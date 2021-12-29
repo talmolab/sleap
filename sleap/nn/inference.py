@@ -1418,13 +1418,6 @@ class CentroidCrop(InferenceLayer):
         n_peaks = tf.shape(centroid_points)[0]
         if n_peaks > 0:
 
-            # if n_peaks > 1:
-            #     _, keep_inds = tf.top_k(centroid_vals, k=1)
-            #     centroid_points = tf.gather(centroid_points, keep_inds, a)
-            #     centroid_vals = tf.gather(centroid_vals, keep_inds, a)
-            #     crop_offsets = tf.gather(crop_offsets, keep_inds, a)
-            #     crop_sample_inds = tf.gather(crop_sample_inds, keep_inds, a)
-
             # Crop instances around centroids.
             bboxes = sleap.nn.data.instance_cropping.make_centered_bboxes(
                 centroid_points, self.crop_size, self.crop_size
@@ -2014,8 +2007,6 @@ class TopDownPredictor(Predictor):
         else:
             skeleton = self.centroid_config.data.labels.skeletons[0]
 
-        MAX_INSTANCES = 100
-
         # Loop over batches.
         predicted_frames = []
         for ex in generator:
@@ -2043,12 +2034,6 @@ class TopDownPredictor(Predictor):
                 ex["instance_peak_vals"],
                 ex["centroid_vals"],
             ):
-
-                if len(points) > MAX_INSTANCES:
-                    keep_inds = np.argsort(scores)[::-1][:MAX_INSTANCES]
-                    points = points.numpy()[keep_inds]
-                    confidences = confidences.numpy()[keep_inds]
-                    scores = scores.numpy()[keep_inds]
 
                 # Loop over instances.
                 predicted_instances = []
