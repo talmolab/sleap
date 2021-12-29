@@ -10,6 +10,10 @@ import shutil
 from collections import defaultdict
 from pkg_resources import Requirement, resource_filename
 
+from pathlib import Path
+from urllib.parse import unquote, urlparse
+from urllib.request import url2pathname
+
 import h5py as h5
 import numpy as np
 import attr
@@ -380,3 +384,8 @@ def find_files_by_suffix(
             )
 
     return matching_files
+
+
+def parse_uri_path(uri: str) -> str:
+    """Parse a URI starting with 'file:///' to a posix path."""
+    return Path(url2pathname(urlparse(unquote(uri)).path)).as_posix()
