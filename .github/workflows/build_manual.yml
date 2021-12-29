@@ -72,14 +72,14 @@ jobs:
           # export DISPLAY=":1"
           # xvfb-run pytest tests/
         run: |
-          conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/
+          conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/ -c https://conda.anaconda.org/nvidia/
       - name: Build conda package (Windows)
         if: matrix.os == 'windows-2019'
         shell: powershell
         run: |
           conda activate sleap
           pytest tests/
-          conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/
+          conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/ -c https://conda.anaconda.org/nvidia/
 
       # Upload conda package
       - name: Login to Anaconda (Ubuntu)
