@@ -221,14 +221,18 @@ class LearningDialog(QtWidgets.QDialog):
                 )
 
             # Build list of options
-
+            # Priority for default (lowest to highest):
+            #   "nothing" (if training)
+            #   "current frame" (if inference)
+            #   "suggested frames" (if available)
+            #   "selected clip" (if available)
             if self.mode != "inference":
                 prediction_options.append("nothing")
             prediction_options.append("current frame")
+            default_option = "nothing" if self.mode != "inference" else "current frame"
 
             option = f"random frames ({total_random} total frames)"
             prediction_options.append(option)
-            default_option = option
 
             if random_video > 0:
                 option = f"random frames in current video ({random_video} frames)"
