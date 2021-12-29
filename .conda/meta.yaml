@@ -16,7 +16,7 @@ about:
   summary: {{ data.get('description') }}
 
 build:
-  number: 3
+  number: 4
 
 source:
   path: ../
@@ -32,6 +32,7 @@ requirements:
     - python=3.7
     - cudatoolkit=11.3.1
     - cudnn=8.2.1
+    - nvidia::cuda-nvcc
     - sleap::tensorflow=2.7.0
     - sleap::pyside2=5.14.1
     - pillow
