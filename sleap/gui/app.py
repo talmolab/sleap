@@ -50,6 +50,7 @@ import re
 import os
 import random
 import platform
+from pathlib import Path
 
 from typing import Callable, List, Optional, Tuple
 
@@ -79,6 +80,7 @@ from sleap.gui.dataviews import (
     LabeledFrameTableModel,
     SkeletonNodeModel,
 )
+from sleap.util import parse_uri_path
 
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget, FormBuilderModalDialog
@@ -116,6 +118,7 @@ class MainWindow(QMainWindow):
             reset: If `True`, reset preferences to default (including window state).
         """
         super(MainWindow, self).__init__(*args, **kwargs)
+        self.setAcceptDrops(True)
 
         self.state = GuiState()
         self.labels = Labels()
@@ -227,6 +230,36 @@ class MainWindow(QMainWindow):
                 self.commands.saveProject()
                 # accept event (closes window)
                 event.accept()
+
+    def dragEnterEvent(self, event):
+        # TODO: Parse filenames and accept only if valid ext (or folder)
+        mime_format = 'application/x-qt-windows-mime;value="FileName"'
+        if mime_format in event.mimeData().formats():
+            # This only returns the first filename if multiple files are dropped:
+            filename = event.mimeData().data(mime_format).data().decode()
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        
+        # Parse filenames        
+        filenames = event.mimeData().data("text/uri-list").data().decode()
+        filenames = [parse_uri_path(f.strip()) for f in filenames.strip().split("\n")]
+
+        exts = [Path(f).suffix for f in filenames]
+        if all([ext.lower() == ".mp4" for ext in exts]):
+            # TODO: Add videos dialog and make this a command
+            # sleap.gui.dialogs.importvideos.ImportVideos
+            for filename in filenames:
+                video = sleap.load_video(filename)
+                self.labels.add_video(video)
+                self.commands.changestack_push("add video")
+            if self.state["video"] is None:
+                self.state["video"] = video
+            self.on_data_update([UpdateTopic.video])
+            
+        elif len(exts) == 1 and exts[0].lower() == ".slp":
+            self.loadProjectFile(filenames[0])
+            self.on_data_update([UpdateTopic.project])
 
     @property
     def labels(self):
