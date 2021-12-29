@@ -1002,11 +1002,20 @@ class Labels(MutableSequence):
 
     @property
     def max_user_instances(self) -> int:
-        return max([len(lf.user_instances) for lf in self.labeled_frames])
+        n = 0
+        for lf in self.labeled_frames:
+            n = max(n, lf.n_user_instances)
+        return n
 
     @property
     def min_user_instances(self) -> int:
-        return min([len(lf.user_instances) for lf in self.labeled_frames])
+        n = None
+        for lf in self.labeled_frames:
+            if n is not None:
+                n = min(n, lf.n_user_instances)
+            else:
+                n = lf.n_user_instances
+        return n
 
     @property
     def is_multi_instance(self) -> bool:
@@ -2133,30 +2142,44 @@ class Labels(MutableSequence):
         return pipeline
 
     def numpy(
-        self, video: Optional[Video] = None, all_frames: bool = True
+        self,
+        video: Optional[Union[Video, int]] = None,
+        all_frames: bool = True,
+        untracked: bool = False,
     ) -> np.ndarray:
-        """Construct a numpy array from tracked instance points.
+        """Construct a numpy array from instance points.
 
         Args:
-            video: Video to convert to numpy arrays. If `None` (the default), uses the
-                first video.
+            video: Video or video index to convert to numpy arrays. If `None` (the
+                default), uses the first video.
             all_frames: If `True` (the default), allocate array of the same number of
                 frames as the video. If `False`, only return data between the first and
                 last frame with data.
+            untracked: If `False` (the default), include only instances that have a
+                track assignment. If `True`, includes all instances in each frame in
+                arbitrary order.
 
         Returns:
             An array of tracks of shape `(n_frames, n_tracks, n_nodes, 2)`.
 
             Missing data will be replaced with `np.nan`.
 
+            If this is a single instance project, a track does not need to be assigned.
+
+            Only predicted instances (NOT user instances) will be returned.
+
         Notes:
             This method assumes that instances have tracks assigned and is intended to
             function primarily for single-video prediction results.
         """
+        # Get labeled frames for specified video.
         if video is None:
-            video = self.videos[0]
+            video = 0
+        if type(video) == int:
+            video = self.videos[video]
         lfs = self.find(video=video)
 
+        # Figure out frame index range.
         if all_frames:
             first_frame, last_frame = 0, video.shape[0] - 1
         else:
@@ -2169,15 +2192,34 @@ class Labels(MutableSequence):
                 first_frame = min(first_frame, lf.frame_idx)
                 last_frame = max(last_frame, lf.frame_idx)
 
+        # Figure out the number of tracks based on number of instances in each frame.
+        #
+        # First, let's check the max number of predicted instances (regardless of
+        # whether they're tracked.
+        n_preds = 0
+        for lf in lfs:
+            n_preds = max(n_preds, lf.n_predicted_instances)
+
+        # Case 1: We don't care about order because there's only 1 instance per frame,
+        # or we're considering untracked instances.
+        untracked = untracked or n_preds == 1
+        if untracked:
+            n_tracks = n_preds
+        else:
+            # Case 2: We're considering only tracked instances.
+            n_tracks = len(self.tracks)
+
         n_frames = last_frame - first_frame + 1
-        n_tracks = len(self.tracks)
         n_nodes = len(self.skeleton.nodes)
 
         tracks = np.full((n_frames, n_tracks, n_nodes, 2), np.nan, dtype="float32")
         for lf in lfs:
             i = lf.frame_idx - first_frame
-            for inst in lf:
-                if inst.track is not None:
+            if untracked:
+                for j, inst in enumerate(lf.predicted_instances):
+                    tracks[i, j] = inst.numpy()
+            else:
+                for inst in lf.tracked_instances:
                     j = self.tracks.index(inst.track)
                     tracks[i, j] = inst.numpy()
 

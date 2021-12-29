@@ -436,3 +436,44 @@ def test_instance_fill_missing():
         assert inst.points[2].y >= 0
         assert inst.points[2].x <= 7
         assert inst.points[2].y <= 5
+
+
+def test_labeledframe_numpy(centered_pair_predictions):
+    lf = centered_pair_predictions.labeled_frames[0]
+    assert lf.numpy().shape == (2, 24, 2)
+
+    lf.instances = []
+    assert lf.numpy().shape == (0, 0, 2)
+
+
+def test_labeledframe_instance_counting(min_labels, centered_pair_predictions):
+    lf = centered_pair_predictions.labeled_frames[0]
+    assert lf.n_user_instances == 0
+    assert len(lf.user_instances) == 0
+    assert not lf.has_user_instances
+
+    assert lf.n_predicted_instances == 2
+    assert all([type(inst) == PredictedInstance for inst in lf.predicted_instances])
+    assert lf.has_predicted_instances
+
+    assert lf.n_tracked_instances == 2
+    assert all(
+        [
+            type(inst) == PredictedInstance and inst.track is not None
+            for inst in lf.tracked_instances
+        ]
+    )
+    assert lf.has_tracked_instances
+
+    lf = min_labels.labeled_frames[0]
+    assert lf.n_user_instances == 2
+    assert all([type(inst) == Instance for inst in lf.user_instances])
+    assert lf.has_user_instances
+
+    assert lf.n_predicted_instances == 0
+    assert len(lf.predicted_instances) == 0
+    assert not lf.has_predicted_instances
+
+    assert lf.n_tracked_instances == 0
+    assert len(lf.tracked_instances) == 0
+    assert not lf.has_tracked_instances
