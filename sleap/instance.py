@@ -1426,14 +1426,64 @@ class LabeledFrame:
         return [inst for inst in self._instances if type(inst) == PredictedInstance]
 
     @property
+    def tracked_instances(self) -> List[PredictedInstance]:
+        """Return list of predicted instances with tracks associated with frame."""
+        return [
+            inst
+            for inst in self._instances
+            if type(inst) == PredictedInstance and inst.track is not None
+        ]
+
+    @property
     def has_user_instances(self) -> bool:
         """Return whether the frame contains any user instances."""
-        return len(self.user_instances) > 0
+        for inst in self._instances:
+            if type(inst) == Instance:
+                return True
+        return False
 
     @property
     def has_predicted_instances(self) -> bool:
         """Return whether the frame contains any predicted instances."""
-        return len(self.predicted_instances) > 0
+        for inst in self._instances:
+            if type(inst) == PredictedInstance:
+                return True
+        return False
+
+    @property
+    def has_tracked_instances(self) -> bool:
+        """Return whether the frame contains any predicted instances with tracks."""
+        for inst in self._instances:
+            if type(inst) == PredictedInstance and inst.track is not None:
+                return True
+        return False
+
+    @property
+    def n_user_instances(self) -> int:
+        """Return the number of user instances in the frame."""
+        n = 0
+        for inst in self._instances:
+            if type(inst) == Instance:
+                n += 1
+        return n
+
+    @property
+    def n_predicted_instances(self) -> int:
+        """Return the number of predicted instances in the frame."""
+        n = 0
+        for inst in self._instances:
+            if type(inst) == PredictedInstance:
+                n += 1
+        return n
+
+    @property
+    def n_tracked_instances(self) -> int:
+        """Return the number of predicted instances with tracks in the frame."""
+        n = 0
+        for inst in self._instances:
+            if type(inst) == PredictedInstance and inst.track is not None:
+                n += 1
+        return n
 
     def remove_empty_instances(self):
         """Remove instances with no visible nodes from the labeled frame."""
@@ -1704,7 +1754,10 @@ class LabeledFrame:
 
     def numpy(self) -> np.ndarray:
         """Return the instances as an array of shape (instances, nodes, 2)."""
-        return np.stack([inst.numpy() for inst in self.instances], axis=0)
+        if len(self.instances) > 0:
+            return np.stack([inst.numpy() for inst in self.instances], axis=0)
+        else:
+            return np.full((0, 0, 2), np.nan)
 
     def plot(self, image: bool = True, scale: float = 1.0):
         """Plot the frame with all instances.
