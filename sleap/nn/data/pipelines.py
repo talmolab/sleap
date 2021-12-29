@@ -454,9 +454,14 @@ class SingleInstanceConfmapsPipeline:
             A `Pipeline` instance configured to fetch data and run inference to generate
             predictions useful for visualization during training.
         """
-        pipeline = self.make_base_pipeline(data_provider=data_provider)
-        pipeline += Prefetcher()
+        pipeline = Pipeline(providers=data_provider)
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+            )
         pipeline += Repeater()
+        pipeline += Prefetcher()
         return pipeline
 
 

@@ -1417,6 +1417,7 @@ class CentroidCrop(InferenceLayer):
 
         n_peaks = tf.shape(centroid_points)[0]
         if n_peaks > 0:
+
             # Crop instances around centroids.
             bboxes = sleap.nn.data.instance_cropping.make_centered_bboxes(
                 centroid_points, self.crop_size, self.crop_size
