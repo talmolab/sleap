@@ -240,8 +240,8 @@ class MainWindow(QMainWindow):
             event.acceptProposedAction()
 
     def dropEvent(self, event):
-        
-        # Parse filenames        
+
+        # Parse filenames
         filenames = event.mimeData().data("text/uri-list").data().decode()
         filenames = [parse_uri_path(f.strip()) for f in filenames.strip().split("\n")]
 
@@ -256,7 +256,7 @@ class MainWindow(QMainWindow):
             if self.state["video"] is None:
                 self.state["video"] = video
             self.on_data_update([UpdateTopic.video])
-            
+
         elif len(exts) == 1 and exts[0].lower() == ".slp":
             self.loadProjectFile(filenames[0])
             self.on_data_update([UpdateTopic.project])
