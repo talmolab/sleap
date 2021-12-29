@@ -531,6 +531,7 @@ def test_single_instance_predictor(
     predictor = SingleInstancePredictor.from_trained_models(
         min_single_instance_robot_model_path
     )
+    predictor.verbosity = "none"
     labels_pr = predictor.predict(min_labels_robot)
     assert len(labels_pr) == 2
     assert len(labels_pr[0].instances) == 1
@@ -550,6 +551,7 @@ def test_single_instance_predictor_high_peak_thresh(
     predictor = SingleInstancePredictor.from_trained_models(
         min_single_instance_robot_model_path, peak_threshold=1.5
     )
+    predictor.verbosity = "none"
     labels_pr = predictor.predict(min_labels_robot)
     assert len(labels_pr) == 2
     assert labels_pr[0][0].n_visible_points == 0
@@ -560,6 +562,7 @@ def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
     predictor = TopDownPredictor.from_trained_models(
         centroid_model_path=min_centroid_model_path
     )
+    predictor.verbosity = "none"
     labels_pr = predictor.predict(min_labels)
     assert len(labels_pr) == 1
     assert len(labels_pr[0].instances) == 2
@@ -580,6 +583,7 @@ def test_topdown_predictor_centered_instance(
     predictor = TopDownPredictor.from_trained_models(
         confmap_model_path=min_centered_instance_model_path
     )
+    predictor.verbosity = "none"
     labels_pr = predictor.predict(min_labels)
     assert len(labels_pr) == 1
     assert len(labels_pr[0].instances) == 2
@@ -598,6 +602,7 @@ def test_bottomup_predictor(min_labels, min_bottomup_model_path):
     predictor = BottomUpPredictor.from_trained_models(
         model_path=min_bottomup_model_path
     )
+    predictor.verbosity = "none"
     labels_pr = predictor.predict(min_labels)
     assert len(labels_pr) == 1
     assert len(labels_pr[0].instances) == 2
@@ -616,6 +621,7 @@ def test_bottomup_predictor(min_labels, min_bottomup_model_path):
         model_path=min_bottomup_model_path,
         min_line_scores=1.1,
     )
+    predictor.verbosity = "none"
     labels_pr = predictor.predict(min_labels)
     assert len(labels_pr[0]) == 0
 
