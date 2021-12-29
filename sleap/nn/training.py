@@ -1033,6 +1033,7 @@ class SingleInstanceModelTrainer(Trainer):
         inference_layer = SingleInstanceInferenceLayer(
             keras_model=self.keras_model,
             input_scale=self.config.data.preprocessing.input_scaling,
+            pad_to_stride=self.config.data.preprocessing.pad_to_stride,
             peak_threshold=0.2,
             return_confmaps=True,
         )
