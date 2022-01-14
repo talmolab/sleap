@@ -1,5 +1,5 @@
 pytest
-pytest-qt
+pytest-qt>=4.0.0
 pytest-cov
 pytest-xvfb
 ipython

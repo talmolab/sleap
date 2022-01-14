@@ -8,7 +8,7 @@ drawing a frame (i.e., when user navigates to a new frame or something changes
 so that current frame must be redrawn).
 """
 
-from PySide2 import QtWidgets
+from PySide6 import QtWidgets
 
 import attr
 import abc

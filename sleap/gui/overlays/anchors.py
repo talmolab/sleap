@@ -3,7 +3,7 @@ Overlay for showing negative training sample anchors (currently unused).
 """
 import attr
 
-from PySide2 import QtGui
+from PySide6 import QtGui
 
 from sleap.gui.overlays.base import BaseOverlay
 from sleap.gui.widgets.video import QtVideoPlayer

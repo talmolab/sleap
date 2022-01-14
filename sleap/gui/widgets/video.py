@@ -25,19 +25,19 @@ from collections import deque
 FORCE_REQUESTS = True
 
 
-from PySide2 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore
 
-from PySide2.QtWidgets import (
+from PySide6.QtWidgets import (
     QApplication,
     QVBoxLayout,
     QWidget,
     QGraphicsView,
     QGraphicsScene,
 )
-from PySide2.QtGui import QImage, QPixmap, QPainter, QPainterPath, QTransform
-from PySide2.QtGui import QPen, QBrush, QColor, QFont, QPolygonF
-from PySide2.QtGui import QKeyEvent, QMouseEvent, QKeySequence
-from PySide2.QtCore import Qt, QRectF, QPointF, QMarginsF, QLineF
+from PySide6.QtGui import QImage, QPixmap, QPainter, QPainterPath, QTransform
+from PySide6.QtGui import QPen, QBrush, QColor, QFont, QPolygonF
+from PySide6.QtGui import QShortcut, QKeyEvent, QMouseEvent, QKeySequence
+from PySide6.QtCore import Qt, QRectF, QPointF, QMarginsF, QLineF
 
 import atexit
 import math
@@ -46,9 +46,9 @@ import numpy as np
 
 from typing import Callable, List, Optional, Union
 
-from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
+from PySide6.QtWidgets import QGraphicsItem, QGraphicsObject
 
-from PySide2.QtWidgets import (
+from PySide6.QtWidgets import (
     QGraphicsEllipseItem,
     QGraphicsTextItem,
     QGraphicsRectItem,
@@ -306,7 +306,7 @@ class QtVideoPlayer(QWidget):
 
         def add_shortcut(key, step):
             # Register shortcut and have it trigger frame_step action
-            shortcut = QtWidgets.QShortcut(self.shortcuts[key], self)
+            shortcut = QShortcut(self.shortcuts[key], self)
             shortcut.activated.connect(lambda x=step: frame_step(x, False))
             self._shortcut_triggers[key] = shortcut
 
@@ -324,7 +324,7 @@ class QtVideoPlayer(QWidget):
                 )
 
                 # Register this new shortcut, enabling shift selection
-                shortcut = QtWidgets.QShortcut(shortcut_seq_with_shift, self)
+                shortcut = QShortcut(shortcut_seq_with_shift, self)
                 shortcut.activated.connect(lambda x=step: frame_step(x, True))
                 self._shortcut_triggers[key + "_shift_selection"] = shortcut
 
@@ -1546,7 +1546,7 @@ class QtEdge(QGraphicsPolygonItem):
         self.show_non_visible = show_non_visible
 
         super(QtEdge, self).__init__(
-            polygon=QPolygonF(),
+            # polygon=QPolygonF(),
             parent=parent,
             *args,
             **kwargs,

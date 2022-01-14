@@ -13,7 +13,7 @@ import shutil
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Text, Tuple
 
-from PySide2 import QtWidgets
+from PySide6 import QtWidgets
 
 from sleap import Labels, Video, LabeledFrame
 from sleap.gui.learning.configs import ConfigFileInfo
@@ -502,7 +502,7 @@ def run_gui_training(
     trained_job_paths = dict()
 
     if gui:
-        from sleap.nn.monitor import LossViewer
+        from sleap.gui.widgets.training_monitor import LossViewer
         from sleap.gui.widgets.imagedir import QtImageDirectoryWidget
 
         # open training monitor window

@@ -11,7 +11,7 @@ creates widgets with relevant filters from a given training run path.
 from sleap import Video
 from sleap.gui.widgets.video import QtVideoPlayer
 
-from PySide2 import QtWidgets
+from PySide6 import QtWidgets
 
 import glob
 import os
@@ -125,7 +125,7 @@ class QtImageDirectoryWidget(QtVideoPlayer):
 
 
 if __name__ == "__main__":
-    from PySide2.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication
 
     app = QApplication([])
 

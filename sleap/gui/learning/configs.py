@@ -17,7 +17,7 @@ from sleap.gui.dialogs.formbuilder import FieldComboWidget
 
 from typing import Any, Dict, List, Optional, Text
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 
 @attr.s(auto_attribs=True, slots=True)

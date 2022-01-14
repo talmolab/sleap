@@ -20,10 +20,10 @@ method while passing the user-selected params as the named parameters: ::
 
 """
 
-from PySide2.QtCore import Qt, QRectF, Signal
-from PySide2.QtWidgets import QApplication, QLayout, QVBoxLayout, QHBoxLayout, QFrame
-from PySide2.QtWidgets import QDialog, QWidget, QLabel, QScrollArea
-from PySide2.QtWidgets import (
+from PySide6.QtCore import Qt, QRectF, Signal
+from PySide6.QtWidgets import QApplication, QLayout, QVBoxLayout, QHBoxLayout, QFrame
+from PySide6.QtWidgets import QDialog, QWidget, QLabel, QScrollArea
+from PySide6.QtWidgets import (
     QPushButton,
     QButtonGroup,
     QRadioButton,

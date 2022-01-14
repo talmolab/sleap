@@ -16,7 +16,7 @@ from sleap.gui.learning import runners, scopedkeydict, configs, datagen, recepti
 
 from typing import Dict, List, Optional, Text, Optional
 
-from PySide2 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore
 
 
 # List of fields which should show list of skeleton nodes

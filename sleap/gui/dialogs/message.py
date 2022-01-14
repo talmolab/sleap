@@ -2,7 +2,7 @@
 Module to show a non-blocking modal dialog box with a string message.
 """
 
-from PySide2 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore
 
 
 class MessageDialog(QtWidgets.QDialog):

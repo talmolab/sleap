@@ -3,7 +3,7 @@ Class for accessing/setting keyboard shortcuts.
 """
 
 from typing import Dict, Union
-from PySide2.QtGui import QKeySequence
+from PySide6.QtGui import QKeySequence
 from sleap import util
 
 
@@ -146,7 +146,7 @@ class Shortcuts(object):
 
 
 if __name__ == "__main__":
-    from PySide2 import QtWidgets
+    from PySide6 import QtWidgets
 
     from sleap.gui.dialogs.shortcuts import ShortcutDialog
 

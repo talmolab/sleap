@@ -12,7 +12,7 @@ import attr
 
 from typing import Iterable, List, Optional
 
-from PySide2 import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 
 
 @attr.s(auto_attribs=True)

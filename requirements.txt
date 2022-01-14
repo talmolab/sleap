@@ -9,7 +9,7 @@ python-rapidjson
 opencv-python-headless==4.2.0.34
 pandas
 psutil
-PySide2==5.14.1
+PySide6==6.2.2.1
 pyzmq
 pyyaml
 imgaug==0.4.0
@@ -18,7 +18,7 @@ scikit-image
 scikit-learn
 scikit-video
 imgstore==0.2.9
-qimage2ndarray==1.8
+qimage2ndarray @ git+https://github.com/hmeine/qimage2ndarray.git@238148cafbb6cfcf121febebf82eaacc8bf34b1e
 jsmin
 seaborn
 pykalman==0.9.5

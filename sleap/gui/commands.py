@@ -41,9 +41,9 @@ from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
 
 import numpy as np
 
-from PySide2 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets, QtGui
 
-from PySide2.QtWidgets import QMessageBox, QProgressDialog
+from PySide6.QtWidgets import QMessageBox, QProgressDialog
 
 from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.skeleton import Skeleton

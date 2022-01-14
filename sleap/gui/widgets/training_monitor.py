@@ -8,7 +8,7 @@ import jsonpickle
 import logging
 from typing import Optional
 
-from PySide2 import QtCore, QtWidgets, QtGui, QtCharts
+from PySide6 import QtCore, QtWidgets, QtGui, QtCharts
 
 logger = logging.getLogger(__name__)
 
@@ -63,14 +63,14 @@ class LossViewer(QtWidgets.QMainWindow):
             self.ctx = None
 
     def reset(self, what=""):
-        self.chart = QtCharts.QtCharts.QChart()
+        self.chart = QtCharts.QChart()
 
         self.series = dict()
         self.color = dict()
 
-        self.series["batch"] = QtCharts.QtCharts.QScatterSeries()
-        self.series["epoch_loss"] = QtCharts.QtCharts.QLineSeries()
-        self.series["val_loss"] = QtCharts.QtCharts.QLineSeries()
+        self.series["batch"] = QtCharts.QScatterSeries()
+        self.series["epoch_loss"] = QtCharts.QLineSeries()
+        self.series["val_loss"] = QtCharts.QLineSeries()
 
         self.series["batch"].setName("Batch Training Loss")
         self.series["epoch_loss"].setName("Epoch Training Loss")
@@ -89,7 +89,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.chart.addSeries(self.series["epoch_loss"])
         self.chart.addSeries(self.series["val_loss"])
 
-        axisX = QtCharts.QtCharts.QValueAxis()
+        axisX = QtCharts.QValueAxis()
         axisX.setLabelFormat("%d")
         axisX.setTitleText("Batches")
         self.chart.addAxis(axisX, QtCore.Qt.AlignBottom)
@@ -97,10 +97,10 @@ class LossViewer(QtWidgets.QMainWindow):
         # create the different Y axes that can be used
         self.axisY = dict()
 
-        self.axisY["log"] = QtCharts.QtCharts.QLogValueAxis()
+        self.axisY["log"] = QtCharts.QLogValueAxis()
         self.axisY["log"].setBase(10)
 
-        self.axisY["linear"] = QtCharts.QtCharts.QValueAxis()
+        self.axisY["linear"] = QtCharts.QValueAxis()
 
         # settings that apply to all Y axes
         for axisY in self.axisY.values():
@@ -122,7 +122,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.chart.legend().setVisible(True)
         self.chart.legend().setAlignment(QtCore.Qt.AlignTop)
 
-        self.chartView = QtCharts.QtCharts.QChartView(self.chart)
+        self.chartView = QtCharts.QChartView(self.chart)
         self.chartView.setRenderHint(QtGui.QPainter.Antialiasing)
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.chartView)

@@ -5,7 +5,7 @@ Dialog for deleting various subsets of instances in dataset.
 from sleap import LabeledFrame, Instance
 from sleap.gui.dialogs import formbuilder
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from typing import List, Text, Tuple
 

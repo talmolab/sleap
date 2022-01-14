@@ -31,7 +31,7 @@ import yaml
 
 from typing import Any, Dict, List, Optional, Text
 
-from PySide2 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore
 
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.util import get_package_file

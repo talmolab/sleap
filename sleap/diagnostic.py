@@ -78,10 +78,10 @@ def imports_section():
         label("sleap import", False)
 
     try:
-        import PySide2
+        import PySide6
 
-        label("pyside2 import", True)
-        label("pyside path", PySide2.__file__)
+        label("pyside6 import", True)
+        label("pyside path", PySide6.__file__)
 
         call_self(["--gui-check"])
 

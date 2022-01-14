@@ -15,7 +15,7 @@ as is. For example::
 
 """
 
-from PySide2 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets, QtGui
 
 import numpy as np
 import os
