@@ -246,20 +246,20 @@ class MainWindow(QMainWindow):
         filenames = [parse_uri_path(f.strip()) for f in filenames.strip().split("\n")]
 
         exts = [Path(f).suffix for f in filenames]
-        if all([ext.lower() == ".mp4" for ext in exts]):
-            # TODO: Add videos dialog and make this a command
-            # sleap.gui.dialogs.importvideos.ImportVideos
-            for filename in filenames:
-                video = sleap.load_video(filename)
-                self.labels.add_video(video)
-                self.commands.changestack_push("add video")
-            if self.state["video"] is None:
-                self.state["video"] = video
-            self.on_data_update([UpdateTopic.video])
 
-        elif len(exts) == 1 and exts[0].lower() == ".slp":
-            self.loadProjectFile(filenames[0])
-            self.on_data_update([UpdateTopic.project])
+        VIDEO_EXTS = (".mp4", ".avi", ".h5")  # TODO: make this list global
+
+        if len(exts) == 1 and exts[0].lower() == ".slp":
+            if self.state["project_loaded"]:
+                # Merge
+                self.commands.mergeProject(filenames=filenames)
+            else:
+                # Load
+                self.commands.openProject(filename=filenames[0], first_open=True)
+
+        elif all([ext.lower() in VIDEO_EXTS for ext in exts]):
+            # Import videos
+            self.commands.showImportVideos(filenames=filenames)
 
     @property
     def labels(self):
@@ -408,7 +408,7 @@ class MainWindow(QMainWindow):
             fileMenu,
             "import predictions",
             "Merge into Project...",
-            self.commands.importPredictions,
+            self.commands.mergeProject,
         )
 
         fileMenu.addSeparator()
@@ -1336,7 +1336,7 @@ class MainWindow(QMainWindow):
                 message += f"Selection: {start+1:,}-{end:,} ({end-start+1:,} frames)"
 
             message += f"{spacer}Labeled Frames: "
-            if current_video is not None:
+            if current_video is not None and current_video in self.labels.videos:
                 message += str(
                     self.labels.get_labeled_frame_count(current_video, "user")
                 )

@@ -38,7 +38,7 @@ from sleap.gui.dialogs.filedialog import FileDialog
 import h5py
 import qimage2ndarray
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 class ImportVideos:
@@ -47,23 +47,25 @@ class ImportVideos:
     def __init__(self):
         self.result = []
 
-    def ask(self):
+    def ask(self, filenames: Optional[List[str]] = None):
         """Runs the import UI.
 
         1. Show file selection dialog.
         2. Show import parameter dialog with widget for each file.
 
         Args:
-            None.
+            filenames: List of filenames. If not provided, a file browser GUI will appear.
+
         Returns:
             List with dict of the parameters for each file to import.
         """
-        filenames, filter = FileDialog.openMultiple(
-            None,
-            "Select videos to import...",  # dialogue title
-            ".",  # initial path
-            "Any Video (*.h5 *.hd5v *.mp4 *.avi *.json);;HDF5 (*.h5 *.hd5v);;ImgStore (*.json);;Media Video (*.mp4 *.avi);;Any File (*.*)",
-        )
+        if filenames is None:
+            filenames, filter = FileDialog.openMultiple(
+                None,
+                "Select videos to import...",  # dialogue title
+                ".",  # initial path
+                "Any Video (*.h5 *.hd5v *.mp4 *.avi *.json);;HDF5 (*.h5 *.hd5v);;ImgStore (*.json);;Media Video (*.mp4 *.avi);;Any File (*.*)",
+            )
         if len(filenames) > 0:
             importer = ImportParamDialog(filenames)
             importer.accepted.connect(lambda: importer.get_data(self.result))
@@ -89,7 +91,7 @@ class ImportParamDialog(QDialog):
         filenames (list): List of files we want to import.
     """
 
-    def __init__(self, filenames: list, *args, **kwargs):
+    def __init__(self, filenames: List[str], *args, **kwargs):
         super(ImportParamDialog, self).__init__(*args, **kwargs)
 
         self.import_widgets = []
