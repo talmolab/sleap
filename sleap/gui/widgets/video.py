@@ -204,6 +204,8 @@ class QtVideoPlayer(QWidget):
     ):
         super(QtVideoPlayer, self).__init__(*args, **kwargs)
 
+        self.setAcceptDrops(True)
+
         self._shift_key_down = False
 
         self.color_manager = color_manager or ColorManager()
@@ -278,6 +280,14 @@ class QtVideoPlayer(QWidget):
     def cleanup(self):
         self._loader_thread.quit()
         self._loader_thread.wait()
+
+    def dragEnterEvent(self, event):
+        if self.parentWidget():
+            self.parentWidget().dragEnterEvent(event)
+
+    def dropEvent(self, event):
+        if self.parentWidget():
+            self.parentWidget().dropEvent(event)
 
     def _load_and_show_requested_image(self, frame_idx):
         # Get image data
@@ -736,6 +746,8 @@ class GraphicsView(QGraphicsView):
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
 
+        self.setAcceptDrops(True)
+
         self.scene.setBackgroundBrush(QBrush(QColor(Qt.black)))
 
         self._pixmapHandle = None
@@ -757,6 +769,14 @@ class GraphicsView(QGraphicsView):
 
         # Set icon as default background.
         self.setImage(QImage(sleap.util.get_package_file("sleap/gui/background.png")))
+
+    def dragEnterEvent(self, event):
+        if self.parentWidget():
+            self.parentWidget().dragEnterEvent(event)
+
+    def dropEvent(self, event):
+        if self.parentWidget():
+            self.parentWidget().dropEvent(event)
 
     def hasImage(self) -> bool:
         """Returns whether or not the scene contains an image pixmap."""
