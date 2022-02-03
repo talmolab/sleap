@@ -1,18 +1,22 @@
-numpy>=1.19.5
-attrs==21.2.0
+numpy==1.21.2
+attrs>=21.2.0,<=21.4.0
 cattrs==1.1.1
 jsonpickle==1.2
 networkx
-h5py<=3.6.0,>=3.1.0
+#tensorflow<=2.7.0,>=2.6.2  # TODO: write a wrapper like for opencv-python below?
+#h5py<=3.6.0,>=3.1.0  # TODO: check that conda package works on other OSes
 python-rapidjson
-opencv-python-headless>=4.5.3.56
+#opencv-python-headless==4.2.0.34
+opencv-python-headless==4.5.5.62  # TODO: check other OSes
+opencv-python @ git+https://github.com/bertsky/wrap_opencv-python-headless.git@ede49f6a23a73033216339f29515e59d594ba921
 pandas
 psutil
-PySide6>=6.2.2.1
+PySide6==6.2.2.1
 pyzmq
 pyyaml
 imgaug==0.4.0
-scipy>=1.4.1
+#scipy<=1.7.1,>=1.4.1
+scipy==1.7.3  # TODO: check other OSes
 scikit-image
 scikit-learn
 scikit-video

@@ -1,0 +1,24 @@
+name: sleap_m1
+
+channels:
+    - defaults
+    - conda-forge
+    - apple
+
+dependencies:
+    - python=3.8
+    # - cudatoolkit=11.3.1
+    # - cudnn=8.2.1
+    # - nvidia::cuda-nvcc=11.3
+    # - sleap::tensorflow=2.7.0
+    # - sleap::pyside2=5.14.1
+    - pillow
+    - shapely
+    - h5py=3.1.0
+    - tensorflow-deps=2.7.0
+    - pip
+    - pip:
+        - "--editable=./"
+        - tensorflow-macos==2.7.0
+        - tensorflow-metal==0.3.0
+        - "--requirement=./dev_requirements.txt"
