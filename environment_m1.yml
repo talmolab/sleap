@@ -12,8 +12,8 @@ dependencies:
     # - nvidia::cuda-nvcc=11.3
     # - sleap::tensorflow=2.7.0
     # - sleap::pyside2=5.14.1
-    - pillow
-    - shapely
+    # - pillow=8.3.1
+    - shapely=1.7.1
     - h5py=3.1.0
     - tensorflow-deps=2.7.0
     - pip
