@@ -793,14 +793,8 @@ def train_subprocess(
         if job_config.outputs.tensorboard.write_logs:
             cli_args.append("--tensorboard")
 
-        # Add list of video paths so we can find video even if paths in saved
-        # labels dataset file are incorrect.
-        if video_paths:
-            cli_args.extend(("--video-paths", ",".join(video_paths)))
-
-        print(cli_args)
-
         # Run training in a subprocess.
+        print(cli_args)
         proc = subprocess.Popen(cli_args)
 
         # Wait till training is done, calling a callback if given.
