@@ -58,6 +58,7 @@ from sleap.nn.data.pipelines import (
     Normalizer,
     Resizer,
     Prefetcher,
+    InstanceCentroidFinder,
     KerasModelPredictor,
 )
 
@@ -198,6 +199,12 @@ class Predictor(ABC):
     def data_config(self) -> DataConfig:
         pass
 
+    @property
+    @abstractmethod
+    def is_grayscale(self) -> bool:
+        """Return whether the model expects grayscale inputs."""
+        pass
+
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
         """Make a data loading pipeline.
 
@@ -215,6 +222,12 @@ class Predictor(ABC):
         pipeline = Pipeline()
         if data_provider is not None:
             pipeline.providers = [data_provider]
+
+        pipeline += Normalizer(
+            ensure_float=False,
+            ensure_grayscale=self.is_grayscale,
+            ensure_rgb=(not self.is_grayscale),
+        )
 
         if self.data_config.preprocessing.resize_and_pad_to_target:
             points_key = None
@@ -740,6 +753,7 @@ class InferenceLayer(tf.keras.layers.Layer):
             was previously an integer.
         """
         if self.ensure_grayscale:
+            # TODO: Find out why this does not work on the GPU (but does on CPU).
             imgs = sleap.nn.data.normalization.ensure_grayscale(imgs)
         else:
             imgs = sleap.nn.data.normalization.ensure_rgb(imgs)
@@ -1131,6 +1145,11 @@ class SingleInstancePredictor(Predictor):
     @property
     def data_config(self) -> DataConfig:
         return self.confmap_config.data
+
+    @property
+    def is_grayscale(self) -> bool:
+        """Return whether the model expects grayscale inputs."""
+        return self.confmap_model.keras_model.input.shape[-1] == 1
 
     @classmethod
     def from_trained_models(
@@ -1939,6 +1958,16 @@ class TopDownPredictor(Predictor):
         obj._initialize_inference_model()
         return obj
 
+    @property
+    def is_grayscale(self) -> bool:
+        """Return whether the model expects grayscale inputs."""
+        is_gray = False
+        if self.centroid_model is not None:
+            is_gray = self.centroid_model.keras_model.input.shape[-1] == 1
+        else:
+            is_gray = self.confmap_model.keras_model.input.shape[-1] == 1
+        return is_gray
+
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
         """Make a data loading pipeline.
 
@@ -1962,9 +1991,16 @@ class TopDownPredictor(Predictor):
                 provider=data_provider,
                 points_key=None,
             )
+
+        pipeline += Normalizer(
+            ensure_float=False,
+            ensure_grayscale=self.is_grayscale,
+            ensure_rgb=(not self.is_grayscale),
+        )
+
         if self.centroid_model is None:
             anchor_part = self.confmap_config.data.instance_cropping.center_on_part
-            pipeline += sleap.nn.data.pipelines.InstanceCentroidFinder(
+            pipeline += InstanceCentroidFinder(
                 center_on_anchor_part=anchor_part is not None,
                 anchor_part_names=anchor_part,
                 skeletons=self.confmap_config.data.labels.skeletons,
@@ -2443,6 +2479,11 @@ class BottomUpPredictor(Predictor):
     @property
     def data_config(self) -> DataConfig:
         return self.bottomup_config.data
+
+    @property
+    def is_grayscale(self) -> bool:
+        """Return whether the model expects grayscale inputs."""
+        return self.bottomup_model.keras_model.input.shape[-1] == 1
 
     @classmethod
     def from_trained_models(
