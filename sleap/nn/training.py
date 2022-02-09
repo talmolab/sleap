@@ -157,7 +157,7 @@ class DataReaders:
         """Create data readers from sleap.Labels datasets as data providers."""
         if isinstance(training, str):
             logger.info(f"Loading training labels from: {training}")
-            training = sleap.load_file(training, video_search=video_search_paths)
+            training = sleap.load_file(training, search_paths=video_search_paths)
 
         if labels_config is not None and labels_config.split_by_inds:
             # First try to split by indices if specified in config.
