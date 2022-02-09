@@ -666,7 +666,7 @@ class FindInstancePeaksGroundTruth(tf.keras.layers.Layer):
             tf.int64
         )  # (batch_size, n_centroids, 1, 1, 2)
         dists = a - b  # (batch_size, n_centroids, n_insts, n_nodes, 2)
-        dists = tf.sqrt(tf.reduce_sum(dists**2, axis=-1))  # reduce over xy
+        dists = tf.sqrt(tf.reduce_sum(dists ** 2, axis=-1))  # reduce over xy
         dists = tf.reduce_min(dists, axis=-1)  # reduce over nodes
         dists = dists.to_tensor(
             tf.cast(np.NaN, tf.float32)
