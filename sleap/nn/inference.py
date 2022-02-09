@@ -223,12 +223,6 @@ class Predictor(ABC):
         if data_provider is not None:
             pipeline.providers = [data_provider]
 
-        pipeline += Normalizer(
-            ensure_float=False,
-            ensure_grayscale=self.is_grayscale,
-            ensure_rgb=(not self.is_grayscale),
-        )
-
         if self.data_config.preprocessing.resize_and_pad_to_target:
             points_key = None
             if data_provider is not None and "instances" in data_provider.output_keys:
@@ -238,6 +232,12 @@ class Predictor(ABC):
                 provider=data_provider,
                 points_key=points_key,
             )
+
+        pipeline += Normalizer(
+            ensure_float=False,
+            ensure_grayscale=self.is_grayscale,
+            ensure_rgb=(not self.is_grayscale),
+        )
 
         pipeline += sleap.nn.data.pipelines.Batcher(
             batch_size=self.batch_size, drop_remainder=False, unrag=False
@@ -666,7 +666,7 @@ class FindInstancePeaksGroundTruth(tf.keras.layers.Layer):
             tf.int64
         )  # (batch_size, n_centroids, 1, 1, 2)
         dists = a - b  # (batch_size, n_centroids, n_insts, n_nodes, 2)
-        dists = tf.sqrt(tf.reduce_sum(dists ** 2, axis=-1))  # reduce over xy
+        dists = tf.sqrt(tf.reduce_sum(dists**2, axis=-1))  # reduce over xy
         dists = tf.reduce_min(dists, axis=-1)  # reduce over nodes
         dists = dists.to_tensor(
             tf.cast(np.NaN, tf.float32)
