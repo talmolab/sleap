@@ -1588,6 +1588,7 @@ class MainWindow(QMainWindow):
             return
 
         if self._child_windows.get(mode, None) is None:
+            # Re-use existing dialog widget.
             self._child_windows[mode] = LearningDialog(
                 mode,
                 self.state["filename"],
@@ -1596,6 +1597,11 @@ class MainWindow(QMainWindow):
             self._child_windows[mode]._handle_learning_finished.connect(
                 self._handle_learning_finished
             )
+        else:
+            # Update data in existing dialog widget.
+            self._child_windows[mode].labels = self.labels
+            self._child_windows[mode].labels_filename = self.state["filename"]
+            self._child_windows[mode].skeleton = self.labels.skeleton
 
         self._child_windows[mode].update_file_lists()
 

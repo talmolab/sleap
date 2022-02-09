@@ -2947,7 +2947,7 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
         )
 
     if data_path.endswith(".slp"):
-        labels = sleap.Labels.load_file(data_path)
+        labels = sleap.load_file(data_path)
 
         if args.only_labeled_frames:
             provider = LabelsReader.from_user_labeled_frames(labels)
