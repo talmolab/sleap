@@ -1568,6 +1568,9 @@ def main():
     job_config.outputs.save_visualizations |= args.save_viz
     if args.labels_path == "":
         args.labels_path = None
+    args.video_paths = args.video_paths.split(",")
+    if len(args.video_paths) == 0:
+        args.video_paths = None
 
     logger.info("Versions:")
     sleap.versions()
@@ -1613,7 +1616,7 @@ def main():
         training_labels=args.labels_path,
         validation_labels=args.val_labels,
         test_labels=args.test_labels,
-        video_search_paths=args.video_paths.split(","),
+        video_search_paths=args.video_paths,
     )
     trainer.train()
 
