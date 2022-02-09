@@ -157,7 +157,7 @@ class DataReaders:
         """Create data readers from sleap.Labels datasets as data providers."""
         if isinstance(training, str):
             logger.info(f"Loading training labels from: {training}")
-            training = sleap.Labels.load_file(training, video_search=video_search_paths)
+            training = sleap.load_file(training, video_search=video_search_paths)
 
         if labels_config is not None and labels_config.split_by_inds:
             # First try to split by indices if specified in config.
@@ -192,7 +192,7 @@ class DataReaders:
             # If validation is still a path, load it.
             logger.info(f"Loading validation labels from: {validation}")
             validation = sleap.Labels.load_file(
-                validation, video_search=video_search_paths
+                validation, search_paths=video_search_paths
             )
         elif isinstance(validation, float):
             logger.info(
@@ -217,7 +217,7 @@ class DataReaders:
         if isinstance(test, str):
             # If test is still a path, load it.
             logger.info(f"Loading test labels from: {test}")
-            test = sleap.Labels.load_file(test, video_search=video_search_paths)
+            test = sleap.load_file(test, search_paths=video_search_paths)
 
         test_reader = None
         if test is not None:
