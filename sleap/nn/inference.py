@@ -223,12 +223,6 @@ class Predictor(ABC):
         if data_provider is not None:
             pipeline.providers = [data_provider]
 
-        pipeline += Normalizer(
-            ensure_float=False,
-            ensure_grayscale=self.is_grayscale,
-            ensure_rgb=(not self.is_grayscale),
-        )
-
         if self.data_config.preprocessing.resize_and_pad_to_target:
             points_key = None
             if data_provider is not None and "instances" in data_provider.output_keys:
@@ -238,6 +232,12 @@ class Predictor(ABC):
                 provider=data_provider,
                 points_key=points_key,
             )
+
+        pipeline += Normalizer(
+            ensure_float=False,
+            ensure_grayscale=self.is_grayscale,
+            ensure_rgb=(not self.is_grayscale),
+        )
 
         pipeline += sleap.nn.data.pipelines.Batcher(
             batch_size=self.batch_size, drop_remainder=False, unrag=False
