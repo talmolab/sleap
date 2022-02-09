@@ -1,16 +1,22 @@
 import pytest
 import sleap
 from sleap.nn.config.data import LabelsConfig
-from sleap.nn.config.model import (CenteredInstanceConfmapsHeadConfig,
-                                   CentroidsHeadConfig, MultiInstanceConfig,
-                                   MultiInstanceConfmapsHeadConfig,
-                                   PartAffinityFieldsHeadConfig,
-                                   SingleInstanceConfmapsHeadConfig,
-                                   UNetConfig)
+from sleap.nn.config.model import (
+    CenteredInstanceConfmapsHeadConfig,
+    CentroidsHeadConfig,
+    MultiInstanceConfig,
+    MultiInstanceConfmapsHeadConfig,
+    PartAffinityFieldsHeadConfig,
+    SingleInstanceConfmapsHeadConfig,
+    UNetConfig,
+)
 from sleap.nn.config.training_job import TrainingJobConfig
-from sleap.nn.training import (CentroidConfmapsModelTrainer, DataReaders,
-                               SingleInstanceModelTrainer,
-                               TopdownConfmapsModelTrainer)
+from sleap.nn.training import (
+    CentroidConfmapsModelTrainer,
+    DataReaders,
+    SingleInstanceModelTrainer,
+    TopdownConfmapsModelTrainer,
+)
 
 sleap.use_cpu_only()
 
@@ -113,10 +119,8 @@ def test_train_centroids_with_offset(training_labels, cfg):
 
 
 def test_train_topdown(training_labels, cfg):
-    cfg.model.heads.centered_instance = (
-        CenteredInstanceConfmapsHeadConfig(
-            sigma=1.5, output_stride=1, offset_refinement=False
-        )
+    cfg.model.heads.centered_instance = CenteredInstanceConfmapsHeadConfig(
+        sigma=1.5, output_stride=1, offset_refinement=False
     )
     trainer = TopdownConfmapsModelTrainer.from_config(
         cfg, training_labels=training_labels
@@ -128,10 +132,8 @@ def test_train_topdown(training_labels, cfg):
 
 
 def test_train_topdown_with_offset(training_labels, cfg):
-    cfg.model.heads.centered_instance = (
-        CenteredInstanceConfmapsHeadConfig(
-            sigma=1.5, output_stride=1, offset_refinement=True
-        )
+    cfg.model.heads.centered_instance = CenteredInstanceConfmapsHeadConfig(
+        sigma=1.5, output_stride=1, offset_refinement=True
     )
     trainer = TopdownConfmapsModelTrainer.from_config(
         cfg, training_labels=training_labels
