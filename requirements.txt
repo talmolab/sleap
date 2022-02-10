@@ -3,10 +3,10 @@ attrs==21.2.0
 cattrs==1.1.1
 jsonpickle==1.2
 networkx
-tensorflow<=2.7.0,>=2.6.2
+tensorflow>=2.6.3,<=2.7.1,!=2.7.0
 h5py<=3.6.0,>=3.1.0
 python-rapidjson
-opencv-python-headless==4.2.0.34
+opencv-python-headless==4.2.*
 pandas
 psutil
 PySide2==5.14.1
