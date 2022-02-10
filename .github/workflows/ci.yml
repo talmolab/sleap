@@ -8,6 +8,8 @@ on:
       - 'tests/**'
       - '.github/workflows/ci.yml'
       - 'environment_no_cuda.yml'
+      - 'requirements.txt'
+      - 'dev_requirements.txt'
 
 jobs:
   type_check:
