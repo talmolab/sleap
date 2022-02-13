@@ -19,8 +19,8 @@ pip install networkx
 # pip install tensorflow>=2.6.3,<=2.7.1
 # pip install h5py>=3.1.0,<=3.6.0
 pip install python-rapidjson
-pip install opencv-python-headless>=4.2.0.34,<=4.5.5.62
-pip install opencv-python @ git+https://github.com/talmolab/wrap_opencv-python-headless.git@ede49f6a23a73033216339f29515e59d594ba921
+pip install opencv-python-headless==4.5.5.62
+pip install git+https://github.com/talmolab/wrap_opencv-python-headless.git@ede49f6a23a73033216339f29515e59d594ba921
 # pip install pandas
 pip install psutil
 # pip install PySide2>=5.13.2,<=5.14.1
@@ -32,7 +32,7 @@ pip install scikit-image
 pip install scikit-learn==1.0.*
 pip install scikit-video
 pip install imgstore==0.2.9
-pip install qimage2ndarray>=1.8.0,<=1.8.3
+pip install qimage2ndarray==1.8.3
 pip install jsmin
 pip install seaborn
 pip install pykalman==0.9.5

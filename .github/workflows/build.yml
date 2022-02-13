@@ -61,14 +61,14 @@ jobs:
         if: matrix.os == 'ubuntu-18.04'
         shell: bash -l {0}
         run: |
-          conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/ -c https://conda.anaconda.org/nvidia/ -c https://conda.anaconda.org/conda-forge/
+          conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/ -c nvidia -c conda-forge
       - name: Build conda package (Windows)
         if: matrix.os == 'windows-2019'
         shell: powershell
         run: |
           conda activate sleap
           pytest tests/
-          conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/ -c https://conda.anaconda.org/nvidia/ -c https://conda.anaconda.org/conda-forge/
+          conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/ -c nvidia -c conda-forge
 
       # Upload conda package
       - name: Login to Anaconda (Ubuntu)

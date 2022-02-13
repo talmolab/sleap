@@ -7,7 +7,7 @@ tensorflow>=2.6.3,<=2.7.1
 h5py>=3.1.0,<=3.6.0
 python-rapidjson
 opencv-python-headless>=4.2.0.34,<=4.5.5.62
-opencv-python @ git+https://github.com/talmolab/wrap_opencv-python-headless.git@ede49f6a23a73033216339f29515e59d594ba921
+# opencv-python @ git+https://github.com/talmolab/wrap_opencv-python-headless.git@ede49f6a23a73033216339f29515e59d594ba921
 pandas
 psutil
 PySide2>=5.13.2,<=5.14.1
