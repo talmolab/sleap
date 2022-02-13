@@ -515,7 +515,11 @@ def score_paf_lines_batch(
             pafs_stride,
         )
         line_scores_sample = score_paf_lines(
-            paf_lines_sample, peaks_sample, edge_peak_inds_sample, max_edge_length, dist_penalty_weight=dist_penalty_weight
+            paf_lines_sample,
+            peaks_sample,
+            edge_peak_inds_sample,
+            max_edge_length,
+            dist_penalty_weight=dist_penalty_weight,
         )
         n_candidates = tf.shape(edge_peak_inds_sample)[0]
 
