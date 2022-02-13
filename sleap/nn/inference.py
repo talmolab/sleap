@@ -26,12 +26,14 @@ import argparse
 import logging
 import warnings
 import os
+import sys
 import tempfile
 import platform
 import shutil
 import atexit
 import subprocess
 import rich.progress
+from rich.pretty import pprint
 from collections import deque
 import json
 from time import time
@@ -3040,14 +3042,16 @@ def main():
 
     # Parse inputs.
     args, _ = parser.parse_known_args()
+    print("Args:")
+    pprint(vars(args))
+    print()
 
-    args_msg = ["Args:"]
-    for name, val in vars(args).items():
-        if name == "frames" and val is not None:
-            args_msg.append(f"  frames: {min(val)}-{max(val)} ({len(val)})")
-        else:
-            args_msg.append(f"  {name}: {val}")
-    print("\n".join(args_msg))
+    # Check for some common errors.
+    if args.models is None:
+        raise ValueError(
+            "Path to trained models not specified. "
+            "Use \"sleap-track -m path/to/model ...' to specify models to use."
+        )
 
     # Setup devices.
     if args.cpu or not sleap.nn.system.is_gpu_system():
@@ -3099,6 +3103,7 @@ def main():
     # Add provenance metadata to predictions.
     labels_pr.provenance["sleap_version"] = sleap.__version__
     labels_pr.provenance["platform"] = platform.platform()
+    labels_pr.provenance["command"] = " ".join(sys.argv)
     labels_pr.provenance["data_path"] = data_path
     labels_pr.provenance["model_paths"] = predictor.model_paths
     labels_pr.provenance["output_path"] = output_path
@@ -3106,6 +3111,12 @@ def main():
     labels_pr.provenance["total_elapsed"] = total_elapsed
     labels_pr.provenance["start_timestamp"] = start_timestamp
     labels_pr.provenance["finish_timestamp"] = finish_timestamp
+
+    print("Provenance:")
+    pprint(labels_pr.provenance)
+    print()
+
+    labels_pr.provenance["args"] = vars(args)
 
     # Save results.
     labels_pr.save(output_path)
