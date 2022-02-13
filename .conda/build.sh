@@ -11,24 +11,25 @@ export PIP_NO_INDEX=False
 export PIP_NO_DEPENDENCIES=False
 export PIP_IGNORE_INSTALLED=False
 
-# pip install numpy==1.19.5
+# pip install numpy>=1.19.5,<=1.21.5
 pip install attrs==21.2.0
 pip install cattrs==1.1.1
 pip install jsonpickle==1.2
 pip install networkx
-# pip install tensorflow==2.7.0
-# pip install h5py==3.10.0
+# pip install tensorflow>=2.6.3,<=2.7.1
+# pip install h5py>=3.1.0,<=3.6.0
 pip install python-rapidjson
-# pip install opencv-python-headless==4.2.0.34
-pip install pandas
+pip install opencv-python-headless>=4.2.0.34,<=4.5.5.62
+pip install opencv-python @ git+https://github.com/talmolab/wrap_opencv-python-headless.git@ede49f6a23a73033216339f29515e59d594ba921
+# pip install pandas
 pip install psutil
-# pip install PySide2==5.14.1
+# pip install PySide2>=5.13.2,<=5.14.1
 pip install pyzmq
 pip install pyyaml
 pip install imgaug==0.4.0
-pip install scipy==1.7.1
+# pip install scipy>=1.4.1,<=1.7.3
 pip install scikit-image
-pip install scikit-learn
+pip install scikit-learn==1.0.*
 pip install scikit-video
 pip install imgstore==0.2.9
 pip install qimage2ndarray==1.8
