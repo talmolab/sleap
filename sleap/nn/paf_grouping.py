@@ -275,11 +275,59 @@ def get_paf_lines(
     return lines
 
 
+def compute_distance_penalty(
+    spatial_vec_lengths: tf.Tensor,
+    max_edge_length: float,
+    dist_penalty_weight: float = 1.0,
+) -> tf.Tensor:
+    """Compute the distance penalty component of the PAF line integral score.
+
+    Args:
+        spatial_vec_lengths: Euclidean distance between candidate source and
+            destination points as a `tf.float32` tensor of any shape (typically
+            `(n_candidates, 1)`).
+        max_edge_length: Maximum length expected for any connection as a scalar `float`
+            in units of pixels (corresponding to `peaks_sample`). Scores of lines
+            longer than this will be penalized. Useful for ignoring spurious
+            connections that are far apart in space.
+        dist_penalty_weight: A coefficient to scale weight of the distance penalty as
+            a scalar float. Set to values greater than 1.0 to enforce the distance
+            penalty more strictly.
+
+    Returns:
+        The distance penalty for each candidate as a `tf.float32` tensor of the same
+        shape as `spatial_vec_lengths`.
+
+        The penalty will be 0 (when below the threshold) and -1 as the distance
+        approaches infinity. This is then scaled by the `dist_penalty_weight`.
+
+    Notes:
+        The penalty is computed from the distances scaled by the max length:
+
+        ```
+        if distance <= max_edge_length:
+            penalty = 0
+        else:
+            penalty = (max_edge_length / distance) - 1
+        ```
+
+        For example, if the max length is 10 and the distance is 20, then the penalty
+        will be: `(10 / 20) - 1 == 0.5 - 1 == -0.5`.
+
+    See also: score_paf_lines
+    """
+    return (
+        tf.math.minimum((max_edge_length / spatial_vec_lengths) - 1, 0)
+        * dist_penalty_weight
+    )  # < 0 = longer than max
+
+
 def score_paf_lines(
     paf_lines_sample: tf.Tensor,
     peaks_sample: tf.Tensor,
     edge_peak_inds_sample: tf.Tensor,
     max_edge_length: float,
+    dist_penalty_weight: float = 1.0,
 ) -> tf.Tensor:
     """Compute the connectivity score for each PAF line in a sample.
 
@@ -296,9 +344,12 @@ def score_paf_lines(
             destination of each candidate connection. This indexes into the input
             `peaks_sample`. Can be generated using `get_connection_candidates()`.
         max_edge_length: Maximum length expected for any connection as a scalar `float`
-            in units of pixels (corresponding to `peaks_sample`. Scores of lines longer
-            than this will be penalized. Useful for ignoring spurious connections that
-            are far apart in space.
+            in units of pixels (corresponding to `peaks_sample`). Scores of lines
+            longer than this will be penalized. Useful for ignoring spurious
+            connections that are far apart in space.
+        dist_penalty_weight: A coefficient to scale weight of the distance penalty as
+            a scalar float. Set to values greater than 1.0 to enforce the distance
+            penalty more strictly.
 
     Returns:
         The line scores as a `tf.Tensor` of shape `(n_candidates,)` and dtype
@@ -313,7 +364,7 @@ def score_paf_lines(
         This function operates on a single sample (frame). For batches of multiple
         frames, use `score_paf_lines_batch()`.
 
-    See also: get_paf_lines, score_paf_lines_batch
+    See also: get_paf_lines, score_paf_lines_batch, compute_distance_penalty
     """
     # Pull out points.
     src_peaks = tf.gather(
@@ -336,9 +387,14 @@ def score_paf_lines(
     )  # (n_candidates, n_line_points)
 
     # Compute distance penalties
-    dist_penalties = tf.math.minimum(
-        (max_edge_length / tf.squeeze(spatial_vec_lengths, axis=1)) - 1, 0
-    )  # < 0 = longer than max
+    dist_penalties = tf.squeeze(
+        compute_distance_penalty(
+            spatial_vec_lengths,
+            max_edge_length,
+            dist_penalty_weight=dist_penalty_weight,
+        ),
+        axis=1,
+    )  # (n_candidates,)
 
     # Compute average line scores with distance penalty.
     mean_line_scores = tf.reduce_mean(line_scores, axis=1)
@@ -355,6 +411,7 @@ def score_paf_lines_batch(
     n_line_points: int,
     pafs_stride: int,
     max_edge_length_ratio: float,
+    dist_penalty_weight: float,
     n_nodes: int,
 ) -> Tuple[tf.RaggedTensor, tf.RaggedTensor, tf.RaggedTensor]:
     """Create and score PAF lines formed between connection candidates.
@@ -379,6 +436,9 @@ def score_paf_lines_batch(
         max_edge_length_ratio: The maximum expected length of a connected pair of points
             in relative image units. Candidate connections above this length will be
             penalized during matching.
+        dist_penalty_weight: A coefficient to scale weight of the distance penalty as
+            a scalar float. Set to values greater than 1.0 to enforce the distance
+            penalty more strictly.
         n_nodes: The total number of nodes in the skeleton as a scalar integer.
 
     Returns:
@@ -455,7 +515,7 @@ def score_paf_lines_batch(
             pafs_stride,
         )
         line_scores_sample = score_paf_lines(
-            paf_lines_sample, peaks_sample, edge_peak_inds_sample, max_edge_length
+            paf_lines_sample, peaks_sample, edge_peak_inds_sample, max_edge_length, dist_penalty_weight=dist_penalty_weight
         )
         n_candidates = tf.shape(edge_peak_inds_sample)[0]
 
@@ -1269,8 +1329,11 @@ class PAFScorer:
         pafs_stride: Output stride of the part affinity fields. This will be used to
             adjust the peak coordinates from full image to PAF subscripts.
         max_edge_length_ratio: The maximum expected length of a connected pair of points
-            in relative image units. Candidate connections above this length will be
-            penalized during matching.
+            as a fraction of the image size. Candidate connections longer than this
+            length will be penalized during matching.
+        dist_penalty_weight: A coefficient to scale weight of the distance penalty as
+            a scalar float. Set to values greater than 1.0 to enforce the distance
+            penalty more strictly.
         n_points: Number of points to sample along the line integral.
         min_instance_peaks: Minimum number of peaks the instance should have to be
             considered a real instance. Instances with fewer peaks than this will be
@@ -1316,6 +1379,7 @@ class PAFScorer:
     edges: List[Tuple[Text, Text]]
     pafs_stride: int
     max_edge_length_ratio: float = 0.25
+    dist_penalty_weight: float = 1.0
     n_points: int = 10
     min_instance_peaks: Union[int, float] = 0
     min_line_scores: float = 0.25
@@ -1344,7 +1408,8 @@ class PAFScorer:
     def from_config(
         cls,
         config: MultiInstanceConfig,
-        max_edge_length_ratio: float = 0.5,
+        max_edge_length_ratio: float = 0.25,
+        dist_penalty_weight: float = 1.0,
         n_points: int = 10,
         min_instance_peaks: Union[int, float] = 0,
         min_line_scores: float = 0.25,
@@ -1354,8 +1419,11 @@ class PAFScorer:
         Args:
             config: `MultiInstanceConfig` from `cfg.model.heads.multi_instance`.
             max_edge_length_ratio: The maximum expected length of a connected pair of
-                points relative image units. Candidate connections above this length
-                will be penalized during matching.
+                points as a fraction of the image size. Candidate connections longer
+                than this length will be penalized during matching.
+            dist_penalty_weight: A coefficient to scale weight of the distance penalty
+                as a scalar float. Set to values greater than 1.0 to enforce the
+                distance penalty more strictly.
             min_edge_score: Minimum score required to classify a connection as correct.
             n_points: Number of points to sample along the line integral.
             min_instance_peaks: Minimum number of peaks the instance should have to be
@@ -1373,6 +1441,7 @@ class PAFScorer:
             edges=config.pafs.edges,
             pafs_stride=config.pafs.output_stride,
             max_edge_length_ratio=max_edge_length_ratio,
+            dist_penalty_weight=dist_penalty_weight,
             n_points=n_points,
             min_instance_peaks=min_instance_peaks,
             min_line_scores=min_line_scores,
@@ -1423,6 +1492,7 @@ class PAFScorer:
             self.n_points,
             self.pafs_stride,
             self.max_edge_length_ratio,
+            self.dist_penalty_weight,
             self.n_nodes,
         )
 
