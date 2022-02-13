@@ -2435,8 +2435,11 @@ class BottomUpPredictor(Predictor):
         integral_patch_size: Size of patches to crop around each rough peak for integral
             refinement as an integer scalar.
         max_edge_length_ratio: The maximum expected length of a connected pair of points
-            in relative image units. Candidate connections above this length will be
-            penalized during matching.
+            as a fraction of the image size. Candidate connections longer than this
+            length will be penalized during matching.
+        dist_penalty_weight: A coefficient to scale weight of the distance penalty as
+            a scalar float. Set to values greater than 1.0 to enforce the distance
+            penalty more strictly.
         paf_line_points: Number of points to sample along the line integral.
         min_line_scores: Minimum line score (between -1 and 1) required to form a match
             between candidate point pairs. Useful for rejecting spurious detections when
@@ -2452,7 +2455,8 @@ class BottomUpPredictor(Predictor):
     batch_size: int = 4
     integral_refinement: bool = True
     integral_patch_size: int = 5
-    max_edge_length_ratio: float = 0.5
+    max_edge_length_ratio: float = 0.25
+    dist_penalty_weight: float = 1.0
     paf_line_points: int = 10
     min_line_scores: float = 0.25
 
@@ -2464,6 +2468,7 @@ class BottomUpPredictor(Predictor):
                 paf_scorer=PAFScorer.from_config(
                     self.bottomup_config.model.heads.multi_instance,
                     max_edge_length_ratio=self.max_edge_length_ratio,
+                    dist_penalty_weight=self.dist_penalty_weight,
                     n_points=self.paf_line_points,
                     min_instance_peaks=0,
                     min_line_scores=self.min_line_scores,
@@ -2493,7 +2498,8 @@ class BottomUpPredictor(Predictor):
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
-        max_edge_length_ratio: float = 0.5,
+        max_edge_length_ratio: float = 0.25,
+        dist_penalty_weight: float = 1.0,
         paf_line_points: int = 10,
         min_line_scores: float = 0.25,
     ) -> "BottomUpPredictor":
@@ -2515,8 +2521,11 @@ class BottomUpPredictor(Predictor):
             integral_patch_size: Size of patches to crop around each rough peak for
                 integral refinement as an integer scalar.
             max_edge_length_ratio: The maximum expected length of a connected pair of
-                points in relative image units. Candidate connections above this length
-                will be penalized during matching.
+                points as a fraction of the image size. Candidate connections longer
+                than this length will be penalized during matching.
+            dist_penalty_weight: A coefficient to scale weight of the distance penalty
+                as a scalar float. Set to values greater than 1.0 to enforce the
+                distance penalty more strictly.
             paf_line_points: Number of points to sample along the line integral.
             min_line_scores: Minimum line score (between -1 and 1) required to form a
                 match between candidate point pairs. Useful for rejecting spurious
@@ -2540,6 +2549,7 @@ class BottomUpPredictor(Predictor):
             integral_patch_size=integral_patch_size,
             batch_size=batch_size,
             max_edge_length_ratio=max_edge_length_ratio,
+            dist_penalty_weight=dist_penalty_weight,
             paf_line_points=paf_line_points,
             min_line_scores=min_line_scores,
         )
@@ -2850,12 +2860,22 @@ def _make_cli_parser() -> argparse.ArgumentParser:
     device_group.add_argument(
         "--gpu", type=int, default=0, help="Run inference on the i-th GPU specified."
     )
-
     parser.add_argument(
-        "--peak_threshold",
+        "--max_edge_length_ratio",
         type=float,
-        default=0.2,
-        help="Minimum confidence map value to consider a peak as valid.",
+        default=0.25,
+        help="The maximum expected length of a connected pair of points "
+        "as a fraction of the image size. Candidate connections longer "
+        "than this length will be penalized during matching. "
+        "Only applies to bottom-up (PAF) models.",
+    )
+    parser.add_argument(
+        "--dist_penalty_weight",
+        type=float,
+        default=1.0,
+        help="A coefficient to scale weight of the distance penalty. Set "
+        "to values greater than 1.0 to enforce the distance penalty more strictly. "
+        "Only applies to bottom-up (PAF) models.",
     )
     parser.add_argument(
         "--batch_size",
@@ -2870,6 +2890,12 @@ def _make_cli_parser() -> argparse.ArgumentParser:
         "--open-in-gui",
         action="store_true",
         help="Open the resulting predictions in the GUI when finished.",
+    )
+    parser.add_argument(
+        "--peak_threshold",
+        type=float,
+        default=0.2,
+        help="Minimum confidence map value to consider a peak as valid.",
     )
 
     # Deprecated legacy args. These will still be parsed for backward compatibility but
@@ -3010,6 +3036,13 @@ def _make_predictor_from_cli(args: argparse.Namespace) -> Predictor:
         refinement="integral",
         progress_reporting=args.verbosity,
     )
+    if type(predictor) == BottomUpPredictor:
+        predictor.inference_model.bottomup_layer.paf_scorer.max_edge_length_ratio = (
+            args.max_edge_length_ratio
+        )
+        predictor.inference_model.bottomup_layer.paf_scorer.dist_penalty_weight = (
+            args.dist_penalty_weight
+        )
     return predictor
 
 
