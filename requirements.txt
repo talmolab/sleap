@@ -19,7 +19,7 @@ scikit-image
 scikit-learn==1.0.*
 scikit-video
 imgstore==0.2.9
-qimage2ndarray==1.8
+qimage2ndarray>=1.8.0,<=1.8.3
 jsmin
 seaborn
 pykalman==0.9.5
