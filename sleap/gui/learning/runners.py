@@ -271,10 +271,16 @@ class InferenceTask:
                 line = proc.stdout.readline()
                 line = line.decode().rstrip()
 
+                is_json = False
                 if line.startswith("{"):
-                    # Parse line.
-                    line_data = json.loads(line)
-                else:
+                    try:
+                        # Parse line.
+                        line_data = json.loads(line)
+                        is_json = True
+                    except:
+                        is_json = False
+
+                if not is_json:
                     # Pass through non-json output.
                     print(line)
                     line_data = {}
@@ -739,15 +745,9 @@ def run_gui_inference(
             gui=gui,
         )
 
-        if gui:
-            progress.close()
-
-        if ret == "success":
-            inference_task.merge_results()
-            return len(inference_task.results)
-        elif ret == "canceled":
+        if ret == "canceled":
             return -1
-        else:
+        elif ret != "success":
             if gui:
                 QtWidgets.QMessageBox(
                     text=(
@@ -756,6 +756,11 @@ def run_gui_inference(
                     )
                 ).exec_()
             return -1
+
+    inference_task.merge_results()
+    if gui:
+        progress.close()
+    return len(inference_task.results)
 
 
 def train_subprocess(
