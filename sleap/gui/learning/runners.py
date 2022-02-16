@@ -271,10 +271,16 @@ class InferenceTask:
                 line = proc.stdout.readline()
                 line = line.decode().rstrip()
 
+                is_json = False
                 if line.startswith("{"):
-                    # Parse line.
-                    line_data = json.loads(line)
-                else:
+                    try:
+                        # Parse line.
+                        line_data = json.loads(line)
+                        is_json = True
+                    except:
+                        is_json = False
+
+                if not is_json:
                     # Pass through non-json output.
                     print(line)
                     line_data = {}
