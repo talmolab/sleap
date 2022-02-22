@@ -63,6 +63,8 @@ from sleap.nn.data.pipelines import (
     InstanceCentroidFinder,
     KerasModelPredictor,
 )
+from sleap.util import frame_list
+
 
 logger = logging.getLogger(__name__)
 
@@ -2775,7 +2777,7 @@ def _make_cli_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--frames",
-        type=sleap.util.frame_list,
+        type=str,
         default="",
         help=(
             "List of frames to predict when running on a video. Can be specified as a "
@@ -2992,7 +2994,7 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
             input_format=vars(args).get("video.input_format"),
         )
         provider = VideoReader.from_filepath(
-            filename=data_path, example_indices=args.frames, **video_kwargs
+            filename=data_path, example_indices=frame_list(args.frames), **video_kwargs
         )
 
     return provider, data_path
