@@ -15,6 +15,8 @@ set PIP_NO_DEPENDENCIES=False
 set PIP_IGNORE_INSTALLED=False
 
 pip install numpy==1.19.5
+pip install six==1.15.0
+pip install imageio==2.15.0
 pip install attrs==21.2.0
 pip install cattrs==1.1.1
 pip install jsonpickle==1.2
