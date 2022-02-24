@@ -11,7 +11,9 @@ export PIP_NO_INDEX=False
 export PIP_NO_DEPENDENCIES=False
 export PIP_IGNORE_INSTALLED=False
 
-# pip install numpy>=1.19.5,<=1.21.5
+pip install numpy==1.19.5
+pip install six==1.15.0
+pip install imageio==2.15.0
 pip install attrs==21.2.0
 pip install cattrs==1.1.1
 pip install jsonpickle==1.2
@@ -19,8 +21,8 @@ pip install networkx
 # pip install tensorflow>=2.6.3,<=2.7.1
 # pip install h5py>=3.1.0,<=3.6.0
 pip install python-rapidjson
-pip install opencv-python-headless==4.5.5.62
-pip install git+https://github.com/talmolab/wrap_opencv-python-headless.git@ede49f6a23a73033216339f29515e59d594ba921
+# pip install opencv-python-headless==4.5.5.62
+# pip install git+https://github.com/talmolab/wrap_opencv-python-headless.git@ede49f6a23a73033216339f29515e59d594ba921
 # pip install pandas
 pip install psutil
 # pip install PySide2>=5.13.2,<=5.14.1

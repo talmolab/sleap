@@ -13,6 +13,7 @@ psutil
 PySide2>=5.13.2,<=5.14.1
 pyzmq
 pyyaml
+imageio<=2.15.0
 imgaug==0.4.0
 scipy>=1.4.1,<=1.7.3
 scikit-image

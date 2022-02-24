@@ -16,7 +16,7 @@ about:
   summary: {{ data.get('description') }}
 
 build:
-  number: 1
+  number: 4
 
 source:
   path: ../
@@ -25,11 +25,12 @@ requirements:
   host:
     - python=3.7
     # - sleap::pyside2=5.14.1
-    - conda-forge::numpy=1.21.5
-    - sleap::tensorflow=2.7.0
+    - conda-forge::numpy=1.19.5
+    - sleap::tensorflow=2.6.3
     - conda-forge::pyside2=5.13.2
-    - conda-forge::h5py=3.6.0
+    - conda-forge::h5py=3.1.0
     - conda-forge::scipy=1.7.3
+    - conda-forge::six=1.15.0
     - pillow=8.4.0
     - shapely=1.7.1
     - conda-forge::pandas
@@ -38,11 +39,12 @@ requirements:
 
   run:
     - python=3.7
-    - conda-forge::numpy>=1.19.5,<=1.21.5
-    - sleap::tensorflow>=2.6.3,<=2.7.1
+    - conda-forge::numpy~=1.19.5
+    - sleap::tensorflow=2.6.3
     - conda-forge::pyside2>=5.13.2,<=5.14.1
-    - conda-forge::h5py>=3.1.0,<=3.6.0
+    - conda-forge::h5py~=3.1.0
     - conda-forge::scipy>=1.4.1,<=1.7.3
+    - conda-forge::six~=1.15.0
     - pillow=8.4.0
     - shapely=1.7.1
     - conda-forge::pandas
