@@ -532,6 +532,7 @@ def test_single_instance_predictor(
         min_single_instance_robot_model_path
     )
     predictor.verbosity = "none"
+    assert predictor.is_grayscale == False
     labels_pr = predictor.predict(min_labels_robot)
     assert len(labels_pr) == 2
     assert len(labels_pr[0].instances) == 1
@@ -567,6 +568,8 @@ def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
     assert len(labels_pr) == 1
     assert len(labels_pr[0].instances) == 2
 
+    assert predictor.is_grayscale == True
+
     points_gt = np.concatenate(
         [min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0
     )
@@ -588,6 +591,8 @@ def test_topdown_predictor_centered_instance(
     assert len(labels_pr) == 1
     assert len(labels_pr[0].instances) == 2
 
+    assert predictor.is_grayscale == True
+
     points_gt = np.concatenate(
         [min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0
     )
@@ -606,6 +611,8 @@ def test_bottomup_predictor(min_labels, min_bottomup_model_path):
     labels_pr = predictor.predict(min_labels)
     assert len(labels_pr) == 1
     assert len(labels_pr[0].instances) == 2
+
+    assert predictor.is_grayscale == True
 
     points_gt = np.concatenate(
         [min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0

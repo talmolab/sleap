@@ -8,6 +8,7 @@ from sleap.nn.paf_grouping import (
     get_connection_candidates,
     make_line_subs,
     get_paf_lines,
+    compute_distance_penalty,
     score_paf_lines,
     score_paf_lines_batch,
     match_candidates_sample,
@@ -89,6 +90,18 @@ def test_score_paf_lines():
     assert_allclose(scores, [24.27], atol=1e-2)
 
 
+def test_compute_distance_penalty():
+    penalties = compute_distance_penalty(
+        tf.cast([1, 2, 3, 4], tf.float32), max_edge_length=2
+    )
+    assert_allclose(penalties, [0, 0, 2 / 3 - 1, 2 / 4 - 1], atol=1e-6)
+
+    penalties = compute_distance_penalty(
+        tf.cast([1, 2, 3, 4], tf.float32), max_edge_length=2, dist_penalty_weight=2
+    )
+    assert_allclose(penalties, [0, 0, -0.6666666, -1], atol=1e-6)
+
+
 def test_score_paf_lines_batch():
     pafs = tf.cast(tf.reshape(tf.range(6 * 4 * 2), [1, 6, 4, 2]), tf.float32)
     peaks = tf.constant([[[0, 0], [4, 8]]], tf.float32)
@@ -97,6 +110,7 @@ def test_score_paf_lines_batch():
     n_line_points = 3
     pafs_stride = 2
     max_edge_length_ratio = 2 / 12
+    dist_penalty_weight = 1.0
     n_nodes = 4
 
     edge_inds, edge_peak_inds, line_scores = score_paf_lines_batch(
@@ -107,6 +121,7 @@ def test_score_paf_lines_batch():
         n_line_points,
         pafs_stride,
         max_edge_length_ratio,
+        dist_penalty_weight,
         n_nodes,
     )
     assert_array_equal(edge_inds.to_list(), [[0]])

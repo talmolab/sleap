@@ -87,7 +87,7 @@ class LabelsReader:
         Returns:
             A `LabelsReader` instance that can create a dataset for pipelining.
         """
-        labels = sleap.Labels.load_file(filename)
+        labels = sleap.load_file(filename)
         if user_instances:
             return cls.from_user_instances(labels)
         else:

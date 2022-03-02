@@ -26,12 +26,14 @@ import argparse
 import logging
 import warnings
 import os
+import sys
 import tempfile
 import platform
 import shutil
 import atexit
 import subprocess
 import rich.progress
+from rich.pretty import pprint
 from collections import deque
 import json
 from time import time
@@ -58,8 +60,11 @@ from sleap.nn.data.pipelines import (
     Normalizer,
     Resizer,
     Prefetcher,
+    InstanceCentroidFinder,
     KerasModelPredictor,
 )
+from sleap.util import frame_list
+
 
 logger = logging.getLogger(__name__)
 
@@ -198,6 +203,12 @@ class Predictor(ABC):
     def data_config(self) -> DataConfig:
         pass
 
+    @property
+    @abstractmethod
+    def is_grayscale(self) -> bool:
+        """Return whether the model expects grayscale inputs."""
+        pass
+
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
         """Make a data loading pipeline.
 
@@ -225,6 +236,12 @@ class Predictor(ABC):
                 provider=data_provider,
                 points_key=points_key,
             )
+
+        pipeline += Normalizer(
+            ensure_float=False,
+            ensure_grayscale=self.is_grayscale,
+            ensure_rgb=(not self.is_grayscale),
+        )
 
         pipeline += sleap.nn.data.pipelines.Batcher(
             batch_size=self.batch_size, drop_remainder=False, unrag=False
@@ -740,6 +757,7 @@ class InferenceLayer(tf.keras.layers.Layer):
             was previously an integer.
         """
         if self.ensure_grayscale:
+            # TODO: Find out why this does not work on the GPU (but does on CPU).
             imgs = sleap.nn.data.normalization.ensure_grayscale(imgs)
         else:
             imgs = sleap.nn.data.normalization.ensure_rgb(imgs)
@@ -1131,6 +1149,11 @@ class SingleInstancePredictor(Predictor):
     @property
     def data_config(self) -> DataConfig:
         return self.confmap_config.data
+
+    @property
+    def is_grayscale(self) -> bool:
+        """Return whether the model expects grayscale inputs."""
+        return self.confmap_model.keras_model.input.shape[-1] == 1
 
     @classmethod
     def from_trained_models(
@@ -1939,6 +1962,16 @@ class TopDownPredictor(Predictor):
         obj._initialize_inference_model()
         return obj
 
+    @property
+    def is_grayscale(self) -> bool:
+        """Return whether the model expects grayscale inputs."""
+        is_gray = False
+        if self.centroid_model is not None:
+            is_gray = self.centroid_model.keras_model.input.shape[-1] == 1
+        else:
+            is_gray = self.confmap_model.keras_model.input.shape[-1] == 1
+        return is_gray
+
     def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
         """Make a data loading pipeline.
 
@@ -1962,9 +1995,16 @@ class TopDownPredictor(Predictor):
                 provider=data_provider,
                 points_key=None,
             )
+
+        pipeline += Normalizer(
+            ensure_float=False,
+            ensure_grayscale=self.is_grayscale,
+            ensure_rgb=(not self.is_grayscale),
+        )
+
         if self.centroid_model is None:
             anchor_part = self.confmap_config.data.instance_cropping.center_on_part
-            pipeline += sleap.nn.data.pipelines.InstanceCentroidFinder(
+            pipeline += InstanceCentroidFinder(
                 center_on_anchor_part=anchor_part is not None,
                 anchor_part_names=anchor_part,
                 skeletons=self.confmap_config.data.labels.skeletons,
@@ -2399,8 +2439,11 @@ class BottomUpPredictor(Predictor):
         integral_patch_size: Size of patches to crop around each rough peak for integral
             refinement as an integer scalar.
         max_edge_length_ratio: The maximum expected length of a connected pair of points
-            in relative image units. Candidate connections above this length will be
-            penalized during matching.
+            as a fraction of the image size. Candidate connections longer than this
+            length will be penalized during matching.
+        dist_penalty_weight: A coefficient to scale weight of the distance penalty as
+            a scalar float. Set to values greater than 1.0 to enforce the distance
+            penalty more strictly.
         paf_line_points: Number of points to sample along the line integral.
         min_line_scores: Minimum line score (between -1 and 1) required to form a match
             between candidate point pairs. Useful for rejecting spurious detections when
@@ -2416,7 +2459,8 @@ class BottomUpPredictor(Predictor):
     batch_size: int = 4
     integral_refinement: bool = True
     integral_patch_size: int = 5
-    max_edge_length_ratio: float = 0.5
+    max_edge_length_ratio: float = 0.25
+    dist_penalty_weight: float = 1.0
     paf_line_points: int = 10
     min_line_scores: float = 0.25
 
@@ -2428,6 +2472,7 @@ class BottomUpPredictor(Predictor):
                 paf_scorer=PAFScorer.from_config(
                     self.bottomup_config.model.heads.multi_instance,
                     max_edge_length_ratio=self.max_edge_length_ratio,
+                    dist_penalty_weight=self.dist_penalty_weight,
                     n_points=self.paf_line_points,
                     min_instance_peaks=0,
                     min_line_scores=self.min_line_scores,
@@ -2444,6 +2489,11 @@ class BottomUpPredictor(Predictor):
     def data_config(self) -> DataConfig:
         return self.bottomup_config.data
 
+    @property
+    def is_grayscale(self) -> bool:
+        """Return whether the model expects grayscale inputs."""
+        return self.bottomup_model.keras_model.input.shape[-1] == 1
+
     @classmethod
     def from_trained_models(
         cls,
@@ -2452,7 +2502,8 @@ class BottomUpPredictor(Predictor):
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
-        max_edge_length_ratio: float = 0.5,
+        max_edge_length_ratio: float = 0.25,
+        dist_penalty_weight: float = 1.0,
         paf_line_points: int = 10,
         min_line_scores: float = 0.25,
     ) -> "BottomUpPredictor":
@@ -2474,8 +2525,11 @@ class BottomUpPredictor(Predictor):
             integral_patch_size: Size of patches to crop around each rough peak for
                 integral refinement as an integer scalar.
             max_edge_length_ratio: The maximum expected length of a connected pair of
-                points in relative image units. Candidate connections above this length
-                will be penalized during matching.
+                points as a fraction of the image size. Candidate connections longer
+                than this length will be penalized during matching.
+            dist_penalty_weight: A coefficient to scale weight of the distance penalty
+                as a scalar float. Set to values greater than 1.0 to enforce the
+                distance penalty more strictly.
             paf_line_points: Number of points to sample along the line integral.
             min_line_scores: Minimum line score (between -1 and 1) required to form a
                 match between candidate point pairs. Useful for rejecting spurious
@@ -2499,6 +2553,7 @@ class BottomUpPredictor(Predictor):
             integral_patch_size=integral_patch_size,
             batch_size=batch_size,
             max_edge_length_ratio=max_edge_length_ratio,
+            dist_penalty_weight=dist_penalty_weight,
             paf_line_points=paf_line_points,
             min_line_scores=min_line_scores,
         )
@@ -2722,7 +2777,7 @@ def _make_cli_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--frames",
-        type=sleap.util.frame_list,
+        type=str,
         default="",
         help=(
             "List of frames to predict when running on a video. Can be specified as a "
@@ -2809,12 +2864,22 @@ def _make_cli_parser() -> argparse.ArgumentParser:
     device_group.add_argument(
         "--gpu", type=int, default=0, help="Run inference on the i-th GPU specified."
     )
-
     parser.add_argument(
-        "--peak_threshold",
+        "--max_edge_length_ratio",
         type=float,
-        default=0.2,
-        help="Minimum confidence map value to consider a peak as valid.",
+        default=0.25,
+        help="The maximum expected length of a connected pair of points "
+        "as a fraction of the image size. Candidate connections longer "
+        "than this length will be penalized during matching. "
+        "Only applies to bottom-up (PAF) models.",
+    )
+    parser.add_argument(
+        "--dist_penalty_weight",
+        type=float,
+        default=1.0,
+        help="A coefficient to scale weight of the distance penalty. Set "
+        "to values greater than 1.0 to enforce the distance penalty more strictly. "
+        "Only applies to bottom-up (PAF) models.",
     )
     parser.add_argument(
         "--batch_size",
@@ -2829,6 +2894,12 @@ def _make_cli_parser() -> argparse.ArgumentParser:
         "--open-in-gui",
         action="store_true",
         help="Open the resulting predictions in the GUI when finished.",
+    )
+    parser.add_argument(
+        "--peak_threshold",
+        type=float,
+        default=0.2,
+        help="Minimum confidence map value to consider a peak as valid.",
     )
 
     # Deprecated legacy args. These will still be parsed for backward compatibility but
@@ -2906,7 +2977,7 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
         )
 
     if data_path.endswith(".slp"):
-        labels = sleap.Labels.load_file(data_path)
+        labels = sleap.load_file(data_path)
 
         if args.only_labeled_frames:
             provider = LabelsReader.from_user_labeled_frames(labels)
@@ -2923,7 +2994,7 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
             input_format=vars(args).get("video.input_format"),
         )
         provider = VideoReader.from_filepath(
-            filename=data_path, example_indices=args.frames, **video_kwargs
+            filename=data_path, example_indices=frame_list(args.frames), **video_kwargs
         )
 
     return provider, data_path
@@ -2969,6 +3040,13 @@ def _make_predictor_from_cli(args: argparse.Namespace) -> Predictor:
         refinement="integral",
         progress_reporting=args.verbosity,
     )
+    if type(predictor) == BottomUpPredictor:
+        predictor.inference_model.bottomup_layer.paf_scorer.max_edge_length_ratio = (
+            args.max_edge_length_ratio
+        )
+        predictor.inference_model.bottomup_layer.paf_scorer.dist_penalty_weight = (
+            args.dist_penalty_weight
+        )
     return predictor
 
 
@@ -2999,14 +3077,16 @@ def main():
 
     # Parse inputs.
     args, _ = parser.parse_known_args()
+    print("Args:")
+    pprint(vars(args))
+    print()
 
-    args_msg = ["Args:"]
-    for name, val in vars(args).items():
-        if name == "frames" and val is not None:
-            args_msg.append(f"  frames: {min(val)}-{max(val)} ({len(val)})")
-        else:
-            args_msg.append(f"  {name}: {val}")
-    print("\n".join(args_msg))
+    # Check for some common errors.
+    if args.models is None:
+        raise ValueError(
+            "Path to trained models not specified. "
+            "Use \"sleap-track -m path/to/model ...' to specify models to use."
+        )
 
     # Setup devices.
     if args.cpu or not sleap.nn.system.is_gpu_system():
@@ -3058,6 +3138,7 @@ def main():
     # Add provenance metadata to predictions.
     labels_pr.provenance["sleap_version"] = sleap.__version__
     labels_pr.provenance["platform"] = platform.platform()
+    labels_pr.provenance["command"] = " ".join(sys.argv)
     labels_pr.provenance["data_path"] = data_path
     labels_pr.provenance["model_paths"] = predictor.model_paths
     labels_pr.provenance["output_path"] = output_path
@@ -3065,6 +3146,12 @@ def main():
     labels_pr.provenance["total_elapsed"] = total_elapsed
     labels_pr.provenance["start_timestamp"] = start_timestamp
     labels_pr.provenance["finish_timestamp"] = finish_timestamp
+
+    print("Provenance:")
+    pprint(labels_pr.provenance)
+    print()
+
+    labels_pr.provenance["args"] = vars(args)
 
     # Save results.
     labels_pr.save(output_path)

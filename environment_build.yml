@@ -1,17 +1,23 @@
 name: sleap
 
 dependencies:
-- python=3.7
-# - cudatoolkit=11.3.1
-# - cudnn=8.2.1
-- sleap::tensorflow=2.7.0
-- sleap::pyside2=5.14.1
-- pillow
-- shapely=1.7.1
-- conda-build=3.21.7
-- anaconda-client
-- conda-verify
-- pip
-- pip:
-    - "--editable=./"
-    - "--requirement=./dev_requirements.txt"
+    - python=3.7
+    - conda-forge::numpy=1.19.5
+    - sleap::tensorflow=2.6.3
+    - conda-forge::pyside2=5.13.2
+    - conda-forge::h5py=3.1.0
+    - conda-forge::scipy=1.7.3
+    - pillow=8.4.0
+    - shapely=1.7.1
+    - conda-forge::pandas
+    - ffmpeg
+    # - cudatoolkit=11.3.1
+    # - cudnn=8.2.1
+    # - nvidia::cuda-nvcc=11.3
+    - conda-build=3.21.7
+    - anaconda-client
+    - conda-verify
+    - pip
+    - pip:
+        - "."
+        - "--requirement=./dev_requirements.txt"
