@@ -3,7 +3,9 @@ attrs==21.2.0
 cattrs==1.1.1
 jsonpickle==1.2
 networkx
-tensorflow>=2.6.3,<=2.7.1
+tensorflow>=2.6.3,<=2.7.1; platform_machine != 'arm64'
+tensorflow-macos==2.7.0; sys_platform == 'darwin' and platform_machine == 'arm64'
+tensorflow-metal==0.3.0; sys_platform == 'darwin' and platform_machine == 'arm64'
 h5py>=3.1.0,<=3.6.0
 python-rapidjson
 opencv-python-headless>=4.2.0.34,<=4.5.5.62
@@ -18,7 +20,6 @@ pillow>=8.3.1,<=8.4.0
 imageio<=2.15.0
 imgaug==0.4.0
 scipy>=1.4.1,<=1.7.3
->>>>>>> develop
 scikit-image
 scikit-learn==1.0.*
 scikit-video
