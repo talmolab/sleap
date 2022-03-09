@@ -8,6 +8,7 @@ on:
       # 'main' triggers updates to 'sleap.ai', 'develop' to 'sleap.ai/develop'
       - main
       - develop
+      - talmo/update-docs-pre-migration
     paths:
       - 'docs/**'
       - 'README.rst'
