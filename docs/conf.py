@@ -23,11 +23,11 @@ sys.path.insert(0, os.path.abspath(".."))
 # -- Project information -----------------------------------------------------
 
 project = "SLEAP"
-author = "Talmo D. Pereira, Arie Matsliah, Nat Tabris, David M. Turner"
-copyright = "2019–2021, Murthy Lab @ Princeton University"
+author = "Talmo D. Pereira"
+copyright = "2019–2022, Talmo Lab"
 
 # The short X.Y version
-version = "1.1.5"
+version = "1.2.0"
 
 # Get the sleap version
 # with open("../sleap/version.py") as f:
@@ -35,11 +35,11 @@ version = "1.1.5"
 #     version = re.search("\d.+(?=['\"])", version_file).group(0)
 
 # Release should be the full branch name
-release = "v1.1.5"
+release = "v1.2.0"
 
 html_title = f"SLEAP ({release})"
 html_short_title = "SLEAP"
-html_favicon = '_static/favicon.ico'
+html_favicon = "_static/favicon.ico"
 html_baseurl = "/develop/"
 
 # -- General configuration ---------------------------------------------------
@@ -98,10 +98,11 @@ def linkcode_resolve(domain, info):
         filename = docs.utils.resolve(info["module"], info["fullname"])
         if filename is None:
             return None
-        return f"https://github.com/murthylab/sleap/blob/{release}/{filename}"
+        return f"https://github.com/talmolab/sleap/blob/{release}/{filename}"
     except:
         print(info)
         raise
+
 
 autosummary_generate = True
 

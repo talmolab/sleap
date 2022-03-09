@@ -824,7 +824,7 @@ class MainWindow(QMainWindow):
             "training on colab",
             "Train on Google Colab...",
             lambda: self.commands.openWebsite(
-                "https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
+                "https://colab.research.google.com/github/talmolab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
             ),
         )
 
@@ -837,12 +837,12 @@ class MainWindow(QMainWindow):
         )
         helpMenu.addAction(
             "GitHub",
-            lambda: self.commands.openWebsite("https://github.com/murthylab/sleap"),
+            lambda: self.commands.openWebsite("https://github.com/talmolab/sleap"),
         )
         helpMenu.addAction(
             "Releases",
             lambda: self.commands.openWebsite(
-                "https://github.com/murthylab/sleap/releases"
+                "https://github.com/talmolab/sleap/releases"
             ),
         )
 
