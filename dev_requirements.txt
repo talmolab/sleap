@@ -4,8 +4,11 @@ pytest-cov
 pytest-xvfb
 ipython
 sphinx
-furo
+# furo
+sphinx-book-theme
 sphinx-copybutton
+myst-parser
+linkify-it-py
 myst-nb
 sphinx-autobuild
 black==21.6b0
