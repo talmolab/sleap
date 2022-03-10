@@ -141,7 +141,7 @@ Contributors
 
 SLEAP was created in the `Murthy <https://murthylab.princeton.edu>`_ and `Shaevitz <https://shaevitzlab.princeton.edu>`_ labs at the `Princeton Neuroscience Institute <https://pni.princeton.edu>`_ at Princeton University.
 
-SLEAP is currently being developed and maintained in the `Talmo Lab <https://talmolab.org>`_ at the `Salk Institute for Biological Studies <https://salk.edu>`_.
+SLEAP is currently being developed and maintained in the `Talmo Lab <https://talmolab.org>`_ at the `Salk Institute for Biological Studies <https://salk.edu>`_, in collaboration with the Murthy and Shaevitz labs at Princeton University.
 
 This work was made possible through our funding sources, including:
 
