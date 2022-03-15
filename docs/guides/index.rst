@@ -28,13 +28,11 @@ Running remotely
 
 :ref:`colab` when you have a project with labeled training data and you'd like to run training or inference in a **Colab** notebook.
 
-:ref:`remote_train` when you have a project with training data and you want to train on a different machine using a **command-line interface**.
+:ref:`remote-train` when you have a project with training data and you want to train on a different machine using a **command-line interface**.
 
-:ref:`custom_training` for creating **custom training profiles** (i.e., non-default model hyperparameters) from the GUI.
+:ref:`custom-training` for creating **custom training profiles** (i.e., non-default model hyperparameters) from the GUI.
 
-:ref:`remote_inference` when you trained models and you want to run inference on a different machine using a **command-line interface**.
-
-:ref:`pretrained_weights_remote` explains how to download pretrained weights if you're training a network with pretrained weights on a machine without internet access.
+:ref:`remote-inference` when you trained models and you want to run inference on a different machine using a **command-line interface**.
 
 
 
