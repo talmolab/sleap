@@ -4,7 +4,7 @@ SLEAP can be installed as a Python package on Windows, Linux and Mac OS X. We cu
 
 SLEAP requires many complex dependencies, so we **strongly** recommend using [Miniconda](https://https://docs.conda.io/en/latest/miniconda.html) to install it in its own isolated environment. See {ref}`Installing Miniconda<miniconda>` below for more instructions.
 
-The newest version of SLEAP can always be found in the [Releases page](https://github.com/talmolab/sleap/releases).
+The newest version of SLEAP can always be found in the [Releases page](https://github.com/murthylab/sleap/releases).
 
 ## Installation methods
 :::{hint}
@@ -41,7 +41,7 @@ conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap=1.2.0
 ### `conda` from source
 1. First, clone the repository:
    ```bash
-   git clone https://github.com/talmolab/sleap && cd sleap
+   git clone https://github.com/murthylab/sleap && cd sleap
    ```
 
 2. Then, install from the environment file:
@@ -87,7 +87,7 @@ If you get any errors or the GUI fails to launch, try running the diagnostics to
 sleap-diagnostic
 ```
 
-If you run into any problems, check out the [GitHub Issues](https://github.com/talmolab/sleap/issues) to see if others have had the same problem or open a new issue.
+If you run into any problems, check out the [GitHub Issues](https://github.com/murthylab/sleap/issues) to see if others have had the same problem or open a new issue.
 
 (miniconda)=
 ## Installing Miniconda
@@ -145,7 +145,7 @@ SLEAP can be installed on newer M1 Macs by following these instructions:
 
 5. **Download the SLEAP M1 branch**:
    ```bash
-   cd ~ && git clone -b talmo/m1 --single-branch https://github.com/talmolab/sleap.git sleap_m1 && cd sleap_m1
+   cd ~ && git clone -b talmo/m1 --single-branch https://github.com/murthylab/sleap.git sleap_m1 && cd sleap_m1
    ```
    *Note:* This installs SLEAP in development mode, so changes to the source code are immediately applied in case you wanted to mess around with it. You can also just do a `git pull` to update it (no need to re-do any of the previous steps).
 
@@ -160,4 +160,4 @@ SLEAP can be installed on newer M1 Macs by following these instructions:
    conda activate sleap_m1 && sleap-label
    ```
 
-See [this Issue](https://github.com/talmolab/sleap/issues/579#issuecomment-1028602327) for more information.
+See [this Issue](https://github.com/murthylab/sleap/issues/579#issuecomment-1028602327) for more information.

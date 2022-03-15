@@ -644,17 +644,17 @@
   </ul>
  </li>
  <li class="toctree-l1">
-  <a class="reference external" href="https://github.com/talmolab/sleap-datasets">
+  <a class="reference external" href="https://github.com/murthylab/sleap-datasets">
    Sample datasets
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference external" href="https://github.com/talmolab/sleap">
+  <a class="reference external" href="https://github.com/murthylab/sleap">
    Source code
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference external" href="https://github.com/talmolab/sleap/releases">
+  <a class="reference external" href="https://github.com/murthylab/sleap/releases">
    Releases
   </a>
  </li>
@@ -699,7 +699,7 @@
         aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
     <div class="dropdown-buttons sourcebuttons">
         <a class="repository-button"
-            href="https://github.com/talmolab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
+            href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
                 data-toggle="tooltip" data-placement="left" title="Source repository"><i
                     class="fab fa-github"></i>repository</button></a>
         
@@ -793,7 +793,7 @@
 <p>Although it’s easiest if you bundle the labels and images into training job package, there are alternatives. If the files are already on a shared network drive, it may be possible to use the original labels project and videos for training. But this can be tricky, because often the full paths to the files will be different when accessed from different machines (i.e., different paths on Windows and Linux machines or different paths from how the network drive is mounted). To use the original labels and video files, you’ll either need to ensure that the file paths to videos used in the project are the same on the remote machine as on the local machine where you last saved the project, <strong>or</strong> if all the video files have distinct filenames, you can place the videos inside the same directory which contains the labels project file.</p>
 <p>But in most cases it’s best to create a training job package and just use that for remote training.</p>
 <p><strong>Training profile</strong>:</p>
-<p>SLEAP comes with “default” training profiles for training confidence maps, part affinity fields, centroids, or top-down confidence maps (which allow multi-instance inference without using part affinity fields). Any file in the <a class="reference external" href="https://github.com/talmolab/sleap/tree/main/sleap/training_profiles">training_profiles</a> directory of the SLEAP package can be used by specifying its filename (e.g., <code class="code docutils literal notranslate"><span class="pre">baseline_medium_rf.bottomup.json</span></code>) as the training profile—the full path isn’t required to use these built-in profiles.</p>
+<p>SLEAP comes with “default” training profiles for training confidence maps, part affinity fields, centroids, or top-down confidence maps (which allow multi-instance inference without using part affinity fields). Any file in the <a class="reference external" href="https://github.com/murthylab/sleap/tree/main/sleap/training_profiles">training_profiles</a> directory of the SLEAP package can be used by specifying its filename (e.g., <code class="code docutils literal notranslate"><span class="pre">baseline_medium_rf.bottomup.json</span></code>) as the training profile—the full path isn’t required to use these built-in profiles.</p>
 <p>Our guide to [custom-training] explains how to use the GUI to export custom training profiles. You can also use the <code class="code docutils literal notranslate"><span class="pre">initial_config.json</span></code> file saved from previous training run as a template for a new training config. You can copy the <code class="code docutils literal notranslate"><span class="pre">json</span></code> file and edit it in any text editor.</p>
 <p>When you run training, specify the full path to the <code class="code docutils literal notranslate"><span class="pre">json</span></code> file to use a custom training profile.</p>
 <p><strong>Command-line training</strong>:</p>
