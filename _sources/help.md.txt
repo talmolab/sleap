@@ -19,7 +19,7 @@ Yes! You can install SLEAP as you normally would using the `conda` or `pip`-base
 
 You can use the system CUDA installation by simply using the {ref}`pip <pip install>` installation method.
 
-Note that you will need to use a version compatible with TensorFlow 2.3.1.
+Note that you will need to use a version compatible with **TensorFlow 2.6+** (**CUDA Toolkit v11.3** and **cuDNN v8.2**).
 
 
 ## Usage
@@ -79,4 +79,4 @@ Feel free to [open an issue](https://github.com/murthylab/sleap/issues) and we'l
 
 SLEAP is a complex machine learning system intended for general use, so it's possible that we failed to consider the specifics of the situation in which you may be interested in using it with.
 
-Feel free to reach out to us at `sleap@princeton.edu` if you have a question that isn't covered here.
+Feel free to reach out to us at `talmo@salk.edu` if you have a question that isn't covered here.

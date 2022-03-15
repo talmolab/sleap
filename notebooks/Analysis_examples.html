@@ -1,318 +1,861 @@
-<!doctype html>
-<html class="no-js">
-  <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Developer API" href="../api.html" /><link rel="prev" title="Model evaluation" href="Model_evaluation.html" />
 
-    <link rel="shortcut icon" href="../_static/favicon.ico"/><meta name="generator" content="sphinx-4.3.0, furo 2021.11.16"/>
-        <title>Analysis examples - SLEAP (v1.1.5)</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=916d6ed8f59335acffa15474ff504849343d4c76" />
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analysis examples &#8212; SLEAP (v1.2.0)</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet">
+  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=0af69da206d614734f649b27d4cdc2dd6c31f41d" />
     
+  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
+    <link rel="canonical" href="/develop/notebooks/Analysis_examples.html" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Developer API" href="../api.html" />
+    <link rel="prev" title="Model evaluation" href="Model_evaluation.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
     
 
-
-<style>
-  body {
-    --color-code-background: #eeffcc;
-  --color-code-foreground: black;
-  
-  }
-  body[data-theme="dark"] {
-    --color-code-background: #272822;
-  --color-code-foreground: #f8f8f2;
-  
-  }
-  @media (prefers-color-scheme: dark) {
-    body:not([data-theme="light"]) {
-      --color-code-background: #272822;
-  --color-code-foreground: #f8f8f2;
-  
-    }
-  }
-</style></head>
-  <body>
-    <script>
-      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
-    </script>
+    <!-- Google Analytics -->
     
-<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
-  <symbol id="svg-toc" viewBox="0 0 24 24">
-    <title>Contents</title>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <path stroke="none" d="M0 0h24v24H0z" />
-      <line x1="4" y1="6" x2="20" y2="6" />
-      <line x1="10" y1="12" x2="20" y2="12" />
-      <line x1="6" y1="18" x2="20" y2="18" />
-    </svg>
-  </symbol>
-  <symbol id="svg-menu" viewBox="0 0 24 24">
-    <title>Menu</title>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
-      <line x1="3" y1="12" x2="21" y2="12"></line>
-      <line x1="3" y1="6" x2="21" y2="6"></line>
-      <line x1="3" y1="18" x2="21" y2="18"></line>
-    </svg>
-  </symbol>
-  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
-    <title>Expand</title>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
-      <polyline points="9 18 15 12 9 6"></polyline>
-    </svg>
-  </symbol>
-  <symbol id="svg-sun" viewBox="0 0 24 24">
-    <title>Light mode</title>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
-      <circle cx="12" cy="12" r="5"></circle>
-      <line x1="12" y1="1" x2="12" y2="3"></line>
-      <line x1="12" y1="21" x2="12" y2="23"></line>
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-      <line x1="1" y1="12" x2="3" y2="12"></line>
-      <line x1="21" y1="12" x2="23" y2="12"></line>
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-    </svg>
-  </symbol>
-  <symbol id="svg-moon" viewBox="0 0 24 24">
-    <title>Dark mode</title>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
-    </svg>
-  </symbol>
-  <symbol id="svg-sun-half" viewBox="0 0 24 24">
-    <title>Auto light/dark mode</title>
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M13 12h5" />
-      <path d="M13 15h4" />
-      <path d="M13 18h1" />
-      <path d="M13 9h4" />
-      <path d="M13 6h1" />
-    </svg>
-  </symbol>
-</svg>
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
 
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
-<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
-<label class="overlay sidebar-overlay" for="__navigation">
-  <div class="visually-hidden">Hide navigation sidebar</div>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
 </label>
-<label class="overlay toc-overlay" for="__toc">
-  <div class="visually-hidden">Hide table of contents sidebar</div>
-</label>
-
-
-
-<div class="page">
-  <header class="mobile-header">
-    <div class="header-left">
-      <label class="nav-overlay-icon" for="__navigation">
-        <div class="visually-hidden">Toggle site navigation sidebar</div>
-        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
-      </label>
-    </div>
-    <div class="header-center">
-      <a href="../index.html"><div class="brand">SLEAP (v1.1.5)</div></a>
-    </div>
-    <div class="header-right">
-      <div class="theme-toggle-container theme-toggle-header">
-        <button class="theme-toggle">
-          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
-          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
-          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
-        </button>
-      </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
-        <div class="visually-hidden">Toggle table of contents sidebar</div>
-        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
-      </label>
-    </div>
-  </header>
-  <aside class="sidebar-drawer">
-    <div class="sidebar-container">
+<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
       
-      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
-  
-  <div class="sidebar-logo-container">
-    <img class="sidebar-logo only-light" src="../_static/logo.png" alt="Light Logo"/>
-    <img class="sidebar-logo only-dark" src="../_static/logo.png" alt="Dark Logo"/>
-  </div>
-  
-  <span class="sidebar-brand-text">SLEAP (v1.1.5)</span>
-  
-</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
-  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
-  <input type="hidden" name="check_keywords" value="yes">
-  <input type="hidden" name="area" value="default">
-</form>
-<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.0)</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../index.html">
+   Home
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../overview.html">
+   Overview
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../installation.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../tutorials/tutorial.html">
+   Tutorial
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../tutorials/new-project.html">
+     Creating a project
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../tutorials/initial-labeling.html">
+     Initial Labeling
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../tutorials/initial-training.html">
+     Training and Inference
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../tutorials/assisted-labeling.html">
+     Prediction-assisted labeling
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../tutorials/proofreading.html">
+     Tracking instances across frames
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../tutorials/analysis.html">
+     Export Data For Analysis
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../guides/index.html">
+   Guides
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/gui.html">
+     GUI
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/cli.html">
+     Command line interfaces
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/skeletons.html">
+     Skeleton design
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/choosing-models.html">
+     Choosing a set of models
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/merging.html">
+     Importing predictions for labeling
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/proofreading.html">
+     Tracking and proofreading
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/colab.html">
+     Run training and inference on Colab
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/custom-training.html">
+     Creating a custom training profile
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/remote.html">
+     Running SLEAP remotely
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="index.html">
+   Notebooks
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/new-project.html">Creating a project</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-labeling.html">Initial Labeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-training.html">Training and Inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/assisted-labeling.html">Prediction-assisted labeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/assisted-labeling.html#reviewing-and-fixing-predictions">Reviewing and fixing predictions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/proofreading.html">Tracking instances across frames</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/analysis.html">Export Data For Analysis</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../guides/gui.html">GUI</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/cli.html">Command line interfaces</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/skeletons.html">Skeleton design</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/choosing-models.html">Choosing a set of models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/merging.html">Importing predictions for labeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/proofreading.html">Tracking and proofreading</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
-</ul>
-</li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Notebooks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_on_an_example_dataset.html">Training and inference on an example dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Training_and_inference_using_Google_Drive.html">Training and inference on your own data using Google Drive</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Model_evaluation.html">Model evaluation</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Analysis examples</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../api.html">Developer API</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.instance.html">sleap.instance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.message.html">sleap.message</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.skeleton.html">sleap.skeleton</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.util.html">sleap.util</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.callbacks.html">sleap.nn.callbacks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.evals.html">sleap.nn.evals</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.heads.html">sleap.nn.heads</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.inference.html">sleap.nn.inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.losses.html">sleap.nn.losses</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.model.html">sleap.nn.model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.monitor.html">sleap.nn.monitor</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.paf_grouping.html">sleap.nn.paf_grouping</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.peak_finding.html">sleap.nn.peak_finding</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.system.html">sleap.nn.system</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracking.html">sleap.nn.tracking</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.training.html">sleap.nn.training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.utils.html">sleap.nn.utils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.viz.html">sleap.nn.viz</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.common.html">sleap.nn.architectures.common</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.encoder_decoder.html">sleap.nn.architectures.encoder_decoder</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hourglass.html">sleap.nn.architectures.hourglass</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.hrnet.html">sleap.nn.architectures.hrnet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.leap.html">sleap.nn.architectures.leap</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.pretrained_encoders.html">sleap.nn.architectures.pretrained_encoders</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.resnet.html">sleap.nn.architectures.resnet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.unet.html">sleap.nn.architectures.unet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.architectures.upsampling.html">sleap.nn.architectures.upsampling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.components.html">sleap.nn.tracker.components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.tracker.kalman.html">sleap.nn.tracker.kalman</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.augmentation.html">sleap.nn.data.augmentation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.confidence_maps.html">sleap.nn.data.confidence_maps</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.dataset_ops.html">sleap.nn.data.dataset_ops</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.edge_maps.html">sleap.nn.data.edge_maps</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.general.html">sleap.nn.data.general</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.grouping.html">sleap.nn.data.grouping</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.inference.html">sleap.nn.data.inference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.instance_centroids.html">sleap.nn.data.instance_centroids</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.instance_cropping.html">sleap.nn.data.instance_cropping</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.normalization.html">sleap.nn.data.normalization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.offset_regression.html">sleap.nn.data.offset_regression</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.pipelines.html">sleap.nn.data.pipelines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.providers.html">sleap.nn.data.providers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.resizing.html">sleap.nn.data.resizing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.training.html">sleap.nn.data.training</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.data.utils.html">sleap.nn.data.utils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.data.html">sleap.nn.config.data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.model.html">sleap.nn.config.model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.optimization.html">sleap.nn.config.optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.outputs.html">sleap.nn.config.outputs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.training_job.html">sleap.nn.config.training_job</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.nn.config.utils.html">sleap.nn.config.utils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.align.html">sleap.info.align</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.feature_suggestions.html">sleap.info.feature_suggestions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.labels.html">sleap.info.labels</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.metrics.html">sleap.info.metrics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.summary.html">sleap.info.summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.trackcleaner.html">sleap.info.trackcleaner</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.info.write_tracking_h5.html">sleap.info.write_tracking_h5</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.asyncvideo.html">sleap.io.asyncvideo</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.convert.html">sleap.io.convert</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.dataset.html">sleap.io.dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.legacy.html">sleap.io.legacy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.pathutils.html">sleap.io.pathutils</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.video.html">sleap.io.video</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.videowriter.html">sleap.io.videowriter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.visuals.html">sleap.io.visuals</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.adaptor.html">sleap.io.format.adaptor</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.coco.html">sleap.io.format.coco</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.deeplabcut.html">sleap.io.format.deeplabcut</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.deepposekit.html">sleap.io.format.deepposekit</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.dispatch.html">sleap.io.format.dispatch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.filehandle.html">sleap.io.format.filehandle</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.genericjson.html">sleap.io.format.genericjson</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.hdf5.html">sleap.io.format.hdf5</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.labels_json.html">sleap.io.format.labels_json</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.leap_matlab.html">sleap.io.format.leap_matlab</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.main.html">sleap.io.format.main</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.sleap_analysis.html">sleap.io.format.sleap_analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sleap.io.format.text.html">sleap.io.format.text</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample datasets</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">Source code</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap/releases">Releases</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../help.html">Help</a></li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Training_and_inference_on_an_example_dataset.html">
+     Training and inference on an example dataset
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Training_and_inference_using_Google_Drive.html">
+     Training and inference on your own data using Google Drive
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Model_evaluation.html">
+     Model evaluation
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     Analysis examples
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../api.html">
+   Developer API
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+  <label for="toctree-checkbox-4">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.instance.html">
+     sleap.instance
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.message.html">
+     sleap.message
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.skeleton.html">
+     sleap.skeleton
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.util.html">
+     sleap.util
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.callbacks.html">
+     sleap.nn.callbacks
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.evals.html">
+     sleap.nn.evals
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.heads.html">
+     sleap.nn.heads
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.inference.html">
+     sleap.nn.inference
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.losses.html">
+     sleap.nn.losses
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.model.html">
+     sleap.nn.model
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.monitor.html">
+     sleap.nn.monitor
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.paf_grouping.html">
+     sleap.nn.paf_grouping
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.peak_finding.html">
+     sleap.nn.peak_finding
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.system.html">
+     sleap.nn.system
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.tracking.html">
+     sleap.nn.tracking
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.training.html">
+     sleap.nn.training
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.utils.html">
+     sleap.nn.utils
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.viz.html">
+     sleap.nn.viz
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.config.data.html">
+     sleap.nn.config.data
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.config.model.html">
+     sleap.nn.config.model
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.config.optimization.html">
+     sleap.nn.config.optimization
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.config.outputs.html">
+     sleap.nn.config.outputs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.config.training_job.html">
+     sleap.nn.config.training_job
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.config.utils.html">
+     sleap.nn.config.utils
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.augmentation.html">
+     sleap.nn.data.augmentation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.confidence_maps.html">
+     sleap.nn.data.confidence_maps
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.dataset_ops.html">
+     sleap.nn.data.dataset_ops
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.edge_maps.html">
+     sleap.nn.data.edge_maps
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.general.html">
+     sleap.nn.data.general
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.grouping.html">
+     sleap.nn.data.grouping
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.inference.html">
+     sleap.nn.data.inference
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.instance_centroids.html">
+     sleap.nn.data.instance_centroids
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.instance_cropping.html">
+     sleap.nn.data.instance_cropping
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.normalization.html">
+     sleap.nn.data.normalization
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.offset_regression.html">
+     sleap.nn.data.offset_regression
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.pipelines.html">
+     sleap.nn.data.pipelines
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.providers.html">
+     sleap.nn.data.providers
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.resizing.html">
+     sleap.nn.data.resizing
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.training.html">
+     sleap.nn.data.training
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.utils.html">
+     sleap.nn.data.utils
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.tracker.components.html">
+     sleap.nn.tracker.components
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.tracker.kalman.html">
+     sleap.nn.tracker.kalman
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.common.html">
+     sleap.nn.architectures.common
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.encoder_decoder.html">
+     sleap.nn.architectures.encoder_decoder
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.hourglass.html">
+     sleap.nn.architectures.hourglass
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.hrnet.html">
+     sleap.nn.architectures.hrnet
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.leap.html">
+     sleap.nn.architectures.leap
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.pretrained_encoders.html">
+     sleap.nn.architectures.pretrained_encoders
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.resnet.html">
+     sleap.nn.architectures.resnet
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.unet.html">
+     sleap.nn.architectures.unet
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.upsampling.html">
+     sleap.nn.architectures.upsampling
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.asyncvideo.html">
+     sleap.io.asyncvideo
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.convert.html">
+     sleap.io.convert
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.dataset.html">
+     sleap.io.dataset
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.legacy.html">
+     sleap.io.legacy
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.pathutils.html">
+     sleap.io.pathutils
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.video.html">
+     sleap.io.video
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.videowriter.html">
+     sleap.io.videowriter
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.visuals.html">
+     sleap.io.visuals
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.adaptor.html">
+     sleap.io.format.adaptor
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.coco.html">
+     sleap.io.format.coco
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.deeplabcut.html">
+     sleap.io.format.deeplabcut
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.deepposekit.html">
+     sleap.io.format.deepposekit
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.dispatch.html">
+     sleap.io.format.dispatch
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.filehandle.html">
+     sleap.io.format.filehandle
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.genericjson.html">
+     sleap.io.format.genericjson
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.hdf5.html">
+     sleap.io.format.hdf5
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.labels_json.html">
+     sleap.io.format.labels_json
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.leap_matlab.html">
+     sleap.io.format.leap_matlab
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.main.html">
+     sleap.io.format.main
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.sleap_analysis.html">
+     sleap.io.format.sleap_analysis
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.text.html">
+     sleap.io.format.text
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.info.align.html">
+     sleap.info.align
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.info.feature_suggestions.html">
+     sleap.info.feature_suggestions
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.info.labels.html">
+     sleap.info.labels
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.info.metrics.html">
+     sleap.info.metrics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.info.summary.html">
+     sleap.info.summary
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.info.trackcleaner.html">
+     sleap.info.trackcleaner
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.info.write_tracking_h5.html">
+     sleap.info.write_tracking_h5
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference external" href="https://github.com/murthylab/sleap-datasets">
+   Sample datasets
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference external" href="https://github.com/murthylab/sleap">
+   Source code
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference external" href="https://github.com/murthylab/sleap/releases">
+   Releases
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../help.html">
+   Help
+  </a>
+ </li>
 </ul>
 
-</div>
-</div>
-      </div>
-      
     </div>
-  </aside>
-  <div class="main">
-    <div class="content">
-      <div class="article-container">
-        <div class="content-icon-container">
-          <div class="theme-toggle-container theme-toggle-content">
-            <button class="theme-toggle">
-              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
-              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
-              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
-            </button>
-          </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
-            <div class="visually-hidden">Toggle table of contents sidebar</div>
-            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
-          </label>
+</nav> <!-- To handle the deprecated key -->
+
+</div>
+
+
+          
+
+
+          
+<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<div class="sbt-scroll-pixel-helper"></div>
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            <div class="topbar-left">
+                
+                <label class="nav-toggle-button" for="__navigation">
+                    <div class="visually-hidden">Toggle navigation</div>
+                    <i class="fas fa-bars"></i>
+                </label>
+                
+            </div>
+            
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
         </div>
-        <article role="main">
-          <p><a href="https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Analysis_examples.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
-<section class="tex2jax_ignore mathjax_ignore" id="analysis-examples">
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav" aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#example-analysis-data">
+   Example analysis data
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#loading-the-data">
+   Loading the data
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#fill-missing-values">
+   Fill missing values
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#visualize-thorax-movement-across-video">
+   Visualize thorax movement across video
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#more-advanced-visualizations">
+   More advanced visualizations
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0">
+     Visualizing thorax x-y dynamics and velocity for fly 0
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#visualize-thorax-colored-by-magnitude-of-fly-speed">
+     Visualize thorax colored by magnitude of fly speed
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#find-covariance-in-thorax-velocities-between-fly-0-and-fly-1">
+     Find covariance in thorax velocities between fly-0 and fly-1
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#clustering">
+   Clustering
+  </a>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>Analysis examples</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#example-analysis-data">
+   Example analysis data
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#loading-the-data">
+   Loading the data
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#fill-missing-values">
+   Fill missing values
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#visualize-thorax-movement-across-video">
+   Visualize thorax movement across video
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#more-advanced-visualizations">
+   More advanced visualizations
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0">
+     Visualizing thorax x-y dynamics and velocity for fly 0
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#visualize-thorax-colored-by-magnitude-of-fly-speed">
+     Visualize thorax colored by magnitude of fly speed
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#find-covariance-in-thorax-velocities-between-fly-0-and-fly-1">
+     Find covariance in thorax velocities between fly-0 and fly-1
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#clustering">
+   Clustering
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            
+              <div>
+                
+  <p><a href="https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Analysis_examples.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<div class="tex2jax_ignore mathjax_ignore section" id="analysis-examples">
 <h1>Analysis examples<a class="headerlink" href="#analysis-examples" title="Permalink to this headline">¶</a></h1>
 <p>In this notebook we’ll show examples of how you might use the predictions exported from SLEAP. We’ll work with an <a class="reference external" href="https://sleap.ai/tutorials/analysis.html">Analysis HDF5</a> file (rather than the <code class="docutils literal notranslate"><span class="pre">.slp</span></code> predictions file). This HDF5 file can be exported from SLEAP.</p>
 <p>We advise building your post-SLEAP analysis pipeline around these HDF5 files rather than trying to work directly with the <code class="docutils literal notranslate"><span class="pre">.slp</span></code> files used by SLEAP.</p>
 <p><strong>Note</strong>: You can work with these HDF5 directly in Python (as we’ll do here) or MATLAB without having SLEAP itself installed.</p>
-<section id="example-analysis-data">
+<div class="section" id="example-analysis-data">
 <h2>Example analysis data<a class="headerlink" href="#example-analysis-data" title="Permalink to this headline">¶</a></h2>
 <p>Let’s start by download a sample HDF5. These predictions were created with models trained on our <a class="reference external" href="https://github.com/murthylab/sleap-datasets">sample Drosophila melanogaster courtship dataset</a>. Using these models we can inference on a video clip with 3000 frames. The video clip, resulting predictions, and exported HDF5 are all available <a class="reference external" href="https://github.com/murthylab/sleap/tree/main/docs/notebooks/analysis_example">here</a>.</p>
 <p>We’ll just download the <code class="docutils literal notranslate"><span class="pre">predictions.analysis.h5</span></code> file:</p>
@@ -345,13 +888,13 @@ predictions.analysi 100%[===================&gt;] 538.58K  --.-KB/s    in 0.05s
 <p>We can set the path and filename to the analysis HDF5. In our case, this is just <code class="docutils literal notranslate"><span class="pre">predictions.analysis.h5</span></code>. If you’re running analysis code on your local computer this will be the full path and filename of your HDF5. If you’re running analysis code on Colab, then you’ll probably copy files to Colab via Google Drive and should use the path to your file there.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">filename</span> <span class="o">=</span> <span class="s2">"predictions.analysis.h5"</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;predictions.analysis.h5&quot;</span>
 </pre></div>
 </div>
 </div>
 </div>
-</section>
-<section id="loading-the-data">
+</div>
+<div class="section" id="loading-the-data">
 <h2>Loading the data<a class="headerlink" href="#loading-the-data" title="Permalink to this headline">¶</a></h2>
 <p>We use the <a class="reference external" href="https://www.h5py.org">h5py</a> package to load data from the HDF5. This is already installed in Colab. If your running analysis code on your local machine and have SLEAP installed, then <code class="docutils literal notranslate"><span class="pre">h5py</span></code> and other packages we use are already installed in your SLEAP conda environment. Otherwise, you may need to use <code class="docutils literal notranslate"><span class="pre">conda</span></code> or <code class="docutils literal notranslate"><span class="pre">pip</span></code> to install <code class="docutils literal notranslate"><span class="pre">h5py</span></code> as well as <code class="docutils literal notranslate"><span class="pre">numpy</span></code>, <code class="docutils literal notranslate"><span class="pre">scipy</span></code>, <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code>, <code class="docutils literal notranslate"><span class="pre">seaborn</span></code>, and any other packages you want use in your analysis code.</p>
 <p>Let’s load the file and take a peek.</p>
@@ -360,26 +903,26 @@ predictions.analysi 100%[===================&gt;] 538.58K  --.-KB/s    in 0.05s
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">dset_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-    <span class="n">locations</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">"tracks"</span><span class="p">][:]</span><span class="o">.</span><span class="n">T</span>
-    <span class="n">node_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">f</span><span class="p">[</span><span class="s2">"node_names"</span><span class="p">][:]]</span>
+    <span class="n">locations</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;tracks&quot;</span><span class="p">][:]</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">node_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;node_names&quot;</span><span class="p">][:]]</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">"===filename==="</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;===filename===&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">"===HDF5 datasets==="</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;===HDF5 datasets===&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">dset_names</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">"===locations data shape==="</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;===locations data shape===&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">locations</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">"===nodes==="</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;===nodes===&quot;</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node_names</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -389,7 +932,7 @@ predictions.analysi 100%[===================&gt;] 538.58K  --.-KB/s    in 0.05s
 predictions.analysis.h5
 
 ===HDF5 datasets===
-['node_names', 'track_names', 'track_occupancy', 'tracks']
+[&#39;node_names&#39;, &#39;track_names&#39;, &#39;track_occupancy&#39;, &#39;tracks&#39;]
 
 ===locations data shape===
 (3000, 13, 2, 2)
@@ -425,9 +968,9 @@ predictions.analysis.h5
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">frame_count</span><span class="p">,</span> <span class="n">node_count</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">instance_count</span> <span class="o">=</span> <span class="n">locations</span><span class="o">.</span><span class="n">shape</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">"frame count:"</span><span class="p">,</span> <span class="n">frame_count</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"node count:"</span><span class="p">,</span> <span class="n">node_count</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"instance count:"</span><span class="p">,</span> <span class="n">instance_count</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;frame count:&quot;</span><span class="p">,</span> <span class="n">frame_count</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;node count:&quot;</span><span class="p">,</span> <span class="n">node_count</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;instance count:&quot;</span><span class="p">,</span> <span class="n">instance_count</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -440,15 +983,15 @@ instance count: 2
 </div>
 </div>
 <p>Now that we’ve loaded the data, let’s see some different things we can do with it…</p>
-</section>
-<section id="fill-missing-values">
+</div>
+<div class="section" id="fill-missing-values">
 <h2>Fill missing values<a class="headerlink" href="#fill-missing-values" title="Permalink to this headline">¶</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">interp1d</span>
 
-<span class="k">def</span> <span class="nf">fill_missing</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"linear"</span><span class="p">):</span>
-    <span class="sd">"""Fills missing values independently along each dimension after the first."""</span>
+<span class="k">def</span> <span class="nf">fill_missing</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Fills missing values independently along each dimension after the first.&quot;&quot;&quot;</span>
 
     <span class="c1"># Store initial shape.</span>
     <span class="n">initial_shape</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">shape</span>
@@ -490,8 +1033,8 @@ instance count: 2
 </div>
 </div>
 </div>
-</section>
-<section id="visualize-thorax-movement-across-video">
+</div>
+<div class="section" id="visualize-thorax-movement-across-video">
 <h2>Visualize thorax movement across video<a class="headerlink" href="#visualize-thorax-movement-across-video" title="Permalink to this headline">¶</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -517,8 +1060,8 @@ instance count: 2
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sns</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'notebook'</span><span class="p">,</span> <span class="s1">'ticks'</span><span class="p">,</span> <span class="n">font_scale</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
-<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">'figure.figsize'</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">15</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sns</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;notebook&#39;</span><span class="p">,</span> <span class="s1">&#39;ticks&#39;</span><span class="p">,</span> <span class="n">font_scale</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.figsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">15</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
@@ -526,19 +1069,19 @@ instance count: 2
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thorax_loc</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="s1">'y'</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">'fly-0'</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thorax_loc</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="s1">'g'</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">'fly-1'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thorax_loc</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;fly-0&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thorax_loc</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;fly-1&#39;</span><span class="p">)</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">thorax_loc</span><span class="p">[:,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="s1">'y'</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">thorax_loc</span><span class="p">[:,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="s1">'g'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">thorax_loc</span><span class="p">[:,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">thorax_loc</span><span class="p">[:,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;g&#39;</span><span class="p">)</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"center right"</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">'Thorax locations'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;center right&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Thorax locations&#39;</span><span class="p">)</span>
 
 
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">7</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thorax_loc</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">thorax_loc</span><span class="p">[:,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="s1">'y'</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">'fly-0'</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thorax_loc</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">thorax_loc</span><span class="p">[:,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="s1">'g'</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">'fly-1'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thorax_loc</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">thorax_loc</span><span class="p">[:,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;fly-0&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thorax_loc</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span><span class="n">thorax_loc</span><span class="p">[:,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;fly-1&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1024</span><span class="p">)</span>
@@ -546,20 +1089,20 @@ instance count: 2
 
 <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1024</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">([])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">'Thorax tracks'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Thorax tracks&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Text(0.5, 1.0, 'Thorax tracks')
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Text(0.5, 1.0, &#39;Thorax tracks&#39;)
 </pre></div>
 </div>
-<img alt="../_images/Analysis_examples_19_1.png" src="../_images/Analysis_examples_19_1.png"/>
-<img alt="../_images/Analysis_examples_19_2.png" src="../_images/Analysis_examples_19_2.png"/>
+<img alt="../_images/Analysis_examples_19_1.png" src="../_images/Analysis_examples_19_1.png" />
+<img alt="../_images/Analysis_examples_19_2.png" src="../_images/Analysis_examples_19_2.png" />
 </div>
 </div>
-</section>
-<section id="more-advanced-visualizations">
+</div>
+<div class="section" id="more-advanced-visualizations">
 <h2>More advanced visualizations<a class="headerlink" href="#more-advanced-visualizations" title="Permalink to this headline">¶</a></h2>
 <p>For some additional analysis, we’ll first smooth and differentiate the data with a Savitzky-Golay filter to extract velocities of each joint.</p>
 <div class="cell docutils container">
@@ -567,7 +1110,7 @@ instance count: 2
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">savgol_filter</span>
 
 <span class="k">def</span> <span class="nf">smooth_diff</span><span class="p">(</span><span class="n">node_loc</span><span class="p">,</span> <span class="n">win</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">poly</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
-    <span class="sd">"""</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    node_loc is a [frames, 2] array</span>
 <span class="sd">    </span>
 <span class="sd">    win defines the window to smooth over</span>
@@ -575,7 +1118,7 @@ instance count: 2
 <span class="sd">    poly defines the order of the polynomial</span>
 <span class="sd">    to fit with</span>
 <span class="sd">    </span>
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">node_loc_vel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">node_loc</span><span class="p">)</span>
     
     <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">node_loc</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
@@ -597,45 +1140,45 @@ instance count: 2
 </div>
 </div>
 </div>
-<section id="visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0">
+<div class="section" id="visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0">
 <h3>Visualizing thorax x-y dynamics and velocity for fly 0<a class="headerlink" href="#visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0" title="Permalink to this headline">¶</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">7</span><span class="p">))</span>
 <span class="n">ax1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">211</span><span class="p">)</span>
-<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thorax_loc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="s1">'k'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'x'</span><span class="p">)</span>
-<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">thorax_loc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="s1">'k'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'y'</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thorax_loc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">thorax_loc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
 <span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">ax1</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
-<span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Thorax'</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Thorax&#39;</span><span class="p">)</span>
 
 <span class="n">ax2</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">212</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="n">ax1</span><span class="p">)</span>
-<span class="n">ax2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">thx_vel_fly0</span><span class="p">[:,</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s1">'auto'</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">thx_vel_fly0</span><span class="p">[:,</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="n">ax2</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
-<span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Velocity'</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Velocity&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Text(0.5, 1.0, 'Velocity')
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Text(0.5, 1.0, &#39;Velocity&#39;)
 </pre></div>
 </div>
-<img alt="../_images/Analysis_examples_25_1.png" src="../_images/Analysis_examples_25_1.png"/>
+<img alt="../_images/Analysis_examples_25_1.png" src="../_images/Analysis_examples_25_1.png" />
 </div>
 </div>
-</section>
-<section id="visualize-thorax-colored-by-magnitude-of-fly-speed">
+</div>
+<div class="section" id="visualize-thorax-colored-by-magnitude-of-fly-speed">
 <h3>Visualize thorax colored by magnitude of fly speed<a class="headerlink" href="#visualize-thorax-colored-by-magnitude-of-fly-speed" title="Permalink to this headline">¶</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
 <span class="n">ax1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">)</span>
-<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thorax_loc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">thorax_loc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="s1">'k'</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thorax_loc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">thorax_loc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;k&#39;</span><span class="p">)</span>
 <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1024</span><span class="p">)</span>
 <span class="n">ax1</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
 <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1024</span><span class="p">)</span>
 <span class="n">ax1</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
-<span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Thorax tracks'</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Thorax tracks&#39;</span><span class="p">)</span>
 
 <span class="n">kp</span> <span class="o">=</span> <span class="n">thx_vel_fly0</span>  <span class="c1"># use thx_vel_fly1 for other fly</span>
 <span class="n">vmin</span> <span class="o">=</span> <span class="mi">0</span>
@@ -647,31 +1190,31 @@ instance count: 2
 <span class="n">ax2</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
 <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1024</span><span class="p">)</span>
 <span class="n">ax2</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
-<span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Thorax tracks colored by magnitude of fly speed'</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Thorax tracks colored by magnitude of fly speed&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Text(0.5, 1.0, 'Thorax tracks colored by magnitude of fly speed')
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Text(0.5, 1.0, &#39;Thorax tracks colored by magnitude of fly speed&#39;)
 </pre></div>
 </div>
-<img alt="../_images/Analysis_examples_27_1.png" src="../_images/Analysis_examples_27_1.png"/>
+<img alt="../_images/Analysis_examples_27_1.png" src="../_images/Analysis_examples_27_1.png" />
 </div>
 </div>
-</section>
-<section id="find-covariance-in-thorax-velocities-between-fly-0-and-fly-1">
+</div>
+<div class="section" id="find-covariance-in-thorax-velocities-between-fly-0-and-fly-1">
 <h3>Find covariance in thorax velocities between fly-0 and fly-1<a class="headerlink" href="#find-covariance-in-thorax-velocities-between-fly-0-and-fly-1" title="Permalink to this headline">¶</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 <span class="k">def</span> <span class="nf">corr_roll</span><span class="p">(</span><span class="n">datax</span><span class="p">,</span> <span class="n">datay</span><span class="p">,</span> <span class="n">win</span><span class="p">):</span>
-    <span class="sd">"""</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    datax, datay are the two timeseries to find correlations between</span>
 <span class="sd">    </span>
 <span class="sd">    win sets the number of frames over which the covariance is computed</span>
 <span class="sd">    </span>
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="n">s1</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">datax</span><span class="p">)</span>
     <span class="n">s2</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">datay</span><span class="p">)</span>
@@ -688,26 +1231,26 @@ instance count: 2
 <span class="n">cov_vel</span> <span class="o">=</span> <span class="n">corr_roll</span><span class="p">(</span><span class="n">thx_vel_fly0</span><span class="p">,</span> <span class="n">thx_vel_fly1</span><span class="p">,</span><span class="n">win</span><span class="p">)</span>
 
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thx_vel_fly0</span><span class="p">,</span> <span class="s1">'y'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'fly-0'</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thx_vel_fly1</span><span class="p">,</span> <span class="s1">'g'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">'fly-1'</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thx_vel_fly0</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;fly-0&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">thx_vel_fly1</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;fly-1&#39;</span><span class="p">)</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Forward Velocity'</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Forward Velocity&#39;</span><span class="p">)</span>
 
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">cov_vel</span><span class="p">,</span> <span class="s1">'c'</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">cov_vel</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">1.2</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Covariance'</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Covariance&#39;</span><span class="p">)</span>
 
 <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Analysis_examples_30_0.png" src="../_images/Analysis_examples_30_0.png"/>
+<img alt="../_images/Analysis_examples_30_0.png" src="../_images/Analysis_examples_30_0.png" />
 </div>
 </div>
-</section>
-</section>
-<section id="clustering">
+</div>
+</div>
+<div class="section" id="clustering">
 <h2>Clustering<a class="headerlink" href="#clustering" title="Permalink to this headline">¶</a></h2>
 <p>For an example of clustering the data, we’ll</p>
 <ol class="simple">
@@ -732,11 +1275,11 @@ instance count: 2
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">plot_instance_node_velocities</span><span class="p">(</span><span class="n">instance_idx</span><span class="p">,</span> <span class="n">node_velocities</span><span class="p">):</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">node_velocities</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s1">'auto'</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'frames'</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">'nodes'</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">node_velocities</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;frames&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;nodes&#39;</span><span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">node_count</span><span class="p">),</span> <span class="n">node_names</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">20</span><span class="p">);</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Fly </span><span class="si">{</span><span class="n">instance_idx</span><span class="si">}</span><span class="s1"> node velocities'</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Fly </span><span class="si">{</span><span class="n">instance_idx</span><span class="si">}</span><span class="s1"> node velocities&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -750,7 +1293,7 @@ instance count: 2
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Analysis_examples_34_0.png" src="../_images/Analysis_examples_34_0.png"/>
+<img alt="../_images/Analysis_examples_34_0.png" src="../_images/Analysis_examples_34_0.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -762,7 +1305,7 @@ instance count: 2
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Analysis_examples_35_0.png" src="../_images/Analysis_examples_35_0.png"/>
+<img alt="../_images/Analysis_examples_35_0.png" src="../_images/Analysis_examples_35_0.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -788,111 +1331,68 @@ instance count: 2
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
 
 <span class="n">ax1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">211</span><span class="p">)</span>
-<span class="n">ax1</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">fly_node_velocities</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">)</span>
-<span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Frames"</span><span class="p">)</span>
-<span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"Nodes"</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">fly_node_velocities</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Frames&quot;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Nodes&quot;</span><span class="p">)</span>
 <span class="n">ax1</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">node_count</span><span class="p">))</span>
 <span class="n">ax1</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="n">node_names</span><span class="p">);</span>
-<span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Fly </span><span class="si">{</span><span class="n">fly_ID</span><span class="si">}</span><span class="s2"> node velocities"</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fly </span><span class="si">{</span><span class="n">fly_ID</span><span class="si">}</span><span class="s2"> node velocities&quot;</span><span class="p">)</span>
 <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">frame_count</span><span class="p">)</span>
 
 <span class="n">ax2</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">212</span><span class="p">,</span><span class="n">sharex</span><span class="o">=</span><span class="n">ax1</span><span class="p">)</span>
-<span class="n">ax2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:],</span> <span class="n">aspect</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">"tab10"</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">)</span>
-<span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"Frames"</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:],</span> <span class="n">aspect</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;tab10&quot;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Frames&quot;</span><span class="p">)</span>
 <span class="n">ax2</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
-<span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Ethogram (colors = clusters)"</span><span class="p">);</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Ethogram (colors = clusters)&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Analysis_examples_38_0.png" src="../_images/Analysis_examples_38_0.png"/>
+<img alt="../_images/Analysis_examples_38_0.png" src="../_images/Analysis_examples_38_0.png" />
 </div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
-        </article>
-      </div>
-      <footer>
-        
-        <div class="related-pages">
-          <a class="next-page" href="../api.html">
-              <div class="page-info">
-                <div class="context">
-                  <span>Next</span>
-                </div>
-                <div class="title">Developer API</div>
-              </div>
-              <svg><use href="#svg-arrow-right"></use></svg>
-            </a>
-          <a class="prev-page" href="Model_evaluation.html">
-              <svg><use href="#svg-arrow-right"></use></svg>
-              <div class="page-info">
-                <div class="context">
-                  <span>Previous</span>
-                </div>
-                
-                <div class="title">Model evaluation</div>
-                
-              </div>
-            </a>
-        </div>
 
-        <div class="related-information">
-              Copyright &#169; 2019–2021, Murthy Lab @ Princeton University |
-          Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
-          <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
-            | <a class="muted-link" href="../_sources/notebooks/Analysis_examples.ipynb.txt"
-               rel="nofollow">
-              Show Source
-            </a>
+              </div>
+              
+            
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'> 
+    <a class='left-prev' id="prev-link" href="Model_evaluation.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Model evaluation</p>
         </div>
-        
-      </footer>
+    </a>
+    <a class='right-next' id="next-link" href="../api.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Developer API</p>
     </div>
-    <aside class="toc-drawer">
-      
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            Contents
-          </span>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            
         </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">Analysis examples</a><ul>
-<li><a class="reference internal" href="#example-analysis-data">Example analysis data</a></li>
-<li><a class="reference internal" href="#loading-the-data">Loading the data</a></li>
-<li><a class="reference internal" href="#fill-missing-values">Fill missing values</a></li>
-<li><a class="reference internal" href="#visualize-thorax-movement-across-video">Visualize thorax movement across video</a></li>
-<li><a class="reference internal" href="#more-advanced-visualizations">More advanced visualizations</a><ul>
-<li><a class="reference internal" href="#visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0">Visualizing thorax x-y dynamics and velocity for fly 0</a></li>
-<li><a class="reference internal" href="#visualize-thorax-colored-by-magnitude-of-fly-speed">Visualize thorax colored by magnitude of fly speed</a></li>
-<li><a class="reference internal" href="#find-covariance-in-thorax-velocities-between-fly-0-and-fly-1">Find covariance in thorax velocities between fly-0 and fly-1</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#clustering">Clustering</a></li>
-</ul>
-</li>
-</ul>
+    </div>
+    <footer class="footer">
+  <p>
+    
+      By Talmo D. Pereira<br/>
+    
+        &copy; Copyright 2019–2022, Talmo Lab.<br/>
+  </p>
+</footer>
+</main>
 
-          </div>
-        </div>
+
       </div>
-      
-      
-    </aside>
-  </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
-    <script src="../_static/togglebutton.js"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    </body>
+    </div>
+  
+  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+
+  </body>
 </html>
