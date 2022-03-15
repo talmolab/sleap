@@ -7,9 +7,10 @@ sphinx
 # furo
 sphinx-book-theme
 sphinx-copybutton
-myst-parser
+nbformat==5.1.3
+myst-nb==0.13.2
+myst-parser==0.15.2
 linkify-it-py
-myst-nb
 sphinx-autobuild
 black==21.6b0
 pre-commit
