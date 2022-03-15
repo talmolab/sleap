@@ -8,6 +8,7 @@ from sleap.nn.paf_grouping import (
     get_connection_candidates,
     make_line_subs,
     get_paf_lines,
+    compute_distance_penalty,
     score_paf_lines,
     score_paf_lines_batch,
     match_candidates_sample,
@@ -15,6 +16,10 @@ from sleap.nn.paf_grouping import (
     group_instances_sample,
     group_instances_batch,
     EdgeType,
+    EdgeConnection,
+    PeakID,
+    toposort_edges,
+    assign_connections_to_instances,
 )
 
 sleap.nn.system.use_cpu_only()
@@ -85,6 +90,18 @@ def test_score_paf_lines():
     assert_allclose(scores, [24.27], atol=1e-2)
 
 
+def test_compute_distance_penalty():
+    penalties = compute_distance_penalty(
+        tf.cast([1, 2, 3, 4], tf.float32), max_edge_length=2
+    )
+    assert_allclose(penalties, [0, 0, 2 / 3 - 1, 2 / 4 - 1], atol=1e-6)
+
+    penalties = compute_distance_penalty(
+        tf.cast([1, 2, 3, 4], tf.float32), max_edge_length=2, dist_penalty_weight=2
+    )
+    assert_allclose(penalties, [0, 0, -0.6666666, -1], atol=1e-6)
+
+
 def test_score_paf_lines_batch():
     pafs = tf.cast(tf.reshape(tf.range(6 * 4 * 2), [1, 6, 4, 2]), tf.float32)
     peaks = tf.constant([[[0, 0], [4, 8]]], tf.float32)
@@ -93,6 +110,7 @@ def test_score_paf_lines_batch():
     n_line_points = 3
     pafs_stride = 2
     max_edge_length_ratio = 2 / 12
+    dist_penalty_weight = 1.0
     n_nodes = 4
 
     edge_inds, edge_peak_inds, line_scores = score_paf_lines_batch(
@@ -103,6 +121,7 @@ def test_score_paf_lines_batch():
         n_line_points,
         pafs_stride,
         max_edge_length_ratio,
+        dist_penalty_weight,
         n_nodes,
     )
     assert_array_equal(edge_inds.to_list(), [[0]])
@@ -175,7 +194,7 @@ def test_group_instances_sample():
     match_dst_peak_inds_sample = tf.constant([0, 0, 1], tf.int32)
     match_line_scores_sample = tf.ones([3], dtype=tf.float32)
     n_nodes = 3
-    n_edges = 2
+    sorted_edge_inds = tf.constant((0, 1), dtype=tf.int32)
     edge_types = [EdgeType(0, 1), EdgeType(1, 2)]
     min_instance_peaks = 0
 
@@ -192,7 +211,7 @@ def test_group_instances_sample():
         match_dst_peak_inds_sample,
         match_line_scores_sample,
         n_nodes,
-        n_edges,
+        sorted_edge_inds,
         edge_types,
         min_instance_peaks,
     )
@@ -237,7 +256,7 @@ def test_group_instances_batch():
         tf.ones([3], dtype=tf.float32), row_ids_edges
     )
     n_nodes = 3
-    n_edges = 2
+    sorted_edge_inds = (0, 1)
     edge_types = [EdgeType(0, 1), EdgeType(1, 2)]
     min_instance_peaks = 0
 
@@ -254,7 +273,7 @@ def test_group_instances_batch():
         match_dst_peak_inds,
         match_line_scores,
         n_nodes,
-        n_edges,
+        sorted_edge_inds,
         edge_types,
         min_instance_peaks,
     )
@@ -278,3 +297,91 @@ def test_group_instances_batch():
         predicted_peak_scores.flat_values, [[0.0, 1.0, 2.0], [3.0, 4.0, np.nan]]
     )
     assert_array_equal(predicted_instance_scores.flat_values, [2.0, 1.0])
+
+
+def test_toposort_edges():
+    edge_inds = [
+        (5, 7),
+        (5, 8),
+        (5, 9),
+        (5, 6),
+        (5, 11),
+        (5, 12),
+        (1, 0),
+        (1, 3),
+        (1, 2),
+        (1, 10),
+        (1, 13),
+        (1, 14),
+        (4, 5),
+        (4, 1),
+    ]
+
+    edge_types = [EdgeType(src_node, dst_node) for src_node, dst_node in edge_inds]
+
+    sorted_edge_inds = toposort_edges(edge_types)
+    assert sorted_edge_inds == (12, 13, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+
+
+def test_assign_connections_to_instances():
+    connections = {
+        EdgeType(src_node_ind=5, dst_node_ind=7): [
+            EdgeConnection(src_peak_ind=0, dst_peak_ind=0, score=1.0465653)
+        ],
+        EdgeType(src_node_ind=5, dst_node_ind=8): [
+            EdgeConnection(src_peak_ind=0, dst_peak_ind=0, score=1.0607507)
+        ],
+        EdgeType(src_node_ind=5, dst_node_ind=9): [
+            EdgeConnection(src_peak_ind=0, dst_peak_ind=0, score=0.9563284)
+        ],
+        EdgeType(src_node_ind=5, dst_node_ind=6): [
+            EdgeConnection(src_peak_ind=0, dst_peak_ind=1, score=0.5797864)
+        ],
+        EdgeType(src_node_ind=5, dst_node_ind=11): [
+            EdgeConnection(src_peak_ind=0, dst_peak_ind=0, score=0.9892818)
+        ],
+        EdgeType(src_node_ind=5, dst_node_ind=12): [
+            EdgeConnection(src_peak_ind=0, dst_peak_ind=0, score=0.7557168)
+        ],
+        EdgeType(src_node_ind=1, dst_node_ind=0): [],
+        EdgeType(src_node_ind=1, dst_node_ind=3): [],
+        EdgeType(src_node_ind=1, dst_node_ind=2): [],
+        EdgeType(src_node_ind=1, dst_node_ind=10): [],
+        EdgeType(src_node_ind=1, dst_node_ind=13): [],
+        EdgeType(src_node_ind=1, dst_node_ind=14): [],
+        EdgeType(src_node_ind=4, dst_node_ind=5): [
+            EdgeConnection(src_peak_ind=0, dst_peak_ind=0, score=0.9735552)
+        ],
+        EdgeType(src_node_ind=4, dst_node_ind=1): [
+            EdgeConnection(src_peak_ind=0, dst_peak_ind=0, score=0.31536198)
+        ],
+    }
+    instance_assignments = assign_connections_to_instances(
+        connections,
+        min_instance_peaks=0,
+        n_nodes=15,
+    )
+    assert instance_assignments == {
+        PeakID(node_ind=5, peak_ind=0): 0,
+        PeakID(node_ind=7, peak_ind=0): 0,
+        PeakID(node_ind=8, peak_ind=0): 0,
+        PeakID(node_ind=9, peak_ind=0): 0,
+        PeakID(node_ind=6, peak_ind=1): 0,
+        PeakID(node_ind=11, peak_ind=0): 0,
+        PeakID(node_ind=12, peak_ind=0): 0,
+        PeakID(node_ind=4, peak_ind=0): 1,
+        PeakID(node_ind=1, peak_ind=0): 1,
+    }
+
+    # Now in topological order:
+    edge_types = list(connections.keys())
+    sorted_edge_inds = toposort_edges(edge_types)
+    instance_assignments = assign_connections_to_instances(
+        {
+            edge_types[edge_ind]: connections[edge_types[edge_ind]]
+            for edge_ind in sorted_edge_inds
+        },
+        min_instance_peaks=0,
+        n_nodes=15,
+    )
+    assert all(x == 0 for x in instance_assignments.values())

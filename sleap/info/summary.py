@@ -145,9 +145,9 @@ class StatisticSeries:
 
         last_frame_idx = video.num_frames - 1
         location_matrix = np.full(
-            (last_frame_idx + 1, track_count, 2), np.nan, dtype=np.float
+            (last_frame_idx + 1, track_count, 2), np.nan, dtype=float
         )
-        last_track_pos = np.full((track_count, 2), 0, dtype=np.float)
+        last_track_pos = np.full((track_count, 2), 0, dtype=float)
 
         has_seen_track_idx = set()
 

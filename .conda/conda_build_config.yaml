@@ -3,7 +3,8 @@
 # Ref: https://docs.conda.io/projects/conda-build/en/latest/resources/variants.html#conda-build-variant-config-files
 
 python:
-  - 3.6
+  - 3.7
 
 numpy:
-  - 1.18.1
+  - 1.19.5
+  # - 1.21.2

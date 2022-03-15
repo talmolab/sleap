@@ -1,14 +1,14 @@
 name: sleap
 
 dependencies:
-- python=3.6
+- python=3.7
 - Pillow
 - Shapely
 - anaconda-client
 - conda-verify
 - pip
 - pip:
-    - tensorflow==2.3.1
+    - tensorflow==2.7.0
     - pyside2==5.14.1
     - "--editable=./"
     - "--requirement=./dev_requirements.txt"

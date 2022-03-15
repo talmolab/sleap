@@ -38,7 +38,7 @@ from sleap.gui.dialogs.filedialog import FileDialog
 import h5py
 import qimage2ndarray
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 class ImportVideos:
@@ -47,23 +47,25 @@ class ImportVideos:
     def __init__(self):
         self.result = []
 
-    def ask(self):
+    def ask(self, filenames: Optional[List[str]] = None):
         """Runs the import UI.
 
         1. Show file selection dialog.
         2. Show import parameter dialog with widget for each file.
 
         Args:
-            None.
+            filenames: List of filenames. If not provided, a file browser GUI will appear.
+
         Returns:
             List with dict of the parameters for each file to import.
         """
-        filenames, filter = FileDialog.openMultiple(
-            None,
-            "Select videos to import...",  # dialogue title
-            ".",  # initial path
-            "Any Video (*.h5 *.hd5v *.mp4 *.avi *.json);;HDF5 (*.h5 *.hd5v);;ImgStore (*.json);;Media Video (*.mp4 *.avi);;Any File (*.*)",
-        )
+        if filenames is None:
+            filenames, filter = FileDialog.openMultiple(
+                None,
+                "Select videos to import...",  # dialogue title
+                ".",  # initial path
+                "Any Video (*.h5 *.hd5v *.mp4 *.avi *.json);;HDF5 (*.h5 *.hd5v);;ImgStore (*.json);;Media Video (*.mp4 *.avi);;Any File (*.*)",
+            )
         if len(filenames) > 0:
             importer = ImportParamDialog(filenames)
             importer.accepted.connect(lambda: importer.get_data(self.result))
@@ -89,7 +91,7 @@ class ImportParamDialog(QDialog):
         filenames (list): List of files we want to import.
     """
 
-    def __init__(self, filenames: list, *args, **kwargs):
+    def __init__(self, filenames: List[str], *args, **kwargs):
         super(ImportParamDialog, self).__init__(*args, **kwargs)
 
         self.import_widgets = []
@@ -160,9 +162,36 @@ class ImportParamDialog(QDialog):
         outer_layout.addWidget(scroll_widget)
 
         button_layout = QHBoxLayout()
+
+        if any(
+            [
+                widget.import_type["video_type"] == "mp4"
+                for widget in self.import_widgets
+            ]
+        ):
+            all_grayscale_button = QPushButton("All grayscale")
+            all_rgb_button = QPushButton("All RGB")
+            button_layout.addWidget(all_grayscale_button)
+            button_layout.addWidget(all_rgb_button)
+            all_grayscale_button.clicked.connect(self.set_all_grayscale)
+            all_rgb_button.clicked.connect(self.set_all_rgb)
+        if any(
+            [
+                widget.import_type["video_type"] == "hdf5"
+                for widget in self.import_widgets
+            ]
+        ):
+            all_channels_last_button = QPushButton("All channels last")
+            all_channels_first_button = QPushButton("All channels first")
+            button_layout.addWidget(all_channels_last_button)
+            button_layout.addWidget(all_channels_first_button)
+            all_channels_last_button.clicked.connect(self.set_all_channels_last)
+            all_channels_first_button.clicked.connect(self.set_all_channels_first)
+
         cancel_button = QPushButton("Cancel")
         import_button = QPushButton("Import")
         import_button.setDefault(True)
+
         button_layout.addStretch()
         button_layout.addWidget(cancel_button)
         button_layout.addWidget(import_button)
@@ -198,6 +227,38 @@ class ImportParamDialog(QDialog):
     def paint(self, painter, option, widget=None):
         """Method required by Qt."""
         pass
+
+    def set_all_grayscale(self):
+        for import_item in self.import_widgets:
+            widget_elements = import_item.options_widget.widget_elements
+            if "grayscale" in widget_elements:
+                widget_elements["grayscale"].setChecked(True)
+
+    def set_all_rgb(self):
+        for import_item in self.import_widgets:
+            widget_elements = import_item.options_widget.widget_elements
+            if "grayscale" in widget_elements:
+                widget_elements["grayscale"].setChecked(False)
+
+    def set_all_channels_last(self):
+        for import_item in self.import_widgets:
+            widget_elements = import_item.options_widget.widget_elements
+
+            if "input_format" in widget_elements:
+                for btn in widget_elements["input_format"].buttons():
+                    if btn.text() == "channels_last":
+                        btn.click()
+                        break
+
+    def set_all_channels_first(self):
+        for import_item in self.import_widgets:
+            widget_elements = import_item.options_widget.widget_elements
+
+            if "input_format" in widget_elements:
+                for btn in widget_elements["input_format"].buttons():
+                    if btn.text() == "channels_first":
+                        btn.click()
+                        break
 
 
 class ImportItemWidget(QFrame):
@@ -537,7 +598,17 @@ if __name__ == "__main__":
 
     app = QApplication([])
 
-    import_list = ImportVideos().ask()
+    # import_list = ImportVideos().ask()
+
+    filenames = [
+        "tests/data/videos/centered_pair_small.mp4",
+        "tests/data/videos/small_robot.mp4",
+    ]
+
+    import_list = []
+    importer = ImportParamDialog(filenames)
+    importer.accepted.connect(lambda: importer.get_data(import_list))
+    importer.exec_()
 
     for import_item in import_list:
         vid = import_item["video_class"](**import_item["params"])

@@ -241,11 +241,13 @@ class CommandContext:
         """Create a new project in a new window."""
         self.execute(NewProject)
 
-    def openProject(self, first_open: bool = False):
+    def openProject(self, filename: Optional[str] = None, first_open: bool = False):
         """
         Allows use to select and then open a saved project.
 
         Args:
+            filename: Filename of the project to be opened. If None, a file browser
+                dialog will prompt the user for a path.
             first_open: Whether this is the first window opened. If True,
                 then the new project is loaded into the current window
                 rather than a new application window.
@@ -253,7 +255,7 @@ class CommandContext:
         Returns:
             None.
         """
-        self.execute(OpenProject, first_open=first_open)
+        self.execute(OpenProject, filename=filename, first_open=first_open)
 
     def importDPK(self):
         """Imports DeepPoseKit datasets."""
@@ -321,6 +323,10 @@ class CommandContext:
         """Goes to next labeled frame with user instances."""
         self.execute(GoNextUserLabeledFrame)
 
+    def lastInteractedFrame(self):
+        """Goes to last frame that user interacted with."""
+        self.execute(GoLastInteractedFrame)
+
     def nextSuggestedFrame(self):
         """Goes to next suggested frame."""
         self.execute(GoNextSuggestedFrame)
@@ -362,6 +368,10 @@ class CommandContext:
     def addVideo(self):
         """Shows gui for adding videos to project."""
         self.execute(AddVideo)
+
+    def showImportVideos(self, filenames: List[str]):
+        """Show video importer GUI without the file browser."""
+        self.execute(ShowImportVideos, filenames=filenames)
 
     def replaceVideo(self):
         """Shows gui for replacing videos to project."""
@@ -522,9 +532,9 @@ class CommandContext:
         """
         self.execute(TransposeInstances)
 
-    def importPredictions(self):
+    def mergeProject(self, filenames: Optional[List[str]] = None):
         """Starts gui for importing another dataset into currently one."""
-        self.execute(MergeProject)
+        self.execute(MergeProject, filenames=filenames)
 
     def generateSuggestions(self, params: Dict):
         """Generates suggestions using given params dictionary."""
@@ -579,22 +589,23 @@ class OpenProject(AppCommand):
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
-        filters = [
-            "SLEAP HDF5 dataset (*.slp *.h5 *.hdf5)",
-            "JSON labels (*.json *.json.zip)",
-        ]
+        if params["filename"] is None:
+            filters = [
+                "SLEAP HDF5 dataset (*.slp *.h5 *.hdf5)",
+                "JSON labels (*.json *.json.zip)",
+            ]
 
-        filename, selected_filter = FileDialog.open(
-            context.app,
-            dir=None,
-            caption="Import labeled data...",
-            filter=";;".join(filters),
-        )
+            filename, selected_filter = FileDialog.open(
+                context.app,
+                dir=None,
+                caption="Import labeled data...",
+                filter=";;".join(filters),
+            )
 
-        if len(filename) == 0:
-            return False
+            if len(filename) == 0:
+                return False
 
-        params["filename"] = filename
+            params["filename"] = filename
         return True
 
 
@@ -1217,6 +1228,17 @@ class NavCommand(AppCommand):
         context.state["frame_idx"] = frame_idx
 
 
+class GoLastInteractedFrame(NavCommand):
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        if context.state["last_interacted_frame"] is not None:
+            cls.go_to(
+                context,
+                frame_idx=context.state["last_interacted_frame"].frame_idx,
+                video=context.state["last_interacted_frame"].video,
+            )
+
+
 class GoNextSuggestedFrame(NavCommand):
     seek_direction = 1
 
@@ -1344,6 +1366,25 @@ class AddVideo(EditCommand):
         params["import_list"] = ImportVideos().ask()
 
         return len(params["import_list"]) > 0
+
+
+class ShowImportVideos(EditCommand):
+    topics = [UpdateTopic.video]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        filenames = params["filenames"]
+        import_list = ImportVideos().ask(filenames=filenames)
+        new_videos = ImportVideos.create_videos(import_list)
+        video = None
+        for video in new_videos:
+            # Add to labels
+            context.labels.add_video(video)
+            context.changestack_push("add video")
+
+        # Load if no video currently loaded
+        if context.state["video"] is None:
+            context.state["video"] = video
 
 
 class ReplaceVideo(EditCommand):
@@ -2042,17 +2083,19 @@ class MergeProject(EditCommand):
 
     @classmethod
     def ask_and_do(cls, context: CommandContext, params: dict):
-        filters = [
-            "SLEAP HDF5 dataset (*.slp *.h5 *.hdf5)",
-            "SLEAP JSON dataset (*.json *.json.zip)",
-        ]
+        filenames = params["filenames"]
+        if filenames is None:
+            filters = [
+                "SLEAP HDF5 dataset (*.slp *.h5 *.hdf5)",
+                "SLEAP JSON dataset (*.json *.json.zip)",
+            ]
 
-        filenames, selected_filter = FileDialog.openMultiple(
-            context.app,
-            dir=None,
-            caption="Import labeled data...",
-            filter=";;".join(filters),
-        )
+            filenames, selected_filter = FileDialog.openMultiple(
+                context.app,
+                dir=None,
+                caption="Import labeled data...",
+                filter=";;".join(filters),
+            )
 
         if len(filenames) == 0:
             return

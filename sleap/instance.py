@@ -791,19 +791,36 @@ class Instance:
 
             return parray
 
-    def fill_missing(self):
+    def fill_missing(
+        self, max_x: Optional[float] = None, max_y: Optional[float] = None
+    ):
         """Add points for skeleton nodes that are missing in the instance.
 
         This is useful when modifying the skeleton so the nodes appears in the GUI.
+
+        Args:
+            max_x: If specified, make sure points are not added outside of valid range.
+            max_y: If specified, make sure points are not added outside of valid range.
         """
         self._fix_array()
         y1, x1, y2, x2 = self.bounding_box
+        y1, x1 = max(y1, 0), max(x1, 0)
+        if max_x is not None:
+            x2 = min(x2, max_x)
+        if max_y is not None:
+            y2 = min(y2, max_y)
         w, h = y2 - y1, x2 - x1
+
         for node in self.skeleton.nodes:
             if node not in self.nodes or self[node].isnan():
-                x, y = np.random.rand(2) * np.array([w + 2, h + 2]) + np.array(
-                    [x1 - 2, y1 - 2]
-                )
+                off = np.array([w, h]) * np.random.rand(2)
+                x, y = off + np.array([x1, y1])
+                y, x = max(y, 0), max(x, 0)
+                if max_x is not None:
+                    x = min(x, max_x)
+                if max_y is not None:
+                    y = min(y, max_y)
+
                 self[node] = Point(x=x, y=y, visible=False)
 
     @property
@@ -866,6 +883,8 @@ class Instance:
     def bounding_box(self) -> np.ndarray:
         """Return bounding box containing all points in `[y1, x1, y2, x2]` format."""
         points = self.points_array
+        if np.isnan(points).all():
+            return np.array([np.nan, np.nan, np.nan, np.nan])
         bbox = np.concatenate(
             [np.nanmin(points, axis=0)[::-1], np.nanmax(points, axis=0)[::-1]]
         )
@@ -1407,14 +1426,64 @@ class LabeledFrame:
         return [inst for inst in self._instances if type(inst) == PredictedInstance]
 
     @property
+    def tracked_instances(self) -> List[PredictedInstance]:
+        """Return list of predicted instances with tracks associated with frame."""
+        return [
+            inst
+            for inst in self._instances
+            if type(inst) == PredictedInstance and inst.track is not None
+        ]
+
+    @property
     def has_user_instances(self) -> bool:
         """Return whether the frame contains any user instances."""
-        return len(self.user_instances) > 0
+        for inst in self._instances:
+            if type(inst) == Instance:
+                return True
+        return False
 
     @property
     def has_predicted_instances(self) -> bool:
         """Return whether the frame contains any predicted instances."""
-        return len(self.predicted_instances) > 0
+        for inst in self._instances:
+            if type(inst) == PredictedInstance:
+                return True
+        return False
+
+    @property
+    def has_tracked_instances(self) -> bool:
+        """Return whether the frame contains any predicted instances with tracks."""
+        for inst in self._instances:
+            if type(inst) == PredictedInstance and inst.track is not None:
+                return True
+        return False
+
+    @property
+    def n_user_instances(self) -> int:
+        """Return the number of user instances in the frame."""
+        n = 0
+        for inst in self._instances:
+            if type(inst) == Instance:
+                n += 1
+        return n
+
+    @property
+    def n_predicted_instances(self) -> int:
+        """Return the number of predicted instances in the frame."""
+        n = 0
+        for inst in self._instances:
+            if type(inst) == PredictedInstance:
+                n += 1
+        return n
+
+    @property
+    def n_tracked_instances(self) -> int:
+        """Return the number of predicted instances with tracks in the frame."""
+        n = 0
+        for inst in self._instances:
+            if type(inst) == PredictedInstance and inst.track is not None:
+                n += 1
+        return n
 
     def remove_empty_instances(self):
         """Remove instances with no visible nodes from the labeled frame."""
@@ -1685,7 +1754,10 @@ class LabeledFrame:
 
     def numpy(self) -> np.ndarray:
         """Return the instances as an array of shape (instances, nodes, 2)."""
-        return np.stack([inst.numpy() for inst in self.instances], axis=0)
+        if len(self.instances) > 0:
+            return np.stack([inst.numpy() for inst in self.instances], axis=0)
+        else:
+            return np.full((0, 0, 2), np.nan)
 
     def plot(self, image: bool = True, scale: float = 1.0):
         """Plot the frame with all instances.

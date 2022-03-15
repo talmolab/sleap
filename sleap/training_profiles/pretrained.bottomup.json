@@ -42,7 +42,7 @@
             "multi_instance": {
                 "confmaps": {
                     "part_names": null,
-                    "sigma": 5.0,
+                    "sigma": 2.5,
                     "output_stride": 4,
                     "loss_weight": 1.0
                 },
@@ -59,8 +59,8 @@
         "preload_data": true,
         "augmentation_config": {
             "rotate": true,
-            "rotation_min_angle": -180,
-            "rotation_max_angle": 180,
+            "rotation_min_angle": -15,
+            "rotation_max_angle": 15,
             "translate": false,
             "translate_min": -5,
             "translate_max": 5,
@@ -96,7 +96,7 @@
         "learning_rate_schedule": {
             "reduce_on_plateau": true,
             "reduction_factor": 0.5,
-            "plateau_min_delta": 1e-06,
+            "plateau_min_delta": 1e-08,
             "plateau_patience": 8,
             "plateau_cooldown": 3,
             "min_learning_rate": 1e-08
@@ -110,7 +110,7 @@
         },
         "early_stopping": {
             "stop_training_on_plateau": true,
-            "plateau_min_delta": 1e-06,
+            "plateau_min_delta": 1e-08,
             "plateau_patience": 10
         }
     },

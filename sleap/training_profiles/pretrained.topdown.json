@@ -41,7 +41,7 @@
             "centered_instance": {
                 "anchor_part": null,
                 "part_names": null,
-                "sigma": 1.5,
+                "sigma": 2.5,
                 "output_stride": 2
             },
             "multi_instance": null
@@ -51,8 +51,8 @@
         "preload_data": true,
         "augmentation_config": {
             "rotate": true,
-            "rotation_min_angle": -180,
-            "rotation_max_angle": 180,
+            "rotation_min_angle": -15,
+            "rotation_max_angle": 15,
             "translate": false,
             "translate_min": -5,
             "translate_max": 5,

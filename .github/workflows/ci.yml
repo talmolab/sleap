@@ -6,6 +6,10 @@ on:
     paths:
       - 'sleap/**'
       - 'tests/**'
+      - '.github/workflows/ci.yml'
+      - 'environment_no_cuda.yml'
+      - 'requirements.txt'
+      - 'dev_requirements.txt'
 
 jobs:
   type_check:
@@ -13,10 +17,10 @@ jobs:
     runs-on: "ubuntu-18.04"
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python 3.6
+    - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
-        python-version: 3.6
+        python-version: 3.7
     - name: Install Dependencies
       run: |
         pip install mypy
@@ -30,10 +34,10 @@ jobs:
     runs-on: "ubuntu-18.04"
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python 3.6
+    - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
-        python-version: 3.6
+        python-version: 3.7
     - name: Install Dependencies
       run: |
         pip install black==20.8b1
@@ -53,18 +57,18 @@ jobs:
       - name: Cache conda
         uses: actions/cache@v1
         env:
-          # Increase this value to reset cache if environment_build.yml has not changed
+          # Increase this value to reset cache if environment_no_cuda.yml has not changed
           CACHE_NUMBER: 0
         with:
           path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'requirements.txt') }}
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_no_cuda.yml', 'requirements.txt') }}
       - name: Setup Miniconda
         # https://github.com/conda-incubator/setup-miniconda
         uses: conda-incubator/setup-miniconda@v2.0.1
         with:
-          python-version: 3.6
+          python-version: 3.7
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-          environment-file: environment_build.yml
+          environment-file: environment_no_cuda.yml
           activate-environment: sleap
       - name: Print environment info
         shell: bash -l {0}
@@ -83,8 +87,14 @@ jobs:
       - name: Test with pytest (Ubuntu)
         if: matrix.os == 'ubuntu-18.04'
         shell: bash -l {0}
+          # https://pytest-qt.readthedocs.io/en/latest/troubleshooting.html#github-actions
+          # sudo apt-get install xvfb libxkbcommon-x11-0
+          # sudo apt install libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
+          # export DISPLAY=":99.0"
+          # /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
+          # xvfb-run pytest --cov=sleap --cov-report=xml tests/
         run: |
-          sudo apt-get install xvfb libxkbcommon-x11-0
+          sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
           sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
           export DISPLAY=":1"
           xvfb-run pytest --cov=sleap --cov-report=xml tests/

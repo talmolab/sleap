@@ -798,7 +798,10 @@ def test_save_labels_with_frame_data(multi_skel_vid_labels, tmpdir, format):
         filename=filename,
         save_frame_data=True,
         frame_data_format=format,
+        # compress=True,
     )
+
+    print(filename, os.path.exists(filename + ".zip"))
 
     # Load the data back in
     loaded_labels = Labels.load_json(f"{filename}.zip")
@@ -1287,21 +1290,38 @@ def test_remove_predictions_with_new_labels(removal_test_labels):
 
 
 def test_labels_numpy(centered_pair_predictions):
-    trx = centered_pair_predictions.numpy(video=None, all_frames=False)
+    trx = centered_pair_predictions.numpy(video=None, all_frames=False, untracked=False)
     assert trx.shape == (1100, 27, 24, 2)
 
-    trx = centered_pair_predictions.numpy(video=None, all_frames=True)
+    trx = centered_pair_predictions.numpy(video=None, all_frames=True, untracked=False)
     assert trx.shape == (1100, 27, 24, 2)
 
     # Remove the first labeled frame
     centered_pair_predictions.remove_frame(centered_pair_predictions[0])
     assert len(centered_pair_predictions) == 1099
 
-    trx = centered_pair_predictions.numpy(video=None, all_frames=False)
+    trx = centered_pair_predictions.numpy(video=None, all_frames=False, untracked=False)
     assert trx.shape == (1099, 27, 24, 2)
 
-    trx = centered_pair_predictions.numpy(video=None, all_frames=True)
+    trx = centered_pair_predictions.numpy(video=None, all_frames=True, untracked=False)
     assert trx.shape == (1100, 27, 24, 2)
+
+    labels_single = Labels(
+        [
+            LabeledFrame(
+                video=lf.video, frame_idx=lf.frame_idx, instances=[lf.instances[0]]
+            )
+            for lf in centered_pair_predictions
+        ]
+    )
+    assert labels_single.numpy().shape == (1100, 1, 24, 2)
+
+    assert centered_pair_predictions.numpy(untracked=True).shape == (1100, 5, 24, 2)
+    for lf in centered_pair_predictions:
+        for inst in lf:
+            inst.track = None
+    centered_pair_predictions.tracks = []
+    assert centered_pair_predictions.numpy(untracked=False).shape == (1100, 0, 24, 2)
 
 
 def test_remove_track(centered_pair_predictions):

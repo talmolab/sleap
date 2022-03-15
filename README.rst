@@ -21,85 +21,138 @@
    :alt: Downloads
 
 .. |Stable version| image:: https://img.shields.io/github/v/release/murthylab/sleap?label=stable
-   :target: https://GitHub.com/murthylab/sleap/releases/
+   :target: https://github.com/murthylab/sleap/releases/
    :alt: Stable version
 
 .. |Latest version| image:: https://img.shields.io/github/v/release/murthylab/sleap?include_prereleases&label=latest
-   :target: https://GitHub.com/murthylab/sleap/releases/
+   :target: https://github.com/murthylab/sleap/releases/
    :alt: Latest version
 
 
 .. start-inclusion-marker-do-not-remove
 
 
-**SLEAP** - Social LEAP Estimates Animal Poses
-==============================================
+Social LEAP Estimates Animal Poses (SLEAP)
+==========================================
 
 .. image:: https://sleap.ai/docs/_static/sleap_movie.gif
     :width: 600px
 
-**SLEAP** is an open source deep-learning based framework for estimating positions of animal body parts. It supports *multi-animal pose estimation* and *tracking*, and includes an advanced labeling/training GUI for active learning and proofreading.
-
-SLEAP is written in Python and uses TensorFlow 2 for machine learning and Qt/PySide2 for graphical user interface. SLEAP is the successor to `LEAP <https://github.com/talmo/leap>`_ (`Pereira et al., Nature Methods, 2019 <https://www.nature.com/articles/s41592-018-0234-5>`_).
+**SLEAP** is an open source deep-learning based framework for multi-animal pose tracking. It can be used to track any type or number of animals and includes an advanced labeling/training GUI for active learning and proofreading.
 
 
 Features
-------------
-
+--------
+* Easy, one-line installation with support for all OSes
 * Purpose-built GUI and human-in-the-loop workflow for rapidly labeling large datasets
-* Multi-animal pose estimation with *top-down* and *bottom-up* training strategies
+* Single- and multi-animal pose estimation with *top-down* and *bottom-up* training strategies
 * State-of-the-art pretrained and customizable neural network architectures that deliver *accurate predictions* with *very few* labels
 * Fast training: 15 to 60 mins on a single GPU for a typical dataset
-* Fast inference: 400+ FPS for batch, <10ms latency for realtime
+* Fast inference: up to 600+ FPS for batch, <10ms latency for realtime
 * Support for remote training/inference workflow (for using SLEAP without GPUs)
 * Flexible developer API for building integrated apps and customization
 
 
-Getting started
-----------------
-
-To get started with SLEAP, head over to the `Documentation <https://sleap.ai>`_ where you'll find tutorials, guides and example notebooks.
-
-To learn more about the technical side of SLEAP and multi-animal pose tracking, check out our `preprint on bioRxiv <https://doi.org/10.1101/2020.08.31.276246>`_ or watch the `tutorial on SLEAP <https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking>`_. For a more general introduction to the field of quantitative animal behavior, check out our `review in Nature Neuroscience <https://rdcu.be/caH3H>`_.
+Get some SLEAP
+--------------
+SLEAP is installed as a Python package. We strongly recommend using `Miniconda <https://https://docs.conda.io/en/latest/miniconda.html>`_ to install SLEAP in its own environment.
 
 You can find the latest version of SLEAP in the `Releases <https://github.com/murthylab/sleap/releases>`_ page.
+
+Quick install
+^^^^^^^^^^^^^
+`conda` **(Windows/Linux/GPU)**:
+
+.. code-block:: bash
+
+    conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap
+
+
+`pip` **(any OS)**:
+
+.. code-block:: bash
+
+    pip install sleap
+
+
+See the docs for `full installation instructions <https://sleap.ai/installation.html>`_.
+
+Learn to SLEAP
+--------------
+- **Learn step-by-step**: `Tutorial <https://sleap.ai/tutorials/tutorial.html>`_
+- **Learn more advanced usage**: `Guides <https://sleap.ai/guides/>`_ and `Notebooks <https://sleap.ai/notebooks/>`_
+- **Learn by watching**: `MIT CBMM Tutorial <https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking>`_
+- **Learn by reading**: `Paper (Pereira et al., bioRxiv, 2020) <https://doi.org/10.1101/2020.08.31.276246>`_ and `Review on behavioral quantification (Pereira et al., Nature Neuroscience, 2020) <https://rdcu.be/caH3H>`_
 
 
 References
 -----------
-If you use **SLEAP** in your research, please cite:
+SLEAP is the successor to the single-animal pose estimation software `LEAP <https://github.com/talmo/leap>`_ (`Pereira et al., Nature Methods, 2019 <https://www.nature.com/articles/s41592-018-0234-5>`_).
 
-    Talmo D. Pereira, Nathaniel Tabris, Junyu Li, Shruthi Ravindranath, Eleni S. Papadoyannis, Z. Yan Wang, David M. Turner, et al. 2020. "SLEAP: Multi-Animal Pose Tracking." *bioRxiv*. https://doi.org/10.1101/2020.08.31.276246.
+If you use SLEAP in your research, please cite:
 
-License
--------
-SLEAP is released under a `Clear BSD License <https://raw.githubusercontent.com/murthylab/sleap/main/LICENSE>`_ and is intended for research/academic use only. For commercial use, please contact: Laurie Tzodikov (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256.
+    Pereira, Talmo D., Nathaniel Tabris, Junyu Li, Shruthi Ravindranath, Eleni S. Papadoyannis, Z. Yan Wang, David M. Turner, et al. 2020. "SLEAP: Multi-Animal Pose Tracking." *bioRxiv*. https://doi.org/10.1101/2020.08.31.276246.
+
+
+**BibTeX:**
+
+.. code-block:: tex
+
+   @ARTICLE{Pereira2020-tt,
+   title    = "{SLEAP}: Multi-animal pose tracking",
+   author   = "Pereira, Talmo D and Tabris, Nathaniel and Li, Junyu and
+               Ravindranath, Shruthi and Papadoyannis, Eleni S and Yan Wang, Z
+               and Turner, David M and McKenzie-Smith, Grace and Kocher, Sarah D
+               and Falkner, Annegret Lea and Shaevitz, Joshua W and Murthy, Mala",
+   journal  = "bioRxiv",
+   pages    = "2020.08.31.276246",
+   month    =  sep,
+   year     =  2020,
+   language = "en"
+   }
+
 
 Contact
 -------
 
-Follow `@MurthyLab <https://twitter.com/MurthyLab>`_ on Twitter for news and updates!
+Follow `@talmop <https://twitter.com/talmop>`_ on Twitter for news and updates!
 
-**Technical issue with the software?** Check the `Help page <https://sleap.ai/help.html>`_ first, then `open an issue on GitHub. <https://github.com/murthylab/sleap/issues>`_
+**Technical issue with the software?**
 
-**Press inquiries? Interested in using SLEAP in a commercial application?** Reach out at `sleap@princeton.edu`_.
+1. Check the `Help page <https://sleap.ai/help.html>`_.
+2. Search the `issues on GitHub <https://github.com/murthylab/sleap/issues>`_ or open a new one.
 
-.. _sleap@princeton.edu: sleap@princeton.edu
 
+**General inquiries?**
+Reach out to `talmo@salk.edu`.
 
 .. _Contributors:
 
 Contributors
 ------------
 
-* **Talmo Pereira**, Princeton Neuroscience Institute, Princeton University
+* **Talmo Pereira**, Salk Institute for Biological Studies
+* **Liezl Maree**, Salk Institute for Biological Studies
 * **Arie Matsliah**, Princeton Neuroscience Institute, Princeton University
 * **Nat Tabris**, Princeton Neuroscience Institute, Princeton University
 * **David Turner**, Research Computing and Princeton Neuroscience Institute, Princeton University
 * **Joshua Shaevitz**, Physics and Lewis-Sigler Institute, Princeton University
 * **Mala Murthy**, Princeton Neuroscience Institute, Princeton University
 
-SLEAP is developed in the `Murthy <https://murthylab.princeton.edu>`_ and `Shaevitz <https://shaevitzlab.princeton.edu>`_ labs at the `Princeton Neuroscience Institute <https://pni.princeton.edu>`_ at Princeton University. This work was made possible through our funding sources, including: NIH BRAIN Initiative R01 NS104899 and Princeton Innovation Accelerator Fund.
+SLEAP was created in the `Murthy <https://murthylab.princeton.edu>`_ and `Shaevitz <https://shaevitzlab.princeton.edu>`_ labs at the `Princeton Neuroscience Institute <https://pni.princeton.edu>`_ at Princeton University.
+
+SLEAP is currently being developed and maintained in the `Talmo Lab <https://talmolab.org>`_ at the `Salk Institute for Biological Studies <https://salk.edu>`_, in collaboration with the Murthy and Shaevitz labs at Princeton University.
+
+This work was made possible through our funding sources, including:
+
+* NIH BRAIN Initiative R01 NS104899
+* Princeton Innovation Accelerator Fund
+
+
+License
+-------
+SLEAP is released under a `Clear BSD License <https://raw.githubusercontent.com/murthylab/sleap/main/LICENSE>`_ and is intended for research/academic use only. For commercial use, please contact: Laurie Tzodikov (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256.
+
 
 .. end-inclusion-marker-do-not-remove
 

@@ -50,6 +50,7 @@ import re
 import os
 import random
 import platform
+from pathlib import Path
 
 from typing import Callable, List, Optional, Tuple
 
@@ -79,6 +80,7 @@ from sleap.gui.dataviews import (
     LabeledFrameTableModel,
     SkeletonNodeModel,
 )
+from sleap.util import parse_uri_path
 
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget, FormBuilderModalDialog
@@ -116,6 +118,7 @@ class MainWindow(QMainWindow):
             reset: If `True`, reset preferences to default (including window state).
         """
         super(MainWindow, self).__init__(*args, **kwargs)
+        self.setAcceptDrops(True)
 
         self.state = GuiState()
         self.labels = Labels()
@@ -134,7 +137,9 @@ class MainWindow(QMainWindow):
 
         self.state["skeleton"] = Skeleton()
         self.state["labeled_frame"] = None
+        self.state["last_interacted_frame"] = None
         self.state["filename"] = None
+        self.state["show non-visible nodes"] = prefs["show non-visible nodes"]
         self.state["show labels"] = True
         self.state["show edges"] = True
         self.state["edge style"] = prefs["edge style"]
@@ -145,6 +150,7 @@ class MainWindow(QMainWindow):
         self.state["node label size"] = prefs["node label size"]
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
+        self.state.connect("show non-visible nodes", self.plotFrame)
 
         self.release_checker = ReleaseChecker()
 
@@ -190,6 +196,7 @@ class MainWindow(QMainWindow):
         # Save window state.
         prefs["window state"] = self.saveState()
         prefs["marker size"] = self.state["marker size"]
+        prefs["show non-visible nodes"] = self.state["show non-visible nodes"]
         prefs["node label size"] = self.state["node label size"]
         prefs["edge style"] = self.state["edge style"]
         prefs["propagate track labels"] = self.state["propagate track labels"]
@@ -223,6 +230,36 @@ class MainWindow(QMainWindow):
                 self.commands.saveProject()
                 # accept event (closes window)
                 event.accept()
+
+    def dragEnterEvent(self, event):
+        # TODO: Parse filenames and accept only if valid ext (or folder)
+        mime_format = 'application/x-qt-windows-mime;value="FileName"'
+        if mime_format in event.mimeData().formats():
+            # This only returns the first filename if multiple files are dropped:
+            filename = event.mimeData().data(mime_format).data().decode()
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+
+        # Parse filenames
+        filenames = event.mimeData().data("text/uri-list").data().decode()
+        filenames = [parse_uri_path(f.strip()) for f in filenames.strip().split("\n")]
+
+        exts = [Path(f).suffix for f in filenames]
+
+        VIDEO_EXTS = (".mp4", ".avi", ".h5")  # TODO: make this list global
+
+        if len(exts) == 1 and exts[0].lower() == ".slp":
+            if self.state["project_loaded"]:
+                # Merge
+                self.commands.mergeProject(filenames=filenames)
+            else:
+                # Load
+                self.commands.openProject(filename=filenames[0], first_open=True)
+
+        elif all([ext.lower() in VIDEO_EXTS for ext in exts]):
+            # Import videos
+            self.commands.showImportVideos(filenames=filenames)
 
     @property
     def labels(self):
@@ -371,7 +408,7 @@ class MainWindow(QMainWindow):
             fileMenu,
             "import predictions",
             "Merge into Project...",
-            self.commands.importPredictions,
+            self.commands.mergeProject,
         )
 
         fileMenu.addSeparator()
@@ -413,6 +450,12 @@ class MainWindow(QMainWindow):
             "goto prev labeled",
             "Previous Labeled Frame",
             self.commands.previousLabeledFrame,
+        )
+        add_menu_item(
+            goMenu,
+            "goto last interacted",
+            "Last Interacted Frame",
+            self.commands.lastInteractedFrame,
         )
         add_menu_item(
             goMenu,
@@ -506,6 +549,9 @@ class MainWindow(QMainWindow):
 
         viewMenu.addSeparator()
 
+        add_menu_check_item(
+            viewMenu, "show non-visible nodes", "Show Non-Visible Nodes"
+        )
         add_menu_check_item(viewMenu, "show labels", "Show Node Names")
         add_menu_check_item(viewMenu, "show edges", "Show Edges")
 
@@ -1232,6 +1278,9 @@ class MainWindow(QMainWindow):
                 )
             self.suggested_count_label.setText(suggestion_status_text)
 
+        if _has_topic([UpdateTopic.frame, UpdateTopic.project_instances]):
+            self.state["last_interacted_frame"] = self.state["labeled_frame"]
+
     def plotFrame(self, *args, **kwargs):
         """Plots (or replots) current frame."""
         if self.state["video"] is None:
@@ -1287,7 +1336,7 @@ class MainWindow(QMainWindow):
                 message += f"Selection: {start+1:,}-{end:,} ({end-start+1:,} frames)"
 
             message += f"{spacer}Labeled Frames: "
-            if current_video is not None:
+            if current_video is not None and current_video in self.labels.videos:
                 message += str(
                     self.labels.get_labeled_frame_count(current_video, "user")
                 )
@@ -1539,6 +1588,7 @@ class MainWindow(QMainWindow):
             return
 
         if self._child_windows.get(mode, None) is None:
+            # Re-use existing dialog widget.
             self._child_windows[mode] = LearningDialog(
                 mode,
                 self.state["filename"],
@@ -1547,6 +1597,11 @@ class MainWindow(QMainWindow):
             self._child_windows[mode]._handle_learning_finished.connect(
                 self._handle_learning_finished
             )
+        else:
+            # Update data in existing dialog widget.
+            self._child_windows[mode].labels = self.labels
+            self._child_windows[mode].labels_filename = self.state["filename"]
+            self._child_windows[mode].skeleton = self.labels.skeleton
 
         self._child_windows[mode].update_file_lists()
 

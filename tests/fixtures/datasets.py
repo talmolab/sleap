@@ -42,6 +42,11 @@ def min_labels_slp():
 
 
 @pytest.fixture
+def min_labels_slp_path():
+    return TEST_SLP_MIN_LABELS
+
+
+@pytest.fixture
 def min_labels_robot():
     return Labels.load_file(TEST_SLP_MIN_LABELS_ROBOT)
 

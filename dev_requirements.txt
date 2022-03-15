@@ -1,10 +1,14 @@
 pytest
 pytest-qt
 pytest-cov
+pytest-xvfb
 ipython
 sphinx
-furo
+# furo
+sphinx-book-theme
 sphinx-copybutton
+myst-parser
+linkify-it-py
 myst-nb
 sphinx-autobuild
 black==21.6b0
@@ -13,3 +17,4 @@ twine==3.3.0
 PyGithub
 jupyterlab
 jedi==0.17.2
+ipykernel

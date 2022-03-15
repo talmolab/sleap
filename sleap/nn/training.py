@@ -157,7 +157,7 @@ class DataReaders:
         """Create data readers from sleap.Labels datasets as data providers."""
         if isinstance(training, str):
             logger.info(f"Loading training labels from: {training}")
-            training = sleap.Labels.load_file(training, video_search=video_search_paths)
+            training = sleap.load_file(training, search_paths=video_search_paths)
 
         if labels_config is not None and labels_config.split_by_inds:
             # First try to split by indices if specified in config.
@@ -192,7 +192,7 @@ class DataReaders:
             # If validation is still a path, load it.
             logger.info(f"Loading validation labels from: {validation}")
             validation = sleap.Labels.load_file(
-                validation, video_search=video_search_paths
+                validation, search_paths=video_search_paths
             )
         elif isinstance(validation, float):
             logger.info(
@@ -217,7 +217,7 @@ class DataReaders:
         if isinstance(test, str):
             # If test is still a path, load it.
             logger.info(f"Loading test labels from: {test}")
-            test = sleap.Labels.load_file(test, video_search=video_search_paths)
+            test = sleap.load_file(test, search_paths=video_search_paths)
 
         test_reader = None
         if test is not None:
@@ -1033,6 +1033,7 @@ class SingleInstanceModelTrainer(Trainer):
         inference_layer = SingleInstanceInferenceLayer(
             keras_model=self.keras_model,
             input_scale=self.config.data.preprocessing.input_scaling,
+            pad_to_stride=self.config.data.preprocessing.pad_to_stride,
             peak_threshold=0.2,
             return_confmaps=True,
         )
@@ -1567,6 +1568,9 @@ def main():
     job_config.outputs.save_visualizations |= args.save_viz
     if args.labels_path == "":
         args.labels_path = None
+    args.video_paths = args.video_paths.split(",")
+    if len(args.video_paths) == 0:
+        args.video_paths = None
 
     logger.info("Versions:")
     sleap.versions()
@@ -1612,7 +1616,7 @@ def main():
         training_labels=args.labels_path,
         validation_labels=args.val_labels,
         test_labels=args.test_labels,
-        video_search_paths=args.video_paths.split(","),
+        video_search_paths=args.video_paths,
     )
     trainer.train()
 

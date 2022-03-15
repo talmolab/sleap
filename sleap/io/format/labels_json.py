@@ -286,12 +286,13 @@ class LabelsJsonAdaptor(Adaptor):
         if compress is None:
             compress = filename.endswith(".zip")
 
-        # Lets make a temporary directory to store the image frame data or pre-compressed json
-        # in case we need it.
+        # Lets make a temporary directory to store the image frame data or pre-
+        # compressed json in case we need it.
         with tempfile.TemporaryDirectory() as tmp_dir:
 
-            # If we are saving frame data along with the datasets. We will replace videos with
-            # new video object that represent video data from just the labeled frames.
+            # If we are saving frame data along with the datasets. We will replace
+            # videos with new video object that represent video data from just the
+            # labeled frames.
             if save_frame_data:
 
                 # Create a set of new Video objects with imgstore backends. One for each
@@ -314,7 +315,8 @@ class LabelsJsonAdaptor(Adaptor):
                     # Change to relative path
                     vid.backend.filename = img_store_dir
 
-                # Convert to a dict, not JSON yet, because we need to patch up the videos
+                # Convert to a dict, not JSON yet, because we need to patch up the
+                # videos
                 d = labels.to_dict()
                 d["videos"] = Video.cattr().unstructure(new_videos)
 
@@ -328,16 +330,18 @@ class LabelsJsonAdaptor(Adaptor):
 
                 # Ensure that filename ends with .json
                 # shutil will append .zip
-                filename = re.sub("(\\.json)?(\\.zip)?$", ".json", filename)
+                filename = re.sub(r"(\.json\.zip)$", ".json", filename)
 
-                # Write the json to the tmp directory, we will zip it up with the frame data.
+                # Write the json to the tmp directory, we will zip it up with the frame
+                # data.
                 full_out_filename = os.path.join(tmp_dir, os.path.basename(filename))
                 json_dumps(d, full_out_filename)
 
                 # Create the archive
                 shutil.make_archive(base_name=filename, root_dir=tmp_dir, format="zip")
 
-            # If the user doesn't want to compress, then just write the json to the filename
+            # If the user doesn't want to compress, then just write the json to the
+            # filename
             else:
                 json_dumps(d, filename)
 

@@ -16,27 +16,42 @@ about:
   summary: {{ data.get('description') }}
 
 build:
-  # number: {{ GIT_DESCRIBE_NUMBER }}
-  number: {{ data.get('version') }}
+  number: 0
 
 source:
   path: ../
 
 requirements:
   host:
-    - python=3.6
-    - sleap::tensorflow=2.3.1
-    - sleap::pyside2=5.14.1
+    - python=3.7
+    # - sleap::pyside2=5.14.1
+    - conda-forge::numpy=1.19.5
+    - sleap::tensorflow=2.6.3
+    - conda-forge::pyside2=5.13.2
+    - conda-forge::h5py=3.1.0
+    - conda-forge::scipy=1.7.3
+    - conda-forge::six=1.15.0
+    - pillow=8.4.0
+    - shapely=1.7.1
+    - conda-forge::pandas
+    - ffmpeg
     - pip
 
   run:
-    - python=3.6
-    - cudatoolkit=10.1
-    - cudnn=7.6
-    - sleap::tensorflow=2.3.1
-    - sleap::pyside2=5.14.1
-    - Pillow
-    - Shapely
+    - python=3.7
+    - conda-forge::numpy~=1.19.5
+    - sleap::tensorflow=2.6.3
+    - conda-forge::pyside2>=5.13.2,<=5.14.1
+    - conda-forge::h5py~=3.1.0
+    - conda-forge::scipy>=1.4.1,<=1.7.3
+    - conda-forge::six~=1.15.0
+    - pillow=8.4.0
+    - shapely=1.7.1
+    - conda-forge::pandas
+    - ffmpeg
+    - cudatoolkit=11.3.1
+    - cudnn=8.2.1
+    - nvidia::cuda-nvcc=11.3
     - pip
 
   run_constrained:

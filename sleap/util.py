@@ -10,6 +10,10 @@ import shutil
 from collections import defaultdict
 from pkg_resources import Requirement, resource_filename
 
+from pathlib import Path
+from urllib.parse import unquote, urlparse
+from urllib.request import url2pathname
+
 import h5py as h5
 import numpy as np
 import attr
@@ -216,8 +220,8 @@ def weak_filename_match(filename_a: str, filename_b: str) -> bool:
     filename_b = filename_b.replace("\\", "/")
 
     # remove unique pid so we can match tmp directories for same zip
-    filename_a = re.sub("/tmp_\d+_", "tmp_", filename_a)
-    filename_b = re.sub("/tmp_\d+_", "tmp_", filename_b)
+    filename_a = re.sub(r"/tmp_\d+_", "tmp_", filename_a)
+    filename_b = re.sub(r"/tmp_\d+_", "tmp_", filename_b)
 
     # check if last three parts of path match
     return filename_a.split("/")[-3:] == filename_b.split("/")[-3:]
@@ -380,3 +384,8 @@ def find_files_by_suffix(
             )
 
     return matching_files
+
+
+def parse_uri_path(uri: str) -> str:
+    """Parse a URI starting with 'file:///' to a posix path."""
+    return Path(url2pathname(urlparse(unquote(uri)).path)).as_posix()

@@ -13,32 +13,37 @@ rem # this out myself, ughhh.
 set PIP_NO_INDEX=False
 set PIP_NO_DEPENDENCIES=False
 set PIP_IGNORE_INSTALLED=False
-rem pip install "numpy>=1.18.1,<1.19.0"
-pip install attrs==19.3
-pip install cattrs==1.0.0rc
+
+pip install numpy==1.19.5
+pip install six==1.15.0
+pip install imageio==2.15.0
+pip install attrs==21.2.0
+pip install cattrs==1.1.1
 pip install jsonpickle==1.2
 pip install networkx
-rem pip install tensorflow==2.3.1
-rem pip install h5py==2.10.0
+@REM pip install tensorflow>=2.6.3,<=2.7.1
+@REM pip install h5py>=3.1.0,<=3.6.0
 pip install python-rapidjson
-rem pip install opencv-python-headless==4.2.0.34
-pip install pandas
+@REM pip install opencv-python-headless>=4.2.0.34,<=4.5.5.62
+@REM pip install opencv-python @ git+https://github.com/talmolab/wrap_opencv-python-headless.git@ede49f6a23a73033216339f29515e59d594ba921
+@REM pip install pandas
 pip install psutil
-rem pip install "PySide2>=5.12.0,<=5.14.1"
+@REM pip install PySide2>=5.13.2,<=5.14.1
 pip install pyzmq
 pip install pyyaml
-pip install imgaug==0.3.0
-pip install "scipy<=1.4.1"
+pip install imgaug==0.4.0
+@REM pip install scipy>=1.4.1,<=1.7.3
 pip install scikit-image
-pip install scikit-learn
+pip install scikit-learn==1.0.*
 pip install scikit-video
 pip install imgstore==0.2.9
-pip install qimage2ndarray==1.8
+pip install qimage2ndarray==1.8.3
 pip install jsmin
 pip install seaborn
 pip install pykalman==0.9.5
 pip install segmentation-models==1.0.1
-pip install rich==9.10.0
+pip install rich==10.16.1
+pip install certifi==2021.10.8
 
 rem # Use and update environment.yml call to install pip dependencies. This is slick.
 rem # While environment.yml contains the non pip dependencies, the only thing left
