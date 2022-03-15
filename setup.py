@@ -41,8 +41,8 @@ setup(
     author_email="talmo@salk.edu",
     project_urls={
         "Documentation": "https://sleap.ai/",
-        "Bug Tracker": "https://github.com/talmolab/sleap/issues",
-        "Source Code": "https://github.com/talmolab/sleap",
+        "Bug Tracker": "https://github.com/murthylab/sleap/issues",
+        "Source Code": "https://github.com/murthylab/sleap",
     },
     url="https://sleap.ai",
     keywords="deep learning, pose estimation, tracking, neuroscience",

@@ -15,8 +15,8 @@
 
 ### Outside contributors checklist
 
-- [ ] Review the [guidelines for contributing](https://github.com/talmolab/sleap/wiki/Developer-Guide) to this repository
-- [ ] Read and sign the [CLA](https://github.com/talmolab/sleap/blob/develop/sleap-cla.pdf) and add yourself to the [authors list](https://github.com/talmolab/sleap/blob/develop/AUTHORS)
+- [ ] Review the [guidelines for contributing](https://github.com/murthylab/sleap/wiki/Developer-Guide) to this repository
+- [ ] Read and sign the [CLA](https://github.com/murthylab/sleap/blob/develop/sleap-cla.pdf) and add yourself to the [authors list](https://github.com/murthylab/sleap/blob/develop/AUTHORS)
 - [ ] Make sure you are making a pull request against the **develop** branch (not *main*). Also you should start *your branch* off *develop*
 - [ ] Add tests that prove your fix is effective or that your feature works
 - [ ] Add necessary documentation (if appropriate)

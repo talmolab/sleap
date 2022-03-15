@@ -7,7 +7,7 @@ import requests
 from typing import List, Dict, Optional
 
 
-REPO_ID = "talmolab/sleap"
+REPO_ID = "murthylab/sleap"
 
 
 @attr.s(auto_attribs=True)
