@@ -32,6 +32,8 @@ from sleap.nn.config import (
     CentroidsHeadConfig,
     CenteredInstanceConfmapsHeadConfig,
     MultiInstanceConfig,
+    MultiClassBottomUpConfig,
+    MultiClassTopDownConfig,
     SingleInstanceConfmapsHeadConfig,
 )
 from sleap.nn.model import Model
@@ -39,6 +41,7 @@ from sleap.nn.data.pipelines import LabelsReader
 from sleap.nn.inference import (
     TopDownPredictor,
     BottomUpPredictor,
+    BottomUpMultiClassPredictor,
     SingleInstancePredictor,
 )
 
@@ -195,7 +198,7 @@ def compute_oks(
     assert displacement.shape == (n_gt, n_pr, n_nodes, n_ed)
 
     # Convert to pairwise Euclidean distances.
-    distance = (displacement ** 2).sum(axis=-1)  # (n_gt, n_pr, n_nodes)
+    distance = (displacement**2).sum(axis=-1)  # (n_gt, n_pr, n_nodes)
     assert distance.shape == (n_gt, n_pr, n_nodes)
 
     # Compute the normalization factor per keypoint.
@@ -691,6 +694,18 @@ def evaluate_model(
     elif isinstance(head_config, SingleInstanceConfmapsHeadConfig):
         predictor = sleap.nn.inference.SingleInstancePredictor(
             confmap_config=cfg, confmap_model=model
+        )
+    elif isinstance(head_config, MultiClassBottomUpConfig):
+        predictor = sleap.nn.inference.BottomUpMultiClassPredictor(
+            config=cfg,
+            model=model,
+        )
+    elif isinstance(head_config, MultiClassTopDownConfig):
+        predictor = sleap.nn.inference.TopDownMultiClassPredictor(
+            centroid_config=None,
+            centroid_model=None,
+            confmap_config=cfg,
+            confmap_model=model,
         )
     else:
         raise ValueError("Unrecognized model type:", head_config)

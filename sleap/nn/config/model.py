@@ -28,6 +28,9 @@ class SingleInstanceConfmapsHeadConfig:
             results in confidence maps that are 0.5x the size of the input. Increasing
             this value can considerably speed up model performance and decrease memory
             requirements, at the cost of decreased spatial resolution.
+        loss_weight: Scalar float used to weigh the loss term for this head during
+            training. Increase this to encourage the optimization to focus on improving
+            this specific output in multi-head models.
         offset_refinement: If `True`, model will also output an offset refinement map
             used to achieve subpixel localization of peaks during inference. This can
             improve the localization accuracy of the model at the cost of additional
@@ -40,6 +43,7 @@ class SingleInstanceConfmapsHeadConfig:
     part_names: Optional[List[Text]] = None
     sigma: float = 5.0
     output_stride: int = 1
+    loss_weight: float = 1.0
     offset_refinement: bool = False
 
 
@@ -72,6 +76,9 @@ class CentroidsHeadConfig:
             results in confidence maps that are 0.5x the size of the input. Increasing
             this value can considerably speed up model performance and decrease memory
             requirements, at the cost of decreased spatial resolution.
+        loss_weight: Scalar float used to weigh the loss term for this head during
+            training. Increase this to encourage the optimization to focus on improving
+            this specific output in multi-head models.
         offset_refinement: If `True`, model will also output an offset refinement map
             used to achieve subpixel localization of peaks during inference. This can
             improve the localization accuracy of the model at the cost of additional
@@ -84,6 +91,7 @@ class CentroidsHeadConfig:
     anchor_part: Optional[Text] = None
     sigma: float = 5.0
     output_stride: int = 1
+    loss_weight: float = 1.0
     offset_refinement: bool = False
 
 
@@ -129,6 +137,9 @@ class CenteredInstanceConfmapsHeadConfig:
             results in confidence maps that are 0.5x the size of the input. Increasing
             this value can considerably speed up model performance and decrease memory
             requirements, at the cost of decreased spatial resolution.
+        loss_weight: Scalar float used to weigh the loss term for this head during
+            training. Increase this to encourage the optimization to focus on improving
+            this specific output in multi-head models.
         offset_refinement: If `True`, model will also output an offset refinement map
             used to achieve subpixel localization of peaks during inference. This can
             improve the localization accuracy of the model at the cost of additional
@@ -142,6 +153,7 @@ class CenteredInstanceConfmapsHeadConfig:
     part_names: Optional[List[Text]] = None
     sigma: float = 5.0
     output_stride: int = 1
+    loss_weight: float = 1.0
     offset_refinement: bool = False
 
 
@@ -274,6 +286,125 @@ class MultiInstanceConfig:
     pafs: PartAffinityFieldsHeadConfig = attr.ib(factory=PartAffinityFieldsHeadConfig)
 
 
+@attr.s(auto_attribs=True)
+class ClassMapsHeadConfig:
+    """Configurations for class map heads.
+
+    These heads are used in bottom-up multi-instance models that classify detected
+    points using a fixed set of learned classes (e.g., animal identities).
+
+    Class maps are an image-space representation of the probability of that each class
+    occupies a given pixel. This is similar to semantic segmentation, however only the
+    pixels in the neighborhood of the landmarks have a class assignment.
+
+    Attributes:
+        classes: List of string names of the classes that this head will predict.
+        sigma: Spread of the Gaussian distribution that determines the neighborhood
+            that the class maps will be nonzero around each landmark.
+        output_stride: The stride of the output class maps relative to the input image.
+            This is the reciprocal of the resolution, e.g., an output stride of 2
+            results in maps that are 0.5x the size of the input. This should be the same
+            size as the confidence maps they are associated with.
+        loss_weight: Scalar float used to weigh the loss term for this head during
+            training. Increase this to encourage the optimization to focus on improving
+            this specific output in multi-head models.
+    """
+
+    classes: Optional[List[Text]] = None
+    sigma: float = 5.0
+    output_stride: int = 1
+    loss_weight: float = 1.0
+
+
+@attr.s(auto_attribs=True)
+class MultiClassBottomUpConfig:
+    """Configuration for multi-instance confidence map and class map models.
+
+    This configuration specifies a multi-head model that outputs both multi-instance
+    confidence maps and class maps, which together enable multi-instance pose tracking
+    in a bottom-up fashion, i.e., no instance cropping, centroids or PAFs are required.
+    The limitation with this approach is that the classes, e.g., animal identities, must
+    be labeled in the training data and cannot be generalized beyond those classes. This
+    is still useful for applications in which the animals are uniquely identifiable and
+    tracking their identities at inference time is critical, e.g., for closed loop
+    experiments.
+
+    Attributes:
+        confmaps: Part confidence map configuration (see the description in
+            `MultiInstanceConfmapsHeadConfig`).
+        class_maps: Class map configuration (see the description in
+            `ClassMapsHeadConfig`).
+    """
+
+    confmaps: MultiInstanceConfmapsHeadConfig = attr.ib(
+        factory=MultiInstanceConfmapsHeadConfig
+    )
+    class_maps: ClassMapsHeadConfig = attr.ib(factory=ClassMapsHeadConfig)
+
+
+@attr.s(auto_attribs=True)
+class ClassVectorsHeadConfig:
+    """Configurations for class vectors heads.
+
+    These heads are used in top-down multi-instance models that classify detected
+    points using a fixed set of learned classes (e.g., animal identities).
+
+    Class vectors represent the probability that the image is associated with each of
+    the specified classes. This is similar to a standard classification task.
+
+    Attributes:
+        classes: List of string names of the classes that this head will predict.
+        num_fc_layers: Number of fully-connected layers before the classification output
+            layer. These can help in transforming general image features into
+            classification-specific features.
+        num_fc_units: Number of units (dimensions) in the fully-connected layers before
+            classification. Increasing this can improve the representational capacity in
+            the pre-classification layers.
+        output_stride: The stride of the output class maps relative to the input image.
+            This is the reciprocal of the resolution, e.g., an output stride of 2
+            results in maps that are 0.5x the size of the input. This should be the same
+            size as the confidence maps they are associated with.
+        loss_weight: Scalar float used to weigh the loss term for this head during
+            training. Increase this to encourage the optimization to focus on improving
+            this specific output in multi-head models.
+    """
+
+    classes: Optional[List[Text]] = None
+    num_fc_layers: int = 1
+    num_fc_units: int = 64
+    global_pool: bool = True
+    output_stride: int = 1
+    loss_weight: float = 1.0
+
+
+@attr.s(auto_attribs=True)
+class MultiClassTopDownConfig:
+    """Configuration for centered-instance confidence map and class map models.
+
+    This configuration specifies a multi-head model that outputs both centered-instance
+    confidence maps and class vectors, which together enable multi-instance pose
+    tracking in a top-down fashion, i.e., instance-centered crops followed by pose
+    estimation and classification.
+
+    The limitation with this approach is that the classes, e.g., animal identities, must
+    be labeled in the training data and cannot be generalized beyond those classes. This
+    is still useful for applications in which the animals are uniquely identifiable and
+    tracking their identities at inference time is critical, e.g., for closed loop
+    experiments.
+
+    Attributes:
+        confmaps: Part confidence map configuration (see the description in
+            `CenteredInstanceConfmapsHeadConfig`).
+        class_vectors: Class map configuration (see the description in
+            `ClassVectorsHeadConfig`).
+    """
+
+    confmaps: CenteredInstanceConfmapsHeadConfig = attr.ib(
+        factory=CenteredInstanceConfmapsHeadConfig
+    )
+    class_vectors: ClassVectorsHeadConfig = attr.ib(factory=ClassVectorsHeadConfig)
+
+
 @oneof
 @attr.s(auto_attribs=True)
 class HeadsConfig:
@@ -286,12 +417,16 @@ class HeadsConfig:
         centroid: An instance of `CentroidsHeadConfig`.
         centered_instance: An instance of `CenteredInstanceConfmapsHeadConfig`.
         multi_instance: An instance of `MultiInstanceConfig`.
+        multi_class_bottomup: An instance of `MultiClassBottomUpConfig`.
+        multi_class_topdown: An instance of `MultiClassTopDownConfig`.
     """
 
     single_instance: Optional[SingleInstanceConfmapsHeadConfig] = None
     centroid: Optional[CentroidsHeadConfig] = None
     centered_instance: Optional[CenteredInstanceConfmapsHeadConfig] = None
     multi_instance: Optional[MultiInstanceConfig] = None
+    multi_class_bottomup: Optional[MultiClassBottomUpConfig] = None
+    multi_class_topdown: Optional[MultiClassTopDownConfig] = None
 
 
 @attr.s(auto_attribs=True)
@@ -459,13 +594,27 @@ class PretrainedEncoderConfig:
     """Configuration for UNet backbone with pretrained encoder.
 
     Attributes:
-        encoder: Name of the network architecture to use as the encoder.
+        encoder: Name of the network architecture to use as the encoder. Valid encoder
+            names are:
+            - `"vgg16", "vgg19",`
+            - `"resnet18", "resnet34", "resnet50", "resnet101", "resnet152"`
+            - `"resnext50", "resnext101"`
+            - `"inceptionv3", "inceptionresnetv2"`
+            - `"densenet121", "densenet169", "densenet201"`
+            - `"seresnet18", "seresnet34", "seresnet50", "seresnet101", "seresnet152",`
+              `"seresnext50", "seresnext101", "senet154"`
+            - `"mobilenet", "mobilenetv2"`
+            - `"efficientnetb0", "efficientnetb1", "efficientnetb2", "efficientnetb3",`
+              `"efficientnetb4", "efficientnetb5", "efficientnetb6", "efficientnetb7"`
+            Defaults to `"efficientnetb0"`.
         pretrained: If `True`, use initialized with weights pretrained on ImageNet.
         decoder_filters: Base number of filters for the upsampling blocks in the
             decoder.
         decoder_filters_rate: Factor to scale the number of filters by at each
             consecutive upsampling block in the decoder.
         output_stride: Stride of the final output.
+        decoder_batchnorm: If `True` (the default), use batch normalization in the
+            decoder layers.
     """
 
     encoder: Text = attr.ib(default="efficientnetb0")
@@ -473,6 +622,7 @@ class PretrainedEncoderConfig:
     decoder_filters: int = 256
     decoder_filters_rate: float = 1.0
     output_stride: int = 2
+    decoder_batchnorm: bool = True
 
 
 @oneof
