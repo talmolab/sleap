@@ -1652,7 +1652,7 @@ class Labels(MutableSequence):
                 contain any instances after removing untracked ones.
         """
         for lf in self.labeled_frames:
-            lf.instances = lf.tracked_instances
+            lf.remove_untracked()
         if remove_empty_frames:
             self.remove_empty_frames()
 

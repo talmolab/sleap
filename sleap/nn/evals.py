@@ -198,7 +198,7 @@ def compute_oks(
     assert displacement.shape == (n_gt, n_pr, n_nodes, n_ed)
 
     # Convert to pairwise Euclidean distances.
-    distance = (displacement**2).sum(axis=-1)  # (n_gt, n_pr, n_nodes)
+    distance = (displacement ** 2).sum(axis=-1)  # (n_gt, n_pr, n_nodes)
     assert distance.shape == (n_gt, n_pr, n_nodes)
 
     # Compute the normalization factor per keypoint.

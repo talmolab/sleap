@@ -199,7 +199,7 @@ class DataReaders:
             # If validation is still a path, load it.
             logger.info(f"Loading validation labels from: {validation}")
             validation = sleap.Labels.load_file(
-                validation, video_search=video_search_paths
+                validation, search_paths=video_search_paths
             )
         elif isinstance(validation, float):
             logger.info(
