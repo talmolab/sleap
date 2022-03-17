@@ -158,9 +158,13 @@ def test_matching_adaptor():
     )
 
 
-def test_madlc():
+@pytest.mark.parametrize(
+    "test_data",
+    ["tests/data/dlc/madlc_testdata.csv", "tests/data/dlc/madlc_testdata_v2.csv"],
+)
+def test_madlc(test_data):
     labels = read(
-        "tests/data/dlc/madlc_testdata.csv",
+        test_data,
         for_object="labels",
         as_format="deeplabcut",
     )
