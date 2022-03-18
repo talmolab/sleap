@@ -477,3 +477,33 @@ def test_labeledframe_instance_counting(min_labels, centered_pair_predictions):
     assert lf.n_tracked_instances == 0
     assert len(lf.tracked_instances) == 0
     assert not lf.has_tracked_instances
+
+
+def test_labeledframe_remove_untracked(
+    min_tracks_2node_labels: "Labels", centered_pair_predictions: "Labels"
+):
+    """Test removal of untracked instances on both user-labeled and predicted frames.
+
+    Args:
+        min_tracks_2node_labels: Labels object which contains user labeled frames with tracked instances.
+        centered_pair_predictions: Labels object which contains predicted frames with tracked instances.
+    """
+    # Load user-labeled frames.
+    lf = min_tracks_2node_labels.labeled_frames[0]
+    assert any([type(inst) == Instance for inst in lf.instances])
+
+    lf.instances[0].track = None
+    assert any([(inst.track is None) for inst in lf.instances])
+
+    lf.remove_untracked()
+    assert all([(inst.track is not None) for inst in lf.instances])
+
+    # Load predicted frames.
+    lf = centered_pair_predictions.labeled_frames[0]
+    assert any([type(inst) == PredictedInstance for inst in lf.instances])
+
+    lf.instances[0].track = None
+    assert any([(inst.track is None) for inst in lf.instances])
+
+    lf.remove_untracked()
+    assert all([(inst.track is not None) for inst in lf.instances])
