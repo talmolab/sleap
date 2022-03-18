@@ -495,17 +495,17 @@ def test_labeledframe_remove_untracked(
     assert any([type(inst) == Instance for inst in lf.instances])
 
     lf.instances[0].track = None
-    assert any([(inst.track is None) for inst in lf.instances])
+    assert any([inst.track is None for inst in lf.instances])
 
     lf.remove_untracked()
-    assert all([(inst.track is not None) for inst in lf.instances])
+    assert all([inst.track is not None for inst in lf.instances])
 
     # Load predicted frames.
     lf = centered_pair_predictions.labeled_frames[0]
     assert any([type(inst) == PredictedInstance for inst in lf.instances])
 
     lf.instances[0].track = None
-    assert any([(inst.track is None) for inst in lf.instances])
+    assert any([inst.track is None for inst in lf.instances])
 
     lf.remove_untracked()
-    assert all([(inst.track is not None) for inst in lf.instances])
+    assert all([inst.track is not None for inst in lf.instances])

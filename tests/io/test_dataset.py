@@ -1429,31 +1429,27 @@ def test_remove_untracked_instances(min_tracks_2node_labels):
         min_tracks_2node_labels: Labels object which contains user labeled frames with
         tracked instances.
     """
-    # XXX(LM): only test user_labeled instances
-    # XXX(LM): can we ensure that the datasets will remain unchanged?
     labels = min_tracks_2node_labels
 
-    # XXX(LM): should I remove multiple tracks and frames?
-    # XXX(LM): if len(labels.labeled_frames)==1, then will not properly test lf.remove_untracked()
     # Preprocessing
     labels.labeled_frames[0].instances[0].track = None
-    labels.labeled_frames[-1].instances = []
+    labels.labeled_frames[1].instances = []
     assert any(
-        [(inst.track is None) for lf in labels.labeled_frames for inst in lf.instances]
+        [inst.track is None for lf in labels.labeled_frames for inst in lf.instances]
     )
-    assert any([(len(lf.instances) == 0) for lf in labels.labeled_frames])
+    assert any([len(lf.instances) == 0 for lf in labels.labeled_frames])
 
     # Test function with remove_empty_frames=False
     labels.remove_untracked_instances(remove_empty_frames=False)
     assert all(
         [
-            (inst.track is not None)
+            inst.track is not None
             for lf in labels.labeled_frames
             for inst in lf.instances
         ]
     )
-    assert any([(len(lf.instances) == 0) for lf in labels.labeled_frames])
+    assert any([len(lf.instances) == 0 for lf in labels.labeled_frames])
 
     # Test function with remove_empty_frames=True
     labels.remove_untracked_instances(remove_empty_frames=True)
-    assert all([(len(lf.instances) > 0) for lf in labels.labeled_frames])
+    assert all([len(lf.instances) > 0 for lf in labels.labeled_frames])
