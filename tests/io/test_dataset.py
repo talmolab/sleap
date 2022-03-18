@@ -1434,8 +1434,7 @@ def test_remove_untracked_instances(min_tracks_2node_labels):
     labels = min_tracks_2node_labels
 
     # XXX(LM): should I remove multiple tracks and frames?
-    # XXX(LM): if len(labels.labeled_frames)==1,
-    # XXX(LM)       then will not properly test lf.remove_untracked()
+    # XXX(LM): if len(labels.labeled_frames)==1, then will not properly test lf.remove_untracked()
     # Preprocessing
     labels.labeled_frames[0].instances[0].track = None
     labels.labeled_frames[-1].instances = []

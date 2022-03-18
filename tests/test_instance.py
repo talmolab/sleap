@@ -485,8 +485,10 @@ def test_labeledframe_remove_untracked(
     """Test removal of untracked instances on both user-labeled and predicted frames.
 
     Args:
-        min_tracks_2node_labels: Labels object which contains user labeled frames with tracked instances.
-        centered_pair_predictions: Labels object which contains predicted frames with tracked instances.
+        min_tracks_2node_labels: Labels object which contains user labeled frames with
+            tracked instances.
+        centered_pair_predictions: Labels object which contains predicted frames with
+            tracked instances.
     """
     # Load user-labeled frames.
     lf = min_tracks_2node_labels.labeled_frames[0]
