@@ -3516,7 +3516,8 @@ class TopDownMultiClassPredictor(Predictor):
         if use_gt_confmap:
             raise ValueError(
                 "Both a centroid and a confidence map model must be provided to "
-                "initialize a TopDownMultiClassPredictor.")
+                "initialize a TopDownMultiClassPredictor."
+            )
 
         if use_gt_centroid:
             centroid_crop_layer = CentroidCropGroundTruth(
