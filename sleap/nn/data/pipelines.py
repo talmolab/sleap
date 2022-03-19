@@ -1022,6 +1022,12 @@ class BottomUpMultiClassPipeline:
                 provider=data_provider,
             )
         aug_config = self.optimization_config.augmentation_config
+        if aug_config.random_flip:
+            pipeline += RandomFlipper.from_skeleton(
+                self.data_config.labels.skeletons[0],
+                horizontal=aug_config.flip_horizontal,
+            )
+
         pipeline += ImgaugAugmenter.from_config(aug_config)
         if aug_config.random_crop:
             pipeline += RandomCropper(

@@ -548,6 +548,7 @@ PipelineBuilder = TypeVar(
     CentroidConfmapsPipeline,
     TopdownConfmapsPipeline,
     BottomUpPipeline,
+    TopDownMultiClassPipeline,
     BottomUpMultiClassPipeline,
     SingleInstanceConfmapsPipeline,
 )

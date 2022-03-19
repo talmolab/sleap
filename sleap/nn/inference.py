@@ -3512,16 +3512,17 @@ class TopDownMultiClassPredictor(Predictor):
     def _initialize_inference_model(self):
         """Initialize the inference model from the trained models and configuration."""
         use_gt_centroid = self.centroid_config is None
-        use_gt_confmap = self.confmap_config is None  # TODO
+        use_gt_confmap = self.confmap_config is None
+        if use_gt_confmap:
+            raise ValueError(
+                "Both a centroid and a confidence map model must be provided to "
+                "initialize a TopDownMultiClassPredictor.")
 
         if use_gt_centroid:
             centroid_crop_layer = CentroidCropGroundTruth(
                 crop_size=self.confmap_config.data.instance_cropping.crop_size
             )
         else:
-            # if use_gt_confmap:
-            #     crop_size = 1
-            # else:
             crop_size = self.confmap_config.data.instance_cropping.crop_size
             centroid_crop_layer = CentroidCrop(
                 keras_model=self.centroid_model.keras_model,
@@ -3535,9 +3536,6 @@ class TopDownMultiClassPredictor(Predictor):
                 return_confmaps=False,
             )
 
-        # if use_gt_confmap:
-        #     instance_peaks_layer = FindInstancePeaksGroundTruth()
-        # else:
         cfg = self.confmap_config
         instance_peaks_layer = TopDownMultiClassFindPeaks(
             keras_model=self.confmap_model.keras_model,

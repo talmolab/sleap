@@ -698,6 +698,8 @@ def test_load_model(
     min_centroid_model_path,
     min_centered_instance_model_path,
     min_bottomup_model_path,
+    min_topdown_multiclass_model_path,
+    min_bottomup_multiclass_model_path,
 ):
     predictor = load_model(min_single_instance_robot_model_path)
     assert isinstance(predictor, SingleInstancePredictor)
@@ -707,3 +709,9 @@ def test_load_model(
 
     predictor = load_model(min_bottomup_model_path)
     assert isinstance(predictor, BottomUpPredictor)
+
+    predictor = load_model([min_centroid_model_path, min_topdown_multiclass_model_path])
+    assert isinstance(predictor, TopDownMultiClassPredictor)
+
+    predictor = load_model(min_bottomup_multiclass_model_path)
+    assert isinstance(predictor, BottomUpMultiClassPredictor)
