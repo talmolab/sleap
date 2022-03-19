@@ -32,6 +32,8 @@ from sleap.nn.config import (
     CentroidsHeadConfig,
     CenteredInstanceConfmapsHeadConfig,
     MultiInstanceConfig,
+    MultiClassBottomUpConfig,
+    MultiClassTopDownConfig,
     SingleInstanceConfmapsHeadConfig,
 )
 from sleap.nn.model import Model
@@ -39,6 +41,8 @@ from sleap.nn.data.pipelines import LabelsReader
 from sleap.nn.inference import (
     TopDownPredictor,
     BottomUpPredictor,
+    BottomUpMultiClassPredictor,
+    TopDownMultiClassPredictor,
     SingleInstancePredictor,
 )
 
@@ -685,12 +689,20 @@ def evaluate_model(
             confmap_model=model,
         )
     elif isinstance(head_config, MultiInstanceConfig):
-        predictor = sleap.nn.inference.BottomUpPredictor(
-            bottomup_config=cfg, bottomup_model=model
-        )
+        predictor = BottomUpPredictor(bottomup_config=cfg, bottomup_model=model)
     elif isinstance(head_config, SingleInstanceConfmapsHeadConfig):
-        predictor = sleap.nn.inference.SingleInstancePredictor(
-            confmap_config=cfg, confmap_model=model
+        predictor = SingleInstancePredictor(confmap_config=cfg, confmap_model=model)
+    elif isinstance(head_config, MultiClassBottomUpConfig):
+        predictor = BottomUpMultiClassPredictor(
+            config=cfg,
+            model=model,
+        )
+    elif isinstance(head_config, MultiClassTopDownConfig):
+        predictor = TopDownMultiClassPredictor(
+            centroid_config=None,
+            centroid_model=None,
+            confmap_config=cfg,
+            confmap_model=model,
         )
     else:
         raise ValueError("Unrecognized model type:", head_config)

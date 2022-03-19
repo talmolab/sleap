@@ -25,17 +25,24 @@ class LabelsReader:
             or filtered.
         user_instances_only: If `True`, load only user labeled instances. If `False`,
             all instances will be loaded.
+        with_track_only: If `True`, load only instances that have a track assigned.
+            Useful when training supervised ID models.
     """
 
     labels: sleap.Labels
     example_indices: Optional[Union[Sequence[int], np.ndarray]] = None
     user_instances_only: bool = False
+    with_track_only: bool = False
 
     @classmethod
-    def from_user_instances(cls, labels: sleap.Labels) -> "LabelsReader":
+    def from_user_instances(
+        cls, labels: sleap.Labels, with_track_only: bool = False
+    ) -> "LabelsReader":
         """Create a `LabelsReader` using the user instances in a `Labels` set.
         Args:
             labels: A `sleap.Labels` instance containing user instances.
+            with_track_only: If `True`, load only instances that have a track assigned.
+                Useful when training supervised ID models.
 
         Returns:
             A `LabelsReader` instance that can create a dataset for pipelining.
@@ -48,6 +55,7 @@ class LabelsReader:
         labels.remove_empty_instances(keep_empty_frames=False)
         obj = cls.from_user_labeled_frames(labels)
         obj.user_instances_only = True
+        obj.with_track_only = with_track_only
         return obj
 
     @classmethod
@@ -195,6 +203,8 @@ class LabelsReader:
             else:
                 insts = lf.instances
             insts = [inst for inst in insts if len(inst) > 0]
+            if self.with_track_only:
+                insts = [inst for inst in insts if inst.track is not None]
             n_instances = len(insts)
             n_nodes = len(insts[0].skeleton) if n_instances > 0 else 0
 
