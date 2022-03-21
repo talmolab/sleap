@@ -96,7 +96,7 @@ If you use SLEAP in your research, please cite:
 
 **BibTeX:**
 
-.. code-block:: tex
+.. code-block::
 
    @ARTICLE{Pereira2020-tt,
    title    = "{SLEAP}: Multi-animal pose tracking",
@@ -133,6 +133,7 @@ Contributors
 
 * **Talmo Pereira**, Salk Institute for Biological Studies
 * **Liezl Maree**, Salk Institute for Biological Studies
+* **Arlo Sheridan**, Salk Institute for Biological Studies
 * **Arie Matsliah**, Princeton Neuroscience Institute, Princeton University
 * **Nat Tabris**, Princeton Neuroscience Institute, Princeton University
 * **David Turner**, Research Computing and Princeton Neuroscience Institute, Princeton University
