@@ -282,6 +282,11 @@
     </a>
    </li>
    <li class="toctree-l2">
+    <a class="reference internal" href="sleap.nn.identity.html">
+     sleap.nn.identity
+    </a>
+   </li>
+   <li class="toctree-l2">
     <a class="reference internal" href="sleap.nn.inference.html">
      sleap.nn.inference
     </a>
@@ -394,6 +399,11 @@
    <li class="toctree-l2">
     <a class="reference internal" href="sleap.nn.data.grouping.html">
      sleap.nn.data.grouping
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="sleap.nn.data.identity.html">
+     sleap.nn.data.identity
     </a>
    </li>
    <li class="toctree-l2">
@@ -702,17 +712,15 @@
             href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
                 data-toggle="tooltip" data-placement="left" title="Source repository"><i
                     class="fab fa-github"></i>repository</button></a>
-        
+        <a class="issues-button"
+            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.data.instance_cropping.html&body=Your%20issue%20content%20here."><button
+                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
+                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
         
     </div>
 </div>
 
             <!-- Full screen (wrap in <a> to have style consistency -->
-
-<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
-        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
-        title="Fullscreen mode"><i
-            class="fas fa-expand"></i></button></a>
 
             <!-- Launch buttons -->
 
@@ -744,7 +752,7 @@
 <p>Transformers for cropping instances for topdown processing.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.instance_cropping.InstanceCropper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.instance_cropping.</span></span><span class="sig-name descname"><span class="pre">InstanceCropper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crop_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_full_image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_centroid_confidence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unbatch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instances_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'instances'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroids_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'centroids'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.0/sleap/nn/data/instance_cropping.py#L214-L439"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.instance_cropping.InstanceCropper" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.instance_cropping.</span></span><span class="sig-name descname"><span class="pre">InstanceCropper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crop_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_full_image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mock_centroid_confidence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unbatch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instances_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'instances'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroids_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'centroids'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.0/sleap/nn/data/instance_cropping.py#L214-L447"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.instance_cropping.InstanceCropper" title="Permalink to this definition">¶</a></dt>
 <dd><p>Data transformer to crop and generate individual examples for instances.</p>
 <p>This generates datasets that are instance cropped for topdown processing.</p>
 <dl class="py attribute">
@@ -883,7 +891,7 @@ not specify an explicit integer crop size (e.g., it is set to None).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.instance_cropping.InstanceCropper.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.0/sleap/nn/data/instance_cropping.py#L303-L439"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.instance_cropping.InstanceCropper.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.0/sleap/nn/data/instance_cropping.py#L304-L447"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.instance_cropping.InstanceCropper.transform_dataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a dataset that contains instance cropped data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -897,14 +905,15 @@ not specify an explicit integer crop size (e.g., it is set to None).</p></li>
 <dt>”centroids”: The computed centroid for each instance in a tf.float32</dt><dd><p>tensor of shape (n_instances, 2).</p>
 </dd>
 </dl>
-<p>Any additional keys present will be replicated in each output.</p>
+<p>”track_inds”: The track indices of the indices if available.
+Any additional keys present will be replicated in each output.</p>
 </p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> with elements containing instance cropped data. Each
 instance will generate an example, so the total number of elements may
 change relative to the input dataset.</p>
-<dl class="simple">
+<dl>
 <dt>Each element in the output dataset will have the following keys:</dt><dd><dl class="simple">
 <dt>”instance_image”: A cropped image of the same dtype as the input image</dt><dd><p>but with shape (crop_width, crop_height, channels) and will be
 centered on an instance.</p>
@@ -919,12 +928,17 @@ recovered by adding (x1, y1) from the “bbox” key.</p>
 <dt>”center_instance_ind”: Scalar tf.int32 index of the centered instance</dt><dd><p>relative to all the instances in the frame. This can be used to
 index into additional keys that may contain data from all instances.</p>
 </dd>
-<dt>”all_instances”: The points of all instances in the frame in image</dt><dd><p>coordinates in the “instance_image”. This will be a tf.float32
+</dl>
+<p>”track_ind”: Index of the track the instance belongs to if available.
+“all_instances”: The points of all instances in the frame in image</p>
+<blockquote>
+<div><p>coordinates in the “instance_image”. This will be a tf.float32
 tensor of shape (n_instances, n_nodes, 2). This is useful for multi-
 stage models that first predict all nodes and subsequently refine it
 to just the centered instance. The “center_instance_ind”-th row of
 this tensor is equal to “center_instance”.</p>
-</dd>
+</div></blockquote>
+<dl class="simple">
 <dt>”centroid”: The centroid coordinate that was used to generate this crop,</dt><dd><p>specified as a tf.float32 tensor of shape (2,) in absolute image
 coordinates.</p>
 </dd>

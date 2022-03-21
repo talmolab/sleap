@@ -282,6 +282,11 @@
     </a>
    </li>
    <li class="toctree-l2">
+    <a class="reference internal" href="api/sleap.nn.identity.html">
+     sleap.nn.identity
+    </a>
+   </li>
+   <li class="toctree-l2">
     <a class="reference internal" href="api/sleap.nn.inference.html">
      sleap.nn.inference
     </a>
@@ -394,6 +399,11 @@
    <li class="toctree-l2">
     <a class="reference internal" href="api/sleap.nn.data.grouping.html">
      sleap.nn.data.grouping
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api/sleap.nn.data.identity.html">
+     sleap.nn.data.identity
     </a>
    </li>
    <li class="toctree-l2">
@@ -702,17 +712,15 @@
             href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
                 data-toggle="tooltip" data-placement="left" title="Source repository"><i
                     class="fab fa-github"></i>repository</button></a>
-        
+        <a class="issues-button"
+            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi.html&body=Your%20issue%20content%20here."><button
+                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
+                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
         
     </div>
 </div>
 
             <!-- Full screen (wrap in <a> to have style consistency -->
-
-<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
-        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
-        title="Fullscreen mode"><i
-            class="fas fa-expand"></i></button></a>
 
             <!-- Launch buttons -->
 
@@ -770,74 +778,80 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.heads.html#module-sleap.nn.heads" title="sleap.nn.heads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.heads</span></code></a></p></td>
 <td><p>Model head definitions for defining model output types.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.inference.html#module-sleap.nn.inference" title="sleap.nn.inference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.inference</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.identity.html#module-sleap.nn.identity" title="sleap.nn.identity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.identity</span></code></a></p></td>
+<td><p>Utilities for models that learn identity.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.inference.html#module-sleap.nn.inference" title="sleap.nn.inference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.inference</span></code></a></p></td>
 <td><p>Inference pipelines and utilities.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.losses.html#module-sleap.nn.losses" title="sleap.nn.losses"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.losses</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.losses.html#module-sleap.nn.losses" title="sleap.nn.losses"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.losses</span></code></a></p></td>
 <td><p>Custom loss functions and metrics.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.model.html#module-sleap.nn.model" title="sleap.nn.model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.model</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.model.html#module-sleap.nn.model" title="sleap.nn.model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.model</span></code></a></p></td>
 <td><p>This module defines the main SLEAP model class for defining a trainable model.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.monitor.html#module-sleap.nn.monitor" title="sleap.nn.monitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.monitor</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.monitor.html#module-sleap.nn.monitor" title="sleap.nn.monitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.monitor</span></code></a></p></td>
 <td><p>GUI for monitoring training progress interactively.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.paf_grouping.html#module-sleap.nn.paf_grouping" title="sleap.nn.paf_grouping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.paf_grouping</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.paf_grouping.html#module-sleap.nn.paf_grouping" title="sleap.nn.paf_grouping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.paf_grouping</span></code></a></p></td>
 <td><p>This module provides a set of utilities for grouping peaks based on PAFs.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.peak_finding.html#module-sleap.nn.peak_finding" title="sleap.nn.peak_finding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.peak_finding</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.peak_finding.html#module-sleap.nn.peak_finding" title="sleap.nn.peak_finding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.peak_finding</span></code></a></p></td>
 <td><p>This module contains TensorFlow-based peak finding methods.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.system.html#module-sleap.nn.system" title="sleap.nn.system"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.system</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.system.html#module-sleap.nn.system" title="sleap.nn.system"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.system</span></code></a></p></td>
 <td><p>Utilities for working with the physical system (e.g., GPUs).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.tracking.html#module-sleap.nn.tracking" title="sleap.nn.tracking"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.tracking</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.tracking.html#module-sleap.nn.tracking" title="sleap.nn.tracking"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.tracking</span></code></a></p></td>
 <td><p>Tracking tools for linking grouped instances over time.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.training.html#module-sleap.nn.training" title="sleap.nn.training"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.training</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.training.html#module-sleap.nn.training" title="sleap.nn.training"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.training</span></code></a></p></td>
 <td><p>Training functionality and high level APIs.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.utils.html#module-sleap.nn.utils" title="sleap.nn.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.utils</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.utils.html#module-sleap.nn.utils" title="sleap.nn.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.utils</span></code></a></p></td>
 <td><p>This module contains generic utilities used for training and inference.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.viz.html#module-sleap.nn.viz" title="sleap.nn.viz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.viz</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.viz.html#module-sleap.nn.viz" title="sleap.nn.viz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.viz</span></code></a></p></td>
 <td><p>Visualization and plotting utilities.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.data.html#module-sleap.nn.config.data" title="sleap.nn.config.data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.data</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.data.html#module-sleap.nn.config.data" title="sleap.nn.config.data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.data</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.model.html#module-sleap.nn.config.model" title="sleap.nn.config.model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.model</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.model.html#module-sleap.nn.config.model" title="sleap.nn.config.model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.model</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.optimization.html#module-sleap.nn.config.optimization" title="sleap.nn.config.optimization"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.optimization</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.optimization.html#module-sleap.nn.config.optimization" title="sleap.nn.config.optimization"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.optimization</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.outputs.html#module-sleap.nn.config.outputs" title="sleap.nn.config.outputs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.outputs</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.outputs.html#module-sleap.nn.config.outputs" title="sleap.nn.config.outputs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.outputs</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.training_job.html#module-sleap.nn.config.training_job" title="sleap.nn.config.training_job"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.training_job</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.training_job.html#module-sleap.nn.config.training_job" title="sleap.nn.config.training_job"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.training_job</span></code></a></p></td>
 <td><p>Serializable configuration classes for specifying all training job parameters.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.utils.html#module-sleap.nn.config.utils" title="sleap.nn.config.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.utils</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.utils.html#module-sleap.nn.config.utils" title="sleap.nn.config.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.utils</span></code></a></p></td>
 <td><p>Utilities for config building and validation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.augmentation.html#module-sleap.nn.data.augmentation" title="sleap.nn.data.augmentation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.augmentation</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.augmentation.html#module-sleap.nn.data.augmentation" title="sleap.nn.data.augmentation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.augmentation</span></code></a></p></td>
 <td><p>Transformers for applying data augmentation.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.confidence_maps.html#module-sleap.nn.data.confidence_maps" title="sleap.nn.data.confidence_maps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.confidence_maps</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.confidence_maps.html#module-sleap.nn.data.confidence_maps" title="sleap.nn.data.confidence_maps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.confidence_maps</span></code></a></p></td>
 <td><p>Transformers for confidence map generation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.dataset_ops.html#module-sleap.nn.data.dataset_ops" title="sleap.nn.data.dataset_ops"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.dataset_ops</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.dataset_ops.html#module-sleap.nn.data.dataset_ops" title="sleap.nn.data.dataset_ops"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.dataset_ops</span></code></a></p></td>
 <td><p>Transformers for dataset (multi-example) operations, e.g., shuffling and batching.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.edge_maps.html#module-sleap.nn.data.edge_maps" title="sleap.nn.data.edge_maps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.edge_maps</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.edge_maps.html#module-sleap.nn.data.edge_maps" title="sleap.nn.data.edge_maps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.edge_maps</span></code></a></p></td>
 <td><p>Transformers for generating edge confidence maps and part affinity fields.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.general.html#module-sleap.nn.data.general" title="sleap.nn.data.general"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.general</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.general.html#module-sleap.nn.data.general" title="sleap.nn.data.general"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.general</span></code></a></p></td>
 <td><p>General purpose transformers for common pipeline processing tasks.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.grouping.html#module-sleap.nn.data.grouping" title="sleap.nn.data.grouping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.grouping</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.grouping.html#module-sleap.nn.data.grouping" title="sleap.nn.data.grouping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.grouping</span></code></a></p></td>
 <td><p>Group inference results (&quot;examples&quot;) by frame.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.identity.html#module-sleap.nn.data.identity" title="sleap.nn.data.identity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.identity</span></code></a></p></td>
+<td><p>Utilities for generating data for track identity models.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.inference.html#module-sleap.nn.data.inference" title="sleap.nn.data.inference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.inference</span></code></a></p></td>
 <td><p>Transformers for performing inference.</p></td>

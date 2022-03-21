@@ -280,6 +280,11 @@
     </a>
    </li>
    <li class="toctree-l2">
+    <a class="reference internal" href="api/sleap.nn.identity.html">
+     sleap.nn.identity
+    </a>
+   </li>
+   <li class="toctree-l2">
     <a class="reference internal" href="api/sleap.nn.inference.html">
      sleap.nn.inference
     </a>
@@ -392,6 +397,11 @@
    <li class="toctree-l2">
     <a class="reference internal" href="api/sleap.nn.data.grouping.html">
      sleap.nn.data.grouping
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="api/sleap.nn.data.identity.html">
+     sleap.nn.data.identity
     </a>
    </li>
    <li class="toctree-l2">
@@ -700,17 +710,15 @@
             href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
                 data-toggle="tooltip" data-placement="left" title="Source repository"><i
                     class="fab fa-github"></i>repository</button></a>
-        
+        <a class="issues-button"
+            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fgenindex.html&body=Your%20issue%20content%20here."><button
+                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
+                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
         
     </div>
 </div>
 
             <!-- Full screen (wrap in <a> to have style consistency -->
-
-<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
-        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
-        title="Fullscreen mode"><i
-            class="fas fa-expand"></i></button></a>
 
             <!-- Launch buttons -->
 
@@ -770,7 +778,15 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.activation">activation (sleap.nn.architectures.encoder_decoder.SimpleConvBlock attribute)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassMapsHead.activation">(sleap.nn.heads.ClassMapsHead property)</a>
 </li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassVectorsHead.activation">(sleap.nn.heads.ClassVectorsHead property)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.Head.activation">(sleap.nn.heads.Head property)</a>
+</li>
+      </ul></li>
       <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor">Adaptor (class in sleap.io.format.adaptor)</a>
 </li>
       <li><a href="api/sleap.nn.monitor.html#sleap.nn.monitor.LossViewer.add_datapoint">add_datapoint() (sleap.nn.monitor.LossViewer method)</a>
@@ -846,6 +862,10 @@
       <ul>
         <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.CentroidsHeadConfig.anchor_part">(sleap.nn.config.model.CentroidsHeadConfig attribute)</a>
 </li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.CenteredInstanceConfmapsHead.anchor_part">(sleap.nn.heads.CenteredInstanceConfmapsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.CentroidConfmapsHead.anchor_part">(sleap.nn.heads.CentroidConfmapsHead attribute)</a>
+</li>
       </ul></li>
       <li><a href="api/sleap.nn.data.instance_centroids.html#sleap.nn.data.instance_centroids.InstanceCentroidFinder.anchor_part_names">anchor_part_names (sleap.nn.data.instance_centroids.InstanceCentroidFinder attribute)</a>
 </li>
@@ -902,9 +922,13 @@
       <ul>
         <li><a href="api/sleap.nn.data.dataset_ops.html#sleap.nn.data.dataset_ops.Batcher.batch_size">(sleap.nn.data.dataset_ops.Batcher attribute)</a>
 </li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassPredictor.batch_size">(sleap.nn.inference.BottomUpMultiClassPredictor attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.batch_size">(sleap.nn.inference.BottomUpPredictor attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.batch_size">(sleap.nn.inference.SingleInstancePredictor attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassPredictor.batch_size">(sleap.nn.inference.TopDownMultiClassPredictor attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.batch_size">(sleap.nn.inference.TopDownPredictor attribute)</a>
 </li>
@@ -923,10 +947,10 @@
 </li>
       <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.block_prefix">block_prefix (sleap.nn.architectures.encoder_decoder.SimpleConvBlock attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.UpsamplingConfig.block_stride">block_stride (sleap.nn.config.model.UpsamplingConfig attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.block_v1">block_v1() (in module sleap.nn.architectures.resnet)</a>
 </li>
       <li><a href="api/sleap.nn.architectures.hrnet.html#sleap.nn.architectures.hrnet.HigherHRNet.bottleneck">bottleneck (sleap.nn.architectures.hrnet.HigherHRNet attribute)</a>
@@ -944,6 +968,16 @@
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceModel">BottomUpInferenceModel (class in sleap.nn.inference)</a>
 </li>
       <li><a href="api/sleap.nn.training.html#sleap.nn.training.BottomUpModelTrainer">BottomUpModelTrainer (class in sleap.nn.training)</a>
+</li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer">BottomUpMultiClassInferenceLayer (class in sleap.nn.inference)</a>
+</li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceModel">BottomUpMultiClassInferenceModel (class in sleap.nn.inference)</a>
+</li>
+      <li><a href="api/sleap.nn.training.html#sleap.nn.training.BottomUpMultiClassModelTrainer">BottomUpMultiClassModelTrainer (class in sleap.nn.training)</a>
+</li>
+      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpMultiClassPipeline">BottomUpMultiClassPipeline (class in sleap.nn.data.pipelines)</a>
+</li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassPredictor">BottomUpMultiClassPredictor (class in sleap.nn.inference)</a>
 </li>
       <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline">BottomUpPipeline (class in sleap.nn.data.pipelines)</a>
 </li>
@@ -980,6 +1014,10 @@
       <ul>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceModel.call">(sleap.nn.inference.BottomUpInferenceModel method)</a>
 </li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.call">(sleap.nn.inference.BottomUpMultiClassInferenceLayer method)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceModel.call">(sleap.nn.inference.BottomUpMultiClassInferenceModel method)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.CentroidCrop.call">(sleap.nn.inference.CentroidCrop method)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.CentroidCropGroundTruth.call">(sleap.nn.inference.CentroidCropGroundTruth method)</a>
@@ -995,6 +1033,10 @@
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstanceInferenceModel.call">(sleap.nn.inference.SingleInstanceInferenceModel method)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownInferenceModel.call">(sleap.nn.inference.TopDownInferenceModel method)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassFindPeaks.call">(sleap.nn.inference.TopDownMultiClassFindPeaks method)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassInferenceModel.call">(sleap.nn.inference.TopDownMultiClassInferenceModel method)</a>
 </li>
         <li><a href="api/sleap.nn.losses.html#sleap.nn.losses.OHKMLoss.call">(sleap.nn.losses.OHKMLoss method)</a>
 </li>
@@ -1071,16 +1113,28 @@
         <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.HeadsConfig.centroid">(sleap.nn.config.model.HeadsConfig attribute)</a>
 </li>
       </ul></li>
-      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.centroid_config">centroid_config (sleap.nn.inference.TopDownPredictor attribute)</a>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassPredictor.centroid_config">centroid_config (sleap.nn.inference.TopDownMultiClassPredictor attribute)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.centroid_config">(sleap.nn.inference.TopDownPredictor attribute)</a>
 </li>
+      </ul></li>
       <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.CentroidConfmapsPipeline.centroid_confmap_head">centroid_confmap_head (sleap.nn.data.pipelines.CentroidConfmapsPipeline attribute)</a>
 </li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownInferenceModel.centroid_crop">centroid_crop (sleap.nn.inference.TopDownInferenceModel attribute)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassInferenceModel.centroid_crop">(sleap.nn.inference.TopDownMultiClassInferenceModel attribute)</a>
 </li>
+      </ul></li>
       <li><a href="api/sleap.nn.tracker.components.html#sleap.nn.tracker.components.centroid_distance">centroid_distance() (in module sleap.nn.tracker.components)</a>
 </li>
-      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.centroid_model">centroid_model (sleap.nn.inference.TopDownPredictor attribute)</a>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassPredictor.centroid_model">centroid_model (sleap.nn.inference.TopDownMultiClassPredictor attribute)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.centroid_model">(sleap.nn.inference.TopDownPredictor attribute)</a>
 </li>
+      </ul></li>
       <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.CentroidConfmapsHead">CentroidConfmapsHead (class in sleap.nn.heads)</a>
 </li>
       <li><a href="api/sleap.nn.training.html#sleap.nn.training.CentroidConfmapsModelTrainer">CentroidConfmapsModelTrainer (class in sleap.nn.training)</a>
@@ -1092,7 +1146,11 @@
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.CentroidCropGroundTruth">CentroidCropGroundTruth (class in sleap.nn.inference)</a>
 </li>
       <li><a href="api/sleap.nn.data.confidence_maps.html#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.centroids">centroids (sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator attribute)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.data.identity.html#sleap.nn.data.identity.ClassMapGenerator.centroids">(sleap.nn.data.identity.ClassMapGenerator attribute)</a>
 </li>
+      </ul></li>
       <li><a href="api/sleap.nn.data.instance_cropping.html#sleap.nn.data.instance_cropping.InstanceCropper.centroids_key">centroids_key (sleap.nn.data.instance_cropping.InstanceCropper attribute)</a>
 </li>
       <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.CentroidsHeadConfig">CentroidsHeadConfig (class in sleap.nn.config.model)</a>
@@ -1114,6 +1172,12 @@
 </li>
         <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.CentroidConfmapsHead.channels">(sleap.nn.heads.CentroidConfmapsHead property)</a>
 </li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassMapsHead.channels">(sleap.nn.heads.ClassMapsHead property)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassVectorsHead.channels">(sleap.nn.heads.ClassVectorsHead property)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.Head.channels">(sleap.nn.heads.Head property)</a>
+</li>
         <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.MultiInstanceConfmapsHead.channels">(sleap.nn.heads.MultiInstanceConfmapsHead property)</a>
 </li>
         <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead.channels">(sleap.nn.heads.OffsetRefinementHead property)</a>
@@ -1125,8 +1189,6 @@
       </ul></li>
       <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.check">check() (sleap.io.video.HDF5Video method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.message.html#sleap.message.Receiver.check_message">check_message() (sleap.message.Receiver method)</a>
 </li>
       <li><a href="api/sleap.message.html#sleap.message.Receiver.check_messages">check_messages() (sleap.message.Receiver method)</a>
@@ -1140,6 +1202,50 @@
       <li><a href="api/sleap.nn.config.outputs.html#sleap.nn.config.outputs.CheckpointingConfig">CheckpointingConfig (class in sleap.nn.config.outputs)</a>
 </li>
       <li><a href="api/sleap.io.asyncvideo.html#sleap.io.asyncvideo.AsyncVideo.chunks">chunks (sleap.io.asyncvideo.AsyncVideo property)</a>
+</li>
+      <li><a href="api/sleap.nn.data.identity.html#sleap.nn.data.identity.ClassMapGenerator.class_map_threshold">class_map_threshold (sleap.nn.data.identity.ClassMapGenerator attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.MultiClassBottomUpConfig.class_maps">class_maps (sleap.nn.config.model.MultiClassBottomUpConfig attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpMultiClassPipeline.class_maps_head">class_maps_head (sleap.nn.data.pipelines.BottomUpMultiClassPipeline attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.class_maps_ind">class_maps_ind (sleap.nn.inference.BottomUpMultiClassInferenceLayer attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.class_maps_output_stride">class_maps_output_stride (sleap.nn.inference.BottomUpMultiClassInferenceLayer attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.MultiClassTopDownConfig.class_vectors">class_vectors (sleap.nn.config.model.MultiClassTopDownConfig attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopDownMultiClassPipeline.class_vectors_head">class_vectors_head (sleap.nn.data.pipelines.TopDownMultiClassPipeline attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassFindPeaks.class_vectors_ind">class_vectors_ind (sleap.nn.inference.TopDownMultiClassFindPeaks attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.ClassMapsHeadConfig.classes">classes (sleap.nn.config.model.ClassMapsHeadConfig attribute)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.ClassVectorsHeadConfig.classes">(sleap.nn.config.model.ClassVectorsHeadConfig attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#id1">(sleap.nn.heads.ClassMapsHead attribute)</a>, <a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassMapsHead.classes">[1]</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#id2">(sleap.nn.heads.ClassVectorsHead attribute)</a>, <a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassVectorsHead.classes">[1]</a>
+</li>
+      </ul></li>
+      <li><a href="api/sleap.nn.identity.html#sleap.nn.identity.classify_peaks_from_maps">classify_peaks_from_maps() (in module sleap.nn.identity)</a>
+</li>
+      <li><a href="api/sleap.nn.identity.html#sleap.nn.identity.classify_peaks_from_vectors">classify_peaks_from_vectors() (in module sleap.nn.identity)</a>
+</li>
+      <li><a href="api/sleap.nn.data.identity.html#sleap.nn.data.identity.ClassMapGenerator">ClassMapGenerator (class in sleap.nn.data.identity)</a>
+</li>
+      <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassMapsHead">ClassMapsHead (class in sleap.nn.heads)</a>
+</li>
+      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.ClassMapsHeadConfig">ClassMapsHeadConfig (class in sleap.nn.config.model)</a>
+</li>
+      <li><a href="api/sleap.nn.data.identity.html#sleap.nn.data.identity.ClassVectorGenerator">ClassVectorGenerator (class in sleap.nn.data.identity)</a>
+</li>
+      <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassVectorsHead">ClassVectorsHead (class in sleap.nn.heads)</a>
+</li>
+      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.ClassVectorsHeadConfig">ClassVectorsHeadConfig (class in sleap.nn.config.model)</a>
 </li>
       <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.cleaner">cleaner (sleap.nn.tracking.Tracker attribute)</a>
 </li>
@@ -1162,7 +1268,11 @@
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.cm_output_stride">cm_output_stride (sleap.nn.inference.BottomUpInferenceLayer attribute)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.cm_output_stride">(sleap.nn.inference.BottomUpMultiClassInferenceLayer attribute)</a>
 </li>
+      </ul></li>
       <li><a href="api/sleap.info.metrics.html#sleap.info.metrics.compare_instance_lists">compare_instance_lists() (in module sleap.info.metrics)</a>
 </li>
       <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.complex_frame_merge">complex_frame_merge() (sleap.instance.LabeledFrame class method)</a>
@@ -1198,6 +1308,10 @@
       <ul>
         <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.CentroidConfmapsHead.config">(sleap.nn.heads.CentroidConfmapsHead attribute)</a>
 </li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassMapsHead.config">(sleap.nn.heads.ClassMapsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassVectorsHead.config">(sleap.nn.heads.ClassVectorsHead attribute)</a>
+</li>
         <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.MultiInstanceConfmapsHead.config">(sleap.nn.heads.MultiInstanceConfmapsHead attribute)</a>
 </li>
         <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead.config">(sleap.nn.heads.OffsetRefinementHead attribute)</a>
@@ -1206,33 +1320,55 @@
 </li>
         <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.SingleInstanceConfmapsHead.config">(sleap.nn.heads.SingleInstanceConfmapsHead attribute)</a>
 </li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassPredictor.config">(sleap.nn.inference.BottomUpMultiClassPredictor attribute)</a>
+</li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.config">(sleap.nn.training.Trainer attribute)</a>
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.confmap_config">confmap_config (sleap.nn.inference.SingleInstancePredictor attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassPredictor.confmap_config">(sleap.nn.inference.TopDownMultiClassPredictor attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.confmap_config">(sleap.nn.inference.TopDownPredictor attribute)</a>
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.confmap_model">confmap_model (sleap.nn.inference.SingleInstancePredictor attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassPredictor.confmap_model">(sleap.nn.inference.TopDownMultiClassPredictor attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.confmap_model">(sleap.nn.inference.TopDownPredictor attribute)</a>
 </li>
       </ul></li>
-      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.MultiInstanceConfig.confmaps">confmaps (sleap.nn.config.model.MultiInstanceConfig attribute)</a>
+      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.MultiClassBottomUpConfig.confmaps">confmaps (sleap.nn.config.model.MultiClassBottomUpConfig attribute)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.MultiClassTopDownConfig.confmaps">(sleap.nn.config.model.MultiClassTopDownConfig attribute)</a>
 </li>
-      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.confmaps_head">confmaps_head (sleap.nn.data.pipelines.BottomUpPipeline attribute)</a>
+        <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.MultiInstanceConfig.confmaps">(sleap.nn.config.model.MultiInstanceConfig attribute)</a>
 </li>
+      </ul></li>
+      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpMultiClassPipeline.confmaps_head">confmaps_head (sleap.nn.data.pipelines.BottomUpMultiClassPipeline attribute)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.confmaps_head">(sleap.nn.data.pipelines.BottomUpPipeline attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopDownMultiClassPipeline.confmaps_head">(sleap.nn.data.pipelines.TopDownMultiClassPipeline attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.confmaps_ind">confmaps_ind (sleap.nn.inference.BottomUpInferenceLayer attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.confmaps_ind">(sleap.nn.inference.BottomUpMultiClassInferenceLayer attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.CentroidCrop.confmaps_ind">(sleap.nn.inference.CentroidCrop attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.FindInstancePeaks.confmaps_ind">(sleap.nn.inference.FindInstancePeaks attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstanceInferenceLayer.confmaps_ind">(sleap.nn.inference.SingleInstanceInferenceLayer attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassFindPeaks.confmaps_ind">(sleap.nn.inference.TopDownMultiClassFindPeaks attribute)</a>
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.tracker.components.html#sleap.nn.tracker.components.connect_single_track_breaks">connect_single_track_breaks() (in module sleap.nn.tracker.components)</a>
@@ -1307,14 +1443,18 @@
         <li><a href="api/sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig.data">(sleap.nn.config.training_job.TrainingJobConfig attribute)</a>
 </li>
       </ul></li>
-      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.data_config">data_config (sleap.nn.data.pipelines.BottomUpPipeline attribute)</a>
+      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpMultiClassPipeline.data_config">data_config (sleap.nn.data.pipelines.BottomUpMultiClassPipeline attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.data_config">(sleap.nn.data.pipelines.BottomUpPipeline attribute)</a>
+</li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.CentroidConfmapsPipeline.data_config">(sleap.nn.data.pipelines.CentroidConfmapsPipeline attribute)</a>
 </li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.data_config">(sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline attribute)</a>
 </li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopdownConfmapsPipeline.data_config">(sleap.nn.data.pipelines.TopdownConfmapsPipeline attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopDownMultiClassPipeline.data_config">(sleap.nn.data.pipelines.TopDownMultiClassPipeline attribute)</a>
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.data_readers">data_readers (sleap.nn.training.Trainer attribute)</a>
@@ -1322,6 +1462,8 @@
       <li><a href="api/sleap.nn.config.data.html#sleap.nn.config.data.DataConfig">DataConfig (class in sleap.nn.config.data)</a>
 </li>
       <li><a href="api/sleap.nn.training.html#sleap.nn.training.DataReaders">DataReaders (class in sleap.nn.training)</a>
+</li>
+      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.PretrainedEncoderConfig.decoder_batchnorm">decoder_batchnorm (sleap.nn.config.model.PretrainedEncoderConfig attribute)</a>
 </li>
       <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_features_stride">decoder_features_stride (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
 </li>
@@ -1395,14 +1537,14 @@
 </li>
       <li><a href="api/sleap.nn.system.html#sleap.nn.system.disable_preallocation">disable_preallocation() (in module sleap.nn.system)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.dist_penalty_weight">dist_penalty_weight (sleap.nn.inference.BottomUpPredictor attribute)</a>
 
       <ul>
         <li><a href="api/sleap.nn.paf_grouping.html#sleap.nn.paf_grouping.PAFScorer.dist_penalty_weight">(sleap.nn.paf_grouping.PAFScorer attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.data.edge_maps.html#sleap.nn.data.edge_maps.distance_to_edge">distance_to_edge() (in module sleap.nn.data.edge_maps)</a>
 </li>
       <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.does_match_ext">does_match_ext() (sleap.io.format.adaptor.Adaptor method)</a>
@@ -1524,7 +1666,7 @@
       <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.PartAffinityFieldsHeadConfig.edges">edges (sleap.nn.config.model.PartAffinityFieldsHeadConfig attribute)</a>
 
       <ul>
-        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.PartAffinityFieldsHead.edges">(sleap.nn.heads.PartAffinityFieldsHead attribute)</a>
+        <li><a href="api/sleap.nn.heads.html#id7">(sleap.nn.heads.PartAffinityFieldsHead attribute)</a>, <a href="api/sleap.nn.heads.html#sleap.nn.heads.PartAffinityFieldsHead.edges">[1]</a>
 </li>
         <li><a href="api/sleap.nn.paf_grouping.html#sleap.nn.paf_grouping.PAFScorer.edges">(sleap.nn.paf_grouping.PAFScorer attribute)</a>
 </li>
@@ -1764,7 +1906,11 @@
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.find_path_using_paths">find_path_using_paths() (in module sleap.io.dataset)</a>
 </li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.find_peaks">find_peaks() (sleap.nn.inference.BottomUpInferenceLayer method)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.find_peaks">(sleap.nn.inference.BottomUpMultiClassInferenceLayer method)</a>
 </li>
+      </ul></li>
       <li><a href="api/sleap.nn.data.instance_centroids.html#sleap.nn.data.instance_centroids.find_points_bbox_midpoint">find_points_bbox_midpoint() (in module sleap.nn.data.instance_centroids)</a>
 </li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.find_suggestion">find_suggestion() (sleap.io.dataset.Labels method)</a>
@@ -1811,14 +1957,18 @@
 </li>
       <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowTracker">FlowTracker (class in sleap.nn.tracking)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle.format_id">format_id (sleap.io.format.filehandle.FileHandle property)</a>
 </li>
       <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor.formatted_ext_options">formatted_ext_options (sleap.io.format.adaptor.Adaptor property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.forward_pass">forward_pass() (sleap.nn.inference.BottomUpInferenceLayer method)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.forward_pass">(sleap.nn.inference.BottomUpMultiClassInferenceLayer method)</a>
 </li>
+      </ul></li>
       <li><a href="api/sleap.io.video.html#sleap.io.video.MediaVideo.fps">fps (sleap.io.video.MediaVideo property)</a>
 
       <ul>
@@ -1883,6 +2033,10 @@
         <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.CenteredInstanceConfmapsHead.from_config">(sleap.nn.heads.CenteredInstanceConfmapsHead class method)</a>
 </li>
         <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.CentroidConfmapsHead.from_config">(sleap.nn.heads.CentroidConfmapsHead class method)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassMapsHead.from_config">(sleap.nn.heads.ClassMapsHead class method)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassVectorsHead.from_config">(sleap.nn.heads.ClassVectorsHead class method)</a>
 </li>
         <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.MultiInstanceConfmapsHead.from_config">(sleap.nn.heads.MultiInstanceConfmapsHead class method)</a>
 </li>
@@ -1959,10 +2113,14 @@
       </ul></li>
       <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.RandomFlipper.from_skeleton">from_skeleton() (sleap.nn.data.augmentation.RandomFlipper class method)</a>
 </li>
-      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.from_trained_models">from_trained_models() (sleap.nn.inference.BottomUpPredictor class method)</a>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassPredictor.from_trained_models">from_trained_models() (sleap.nn.inference.BottomUpMultiClassPredictor class method)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.from_trained_models">(sleap.nn.inference.BottomUpPredictor class method)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.from_trained_models">(sleap.nn.inference.SingleInstancePredictor class method)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassPredictor.from_trained_models">(sleap.nn.inference.TopDownMultiClassPredictor class method)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.from_trained_models">(sleap.nn.inference.TopDownPredictor class method)</a>
 </li>
@@ -2075,10 +2233,10 @@
 </li>
       <li><a href="api/sleap.info.write_tracking_h5.html#sleap.info.write_tracking_h5.get_nodes_as_np_strings">get_nodes_as_np_strings() (in module sleap.info.write_tracking_h5)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.info.write_tracking_h5.html#sleap.info.write_tracking_h5.get_occupancy_and_points_matrices">get_occupancy_and_points_matrices() (in module sleap.info.write_tracking_h5)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.util.html#sleap.util.get_package_file">get_package_file() (in module sleap.util)</a>
 </li>
       <li><a href="api/sleap.nn.paf_grouping.html#sleap.nn.paf_grouping.get_paf_lines">get_paf_lines() (in module sleap.nn.paf_grouping)</a>
@@ -2134,6 +2292,8 @@
       <li><a href="api/sleap.nn.tracker.components.html#sleap.nn.tracker.components.greedy_matching">greedy_matching() (in module sleap.nn.tracker.components)</a>
 </li>
       <li><a href="api/sleap.nn.utils.html#sleap.nn.utils.group_array">group_array() (in module sleap.nn.utils)</a>
+</li>
+      <li><a href="api/sleap.nn.identity.html#sleap.nn.identity.group_class_peaks">group_class_peaks() (in module sleap.nn.identity)</a>
 </li>
       <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameGroupSet.group_data">group_data (sleap.info.feature_suggestions.FrameGroupSet attribute)</a>
 </li>
@@ -2208,11 +2368,15 @@
       <li><a href="api/sleap.nn.training.html#sleap.nn.training.BottomUpModelTrainer.has_offsets">has_offsets (sleap.nn.training.BottomUpModelTrainer property)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.training.html#sleap.nn.training.BottomUpMultiClassModelTrainer.has_offsets">(sleap.nn.training.BottomUpMultiClassModelTrainer property)</a>
+</li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.CentroidConfmapsModelTrainer.has_offsets">(sleap.nn.training.CentroidConfmapsModelTrainer property)</a>
 </li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.SingleInstanceModelTrainer.has_offsets">(sleap.nn.training.SingleInstanceModelTrainer property)</a>
 </li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.TopdownConfmapsModelTrainer.has_offsets">(sleap.nn.training.TopdownConfmapsModelTrainer property)</a>
+</li>
+        <li><a href="api/sleap.nn.training.html#sleap.nn.training.TopDownMultiClassModelTrainer.has_offsets">(sleap.nn.training.TopDownMultiClassModelTrainer property)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -2226,6 +2390,8 @@
       <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.has_user_instances">has_user_instances (sleap.instance.LabeledFrame property)</a>
 </li>
       <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video">HDF5Video (class in sleap.io.video)</a>
+</li>
+      <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.Head">Head (class in sleap.nn.heads)</a>
 </li>
       <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.ModelConfig.heads">heads (sleap.nn.config.model.ModelConfig attribute)</a>
 
@@ -2309,10 +2475,16 @@
         <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.index">(sleap.io.dataset.Labels method)</a>
 </li>
       </ul></li>
-      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.inference_model">inference_model (sleap.nn.inference.BottomUpPredictor attribute)</a>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceModel.inference_layer">inference_layer (sleap.nn.inference.BottomUpMultiClassInferenceModel attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassPredictor.inference_model">inference_model (sleap.nn.inference.BottomUpMultiClassPredictor attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.inference_model">(sleap.nn.inference.BottomUpPredictor attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.inference_model">(sleap.nn.inference.SingleInstancePredictor attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassPredictor.inference_model">(sleap.nn.inference.TopDownMultiClassPredictor attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.inference_model">(sleap.nn.inference.TopDownPredictor attribute)</a>
 </li>
@@ -2366,6 +2538,10 @@
 </li>
         <li><a href="api/sleap.nn.data.general.html#sleap.nn.data.general.LambdaMap.input_keys">(sleap.nn.data.general.LambdaMap property)</a>
 </li>
+        <li><a href="api/sleap.nn.data.identity.html#sleap.nn.data.identity.ClassMapGenerator.input_keys">(sleap.nn.data.identity.ClassMapGenerator property)</a>
+</li>
+        <li><a href="api/sleap.nn.data.identity.html#sleap.nn.data.identity.ClassVectorGenerator.input_keys">(sleap.nn.data.identity.ClassVectorGenerator property)</a>
+</li>
         <li><a href="api/sleap.nn.data.inference.html#sleap.nn.data.inference.PredictedCenterInstanceNormalizer.input_keys">(sleap.nn.data.inference.PredictedCenterInstanceNormalizer property)</a>
 </li>
         <li><a href="api/sleap.nn.data.instance_centroids.html#sleap.nn.data.instance_centroids.InstanceCentroidFinder.input_keys">(sleap.nn.data.instance_centroids.InstanceCentroidFinder property)</a>
@@ -2384,11 +2560,15 @@
 </li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.BottomUpModelTrainer.input_keys">(sleap.nn.training.BottomUpModelTrainer property)</a>
 </li>
+        <li><a href="api/sleap.nn.training.html#sleap.nn.training.BottomUpMultiClassModelTrainer.input_keys">(sleap.nn.training.BottomUpMultiClassModelTrainer property)</a>
+</li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.CentroidConfmapsModelTrainer.input_keys">(sleap.nn.training.CentroidConfmapsModelTrainer property)</a>
 </li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.SingleInstanceModelTrainer.input_keys">(sleap.nn.training.SingleInstanceModelTrainer property)</a>
 </li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.TopdownConfmapsModelTrainer.input_keys">(sleap.nn.training.TopdownConfmapsModelTrainer property)</a>
+</li>
+        <li><a href="api/sleap.nn.training.html#sleap.nn.training.TopDownMultiClassModelTrainer.input_keys">(sleap.nn.training.TopDownMultiClassModelTrainer property)</a>
 </li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.input_keys">(sleap.nn.training.Trainer property)</a>
 </li>
@@ -2398,6 +2578,8 @@
       <ul>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.input_scale">(sleap.nn.inference.BottomUpInferenceLayer attribute)</a>
 </li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.input_scale">(sleap.nn.inference.BottomUpMultiClassInferenceLayer attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.CentroidCrop.input_scale">(sleap.nn.inference.CentroidCrop attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.FindInstancePeaks.input_scale">(sleap.nn.inference.FindInstancePeaks attribute)</a>
@@ -2405,6 +2587,8 @@
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.InferenceLayer.input_scale">(sleap.nn.inference.InferenceLayer attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstanceInferenceLayer.input_scale">(sleap.nn.inference.SingleInstanceInferenceLayer attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassFindPeaks.input_scale">(sleap.nn.inference.TopDownMultiClassFindPeaks attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -2426,7 +2610,11 @@
       <li><a href="api/sleap.nn.tracker.components.html#sleap.nn.tracker.components.instance_iou">instance_iou() (in module sleap.nn.tracker.components)</a>
 </li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownInferenceModel.instance_peaks">instance_peaks (sleap.nn.inference.TopDownInferenceModel attribute)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassInferenceModel.instance_peaks">(sleap.nn.inference.TopDownMultiClassInferenceModel attribute)</a>
 </li>
+      </ul></li>
       <li><a href="api/sleap.nn.tracker.components.html#sleap.nn.tracker.components.instance_similarity">instance_similarity() (in module sleap.nn.tracker.components)</a>
 </li>
       <li><a href="api/sleap.nn.data.instance_centroids.html#sleap.nn.data.instance_centroids.InstanceCentroidFinder">InstanceCentroidFinder (class in sleap.nn.data.instance_centroids)</a>
@@ -2454,6 +2642,10 @@
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.integral_patch_size">integral_patch_size (sleap.nn.inference.BottomUpInferenceLayer attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.integral_patch_size">(sleap.nn.inference.BottomUpMultiClassInferenceLayer attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassPredictor.integral_patch_size">(sleap.nn.inference.BottomUpMultiClassPredictor attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.integral_patch_size">(sleap.nn.inference.BottomUpPredictor attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.CentroidCrop.integral_patch_size">(sleap.nn.inference.CentroidCrop attribute)</a>
@@ -2464,13 +2656,21 @@
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.integral_patch_size">(sleap.nn.inference.SingleInstancePredictor attribute)</a>
 </li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassFindPeaks.integral_patch_size">(sleap.nn.inference.TopDownMultiClassFindPeaks attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassPredictor.integral_patch_size">(sleap.nn.inference.TopDownMultiClassPredictor attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.integral_patch_size">(sleap.nn.inference.TopDownPredictor attribute)</a>
 </li>
       </ul></li>
-      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.integral_refinement">integral_refinement (sleap.nn.inference.BottomUpPredictor attribute)</a>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassPredictor.integral_refinement">integral_refinement (sleap.nn.inference.BottomUpMultiClassPredictor attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.integral_refinement">(sleap.nn.inference.BottomUpPredictor attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.integral_refinement">(sleap.nn.inference.SingleInstancePredictor attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassPredictor.integral_refinement">(sleap.nn.inference.TopDownMultiClassPredictor attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.integral_refinement">(sleap.nn.inference.TopDownPredictor attribute)</a>
 </li>
@@ -2495,12 +2695,16 @@
 </li>
       <li><a href="api/sleap.nn.system.html#sleap.nn.system.is_gpu_system">is_gpu_system() (in module sleap.nn.system)</a>
 </li>
-      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.is_grayscale">is_grayscale (sleap.nn.inference.BottomUpPredictor property)</a>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassPredictor.is_grayscale">is_grayscale (sleap.nn.inference.BottomUpMultiClassPredictor property)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.is_grayscale">(sleap.nn.inference.BottomUpPredictor property)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.Predictor.is_grayscale">(sleap.nn.inference.Predictor property)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.is_grayscale">(sleap.nn.inference.SingleInstancePredictor property)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassPredictor.is_grayscale">(sleap.nn.inference.TopDownMultiClassPredictor property)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.is_grayscale">(sleap.nn.inference.TopDownPredictor property)</a>
 </li>
@@ -2562,6 +2766,8 @@
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.keras_model">keras_model (sleap.nn.inference.BottomUpInferenceLayer attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.keras_model">(sleap.nn.inference.BottomUpMultiClassInferenceLayer attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.CentroidCrop.keras_model">(sleap.nn.inference.CentroidCrop attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.FindInstancePeaks.keras_model">(sleap.nn.inference.FindInstancePeaks attribute)</a>
@@ -2569,6 +2775,8 @@
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.InferenceLayer.keras_model">(sleap.nn.inference.InferenceLayer attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstanceInferenceLayer.keras_model">(sleap.nn.inference.SingleInstanceInferenceLayer attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassFindPeaks.keras_model">(sleap.nn.inference.TopDownMultiClassFindPeaks attribute)</a>
 </li>
         <li><a href="api/sleap.nn.model.html#sleap.nn.model.Model.keras_model">(sleap.nn.model.Model attribute)</a>
 </li>
@@ -2659,8 +2867,6 @@
 </li>
       <li><a href="api/sleap.nn.config.optimization.html#sleap.nn.config.optimization.LearningRateScheduleConfig">LearningRateScheduleConfig (class in sleap.nn.config.optimization)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.io.pathutils.html#sleap.io.pathutils.list_file_missing">list_file_missing() (in module sleap.io.pathutils)</a>
 </li>
       <li><a href="api/sleap.info.metrics.html#sleap.info.metrics.list_points_array">list_points_array() (in module sleap.info.metrics)</a>
@@ -2677,6 +2883,8 @@
         <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.load_file">(sleap.io.dataset.Labels class method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.load_hdf5">load_hdf5() (sleap.skeleton.Skeleton class method)</a>
 </li>
       <li><a href="api/sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig.load_json">load_json() (sleap.nn.config.training_job.TrainingJobConfig class method)</a>
@@ -2705,18 +2913,48 @@
 </li>
       <li><a href="api/sleap.nn.config.outputs.html#sleap.nn.config.outputs.TensorBoardConfig.loss_frequency">loss_frequency (sleap.nn.config.outputs.TensorBoardConfig attribute)</a>
 </li>
+      <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassVectorsHead.loss_function">loss_function (sleap.nn.heads.ClassVectorsHead property)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.Head.loss_function">(sleap.nn.heads.Head property)</a>
+</li>
+      </ul></li>
       <li><a href="api/sleap.nn.config.optimization.html#sleap.nn.config.optimization.HardKeypointMiningConfig.loss_scale">loss_scale (sleap.nn.config.optimization.HardKeypointMiningConfig attribute)</a>
 
       <ul>
         <li><a href="api/sleap.nn.losses.html#sleap.nn.losses.OHKMLoss.loss_scale">(sleap.nn.losses.OHKMLoss attribute)</a>
 </li>
       </ul></li>
-      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.loss_weight">loss_weight (sleap.nn.config.model.MultiInstanceConfmapsHeadConfig attribute)</a>
+      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.loss_weight">loss_weight (sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.CentroidsHeadConfig.loss_weight">(sleap.nn.config.model.CentroidsHeadConfig attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.ClassMapsHeadConfig.loss_weight">(sleap.nn.config.model.ClassMapsHeadConfig attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.ClassVectorsHeadConfig.loss_weight">(sleap.nn.config.model.ClassVectorsHeadConfig attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.loss_weight">(sleap.nn.config.model.MultiInstanceConfmapsHeadConfig attribute)</a>
+</li>
         <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.PartAffinityFieldsHeadConfig.loss_weight">(sleap.nn.config.model.PartAffinityFieldsHeadConfig attribute)</a>
 </li>
-        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead.loss_weight">(sleap.nn.heads.OffsetRefinementHead attribute)</a>
+        <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.loss_weight">(sleap.nn.config.model.SingleInstanceConfmapsHeadConfig attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.CenteredInstanceConfmapsHead.loss_weight">(sleap.nn.heads.CenteredInstanceConfmapsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.CentroidConfmapsHead.loss_weight">(sleap.nn.heads.CentroidConfmapsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassMapsHead.loss_weight">(sleap.nn.heads.ClassMapsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassVectorsHead.loss_weight">(sleap.nn.heads.ClassVectorsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.MultiInstanceConfmapsHead.loss_weight">(sleap.nn.heads.MultiInstanceConfmapsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#id6">(sleap.nn.heads.OffsetRefinementHead attribute)</a>, <a href="api/sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead.loss_weight">[1]</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.PartAffinityFieldsHead.loss_weight">(sleap.nn.heads.PartAffinityFieldsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.SingleInstanceConfmapsHead.loss_weight">(sleap.nn.heads.SingleInstanceConfmapsHead attribute)</a>
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.monitor.html#sleap.nn.monitor.LossViewer">LossViewer (class in sleap.nn.monitor)</a>
@@ -2747,14 +2985,18 @@
       </ul></li>
       <li><a href="api/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.make_backbone_fn">make_backbone_fn() (in module sleap.nn.architectures.resnet)</a>
 </li>
-      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.make_base_pipeline">make_base_pipeline() (sleap.nn.data.pipelines.BottomUpPipeline method)</a>
+      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpMultiClassPipeline.make_base_pipeline">make_base_pipeline() (sleap.nn.data.pipelines.BottomUpMultiClassPipeline method)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.make_base_pipeline">(sleap.nn.data.pipelines.BottomUpPipeline method)</a>
+</li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.CentroidConfmapsPipeline.make_base_pipeline">(sleap.nn.data.pipelines.CentroidConfmapsPipeline method)</a>
 </li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.make_base_pipeline">(sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline method)</a>
 </li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopdownConfmapsPipeline.make_base_pipeline">(sleap.nn.data.pipelines.TopdownConfmapsPipeline method)</a>
+</li>
+        <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopDownMultiClassPipeline.make_base_pipeline">(sleap.nn.data.pipelines.TopDownMultiClassPipeline method)</a>
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.DecoderBlock.make_block">make_block() (sleap.nn.architectures.encoder_decoder.DecoderBlock method)</a>
@@ -2779,6 +3021,10 @@
 </li>
       <li><a href="api/sleap.nn.data.instance_cropping.html#sleap.nn.data.instance_cropping.make_centered_bboxes">make_centered_bboxes() (in module sleap.nn.data.instance_cropping)</a>
 </li>
+      <li><a href="api/sleap.nn.data.identity.html#sleap.nn.data.identity.make_class_maps">make_class_maps() (in module sleap.nn.data.identity)</a>
+</li>
+      <li><a href="api/sleap.nn.data.identity.html#sleap.nn.data.identity.make_class_vectors">make_class_vectors() (in module sleap.nn.data.identity)</a>
+</li>
       <li><a href="api/sleap.nn.data.confidence_maps.html#sleap.nn.data.confidence_maps.make_confmaps">make_confmaps() (in module sleap.nn.data.confidence_maps)</a>
 </li>
       <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline.make_dataset">make_dataset() (sleap.nn.data.pipelines.Pipeline method)</a>
@@ -2801,6 +3047,12 @@
 </li>
       <li><a href="api/sleap.nn.data.utils.html#sleap.nn.data.utils.make_grid_vectors">make_grid_vectors() (in module sleap.nn.data.utils)</a>
 </li>
+      <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassVectorsHead.make_head">make_head() (sleap.nn.heads.ClassVectorsHead method)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.Head.make_head">(sleap.nn.heads.Head method)</a>
+</li>
+      </ul></li>
       <li><a href="api/sleap.instance.html#sleap.instance.make_instance_cattr">make_instance_cattr() (in module sleap.instance)</a>
 </li>
       <li><a href="api/sleap.nn.paf_grouping.html#sleap.nn.paf_grouping.make_line_subs">make_line_subs() (in module sleap.nn.paf_grouping)</a>
@@ -2820,6 +3072,8 @@
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.Predictor.make_pipeline">make_pipeline() (sleap.nn.inference.Predictor method)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassPredictor.make_pipeline">(sleap.nn.inference.TopDownMultiClassPredictor method)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.make_pipeline">(sleap.nn.inference.TopDownPredictor method)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.VisualPredictor.make_pipeline">(sleap.nn.inference.VisualPredictor method)</a>
@@ -2841,28 +3095,36 @@
 </li>
       <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.KalmanTracker.make_tracker">make_tracker() (sleap.nn.tracking.KalmanTracker class method)</a>
 </li>
-      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.make_training_pipeline">make_training_pipeline() (sleap.nn.data.pipelines.BottomUpPipeline method)</a>
+      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpMultiClassPipeline.make_training_pipeline">make_training_pipeline() (sleap.nn.data.pipelines.BottomUpMultiClassPipeline method)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.make_training_pipeline">(sleap.nn.data.pipelines.BottomUpPipeline method)</a>
+</li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.CentroidConfmapsPipeline.make_training_pipeline">(sleap.nn.data.pipelines.CentroidConfmapsPipeline method)</a>
 </li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.make_training_pipeline">(sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline method)</a>
 </li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopdownConfmapsPipeline.make_training_pipeline">(sleap.nn.data.pipelines.TopdownConfmapsPipeline method)</a>
 </li>
+        <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopDownMultiClassPipeline.make_training_pipeline">(sleap.nn.data.pipelines.TopDownMultiClassPipeline method)</a>
+</li>
       </ul></li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.make_video_callback">make_video_callback() (sleap.io.dataset.Labels class method)</a>
 </li>
       <li><a href="api/sleap.io.format.deeplabcut.html#sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor.make_video_for_image_list">make_video_for_image_list() (sleap.io.format.deeplabcut.LabelsDeepLabCutCsvAdaptor class method)</a>
 </li>
-      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.make_viz_pipeline">make_viz_pipeline() (sleap.nn.data.pipelines.BottomUpPipeline method)</a>
+      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpMultiClassPipeline.make_viz_pipeline">make_viz_pipeline() (sleap.nn.data.pipelines.BottomUpMultiClassPipeline method)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.make_viz_pipeline">(sleap.nn.data.pipelines.BottomUpPipeline method)</a>
+</li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.CentroidConfmapsPipeline.make_viz_pipeline">(sleap.nn.data.pipelines.CentroidConfmapsPipeline method)</a>
 </li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.make_viz_pipeline">(sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline method)</a>
 </li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopdownConfmapsPipeline.make_viz_pipeline">(sleap.nn.data.pipelines.TopdownConfmapsPipeline method)</a>
+</li>
+        <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopDownMultiClassPipeline.make_viz_pipeline">(sleap.nn.data.pipelines.TopDownMultiClassPipeline method)</a>
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.data.offset_regression.html#sleap.nn.data.offset_regression.mask_offsets">mask_offsets() (in module sleap.nn.data.offset_regression)</a>
@@ -2965,12 +3227,12 @@
 </li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.merge_matching_frames">merge_matching_frames() (sleap.io.dataset.Labels method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.merge_nodes">merge_nodes() (sleap.io.dataset.Labels method)</a>
 </li>
       <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.meta">meta (sleap.info.feature_suggestions.ItemStack attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameGroupSet.method">method (sleap.info.feature_suggestions.FrameGroupSet attribute)</a>
 
       <ul>
@@ -3016,6 +3278,8 @@
       <li><a href="api/sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig.model">model (sleap.nn.config.training_job.TrainingJobConfig attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassPredictor.model">(sleap.nn.inference.BottomUpMultiClassPredictor attribute)</a>
+</li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.model">(sleap.nn.training.Trainer attribute)</a>
 </li>
       </ul></li>
@@ -3133,6 +3397,8 @@
 </li>
         <li><a href="api/sleap.nn.data.grouping.html#module-sleap.nn.data.grouping">sleap.nn.data.grouping</a>
 </li>
+        <li><a href="api/sleap.nn.data.identity.html#module-sleap.nn.data.identity">sleap.nn.data.identity</a>
+</li>
         <li><a href="api/sleap.nn.data.inference.html#module-sleap.nn.data.inference">sleap.nn.data.inference</a>
 </li>
         <li><a href="api/sleap.nn.data.instance_centroids.html#module-sleap.nn.data.instance_centroids">sleap.nn.data.instance_centroids</a>
@@ -3156,6 +3422,8 @@
         <li><a href="api/sleap.nn.evals.html#module-sleap.nn.evals">sleap.nn.evals</a>
 </li>
         <li><a href="api/sleap.nn.heads.html#module-sleap.nn.heads">sleap.nn.heads</a>
+</li>
+        <li><a href="api/sleap.nn.identity.html#module-sleap.nn.identity">sleap.nn.identity</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#module-sleap.nn.inference">sleap.nn.inference</a>
 </li>
@@ -3188,7 +3456,15 @@
         <li><a href="api/sleap.util.html#module-sleap.util">sleap.util</a>
 </li>
       </ul></li>
+      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.HeadsConfig.multi_class_bottomup">multi_class_bottomup (sleap.nn.config.model.HeadsConfig attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.HeadsConfig.multi_class_topdown">multi_class_topdown (sleap.nn.config.model.HeadsConfig attribute)</a>
+</li>
       <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.HeadsConfig.multi_instance">multi_instance (sleap.nn.config.model.HeadsConfig attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.MultiClassBottomUpConfig">MultiClassBottomUpConfig (class in sleap.nn.config.model)</a>
+</li>
+      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.MultiClassTopDownConfig">MultiClassTopDownConfig (class in sleap.nn.config.model)</a>
 </li>
       <li><a href="api/sleap.nn.data.confidence_maps.html#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator">MultiConfidenceMapGenerator (class in sleap.nn.data.confidence_maps)</a>
 </li>
@@ -3282,6 +3558,18 @@
 </li>
       <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.num_convs">num_convs (sleap.nn.architectures.encoder_decoder.SimpleConvBlock attribute)</a>
 </li>
+      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.ClassVectorsHeadConfig.num_fc_layers">num_fc_layers (sleap.nn.config.model.ClassVectorsHeadConfig attribute)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassVectorsHead.num_fc_layers">(sleap.nn.heads.ClassVectorsHead attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.ClassVectorsHeadConfig.num_fc_units">num_fc_units (sleap.nn.config.model.ClassVectorsHeadConfig attribute)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassVectorsHead.num_fc_units">(sleap.nn.heads.ClassVectorsHead attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/sleap.io.video.html#sleap.io.video.Video.num_frames">num_frames (sleap.io.video.Video property)</a>
 </li>
       <li><a href="api/sleap.instance.html#sleap.instance.Instance.numpy">numpy() (sleap.instance.Instance method)</a>
@@ -3314,24 +3602,32 @@
       </ul></li>
       <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead">OffsetRefinementHead (class in sleap.nn.heads)</a>
 </li>
-      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.offsets_head">offsets_head (sleap.nn.data.pipelines.BottomUpPipeline attribute)</a>
+      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpMultiClassPipeline.offsets_head">offsets_head (sleap.nn.data.pipelines.BottomUpMultiClassPipeline attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.offsets_head">(sleap.nn.data.pipelines.BottomUpPipeline attribute)</a>
+</li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.CentroidConfmapsPipeline.offsets_head">(sleap.nn.data.pipelines.CentroidConfmapsPipeline attribute)</a>
 </li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.offsets_head">(sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline attribute)</a>
 </li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopdownConfmapsPipeline.offsets_head">(sleap.nn.data.pipelines.TopdownConfmapsPipeline attribute)</a>
 </li>
+        <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopDownMultiClassPipeline.offsets_head">(sleap.nn.data.pipelines.TopDownMultiClassPipeline attribute)</a>
+</li>
       </ul></li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.offsets_ind">offsets_ind (sleap.nn.inference.BottomUpInferenceLayer attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.offsets_ind">(sleap.nn.inference.BottomUpMultiClassInferenceLayer attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.CentroidCrop.offsets_ind">(sleap.nn.inference.CentroidCrop attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.FindInstancePeaks.offsets_ind">(sleap.nn.inference.FindInstancePeaks attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstanceInferenceLayer.offsets_ind">(sleap.nn.inference.SingleInstanceInferenceLayer attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassFindPeaks.offsets_ind">(sleap.nn.inference.TopDownMultiClassFindPeaks attribute)</a>
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.data.confidence_maps.html#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.offsets_threshold">offsets_threshold (sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator attribute)</a>
@@ -3392,14 +3688,18 @@
 </li>
       <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.optimization_callbacks">optimization_callbacks (sleap.nn.training.Trainer attribute)</a>
 </li>
-      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.optimization_config">optimization_config (sleap.nn.data.pipelines.BottomUpPipeline attribute)</a>
+      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpMultiClassPipeline.optimization_config">optimization_config (sleap.nn.data.pipelines.BottomUpMultiClassPipeline attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpPipeline.optimization_config">(sleap.nn.data.pipelines.BottomUpPipeline attribute)</a>
+</li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.CentroidConfmapsPipeline.optimization_config">(sleap.nn.data.pipelines.CentroidConfmapsPipeline attribute)</a>
 </li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.optimization_config">(sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline attribute)</a>
 </li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopdownConfmapsPipeline.optimization_config">(sleap.nn.data.pipelines.TopdownConfmapsPipeline attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopDownMultiClassPipeline.optimization_config">(sleap.nn.data.pipelines.TopDownMultiClassPipeline attribute)</a>
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig">OptimizationConfig (class in sleap.nn.config.optimization)</a>
@@ -3447,6 +3747,10 @@
 </li>
         <li><a href="api/sleap.nn.data.general.html#sleap.nn.data.general.LambdaMap.output_keys">(sleap.nn.data.general.LambdaMap property)</a>
 </li>
+        <li><a href="api/sleap.nn.data.identity.html#sleap.nn.data.identity.ClassMapGenerator.output_keys">(sleap.nn.data.identity.ClassMapGenerator property)</a>
+</li>
+        <li><a href="api/sleap.nn.data.identity.html#sleap.nn.data.identity.ClassVectorGenerator.output_keys">(sleap.nn.data.identity.ClassVectorGenerator property)</a>
+</li>
         <li><a href="api/sleap.nn.data.inference.html#sleap.nn.data.inference.PredictedCenterInstanceNormalizer.output_keys">(sleap.nn.data.inference.PredictedCenterInstanceNormalizer property)</a>
 </li>
         <li><a href="api/sleap.nn.data.instance_centroids.html#sleap.nn.data.instance_centroids.InstanceCentroidFinder.output_keys">(sleap.nn.data.instance_centroids.InstanceCentroidFinder property)</a>
@@ -3471,11 +3775,15 @@
 </li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.BottomUpModelTrainer.output_keys">(sleap.nn.training.BottomUpModelTrainer property)</a>
 </li>
+        <li><a href="api/sleap.nn.training.html#sleap.nn.training.BottomUpMultiClassModelTrainer.output_keys">(sleap.nn.training.BottomUpMultiClassModelTrainer property)</a>
+</li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.CentroidConfmapsModelTrainer.output_keys">(sleap.nn.training.CentroidConfmapsModelTrainer property)</a>
 </li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.SingleInstanceModelTrainer.output_keys">(sleap.nn.training.SingleInstanceModelTrainer property)</a>
 </li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.TopdownConfmapsModelTrainer.output_keys">(sleap.nn.training.TopdownConfmapsModelTrainer property)</a>
+</li>
+        <li><a href="api/sleap.nn.training.html#sleap.nn.training.TopDownMultiClassModelTrainer.output_keys">(sleap.nn.training.TopDownMultiClassModelTrainer property)</a>
 </li>
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.output_keys">(sleap.nn.training.Trainer property)</a>
 </li>
@@ -3501,6 +3809,10 @@
 </li>
         <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.CentroidsHeadConfig.output_stride">(sleap.nn.config.model.CentroidsHeadConfig attribute)</a>
 </li>
+        <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.ClassMapsHeadConfig.output_stride">(sleap.nn.config.model.ClassMapsHeadConfig attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.ClassVectorsHeadConfig.output_stride">(sleap.nn.config.model.ClassVectorsHeadConfig attribute)</a>
+</li>
         <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.HourglassConfig.output_stride">(sleap.nn.config.model.HourglassConfig attribute)</a>
 </li>
         <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.LEAPConfig.output_stride">(sleap.nn.config.model.LEAPConfig attribute)</a>
@@ -3525,11 +3837,31 @@
 </li>
         <li><a href="api/sleap.nn.data.edge_maps.html#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.output_stride">(sleap.nn.data.edge_maps.PartAffinityFieldsGenerator attribute)</a>
 </li>
+        <li><a href="api/sleap.nn.data.identity.html#sleap.nn.data.identity.ClassMapGenerator.output_stride">(sleap.nn.data.identity.ClassMapGenerator attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.CenteredInstanceConfmapsHead.output_stride">(sleap.nn.heads.CenteredInstanceConfmapsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.CentroidConfmapsHead.output_stride">(sleap.nn.heads.CentroidConfmapsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassMapsHead.output_stride">(sleap.nn.heads.ClassMapsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassVectorsHead.output_stride">(sleap.nn.heads.ClassVectorsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.MultiInstanceConfmapsHead.output_stride">(sleap.nn.heads.MultiInstanceConfmapsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead.output_stride">(sleap.nn.heads.OffsetRefinementHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.PartAffinityFieldsHead.output_stride">(sleap.nn.heads.PartAffinityFieldsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.SingleInstanceConfmapsHead.output_stride">(sleap.nn.heads.SingleInstanceConfmapsHead attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.CentroidCrop.output_stride">(sleap.nn.inference.CentroidCrop attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.FindInstancePeaks.output_stride">(sleap.nn.inference.FindInstancePeaks attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstanceInferenceLayer.output_stride">(sleap.nn.inference.SingleInstanceInferenceLayer attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassFindPeaks.output_stride">(sleap.nn.inference.TopDownMultiClassFindPeaks attribute)</a>
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig.outputs">outputs (sleap.nn.config.training_job.TrainingJobConfig attribute)</a>
@@ -3587,13 +3919,13 @@
 </li>
         <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.part_names">(sleap.nn.config.model.SingleInstanceConfmapsHeadConfig attribute)</a>
 </li>
-        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.CenteredInstanceConfmapsHead.part_names">(sleap.nn.heads.CenteredInstanceConfmapsHead attribute)</a>
+        <li><a href="api/sleap.nn.heads.html#id0">(sleap.nn.heads.CenteredInstanceConfmapsHead attribute)</a>, <a href="api/sleap.nn.heads.html#sleap.nn.heads.CenteredInstanceConfmapsHead.part_names">[1]</a>
 </li>
-        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.MultiInstanceConfmapsHead.part_names">(sleap.nn.heads.MultiInstanceConfmapsHead attribute)</a>
+        <li><a href="api/sleap.nn.heads.html#id3">(sleap.nn.heads.MultiInstanceConfmapsHead attribute)</a>, <a href="api/sleap.nn.heads.html#sleap.nn.heads.MultiInstanceConfmapsHead.part_names">[1]</a>
 </li>
-        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead.part_names">(sleap.nn.heads.OffsetRefinementHead attribute)</a>
+        <li><a href="api/sleap.nn.heads.html#id4">(sleap.nn.heads.OffsetRefinementHead attribute)</a>, <a href="api/sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead.part_names">[1]</a>
 </li>
-        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.SingleInstanceConfmapsHead.part_names">(sleap.nn.heads.SingleInstanceConfmapsHead attribute)</a>
+        <li><a href="api/sleap.nn.heads.html#id8">(sleap.nn.heads.SingleInstanceConfmapsHead attribute)</a>, <a href="api/sleap.nn.heads.html#sleap.nn.heads.SingleInstanceConfmapsHead.part_names">[1]</a>
 </li>
         <li><a href="api/sleap.nn.paf_grouping.html#sleap.nn.paf_grouping.PAFScorer.part_names">(sleap.nn.paf_grouping.PAFScorer attribute)</a>
 </li>
@@ -3613,6 +3945,10 @@
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.peak_threshold">peak_threshold (sleap.nn.inference.BottomUpInferenceLayer attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.peak_threshold">(sleap.nn.inference.BottomUpMultiClassInferenceLayer attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassPredictor.peak_threshold">(sleap.nn.inference.BottomUpMultiClassPredictor attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.peak_threshold">(sleap.nn.inference.BottomUpPredictor attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.CentroidCrop.peak_threshold">(sleap.nn.inference.CentroidCrop attribute)</a>
@@ -3623,6 +3959,10 @@
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.peak_threshold">(sleap.nn.inference.SingleInstancePredictor attribute)</a>
 </li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassFindPeaks.peak_threshold">(sleap.nn.inference.TopDownMultiClassFindPeaks attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassPredictor.peak_threshold">(sleap.nn.inference.TopDownMultiClassPredictor attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.peak_threshold">(sleap.nn.inference.TopDownPredictor attribute)</a>
 </li>
       </ul></li>
@@ -3632,10 +3972,14 @@
 </li>
       <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline">Pipeline (class in sleap.nn.data.pipelines)</a>
 </li>
-      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.pipeline">pipeline (sleap.nn.inference.BottomUpPredictor attribute)</a>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassPredictor.pipeline">pipeline (sleap.nn.inference.BottomUpMultiClassPredictor attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.pipeline">(sleap.nn.inference.BottomUpPredictor attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.pipeline">(sleap.nn.inference.SingleInstancePredictor attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassPredictor.pipeline">(sleap.nn.inference.TopDownMultiClassPredictor attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.pipeline">(sleap.nn.inference.TopDownPredictor attribute)</a>
 </li>
@@ -3666,14 +4010,14 @@
         <li><a href="api/sleap.nn.callbacks.html#sleap.nn.callbacks.TensorBoardMatplotlibWriter.plot_fn">(sleap.nn.callbacks.TensorBoardMatplotlibWriter attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.plot_img">plot_img() (in module sleap.nn.viz)</a>
 </li>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.plot_instance">plot_instance() (in module sleap.nn.viz)</a>
 </li>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.plot_instances">plot_instances() (in module sleap.nn.viz)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.plot_pafs">plot_pafs() (in module sleap.nn.viz)</a>
 </li>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.plot_peaks">plot_peaks() (in module sleap.nn.viz)</a>
@@ -3891,11 +4235,15 @@
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.refinement">refinement (sleap.nn.inference.BottomUpInferenceLayer attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.refinement">(sleap.nn.inference.BottomUpMultiClassInferenceLayer attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.CentroidCrop.refinement">(sleap.nn.inference.CentroidCrop attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.FindInstancePeaks.refinement">(sleap.nn.inference.FindInstancePeaks attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstanceInferenceLayer.refinement">(sleap.nn.inference.SingleInstanceInferenceLayer attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassFindPeaks.refinement">(sleap.nn.inference.TopDownMultiClassFindPeaks attribute)</a>
 </li>
       </ul></li>
       <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.relabel_node">relabel_node() (sleap.skeleton.Skeleton method)</a>
@@ -3924,14 +4272,14 @@
       </ul></li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.remove_frames">remove_frames() (sleap.io.dataset.Labels method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.remove_instance">remove_instance() (sleap.io.dataset.Labels method)</a>
 
       <ul>
         <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.remove_instance">(sleap.io.dataset.LabelsDataCache method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.remove_predictions">remove_predictions() (sleap.io.dataset.Labels method)</a>
 </li>
       <li><a href="api/sleap.nn.tracker.kalman.html#sleap.nn.tracker.kalman.remove_second_bests_from_cost_matrix">remove_second_bests_from_cost_matrix() (in module sleap.nn.tracker.kalman)</a>
@@ -3939,6 +4287,10 @@
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.remove_suggestion">remove_suggestion() (sleap.io.dataset.Labels method)</a>
 </li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.remove_track">remove_track() (sleap.io.dataset.Labels method)</a>
+</li>
+      <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.remove_untracked">remove_untracked() (sleap.instance.LabeledFrame method)</a>
+</li>
+      <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.remove_untracked_instances">remove_untracked_instances() (sleap.io.dataset.Labels method)</a>
 </li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.remove_user_instances">remove_user_instances() (sleap.io.dataset.Labels method)</a>
 </li>
@@ -3998,14 +4350,22 @@
 </li>
       <li><a href="api/sleap.nn.losses.html#sleap.nn.losses.PartLoss.result">result() (sleap.nn.losses.PartLoss method)</a>
 </li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.return_class_maps">return_class_maps (sleap.nn.inference.BottomUpMultiClassInferenceLayer attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassFindPeaks.return_class_vectors">return_class_vectors (sleap.nn.inference.TopDownMultiClassFindPeaks attribute)</a>
+</li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.return_confmaps">return_confmaps (sleap.nn.inference.BottomUpInferenceLayer attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.return_confmaps">(sleap.nn.inference.BottomUpMultiClassInferenceLayer attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.CentroidCrop.return_confmaps">(sleap.nn.inference.CentroidCrop attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.FindInstancePeaks.return_confmaps">(sleap.nn.inference.FindInstancePeaks attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstanceInferenceLayer.return_confmaps">(sleap.nn.inference.SingleInstanceInferenceLayer attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassFindPeaks.return_confmaps">(sleap.nn.inference.TopDownMultiClassFindPeaks attribute)</a>
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.return_pafs">return_pafs (sleap.nn.inference.BottomUpInferenceLayer attribute)</a>
@@ -4171,6 +4531,8 @@
       <ul>
         <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.CentroidsHeadConfig.sigma">(sleap.nn.config.model.CentroidsHeadConfig attribute)</a>
 </li>
+        <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.ClassMapsHeadConfig.sigma">(sleap.nn.config.model.ClassMapsHeadConfig attribute)</a>
+</li>
         <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.sigma">(sleap.nn.config.model.MultiInstanceConfmapsHeadConfig attribute)</a>
 </li>
         <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.PartAffinityFieldsHeadConfig.sigma">(sleap.nn.config.model.PartAffinityFieldsHeadConfig attribute)</a>
@@ -4185,8 +4547,22 @@
 </li>
         <li><a href="api/sleap.nn.data.edge_maps.html#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.sigma">(sleap.nn.data.edge_maps.PartAffinityFieldsGenerator attribute)</a>
 </li>
+        <li><a href="api/sleap.nn.data.identity.html#sleap.nn.data.identity.ClassMapGenerator.sigma">(sleap.nn.data.identity.ClassMapGenerator attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.CenteredInstanceConfmapsHead.sigma">(sleap.nn.heads.CenteredInstanceConfmapsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.CentroidConfmapsHead.sigma">(sleap.nn.heads.CentroidConfmapsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.ClassMapsHead.sigma">(sleap.nn.heads.ClassMapsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.MultiInstanceConfmapsHead.sigma">(sleap.nn.heads.MultiInstanceConfmapsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.PartAffinityFieldsHead.sigma">(sleap.nn.heads.PartAffinityFieldsHead attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.SingleInstanceConfmapsHead.sigma">(sleap.nn.heads.SingleInstanceConfmapsHead attribute)</a>
+</li>
       </ul></li>
-      <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead.sigma_threshold">sigma_threshold (sleap.nn.heads.OffsetRefinementHead attribute)</a>
+      <li><a href="api/sleap.nn.heads.html#id5">sigma_threshold (sleap.nn.heads.OffsetRefinementHead attribute)</a>, <a href="api/sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead.sigma_threshold">[1]</a>
 </li>
       <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.similarity_function">similarity_function (sleap.nn.tracking.Tracker attribute)</a>
 </li>
@@ -4435,6 +4811,8 @@
         <li><a href="api/sleap.io.legacy.html#module-sleap.io.legacy">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     sleap.io.pathutils
 
@@ -4442,8 +4820,6 @@
         <li><a href="api/sleap.io.pathutils.html#module-sleap.io.pathutils">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     sleap.io.video
 
@@ -4627,6 +5003,13 @@
 </li>
       </ul></li>
       <li>
+    sleap.nn.data.identity
+
+      <ul>
+        <li><a href="api/sleap.nn.data.identity.html#module-sleap.nn.data.identity">module</a>
+</li>
+      </ul></li>
+      <li>
     sleap.nn.data.inference
 
       <ul>
@@ -4708,6 +5091,13 @@
 
       <ul>
         <li><a href="api/sleap.nn.heads.html#module-sleap.nn.heads">module</a>
+</li>
+      </ul></li>
+      <li>
+    sleap.nn.identity
+
+      <ul>
+        <li><a href="api/sleap.nn.identity.html#module-sleap.nn.identity">module</a>
 </li>
       </ul></li>
       <li>
@@ -4983,6 +5373,16 @@
 </li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownInferenceModel">TopDownInferenceModel (class in sleap.nn.inference)</a>
 </li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassFindPeaks">TopDownMultiClassFindPeaks (class in sleap.nn.inference)</a>
+</li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassInferenceModel">TopDownMultiClassInferenceModel (class in sleap.nn.inference)</a>
+</li>
+      <li><a href="api/sleap.nn.training.html#sleap.nn.training.TopDownMultiClassModelTrainer">TopDownMultiClassModelTrainer (class in sleap.nn.training)</a>
+</li>
+      <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.TopDownMultiClassPipeline">TopDownMultiClassPipeline (class in sleap.nn.data.pipelines)</a>
+</li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassPredictor">TopDownMultiClassPredictor (class in sleap.nn.inference)</a>
+</li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor">TopDownPredictor (class in sleap.nn.inference)</a>
 </li>
       <li><a href="api/sleap.nn.paf_grouping.html#sleap.nn.paf_grouping.toposort_edges">toposort_edges() (in module sleap.nn.paf_grouping)</a>
@@ -5014,6 +5414,8 @@
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.tracker">tracker (sleap.nn.inference.BottomUpPredictor attribute)</a>
 
       <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassPredictor.tracker">(sleap.nn.inference.TopDownMultiClassPredictor attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownPredictor.tracker">(sleap.nn.inference.TopDownPredictor attribute)</a>
 </li>
       </ul></li>
@@ -5022,11 +5424,17 @@
       <ul>
         <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader.tracks">(sleap.nn.data.providers.LabelsReader property)</a>
 </li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassPredictor.tracks">(sleap.nn.inference.BottomUpMultiClassPredictor attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.TopDownMultiClassPredictor.tracks">(sleap.nn.inference.TopDownMultiClassPredictor attribute)</a>
+</li>
       </ul></li>
       <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.train">train() (sleap.nn.training.Trainer method)</a>
 </li>
       <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer">Trainer (class in sleap.nn.training)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.config.data.html#sleap.nn.config.data.LabelsConfig.training_inds">training_inds (sleap.nn.config.data.LabelsConfig attribute)</a>
 </li>
       <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.training_instances">training_instances (sleap.instance.LabeledFrame property)</a>
@@ -5037,8 +5445,6 @@
         <li><a href="api/sleap.nn.training.html#sleap.nn.training.DataReaders.training_labels">(sleap.nn.training.DataReaders property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.training.html#sleap.nn.training.DataReaders.training_labels_reader">training_labels_reader (sleap.nn.training.DataReaders attribute)</a>
 </li>
       <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.training_pipeline">training_pipeline (sleap.nn.training.Trainer attribute)</a>
@@ -5085,6 +5491,10 @@
         <li><a href="api/sleap.nn.data.general.html#sleap.nn.data.general.KeyRenamer.transform_dataset">(sleap.nn.data.general.KeyRenamer method)</a>
 </li>
         <li><a href="api/sleap.nn.data.general.html#sleap.nn.data.general.LambdaMap.transform_dataset">(sleap.nn.data.general.LambdaMap method)</a>
+</li>
+        <li><a href="api/sleap.nn.data.identity.html#sleap.nn.data.identity.ClassMapGenerator.transform_dataset">(sleap.nn.data.identity.ClassMapGenerator method)</a>
+</li>
+        <li><a href="api/sleap.nn.data.identity.html#sleap.nn.data.identity.ClassVectorGenerator.transform_dataset">(sleap.nn.data.identity.ClassVectorGenerator method)</a>
 </li>
         <li><a href="api/sleap.nn.data.inference.html#sleap.nn.data.inference.PredictedCenterInstanceNormalizer.transform_dataset">(sleap.nn.data.inference.PredictedCenterInstanceNormalizer method)</a>
 </li>
@@ -5371,6 +5781,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader.with_track_only">with_track_only (sleap.nn.data.providers.LabelsReader attribute)</a>
+</li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.with_user_labels_only">with_user_labels_only() (sleap.io.dataset.Labels method)</a>
 </li>
       <li><a href="api/sleap.io.format.main.html#sleap.io.format.main.write">write() (in module sleap.io.format.main)</a>

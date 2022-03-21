@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sleap.io.format.main &#8212; SLEAP (v1.2.0)</title>
+    <title>sleap.nn.identity &#8212; SLEAP (v1.2.0)</title>
     
   <link href="../_static/css/theme.css" rel="stylesheet">
   <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -42,12 +42,12 @@
     <script src="../_static/togglebutton.js"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script src="../_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
-    <link rel="canonical" href="/develop/api/sleap.io.format.main.html" />
+    <link rel="canonical" href="/develop/api/sleap.nn.identity.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="sleap.io.format.sleap_analysis" href="sleap.io.format.sleap_analysis.html" />
-    <link rel="prev" title="sleap.io.format.leap_matlab" href="sleap.io.format.leap_matlab.html" />
+    <link rel="next" title="sleap.nn.inference" href="sleap.nn.inference.html" />
+    <link rel="prev" title="sleap.nn.heads" href="sleap.nn.heads.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -281,8 +281,8 @@
      sleap.nn.heads
     </a>
    </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.identity.html">
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
      sleap.nn.identity
     </a>
    </li>
@@ -601,8 +601,8 @@
      sleap.io.format.leap_matlab
     </a>
    </li>
-   <li class="toctree-l2 current active">
-    <a class="current reference internal" href="#">
+   <li class="toctree-l2">
+    <a class="reference internal" href="sleap.io.format.main.html">
      sleap.io.format.main
     </a>
    </li>
@@ -713,7 +713,7 @@
                 data-toggle="tooltip" data-placement="left" title="Source repository"><i
                     class="fab fa-github"></i>repository</button></a>
         <a class="issues-button"
-            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.io.format.main.html&body=Your%20issue%20content%20here."><button
+            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.identity.html&body=Your%20issue%20content%20here."><button
                 type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
                 title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
         
@@ -736,7 +736,7 @@
         <div class="col-12 col-md-9 pl-md-3 pr-md-0">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
-                <h1>sleap.io.format.main</h1>
+                <h1>sleap.nn.identity</h1>
                 <!-- Table of contents -->
                 <div id="print-main-content">
                     <div id="jb-print-toc">
@@ -747,83 +747,116 @@
             
               <div>
                 
-  <div class="section" id="module-sleap.io.format.main">
-<span id="sleap-io-format-main"></span><h1>sleap.io.format.main<a class="headerlink" href="#module-sleap.io.format.main" title="Permalink to this headline">¶</a></h1>
-<p>Read/write for multiple dataset formats.</p>
-<p>File adaptors provide a common API for code that reads and/or writes data files.
-Usually these are for reading or writing SLEAP datasets or something with
-roughly equivalent data (e.g., a COCO keypoint dataset), although the code
-can in principle be used for reading/writing different types of data.</p>
-<p>For reading or writing SLEAP datasets, use <code class="xref py py-obj docutils literal notranslate"><span class="pre">main.read()</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">main.write()</span></code>,
-optionally specifying the <code class="xref py py-obj docutils literal notranslate"><span class="pre">as_format</span></code> parameter (e.g., if you want to write a
-specific, non-default format). <a class="reference internal" href="sleap.io.convert.html#module-sleap.io.convert" title="sleap.io.convert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.convert</span></code></a> is a nice usage example.</p>
-<p>To add support for a new file format:</p>
-<ol class="arabic simple">
-<li><p>Create an adaptor class which implements all virtual functions in the
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">Adaptor</span></code> class. Take a look at <code class="xref py py-obj docutils literal notranslate"><span class="pre">GenericJsonAdaptor</span></code> for a simple example
-or <code class="xref py py-obj docutils literal notranslate"><span class="pre">SleapAnalysisAdaptor</span></code> for an adaptor which supports reading and writing
-datasets (this would be a good adaptor to use as a template for your own).</p></li>
-<li><p>If it’s for reading and/or writing <code class="xref py py-obj docutils literal notranslate"><span class="pre">Labels</span></code> datasets (the typical case),
-add it to <code class="xref py py-obj docutils literal notranslate"><span class="pre">all_labels_adaptors</span></code> dictionary in <code class="xref py py-obj docutils literal notranslate"><span class="pre">main.py</span></code>.</p></li>
-</ol>
-<p>If your file format has a file extension that’s distinct from other
-supported file formats, then read/write code will automatically detect the
-correct format. For example, if your adaptor supports save and its default file
-ext is <code class="xref py py-obj docutils literal notranslate"><span class="pre">foo</span></code>, then calling <code class="xref py py-obj docutils literal notranslate"><span class="pre">Labels.save_file(labels,</span> <span class="pre">&quot;filename.foo&quot;)</span></code> will use
-your file adaptor.</p>
-<p>If your file format does not have a distinct file extension, then additional
-work is required. For an example, take a look at the <code class="xref py py-obj docutils literal notranslate"><span class="pre">ExportAnalysisFile</span></code> and
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">ImportAnalysisFile</span></code> command classes (in <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.gui.commands</span></code>). For the analysis
-HDF5 we need custom code since these files have a <code class="xref py py-obj docutils literal notranslate"><span class="pre">h5</span></code> extension, and this is
-also a non-default file extension for the <code class="xref py py-obj docutils literal notranslate"><span class="pre">LabelsV1Adaptor</span></code> adaptor.</p>
+  <div class="section" id="module-sleap.nn.identity">
+<span id="sleap-nn-identity"></span><h1>sleap.nn.identity<a class="headerlink" href="#module-sleap.nn.identity" title="Permalink to this headline">¶</a></h1>
+<p>Utilities for models that learn identity.</p>
+<p>These functions implement the inference logic for classifying peaks using class maps or
+classification vectors.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="sleap.io.format.main.read">
-<span class="sig-prename descclassname"><span class="pre">sleap.io.format.main.</span></span><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">for_object</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">object</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.0/sleap/io/format/main.py#L67-L111"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.main.read" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reads file using the appropriate file format adaptor.</p>
+<dt class="sig sig-object py" id="sleap.nn.identity.classify_peaks_from_maps">
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.identity.</span></span><span class="sig-name descname"><span class="pre">classify_peaks_from_maps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">class_maps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_vals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_sample_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_channel_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_channels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.0/sleap/nn/identity.py#L97-L179"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.identity.classify_peaks_from_maps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Classify and group local peaks by their class map probability.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>filename</strong> – Full filename of the file to read.</p></li>
-<li><p><strong>for_object</strong> – The type of object we’re trying to read; can be given as
-string (e.g., “labels”) or instance of the object.</p></li>
-<li><p><strong>as_format</strong> – Allows you to specify the format adaptor to use;
-if not specified, then we’ll try the default adaptors for this
-object type.</p></li>
+<li><p><strong>class_maps</strong> – Class maps for a batch as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and
+shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">height,</span> <span class="pre">width,</span> <span class="pre">n_classes)</span></code>.</p></li>
+<li><p><strong>peak_points</strong> – Local peak coordinates as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and
+shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_peaks,)</span></code>. These should be in the same scale as the class maps.</p></li>
+<li><p><strong>peak_vals</strong> – Confidence map value each peak as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code>
+and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_peaks,)</span></code>.</p></li>
+<li><p><strong>peak_sample_inds</strong> – Sample index for each peak as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.int32</span></code>
+and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_peaks,)</span></code>.</p></li>
+<li><p><strong>peak_channel_inds</strong> – Channel index for each peak as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.int32</span></code> and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_peaks,)</span></code>.</p></li>
+<li><p><strong>n_channels</strong> – Integer number of channels (nodes) the instances should have.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A tuple of <code class="xref py py-obj docutils literal notranslate"><span class="pre">(points,</span> <span class="pre">point_vals,</span> <span class="pre">class_probs)</span></code> containing the grouped peaks.</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">points</span></code>: Class-grouped peaks as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and shape</dt><dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">n_classes,</span> <span class="pre">n_channels,</span> <span class="pre">2)</span></code>. Missing points will be denoted by
+NaNs.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">point_vals</span></code>: The confidence map values for each point as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype</dt><dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">n_classes,</span> <span class="pre">n_channels)</span></code>.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">class_probs</span></code>: Classification probabilities for matched points as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code></dt><dd><p>of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">n_classes,</span> <span class="pre">n_channels)</span></code>.</p>
+</dd>
 </dl>
-<dl>
-<dt>Exceptions:</dt><dd><p>NotImplementedError if appropriate adaptor cannot be found.</p>
-<p>TypeError if adaptor does not support reading
-(shouldn’t happen unless you specify <code class="xref py py-obj docutils literal notranslate"><span class="pre">as_format</span></code> adaptor).</p>
-<p>Any file-related exception thrown while trying to read.</p>
+</p>
+</dd>
+</dl>
+<p>See also: group_class_peaks</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="sleap.nn.identity.classify_peaks_from_vectors">
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.identity.</span></span><span class="sig-name descname"><span class="pre">classify_peaks_from_vectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">peak_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_vals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_class_probs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_sample_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.0/sleap/nn/identity.py#L182-L250"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.identity.classify_peaks_from_vectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Group peaks by classification probabilities.</p>
+<p>This is used in top-down classification models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>peak_points</strong> – </p></li>
+<li><p><strong>peak_vals</strong> – </p></li>
+<li><p><strong>peak_class_probs</strong> – </p></li>
+<li><p><strong>crop_sample_inds</strong> – </p></li>
+<li><p><strong>n_samples</strong> – Number of samples in the batch.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A tuple of <code class="xref py py-obj docutils literal notranslate"><span class="pre">(points,</span> <span class="pre">point_vals,</span> <span class="pre">class_probs)</span></code>.</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">points</span></code>: Class-grouped peaks as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and shape</dt><dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">n_classes,</span> <span class="pre">n_channels,</span> <span class="pre">2)</span></code>. Missing points will be denoted by
+NaNs.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">point_vals</span></code>: The confidence map values for each point as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype</dt><dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">n_classes,</span> <span class="pre">n_channels)</span></code>.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">class_probs</span></code>: Classification probabilities for matched points as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code></dt><dd><p>of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">n_classes,</span> <span class="pre">n_channels)</span></code>.</p>
+</dd>
+</dl>
+</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="sleap.io.format.main.write">
-<span class="sig-prename descclassname"><span class="pre">sleap.io.format.main.</span></span><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_object</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.0/sleap/io/format/main.py#L114-L162"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.main.write" title="Permalink to this definition">¶</a></dt>
-<dd><p>Writes SLEAP dataset file using the appropriate file format adaptor.</p>
+<dt class="sig sig-object py" id="sleap.nn.identity.group_class_peaks">
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.identity.</span></span><span class="sig-name descname"><span class="pre">group_class_peaks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">peak_class_probs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_sample_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_channel_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_channels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.0/sleap/nn/identity.py#L13-L94"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.identity.group_class_peaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Group local peaks using class probabilities.</p>
+<p>This is useful for matching peaks that span multiple samples and channels into
+classes (e.g., instance identities) by their class probability.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>filename</strong> – Full filename of the file to write.
-All directories should exist.</p></li>
-<li><p><strong>source_object</strong> – The object we want to write to a file.</p></li>
-<li><p><strong>as_format</strong> – Allows you to specify the format adaptor to use;
-if not specified, then this will use the privileged adaptor for
-the type of object.</p></li>
+<li><p><strong>peak_class_probs</strong> – Class probabilities for each peak as <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_peaks,</span> <span class="pre">n_classes)</span></code>.</p></li>
+<li><p><strong>peak_sample_inds</strong> – Sample index for each peak as <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.int32</span></code>
+and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_peaks,)</span></code>.</p></li>
+<li><p><strong>peak_channel_inds</strong> – Channel index for each peak as <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.int32</span></code> and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_peaks,)</span></code>.</p></li>
+<li><p><strong>n_samples</strong> – Integer number of samples in the batch.</p></li>
+<li><p><strong>n_channels</strong> – Integer number of channels (nodes) the instances should have.</p></li>
 </ul>
 </dd>
-</dl>
-<dl>
-<dt>Exceptions:</dt><dd><p>NotImplementedError if appropriate adaptor cannot be found.</p>
-<p>TypeError if adaptor does not support writing
-(shouldn’t happen unless you specify <code class="xref py py-obj docutils literal notranslate"><span class="pre">as_format</span></code> adaptor).</p>
-<p>Any file-related exception thrown while trying to write.</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A tuple of <code class="xref py py-obj docutils literal notranslate"><span class="pre">(peak_inds,</span> <span class="pre">class_inds)</span></code>.</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">peak_inds</span></code>: Indices of class-grouped peaks within <code class="xref py py-obj docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">n_peaks)</span></code>. Will be at</dt><dd><p>most <code class="xref py py-obj docutils literal notranslate"><span class="pre">n_classes</span></code> long.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">class_inds</span></code>: Indices of the corresponding class for each peak within</dt><dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">n_peaks)</span></code>. Will be at most <code class="xref py py-obj docutils literal notranslate"><span class="pre">n_classes</span></code> long.</p>
 </dd>
 </dl>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Peaks will be assigned to classes by their probability using the Hungarian
+algorithm. Peaks that are assigned to classes that are not the highest
+probability for each class are removed from the matches.</p>
+</div>
+<p>See also: classify_peaks_from_maps, classify_peaks_from_vectors</p>
 </dd></dl>
 
 </div>
@@ -834,17 +867,17 @@ the type of object.</p></li>
             
                 <!-- Previous / next buttons -->
 <div class='prev-next-area'> 
-    <a class='left-prev' id="prev-link" href="sleap.io.format.leap_matlab.html" title="previous page">
+    <a class='left-prev' id="prev-link" href="sleap.nn.heads.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">sleap.io.format.leap_matlab</p>
+            <p class="prev-next-title">sleap.nn.heads</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="sleap.io.format.sleap_analysis.html" title="next page">
+    <a class='right-next' id="next-link" href="sleap.nn.inference.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">sleap.io.format.sleap_analysis</p>
+        <p class="prev-next-title">sleap.nn.inference</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>
