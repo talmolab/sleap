@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sleap.nn.architectures.pretrained_encoders &#8212; SLEAP (v1.2.1)</title>
+    <title>sleap.nn.identity &#8212; SLEAP (v1.2.1)</title>
     
   <link href="../_static/css/theme.css" rel="stylesheet">
   <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -42,12 +42,12 @@
     <script src="../_static/togglebutton.js"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script src="../_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
-    <link rel="canonical" href="/develop/api/sleap.nn.architectures.pretrained_encoders.html" />
+    <link rel="canonical" href="/develop/api/sleap.nn.identity.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="sleap.nn.architectures.resnet" href="sleap.nn.architectures.resnet.html" />
-    <link rel="prev" title="sleap.nn.architectures.leap" href="sleap.nn.architectures.leap.html" />
+    <link rel="next" title="sleap.nn.inference" href="sleap.nn.inference.html" />
+    <link rel="prev" title="sleap.nn.heads" href="sleap.nn.heads.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -281,8 +281,8 @@
      sleap.nn.heads
     </a>
    </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.identity.html">
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
      sleap.nn.identity
     </a>
    </li>
@@ -491,8 +491,8 @@
      sleap.nn.architectures.leap
     </a>
    </li>
-   <li class="toctree-l2 current active">
-    <a class="current reference internal" href="#">
+   <li class="toctree-l2">
+    <a class="reference internal" href="sleap.nn.architectures.pretrained_encoders.html">
      sleap.nn.architectures.pretrained_encoders
     </a>
    </li>
@@ -713,7 +713,7 @@
                 data-toggle="tooltip" data-placement="left" title="Source repository"><i
                     class="fab fa-github"></i>repository</button></a>
         <a class="issues-button"
-            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.architectures.pretrained_encoders.html&body=Your%20issue%20content%20here."><button
+            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.identity.html&body=Your%20issue%20content%20here."><button
                 type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
                 title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
         
@@ -736,7 +736,7 @@
         <div class="col-12 col-md-9 pl-md-3 pr-md-0">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
-                <h1>sleap.nn.architectures.pretrained_encoders</h1>
+                <h1>sleap.nn.identity</h1>
                 <!-- Table of contents -->
                 <div id="print-main-content">
                     <div id="jb-print-toc">
@@ -747,168 +747,116 @@
             
               <div>
                 
-  <div class="section" id="module-sleap.nn.architectures.pretrained_encoders">
-<span id="sleap-nn-architectures-pretrained-encoders"></span><h1>sleap.nn.architectures.pretrained_encoders<a class="headerlink" href="#module-sleap.nn.architectures.pretrained_encoders" title="Permalink to this headline">¶</a></h1>
-<p>Encoder-decoder backbones with pretrained encoder models.</p>
-<p>This module enables encoder-decoder style architectures using a wide range of
-state-of-the-art architectures as the encoder, with a UNet-like upsampling stack that
-also takes advantage of skip connections from the encoder blocks. Additionally, the
-encoder models can use ImageNet-pretrained weights for initialization.</p>
-<p>This module is made possible by the work by Pavel Yakubovskiy who graciously put
-together a library implementing common pretrained fully-convolutional architectures and
-their weights.</p>
+  <div class="section" id="module-sleap.nn.identity">
+<span id="sleap-nn-identity"></span><h1>sleap.nn.identity<a class="headerlink" href="#module-sleap.nn.identity" title="Permalink to this headline">¶</a></h1>
+<p>Utilities for models that learn identity.</p>
+<p>These functions implement the inference logic for classifying peaks using class maps or
+classification vectors.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="sleap.nn.identity.classify_peaks_from_maps">
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.identity.</span></span><span class="sig-name descname"><span class="pre">classify_peaks_from_maps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">class_maps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_vals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_sample_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_channel_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_channels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/identity.py#L97-L179"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.identity.classify_peaks_from_maps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Classify and group local peaks by their class map probability.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>class_maps</strong> – Class maps for a batch as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and
+shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">height,</span> <span class="pre">width,</span> <span class="pre">n_classes)</span></code>.</p></li>
+<li><p><strong>peak_points</strong> – Local peak coordinates as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and
+shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_peaks,)</span></code>. These should be in the same scale as the class maps.</p></li>
+<li><p><strong>peak_vals</strong> – Confidence map value each peak as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code>
+and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_peaks,)</span></code>.</p></li>
+<li><p><strong>peak_sample_inds</strong> – Sample index for each peak as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.int32</span></code>
+and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_peaks,)</span></code>.</p></li>
+<li><p><strong>peak_channel_inds</strong> – Channel index for each peak as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.int32</span></code> and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_peaks,)</span></code>.</p></li>
+<li><p><strong>n_channels</strong> – Integer number of channels (nodes) the instances should have.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A tuple of <code class="xref py py-obj docutils literal notranslate"><span class="pre">(points,</span> <span class="pre">point_vals,</span> <span class="pre">class_probs)</span></code> containing the grouped peaks.</p>
 <dl class="simple">
-<dt>For more info, see the source repositories:</dt><dd><ul class="simple">
-<li><p><a class="reference external" href="https://github.com/qubvel/segmentation_models">https://github.com/qubvel/segmentation_models</a></p></li>
-<li><p><a class="reference external" href="https://github.com/qubvel/classification_models">https://github.com/qubvel/classification_models</a></p></li>
-</ul>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">points</span></code>: Class-grouped peaks as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and shape</dt><dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">n_classes,</span> <span class="pre">n_channels,</span> <span class="pre">2)</span></code>. Missing points will be denoted by
+NaNs.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">point_vals</span></code>: The confidence map values for each point as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype</dt><dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">n_classes,</span> <span class="pre">n_channels)</span></code>.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">class_probs</span></code>: Classification probabilities for matched points as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code></dt><dd><p>of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">n_classes,</span> <span class="pre">n_channels)</span></code>.</p>
 </dd>
 </dl>
-<p>License:</p>
-<p>The MIT License</p>
-<p>Copyright (c) 2018, Pavel Yakubovskiy</p>
-<p>Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the “Software”), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:</p>
-<p>The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.</p>
-<p>THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.pretrained_encoders.</span></span><span class="sig-name descname"><span class="pre">UnetPretrainedEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'efficientnetb0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(256,</span> <span class="pre">256,</span> <span class="pre">128,</span> <span class="pre">128)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/architectures/pretrained_encoders.py#L98-L253"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder" title="Permalink to this definition">¶</a></dt>
-<dd><p>UNet with an (optionally) pretrained encoder model.</p>
-<p>This backbone enables the use of a variety of popular neural network architectures
-for feature extraction in the backbone. These can be used with ImageNet-pretrained
-weights for initialization. The decoder (upsampling stack) receives skip connections
-from intermediate activations in the encoder blocks.</p>
-<p>All of the encoder models have a maximum stride of 32 and the input does not need to
-be preprocessed in any special way. Grayscale images will be tiled to have 3
-channels automatically.</p>
-<p>See <a class="reference external" href="https://github.com/qubvel/classification_models#specification">https://github.com/qubvel/classification_models#specification</a> for more
-information on the individual backbones.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.encoder">
-<span class="sig-name descname"><span class="pre">encoder</span></span><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.encoder" title="Permalink to this definition">¶</a></dt>
-<dd><p>Name of the model to use as the encoder. Valid encoder names are:
-- <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;vgg16&quot;,</span> <span class="pre">&quot;vgg19&quot;,</span></code>
-- <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;resnet18&quot;,</span> <span class="pre">&quot;resnet34&quot;,</span> <span class="pre">&quot;resnet50&quot;,</span> <span class="pre">&quot;resnet101&quot;,</span> <span class="pre">&quot;resnet152&quot;</span></code>
-- <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;resnext50&quot;,</span> <span class="pre">&quot;resnext101&quot;</span></code>
-- <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;inceptionv3&quot;,</span> <span class="pre">&quot;inceptionresnetv2&quot;</span></code>
-- <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;densenet121&quot;,</span> <span class="pre">&quot;densenet169&quot;,</span> <span class="pre">&quot;densenet201&quot;</span></code>
-- <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;seresnet18&quot;,</span> <span class="pre">&quot;seresnet34&quot;,</span> <span class="pre">&quot;seresnet50&quot;,</span> <span class="pre">&quot;seresnet101&quot;,</span> <span class="pre">&quot;seresnet152&quot;,</span></code></p>
-<blockquote>
-<div><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;seresnext50&quot;,</span> <span class="pre">&quot;seresnext101&quot;,</span> <span class="pre">&quot;senet154&quot;</span></code></p>
-</div></blockquote>
-<ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;mobilenet&quot;,</span> <span class="pre">&quot;mobilenetv2&quot;</span></code></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;efficientnetb0&quot;,</span> <span class="pre">&quot;efficientnetb1&quot;,</span> <span class="pre">&quot;efficientnetb2&quot;,</span> <span class="pre">&quot;efficientnetb3&quot;,</span></code>
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;efficientnetb4&quot;,</span> <span class="pre">&quot;efficientnetb5&quot;,</span> <span class="pre">&quot;efficientnetb6&quot;,</span> <span class="pre">&quot;efficientnetb7&quot;</span></code></p></li>
-</ul>
-<p>Defaults to <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;mobilenetv2&quot;</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
+</p>
 </dd>
 </dl>
+<p>See also: group_class_peaks</p>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.decoder_filters">
-<span class="sig-name descname"><span class="pre">decoder_filters</span></span><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.decoder_filters" title="Permalink to this definition">¶</a></dt>
-<dd><p>A tuple of integers denoting the number of filters to use in
-the upsampling blocks of the decoder, starting from the lowest resolution
-block. The length of this attribute also specifies the number of upsampling
-steps and therefore the output stride of the backbone. Specify 5 filter
-numbers to get an output stride of 1 (same size as the input). Defaults to</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Tuple[int]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.pretrained">
-<span class="sig-name descname"><span class="pre">pretrained</span></span><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.pretrained" title="Permalink to this definition">¶</a></dt>
-<dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code> (the default), load pretrained weights for the encoder. If
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, the same model architecture will be used for the encoder but the
-weights will be randomly initialized.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.down_blocks">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">down_blocks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.down_blocks" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the number of downsampling blocks in the encoder.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.PretrainedEncoderConfig" title="sleap.nn.config.model.PretrainedEncoderConfig"><span class="pre">sleap.nn.config.model.PretrainedEncoderConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder" title="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder"><span class="pre">sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/architectures/pretrained_encoders.py#L142-L163"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.from_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create the backbone from a configuration.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="sleap.nn.identity.classify_peaks_from_vectors">
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.identity.</span></span><span class="sig-name descname"><span class="pre">classify_peaks_from_vectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">peak_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_vals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_class_probs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_sample_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/identity.py#L182-L250"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.identity.classify_peaks_from_vectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Group peaks by classification probabilities.</p>
+<p>This is used in top-down classification models.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>config</strong> – A <code class="xref py py-obj docutils literal notranslate"><span class="pre">PretrainedEncoderConfig</span></code> instance specifying the
-configuration of the backbone.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>peak_points</strong> – </p></li>
+<li><p><strong>peak_vals</strong> – </p></li>
+<li><p><strong>peak_class_probs</strong> – </p></li>
+<li><p><strong>crop_sample_inds</strong> – </p></li>
+<li><p><strong>n_samples</strong> – Number of samples in the batch.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>An instantiated <a class="reference internal" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder" title="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UnetPretrainedEncoder</span></code></a>.</p>
+<dd class="field-even"><p><p>A tuple of <code class="xref py py-obj docutils literal notranslate"><span class="pre">(points,</span> <span class="pre">point_vals,</span> <span class="pre">class_probs)</span></code>.</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">points</span></code>: Class-grouped peaks as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and shape</dt><dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">n_classes,</span> <span class="pre">n_channels,</span> <span class="pre">2)</span></code>. Missing points will be denoted by
+NaNs.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">point_vals</span></code>: The confidence map values for each point as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype</dt><dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">n_classes,</span> <span class="pre">n_channels)</span></code>.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">class_probs</span></code>: Classification probabilities for matched points as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code></dt><dd><p>of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_samples,</span> <span class="pre">n_classes,</span> <span class="pre">n_channels)</span></code>.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.make_backbone">
-<span class="sig-name descname"><span class="pre">make_backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/architectures/pretrained_encoders.py#L185-L253"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.make_backbone" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create the backbone and return the output tensors for building a model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>x_in</strong> – A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> representing the input to this backbone. This is
-typically an instance of <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.layers.Input()</span></code> but can also be any
-rank-4 tensor. Can be grayscale or RGB.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>A tuple of (<code class="xref py py-obj docutils literal notranslate"><span class="pre">x_main</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">intermediate_activations</span></code>).</p>
-<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">x_main</span></code> is the output tensor from the last upsampling block.</p>
-<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">intermediate_activations</span></code> is a list of <a href="#id1"><span class="problematic" id="id2">`</span></a>IntermediateActivation`s containing
-tensors with the outputs from each block of the decoder for use in building
-multi-output models at different feature strides.</p>
 </p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.maximum_stride">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">maximum_stride</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.maximum_stride" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the maximum encoder stride relative to the input.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.output_stride">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_stride</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.output_stride" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the stride of the output of the decoder.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.up_blocks">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">up_blocks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.up_blocks" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the number of upsampling blocks in the decoder.</p>
-</dd></dl>
-
+<dl class="py function">
+<dt class="sig sig-object py" id="sleap.nn.identity.group_class_peaks">
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.identity.</span></span><span class="sig-name descname"><span class="pre">group_class_peaks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">peak_class_probs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_sample_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_channel_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_channels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/identity.py#L13-L94"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.identity.group_class_peaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Group local peaks using class probabilities.</p>
+<p>This is useful for matching peaks that span multiple samples and channels into
+classes (e.g., instance identities) by their class probability.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>peak_class_probs</strong> – Class probabilities for each peak as <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_peaks,</span> <span class="pre">n_classes)</span></code>.</p></li>
+<li><p><strong>peak_sample_inds</strong> – Sample index for each peak as <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.int32</span></code>
+and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_peaks,)</span></code>.</p></li>
+<li><p><strong>peak_channel_inds</strong> – Channel index for each peak as <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of dtype
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.int32</span></code> and shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_peaks,)</span></code>.</p></li>
+<li><p><strong>n_samples</strong> – Integer number of samples in the batch.</p></li>
+<li><p><strong>n_channels</strong> – Integer number of channels (nodes) the instances should have.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A tuple of <code class="xref py py-obj docutils literal notranslate"><span class="pre">(peak_inds,</span> <span class="pre">class_inds)</span></code>.</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">peak_inds</span></code>: Indices of class-grouped peaks within <code class="xref py py-obj docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">n_peaks)</span></code>. Will be at</dt><dd><p>most <code class="xref py py-obj docutils literal notranslate"><span class="pre">n_classes</span></code> long.</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">class_inds</span></code>: Indices of the corresponding class for each peak within</dt><dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">n_peaks)</span></code>. Will be at most <code class="xref py py-obj docutils literal notranslate"><span class="pre">n_classes</span></code> long.</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Peaks will be assigned to classes by their probability using the Hungarian
+algorithm. Peaks that are assigned to classes that are not the highest
+probability for each class are removed from the matches.</p>
+</div>
+<p>See also: classify_peaks_from_maps, classify_peaks_from_vectors</p>
 </dd></dl>
 
 </div>
@@ -919,17 +867,17 @@ multi-output models at different feature strides.</p>
             
                 <!-- Previous / next buttons -->
 <div class='prev-next-area'> 
-    <a class='left-prev' id="prev-link" href="sleap.nn.architectures.leap.html" title="previous page">
+    <a class='left-prev' id="prev-link" href="sleap.nn.heads.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">sleap.nn.architectures.leap</p>
+            <p class="prev-next-title">sleap.nn.heads</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="sleap.nn.architectures.resnet.html" title="next page">
+    <a class='right-next' id="next-link" href="sleap.nn.inference.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">sleap.nn.architectures.resnet</p>
+        <p class="prev-next-title">sleap.nn.inference</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>

@@ -21,6 +21,7 @@ Developer API
    sleap.nn.callbacks
    sleap.nn.evals
    sleap.nn.heads
+   sleap.nn.identity
    sleap.nn.inference
    sleap.nn.losses
    sleap.nn.model
@@ -44,6 +45,7 @@ Developer API
    sleap.nn.data.edge_maps
    sleap.nn.data.general
    sleap.nn.data.grouping
+   sleap.nn.data.identity
    sleap.nn.data.inference
    sleap.nn.data.instance_centroids
    sleap.nn.data.instance_cropping
