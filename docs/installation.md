@@ -211,11 +211,11 @@ python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU')
 - GPU support requires an NVIDIA GPU.
 - If you haven't yet (or in a while), update to the [latest NVIDIA drivers for your GPU](https://nvidia.com/drivers).
 - We use the official conda packages for [cudatoolkit](https://anaconda.org/anaconda/cudatoolkit) and [cudnn](https://anaconda.org/anaconda/cudnn), so no external installations are required. If you already have those installed on your system, they should not interfere with the ones in the SLEAP environment.
-- TensorFlow 2.6-2.7 are compatible with **CUDA Toolkit v11.3** and **cuDNN v8.2**.
+- TensorFlow 2.6-2.8 are compatible with **CUDA Toolkit v11.3** and **cuDNN v8.2**.
 ```
 
 ````{warning}
-TensorFlow 2.7 is currently failing to detect CUDA Toolkit and CuDNN on some systems (see [Issue thread](https://github.com/tensorflow/tensorflow/issues/52988)).
+TensorFlow 2.7+ is currently failing to detect CUDA Toolkit and CuDNN on some systems (see [Issue thread](https://github.com/tensorflow/tensorflow/issues/52988)).
 
 If you run into issues, try downgrading the TensorFlow 2.6:
 ```bash
