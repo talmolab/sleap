@@ -289,6 +289,7 @@ class InstanceCropper:
             "bbox",
             "center_instance",
             "center_instance_ind",
+            "track_ind",
             "all_instances",
             "centroid",
             "full_image_height",
@@ -310,6 +311,7 @@ class InstanceCropper:
                     (n_instances, n_nodes, 2).
                 "centroids": The computed centroid for each instance in a tf.float32
                     tensor of shape (n_instances, 2).
+                "track_inds": The track indices of the indices if available.
                 Any additional keys present will be replicated in each output.
 
         Returns:
@@ -331,6 +333,7 @@ class InstanceCropper:
                 "center_instance_ind": Scalar tf.int32 index of the centered instance
                     relative to all the instances in the frame. This can be used to
                     index into additional keys that may contain data from all instances.
+                "track_ind": Index of the track the instance belongs to if available.
                 "all_instances": The points of all instances in the frame in image
                     coordinates in the "instance_image". This will be a tf.float32
                     tensor of shape (n_instances, n_nodes, 2). This is useful for multi-
@@ -359,6 +362,8 @@ class InstanceCropper:
         keys_to_expand = [
             key for key in test_example.keys() if key not in self.input_keys
         ]
+        if "class_vectors" in keys_to_expand:
+            keys_to_expand.remove("class_vectors")
         img_channels = test_example[self.image_key].shape[-1]
         if self.keep_full_image:
             keys_to_expand.append(self.image_key)
@@ -408,6 +413,7 @@ class InstanceCropper:
                 "bbox": bboxes,
                 "center_instance": center_instances,
                 "center_instance_ind": tf.range(n_instances, dtype=tf.int32),
+                "track_ind": frame_data["track_inds"],
                 "all_instances": all_instances,
                 "centroid": frame_data[self.centroids_key],
                 "full_image_height": tf.repeat(
@@ -417,6 +423,8 @@ class InstanceCropper:
                     tf.shape(frame_data[self.image_key])[1], n_instances
                 ),
             }
+            if "class_vectors" in frame_data:
+                instances_data["class_vectors"] = frame_data["class_vectors"]
             if self.mock_centroid_confidence:
                 instances_data["centroid_confidence"] = tf.ones(
                     [n_instances], dtype=tf.float32

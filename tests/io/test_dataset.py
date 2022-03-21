@@ -1420,3 +1420,36 @@ def test_split(centered_pair_predictions):
     assert len(labels_a) == 1
     assert len(labels_b) == 1
     assert labels_a[0] == labels_b[0]
+
+
+def test_remove_untracked_instances(min_tracks_2node_labels):
+    """Test removal of untracked instances and empty frames.
+
+    Args:
+        min_tracks_2node_labels: Labels object which contains user labeled frames with
+        tracked instances.
+    """
+    labels = min_tracks_2node_labels
+
+    # Preprocessing
+    labels.labeled_frames[0].instances[0].track = None
+    labels.labeled_frames[1].instances = []
+    assert any(
+        [inst.track is None for lf in labels.labeled_frames for inst in lf.instances]
+    )
+    assert any([len(lf.instances) == 0 for lf in labels.labeled_frames])
+
+    # Test function with remove_empty_frames=False
+    labels.remove_untracked_instances(remove_empty_frames=False)
+    assert all(
+        [
+            inst.track is not None
+            for lf in labels.labeled_frames
+            for inst in lf.instances
+        ]
+    )
+    assert any([len(lf.instances) == 0 for lf in labels.labeled_frames])
+
+    # Test function with remove_empty_frames=True
+    labels.remove_untracked_instances(remove_empty_frames=True)
+    assert all([len(lf.instances) > 0 for lf in labels.labeled_frames])

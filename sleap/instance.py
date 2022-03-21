@@ -1434,6 +1434,10 @@ class LabeledFrame:
             if type(inst) == PredictedInstance and inst.track is not None
         ]
 
+    def remove_untracked(self):
+        """Removes any instances without a track assignment."""
+        self.instances = [inst for inst in self.instances if inst.track is not None]
+
     @property
     def has_user_instances(self) -> bool:
         """Return whether the frame contains any user instances."""
