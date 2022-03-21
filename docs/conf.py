@@ -132,9 +132,15 @@ html_theme_options = {
     # "dark_logo": "logo.png",
     # https://sphinx-book-theme.readthedocs.io/en/stable/customize/index.html#theme-options
     "repository_url": "https://github.com/murthylab/sleap",
-    "use_repository_button": True,
     "use_download_button": False,
+    "use_fullscreen_button": False,
+    "use_repository_button": True,
+    "use_issues_button": True,
     "extra_navbar": "",
+    # https://sphinx-book-theme.readthedocs.io/en/stable/launch.html
+    # "launch_buttons": {
+    #     "colab_url": "https://{your-colab-url}"
+    # },
 }
 
 myst_number_code_blocks = ["python"]

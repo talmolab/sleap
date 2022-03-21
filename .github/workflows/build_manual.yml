@@ -2,16 +2,13 @@
 # To trigger a build, bump the build number in .conda/meta.yaml.
 name: Build (manual)
 
-# on:
-#   push:
-#     paths:
-#       - '.conda/meta.yaml'
-
-  # Uncomment the following lines to trigger a build if the release build failed
-  # push:
-    # branches:
-    #   - develop
-
+# Uncomment the following lines to trigger a build if the release build failed
+on:
+  push:
+    paths:
+      - '.conda/meta.yaml'
+    branches:
+      - develop
 
 jobs:
   build:
