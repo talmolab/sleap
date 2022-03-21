@@ -744,7 +744,8 @@
 <p>Let’s start by installing SLEAP and downloading the trained model.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>!pip install sleap &gt; /dev/null 2&gt;&amp;1
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>!pip uninstall -y opencv-python opencv-contrib-python &gt; /dev/null 2&gt;&amp;1
+!pip install sleap &gt; /dev/null 2&gt;&amp;1
 !apt install tree &gt; /dev/null 2&gt;&amp;1
 !wget https://storage.googleapis.com/sleap-data/reference/flies13/td_fast.210505_012601.centered_instance.n%3D1800.zip &gt; /dev/null 2&gt;&amp;1
 !unzip -o -d &quot;td_fast.210505_012601.centered_instance.n=1800&quot; &quot;td_fast.210505_012601.centered_instance.n=1800.zip&quot; &gt; /dev/null 2&gt;&amp;1

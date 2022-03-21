@@ -1154,12 +1154,12 @@ GPUs: 2/2 available
 <li><p>GPU support requires an NVIDIA GPU.</p></li>
 <li><p>If you haven’t yet (or in a while), update to the <a class="reference external" href="https://nvidia.com/drivers">latest NVIDIA drivers for your GPU</a>.</p></li>
 <li><p>We use the official conda packages for <a class="reference external" href="https://anaconda.org/anaconda/cudatoolkit">cudatoolkit</a> and <a class="reference external" href="https://anaconda.org/anaconda/cudnn">cudnn</a>, so no external installations are required. If you already have those installed on your system, they should not interfere with the ones in the SLEAP environment.</p></li>
-<li><p>TensorFlow 2.6-2.7 are compatible with <strong>CUDA Toolkit v11.3</strong> and <strong>cuDNN v8.2</strong>.</p></li>
+<li><p>TensorFlow 2.6-2.8 are compatible with <strong>CUDA Toolkit v11.3</strong> and <strong>cuDNN v8.2</strong>.</p></li>
 </ul>
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>TensorFlow 2.7 is currently failing to detect CUDA Toolkit and CuDNN on some systems (see <a class="reference external" href="https://github.com/tensorflow/tensorflow/issues/52988">Issue thread</a>).</p>
+<p>TensorFlow 2.7+ is currently failing to detect CUDA Toolkit and CuDNN on some systems (see <a class="reference external" href="https://github.com/tensorflow/tensorflow/issues/52988">Issue thread</a>).</p>
 <p>If you run into issues, try downgrading the TensorFlow 2.6:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install <span class="nv">tensorflow</span><span class="o">==</span><span class="m">2</span>.6.3
 </pre></div>
