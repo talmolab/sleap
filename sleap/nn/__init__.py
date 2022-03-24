@@ -13,3 +13,4 @@ import sleap.nn.system
 import sleap.nn.training
 import sleap.nn.tracking
 import sleap.nn.viz
+import sleap.nn.identity
