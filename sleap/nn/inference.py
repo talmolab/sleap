@@ -309,7 +309,7 @@ class Predictor(ABC):
 
         def process_batch(ex):
             # Run inference on current batch.
-            preds = self.inference_model.predict_on_batch(ex)
+            preds = self.inference_model.predict_on_batch(ex, numpy=True)
 
             # Add model outputs to the input data example.
             ex.update(preds)
@@ -877,6 +877,51 @@ class InferenceModel(tf.keras.Model):
                     outs["n_valid"] = v.row_lengths()
                     break
             outs = sleap.nn.data.utils.unrag_example(outs, numpy=True)
+        return outs
+
+    def predict_on_batch(
+        self,
+        data: Union[
+            np.ndarray,
+            tf.Tensor,
+            Dict[str, tf.Tensor],
+        ],
+        numpy: bool = False,
+        **kwargs,
+    ) -> Union[Dict[str, np.ndarray], Dict[str, Union[tf.Tensor, tf.RaggedTensor]]]:
+        """Predict a single batch of samples.
+
+        Args:
+            data: Input data in any form. Possible types:
+                - `np.ndarray`, `tf.Tensor`: Images of shape
+                    `(samples, height, width, channels)`
+                - `dict` with key `"image"` as a tensor
+            numpy: If `True` (default), returned values will be converted to
+                `np.ndarray`s or Python primitives if scalars.
+
+        Returns:
+            The model outputs as a dictionary of (potentially ragged) tensors or numpy
+            arrays if `numpy` is `True`.
+
+            If `numpy` is `False`, values of the dictionary may be `tf.RaggedTensor`s
+            with the same length for axis 0 (samples), but variable length axis 1
+            (instances).
+
+            If `numpy` is `True` and the output contained ragged tensors, they will be
+            NaN-padded to the bounding shape and an additional key `"n_valid"` will be
+            included to indicate the number of valid elements (before padding) in axis
+            1 of the tensors.
+        """
+
+        outs = super().predict_on_batch(data, **kwargs)
+
+        if numpy:
+            for v in outs.values():
+                if isinstance(v, tf.RaggedTensor):
+                    outs["n_valid"] = v.row_lengths()
+                    break
+            outs = sleap.nn.data.utils.unrag_example(outs, numpy=True)
+
         return outs
 
 
