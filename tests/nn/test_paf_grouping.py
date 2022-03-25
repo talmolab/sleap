@@ -322,6 +322,22 @@ def test_toposort_edges():
     sorted_edge_inds = toposort_edges(edge_types)
     assert sorted_edge_inds == (12, 13, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
 
+    edge_inds = [
+        (1, 4),
+        (1, 5),
+        (6, 8),
+        (6, 7),
+        (6, 9),
+        (9, 10),
+        (1, 0),
+        (1, 3),
+        (1, 2),
+        (6, 1),
+    ]
+    edge_types = [EdgeType(src_node, dst_node) for src_node, dst_node in edge_inds]
+    sorted_edge_inds = toposort_edges(edge_types)
+    assert sorted_edge_inds == (2, 3, 4, 9, 5, 0, 1, 6, 7, 8)
+
 
 def test_assign_connections_to_instances():
     connections = {
