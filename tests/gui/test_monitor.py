@@ -1,4 +1,4 @@
-from sleap.nn.monitor import LossViewer
+from sleap.gui.widgets.monitor import LossViewer
 
 
 def test_monitor_release(qtbot):

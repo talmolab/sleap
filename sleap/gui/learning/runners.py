@@ -556,7 +556,7 @@ def run_gui_training(
     trained_job_paths = dict()
 
     if gui:
-        from sleap.nn.monitor import LossViewer
+        from sleap.gui.widgets.monitor import LossViewer
         from sleap.gui.widgets.imagedir import QtImageDirectoryWidget
 
         # open training monitor window
