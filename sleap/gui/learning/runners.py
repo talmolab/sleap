@@ -603,7 +603,7 @@ def run_gui_training(
 
             if gui:
                 print("Resetting monitor window.")
-                win.reset(what=str(model_type))
+                win.reset(what=str(model_type), config=job)
                 win.setWindowTitle(f"Training Model - {str(model_type)}")
                 win.set_message(f"Preparing to run training...")
                 if save_viz:

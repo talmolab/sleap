@@ -2,12 +2,14 @@
 
 import numpy as np
 from time import perf_counter
+from sleap.nn.config.training_job import TrainingJobConfig
 import zmq
 import jsonpickle
 import logging
 from typing import Optional
 from PySide2 import QtCore, QtWidgets, QtGui
 from PySide2.QtCharts import QtCharts
+import attr
 
 
 logger = logging.getLogger(__name__)
@@ -67,7 +69,11 @@ class LossViewer(QtWidgets.QMainWindow):
             self.ctx.term()
             self.ctx = None
 
-    def reset(self, what: str = ""):
+    def reset(
+        self,
+        what: str = "",
+        config: TrainingJobConfig = attr.ib(factory=TrainingJobConfig),
+    ):
         """Reset all chart series.
 
         Args:
@@ -221,16 +227,24 @@ class LossViewer(QtWidgets.QMainWindow):
         wid.setLayout(layout)
         self.setCentralWidget(wid)
 
+        self.config = config
         self.X = []
         self.Y = []
         self.best_val_x = None
         self.best_val_y = None
 
         self.t0 = None
+        self.mean_epoch_time_min = None
+        self.mean_epoch_time_sec = None
+        self.eta_ten_epochs_min = None
+
         self.current_job_output_type = what
         self.epoch = 0
         self.epoch_size = 1
+        self.epochs_in_plateau = 0
         self.last_epoch_val_loss = None
+        self.penultimate_epoch_val_loss = None
+        self.epoch_in_plateau_flag = False
         self.last_batch_number = 0
         self.is_running = False
 
@@ -417,6 +431,18 @@ class LossViewer(QtWidgets.QMainWindow):
             title = f"Training Epoch <b>{self.epoch + 1}</b> / "
             title += f"Runtime: <b>{int(dt_min):02}:{int(dt_sec):02}</b>"
             if self.last_epoch_val_loss is not None:
+                if self.penultimate_epoch_val_loss is not None:
+                    title += (
+                        f"<br />Mean Time per Epoch: "
+                        f"<b>{int(self.mean_epoch_time_min):02}:{int(self.mean_epoch_time_sec):02}</b> / "
+                        f"ETA Next 10 Epochs: <b>{int(self.eta_ten_epochs_min)} min</b>"
+                    )
+                    if self.epoch_in_plateau_flag:
+                        title += (
+                            f"<br />Epochs in Plateau: "
+                            f"<b>{self.epochs_in_plateau} / "
+                            f"{self.config.optimization.early_stopping.plateau_patience}</b>"
+                        )
                 title += (
                     f"<br />Last Epoch Validation Loss: "
                     f"<b>{self.last_epoch_val_loss:.3e}</b>"
@@ -492,12 +518,37 @@ class LossViewer(QtWidgets.QMainWindow):
                         "epoch_loss",
                     )
                     if "val_loss" in msg["logs"].keys():
+                        # update variables and add points to plot
+                        self.penultimate_epoch_val_loss = self.last_epoch_val_loss
                         self.last_epoch_val_loss = msg["logs"]["val_loss"]
                         self.add_datapoint(
                             (self.epoch + 1) * self.epoch_size,
                             msg["logs"]["val_loss"],
                             "val_loss",
                         )
+                        # calculate timing and flags at new epoch
+                        if self.penultimate_epoch_val_loss is not None:
+                            mean_epoch_time = (perf_counter() - self.t0) / (
+                                self.epoch + 1
+                            )
+                            self.mean_epoch_time_min, self.mean_epoch_time_sec = divmod(
+                                mean_epoch_time, 60
+                            )
+                            self.eta_ten_epochs_min = (mean_epoch_time * 10) // 60
+
+                            val_loss_delta = (
+                                self.penultimate_epoch_val_loss
+                                - self.last_epoch_val_loss
+                            )
+                            self.epoch_in_plateau_flag = (
+                                val_loss_delta
+                                < self.config.optimization.early_stopping.plateau_min_delta
+                            ) or (self.best_val_y < self.last_epoch_val_loss)
+                            self.epochs_in_plateau = (
+                                self.epochs_in_plateau + 1
+                                if self.epoch_in_plateau_flag
+                                else 0
+                            )
                     self.on_epoch.emit()
                 elif msg["event"] == "batch_end":
                     self.last_batch_number = msg["batch"]
