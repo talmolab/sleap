@@ -556,7 +556,7 @@ def run_gui_training(
     trained_job_paths = dict()
 
     if gui:
-        from sleap.nn.monitor import LossViewer
+        from sleap.gui.widgets.monitor import LossViewer
         from sleap.gui.widgets.imagedir import QtImageDirectoryWidget
 
         # open training monitor window
@@ -603,7 +603,7 @@ def run_gui_training(
 
             if gui:
                 print("Resetting monitor window.")
-                win.reset(what=str(model_type))
+                win.reset(what=str(model_type), config=job)
                 win.setWindowTitle(f"Training Model - {str(model_type)}")
                 win.set_message(f"Preparing to run training...")
                 if save_viz:

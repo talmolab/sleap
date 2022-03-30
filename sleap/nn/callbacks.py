@@ -41,7 +41,7 @@ class TrainingControllerZMQ(tf.keras.callbacks.Callback):
         self.context.term()
 
     def on_batch_end(self, batch, logs=None):
-        """ Called at the end of a training batch. """
+        """Called at the end of a training batch."""
         if self.socket.poll(self.timeout, zmq.POLLIN):
             msg = jsonpickle.decode(self.socket.recv_string())
             logger.info(f"Received control message: {msg}")
