@@ -140,6 +140,7 @@ class MainWindow(QMainWindow):
         self.state["last_interacted_frame"] = None
         self.state["filename"] = None
         self.state["show non-visible nodes"] = prefs["show non-visible nodes"]
+        self.state["show instances"] = True
         self.state["show labels"] = True
         self.state["show edges"] = True
         self.state["edge style"] = prefs["edge style"]
@@ -549,6 +550,7 @@ class MainWindow(QMainWindow):
 
         viewMenu.addSeparator()
 
+        add_menu_check_item(viewMenu, "show instances", "Show Instances")
         add_menu_check_item(
             viewMenu, "show non-visible nodes", "Show Non-Visible Nodes"
         )

@@ -50,6 +50,7 @@ class InstanceOverlay(BaseOverlay):
                 show_non_visible=self.state.get("show non-visible nodes", default=True),
             )
 
+        self.player.showInstances(self.state.get("show instances", default=True))
         self.player.showLabels(self.state.get("show labels", default=True))
         self.player.showEdges(self.state.get("show edges", default=True))
 
