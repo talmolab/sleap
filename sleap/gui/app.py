@@ -127,6 +127,8 @@ class MainWindow(QMainWindow):
             state=self.state, app=self, update_callback=self.on_data_update
         )
 
+        self.shortcuts = Shortcuts()
+
         self._menu_actions = dict()
         self._buttons = dict()
         self._child_windows = dict()
@@ -318,11 +320,11 @@ class MainWindow(QMainWindow):
 
     def _create_menus(self):
         """Creates main application menus."""
-        shortcuts = Shortcuts()
+        # shortcuts = Shortcuts()
 
         # add basic menu item
         def add_menu_item(menu, key: str, name: str, action: Callable):
-            menu_item = menu.addAction(name, action, shortcuts[key])
+            menu_item = menu.addAction(name, action, self.shortcuts[key])
             self._menu_actions[key] = menu_item
             return menu_item
 
@@ -1361,6 +1363,16 @@ class MainWindow(QMainWindow):
                         f" ({pred_frame_count/current_video.num_frames*100:.2f}%)"
                     )
                     message += " in video"
+
+            lf = self.state["labeled_frame"]
+            n_instances = 0 if lf is None else len(lf)
+            message += f"{spacer}Current frame: {n_instances} instances"
+            if not self.state["show instances"]:
+                hide_key = self.shortcuts["show instances"].toString()
+                message += f" [Hidden] Press '{hide_key}' to toggle."
+                self.statusBar().setStyleSheet("color: red; font-weight: bold")
+            else:
+                self.statusBar().setStyleSheet("color: black; font-weight: normal")
 
         self.statusBar().showMessage(message)
 
