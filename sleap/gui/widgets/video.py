@@ -263,6 +263,7 @@ class QtVideoPlayer(QWidget):
         self.state.connect("frame_idx", lambda idx: self.seekbar.setValue(idx))
         self.state.connect("instance", self.view.selectInstance)
 
+        self.state.connect("show instances", self.plot)
         self.state.connect("show labels", self.plot)
         self.state.connect("show edges", self.plot)
         self.state.connect("video", self.load_video)
@@ -475,6 +476,15 @@ class QtVideoPlayer(QWidget):
         # for too long before they were received by the loader).
         self._video_image_loader.video = self.video
         self._video_image_loader.request(idx)
+
+    def showInstances(self, show):
+        """Show/hide all instances in viewer.
+
+        Args:
+            show: Show if True, hide otherwise.
+        """
+        for inst in self.instances:
+            inst.showInstances(show)
 
     def showLabels(self, show):
         """Show/hide node labels for all instances in viewer.
@@ -1962,6 +1972,15 @@ class QtInstance(QGraphicsObject):
         self._selected = selected
         # Update the selection box for this skeleton instance
         self.updateBox()
+
+    def showInstances(self, show: bool):
+        """
+        Shows/hides skeleton instance.
+
+        Args:
+            show: Show skeleton if True, hide otherwise.
+        """
+        self.setVisible(show)
 
     def showLabels(self, show: bool):
         """

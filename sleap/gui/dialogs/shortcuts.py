@@ -14,7 +14,7 @@ class ShortcutDialog(QtWidgets.QDialog):
     Dialog window for reviewing and modifying the keyboard shortcuts.
     """
 
-    _column_len = 13
+    _column_len = 14
 
     def __init__(self, *args, **kwargs):
         super(ShortcutDialog, self).__init__(*args, **kwargs)
