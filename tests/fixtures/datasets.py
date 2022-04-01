@@ -21,6 +21,8 @@ TEST_MAT_LABELS = "tests/data/mat/labels.mat"
 TEST_SLP_MIN_LABELS_ROBOT = "tests/data/slp_hdf5/small_robot_minimal.slp"
 TEST_MIN_TRACKS_2NODE_LABELS = "tests/data/tracks/clip.2node.slp"
 TEST_MIN_TRACKS_13NODE_LABELS = "tests/data/tracks/clip.slp"
+TEST_HDF5_PREDICTIONS = "tests/data/hdf5_format_v1/centered_pair_predictions.h5"
+TEST_SLP_PREDICTIONS = "tests/data/hdf5_format_v1/centered_pair_predictions.slp"
 
 
 @pytest.fixture
@@ -213,3 +215,13 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
     labels = Labels(labels)
 
     return labels
+
+
+@pytest.fixture
+def centered_pair_predictions_hdf5_path():
+    return TEST_HDF5_PREDICTIONS
+
+
+@pytest.fixture
+def centered_pair_predictions_slp_path():
+    return TEST_SLP_PREDICTIONS
