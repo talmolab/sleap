@@ -28,10 +28,11 @@ from typing import Optional, Callable, List, Text, Union
 
 
 class LabelsV1Adaptor(format.adaptor.Adaptor):
-    FORMAT_ID = 1.1
+    FORMAT_ID = 1.2
 
     # 1.0 points with gridline coordinates, top left corner at (0, 0)
     # 1.1 points with midpixel coordinates, top left corner at (-0.5, -0.5)
+    # 1.2 adds track score to read and write functions
 
     @property
     def handles(self):
@@ -137,6 +138,8 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
         f = file.file
         labels = cls.read_headers(file, video_search, match_to)
 
+        format_id = file.format_id
+
         frames_dset = f["frames"][:]
         instances_dset = f["instances"][:]
         points_dset = f["points"][:]
@@ -144,7 +147,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
 
         # Shift the *non-predicted* points since these used to be saved with a gridline
         # coordinate system.
-        if (file.format_id or 0) < 1.1:
+        if (format_id or 0) < 1.1:
             points_dset[:]["x"] -= 0.5
             points_dset[:]["y"] -= 0.5
 
@@ -184,6 +187,9 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                     track=track,
                     points=pred_points[i["point_id_start"] : i["point_id_end"]],
                     score=i["score"],
+                    tracking_score=i["tracking_score"]
+                    if (format_id is not None and format_id >= 1.2)
+                    else 0.0,
                 )
             instances.append(instance)
 
@@ -349,6 +355,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                     ("score", "f4"),
                     ("point_id_start", "u8"),
                     ("point_id_end", "u8"),
+                    ("tracking_score", "f4"),
                 ]
             )
             frame_dtype = np.dtype(
@@ -431,9 +438,11 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                     if instance_type is PredictedInstance:
                         score = instance.score
                         pid = pred_point_id + pred_point_id_offset
+                        tracking_score = instance.tracking_score
                     else:
                         score = np.nan
                         pid = point_id + point_id_offset
+                        tracking_score = np.nan
 
                         # Keep track of any from_predicted instance links, we will
                         # insert the correct instance_id in the dataset after we are
@@ -453,6 +462,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                         score,
                         pid,
                         pid + len(parray),
+                        tracking_score,
                     )
 
                     # If these are predicted points, copy them to the predicted point
