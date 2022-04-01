@@ -1364,10 +1364,11 @@ class MainWindow(QMainWindow):
                     )
                     message += " in video"
 
-            visible_instances = self.state["labeled_frame"].instances_to_show
-            n_instances = 0 if visible_instances is None else len(visible_instances)
+            lf = self.state["labeled_frame"]
+            # TODO: revisit with LabeledFrame.unused_predictions() & instances_to_show()
+            n_instances = 0 if lf is None else len(lf.instances_to_show)
             message += f"{spacer}Current frame: {n_instances} instances"
-            if n_instances and not self.state["show instances"]:
+            if (n_instances > 0) and not self.state["show instances"]:
                 hide_key = self.shortcuts["show instances"].toString()
                 message += f" [Hidden] Press '{hide_key}' to toggle."
                 self.statusBar().setStyleSheet("color: red")
