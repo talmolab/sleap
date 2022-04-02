@@ -280,7 +280,7 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
     # instantiate the window and load labels
     window: MainWindow = MainWindow()
     window.loadLabelsObject(centered_pair_predictions)
-    with qtbot.waitActive(window, timeout=1000):
+    with qtbot.waitActive(window, timeout=5000):
         window.showNormal()
     vp = window.player
 
