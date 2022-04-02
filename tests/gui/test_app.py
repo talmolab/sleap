@@ -267,13 +267,11 @@ def test_app_new_window(qtbot):
 
 
 def test_menu_actions(qtbot, centered_pair_predictions: Labels):
-
     def verify_visibility(expected_visibility: bool = True):
         for inst in vp.instances:
             assert inst.isVisible() == expected_visibility
         for inst in vp.predicted_instances:
             assert inst.isVisible() == expected_visibility
-
 
     def toggle_and_verify_visibility(expected_visibility: bool = True):
         qtbot.keyClick(window.menuBar(), window.shortcuts["show instances"].toString())
@@ -282,7 +280,7 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
     # instantiate the window and load labels
     window: MainWindow = MainWindow()
     window.loadLabelsObject(centered_pair_predictions)
-    with qtbot.waitExposed(window, timeout=1000):
+    with qtbot.waitActive(window, timeout=1000):
         window.showNormal()
     vp = window.player
 
