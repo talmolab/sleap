@@ -264,3 +264,33 @@ def test_app_new_window(qtbot):
     assert wins == (start_wins + 3)
 
     app.closeAllWindows()
+
+
+def test_menu_actions(qtbot, centered_pair_predictions: Labels):
+
+    def verify_visibility(expected_visibility: bool = True):
+        for inst in vp.instances:
+            assert inst.isVisible() == expected_visibility
+        for inst in vp.predicted_instances:
+            assert inst.isVisible() == expected_visibility
+
+
+    def toggle_and_verify_visibility(expected_visibility: bool = True):
+        qtbot.keyClick(window.menuBar(), window.shortcuts["show instances"].toString())
+        verify_visibility(expected_visibility)
+
+    # instantiate the window and load labels
+    window: MainWindow = MainWindow()
+    window.loadLabelsObject(centered_pair_predictions)
+    with qtbot.waitExposed(window, timeout=1000):
+        window.showNormal()
+    vp = window.player
+
+    # Ensure instances are visible - should be the visible by default
+    verify_visibility(True)
+
+    # Toggle instance visibility with shortcut, hiding instances
+    toggle_and_verify_visibility(False)
+
+    # Toggle instance visibility with shortcut, showing instances
+    toggle_and_verify_visibility(True)
