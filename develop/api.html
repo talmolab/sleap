@@ -4,11 +4,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Developer API &#8212; SLEAP (v1.2.1)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Developer API &#8212; SLEAP (v1.2.2)</title>
     
-  <link href="_static/css/theme.css" rel="stylesheet">
-  <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,17 +20,14 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-
-    
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.css" />
     
-  <link rel="preload" as="script" href="_static/js/index.be7d3bbb2ef33a8344ce.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
@@ -40,8 +39,8 @@
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="_static/togglebutton.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script src="_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <link rel="canonical" href="/develop/api.html" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -55,7 +54,21 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
     
     <div class="container-fluid" id="banner"></div>
 
@@ -64,14 +77,10 @@
     <div class="container-xl">
       <div class="row">
           
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
-    
-        <div class="navbar-brand-box">
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="index.html">
       
         <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
@@ -81,7 +90,7 @@
       <img src="_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.1)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -299,11 +308,6 @@
    <li class="toctree-l2">
     <a class="reference internal" href="api/sleap.nn.model.html">
      sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="api/sleap.nn.monitor.html">
-     sleap.nn.monitor
     </a>
    </li>
    <li class="toctree-l2">
@@ -676,8 +680,13 @@
 </ul>
 
     </div>
-</nav> <!-- To handle the deprecated key -->
-
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
 </div>
 
 
@@ -685,55 +694,90 @@
 
 
           
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<!-- A tiny helper pixel to detect if we've scrolled -->
 <div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+<!-- Main content -->
+<div class="col py-0 content-container">
     
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
-                
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
-            </div>
-            
-            <!-- Source interaction buttons -->
+    <div class="header-article row sticky-top noprint">
+        
 
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
-        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
-    <div class="dropdown-buttons sourcebuttons">
-        <a class="repository-button"
-            href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
-                data-toggle="tooltip" data-placement="left" title="Source repository"><i
-                    class="fab fa-github"></i>repository</button></a>
-        <a class="issues-button"
-            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi.html&body=Your%20issue%20content%20here."><button
-                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
-                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
         
     </div>
+    <div class="header-article__right">
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/murthylab/sleap"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
 </div>
 
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-        </div>
     </div>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
                 <h1>Developer API</h1>
@@ -744,14 +788,15 @@
                     </div>
                 </div>
             </div>
-            
+            <main id="main-content" role="main">
+                
               <div>
                 
-  <div class="section" id="developer-api">
-<span id="api"></span><h1>Developer API<a class="headerlink" href="#developer-api" title="Permalink to this headline">¶</a></h1>
+  <section id="developer-api">
+<span id="api"></span><h1>Developer API<a class="headerlink" href="#developer-api" title="Permalink to this headline">#</a></h1>
 <div class="toctree-wrapper compound">
 </div>
-<table class="longtable table autosummary">
+<table class="autosummary longtable table autosummary">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
@@ -790,226 +835,225 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.model.html#module-sleap.nn.model" title="sleap.nn.model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.model</span></code></a></p></td>
 <td><p>This module defines the main SLEAP model class for defining a trainable model.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.monitor.html#module-sleap.nn.monitor" title="sleap.nn.monitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.monitor</span></code></a></p></td>
-<td><p>GUI for monitoring training progress interactively.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.paf_grouping.html#module-sleap.nn.paf_grouping" title="sleap.nn.paf_grouping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.paf_grouping</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.paf_grouping.html#module-sleap.nn.paf_grouping" title="sleap.nn.paf_grouping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.paf_grouping</span></code></a></p></td>
 <td><p>This module provides a set of utilities for grouping peaks based on PAFs.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.peak_finding.html#module-sleap.nn.peak_finding" title="sleap.nn.peak_finding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.peak_finding</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.peak_finding.html#module-sleap.nn.peak_finding" title="sleap.nn.peak_finding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.peak_finding</span></code></a></p></td>
 <td><p>This module contains TensorFlow-based peak finding methods.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.system.html#module-sleap.nn.system" title="sleap.nn.system"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.system</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.system.html#module-sleap.nn.system" title="sleap.nn.system"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.system</span></code></a></p></td>
 <td><p>Utilities for working with the physical system (e.g., GPUs).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.tracking.html#module-sleap.nn.tracking" title="sleap.nn.tracking"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.tracking</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.tracking.html#module-sleap.nn.tracking" title="sleap.nn.tracking"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.tracking</span></code></a></p></td>
 <td><p>Tracking tools for linking grouped instances over time.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.training.html#module-sleap.nn.training" title="sleap.nn.training"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.training</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.training.html#module-sleap.nn.training" title="sleap.nn.training"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.training</span></code></a></p></td>
 <td><p>Training functionality and high level APIs.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.utils.html#module-sleap.nn.utils" title="sleap.nn.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.utils</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.utils.html#module-sleap.nn.utils" title="sleap.nn.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.utils</span></code></a></p></td>
 <td><p>This module contains generic utilities used for training and inference.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.viz.html#module-sleap.nn.viz" title="sleap.nn.viz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.viz</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.viz.html#module-sleap.nn.viz" title="sleap.nn.viz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.viz</span></code></a></p></td>
 <td><p>Visualization and plotting utilities.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.data.html#module-sleap.nn.config.data" title="sleap.nn.config.data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.data</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.data.html#module-sleap.nn.config.data" title="sleap.nn.config.data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.data</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.model.html#module-sleap.nn.config.model" title="sleap.nn.config.model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.model</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.model.html#module-sleap.nn.config.model" title="sleap.nn.config.model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.model</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.optimization.html#module-sleap.nn.config.optimization" title="sleap.nn.config.optimization"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.optimization</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.optimization.html#module-sleap.nn.config.optimization" title="sleap.nn.config.optimization"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.optimization</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.outputs.html#module-sleap.nn.config.outputs" title="sleap.nn.config.outputs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.outputs</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.outputs.html#module-sleap.nn.config.outputs" title="sleap.nn.config.outputs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.outputs</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.training_job.html#module-sleap.nn.config.training_job" title="sleap.nn.config.training_job"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.training_job</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.training_job.html#module-sleap.nn.config.training_job" title="sleap.nn.config.training_job"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.training_job</span></code></a></p></td>
 <td><p>Serializable configuration classes for specifying all training job parameters.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.utils.html#module-sleap.nn.config.utils" title="sleap.nn.config.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.utils</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.utils.html#module-sleap.nn.config.utils" title="sleap.nn.config.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.utils</span></code></a></p></td>
 <td><p>Utilities for config building and validation.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.augmentation.html#module-sleap.nn.data.augmentation" title="sleap.nn.data.augmentation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.augmentation</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.augmentation.html#module-sleap.nn.data.augmentation" title="sleap.nn.data.augmentation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.augmentation</span></code></a></p></td>
 <td><p>Transformers for applying data augmentation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.confidence_maps.html#module-sleap.nn.data.confidence_maps" title="sleap.nn.data.confidence_maps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.confidence_maps</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.confidence_maps.html#module-sleap.nn.data.confidence_maps" title="sleap.nn.data.confidence_maps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.confidence_maps</span></code></a></p></td>
 <td><p>Transformers for confidence map generation.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.dataset_ops.html#module-sleap.nn.data.dataset_ops" title="sleap.nn.data.dataset_ops"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.dataset_ops</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.dataset_ops.html#module-sleap.nn.data.dataset_ops" title="sleap.nn.data.dataset_ops"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.dataset_ops</span></code></a></p></td>
 <td><p>Transformers for dataset (multi-example) operations, e.g., shuffling and batching.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.edge_maps.html#module-sleap.nn.data.edge_maps" title="sleap.nn.data.edge_maps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.edge_maps</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.edge_maps.html#module-sleap.nn.data.edge_maps" title="sleap.nn.data.edge_maps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.edge_maps</span></code></a></p></td>
 <td><p>Transformers for generating edge confidence maps and part affinity fields.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.general.html#module-sleap.nn.data.general" title="sleap.nn.data.general"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.general</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.general.html#module-sleap.nn.data.general" title="sleap.nn.data.general"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.general</span></code></a></p></td>
 <td><p>General purpose transformers for common pipeline processing tasks.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.grouping.html#module-sleap.nn.data.grouping" title="sleap.nn.data.grouping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.grouping</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.grouping.html#module-sleap.nn.data.grouping" title="sleap.nn.data.grouping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.grouping</span></code></a></p></td>
 <td><p>Group inference results (&quot;examples&quot;) by frame.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.identity.html#module-sleap.nn.data.identity" title="sleap.nn.data.identity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.identity</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.identity.html#module-sleap.nn.data.identity" title="sleap.nn.data.identity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.identity</span></code></a></p></td>
 <td><p>Utilities for generating data for track identity models.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.inference.html#module-sleap.nn.data.inference" title="sleap.nn.data.inference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.inference</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.inference.html#module-sleap.nn.data.inference" title="sleap.nn.data.inference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.inference</span></code></a></p></td>
 <td><p>Transformers for performing inference.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.instance_centroids.html#module-sleap.nn.data.instance_centroids" title="sleap.nn.data.instance_centroids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.instance_centroids</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.instance_centroids.html#module-sleap.nn.data.instance_centroids" title="sleap.nn.data.instance_centroids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.instance_centroids</span></code></a></p></td>
 <td><p>Transformers for finding instance centroids.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.instance_cropping.html#module-sleap.nn.data.instance_cropping" title="sleap.nn.data.instance_cropping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.instance_cropping</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.instance_cropping.html#module-sleap.nn.data.instance_cropping" title="sleap.nn.data.instance_cropping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.instance_cropping</span></code></a></p></td>
 <td><p>Transformers for cropping instances for topdown processing.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.normalization.html#module-sleap.nn.data.normalization" title="sleap.nn.data.normalization"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.normalization</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.normalization.html#module-sleap.nn.data.normalization" title="sleap.nn.data.normalization"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.normalization</span></code></a></p></td>
 <td><p>Transformers for normalizing data formats.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.offset_regression.html#module-sleap.nn.data.offset_regression" title="sleap.nn.data.offset_regression"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.offset_regression</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.offset_regression.html#module-sleap.nn.data.offset_regression" title="sleap.nn.data.offset_regression"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.offset_regression</span></code></a></p></td>
 <td><p>Utilities for creating offset regression maps.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.pipelines.html#module-sleap.nn.data.pipelines" title="sleap.nn.data.pipelines"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.pipelines</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.pipelines.html#module-sleap.nn.data.pipelines" title="sleap.nn.data.pipelines"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.pipelines</span></code></a></p></td>
 <td><p>This module defines high level pipeline configurations from providers/transformers.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.providers.html#module-sleap.nn.data.providers" title="sleap.nn.data.providers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.providers</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.providers.html#module-sleap.nn.data.providers" title="sleap.nn.data.providers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.providers</span></code></a></p></td>
 <td><p>Data providers for pipeline I/O.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.resizing.html#module-sleap.nn.data.resizing" title="sleap.nn.data.resizing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.resizing</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.resizing.html#module-sleap.nn.data.resizing" title="sleap.nn.data.resizing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.resizing</span></code></a></p></td>
 <td><p>Transformers for image resizing and padding.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.training.html#module-sleap.nn.data.training" title="sleap.nn.data.training"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.training</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.training.html#module-sleap.nn.data.training" title="sleap.nn.data.training"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.training</span></code></a></p></td>
 <td><p>Transformers and utilities for training-related operations.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.utils.html#module-sleap.nn.data.utils" title="sleap.nn.data.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.utils</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.data.utils.html#module-sleap.nn.data.utils" title="sleap.nn.data.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.utils</span></code></a></p></td>
 <td><p>Miscellaneous utility functions for data processing.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.tracker.components.html#module-sleap.nn.tracker.components" title="sleap.nn.tracker.components"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.tracker.components</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.tracker.components.html#module-sleap.nn.tracker.components" title="sleap.nn.tracker.components"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.tracker.components</span></code></a></p></td>
 <td><p>Functions/classes used by multiple trackers.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.tracker.kalman.html#module-sleap.nn.tracker.kalman" title="sleap.nn.tracker.kalman"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.tracker.kalman</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.tracker.kalman.html#module-sleap.nn.tracker.kalman" title="sleap.nn.tracker.kalman"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.tracker.kalman</span></code></a></p></td>
 <td><p>Module to use Kalman filters for tracking instance identities.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.architectures.common.html#module-sleap.nn.architectures.common" title="sleap.nn.architectures.common"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.common</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.architectures.common.html#module-sleap.nn.architectures.common" title="sleap.nn.architectures.common"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.common</span></code></a></p></td>
 <td><p>Common utilities for architecture and model building.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.architectures.encoder_decoder.html#module-sleap.nn.architectures.encoder_decoder" title="sleap.nn.architectures.encoder_decoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.encoder_decoder</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.architectures.encoder_decoder.html#module-sleap.nn.architectures.encoder_decoder" title="sleap.nn.architectures.encoder_decoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.encoder_decoder</span></code></a></p></td>
 <td><p>Generic encoder-decoder fully convolutional backbones.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.architectures.hourglass.html#module-sleap.nn.architectures.hourglass" title="sleap.nn.architectures.hourglass"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.hourglass</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.architectures.hourglass.html#module-sleap.nn.architectures.hourglass" title="sleap.nn.architectures.hourglass"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.hourglass</span></code></a></p></td>
 <td><p>This module provides a generalized implementation of (stacked) hourglass.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.architectures.hrnet.html#module-sleap.nn.architectures.hrnet" title="sleap.nn.architectures.hrnet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.hrnet</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.architectures.hrnet.html#module-sleap.nn.architectures.hrnet" title="sleap.nn.architectures.hrnet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.hrnet</span></code></a></p></td>
 <td><p>(Higher)HRNet backbone.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.architectures.leap.html#module-sleap.nn.architectures.leap" title="sleap.nn.architectures.leap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.leap</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.architectures.leap.html#module-sleap.nn.architectures.leap" title="sleap.nn.architectures.leap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.leap</span></code></a></p></td>
 <td><p>This module provides a generalized implementation of the LEAP CNN.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.architectures.pretrained_encoders.html#module-sleap.nn.architectures.pretrained_encoders" title="sleap.nn.architectures.pretrained_encoders"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.pretrained_encoders</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.architectures.pretrained_encoders.html#module-sleap.nn.architectures.pretrained_encoders" title="sleap.nn.architectures.pretrained_encoders"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.pretrained_encoders</span></code></a></p></td>
 <td><p>Encoder-decoder backbones with pretrained encoder models.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.architectures.resnet.html#module-sleap.nn.architectures.resnet" title="sleap.nn.architectures.resnet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.resnet</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.architectures.resnet.html#module-sleap.nn.architectures.resnet" title="sleap.nn.architectures.resnet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.resnet</span></code></a></p></td>
 <td><p>ResNet-based backbones.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.architectures.unet.html#module-sleap.nn.architectures.unet" title="sleap.nn.architectures.unet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.unet</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.architectures.unet.html#module-sleap.nn.architectures.unet" title="sleap.nn.architectures.unet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.unet</span></code></a></p></td>
 <td><p>This module provides a generalized implementation of UNet.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.architectures.upsampling.html#module-sleap.nn.architectures.upsampling" title="sleap.nn.architectures.upsampling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.upsampling</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.architectures.upsampling.html#module-sleap.nn.architectures.upsampling" title="sleap.nn.architectures.upsampling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.upsampling</span></code></a></p></td>
 <td><p>This module defines common upsampling layer stack configurations.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.asyncvideo.html#module-sleap.io.asyncvideo" title="sleap.io.asyncvideo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.asyncvideo</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.asyncvideo.html#module-sleap.io.asyncvideo" title="sleap.io.asyncvideo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.asyncvideo</span></code></a></p></td>
 <td><p>Support for loading video frames (by chunk) in background process.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.convert.html#module-sleap.io.convert" title="sleap.io.convert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.convert</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.convert.html#module-sleap.io.convert" title="sleap.io.convert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.convert</span></code></a></p></td>
 <td><p>Command line utility for converting between various dataset formats.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.dataset.html#module-sleap.io.dataset" title="sleap.io.dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.dataset</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.dataset.html#module-sleap.io.dataset" title="sleap.io.dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.dataset</span></code></a></p></td>
 <td><p>A SLEAP dataset collects labeled video frames, together with required metadata.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.legacy.html#module-sleap.io.legacy" title="sleap.io.legacy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.legacy</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.legacy.html#module-sleap.io.legacy" title="sleap.io.legacy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.legacy</span></code></a></p></td>
 <td><p>Module for legacy LEAP dataset.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.pathutils.html#module-sleap.io.pathutils" title="sleap.io.pathutils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.pathutils</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.pathutils.html#module-sleap.io.pathutils" title="sleap.io.pathutils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.pathutils</span></code></a></p></td>
 <td><p>Utilities for working with file paths.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.video.html#module-sleap.io.video" title="sleap.io.video"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.video</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.video.html#module-sleap.io.video" title="sleap.io.video"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.video</span></code></a></p></td>
 <td><p>Video reading and writing interfaces for different formats.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.videowriter.html#module-sleap.io.videowriter" title="sleap.io.videowriter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.videowriter</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.videowriter.html#module-sleap.io.videowriter" title="sleap.io.videowriter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.videowriter</span></code></a></p></td>
 <td><p>Module for writing avi/mp4 videos.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.visuals.html#module-sleap.io.visuals" title="sleap.io.visuals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.visuals</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.visuals.html#module-sleap.io.visuals" title="sleap.io.visuals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.visuals</span></code></a></p></td>
 <td><p>Module for generating videos with visual annotation overlays.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.adaptor.html#module-sleap.io.format.adaptor" title="sleap.io.format.adaptor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.adaptor</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.adaptor.html#module-sleap.io.format.adaptor" title="sleap.io.format.adaptor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.adaptor</span></code></a></p></td>
 <td><p>File format adaptor base class.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.coco.html#module-sleap.io.format.coco" title="sleap.io.format.coco"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.coco</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.coco.html#module-sleap.io.format.coco" title="sleap.io.format.coco"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.coco</span></code></a></p></td>
 <td><p>Adaptor for reading COCO keypoint detection datasets.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.deeplabcut.html#module-sleap.io.format.deeplabcut" title="sleap.io.format.deeplabcut"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.deeplabcut</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.deeplabcut.html#module-sleap.io.format.deeplabcut" title="sleap.io.format.deeplabcut"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.deeplabcut</span></code></a></p></td>
 <td><p>Adaptor for reading DeepLabCut datasets.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.deepposekit.html#module-sleap.io.format.deepposekit" title="sleap.io.format.deepposekit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.deepposekit</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.deepposekit.html#module-sleap.io.format.deepposekit" title="sleap.io.format.deepposekit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.deepposekit</span></code></a></p></td>
 <td><p>Adaptor for reading DeepPoseKit datasets (HDF5).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.dispatch.html#module-sleap.io.format.dispatch" title="sleap.io.format.dispatch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.dispatch</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.dispatch.html#module-sleap.io.format.dispatch" title="sleap.io.format.dispatch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.dispatch</span></code></a></p></td>
 <td><p>Dispatcher for dynamically supporting multiple dataset file formats.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.filehandle.html#module-sleap.io.format.filehandle" title="sleap.io.format.filehandle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.filehandle</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.filehandle.html#module-sleap.io.format.filehandle" title="sleap.io.format.filehandle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.filehandle</span></code></a></p></td>
 <td><p>File object which can be passed to adaptors.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.genericjson.html#module-sleap.io.format.genericjson" title="sleap.io.format.genericjson"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.genericjson</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.genericjson.html#module-sleap.io.format.genericjson" title="sleap.io.format.genericjson"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.genericjson</span></code></a></p></td>
 <td><p>Adaptor for reading and writing any generic JSON file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.hdf5.html#module-sleap.io.format.hdf5" title="sleap.io.format.hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.hdf5</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.hdf5.html#module-sleap.io.format.hdf5" title="sleap.io.format.hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.hdf5</span></code></a></p></td>
 <td><p>Adaptor for reading/writing SLEAP datasets as HDF5 (including <code class="xref py py-obj docutils literal notranslate"><span class="pre">slp</span></code>).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.labels_json.html#module-sleap.io.format.labels_json" title="sleap.io.format.labels_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.labels_json</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.labels_json.html#module-sleap.io.format.labels_json" title="sleap.io.format.labels_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.labels_json</span></code></a></p></td>
 <td><p>Adaptor for reading/writing old, JSON dataset format (kind of deprecated).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.leap_matlab.html#module-sleap.io.format.leap_matlab" title="sleap.io.format.leap_matlab"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.leap_matlab</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.leap_matlab.html#module-sleap.io.format.leap_matlab" title="sleap.io.format.leap_matlab"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.leap_matlab</span></code></a></p></td>
 <td><p>Adaptor to read (not write) LEAP MATLAB data files.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.main.html#module-sleap.io.format.main" title="sleap.io.format.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.main</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.main.html#module-sleap.io.format.main" title="sleap.io.format.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.main</span></code></a></p></td>
 <td><p>Read/write for multiple dataset formats.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.sleap_analysis.html#module-sleap.io.format.sleap_analysis" title="sleap.io.format.sleap_analysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.sleap_analysis</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.sleap_analysis.html#module-sleap.io.format.sleap_analysis" title="sleap.io.format.sleap_analysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.sleap_analysis</span></code></a></p></td>
 <td><p>Adaptor to read and write analysis HDF5 files.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.text.html#module-sleap.io.format.text" title="sleap.io.format.text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.text</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.text.html#module-sleap.io.format.text" title="sleap.io.format.text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.text</span></code></a></p></td>
 <td><p>Adaptor for reading and writing any generic text file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.info.align.html#module-sleap.info.align" title="sleap.info.align"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.info.align</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.info.align.html#module-sleap.info.align" title="sleap.info.align"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.info.align</span></code></a></p></td>
 <td><p>Functions to align instances.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.info.feature_suggestions.html#module-sleap.info.feature_suggestions" title="sleap.info.feature_suggestions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.info.feature_suggestions</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.info.feature_suggestions.html#module-sleap.info.feature_suggestions" title="sleap.info.feature_suggestions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.info.feature_suggestions</span></code></a></p></td>
 <td><p>Module for generating lists of frames using frame features, pca, kmeans, etc.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.info.labels.html#module-sleap.info.labels" title="sleap.info.labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.info.labels</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.info.labels.html#module-sleap.info.labels" title="sleap.info.labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.info.labels</span></code></a></p></td>
 <td><p>Command line utility which prints data about labels file.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.info.metrics.html#module-sleap.info.metrics" title="sleap.info.metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.info.metrics</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.info.metrics.html#module-sleap.info.metrics" title="sleap.info.metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.info.metrics</span></code></a></p></td>
 <td><p>Module for producing prediction metrics for SLEAP datasets.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.info.summary.html#module-sleap.info.summary" title="sleap.info.summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.info.summary</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.info.summary.html#module-sleap.info.summary" title="sleap.info.summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.info.summary</span></code></a></p></td>
 <td><p>Module for getting a series which gives some statistic based on labeling data for each frame of some labeled video.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.info.trackcleaner.html#module-sleap.info.trackcleaner" title="sleap.info.trackcleaner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.info.trackcleaner</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.info.trackcleaner.html#module-sleap.info.trackcleaner" title="sleap.info.trackcleaner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.info.trackcleaner</span></code></a></p></td>
 <td><p>CLI for TrackCleaner (mostly deprecated).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.info.write_tracking_h5.html#module-sleap.info.write_tracking_h5" title="sleap.info.write_tracking_h5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.info.write_tracking_h5</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.info.write_tracking_h5.html#module-sleap.info.write_tracking_h5" title="sleap.info.write_tracking_h5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.info.write_tracking_h5</span></code></a></p></td>
 <td><p>Generate an HDF5 file with track occupancy and point location data.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
+</section>
 
 
               </div>
               
-            
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
     <a class='left-prev' id="prev-link" href="notebooks/Analysis_examples.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
@@ -1025,24 +1069,28 @@
     <i class="fas fa-angle-right"></i>
     </a>
 </div>
-            
+            </footer>
         </div>
     </div>
-    <footer class="footer">
-  <p>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Talmo D. Pereira<br/>
+  
+      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+</p>
+        </footer>
+    </div>
     
-      By Talmo D. Pereira<br/>
-    
-        &copy; Copyright 2019–2022, Talmo Lab.<br/>
-  </p>
-</footer>
-</main>
+</div>
 
 
       </div>
     </div>
   
-  <script src="_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
 
   </body>
 </html>

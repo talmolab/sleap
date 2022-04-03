@@ -5,10 +5,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; SLEAP (v1.2.1)</title>
+    <title>Index &#8212; SLEAP (v1.2.2)</title>
     
-  <link href="_static/css/theme.css" rel="stylesheet">
-  <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,17 +19,14 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-
-    
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.css" />
     
-  <link rel="preload" as="script" href="_static/js/index.be7d3bbb2ef33a8344ce.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
@@ -40,8 +38,8 @@
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="_static/togglebutton.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script src="_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <link rel="canonical" href="/develop/genindex.html" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="#" />
@@ -53,7 +51,21 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
     
     <div class="container-fluid" id="banner"></div>
 
@@ -62,14 +74,10 @@
     <div class="container-xl">
       <div class="row">
           
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
-    
-        <div class="navbar-brand-box">
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="index.html">
       
         <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
@@ -79,7 +87,7 @@
       <img src="_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.1)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -297,11 +305,6 @@
    <li class="toctree-l2">
     <a class="reference internal" href="api/sleap.nn.model.html">
      sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="api/sleap.nn.monitor.html">
-     sleap.nn.monitor
     </a>
    </li>
    <li class="toctree-l2">
@@ -674,8 +677,13 @@
 </ul>
 
     </div>
-</nav> <!-- To handle the deprecated key -->
-
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
 </div>
 
 
@@ -683,55 +691,90 @@
 
 
           
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<!-- A tiny helper pixel to detect if we've scrolled -->
 <div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+<!-- Main content -->
+<div class="col py-0 content-container">
     
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
-                
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
-            </div>
-            
-            <!-- Source interaction buttons -->
+    <div class="header-article row sticky-top noprint">
+        
 
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
-        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
-    <div class="dropdown-buttons sourcebuttons">
-        <a class="repository-button"
-            href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
-                data-toggle="tooltip" data-placement="left" title="Source repository"><i
-                    class="fab fa-github"></i>repository</button></a>
-        <a class="issues-button"
-            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fgenindex.html&body=Your%20issue%20content%20here."><button
-                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
-                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
         
     </div>
+    <div class="header-article__right">
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/murthylab/sleap"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fgenindex.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
 </div>
 
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-        </div>
     </div>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
                 <h1></h1>
@@ -742,7 +785,8 @@
                     </div>
                 </div>
             </div>
-            
+            <main id="main-content" role="main">
+                
               <div>
                 
 
@@ -788,8 +832,6 @@
 </li>
       </ul></li>
       <li><a href="api/sleap.io.format.adaptor.html#sleap.io.format.adaptor.Adaptor">Adaptor (class in sleap.io.format.adaptor)</a>
-</li>
-      <li><a href="api/sleap.nn.monitor.html#sleap.nn.monitor.LossViewer.add_datapoint">add_datapoint() (sleap.nn.monitor.LossViewer method)</a>
 </li>
       <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.add_edge">add_edge() (sleap.skeleton.Skeleton method)</a>
 </li>
@@ -1091,8 +1133,6 @@
         <li><a href="api/sleap.io.format.text.html#sleap.io.format.text.TextAdaptor.can_write_filename">(sleap.io.format.text.TextAdaptor method)</a>
 </li>
       </ul></li>
-      <li><a href="api/sleap.nn.monitor.html#sleap.nn.monitor.LossViewer.cancel">cancel() (sleap.nn.monitor.LossViewer method)</a>
-</li>
       <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.candidate_maker">candidate_maker (sleap.nn.tracking.Tracker attribute)</a>
 </li>
       <li><a href="api/sleap.io.video.html#sleap.io.video.Video.cattr">cattr() (sleap.io.video.Video static method)</a>
@@ -1192,11 +1232,7 @@
       <li><a href="api/sleap.message.html#sleap.message.Receiver.check_message">check_message() (sleap.message.Receiver method)</a>
 </li>
       <li><a href="api/sleap.message.html#sleap.message.Receiver.check_messages">check_messages() (sleap.message.Receiver method)</a>
-
-      <ul>
-        <li><a href="api/sleap.nn.monitor.html#sleap.nn.monitor.LossViewer.check_messages">(sleap.nn.monitor.LossViewer method)</a>
 </li>
-      </ul></li>
       <li><a href="api/sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig.checkpointing">checkpointing (sleap.nn.config.outputs.OutputsConfig attribute)</a>
 </li>
       <li><a href="api/sleap.nn.config.outputs.html#sleap.nn.config.outputs.CheckpointingConfig">CheckpointingConfig (class in sleap.nn.config.outputs)</a>
@@ -1263,8 +1299,6 @@
         <li><a href="api/sleap.io.video.html#sleap.io.video.HDF5Video.close">(sleap.io.video.HDF5Video method)</a>
 </li>
         <li><a href="api/sleap.io.video.html#sleap.io.video.ImgStoreVideo.close">(sleap.io.video.ImgStoreVideo method)</a>
-</li>
-        <li><a href="api/sleap.nn.monitor.html#sleap.nn.monitor.LossViewer.close">(sleap.nn.monitor.LossViewer method)</a>
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.cm_output_stride">cm_output_stride (sleap.nn.inference.BottomUpInferenceLayer attribute)</a>
@@ -2957,8 +2991,6 @@
         <li><a href="api/sleap.nn.heads.html#sleap.nn.heads.SingleInstanceConfmapsHead.loss_weight">(sleap.nn.heads.SingleInstanceConfmapsHead attribute)</a>
 </li>
       </ul></li>
-      <li><a href="api/sleap.nn.monitor.html#sleap.nn.monitor.LossViewer">LossViewer (class in sleap.nn.monitor)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -3225,10 +3257,10 @@
 </li>
       <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.merge_frames">merge_frames() (sleap.instance.LabeledFrame static method)</a>
 </li>
-      <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.merge_matching_frames">merge_matching_frames() (sleap.io.dataset.Labels method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.merge_matching_frames">merge_matching_frames() (sleap.io.dataset.Labels method)</a>
+</li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.merge_nodes">merge_nodes() (sleap.io.dataset.Labels method)</a>
 </li>
       <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.meta">meta (sleap.info.feature_suggestions.ItemStack attribute)</a>
@@ -3430,8 +3462,6 @@
         <li><a href="api/sleap.nn.losses.html#module-sleap.nn.losses">sleap.nn.losses</a>
 </li>
         <li><a href="api/sleap.nn.model.html#module-sleap.nn.model">sleap.nn.model</a>
-</li>
-        <li><a href="api/sleap.nn.monitor.html#module-sleap.nn.monitor">sleap.nn.monitor</a>
 </li>
         <li><a href="api/sleap.nn.paf_grouping.html#module-sleap.nn.paf_grouping">sleap.nn.paf_grouping</a>
 </li>
@@ -4010,10 +4040,10 @@
         <li><a href="api/sleap.nn.callbacks.html#sleap.nn.callbacks.TensorBoardMatplotlibWriter.plot_fn">(sleap.nn.callbacks.TensorBoardMatplotlibWriter attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.plot_img">plot_img() (in module sleap.nn.viz)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.plot_instance">plot_instance() (in module sleap.nn.viz)</a>
 </li>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.plot_instances">plot_instances() (in module sleap.nn.viz)</a>
@@ -4082,6 +4112,8 @@
         <li><a href="api/sleap.nn.paf_grouping.html#sleap.nn.paf_grouping.PAFScorer.predict">(sleap.nn.paf_grouping.PAFScorer method)</a>
 </li>
       </ul></li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.InferenceModel.predict_on_batch">predict_on_batch() (sleap.nn.inference.InferenceModel method)</a>
+</li>
       <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.predicted_instances">predicted_instances (sleap.instance.LabeledFrame property)</a>
 
       <ul>
@@ -4804,6 +4836,8 @@
         <li><a href="api/sleap.io.format.text.html#module-sleap.io.format.text">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     sleap.io.legacy
 
@@ -4811,8 +4845,6 @@
         <li><a href="api/sleap.io.legacy.html#module-sleap.io.legacy">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     sleap.io.pathutils
 
@@ -5122,13 +5154,6 @@
 </li>
       </ul></li>
       <li>
-    sleap.nn.monitor
-
-      <ul>
-        <li><a href="api/sleap.nn.monitor.html#module-sleap.nn.monitor">module</a>
-</li>
-      </ul></li>
-      <li>
     sleap.nn.paf_grouping
 
       <ul>
@@ -5276,8 +5301,6 @@
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.architectures.hourglass.html#sleap.nn.architectures.hourglass.StemBlock">StemBlock (class in sleap.nn.architectures.hourglass)</a>
-</li>
-      <li><a href="api/sleap.nn.monitor.html#sleap.nn.monitor.LossViewer.stop">stop() (sleap.nn.monitor.LossViewer method)</a>
 </li>
       <li><a href="api/sleap.nn.config.optimization.html#sleap.nn.config.optimization.EarlyStoppingConfig.stop_training_on_plateau">stop_training_on_plateau (sleap.nn.config.optimization.EarlyStoppingConfig attribute)</a>
 </li>
@@ -5828,28 +5851,34 @@
 
               </div>
               
-            
-                <!-- Previous / next buttons -->
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
 <div class='prev-next-area'>
 </div>
-            
+            </footer>
         </div>
     </div>
-    <footer class="footer">
-  <p>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Talmo D. Pereira<br/>
+  
+      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+</p>
+        </footer>
+    </div>
     
-      By Talmo D. Pereira<br/>
-    
-        &copy; Copyright 2019–2022, Talmo Lab.<br/>
-  </p>
-</footer>
-</main>
+</div>
 
 
       </div>
     </div>
   
-  <script src="_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
 
   </body>
 </html>

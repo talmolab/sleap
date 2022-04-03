@@ -25,7 +25,6 @@ Developer API
    sleap.nn.inference
    sleap.nn.losses
    sleap.nn.model
-   sleap.nn.monitor
    sleap.nn.paf_grouping
    sleap.nn.peak_finding
    sleap.nn.system

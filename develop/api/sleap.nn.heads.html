@@ -4,11 +4,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sleap.nn.heads &#8212; SLEAP (v1.2.1)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>sleap.nn.heads &#8212; SLEAP (v1.2.2)</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet">
-  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,17 +20,14 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-
-    
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
@@ -40,8 +39,8 @@
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script src="../_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <link rel="canonical" href="/develop/api/sleap.nn.heads.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -55,7 +54,21 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
     
     <div class="container-fluid" id="banner"></div>
 
@@ -64,14 +77,10 @@
     <div class="container-xl">
       <div class="row">
           
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
-    
-        <div class="navbar-brand-box">
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="../index.html">
       
         <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
@@ -81,7 +90,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.1)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -299,11 +308,6 @@
    <li class="toctree-l2">
     <a class="reference internal" href="sleap.nn.model.html">
      sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.monitor.html">
-     sleap.nn.monitor
     </a>
    </li>
    <li class="toctree-l2">
@@ -676,8 +680,13 @@
 </ul>
 
     </div>
-</nav> <!-- To handle the deprecated key -->
-
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
 </div>
 
 
@@ -685,55 +694,90 @@
 
 
           
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<!-- A tiny helper pixel to detect if we've scrolled -->
 <div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+<!-- Main content -->
+<div class="col py-0 content-container">
     
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
-                
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
-            </div>
-            
-            <!-- Source interaction buttons -->
+    <div class="header-article row sticky-top noprint">
+        
 
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
-        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
-    <div class="dropdown-buttons sourcebuttons">
-        <a class="repository-button"
-            href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
-                data-toggle="tooltip" data-placement="left" title="Source repository"><i
-                    class="fab fa-github"></i>repository</button></a>
-        <a class="issues-button"
-            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.heads.html&body=Your%20issue%20content%20here."><button
-                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
-                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
         
     </div>
+    <div class="header-article__right">
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/murthylab/sleap"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.heads.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
 </div>
 
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-        </div>
     </div>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
                 <h1>sleap.nn.heads</h1>
@@ -744,19 +788,20 @@
                     </div>
                 </div>
             </div>
-            
+            <main id="main-content" role="main">
+                
               <div>
                 
-  <div class="section" id="module-sleap.nn.heads">
-<span id="sleap-nn-heads"></span><h1>sleap.nn.heads<a class="headerlink" href="#module-sleap.nn.heads" title="Permalink to this headline">¶</a></h1>
+  <section id="module-sleap.nn.heads">
+<span id="sleap-nn-heads"></span><h1>sleap.nn.heads<a class="headerlink" href="#module-sleap.nn.heads" title="Permalink to this headline">#</a></h1>
 <p>Model head definitions for defining model output types.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.heads.CenteredInstanceConfmapsHead">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">CenteredInstanceConfmapsHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor_part</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L158-L209"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">CenteredInstanceConfmapsHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor_part</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L158-L209"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead" title="Permalink to this definition">#</a></dt>
 <dd><p>Head for specifying centered instance confidence maps.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.CenteredInstanceConfmapsHead.part_names">
-<span class="sig-name descname"><span class="pre">part_names</span></span><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead.part_names" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">part_names</span></span><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead.part_names" title="Permalink to this definition">#</a></dt>
 <dd><p>List of strings specifying the part names associated with channels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -767,7 +812,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.CenteredInstanceConfmapsHead.anchor_part">
-<span class="sig-name descname"><span class="pre">anchor_part</span></span><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead.anchor_part" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">anchor_part</span></span><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead.anchor_part" title="Permalink to this definition">#</a></dt>
 <dd><p>Name of the part to use as an anchor node. If not specified, the
 bounding box centroid will be used.</p>
 <dl class="field-list simple">
@@ -779,7 +824,7 @@ bounding box centroid will be used.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.CenteredInstanceConfmapsHead.sigma">
-<span class="sig-name descname"><span class="pre">sigma</span></span><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead.sigma" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sigma</span></span><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead.sigma" title="Permalink to this definition">#</a></dt>
 <dd><p>Spread of the confidence maps.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -790,7 +835,7 @@ bounding box centroid will be used.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.CenteredInstanceConfmapsHead.output_stride">
-<span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead.output_stride" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead.output_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Stride of the output head tensor. The input tensor is expected to
 be at the same stride.</p>
 <dl class="field-list simple">
@@ -802,7 +847,7 @@ be at the same stride.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.CenteredInstanceConfmapsHead.loss_weight">
-<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead.loss_weight" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead.loss_weight" title="Permalink to this definition">#</a></dt>
 <dd><p>Weight of the loss term for this head during optimization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -813,24 +858,24 @@ be at the same stride.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.heads.CenteredInstanceConfmapsHead.channels">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead.channels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead.channels" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the number of channels in the tensor output by this head.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.heads.CenteredInstanceConfmapsHead.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig" title="sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig"><span class="pre">sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.heads.CenteredInstanceConfmapsHead" title="sleap.nn.heads.CenteredInstanceConfmapsHead"><span class="pre">sleap.nn.heads.CenteredInstanceConfmapsHead</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L182-L209"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead.from_config" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig" title="sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig"><span class="pre">sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.heads.CenteredInstanceConfmapsHead" title="sleap.nn.heads.CenteredInstanceConfmapsHead"><span class="pre">sleap.nn.heads.CenteredInstanceConfmapsHead</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L182-L209"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead.from_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Create this head from a set of configurations.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.CenteredInstanceConfmapsHead.config">
-<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead.config" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.heads.CenteredInstanceConfmapsHead.config" title="Permalink to this definition">#</a></dt>
 <dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig</span></code> instance specifying the head
 parameters.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">part_names</span></span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">part_names</span></span><a class="headerlink" href="#id0" title="Permalink to this definition">#</a></dt>
 <dd><p>Text name of the body parts (nodes) that the head will be
 configured to produce. The number of parts determines the number of
 channels in the output. This must be provided if the <a class="reference internal" href="#id0" title="sleap.nn.heads.CenteredInstanceConfmapsHead.part_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">part_names</span></code></a>
@@ -848,11 +893,11 @@ attribute of the configuration is not set.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.heads.CentroidConfmapsHead">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">CentroidConfmapsHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">anchor_part</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L117-L154"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.CentroidConfmapsHead" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">CentroidConfmapsHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">anchor_part</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L117-L154"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.CentroidConfmapsHead" title="Permalink to this definition">#</a></dt>
 <dd><p>Head for specifying instance centroid confidence maps.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.CentroidConfmapsHead.anchor_part">
-<span class="sig-name descname"><span class="pre">anchor_part</span></span><a class="headerlink" href="#sleap.nn.heads.CentroidConfmapsHead.anchor_part" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">anchor_part</span></span><a class="headerlink" href="#sleap.nn.heads.CentroidConfmapsHead.anchor_part" title="Permalink to this definition">#</a></dt>
 <dd><p>Name of the part to use as an anchor node. If not specified, the
 bounding box centroid will be used.</p>
 <dl class="field-list simple">
@@ -864,7 +909,7 @@ bounding box centroid will be used.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.CentroidConfmapsHead.sigma">
-<span class="sig-name descname"><span class="pre">sigma</span></span><a class="headerlink" href="#sleap.nn.heads.CentroidConfmapsHead.sigma" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sigma</span></span><a class="headerlink" href="#sleap.nn.heads.CentroidConfmapsHead.sigma" title="Permalink to this definition">#</a></dt>
 <dd><p>Spread of the confidence maps.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -875,7 +920,7 @@ bounding box centroid will be used.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.CentroidConfmapsHead.output_stride">
-<span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.heads.CentroidConfmapsHead.output_stride" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.heads.CentroidConfmapsHead.output_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Stride of the output head tensor. The input tensor is expected to
 be at the same stride.</p>
 <dl class="field-list simple">
@@ -887,7 +932,7 @@ be at the same stride.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.CentroidConfmapsHead.loss_weight">
-<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#sleap.nn.heads.CentroidConfmapsHead.loss_weight" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#sleap.nn.heads.CentroidConfmapsHead.loss_weight" title="Permalink to this definition">#</a></dt>
 <dd><p>Weight of the loss term for this head during optimization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -898,17 +943,17 @@ be at the same stride.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.heads.CentroidConfmapsHead.channels">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.CentroidConfmapsHead.channels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.CentroidConfmapsHead.channels" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the number of channels in the tensor output by this head.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.heads.CentroidConfmapsHead.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.CentroidsHeadConfig" title="sleap.nn.config.model.CentroidsHeadConfig"><span class="pre">sleap.nn.config.model.CentroidsHeadConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.heads.CentroidConfmapsHead" title="sleap.nn.heads.CentroidConfmapsHead"><span class="pre">sleap.nn.heads.CentroidConfmapsHead</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L139-L154"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.CentroidConfmapsHead.from_config" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.CentroidsHeadConfig" title="sleap.nn.config.model.CentroidsHeadConfig"><span class="pre">sleap.nn.config.model.CentroidsHeadConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.heads.CentroidConfmapsHead" title="sleap.nn.heads.CentroidConfmapsHead"><span class="pre">sleap.nn.heads.CentroidConfmapsHead</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L139-L154"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.CentroidConfmapsHead.from_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Create this head from a set of configurations.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.CentroidConfmapsHead.config">
-<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.heads.CentroidConfmapsHead.config" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.heads.CentroidConfmapsHead.config" title="Permalink to this definition">#</a></dt>
 <dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">CentroidsHeadConfig</span></code> instance specifying the head parameters.</p>
 </dd></dl>
 
@@ -923,11 +968,11 @@ be at the same stride.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassMapsHead">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">ClassMapsHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L314-L364"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">ClassMapsHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L314-L364"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead" title="Permalink to this definition">#</a></dt>
 <dd><p>Head for specifying class identity maps.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassMapsHead.classes">
-<span class="sig-name descname"><span class="pre">classes</span></span><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead.classes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">classes</span></span><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead.classes" title="Permalink to this definition">#</a></dt>
 <dd><p>List of string names of the classes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -938,7 +983,7 @@ be at the same stride.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassMapsHead.sigma">
-<span class="sig-name descname"><span class="pre">sigma</span></span><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead.sigma" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sigma</span></span><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead.sigma" title="Permalink to this definition">#</a></dt>
 <dd><p>Spread of the class maps around each node.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -949,7 +994,7 @@ be at the same stride.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassMapsHead.output_stride">
-<span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead.output_stride" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead.output_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Stride of the output head tensor. The input tensor is expected to
 be at the same stride.</p>
 <dl class="field-list simple">
@@ -961,7 +1006,7 @@ be at the same stride.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassMapsHead.loss_weight">
-<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead.loss_weight" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead.loss_weight" title="Permalink to this definition">#</a></dt>
 <dd><p>Weight of the loss term for this head during optimization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -972,29 +1017,29 @@ be at the same stride.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassMapsHead.activation">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">activation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead.activation" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">activation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead.activation" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the activation function of the head output layer.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassMapsHead.channels">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead.channels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead.channels" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the number of channels in the tensor output by this head.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassMapsHead.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.ClassMapsHeadConfig" title="sleap.nn.config.model.ClassMapsHeadConfig"><span class="pre">sleap.nn.config.model.ClassMapsHeadConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.heads.ClassMapsHead" title="sleap.nn.heads.ClassMapsHead"><span class="pre">sleap.nn.heads.ClassMapsHead</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L340-L364"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead.from_config" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.ClassMapsHeadConfig" title="sleap.nn.config.model.ClassMapsHeadConfig"><span class="pre">sleap.nn.config.model.ClassMapsHeadConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.heads.ClassMapsHead" title="sleap.nn.heads.ClassMapsHead"><span class="pre">sleap.nn.heads.ClassMapsHead</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L340-L364"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead.from_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Create this head from a set of configurations.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassMapsHead.config">
-<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead.config" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.heads.ClassMapsHead.config" title="Permalink to this definition">#</a></dt>
 <dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">ClassMapsHeadConfig</span></code> instance specifying the head parameters.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id1">
-<span class="sig-name descname"><span class="pre">classes</span></span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">classes</span></span><a class="headerlink" href="#id1" title="Permalink to this definition">#</a></dt>
 <dd><p>List of string names of the classes that this head will predict.
 This must be set if the <a class="reference internal" href="#id1" title="sleap.nn.heads.ClassMapsHead.classes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classes</span></code></a> attribute of the configuration is not
 set.</p>
@@ -1011,11 +1056,11 @@ set.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassVectorsHead">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">ClassVectorsHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_fc_layers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_fc_units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L368-L460"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">ClassVectorsHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_fc_layers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_fc_units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L368-L460"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead" title="Permalink to this definition">#</a></dt>
 <dd><p>Head for specifying classification heads.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassVectorsHead.classes">
-<span class="sig-name descname"><span class="pre">classes</span></span><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.classes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">classes</span></span><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.classes" title="Permalink to this definition">#</a></dt>
 <dd><p>List of string names of the classes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1026,7 +1071,7 @@ set.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassVectorsHead.num_fc_layers">
-<span class="sig-name descname"><span class="pre">num_fc_layers</span></span><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.num_fc_layers" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">num_fc_layers</span></span><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.num_fc_layers" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of fully connected layers after flattening input features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1037,7 +1082,7 @@ set.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassVectorsHead.num_fc_units">
-<span class="sig-name descname"><span class="pre">num_fc_units</span></span><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.num_fc_units" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">num_fc_units</span></span><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.num_fc_units" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of units (dimensions) in fully connected layers prior to
 classification output.</p>
 <dl class="field-list simple">
@@ -1049,7 +1094,7 @@ classification output.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassVectorsHead.output_stride">
-<span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.output_stride" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.output_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Stride of the output head tensor. The input tensor is expected to
 be at the same stride.</p>
 <dl class="field-list simple">
@@ -1061,7 +1106,7 @@ be at the same stride.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassVectorsHead.loss_weight">
-<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.loss_weight" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.loss_weight" title="Permalink to this definition">#</a></dt>
 <dd><p>Weight of the loss term for this head during optimization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1072,29 +1117,29 @@ be at the same stride.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassVectorsHead.activation">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">activation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.activation" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">activation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.activation" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the activation function of the head output layer.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassVectorsHead.channels">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.channels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.channels" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the number of channels in the tensor output by this head.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassVectorsHead.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.ClassVectorsHeadConfig" title="sleap.nn.config.model.ClassVectorsHeadConfig"><span class="pre">sleap.nn.config.model.ClassVectorsHeadConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.heads.ClassVectorsHead" title="sleap.nn.heads.ClassVectorsHead"><span class="pre">sleap.nn.heads.ClassVectorsHead</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L403-L429"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.from_config" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.ClassVectorsHeadConfig" title="sleap.nn.config.model.ClassVectorsHeadConfig"><span class="pre">sleap.nn.config.model.ClassVectorsHeadConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.heads.ClassVectorsHead" title="sleap.nn.heads.ClassVectorsHead"><span class="pre">sleap.nn.heads.ClassVectorsHead</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L403-L429"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.from_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Create this head from a set of configurations.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassVectorsHead.config">
-<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.config" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.config" title="Permalink to this definition">#</a></dt>
 <dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">ClassVectorsHeadConfig</span></code> instance specifying the head parameters.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id2">
-<span class="sig-name descname"><span class="pre">classes</span></span><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">classes</span></span><a class="headerlink" href="#id2" title="Permalink to this definition">#</a></dt>
 <dd><p>List of string names of the classes that this head will predict.
 This must be set if the <a class="reference internal" href="#id2" title="sleap.nn.heads.ClassVectorsHead.classes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classes</span></code></a> attribute of the configuration is not
 set.</p>
@@ -1109,13 +1154,13 @@ set.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassVectorsHead.loss_function">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">loss_function</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.loss_function" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">loss_function</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.loss_function" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the name of the loss function to use for this head.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.heads.ClassVectorsHead.make_head">
-<span class="sig-name descname"><span class="pre">make_head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L431-L460"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.make_head" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">make_head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L431-L460"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.ClassVectorsHead.make_head" title="Permalink to this definition">#</a></dt>
 <dd><p>Make head output tensor from input feature tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1135,29 +1180,29 @@ default), uses the name of the head as the layer name.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.heads.Head">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">Head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L20-L62"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.Head" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">Head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L20-L62"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.Head" title="Permalink to this definition">#</a></dt>
 <dd><p>Base class for model output heads.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.heads.Head.activation">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">activation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.nn.heads.Head.activation" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">activation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.nn.heads.Head.activation" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the activation function of the head output layer.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.heads.Head.channels">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.Head.channels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.Head.channels" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the number of channels in the tensor output by this head.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.heads.Head.loss_function">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">loss_function</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.nn.heads.Head.loss_function" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">loss_function</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.nn.heads.Head.loss_function" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the name of the loss function to use for this head.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.heads.Head.make_head">
-<span class="sig-name descname"><span class="pre">make_head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L42-L62"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.Head.make_head" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">make_head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L42-L62"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.Head.make_head" title="Permalink to this definition">#</a></dt>
 <dd><p>Make head output tensor from input feature tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1177,11 +1222,11 @@ default), uses the name of the head as the layer name.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.heads.MultiInstanceConfmapsHead">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">MultiInstanceConfmapsHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L213-L260"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.MultiInstanceConfmapsHead" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">MultiInstanceConfmapsHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L213-L260"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.MultiInstanceConfmapsHead" title="Permalink to this definition">#</a></dt>
 <dd><p>Head for specifying multi-instance confidence maps.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.MultiInstanceConfmapsHead.part_names">
-<span class="sig-name descname"><span class="pre">part_names</span></span><a class="headerlink" href="#sleap.nn.heads.MultiInstanceConfmapsHead.part_names" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">part_names</span></span><a class="headerlink" href="#sleap.nn.heads.MultiInstanceConfmapsHead.part_names" title="Permalink to this definition">#</a></dt>
 <dd><p>List of strings specifying the part names associated with channels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1192,7 +1237,7 @@ default), uses the name of the head as the layer name.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.MultiInstanceConfmapsHead.sigma">
-<span class="sig-name descname"><span class="pre">sigma</span></span><a class="headerlink" href="#sleap.nn.heads.MultiInstanceConfmapsHead.sigma" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sigma</span></span><a class="headerlink" href="#sleap.nn.heads.MultiInstanceConfmapsHead.sigma" title="Permalink to this definition">#</a></dt>
 <dd><p>Spread of the confidence maps.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1203,7 +1248,7 @@ default), uses the name of the head as the layer name.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.MultiInstanceConfmapsHead.output_stride">
-<span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.heads.MultiInstanceConfmapsHead.output_stride" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.heads.MultiInstanceConfmapsHead.output_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Stride of the output head tensor. The input tensor is expected to
 be at the same stride.</p>
 <dl class="field-list simple">
@@ -1215,7 +1260,7 @@ be at the same stride.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.MultiInstanceConfmapsHead.loss_weight">
-<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#sleap.nn.heads.MultiInstanceConfmapsHead.loss_weight" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#sleap.nn.heads.MultiInstanceConfmapsHead.loss_weight" title="Permalink to this definition">#</a></dt>
 <dd><p>Weight of the loss term for this head during optimization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1226,24 +1271,24 @@ be at the same stride.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.heads.MultiInstanceConfmapsHead.channels">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.MultiInstanceConfmapsHead.channels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.MultiInstanceConfmapsHead.channels" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the number of channels in the tensor output by this head.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.heads.MultiInstanceConfmapsHead.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig" title="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig"><span class="pre">sleap.nn.config.model.MultiInstanceConfmapsHeadConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.heads.MultiInstanceConfmapsHead" title="sleap.nn.heads.MultiInstanceConfmapsHead"><span class="pre">sleap.nn.heads.MultiInstanceConfmapsHead</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L234-L260"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.MultiInstanceConfmapsHead.from_config" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig" title="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig"><span class="pre">sleap.nn.config.model.MultiInstanceConfmapsHeadConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.heads.MultiInstanceConfmapsHead" title="sleap.nn.heads.MultiInstanceConfmapsHead"><span class="pre">sleap.nn.heads.MultiInstanceConfmapsHead</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L234-L260"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.MultiInstanceConfmapsHead.from_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Create this head from a set of configurations.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.MultiInstanceConfmapsHead.config">
-<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.heads.MultiInstanceConfmapsHead.config" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.heads.MultiInstanceConfmapsHead.config" title="Permalink to this definition">#</a></dt>
 <dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiInstanceConfmapsHeadConfig</span></code> instance specifying the head
 parameters.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id3">
-<span class="sig-name descname"><span class="pre">part_names</span></span><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">part_names</span></span><a class="headerlink" href="#id3" title="Permalink to this definition">#</a></dt>
 <dd><p>Text name of the body parts (nodes) that the head will be
 configured to produce. The number of parts determines the number of
 channels in the output. This must be provided if the <a class="reference internal" href="#id3" title="sleap.nn.heads.MultiInstanceConfmapsHead.part_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">part_names</span></code></a>
@@ -1261,11 +1306,11 @@ attribute of the configuration is not set.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.heads.OffsetRefinementHead">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">OffsetRefinementHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L472-L527"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.OffsetRefinementHead" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">OffsetRefinementHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L472-L527"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.OffsetRefinementHead" title="Permalink to this definition">#</a></dt>
 <dd><p>Head for specifying offset refinement maps.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.OffsetRefinementHead.part_names">
-<span class="sig-name descname"><span class="pre">part_names</span></span><a class="headerlink" href="#sleap.nn.heads.OffsetRefinementHead.part_names" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">part_names</span></span><a class="headerlink" href="#sleap.nn.heads.OffsetRefinementHead.part_names" title="Permalink to this definition">#</a></dt>
 <dd><p>List of strings specifying the part names associated with channels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1276,7 +1321,7 @@ attribute of the configuration is not set.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.OffsetRefinementHead.sigma_threshold">
-<span class="sig-name descname"><span class="pre">sigma_threshold</span></span><a class="headerlink" href="#sleap.nn.heads.OffsetRefinementHead.sigma_threshold" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sigma_threshold</span></span><a class="headerlink" href="#sleap.nn.heads.OffsetRefinementHead.sigma_threshold" title="Permalink to this definition">#</a></dt>
 <dd><p>Threshold of confidence map values to use for defining the
 boundary of the offset maps.</p>
 <dl class="field-list simple">
@@ -1288,7 +1333,7 @@ boundary of the offset maps.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.OffsetRefinementHead.output_stride">
-<span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.heads.OffsetRefinementHead.output_stride" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.heads.OffsetRefinementHead.output_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Stride of the output head tensor. The input tensor is expected to
 be at the same stride.</p>
 <dl class="field-list simple">
@@ -1300,7 +1345,7 @@ be at the same stride.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.OffsetRefinementHead.loss_weight">
-<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#sleap.nn.heads.OffsetRefinementHead.loss_weight" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#sleap.nn.heads.OffsetRefinementHead.loss_weight" title="Permalink to this definition">#</a></dt>
 <dd><p>Weight of the loss term for this head during optimization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1311,23 +1356,23 @@ be at the same stride.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.heads.OffsetRefinementHead.channels">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.OffsetRefinementHead.channels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.OffsetRefinementHead.channels" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the number of channels in the tensor output by this head.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.heads.OffsetRefinementHead.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.CentroidsHeadConfig" title="sleap.nn.config.model.CentroidsHeadConfig"><span class="pre">sleap.nn.config.model.CentroidsHeadConfig</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig" title="sleap.nn.config.model.SingleInstanceConfmapsHeadConfig"><span class="pre">sleap.nn.config.model.SingleInstanceConfmapsHeadConfig</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig" title="sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig"><span class="pre">sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig" title="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig"><span class="pre">sleap.nn.config.model.MultiInstanceConfmapsHeadConfig</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.heads.OffsetRefinementHead" title="sleap.nn.heads.OffsetRefinementHead"><span class="pre">sleap.nn.heads.OffsetRefinementHead</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L494-L527"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.OffsetRefinementHead.from_config" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.CentroidsHeadConfig" title="sleap.nn.config.model.CentroidsHeadConfig"><span class="pre">sleap.nn.config.model.CentroidsHeadConfig</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig" title="sleap.nn.config.model.SingleInstanceConfmapsHeadConfig"><span class="pre">sleap.nn.config.model.SingleInstanceConfmapsHeadConfig</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig" title="sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig"><span class="pre">sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig" title="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig"><span class="pre">sleap.nn.config.model.MultiInstanceConfmapsHeadConfig</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.heads.OffsetRefinementHead" title="sleap.nn.heads.OffsetRefinementHead"><span class="pre">sleap.nn.heads.OffsetRefinementHead</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L494-L527"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.OffsetRefinementHead.from_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Create this head from a set of configurations.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.OffsetRefinementHead.config">
-<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.heads.OffsetRefinementHead.config" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.heads.OffsetRefinementHead.config" title="Permalink to this definition">#</a></dt>
 <dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">ConfmapConfig</span></code> instance specifying the head parameters.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id4">
-<span class="sig-name descname"><span class="pre">part_names</span></span><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">part_names</span></span><a class="headerlink" href="#id4" title="Permalink to this definition">#</a></dt>
 <dd><p>Text name of the body parts (nodes) that the head will be
 configured to produce. The number of parts determines the number of
 channels in the output. This must be provided if the <a class="reference internal" href="#id4" title="sleap.nn.heads.OffsetRefinementHead.part_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">part_names</span></code></a>
@@ -1336,14 +1381,14 @@ attribute of the configuration is not set.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id5">
-<span class="sig-name descname"><span class="pre">sigma_threshold</span></span><a class="headerlink" href="#id5" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sigma_threshold</span></span><a class="headerlink" href="#id5" title="Permalink to this definition">#</a></dt>
 <dd><p>Minimum confidence map value below which offsets will be
 replaced with zeros.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id6">
-<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#id6" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#id6" title="Permalink to this definition">#</a></dt>
 <dd><p>Weight of the loss associated with this head.</p>
 </dd></dl>
 
@@ -1358,11 +1403,11 @@ replaced with zeros.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.heads.PartAffinityFieldsHead">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">PartAffinityFieldsHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">15.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L264-L310"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.PartAffinityFieldsHead" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">PartAffinityFieldsHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">15.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L264-L310"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.PartAffinityFieldsHead" title="Permalink to this definition">#</a></dt>
 <dd><p>Head for specifying multi-instance part affinity fields.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.PartAffinityFieldsHead.edges">
-<span class="sig-name descname"><span class="pre">edges</span></span><a class="headerlink" href="#sleap.nn.heads.PartAffinityFieldsHead.edges" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">edges</span></span><a class="headerlink" href="#sleap.nn.heads.PartAffinityFieldsHead.edges" title="Permalink to this definition">#</a></dt>
 <dd><p>List of tuples of <code class="xref py py-obj docutils literal notranslate"><span class="pre">(source,</span> <span class="pre">destination)</span></code> node names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1373,7 +1418,7 @@ replaced with zeros.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.PartAffinityFieldsHead.sigma">
-<span class="sig-name descname"><span class="pre">sigma</span></span><a class="headerlink" href="#sleap.nn.heads.PartAffinityFieldsHead.sigma" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sigma</span></span><a class="headerlink" href="#sleap.nn.heads.PartAffinityFieldsHead.sigma" title="Permalink to this definition">#</a></dt>
 <dd><p>Spread of the part affinity fields.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1384,7 +1429,7 @@ replaced with zeros.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.PartAffinityFieldsHead.output_stride">
-<span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.heads.PartAffinityFieldsHead.output_stride" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.heads.PartAffinityFieldsHead.output_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Stride of the output head tensor. The input tensor is expected to
 be at the same stride.</p>
 <dl class="field-list simple">
@@ -1396,7 +1441,7 @@ be at the same stride.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.PartAffinityFieldsHead.loss_weight">
-<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#sleap.nn.heads.PartAffinityFieldsHead.loss_weight" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#sleap.nn.heads.PartAffinityFieldsHead.loss_weight" title="Permalink to this definition">#</a></dt>
 <dd><p>Weight of the loss term for this head during optimization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1407,24 +1452,24 @@ be at the same stride.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.heads.PartAffinityFieldsHead.channels">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.PartAffinityFieldsHead.channels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.PartAffinityFieldsHead.channels" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the number of channels in the tensor output by this head.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.heads.PartAffinityFieldsHead.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.PartAffinityFieldsHeadConfig" title="sleap.nn.config.model.PartAffinityFieldsHeadConfig"><span class="pre">sleap.nn.config.model.PartAffinityFieldsHeadConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.heads.PartAffinityFieldsHead" title="sleap.nn.heads.PartAffinityFieldsHead"><span class="pre">sleap.nn.heads.PartAffinityFieldsHead</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L285-L310"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.PartAffinityFieldsHead.from_config" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.PartAffinityFieldsHeadConfig" title="sleap.nn.config.model.PartAffinityFieldsHeadConfig"><span class="pre">sleap.nn.config.model.PartAffinityFieldsHeadConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.heads.PartAffinityFieldsHead" title="sleap.nn.heads.PartAffinityFieldsHead"><span class="pre">sleap.nn.heads.PartAffinityFieldsHead</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L285-L310"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.PartAffinityFieldsHead.from_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Create this head from a set of configurations.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.PartAffinityFieldsHead.config">
-<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.heads.PartAffinityFieldsHead.config" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.heads.PartAffinityFieldsHead.config" title="Permalink to this definition">#</a></dt>
 <dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">PartAffinityFieldsHeadConfig</span></code> instance specifying the head
 parameters.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id7">
-<span class="sig-name descname"><span class="pre">edges</span></span><a class="headerlink" href="#id7" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">edges</span></span><a class="headerlink" href="#id7" title="Permalink to this definition">#</a></dt>
 <dd><p>List of 2-tuples of the form <code class="xref py py-obj docutils literal notranslate"><span class="pre">(source_node,</span> <span class="pre">destination_node)</span></code> that
 define pairs of text names of the directed edges of the graph. This must
 be set if the <a class="reference internal" href="#id7" title="sleap.nn.heads.PartAffinityFieldsHead.edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">edges</span></code></a> attribute of the configuration is not set.</p>
@@ -1441,11 +1486,11 @@ be set if the <a class="reference internal" href="#id7" title="sleap.nn.heads.Pa
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.heads.SingleInstanceConfmapsHead">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">SingleInstanceConfmapsHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L66-L113"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.SingleInstanceConfmapsHead" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.heads.</span></span><span class="sig-name descname"><span class="pre">SingleInstanceConfmapsHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L66-L113"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.SingleInstanceConfmapsHead" title="Permalink to this definition">#</a></dt>
 <dd><p>Head for specifying single instance confidence maps.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.SingleInstanceConfmapsHead.part_names">
-<span class="sig-name descname"><span class="pre">part_names</span></span><a class="headerlink" href="#sleap.nn.heads.SingleInstanceConfmapsHead.part_names" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">part_names</span></span><a class="headerlink" href="#sleap.nn.heads.SingleInstanceConfmapsHead.part_names" title="Permalink to this definition">#</a></dt>
 <dd><p>List of strings specifying the part names associated with channels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1456,7 +1501,7 @@ be set if the <a class="reference internal" href="#id7" title="sleap.nn.heads.Pa
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.SingleInstanceConfmapsHead.sigma">
-<span class="sig-name descname"><span class="pre">sigma</span></span><a class="headerlink" href="#sleap.nn.heads.SingleInstanceConfmapsHead.sigma" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sigma</span></span><a class="headerlink" href="#sleap.nn.heads.SingleInstanceConfmapsHead.sigma" title="Permalink to this definition">#</a></dt>
 <dd><p>Spread of the confidence maps.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1467,7 +1512,7 @@ be set if the <a class="reference internal" href="#id7" title="sleap.nn.heads.Pa
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.SingleInstanceConfmapsHead.output_stride">
-<span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.heads.SingleInstanceConfmapsHead.output_stride" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.heads.SingleInstanceConfmapsHead.output_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Stride of the output head tensor. The input tensor is expected to
 be at the same stride.</p>
 <dl class="field-list simple">
@@ -1479,7 +1524,7 @@ be at the same stride.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.SingleInstanceConfmapsHead.loss_weight">
-<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#sleap.nn.heads.SingleInstanceConfmapsHead.loss_weight" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">loss_weight</span></span><a class="headerlink" href="#sleap.nn.heads.SingleInstanceConfmapsHead.loss_weight" title="Permalink to this definition">#</a></dt>
 <dd><p>Weight of the loss term for this head during optimization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1490,24 +1535,24 @@ be at the same stride.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.heads.SingleInstanceConfmapsHead.channels">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.SingleInstanceConfmapsHead.channels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#sleap.nn.heads.SingleInstanceConfmapsHead.channels" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the number of channels in the tensor output by this head.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.heads.SingleInstanceConfmapsHead.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig" title="sleap.nn.config.model.SingleInstanceConfmapsHeadConfig"><span class="pre">sleap.nn.config.model.SingleInstanceConfmapsHeadConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.heads.SingleInstanceConfmapsHead" title="sleap.nn.heads.SingleInstanceConfmapsHead"><span class="pre">sleap.nn.heads.SingleInstanceConfmapsHead</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/heads.py#L87-L113"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.SingleInstanceConfmapsHead.from_config" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig" title="sleap.nn.config.model.SingleInstanceConfmapsHeadConfig"><span class="pre">sleap.nn.config.model.SingleInstanceConfmapsHeadConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.heads.SingleInstanceConfmapsHead" title="sleap.nn.heads.SingleInstanceConfmapsHead"><span class="pre">sleap.nn.heads.SingleInstanceConfmapsHead</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/heads.py#L87-L113"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.heads.SingleInstanceConfmapsHead.from_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Create this head from a set of configurations.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.heads.SingleInstanceConfmapsHead.config">
-<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.heads.SingleInstanceConfmapsHead.config" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.heads.SingleInstanceConfmapsHead.config" title="Permalink to this definition">#</a></dt>
 <dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">SingleInstanceConfmapsHeadConfig</span></code> instance specifying the head
 parameters.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id8">
-<span class="sig-name descname"><span class="pre">part_names</span></span><a class="headerlink" href="#id8" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">part_names</span></span><a class="headerlink" href="#id8" title="Permalink to this definition">#</a></dt>
 <dd><p>Text name of the body parts (nodes) that the head will be
 configured to produce. The number of parts determines the number of
 channels in the output. This must be provided if the <a class="reference internal" href="#id8" title="sleap.nn.heads.SingleInstanceConfmapsHead.part_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">part_names</span></code></a>
@@ -1523,14 +1568,16 @@ attribute of the configuration is not set.</p>
 
 </dd></dl>
 
-</div>
+</section>
 
 
               </div>
               
-            
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
     <a class='left-prev' id="prev-link" href="sleap.nn.evals.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
@@ -1546,24 +1593,28 @@ attribute of the configuration is not set.</p>
     <i class="fas fa-angle-right"></i>
     </a>
 </div>
-            
+            </footer>
         </div>
     </div>
-    <footer class="footer">
-  <p>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Talmo D. Pereira<br/>
+  
+      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+</p>
+        </footer>
+    </div>
     
-      By Talmo D. Pereira<br/>
-    
-        &copy; Copyright 2019–2022, Talmo Lab.<br/>
-  </p>
-</footer>
-</main>
+</div>
 
 
       </div>
     </div>
   
-  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
 
   </body>
 </html>

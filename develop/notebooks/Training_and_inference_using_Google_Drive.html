@@ -4,11 +4,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Training and inference on your own data using Google Drive &#8212; SLEAP (v1.2.1)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Training and inference on your own data using Google Drive &#8212; SLEAP (v1.2.2)</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet">
-  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,17 +20,14 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-
-    
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
@@ -40,8 +39,8 @@
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script src="../_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <link rel="canonical" href="/develop/notebooks/Training_and_inference_using_Google_Drive.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -55,7 +54,21 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
     
     <div class="container-fluid" id="banner"></div>
 
@@ -64,14 +77,10 @@
     <div class="container-xl">
       <div class="row">
           
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
-    
-        <div class="navbar-brand-box">
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="../index.html">
       
         <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
@@ -81,7 +90,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.1)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -299,11 +308,6 @@
    <li class="toctree-l2">
     <a class="reference internal" href="../api/sleap.nn.model.html">
      sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="../api/sleap.nn.monitor.html">
-     sleap.nn.monitor
     </a>
    </li>
    <li class="toctree-l2">
@@ -676,8 +680,13 @@
 </ul>
 
     </div>
-</nav> <!-- To handle the deprecated key -->
-
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
 </div>
 
 
@@ -685,55 +694,102 @@
 
 
           
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<!-- A tiny helper pixel to detect if we've scrolled -->
 <div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+<!-- Main content -->
+<div class="col py-0 content-container">
     
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
-                
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
-            </div>
-            
-            <!-- Source interaction buttons -->
-
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
-        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
-    <div class="dropdown-buttons sourcebuttons">
-        <a class="repository-button"
-            href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
-                data-toggle="tooltip" data-placement="left" title="Source repository"><i
-                    class="fab fa-github"></i>repository</button></a>
-        <a class="issues-button"
-            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fnotebooks/Training_and_inference_using_Google_Drive.html&body=Your%20issue%20content%20here."><button
-                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
-                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+    <div class="header-article row sticky-top noprint">
         
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/murthylab/sleap"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fnotebooks/Training_and_inference_using_Google_Drive.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
     </div>
 </div>
 
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-            <div class="tocsection onthispage pt-5 pb-3">
-                <i class="fas fa-list"></i> Contents
-            </div>
-            <nav id="bd-toc-nav" aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#install-sleap">
    Install SLEAP
@@ -802,12 +858,11 @@
  </li>
 </ul>
 
-            </nav>
-        </div>
-    </div>
+    </nav>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
                 <h1>Training and inference on your own data using Google Drive</h1>
@@ -892,15 +947,16 @@
                     </div>
                 </div>
             </div>
-            
+            <main id="main-content" role="main">
+                
               <div>
                 
   <p><a href="https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
-<div class="tex2jax_ignore mathjax_ignore section" id="training-and-inference-on-your-own-data-using-google-drive">
-<h1>Training and inference on your own data using Google Drive<a class="headerlink" href="#training-and-inference-on-your-own-data-using-google-drive" title="Permalink to this headline">¶</a></h1>
+<section class="tex2jax_ignore mathjax_ignore" id="training-and-inference-on-your-own-data-using-google-drive">
+<h1>Training and inference on your own data using Google Drive<a class="headerlink" href="#training-and-inference-on-your-own-data-using-google-drive" title="Permalink to this headline">#</a></h1>
 <p>In this notebook we’ll install SLEAP, import training data into Colab using <a class="reference external" href="https://www.google.com/drive">Google Drive</a>, and run training and inference.</p>
-<div class="section" id="install-sleap">
-<h2>Install SLEAP<a class="headerlink" href="#install-sleap" title="Permalink to this headline">¶</a></h2>
+<section id="install-sleap">
+<h2>Install SLEAP<a class="headerlink" href="#install-sleap" title="Permalink to this headline">#</a></h2>
 <p>Note: Before installing SLEAP check <a class="reference external" href="https://github.com/murthylab/sleap/releases">SLEAP releases</a> page for the latest version.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -910,22 +966,22 @@
 </div>
 </div>
 </div>
-</div>
-<div class="section" id="import-training-data-into-colab-with-google-drive">
-<h2>Import training data into Colab with Google Drive<a class="headerlink" href="#import-training-data-into-colab-with-google-drive" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="import-training-data-into-colab-with-google-drive">
+<h2>Import training data into Colab with Google Drive<a class="headerlink" href="#import-training-data-into-colab-with-google-drive" title="Permalink to this headline">#</a></h2>
 <p>We’ll first prepare and export the training data from SLEAP, then upload it to Google Drive, and then mount Google Drive  into this Colab notebook.</p>
-<div class="section" id="create-and-export-the-training-job-package">
-<h3>Create and export the training job package<a class="headerlink" href="#create-and-export-the-training-job-package" title="Permalink to this headline">¶</a></h3>
+<section id="create-and-export-the-training-job-package">
+<h3>Create and export the training job package<a class="headerlink" href="#create-and-export-the-training-job-package" title="Permalink to this headline">#</a></h3>
 <p>A self-contained <strong>training job package</strong> contains a .slp file with labeled data and images which will be used for training, as well as .json training configuration file(s).</p>
 <p>A training job package can be exported in the SLEAP GUI fron the “Run Training…” dialog under the “Predict” menu.</p>
-</div>
-<div class="section" id="upload-training-job-package-to-google-drive">
-<h3>Upload training job package to Google Drive<a class="headerlink" href="#upload-training-job-package-to-google-drive" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="upload-training-job-package-to-google-drive">
+<h3>Upload training job package to Google Drive<a class="headerlink" href="#upload-training-job-package-to-google-drive" title="Permalink to this headline">#</a></h3>
 <p>To be consistent with the examples in this notebook, name the SLEAP project <code class="docutils literal notranslate"><span class="pre">colab</span></code> and create a directory called <code class="docutils literal notranslate"><span class="pre">sleap</span></code> in the root of your Google Drive. Then upload the exported training job package <code class="docutils literal notranslate"><span class="pre">colab.slp.training_job.zip</span></code> into <code class="docutils literal notranslate"><span class="pre">sleap</span></code> directory.</p>
 <p>If you place your training pckage somewhere else, or name it differently, adjust the paths/filenames/parameters below accordingly.</p>
-</div>
-<div class="section" id="mount-your-google-drive">
-<h3>Mount your Google Drive<a class="headerlink" href="#mount-your-google-drive" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="mount-your-google-drive">
+<h3>Mount your Google Drive<a class="headerlink" href="#mount-your-google-drive" title="Permalink to this headline">#</a></h3>
 <p>Mounting your Google Drive will allow you to accessed the uploaded training job package in this notebook. When prompted to log into your Google account, give Colab access and the copy the authorization code into a field below (+ hit ‘return’).</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -951,22 +1007,22 @@
 </div>
 </div>
 </div>
-</div>
-</div>
-<div class="section" id="train-a-model">
-<h2>Train a model<a class="headerlink" href="#train-a-model" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="train-a-model">
+<h2>Train a model<a class="headerlink" href="#train-a-model" title="Permalink to this headline">#</a></h2>
 <p>Let’s train a model with the training profile (.json file) and the project data (.slp file) you have exported from SLEAP.</p>
-<div class="section" id="note-on-training-profiles">
-<h3>Note on training profiles<a class="headerlink" href="#note-on-training-profiles" title="Permalink to this headline">¶</a></h3>
+<section id="note-on-training-profiles">
+<h3>Note on training profiles<a class="headerlink" href="#note-on-training-profiles" title="Permalink to this headline">#</a></h3>
 <p>Depending on the pipeline you chose in the training dialog, the config filename(s) will be:</p>
 <ul class="simple">
 <li><p>for a <strong>bottom-up</strong> pipeline approach: <code class="docutils literal notranslate"><span class="pre">multi_instance.json</span></code> (this is the pipeline we assume here),</p></li>
 <li><p>for a <strong>top-down</strong> pipeline, you’ll have a different profile for each of the models: <code class="docutils literal notranslate"><span class="pre">centroid.json</span></code> and <code class="docutils literal notranslate"><span class="pre">centered_instance.json</span></code>,</p></li>
 <li><p>for a <strong>single animal</strong> pipeline: <code class="docutils literal notranslate"><span class="pre">single_instance.json</span></code>.</p></li>
 </ul>
-</div>
-<div class="section" id="note-on-training-process">
-<h3>Note on training process<a class="headerlink" href="#note-on-training-process" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="note-on-training-process">
+<h3>Note on training process<a class="headerlink" href="#note-on-training-process" title="Permalink to this headline">#</a></h3>
 <p>When you start training, you’ll first see the training parameters and then the training and validation loss for each training epoch.</p>
 <p>As soon as you’re satisfied with the validation loss you see for an epoch during training, you’re welcome to stop training by clicking the stop button. The version of the model with the lowest validation loss is saved during training, and that’s what will be used for inference.</p>
 <p>If you don’t stop training, it will run for 200 epochs or until validation loss fails to improve for some number of epochs (controlled by the early_stopping fields in the training profile).</p>
@@ -982,10 +1038,10 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">!sleap-train</span> <span class="pre">centroid.json</span> <span class="pre">colab.pkg.slp</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">!sleap-train</span> <span class="pre">centered_instance.json</span> <span class="pre">colab.pkg.slp</span></code></p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="run-inference-to-predict-instances">
-<h2>Run inference to predict instances<a class="headerlink" href="#run-inference-to-predict-instances" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="run-inference-to-predict-instances">
+<h2>Run inference to predict instances<a class="headerlink" href="#run-inference-to-predict-instances" title="Permalink to this headline">#</a></h2>
 <p>Once training finishes, you’ll see a new directory (or two new directories for top-down training pipeline) containing all the model files SLEAP needs to use for inference.</p>
 <p>Here we’ll use the created model files to run inference in two modes:</p>
 <ul class="simple">
@@ -993,8 +1049,8 @@
 <li><p>predicting and tracking instances in uploaded video</p></li>
 </ul>
 <p>You can also download the trained models for running inference from the SLEAP GUI on your computer (or anywhere else).</p>
-<div class="section" id="predicting-instances-in-suggested-frames">
-<h3>Predicting instances in suggested frames<a class="headerlink" href="#predicting-instances-in-suggested-frames" title="Permalink to this headline">¶</a></h3>
+<section id="predicting-instances-in-suggested-frames">
+<h3>Predicting instances in suggested frames<a class="headerlink" href="#predicting-instances-in-suggested-frames" title="Permalink to this headline">#</a></h3>
 <p>This mode of predicting instances is useful for accelerating the manual labeling work; it allows you to get early predictions on suggested frames and merge them back into the project for faster labeling.</p>
 <p>Here we assume you’ve trained a bottom-up model and that the model files were written in directory named <code class="docutils literal notranslate"><span class="pre">colab_demo.bottomup</span></code>; later in this notebook we’ll also show how to run inference with the pair of top-down models instead.</p>
 <div class="cell docutils container">
@@ -1009,9 +1065,9 @@
 </div>
 </div>
 <p>Now, you can download the generated <code class="docutils literal notranslate"><span class="pre">colab.predicted_suggestions.slp</span></code> file and merge it into your labeling project (<strong>File -&gt; Merge into Project…</strong> from the GUI) to get new predictions for your suggested frames.</p>
-</div>
-<div class="section" id="predicting-and-tracking-instances-in-uploaded-video">
-<h3>Predicting and tracking instances in uploaded video<a class="headerlink" href="#predicting-and-tracking-instances-in-uploaded-video" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="predicting-and-tracking-instances-in-uploaded-video">
+<h3>Predicting and tracking instances in uploaded video<a class="headerlink" href="#predicting-and-tracking-instances-in-uploaded-video" title="Permalink to this headline">#</a></h3>
 <p>Let’s first upload the video we want to run inference on and name it <code class="docutils literal notranslate"><span class="pre">colab_demo.mp4</span></code>. (If your video is not named <code class="docutils literal notranslate"><span class="pre">colab_demo.mp4</span></code>, adjust the names below accordingly.)</p>
 <p>For this demo we’ll just get predictions for the first 200 frames (or you can adjust the –frames parameter below or remove it to run on the whole video).</p>
 <div class="cell docutils container">
@@ -1034,9 +1090,9 @@
 </div>
 </div>
 <p>You can copy this file from your Google Drive to a local drive and open it in the SLEAP GUI app (or open it directly if you have your Google Drive mounted on your local machine). If the video is in the same directory as the predictions file, SLEAP will automatically find it; otherwise, you’ll be prompted to locate the video (since the path to the video on your local machine will be different than the path to the video on Colab).</p>
-</div>
-<div class="section" id="inference-with-top-down-models">
-<h3>Inference with top-down models<a class="headerlink" href="#inference-with-top-down-models" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="inference-with-top-down-models">
+<h3>Inference with top-down models<a class="headerlink" href="#inference-with-top-down-models" title="Permalink to this headline">#</a></h3>
 <p>If you trained the pair of models needed for top-down inference, you can call <code class="docutils literal notranslate"><span class="pre">sleap-track</span></code> with <code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">path/to/model</span></code> for each model, like so:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -1049,16 +1105,18 @@
 </div>
 </div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
               </div>
               
-            
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
     <a class='left-prev' id="prev-link" href="Training_and_inference_on_an_example_dataset.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
@@ -1074,24 +1132,28 @@
     <i class="fas fa-angle-right"></i>
     </a>
 </div>
-            
+            </footer>
         </div>
     </div>
-    <footer class="footer">
-  <p>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Talmo D. Pereira<br/>
+  
+      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+</p>
+        </footer>
+    </div>
     
-      By Talmo D. Pereira<br/>
-    
-        &copy; Copyright 2019–2022, Talmo Lab.<br/>
-  </p>
-</footer>
-</main>
+</div>
 
 
       </div>
     </div>
   
-  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
 
   </body>
 </html>

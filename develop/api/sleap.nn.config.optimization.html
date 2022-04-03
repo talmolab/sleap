@@ -4,11 +4,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sleap.nn.config.optimization &#8212; SLEAP (v1.2.1)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>sleap.nn.config.optimization &#8212; SLEAP (v1.2.2)</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet">
-  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,17 +20,14 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-
-    
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
@@ -40,8 +39,8 @@
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script src="../_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <link rel="canonical" href="/develop/api/sleap.nn.config.optimization.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -55,7 +54,21 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
     
     <div class="container-fluid" id="banner"></div>
 
@@ -64,14 +77,10 @@
     <div class="container-xl">
       <div class="row">
           
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
-    
-        <div class="navbar-brand-box">
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="../index.html">
       
         <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
@@ -81,7 +90,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.1)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -299,11 +308,6 @@
    <li class="toctree-l2">
     <a class="reference internal" href="sleap.nn.model.html">
      sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.monitor.html">
-     sleap.nn.monitor
     </a>
    </li>
    <li class="toctree-l2">
@@ -676,8 +680,13 @@
 </ul>
 
     </div>
-</nav> <!-- To handle the deprecated key -->
-
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
 </div>
 
 
@@ -685,55 +694,90 @@
 
 
           
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<!-- A tiny helper pixel to detect if we've scrolled -->
 <div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+<!-- Main content -->
+<div class="col py-0 content-container">
     
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
-                
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
-            </div>
-            
-            <!-- Source interaction buttons -->
+    <div class="header-article row sticky-top noprint">
+        
 
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
-        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
-    <div class="dropdown-buttons sourcebuttons">
-        <a class="repository-button"
-            href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
-                data-toggle="tooltip" data-placement="left" title="Source repository"><i
-                    class="fab fa-github"></i>repository</button></a>
-        <a class="issues-button"
-            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.config.optimization.html&body=Your%20issue%20content%20here."><button
-                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
-                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
         
     </div>
+    <div class="header-article__right">
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/murthylab/sleap"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.config.optimization.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
 </div>
 
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-        </div>
     </div>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
                 <h1>sleap.nn.config.optimization</h1>
@@ -744,19 +788,20 @@
                     </div>
                 </div>
             </div>
-            
+            <main id="main-content" role="main">
+                
               <div>
                 
-  <div class="section" id="module-sleap.nn.config.optimization">
-<span id="sleap-nn-config-optimization"></span><h1>sleap.nn.config.optimization<a class="headerlink" href="#module-sleap.nn.config.optimization" title="Permalink to this headline">¶</a></h1>
+  <section id="module-sleap.nn.config.optimization">
+<span id="sleap-nn-config-optimization"></span><h1>sleap.nn.config.optimization<a class="headerlink" href="#module-sleap.nn.config.optimization" title="Permalink to this headline">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.optimization.</span></span><span class="sig-name descname"><span class="pre">AugmentationConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rotate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_min_angle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">180</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_max_angle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">180</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">translate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">translate_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">translate_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniform_noise</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniform_noise_min_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniform_noise_max_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gaussian_noise</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gaussian_noise_mean</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gaussian_noise_stddev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contrast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contrast_min_gamma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contrast_max_gamma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brightness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brightness_min_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brightness_max_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_crop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_crop_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_crop_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_flip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flip_horizontal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/config/optimization.py#L6-L87"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.optimization.</span></span><span class="sig-name descname"><span class="pre">AugmentationConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rotate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_min_angle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">180</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_max_angle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">180</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">translate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">translate_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">translate_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniform_noise</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniform_noise_min_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniform_noise_max_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gaussian_noise</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gaussian_noise_mean</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gaussian_noise_stddev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contrast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contrast_min_gamma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contrast_max_gamma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brightness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brightness_min_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brightness_max_val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_crop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_crop_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_crop_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_flip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flip_horizontal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/config/optimization.py#L6-L87"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig" title="Permalink to this definition">#</a></dt>
 <dd><p>Parameters for configuring an augmentation stack.</p>
 <p>The augmentations will be applied in the the order of the attributes.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.rotate">
-<span class="sig-name descname"><span class="pre">rotate</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.rotate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">rotate</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.rotate" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, rotational augmentation will be applied. Rotation is relative
 to the center of the image. See <code class="xref py py-obj docutils literal notranslate"><span class="pre">imgaug.augmenters.geometric.Affine</span></code>.</p>
 <dl class="field-list simple">
@@ -768,7 +813,7 @@ to the center of the image. See <code class="xref py py-obj docutils literal not
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.rotation_min_angle">
-<span class="sig-name descname"><span class="pre">rotation_min_angle</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.rotation_min_angle" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">rotation_min_angle</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.rotation_min_angle" title="Permalink to this definition">#</a></dt>
 <dd><p>Minimum rotation angle in degrees in [-180, 180].</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -779,7 +824,7 @@ to the center of the image. See <code class="xref py py-obj docutils literal not
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.rotation_max_angle">
-<span class="sig-name descname"><span class="pre">rotation_max_angle</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.rotation_max_angle" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">rotation_max_angle</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.rotation_max_angle" title="Permalink to this definition">#</a></dt>
 <dd><p>Maximum rotation angle in degrees in [-180, 180].</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -790,7 +835,7 @@ to the center of the image. See <code class="xref py py-obj docutils literal not
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.translate">
-<span class="sig-name descname"><span class="pre">translate</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.translate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">translate</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.translate" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, translational augmentation will be applied. The values are
 sampled independently for x and y coordinates. See
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">imgaug.augmenters.geometric.Affine</span></code>.</p>
@@ -803,7 +848,7 @@ sampled independently for x and y coordinates. See
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.translate_min">
-<span class="sig-name descname"><span class="pre">translate_min</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.translate_min" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">translate_min</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.translate_min" title="Permalink to this definition">#</a></dt>
 <dd><p>Minimum translation in integer pixel units.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -814,7 +859,7 @@ sampled independently for x and y coordinates. See
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.translate_max">
-<span class="sig-name descname"><span class="pre">translate_max</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.translate_max" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">translate_max</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.translate_max" title="Permalink to this definition">#</a></dt>
 <dd><p>Maximum translation in integer pixel units.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -825,7 +870,7 @@ sampled independently for x and y coordinates. See
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.scale">
-<span class="sig-name descname"><span class="pre">scale</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.scale" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">scale</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.scale" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, scaling augmentation will be applied. See
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">imgaug.augmenters.geometric.Affine</span></code>.</p>
 <dl class="field-list simple">
@@ -837,7 +882,7 @@ sampled independently for x and y coordinates. See
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.scale_min">
-<span class="sig-name descname"><span class="pre">scale_min</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.scale_min" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">scale_min</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.scale_min" title="Permalink to this definition">#</a></dt>
 <dd><p>Minimum scaling factor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -848,7 +893,7 @@ sampled independently for x and y coordinates. See
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.scale_max">
-<span class="sig-name descname"><span class="pre">scale_max</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.scale_max" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">scale_max</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.scale_max" title="Permalink to this definition">#</a></dt>
 <dd><p>Maximum scaling factor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -859,7 +904,7 @@ sampled independently for x and y coordinates. See
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.uniform_noise">
-<span class="sig-name descname"><span class="pre">uniform_noise</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.uniform_noise" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">uniform_noise</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.uniform_noise" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, uniformly distributed noise will be added to the image.
 This is effectively adding a different random value to each pixel to
 simulate shot noise. See <code class="xref py py-obj docutils literal notranslate"><span class="pre">imgaug.augmenters.arithmetic.AddElementwise</span></code>.</p>
@@ -872,7 +917,7 @@ simulate shot noise. See <code class="xref py py-obj docutils literal notranslat
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.uniform_noise_min_val">
-<span class="sig-name descname"><span class="pre">uniform_noise_min_val</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.uniform_noise_min_val" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">uniform_noise_min_val</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.uniform_noise_min_val" title="Permalink to this definition">#</a></dt>
 <dd><p>Minimum value to add.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -883,7 +928,7 @@ simulate shot noise. See <code class="xref py py-obj docutils literal notranslat
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.uniform_noise_max_val">
-<span class="sig-name descname"><span class="pre">uniform_noise_max_val</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.uniform_noise_max_val" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">uniform_noise_max_val</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.uniform_noise_max_val" title="Permalink to this definition">#</a></dt>
 <dd><p>Maximum value to add.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -894,7 +939,7 @@ simulate shot noise. See <code class="xref py py-obj docutils literal notranslat
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.gaussian_noise">
-<span class="sig-name descname"><span class="pre">gaussian_noise</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.gaussian_noise" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">gaussian_noise</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.gaussian_noise" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, normally distributed noise will be added to the image.
 This is similar to uniform noise, but can provide a tigher bound around a
 mean noise magnitude. This is applied independently to each pixel.
@@ -908,7 +953,7 @@ See <code class="xref py py-obj docutils literal notranslate"><span class="pre">
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.gaussian_noise_mean">
-<span class="sig-name descname"><span class="pre">gaussian_noise_mean</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.gaussian_noise_mean" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">gaussian_noise_mean</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.gaussian_noise_mean" title="Permalink to this definition">#</a></dt>
 <dd><p>Mean of the distribution to sample from.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -919,7 +964,7 @@ See <code class="xref py py-obj docutils literal notranslate"><span class="pre">
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.gaussian_noise_stddev">
-<span class="sig-name descname"><span class="pre">gaussian_noise_stddev</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.gaussian_noise_stddev" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">gaussian_noise_stddev</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.gaussian_noise_stddev" title="Permalink to this definition">#</a></dt>
 <dd><p>Standard deviation of the distribution to sample from.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -930,7 +975,7 @@ See <code class="xref py py-obj docutils literal notranslate"><span class="pre">
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.contrast">
-<span class="sig-name descname"><span class="pre">contrast</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.contrast" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">contrast</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.contrast" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, gamma constrast adjustment will be applied to the image.
 This scales all pixel values by <code class="xref py py-obj docutils literal notranslate"><span class="pre">x</span> <span class="pre">**</span> <span class="pre">gamma</span></code> where <code class="xref py py-obj docutils literal notranslate"><span class="pre">x</span></code> is the pixel value in
 the [0, 1] range. Values in [0, 255] are first scaled to [0, 1]. See
@@ -944,7 +989,7 @@ the [0, 1] range. Values in [0, 255] are first scaled to [0, 1]. See
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.contrast_min_gamma">
-<span class="sig-name descname"><span class="pre">contrast_min_gamma</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.contrast_min_gamma" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">contrast_min_gamma</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.contrast_min_gamma" title="Permalink to this definition">#</a></dt>
 <dd><p>Minimum gamma to use for augmentation. Reasonable values are
 in [0.5, 2.0].</p>
 <dl class="field-list simple">
@@ -956,7 +1001,7 @@ in [0.5, 2.0].</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.contrast_max_gamma">
-<span class="sig-name descname"><span class="pre">contrast_max_gamma</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.contrast_max_gamma" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">contrast_max_gamma</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.contrast_max_gamma" title="Permalink to this definition">#</a></dt>
 <dd><p>Maximum gamma to use for augmentation. Reasonable values are
 in [0.5, 2.0].</p>
 <dl class="field-list simple">
@@ -968,7 +1013,7 @@ in [0.5, 2.0].</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.brightness">
-<span class="sig-name descname"><span class="pre">brightness</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.brightness" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">brightness</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.brightness" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, the image brightness will be augmented. This adjustment
 simply adds the same value to all pixels in the image to simulate broadfield
 illumination change. See <code class="xref py py-obj docutils literal notranslate"><span class="pre">imgaug.augmenters.arithmetic.Add</span></code>.</p>
@@ -981,7 +1026,7 @@ illumination change. See <code class="xref py py-obj docutils literal notranslat
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.brightness_min_val">
-<span class="sig-name descname"><span class="pre">brightness_min_val</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.brightness_min_val" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">brightness_min_val</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.brightness_min_val" title="Permalink to this definition">#</a></dt>
 <dd><p>Minimum value to add to all pixels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -992,7 +1037,7 @@ illumination change. See <code class="xref py py-obj docutils literal notranslat
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.brightness_max_val">
-<span class="sig-name descname"><span class="pre">brightness_max_val</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.brightness_max_val" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">brightness_max_val</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.brightness_max_val" title="Permalink to this definition">#</a></dt>
 <dd><p>Maximum value to add to all pixels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1003,7 +1048,7 @@ illumination change. See <code class="xref py py-obj docutils literal notranslat
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.random_crop">
-<span class="sig-name descname"><span class="pre">random_crop</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.random_crop" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">random_crop</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.random_crop" title="Permalink to this definition">#</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, performs random crops on the image. This is useful for
 training efficiently on large resolution images, but may fail to learn
 global structure beyond the crop size. Random cropping will be applied after
@@ -1017,7 +1062,7 @@ the augmentations above.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.random_crop_width">
-<span class="sig-name descname"><span class="pre">random_crop_width</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.random_crop_width" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">random_crop_width</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.random_crop_width" title="Permalink to this definition">#</a></dt>
 <dd><p>Width of random crops.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1028,7 +1073,7 @@ the augmentations above.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.random_crop_height">
-<span class="sig-name descname"><span class="pre">random_crop_height</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.random_crop_height" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">random_crop_height</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.random_crop_height" title="Permalink to this definition">#</a></dt>
 <dd><p>Height of random crops.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1039,7 +1084,7 @@ the augmentations above.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.random_flip">
-<span class="sig-name descname"><span class="pre">random_flip</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.random_flip" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">random_flip</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.random_flip" title="Permalink to this definition">#</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, images will be randomly reflected. The coordinates of
 the instances will be adjusted accordingly. Body parts that are left/right
 symmetric must be marked on the skeleton in order to be swapped correctly.</p>
@@ -1052,7 +1097,7 @@ symmetric must be marked on the skeleton in order to be swapped correctly.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.AugmentationConfig.flip_horizontal">
-<span class="sig-name descname"><span class="pre">flip_horizontal</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.flip_horizontal" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">flip_horizontal</span></span><a class="headerlink" href="#sleap.nn.config.optimization.AugmentationConfig.flip_horizontal" title="Permalink to this definition">#</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, flip images left/right when randomly reflecting
 them. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, flipping is down up/down instead.</p>
 <dl class="field-list simple">
@@ -1066,11 +1111,11 @@ them. If <code class="xref py py-obj docutils literal notranslate"><span class="
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.EarlyStoppingConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.optimization.</span></span><span class="sig-name descname"><span class="pre">EarlyStoppingConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stop_training_on_plateau</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plateau_min_delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plateau_patience</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/config/optimization.py#L151-L167"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.optimization.EarlyStoppingConfig" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.optimization.</span></span><span class="sig-name descname"><span class="pre">EarlyStoppingConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stop_training_on_plateau</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plateau_min_delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plateau_patience</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/config/optimization.py#L151-L167"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.optimization.EarlyStoppingConfig" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration for early stopping.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.EarlyStoppingConfig.stop_training_on_plateau">
-<span class="sig-name descname"><span class="pre">stop_training_on_plateau</span></span><a class="headerlink" href="#sleap.nn.config.optimization.EarlyStoppingConfig.stop_training_on_plateau" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">stop_training_on_plateau</span></span><a class="headerlink" href="#sleap.nn.config.optimization.EarlyStoppingConfig.stop_training_on_plateau" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, the training will terminate automatically
 when the validation set loss plateaus. This can save time and compute
 resources when there are minimal improvements to be gained from further
@@ -1084,7 +1129,7 @@ training, as well as to prevent training into the overfitting regime.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.EarlyStoppingConfig.plateau_min_delta">
-<span class="sig-name descname"><span class="pre">plateau_min_delta</span></span><a class="headerlink" href="#sleap.nn.config.optimization.EarlyStoppingConfig.plateau_min_delta" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">plateau_min_delta</span></span><a class="headerlink" href="#sleap.nn.config.optimization.EarlyStoppingConfig.plateau_min_delta" title="Permalink to this definition">#</a></dt>
 <dd><p>Minimum absolute decrease in the loss in order to consider an
 epoch as not in a plateau.</p>
 <dl class="field-list simple">
@@ -1096,7 +1141,7 @@ epoch as not in a plateau.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.EarlyStoppingConfig.plateau_patience">
-<span class="sig-name descname"><span class="pre">plateau_patience</span></span><a class="headerlink" href="#sleap.nn.config.optimization.EarlyStoppingConfig.plateau_patience" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">plateau_patience</span></span><a class="headerlink" href="#sleap.nn.config.optimization.EarlyStoppingConfig.plateau_patience" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of epochs without an improvement of at least
 <a class="reference internal" href="#sleap.nn.config.optimization.EarlyStoppingConfig.plateau_min_delta" title="sleap.nn.config.optimization.EarlyStoppingConfig.plateau_min_delta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plateau_min_delta</span></code></a> in order for a plateau to be detected.</p>
 <dl class="field-list simple">
@@ -1110,11 +1155,11 @@ epoch as not in a plateau.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.HardKeypointMiningConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.optimization.</span></span><span class="sig-name descname"><span class="pre">HardKeypointMiningConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">online_mining</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hard_to_easy_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_hard_keypoints</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_hard_keypoints</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/config/optimization.py#L91-L118"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.optimization.HardKeypointMiningConfig" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.optimization.</span></span><span class="sig-name descname"><span class="pre">HardKeypointMiningConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">online_mining</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hard_to_easy_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_hard_keypoints</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_hard_keypoints</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/config/optimization.py#L91-L118"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.optimization.HardKeypointMiningConfig" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration for online hard keypoint mining.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.HardKeypointMiningConfig.online_mining">
-<span class="sig-name descname"><span class="pre">online_mining</span></span><a class="headerlink" href="#sleap.nn.config.optimization.HardKeypointMiningConfig.online_mining" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">online_mining</span></span><a class="headerlink" href="#sleap.nn.config.optimization.HardKeypointMiningConfig.online_mining" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, online hard keypoint mining (OHKM) will be enabled. When
 this is enabled, the loss is computed per keypoint (or edge for PAFs) and
 sorted from lowest (easy) to highest (hard). The hard keypoint loss will be
@@ -1131,7 +1176,7 @@ equally in the loss.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.HardKeypointMiningConfig.hard_to_easy_ratio">
-<span class="sig-name descname"><span class="pre">hard_to_easy_ratio</span></span><a class="headerlink" href="#sleap.nn.config.optimization.HardKeypointMiningConfig.hard_to_easy_ratio" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">hard_to_easy_ratio</span></span><a class="headerlink" href="#sleap.nn.config.optimization.HardKeypointMiningConfig.hard_to_easy_ratio" title="Permalink to this definition">#</a></dt>
 <dd><p>The minimum ratio of the individual keypoint loss with
 respect to the lowest keypoint loss in order to be considered as “hard”.
 This helps to switch focus on across groups of keypoints during training.</p>
@@ -1144,7 +1189,7 @@ This helps to switch focus on across groups of keypoints during training.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.HardKeypointMiningConfig.min_hard_keypoints">
-<span class="sig-name descname"><span class="pre">min_hard_keypoints</span></span><a class="headerlink" href="#sleap.nn.config.optimization.HardKeypointMiningConfig.min_hard_keypoints" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">min_hard_keypoints</span></span><a class="headerlink" href="#sleap.nn.config.optimization.HardKeypointMiningConfig.min_hard_keypoints" title="Permalink to this definition">#</a></dt>
 <dd><p>The minimum number of keypoints that will be considered as
 “hard”, even if they are not below the <a class="reference internal" href="#sleap.nn.config.optimization.HardKeypointMiningConfig.hard_to_easy_ratio" title="sleap.nn.config.optimization.HardKeypointMiningConfig.hard_to_easy_ratio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hard_to_easy_ratio</span></code></a>.</p>
 <dl class="field-list simple">
@@ -1156,7 +1201,7 @@ This helps to switch focus on across groups of keypoints during training.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.HardKeypointMiningConfig.max_hard_keypoints">
-<span class="sig-name descname"><span class="pre">max_hard_keypoints</span></span><a class="headerlink" href="#sleap.nn.config.optimization.HardKeypointMiningConfig.max_hard_keypoints" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">max_hard_keypoints</span></span><a class="headerlink" href="#sleap.nn.config.optimization.HardKeypointMiningConfig.max_hard_keypoints" title="Permalink to this definition">#</a></dt>
 <dd><p>The maximum number of hard keypoints to apply scaling to.
 This can help when there are few very easy keypoints which may skew the
 ratio and result in loss scaling being applied to most keypoints, which can
@@ -1170,7 +1215,7 @@ reduce the impact of hard mining altogether.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.HardKeypointMiningConfig.loss_scale">
-<span class="sig-name descname"><span class="pre">loss_scale</span></span><a class="headerlink" href="#sleap.nn.config.optimization.HardKeypointMiningConfig.loss_scale" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">loss_scale</span></span><a class="headerlink" href="#sleap.nn.config.optimization.HardKeypointMiningConfig.loss_scale" title="Permalink to this definition">#</a></dt>
 <dd><p>Factor to scale the hard keypoint losses by.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1183,11 +1228,11 @@ reduce the impact of hard mining altogether.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.LearningRateScheduleConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.optimization.</span></span><span class="sig-name descname"><span class="pre">LearningRateScheduleConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reduce_on_plateau</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plateau_min_delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plateau_patience</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plateau_cooldown</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_learning_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-08</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/config/optimization.py#L122-L147"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.optimization.LearningRateScheduleConfig" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.optimization.</span></span><span class="sig-name descname"><span class="pre">LearningRateScheduleConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reduce_on_plateau</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plateau_min_delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plateau_patience</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plateau_cooldown</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_learning_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-08</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/config/optimization.py#L122-L147"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.optimization.LearningRateScheduleConfig" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration for learning rate scheduling.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.LearningRateScheduleConfig.reduce_on_plateau">
-<span class="sig-name descname"><span class="pre">reduce_on_plateau</span></span><a class="headerlink" href="#sleap.nn.config.optimization.LearningRateScheduleConfig.reduce_on_plateau" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">reduce_on_plateau</span></span><a class="headerlink" href="#sleap.nn.config.optimization.LearningRateScheduleConfig.reduce_on_plateau" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, learning rate will be reduced when the validation
 set loss plateaus. This improves training at later epochs when finer weight
 updates are required for fine-tuning the optimization, balancing out an
@@ -1201,7 +1246,7 @@ initially high learning rate required for practical initial optimization.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.LearningRateScheduleConfig.reduction_factor">
-<span class="sig-name descname"><span class="pre">reduction_factor</span></span><a class="headerlink" href="#sleap.nn.config.optimization.LearningRateScheduleConfig.reduction_factor" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">reduction_factor</span></span><a class="headerlink" href="#sleap.nn.config.optimization.LearningRateScheduleConfig.reduction_factor" title="Permalink to this definition">#</a></dt>
 <dd><p>Factor by which the learning rate will be scaled when a
 plateau is detected.</p>
 <dl class="field-list simple">
@@ -1213,7 +1258,7 @@ plateau is detected.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.LearningRateScheduleConfig.plateau_min_delta">
-<span class="sig-name descname"><span class="pre">plateau_min_delta</span></span><a class="headerlink" href="#sleap.nn.config.optimization.LearningRateScheduleConfig.plateau_min_delta" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">plateau_min_delta</span></span><a class="headerlink" href="#sleap.nn.config.optimization.LearningRateScheduleConfig.plateau_min_delta" title="Permalink to this definition">#</a></dt>
 <dd><p>Minimum absolute decrease in the loss in order to consider an
 epoch as not in a plateau.</p>
 <dl class="field-list simple">
@@ -1225,7 +1270,7 @@ epoch as not in a plateau.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.LearningRateScheduleConfig.plateau_patience">
-<span class="sig-name descname"><span class="pre">plateau_patience</span></span><a class="headerlink" href="#sleap.nn.config.optimization.LearningRateScheduleConfig.plateau_patience" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">plateau_patience</span></span><a class="headerlink" href="#sleap.nn.config.optimization.LearningRateScheduleConfig.plateau_patience" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of epochs without an improvement of at least
 <a class="reference internal" href="#sleap.nn.config.optimization.LearningRateScheduleConfig.plateau_min_delta" title="sleap.nn.config.optimization.LearningRateScheduleConfig.plateau_min_delta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plateau_min_delta</span></code></a> in order for a plateau to be detected.</p>
 <dl class="field-list simple">
@@ -1237,7 +1282,7 @@ epoch as not in a plateau.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.LearningRateScheduleConfig.plateau_cooldown">
-<span class="sig-name descname"><span class="pre">plateau_cooldown</span></span><a class="headerlink" href="#sleap.nn.config.optimization.LearningRateScheduleConfig.plateau_cooldown" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">plateau_cooldown</span></span><a class="headerlink" href="#sleap.nn.config.optimization.LearningRateScheduleConfig.plateau_cooldown" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of epochs after a reduction step before epochs without
 improvement will begin to be counted again.</p>
 <dl class="field-list simple">
@@ -1249,7 +1294,7 @@ improvement will begin to be counted again.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.LearningRateScheduleConfig.min_learning_rate">
-<span class="sig-name descname"><span class="pre">min_learning_rate</span></span><a class="headerlink" href="#sleap.nn.config.optimization.LearningRateScheduleConfig.min_learning_rate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">min_learning_rate</span></span><a class="headerlink" href="#sleap.nn.config.optimization.LearningRateScheduleConfig.min_learning_rate" title="Permalink to this definition">#</a></dt>
 <dd><p>The minimum absolute value that the learning rate can be
 reduced to.</p>
 <dl class="field-list simple">
@@ -1263,11 +1308,11 @@ reduced to.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.optimization.</span></span><span class="sig-name descname"><span class="pre">OptimizationConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preload_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">augmentation_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.optimization.AugmentationConfig" title="sleap.nn.config.optimization.AugmentationConfig"><span class="pre">sleap.nn.config.optimization.AugmentationConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">online_shuffling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle_buffer_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefetch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batches_per_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_batches_per_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_batches_per_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_val_batches_per_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'adam'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_learning_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate_schedule</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.optimization.LearningRateScheduleConfig" title="sleap.nn.config.optimization.LearningRateScheduleConfig"><span class="pre">sleap.nn.config.optimization.LearningRateScheduleConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hard_keypoint_mining</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.optimization.HardKeypointMiningConfig" title="sleap.nn.config.optimization.HardKeypointMiningConfig"><span class="pre">sleap.nn.config.optimization.HardKeypointMiningConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_stopping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.optimization.EarlyStoppingConfig" title="sleap.nn.config.optimization.EarlyStoppingConfig"><span class="pre">sleap.nn.config.optimization.EarlyStoppingConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/config/optimization.py#L171-L254"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.optimization.</span></span><span class="sig-name descname"><span class="pre">OptimizationConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preload_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">augmentation_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.optimization.AugmentationConfig" title="sleap.nn.config.optimization.AugmentationConfig"><span class="pre">sleap.nn.config.optimization.AugmentationConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">online_shuffling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle_buffer_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefetch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batches_per_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_batches_per_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_batches_per_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_val_batches_per_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'adam'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_learning_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate_schedule</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.optimization.LearningRateScheduleConfig" title="sleap.nn.config.optimization.LearningRateScheduleConfig"><span class="pre">sleap.nn.config.optimization.LearningRateScheduleConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hard_keypoint_mining</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.optimization.HardKeypointMiningConfig" title="sleap.nn.config.optimization.HardKeypointMiningConfig"><span class="pre">sleap.nn.config.optimization.HardKeypointMiningConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_stopping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.optimization.EarlyStoppingConfig" title="sleap.nn.config.optimization.EarlyStoppingConfig"><span class="pre">sleap.nn.config.optimization.EarlyStoppingConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/config/optimization.py#L171-L254"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig" title="Permalink to this definition">#</a></dt>
 <dd><p>Optimization configuration.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig.preload_data">
-<span class="sig-name descname"><span class="pre">preload_data</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.preload_data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">preload_data</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.preload_data" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, the data from the training/validation/test labels will be
 loaded into memory at the beginning of training. If False, the data will be
 loaded every time it is accessed. Preloading can considerably speed up the
@@ -1283,7 +1328,7 @@ examples or when the raw data is on (slow) network storage.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig.augmentation_config">
-<span class="sig-name descname"><span class="pre">augmentation_config</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.augmentation_config" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">augmentation_config</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.augmentation_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration options related to data augmentation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1294,7 +1339,7 @@ examples or when the raw data is on (slow) network storage.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig.online_shuffling">
-<span class="sig-name descname"><span class="pre">online_shuffling</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.online_shuffling" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">online_shuffling</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.online_shuffling" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, data will be shuffled online by maintaining a buffer
 of examples that are sampled from at each step. This allows for
 randomization of data ordering, resulting in more varied mini-batch
@@ -1309,7 +1354,7 @@ are shuffled at the start of training regardless.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig.shuffle_buffer_size">
-<span class="sig-name descname"><span class="pre">shuffle_buffer_size</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.shuffle_buffer_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">shuffle_buffer_size</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.shuffle_buffer_size" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of examples to keep in a buffer to sample uniformly
 from. This should be set to relatively low number as it requires an
 additional copy of each data example to be stored in memory. If set to -1,
@@ -1324,7 +1369,7 @@ the cost of increased memory usage.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig.prefetch">
-<span class="sig-name descname"><span class="pre">prefetch</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.prefetch" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">prefetch</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.prefetch" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, data will generated in parallel to training to minimize the
 bottleneck of the preprocessing pipeline.</p>
 <dl class="field-list simple">
@@ -1336,7 +1381,7 @@ bottleneck of the preprocessing pipeline.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig.batch_size">
-<span class="sig-name descname"><span class="pre">batch_size</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.batch_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">batch_size</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.batch_size" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of examples per minibatch, i.e., a single step of training.
 Higher numbers can increase generalization performance by averaging model
 gradient updates over a larger number of examples at the cost of
@@ -1352,7 +1397,7 @@ process when few but varied examples are available.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig.batches_per_epoch">
-<span class="sig-name descname"><span class="pre">batches_per_epoch</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.batches_per_epoch" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">batches_per_epoch</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.batches_per_epoch" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of minibatches (steps) to train for in an epoch. If
 set to None, this is set to the number of batches in the training data or
 <a class="reference internal" href="#sleap.nn.config.optimization.OptimizationConfig.min_batches_per_epoch" title="sleap.nn.config.optimization.OptimizationConfig.min_batches_per_epoch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_batches_per_epoch</span></code></a>, whichever is largest. At the end of each epoch, the
@@ -1373,7 +1418,7 @@ hyperparameter tuning heuristics only consider epoch-to-epoch performance.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig.min_batches_per_epoch">
-<span class="sig-name descname"><span class="pre">min_batches_per_epoch</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.min_batches_per_epoch" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">min_batches_per_epoch</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.min_batches_per_epoch" title="Permalink to this definition">#</a></dt>
 <dd><p>The minimum number of batches per epoch if
 <a class="reference internal" href="#sleap.nn.config.optimization.OptimizationConfig.batches_per_epoch" title="sleap.nn.config.optimization.OptimizationConfig.batches_per_epoch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">batches_per_epoch</span></code></a> is set to None. No effect if the batches per epoch is
 explicitly specified. This should be set to 200-400 to compensate for short
@@ -1387,7 +1432,7 @@ loops through the data when there are few examples.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig.val_batches_per_epoch">
-<span class="sig-name descname"><span class="pre">val_batches_per_epoch</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.val_batches_per_epoch" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">val_batches_per_epoch</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.val_batches_per_epoch" title="Permalink to this definition">#</a></dt>
 <dd><p>Same as <a class="reference internal" href="#sleap.nn.config.optimization.OptimizationConfig.batches_per_epoch" title="sleap.nn.config.optimization.OptimizationConfig.batches_per_epoch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">batches_per_epoch</span></code></a>, but for the validation set.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1398,7 +1443,7 @@ loops through the data when there are few examples.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig.min_val_batches_per_epoch">
-<span class="sig-name descname"><span class="pre">min_val_batches_per_epoch</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.min_val_batches_per_epoch" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">min_val_batches_per_epoch</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.min_val_batches_per_epoch" title="Permalink to this definition">#</a></dt>
 <dd><p>Same as <a class="reference internal" href="#sleap.nn.config.optimization.OptimizationConfig.min_batches_per_epoch" title="sleap.nn.config.optimization.OptimizationConfig.min_batches_per_epoch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_batches_per_epoch</span></code></a>, but for the
 validation set.</p>
 <dl class="field-list simple">
@@ -1410,7 +1455,7 @@ validation set.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig.epochs">
-<span class="sig-name descname"><span class="pre">epochs</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.epochs" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">epochs</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.epochs" title="Permalink to this definition">#</a></dt>
 <dd><p>Maximum number of epochs to train for. Training can be stopped manually
 or automatically if early stopping is enabled and a plateau is detected.</p>
 <dl class="field-list simple">
@@ -1422,7 +1467,7 @@ or automatically if early stopping is enabled and a plateau is detected.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig.optimizer">
-<span class="sig-name descname"><span class="pre">optimizer</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.optimizer" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">optimizer</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.optimizer" title="Permalink to this definition">#</a></dt>
 <dd><p>Name of the optimizer to use for training. This is typically “adam”
 but the name of any class from <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.optimizers</span></code> may be used. If “adam”
 is specified, the Adam optimizer will have AMSGrad enabled.</p>
@@ -1435,7 +1480,7 @@ is specified, the Adam optimizer will have AMSGrad enabled.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig.initial_learning_rate">
-<span class="sig-name descname"><span class="pre">initial_learning_rate</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.initial_learning_rate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">initial_learning_rate</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.initial_learning_rate" title="Permalink to this definition">#</a></dt>
 <dd><p>The initial learning rate to use for the optimizer. This
 is typically set to 1e-3 or 1e-4, and can be decreased automatically if
 learning rate reduction on plateau is enabled. If this is too high or too
@@ -1449,7 +1494,7 @@ low, the training may fail to find good initial local minima to descend.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig.learning_rate_schedule">
-<span class="sig-name descname"><span class="pre">learning_rate_schedule</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.learning_rate_schedule" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">learning_rate_schedule</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.learning_rate_schedule" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration options related to learning rate
 scheduling.</p>
 <dl class="field-list simple">
@@ -1461,7 +1506,7 @@ scheduling.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig.hard_keypoint_mining">
-<span class="sig-name descname"><span class="pre">hard_keypoint_mining</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.hard_keypoint_mining" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">hard_keypoint_mining</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.hard_keypoint_mining" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration options related to online hard keypoint
 mining.</p>
 <dl class="field-list simple">
@@ -1473,7 +1518,7 @@ mining.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.optimization.OptimizationConfig.early_stopping">
-<span class="sig-name descname"><span class="pre">early_stopping</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.early_stopping" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">early_stopping</span></span><a class="headerlink" href="#sleap.nn.config.optimization.OptimizationConfig.early_stopping" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration options related to early stopping of training on
 plateau/convergence is detected.</p>
 <dl class="field-list simple">
@@ -1485,14 +1530,16 @@ plateau/convergence is detected.</p>
 
 </dd></dl>
 
-</div>
+</section>
 
 
               </div>
               
-            
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
     <a class='left-prev' id="prev-link" href="sleap.nn.config.model.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
@@ -1508,24 +1555,28 @@ plateau/convergence is detected.</p>
     <i class="fas fa-angle-right"></i>
     </a>
 </div>
-            
+            </footer>
         </div>
     </div>
-    <footer class="footer">
-  <p>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Talmo D. Pereira<br/>
+  
+      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+</p>
+        </footer>
+    </div>
     
-      By Talmo D. Pereira<br/>
-    
-        &copy; Copyright 2019–2022, Talmo Lab.<br/>
-  </p>
-</footer>
-</main>
+</div>
 
 
       </div>
     </div>
   
-  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
 
   </body>
 </html>
