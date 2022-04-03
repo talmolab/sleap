@@ -1,4 +1,6 @@
+from tkinter import Button
 from PySide2.QtWidgets import QApplication
+from PySide2.QtCore import Qt, QPoint
 
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
@@ -268,21 +270,55 @@ def test_app_new_window(qtbot):
 
 def test_menu_actions(qtbot, centered_pair_predictions: Labels):
     def verify_visibility(expected_visibility: bool = True):
+        """Verify the visibility status of all instances in video player.
+
+        Args:
+            expected_visibility: Expected visibility of instance. Defaults to True.
+        """
         for inst in vp.instances:
             assert inst.isVisible() == expected_visibility
         for inst in vp.predicted_instances:
             assert inst.isVisible() == expected_visibility
 
     def toggle_and_verify_visibility(expected_visibility: bool = True):
+        """Toggle the visibility of all instances within video player, then verify
+        expected visibility of all instances.
+
+        Args:
+            expected_visibility: Expected visibility of instances. Defaults to True.
+        """
         qtbot.keyClick(window.menuBar(), window.shortcuts["show instances"].toString())
         verify_visibility(expected_visibility)
+
+    # test hide instances menu action (and its effect on instance color)
 
     # instantiate the window and load labels
     window: MainWindow = MainWindow()
     window.loadLabelsObject(centered_pair_predictions)
-    window.showNormal()
-    qtbot.wait(1000)
+    # TODO: window does not seem to show as expected on ubuntu
+    with qtbot.waitActive(window, timeout=2000):
+        window.showNormal()
     vp = window.player
+
+    # Enable distinct colors
+    window.state["color predicted"] = True
+
+    # Read colors for each instance in view
+    # TODO: revisit with LabeledFrame.unused_predictions() & instances_to_show()
+    visible_instances = window.state["labeled_frame"].instances_to_show
+    color_of_instances = {}
+    for inst in visible_instances:
+        item_color = window.color_manager.get_item_color(inst)
+        color_of_instances[inst] = item_color
+
+    # Turn predicted instance into user labeled instance
+    predicted_instance = vp.view.predicted_instances[0].instance
+    window.commands.newInstance(copy_instance=predicted_instance, mark_complete=False)
+
+    # Ensure colors of instances do not change
+    for inst in visible_instances:
+        item_color = window.color_manager.get_item_color(inst)
+        assert item_color == color_of_instances[inst]
 
     # Ensure instances are visible - should be the visible by default
     verify_visibility(True)
