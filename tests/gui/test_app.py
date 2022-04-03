@@ -1,6 +1,5 @@
 import pytest
 from PySide2.QtWidgets import QApplication
-from PySide2.QtCore import Qt, QPoint
 
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
