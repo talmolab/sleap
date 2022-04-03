@@ -485,6 +485,8 @@ class QtVideoPlayer(QWidget):
         """
         for inst in self.instances:
             inst.showInstances(show)
+        for inst in self.predicted_instances:
+            inst.showInstances(show)
 
     def showLabels(self, show):
         """Show/hide node labels for all instances in viewer.
