@@ -268,6 +268,9 @@ def test_app_new_window(qtbot):
     app.closeAllWindows()
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("ub"), reason="qtbot.waitActive times out on ubuntu"
+)
 def test_menu_actions(qtbot, centered_pair_predictions: Labels):
     def verify_visibility(expected_visibility: bool = True):
         """Verify the visibility status of all instances in video player.
@@ -290,9 +293,9 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
         qtbot.keyClick(window.menuBar(), window.shortcuts["show instances"].toString())
         verify_visibility(expected_visibility)
 
-    # test hide instances menu action (and its effect on instance color)
+    # Test hide instances menu action (and its effect on instance color)
 
-    # instantiate the window and load labels
+    # Instantiate the window and load labels
     window: MainWindow = MainWindow()
     window.loadLabelsObject(centered_pair_predictions)
     # TODO: window does not seem to show as expected on ubuntu
