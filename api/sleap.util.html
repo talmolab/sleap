@@ -4,11 +4,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sleap.util &#8212; SLEAP (v1.2.1)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>sleap.util &#8212; SLEAP (v1.2.2)</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet">
-  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,17 +20,14 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-
-    
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
@@ -40,8 +39,8 @@
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script src="../_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <link rel="canonical" href="/develop/api/sleap.util.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -55,7 +54,21 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
     
     <div class="container-fluid" id="banner"></div>
 
@@ -64,14 +77,10 @@
     <div class="container-xl">
       <div class="row">
           
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
-    
-        <div class="navbar-brand-box">
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="../index.html">
       
         <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
@@ -81,7 +90,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.1)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -299,11 +308,6 @@
    <li class="toctree-l2">
     <a class="reference internal" href="sleap.nn.model.html">
      sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.monitor.html">
-     sleap.nn.monitor
     </a>
    </li>
    <li class="toctree-l2">
@@ -676,8 +680,13 @@
 </ul>
 
     </div>
-</nav> <!-- To handle the deprecated key -->
-
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
 </div>
 
 
@@ -685,55 +694,90 @@
 
 
           
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<!-- A tiny helper pixel to detect if we've scrolled -->
 <div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+<!-- Main content -->
+<div class="col py-0 content-container">
     
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
-                
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
-            </div>
-            
-            <!-- Source interaction buttons -->
+    <div class="header-article row sticky-top noprint">
+        
 
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
-        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
-    <div class="dropdown-buttons sourcebuttons">
-        <a class="repository-button"
-            href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
-                data-toggle="tooltip" data-placement="left" title="Source repository"><i
-                    class="fab fa-github"></i>repository</button></a>
-        <a class="issues-button"
-            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.util.html&body=Your%20issue%20content%20here."><button
-                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
-                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
         
     </div>
+    <div class="header-article__right">
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/murthylab/sleap"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.util.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
 </div>
 
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-        </div>
     </div>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
                 <h1>sleap.util</h1>
@@ -744,16 +788,17 @@
                     </div>
                 </div>
             </div>
-            
+            <main id="main-content" role="main">
+                
               <div>
                 
-  <div class="section" id="module-sleap.util">
-<span id="sleap-util"></span><h1>sleap.util<a class="headerlink" href="#module-sleap.util" title="Permalink to this headline">¶</a></h1>
+  <section id="module-sleap.util">
+<span id="sleap-util"></span><h1>sleap.util<a class="headerlink" href="#module-sleap.util" title="Permalink to this headline">#</a></h1>
 <p>A miscellaneous set of utility functions. Try not to put things in here
 unless they really have no other place.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.attr_to_dtype">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">attr_to_dtype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/util.py#L67-L94"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.attr_to_dtype" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">attr_to_dtype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/util.py#L67-L94"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.attr_to_dtype" title="Permalink to this definition">#</a></dt>
 <dd><p>Converts classes with basic types to numpy composite dtypes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -767,7 +812,7 @@ unless they really have no other place.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.dict_cut">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">dict_cut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/util.py#L230-L244"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.dict_cut" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">dict_cut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/util.py#L230-L244"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.dict_cut" title="Permalink to this definition">#</a></dt>
 <dd><p>Helper function for creating subdictionary by numeric indexing of items.</p>
 <p>Assumes that <code class="xref py py-obj docutils literal notranslate"><span class="pre">dict.items()</span></code> will have a fixed order.</p>
 <dl class="field-list simple">
@@ -786,7 +831,7 @@ unless they really have no other place.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.find_files_by_suffix">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">find_files_by_suffix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">posix.DirEntry</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/util.py#L352-L386"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.find_files_by_suffix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">find_files_by_suffix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">posix.DirEntry</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/util.py#L352-L386"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.find_files_by_suffix" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns list of files matching suffix, optionally searching in subdirs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -805,7 +850,7 @@ unless they really have no other place.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.frame_list">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">frame_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame_str</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/util.py#L164-L182"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.frame_list" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">frame_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame_str</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/util.py#L164-L182"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.frame_list" title="Permalink to this definition">#</a></dt>
 <dd><p>Converts ‘n-m’ string to list of ints.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -819,7 +864,7 @@ unless they really have no other place.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.get_config_file">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">get_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shortname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_file_not_found</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_defaults</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/util.py#L254-L311"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.get_config_file" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">get_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shortname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_file_not_found</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_defaults</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/util.py#L254-L311"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.get_config_file" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the full path to the specified config file.</p>
 <p>The config file will be at ~/.sleap/&lt;version&gt;/&lt;shortname&gt;</p>
 <p>If that file doesn’t yet exist, we’ll look for a &lt;shortname&gt; file inside
@@ -845,13 +890,13 @@ regardless of whether it exists.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.get_package_file">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">get_package_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/util.py#L247-L251"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.get_package_file" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">get_package_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/util.py#L247-L251"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.get_package_file" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns full path to specified file within sleap package.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.json_dumps">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">json_dumps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/util.py#L46-L64"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.json_dumps" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">json_dumps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/util.py#L46-L64"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.json_dumps" title="Permalink to this definition">#</a></dt>
 <dd><p>A simple wrapper around the JSON encoder we are using.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -868,7 +913,7 @@ regardless of whether it exists.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.json_loads">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">json_loads</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_str</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/util.py#L30-L43"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.json_loads" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">json_loads</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_str</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/util.py#L30-L43"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.json_loads" title="Permalink to this definition">#</a></dt>
 <dd><p>A simple wrapper around the JSON decoder we are using.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -882,7 +927,7 @@ regardless of whether it exists.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.make_scoped_dictionary">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">make_scoped_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flat_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_nones</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/util.py#L327-L349"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.make_scoped_dictionary" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">make_scoped_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flat_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_nones</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/util.py#L327-L349"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.make_scoped_dictionary" title="Permalink to this definition">#</a></dt>
 <dd><p>Converts dictionary with scoped keys to dictionary of dictionaries.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -904,13 +949,13 @@ regardless of whether it exists.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.parse_uri_path">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">parse_uri_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/util.py#L389-L391"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.parse_uri_path" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">parse_uri_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/util.py#L389-L391"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.parse_uri_path" title="Permalink to this definition">#</a></dt>
 <dd><p>Parse a URI starting with ‘<a class="reference external" href="file:///">file:///</a>’ to a posix path.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.save_dict_to_hdf5">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">save_dict_to_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h5file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">h5py._hl.files.File</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/util.py#L116-L161"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.save_dict_to_hdf5" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">save_dict_to_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h5file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">h5py._hl.files.File</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/util.py#L116-L161"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.save_dict_to_hdf5" title="Permalink to this definition">#</a></dt>
 <dd><p>Saves dictionary to an HDF5 file.</p>
 <p>Calls itself recursively if items in dictionary are not
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">np.ndarray</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">np.int64</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">np.float64</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, or bytes.
@@ -935,7 +980,7 @@ Assume it is open.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.uniquify">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">uniquify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/util.py#L185-L202"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.uniquify" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">uniquify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/util.py#L185-L202"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.uniquify" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns unique elements from list, preserving order.</p>
 <p>Note: This will not work on Python 3.5 or lower since dicts don’t
 preserve order.</p>
@@ -952,7 +997,7 @@ order.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.usable_cpu_count">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">usable_cpu_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/util.py#L97-L113"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.usable_cpu_count" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">usable_cpu_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/util.py#L97-L113"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.usable_cpu_count" title="Permalink to this definition">#</a></dt>
 <dd><p>Gets number of CPUs usable by the current process.</p>
 <p>Takes into consideration cpusets restrictions.</p>
 <dl class="field-list simple">
@@ -964,7 +1009,7 @@ order.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.weak_filename_match">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">weak_filename_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/util.py#L205-L227"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.weak_filename_match" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">weak_filename_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/util.py#L205-L227"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.weak_filename_match" title="Permalink to this definition">#</a></dt>
 <dd><p>Check if paths probably point to same file.</p>
 <p>Compares the filename and names of two directories up.</p>
 <dl class="field-list simple">
@@ -980,14 +1025,16 @@ order.</p>
 </dl>
 </dd></dl>
 
-</div>
+</section>
 
 
               </div>
               
-            
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
     <a class='left-prev' id="prev-link" href="sleap.skeleton.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
@@ -1003,24 +1050,28 @@ order.</p>
     <i class="fas fa-angle-right"></i>
     </a>
 </div>
-            
+            </footer>
         </div>
     </div>
-    <footer class="footer">
-  <p>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Talmo D. Pereira<br/>
+  
+      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+</p>
+        </footer>
+    </div>
     
-      By Talmo D. Pereira<br/>
-    
-        &copy; Copyright 2019–2022, Talmo Lab.<br/>
-  </p>
-</footer>
-</main>
+</div>
 
 
       </div>
     </div>
   
-  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
 
   </body>
 </html>

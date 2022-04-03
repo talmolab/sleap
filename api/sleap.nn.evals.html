@@ -4,11 +4,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sleap.nn.evals &#8212; SLEAP (v1.2.1)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>sleap.nn.evals &#8212; SLEAP (v1.2.2)</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet">
-  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,17 +20,14 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-
-    
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
@@ -40,8 +39,8 @@
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script src="../_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <link rel="canonical" href="/develop/api/sleap.nn.evals.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -55,7 +54,21 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
     
     <div class="container-fluid" id="banner"></div>
 
@@ -64,14 +77,10 @@
     <div class="container-xl">
       <div class="row">
           
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
-    
-        <div class="navbar-brand-box">
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="../index.html">
       
         <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
@@ -81,7 +90,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.1)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -299,11 +308,6 @@
    <li class="toctree-l2">
     <a class="reference internal" href="sleap.nn.model.html">
      sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.monitor.html">
-     sleap.nn.monitor
     </a>
    </li>
    <li class="toctree-l2">
@@ -676,8 +680,13 @@
 </ul>
 
     </div>
-</nav> <!-- To handle the deprecated key -->
-
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
 </div>
 
 
@@ -685,55 +694,90 @@
 
 
           
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<!-- A tiny helper pixel to detect if we've scrolled -->
 <div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+<!-- Main content -->
+<div class="col py-0 content-container">
     
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
-                
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
-            </div>
-            
-            <!-- Source interaction buttons -->
+    <div class="header-article row sticky-top noprint">
+        
 
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
-        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
-    <div class="dropdown-buttons sourcebuttons">
-        <a class="repository-button"
-            href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
-                data-toggle="tooltip" data-placement="left" title="Source repository"><i
-                    class="fab fa-github"></i>repository</button></a>
-        <a class="issues-button"
-            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.evals.html&body=Your%20issue%20content%20here."><button
-                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
-                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
         
     </div>
+    <div class="header-article__right">
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/murthylab/sleap"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.evals.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
 </div>
 
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-        </div>
     </div>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
                 <h1>sleap.nn.evals</h1>
@@ -744,11 +788,12 @@
                     </div>
                 </div>
             </div>
-            
+            <main id="main-content" role="main">
+                
               <div>
                 
-  <div class="section" id="module-sleap.nn.evals">
-<span id="sleap-nn-evals"></span><h1>sleap.nn.evals<a class="headerlink" href="#module-sleap.nn.evals" title="Permalink to this headline">¶</a></h1>
+  <section id="module-sleap.nn.evals">
+<span id="sleap-nn-evals"></span><h1>sleap.nn.evals<a class="headerlink" href="#module-sleap.nn.evals" title="Permalink to this headline">#</a></h1>
 <p>Evaluation utilities for measuring pose estimation accuracy.</p>
 <p>To generate metrics, you’ll need two <code class="xref py py-obj docutils literal notranslate"><span class="pre">Labels</span></code> datasets, one with ground truth
 data and one with predicted data. The video paths in the datasets must match.
@@ -772,7 +817,7 @@ performing is to look at:</p>
 </div></blockquote>
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.evals.compute_dist_metrics">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">compute_dist_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dists</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/evals.py#L495-L520"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.compute_dist_metrics" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">compute_dist_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dists</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/evals.py#L495-L520"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.compute_dist_metrics" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute the Euclidean distance error at different percentiles.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -786,7 +831,7 @@ performing is to look at:</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.evals.compute_dists">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">compute_dists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">positive_pairs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.instance.html#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance"><span class="pre">sleap.instance.PredictedInstance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/evals.py#L472-L492"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.compute_dists" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">compute_dists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">positive_pairs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.instance.html#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance"><span class="pre">sleap.instance.PredictedInstance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/evals.py#L472-L492"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.compute_dists" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute Euclidean distances between matched pairs of instances.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -801,7 +846,7 @@ containing the matched pair of instances.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.evals.compute_generalized_voc_metrics">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">compute_generalized_voc_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">positive_pairs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.instance.html#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance"><span class="pre">sleap.instance.PredictedInstance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">false_negatives</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match_scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match_score_thresholds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">array([0.5,</span> <span class="pre">0.55,</span> <span class="pre">0.6,</span> <span class="pre">0.65,</span> <span class="pre">0.7,</span> <span class="pre">0.75,</span> <span class="pre">0.8,</span> <span class="pre">0.85,</span> <span class="pre">0.9,</span> <span class="pre">0.95])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recall_thresholds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">array([0.0,</span> <span class="pre">0.01,</span> <span class="pre">0.02,</span> <span class="pre">0.03,</span> <span class="pre">0.04,</span> <span class="pre">0.05,</span> <span class="pre">0.06,</span> <span class="pre">0.07,</span> <span class="pre">0.08,</span> <span class="pre">0.09,</span> <span class="pre">0.1,</span> <span class="pre">0.11,</span> <span class="pre">0.12,</span> <span class="pre">0.13,</span> <span class="pre">0.14,</span> <span class="pre">0.15,</span> <span class="pre">0.16,</span> <span class="pre">0.17,</span> <span class="pre">0.18,</span> <span class="pre">0.19,</span> <span class="pre">0.2,</span> <span class="pre">0.21,</span> <span class="pre">0.22,</span> <span class="pre">0.23,</span> <span class="pre">0.24,</span> <span class="pre">0.25,</span> <span class="pre">0.26,</span> <span class="pre">0.27,</span> <span class="pre">0.28,</span> <span class="pre">0.29,</span> <span class="pre">0.3,</span> <span class="pre">0.31,</span> <span class="pre">0.32,</span> <span class="pre">0.33,</span> <span class="pre">0.34,</span> <span class="pre">0.35,</span> <span class="pre">0.36,</span> <span class="pre">0.37,</span> <span class="pre">0.38,</span> <span class="pre">0.39,</span> <span class="pre">0.4,</span> <span class="pre">0.41,</span> <span class="pre">0.42,</span> <span class="pre">0.43,</span> <span class="pre">0.44,</span> <span class="pre">0.45,</span> <span class="pre">0.46,</span> <span class="pre">0.47,</span> <span class="pre">0.48,</span> <span class="pre">0.49,</span> <span class="pre">0.5,</span> <span class="pre">0.51,</span> <span class="pre">0.52,</span> <span class="pre">0.53,</span> <span class="pre">0.54,</span> <span class="pre">0.55,</span> <span class="pre">0.56,</span> <span class="pre">0.57,</span> <span class="pre">0.58,</span> <span class="pre">0.59,</span> <span class="pre">0.6,</span> <span class="pre">0.61,</span> <span class="pre">0.62,</span> <span class="pre">0.63,</span> <span class="pre">0.64,</span> <span class="pre">0.65,</span> <span class="pre">0.66,</span> <span class="pre">0.67,</span> <span class="pre">0.68,</span> <span class="pre">0.69,</span> <span class="pre">0.7,</span> <span class="pre">0.71,</span> <span class="pre">0.72,</span> <span class="pre">0.73,</span> <span class="pre">0.74,</span> <span class="pre">0.75,</span> <span class="pre">0.76,</span> <span class="pre">0.77,</span> <span class="pre">0.78,</span> <span class="pre">0.79,</span> <span class="pre">0.8,</span> <span class="pre">0.81,</span> <span class="pre">0.82,</span> <span class="pre">0.83,</span> <span class="pre">0.84,</span> <span class="pre">0.85,</span> <span class="pre">0.86,</span> <span class="pre">0.87,</span> <span class="pre">0.88,</span> <span class="pre">0.89,</span> <span class="pre">0.9,</span> <span class="pre">0.91,</span> <span class="pre">0.92,</span> <span class="pre">0.93,</span> <span class="pre">0.94,</span> <span class="pre">0.95,</span> <span class="pre">0.96,</span> <span class="pre">0.97,</span> <span class="pre">0.98,</span> <span class="pre">0.99,</span> <span class="pre">1.0])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gvoc'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/evals.py#L389-L469"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.compute_generalized_voc_metrics" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">compute_generalized_voc_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">positive_pairs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.instance.html#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance"><span class="pre">sleap.instance.PredictedInstance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">false_negatives</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match_scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match_score_thresholds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">array([0.5,</span> <span class="pre">0.55,</span> <span class="pre">0.6,</span> <span class="pre">0.65,</span> <span class="pre">0.7,</span> <span class="pre">0.75,</span> <span class="pre">0.8,</span> <span class="pre">0.85,</span> <span class="pre">0.9,</span> <span class="pre">0.95])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recall_thresholds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">array([0.0,</span> <span class="pre">0.01,</span> <span class="pre">0.02,</span> <span class="pre">0.03,</span> <span class="pre">0.04,</span> <span class="pre">0.05,</span> <span class="pre">0.06,</span> <span class="pre">0.07,</span> <span class="pre">0.08,</span> <span class="pre">0.09,</span> <span class="pre">0.1,</span> <span class="pre">0.11,</span> <span class="pre">0.12,</span> <span class="pre">0.13,</span> <span class="pre">0.14,</span> <span class="pre">0.15,</span> <span class="pre">0.16,</span> <span class="pre">0.17,</span> <span class="pre">0.18,</span> <span class="pre">0.19,</span> <span class="pre">0.2,</span> <span class="pre">0.21,</span> <span class="pre">0.22,</span> <span class="pre">0.23,</span> <span class="pre">0.24,</span> <span class="pre">0.25,</span> <span class="pre">0.26,</span> <span class="pre">0.27,</span> <span class="pre">0.28,</span> <span class="pre">0.29,</span> <span class="pre">0.3,</span> <span class="pre">0.31,</span> <span class="pre">0.32,</span> <span class="pre">0.33,</span> <span class="pre">0.34,</span> <span class="pre">0.35,</span> <span class="pre">0.36,</span> <span class="pre">0.37,</span> <span class="pre">0.38,</span> <span class="pre">0.39,</span> <span class="pre">0.4,</span> <span class="pre">0.41,</span> <span class="pre">0.42,</span> <span class="pre">0.43,</span> <span class="pre">0.44,</span> <span class="pre">0.45,</span> <span class="pre">0.46,</span> <span class="pre">0.47,</span> <span class="pre">0.48,</span> <span class="pre">0.49,</span> <span class="pre">0.5,</span> <span class="pre">0.51,</span> <span class="pre">0.52,</span> <span class="pre">0.53,</span> <span class="pre">0.54,</span> <span class="pre">0.55,</span> <span class="pre">0.56,</span> <span class="pre">0.57,</span> <span class="pre">0.58,</span> <span class="pre">0.59,</span> <span class="pre">0.6,</span> <span class="pre">0.61,</span> <span class="pre">0.62,</span> <span class="pre">0.63,</span> <span class="pre">0.64,</span> <span class="pre">0.65,</span> <span class="pre">0.66,</span> <span class="pre">0.67,</span> <span class="pre">0.68,</span> <span class="pre">0.69,</span> <span class="pre">0.7,</span> <span class="pre">0.71,</span> <span class="pre">0.72,</span> <span class="pre">0.73,</span> <span class="pre">0.74,</span> <span class="pre">0.75,</span> <span class="pre">0.76,</span> <span class="pre">0.77,</span> <span class="pre">0.78,</span> <span class="pre">0.79,</span> <span class="pre">0.8,</span> <span class="pre">0.81,</span> <span class="pre">0.82,</span> <span class="pre">0.83,</span> <span class="pre">0.84,</span> <span class="pre">0.85,</span> <span class="pre">0.86,</span> <span class="pre">0.87,</span> <span class="pre">0.88,</span> <span class="pre">0.89,</span> <span class="pre">0.9,</span> <span class="pre">0.91,</span> <span class="pre">0.92,</span> <span class="pre">0.93,</span> <span class="pre">0.94,</span> <span class="pre">0.95,</span> <span class="pre">0.96,</span> <span class="pre">0.97,</span> <span class="pre">0.98,</span> <span class="pre">0.99,</span> <span class="pre">1.0])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gvoc'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/evals.py#L389-L469"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.compute_generalized_voc_metrics" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute VOC metrics given matched pairs of instances.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -825,7 +870,7 @@ positive match.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.evals.compute_instance_area">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">compute_instance_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/evals.py#L116-L131"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.compute_instance_area" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">compute_instance_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/evals.py#L116-L131"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.compute_instance_area" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute the area of the bounding box of a set of keypoints.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -839,7 +884,7 @@ positive match.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.evals.compute_oks">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">compute_oks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points_gt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points_pr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stddev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.025</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/evals.py#L134-L237"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.compute_oks" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">compute_oks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points_gt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points_pr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stddev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.025</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/evals.py#L134-L237"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.compute_oks" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute the object keypoints similarity between sets of points.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -883,7 +928,7 @@ Estimation.” ICCV (2017).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.evals.compute_pck_metrics">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">compute_pck_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dists</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">array([1.0,</span> <span class="pre">2.0,</span> <span class="pre">3.0,</span> <span class="pre">4.0,</span> <span class="pre">5.0,</span> <span class="pre">6.0,</span> <span class="pre">7.0,</span> <span class="pre">8.0,</span> <span class="pre">9.0,</span> <span class="pre">10.0])</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/evals.py#L523-L546"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.compute_pck_metrics" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">compute_pck_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dists</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">array([1.0,</span> <span class="pre">2.0,</span> <span class="pre">3.0,</span> <span class="pre">4.0,</span> <span class="pre">5.0,</span> <span class="pre">6.0,</span> <span class="pre">7.0,</span> <span class="pre">8.0,</span> <span class="pre">9.0,</span> <span class="pre">10.0])</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/evals.py#L523-L546"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.compute_pck_metrics" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute PCK across a range of thresholds.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -900,7 +945,7 @@ Estimation.” ICCV (2017).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.evals.compute_visibility_conf">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">compute_visibility_conf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">positive_pairs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/evals.py#L549-L582"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.compute_visibility_conf" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">compute_visibility_conf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">positive_pairs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/evals.py#L549-L582"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.compute_visibility_conf" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute node visibility metrics.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -915,7 +960,7 @@ containing the matched pair of instances.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.evals.evaluate">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels_gt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_pr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">oks_stddev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oks_scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_labels_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/evals.py#L585-L647"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.evaluate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels_gt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_pr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">oks_stddev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oks_scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_labels_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/evals.py#L585-L647"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.evaluate" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculate all metrics from ground truth and predicted labels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -940,7 +985,7 @@ considered for matching.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.evals.evaluate_model">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">evaluate_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><span class="pre">sleap.nn.data.providers.LabelsReader</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'test'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/evals.py#L650-L738"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.evaluate_model" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">evaluate_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><span class="pre">sleap.nn.data.providers.LabelsReader</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'test'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/evals.py#L650-L738"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.evaluate_model" title="Permalink to this definition">#</a></dt>
 <dd><p>Evaluate a trained model and save metrics and predictions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -965,7 +1010,7 @@ the metrics failed to be computed.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.evals.find_frame_pairs">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">find_frame_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels_gt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_pr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_labels_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/evals.py#L61-L113"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.find_frame_pairs" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">find_frame_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels_gt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_pr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_labels_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/evals.py#L61-L113"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.find_frame_pairs" title="Permalink to this definition">#</a></dt>
 <dd><p>Find corresponding frames across two sets of labels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -984,7 +1029,7 @@ also be considered for matching.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.evals.load_metrics">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">load_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'val'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/evals.py#L741-L778"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.load_metrics" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">load_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'val'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/evals.py#L741-L778"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.load_metrics" title="Permalink to this definition">#</a></dt>
 <dd><p>Load metrics for a model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1027,7 +1072,7 @@ provided.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.evals.match_frame_pairs">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">match_frame_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame_pairs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stddev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_labels_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.instance.html#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance"><span class="pre">sleap.instance.PredictedInstance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/evals.py#L340-L386"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.match_frame_pairs" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">match_frame_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame_pairs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stddev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_labels_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.instance.html#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance"><span class="pre">sleap.instance.PredictedInstance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/evals.py#L340-L386"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.match_frame_pairs" title="Permalink to this definition">#</a></dt>
 <dd><p>Match all ground truth and predicted instances within each pair of frames.</p>
 <p>This is a wrapper for <a class="reference internal" href="#sleap.nn.evals.match_instances" title="sleap.nn.evals.match_instances"><code class="xref py py-obj docutils literal notranslate"><span class="pre">match_instances()</span></code></a> but operates on lists of frames.</p>
 <dl class="field-list simple">
@@ -1058,7 +1103,7 @@ matched.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.evals.match_instances">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">match_instances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame_gt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_pr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">stddev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_labels_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.instance.html#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance"><span class="pre">sleap.instance.PredictedInstance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/evals.py#L240-L337"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.match_instances" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">match_instances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame_gt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_pr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">stddev</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.025</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_labels_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.instance.html#sleap.instance.PredictedInstance" title="sleap.instance.PredictedInstance"><span class="pre">sleap.instance.PredictedInstance</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.Instance" title="sleap.instance.Instance"><span class="pre">sleap.instance.Instance</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/evals.py#L240-L337"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.match_instances" title="Permalink to this definition">#</a></dt>
 <dd><p>Match pairs of instances between ground truth and predictions in a frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1096,18 +1141,20 @@ of available instances.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.evals.replace_path">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">replace_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/evals.py#L52-L58"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.replace_path" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.evals.</span></span><span class="sig-name descname"><span class="pre">replace_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/evals.py#L52-L58"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.evals.replace_path" title="Permalink to this definition">#</a></dt>
 <dd><p>Replace video paths in unstructured video objects.</p>
 </dd></dl>
 
-</div>
+</section>
 
 
               </div>
               
-            
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
     <a class='left-prev' id="prev-link" href="sleap.nn.callbacks.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
@@ -1123,24 +1170,28 @@ of available instances.</p>
     <i class="fas fa-angle-right"></i>
     </a>
 </div>
-            
+            </footer>
         </div>
     </div>
-    <footer class="footer">
-  <p>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Talmo D. Pereira<br/>
+  
+      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+</p>
+        </footer>
+    </div>
     
-      By Talmo D. Pereira<br/>
-    
-        &copy; Copyright 2019–2022, Talmo Lab.<br/>
-  </p>
-</footer>
-</main>
+</div>
 
 
       </div>
     </div>
   
-  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
 
   </body>
 </html>

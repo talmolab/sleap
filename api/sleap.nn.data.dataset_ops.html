@@ -4,11 +4,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sleap.nn.data.dataset_ops &#8212; SLEAP (v1.2.1)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>sleap.nn.data.dataset_ops &#8212; SLEAP (v1.2.2)</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet">
-  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,17 +20,14 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-
-    
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
@@ -40,8 +39,8 @@
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script src="../_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <link rel="canonical" href="/develop/api/sleap.nn.data.dataset_ops.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -55,7 +54,21 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
     
     <div class="container-fluid" id="banner"></div>
 
@@ -64,14 +77,10 @@
     <div class="container-xl">
       <div class="row">
           
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
-    
-        <div class="navbar-brand-box">
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="../index.html">
       
         <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
@@ -81,7 +90,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.1)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -299,11 +308,6 @@
    <li class="toctree-l2">
     <a class="reference internal" href="sleap.nn.model.html">
      sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.monitor.html">
-     sleap.nn.monitor
     </a>
    </li>
    <li class="toctree-l2">
@@ -676,8 +680,13 @@
 </ul>
 
     </div>
-</nav> <!-- To handle the deprecated key -->
-
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
 </div>
 
 
@@ -685,55 +694,90 @@
 
 
           
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<!-- A tiny helper pixel to detect if we've scrolled -->
 <div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+<!-- Main content -->
+<div class="col py-0 content-container">
     
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
-                
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
-            </div>
-            
-            <!-- Source interaction buttons -->
+    <div class="header-article row sticky-top noprint">
+        
 
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
-        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
-    <div class="dropdown-buttons sourcebuttons">
-        <a class="repository-button"
-            href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
-                data-toggle="tooltip" data-placement="left" title="Source repository"><i
-                    class="fab fa-github"></i>repository</button></a>
-        <a class="issues-button"
-            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.data.dataset_ops.html&body=Your%20issue%20content%20here."><button
-                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
-                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
         
     </div>
+    <div class="header-article__right">
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/murthylab/sleap"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.data.dataset_ops.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
 </div>
 
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-        </div>
     </div>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
                 <h1>sleap.nn.data.dataset_ops</h1>
@@ -744,16 +788,17 @@
                     </div>
                 </div>
             </div>
-            
+            <main id="main-content" role="main">
+                
               <div>
                 
-  <div class="section" id="module-sleap.nn.data.dataset_ops">
-<span id="sleap-nn-data-dataset-ops"></span><h1>sleap.nn.data.dataset_ops<a class="headerlink" href="#module-sleap.nn.data.dataset_ops" title="Permalink to this headline">¶</a></h1>
+  <section id="module-sleap.nn.data.dataset_ops">
+<span id="sleap-nn-data-dataset-ops"></span><h1>sleap.nn.data.dataset_ops<a class="headerlink" href="#module-sleap.nn.data.dataset_ops" title="Permalink to this headline">#</a></h1>
 <p>Transformers for dataset (multi-example) operations, e.g., shuffling and batching.</p>
 <p>These are mostly wrappers for standard tf.data.Dataset ops.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Batcher">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.dataset_ops.</span></span><span class="sig-name descname"><span class="pre">Batcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_remainder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unrag</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/data/dataset_ops.py#L76-L158"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Batcher" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.dataset_ops.</span></span><span class="sig-name descname"><span class="pre">Batcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_remainder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unrag</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/dataset_ops.py#L76-L158"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Batcher" title="Permalink to this definition">#</a></dt>
 <dd><p>Batching transformer for use in pipelines.</p>
 <p>This class enables variable-length example keys to be batched by converting them to
 ragged tensors prior to concatenation, then converting them back to dense tensors.</p>
@@ -765,7 +810,7 @@ in inference, this transformer will be used on its own without dropping remainde
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Batcher.batch_size">
-<span class="sig-name descname"><span class="pre">batch_size</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Batcher.batch_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">batch_size</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Batcher.batch_size" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of elements within a batch. Every key will be stacked within
 their first axis (with expansion) such that it has <a class="reference internal" href="#sleap.nn.data.dataset_ops.Batcher.batch_size" title="sleap.nn.data.dataset_ops.Batcher.batch_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">batch_size</span></code></a> length.</p>
 <dl class="field-list simple">
@@ -777,7 +822,7 @@ their first axis (with expansion) such that it has <a class="reference internal"
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Batcher.drop_remainder">
-<span class="sig-name descname"><span class="pre">drop_remainder</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Batcher.drop_remainder" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">drop_remainder</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Batcher.drop_remainder" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, final elements with fewer than <a class="reference internal" href="#sleap.nn.data.dataset_ops.Batcher.batch_size" title="sleap.nn.data.dataset_ops.Batcher.batch_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">batch_size</span></code></a> examples
 will be dropped once the end of the input dataset iteration is reached. This
 should be True for training and False for inference.</p>
@@ -790,7 +835,7 @@ should be True for training and False for inference.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Batcher.unrag">
-<span class="sig-name descname"><span class="pre">unrag</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Batcher.unrag" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">unrag</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Batcher.unrag" title="Permalink to this definition">#</a></dt>
 <dd><p>If False, any tensors that were of variable length will be left as
 <a href="#id1"><span class="problematic" id="id2">`</span></a>tf.RaggedTensor`s. If True, the tensors will be converted to full tensors
 with NaN padding. Leaving tensors as ragged is useful when downstream ops
@@ -804,19 +849,19 @@ will continue to use them in variable length form.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Batcher.input_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Batcher.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Batcher.input_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the keys that incoming elements are expected to have.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Batcher.output_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Batcher.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Batcher.output_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the keys that outgoing elements will have.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Batcher.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/data/dataset_ops.py#L114-L158"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Batcher.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/dataset_ops.py#L114-L158"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Batcher.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a dataset with batched elements.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -841,13 +886,13 @@ with NaNs to the size of the largest element’s length for that key.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.LambdaFilter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.dataset_ops.</span></span><span class="sig-name descname"><span class="pre">LambdaFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/data/dataset_ops.py#L324-L362"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.LambdaFilter" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.dataset_ops.</span></span><span class="sig-name descname"><span class="pre">LambdaFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/dataset_ops.py#L324-L362"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.LambdaFilter" title="Permalink to this definition">#</a></dt>
 <dd><p>Transformer for filtering examples out of a dataset.</p>
 <p>This class is useful for eliminating examples that fail to meet some criteria, e.g.,
 when no peaks are found.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.LambdaFilter.filter_fn">
-<span class="sig-name descname"><span class="pre">filter_fn</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.LambdaFilter.filter_fn" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">filter_fn</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.LambdaFilter.filter_fn" title="Permalink to this definition">#</a></dt>
 <dd><p>Callable that takes an example dictionary as input and returns True
 if the the element should be kept.</p>
 <dl class="field-list simple">
@@ -859,19 +904,19 @@ if the the element should be kept.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.LambdaFilter.input_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.LambdaFilter.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.LambdaFilter.input_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the keys that incoming elements are expected to have.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.LambdaFilter.output_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.LambdaFilter.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.LambdaFilter.output_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the keys that outgoing elements will have.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.LambdaFilter.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/data/dataset_ops.py#L347-L362"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.LambdaFilter.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/dataset_ops.py#L347-L362"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.LambdaFilter.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a dataset with filtering applied.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -889,13 +934,13 @@ potentially fewer elements.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Prefetcher">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.dataset_ops.</span></span><span class="sig-name descname"><span class="pre">Prefetcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefetch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/data/dataset_ops.py#L232-L272"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Prefetcher" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.dataset_ops.</span></span><span class="sig-name descname"><span class="pre">Prefetcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefetch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/dataset_ops.py#L232-L272"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Prefetcher" title="Permalink to this definition">#</a></dt>
 <dd><p>Prefetching transformer for use in pipelines.</p>
 <p>Prefetches elements from the input dataset to minimize the processing bottleneck
 as elements are requested since prefetching can occur in parallel.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Prefetcher.prefetch">
-<span class="sig-name descname"><span class="pre">prefetch</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Prefetcher.prefetch" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">prefetch</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Prefetcher.prefetch" title="Permalink to this definition">#</a></dt>
 <dd><p>If False, returns the input dataset unmodified.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -906,7 +951,7 @@ as elements are requested since prefetching can occur in parallel.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Prefetcher.buffer_size">
-<span class="sig-name descname"><span class="pre">buffer_size</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Prefetcher.buffer_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">buffer_size</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Prefetcher.buffer_size" title="Permalink to this definition">#</a></dt>
 <dd><p>Keep <a class="reference internal" href="#sleap.nn.data.dataset_ops.Prefetcher.buffer_size" title="sleap.nn.data.dataset_ops.Prefetcher.buffer_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">buffer_size</span></code></a> elements loaded in the buffer. If set to -1
 (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.experimental.AUTOTUNE</span></code>), this value will be optimized
 automatically to decrease latency.</p>
@@ -919,19 +964,19 @@ automatically to decrease latency.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Prefetcher.input_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Prefetcher.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Prefetcher.input_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the keys that incoming elements are expected to have.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Prefetcher.output_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Prefetcher.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Prefetcher.output_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the keys that outgoing elements will have.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Prefetcher.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/data/dataset_ops.py#L258-L272"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Prefetcher.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/dataset_ops.py#L258-L272"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Prefetcher.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a dataset with prefetching to maintain a buffer during iteration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -949,7 +994,7 @@ GPU) while new elements are generated from the pipeline.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Preloader">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.dataset_ops.</span></span><span class="sig-name descname"><span class="pre">Preloader</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/data/dataset_ops.py#L276-L320"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Preloader" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.dataset_ops.</span></span><span class="sig-name descname"><span class="pre">Preloader</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/dataset_ops.py#L276-L320"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Preloader" title="Permalink to this definition">#</a></dt>
 <dd><p>Preload elements of the underlying dataset to generate in-memory examples.</p>
 <p>This transformer can lead to considerable performance improvements at the cost of
 memory consumption.</p>
@@ -957,7 +1002,7 @@ memory consumption.</p>
 examples are accessible directly via the <a class="reference internal" href="#sleap.nn.data.dataset_ops.Preloader.examples" title="sleap.nn.data.dataset_ops.Preloader.examples"><code class="xref py py-obj docutils literal notranslate"><span class="pre">examples</span></code></a> attribute.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Preloader.examples">
-<span class="sig-name descname"><span class="pre">examples</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Preloader.examples" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">examples</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Preloader.examples" title="Permalink to this definition">#</a></dt>
 <dd><p>Stored list of preloaded elements.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -968,19 +1013,19 @@ examples are accessible directly via the <a class="reference internal" href="#sl
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Preloader.input_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Preloader.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Preloader.input_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the keys that incoming elements are expected to have.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Preloader.output_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Preloader.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Preloader.output_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the keys that outgoing elements will have.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Preloader.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/data/dataset_ops.py#L301-L320"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Preloader.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/dataset_ops.py#L301-L320"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Preloader.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a dataset that generates preloaded elements.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1001,7 +1046,7 @@ iteration.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Repeater">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.dataset_ops.</span></span><span class="sig-name descname"><span class="pre">Repeater</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repeat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/data/dataset_ops.py#L181-L228"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Repeater" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.dataset_ops.</span></span><span class="sig-name descname"><span class="pre">Repeater</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repeat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/dataset_ops.py#L181-L228"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Repeater" title="Permalink to this definition">#</a></dt>
 <dd><p>Repeating transformer for use in pipelines.</p>
 <p>Repeats the underlying elements indefinitely or for a number of “iterations” or
 “epochs”.</p>
@@ -1015,7 +1060,7 @@ remainders if not shuffling.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Repeater.repeat">
-<span class="sig-name descname"><span class="pre">repeat</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Repeater.repeat" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">repeat</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Repeater.repeat" title="Permalink to this definition">#</a></dt>
 <dd><p>If False, returns the input dataset unmodified.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1026,7 +1071,7 @@ remainders if not shuffling.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Repeater.epochs">
-<span class="sig-name descname"><span class="pre">epochs</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Repeater.epochs" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">epochs</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Repeater.epochs" title="Permalink to this definition">#</a></dt>
 <dd><p>If -1, repeats the input dataset elements infinitely. Otherwise, loops
 through the elements of the input dataset this number of times.</p>
 <dl class="field-list simple">
@@ -1038,19 +1083,19 @@ through the elements of the input dataset this number of times.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Repeater.input_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Repeater.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Repeater.input_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the keys that incoming elements are expected to have.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Repeater.output_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Repeater.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Repeater.output_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the keys that outgoing elements will have.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Repeater.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/data/dataset_ops.py#L215-L228"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Repeater.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/dataset_ops.py#L215-L228"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Repeater.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a dataset with repeated loops over the input elements.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1067,7 +1112,7 @@ through the elements of the input dataset this number of times.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Shuffler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.dataset_ops.</span></span><span class="sig-name descname"><span class="pre">Shuffler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reshuffle_each_iteration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/data/dataset_ops.py#L14-L72"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Shuffler" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.dataset_ops.</span></span><span class="sig-name descname"><span class="pre">Shuffler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reshuffle_each_iteration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/dataset_ops.py#L14-L72"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Shuffler" title="Permalink to this definition">#</a></dt>
 <dd><p>Shuffling transformer for use in pipelines.</p>
 <p>The input to this transformer should not be repeated or batched (though the latter
 would technically work). Repeating prevents the shuffling from going through “epoch”
@@ -1083,7 +1128,7 @@ batches.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Shuffler.shuffle">
-<span class="sig-name descname"><span class="pre">shuffle</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Shuffler.shuffle" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">shuffle</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Shuffler.shuffle" title="Permalink to this definition">#</a></dt>
 <dd><p>If False, returns the input dataset unmodified.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1094,7 +1139,7 @@ batches.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Shuffler.buffer_size">
-<span class="sig-name descname"><span class="pre">buffer_size</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Shuffler.buffer_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">buffer_size</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Shuffler.buffer_size" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of examples to keep in a buffer to sample uniformly from. If
 set too high, it may take a long time to fill the initial buffer, especially
 if it resets every epoch.</p>
@@ -1107,7 +1152,7 @@ if it resets every epoch.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Shuffler.reshuffle_each_iteration">
-<span class="sig-name descname"><span class="pre">reshuffle_each_iteration</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Shuffler.reshuffle_each_iteration" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">reshuffle_each_iteration</span></span><a class="headerlink" href="#sleap.nn.data.dataset_ops.Shuffler.reshuffle_each_iteration" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, resets the sampling buffer every iteration
 through the underlying dataset.</p>
 <dl class="field-list simple">
@@ -1119,19 +1164,19 @@ through the underlying dataset.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Shuffler.input_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Shuffler.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Shuffler.input_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the keys that incoming elements are expected to have.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Shuffler.output_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Shuffler.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Shuffler.output_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the keys that outgoing elements will have.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Shuffler.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/data/dataset_ops.py#L53-L72"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Shuffler.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/dataset_ops.py#L53-L72"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Shuffler.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a dataset with shuffled element order.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1151,36 +1196,38 @@ boundaries since it never reaches the end of the iterator.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Unbatcher">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.dataset_ops.</span></span><span class="sig-name descname"><span class="pre">Unbatcher</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/data/dataset_ops.py#L162-L177"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Unbatcher" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.dataset_ops.</span></span><span class="sig-name descname"><span class="pre">Unbatcher</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/dataset_ops.py#L162-L177"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Unbatcher" title="Permalink to this definition">#</a></dt>
 <dd><p>Unbatching transformer for use in pipelines.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Unbatcher.input_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Unbatcher.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Unbatcher.input_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the keys that incoming elements are expected to have.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Unbatcher.output_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Unbatcher.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.dataset_ops.Unbatcher.output_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the keys that outgoing elements will have.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.dataset_ops.Unbatcher.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/data/dataset_ops.py#L175-L177"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Unbatcher.transform_dataset" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/dataset_ops.py#L175-L177"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.dataset_ops.Unbatcher.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a dataset with unbatched elements.</p>
 </dd></dl>
 
 </dd></dl>
 
-</div>
+</section>
 
 
               </div>
               
-            
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
     <a class='left-prev' id="prev-link" href="sleap.nn.data.confidence_maps.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
@@ -1196,24 +1243,28 @@ boundaries since it never reaches the end of the iterator.</p>
     <i class="fas fa-angle-right"></i>
     </a>
 </div>
-            
+            </footer>
         </div>
     </div>
-    <footer class="footer">
-  <p>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Talmo D. Pereira<br/>
+  
+      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+</p>
+        </footer>
+    </div>
     
-      By Talmo D. Pereira<br/>
-    
-        &copy; Copyright 2019–2022, Talmo Lab.<br/>
-  </p>
-</footer>
-</main>
+</div>
 
 
       </div>
     </div>
   
-  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
 
   </body>
 </html>

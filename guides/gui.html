@@ -4,11 +4,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GUI &#8212; SLEAP (v1.2.1)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>GUI &#8212; SLEAP (v1.2.2)</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet">
-  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,17 +20,14 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-
-    
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
@@ -40,8 +39,8 @@
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script src="../_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <link rel="canonical" href="/develop/guides/gui.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -55,7 +54,21 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
     
     <div class="container-fluid" id="banner"></div>
 
@@ -64,14 +77,10 @@
     <div class="container-xl">
       <div class="row">
           
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
-    
-        <div class="navbar-brand-box">
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="../index.html">
       
         <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
@@ -81,7 +90,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.1)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -299,11 +308,6 @@
    <li class="toctree-l2">
     <a class="reference internal" href="../api/sleap.nn.model.html">
      sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="../api/sleap.nn.monitor.html">
-     sleap.nn.monitor
     </a>
    </li>
    <li class="toctree-l2">
@@ -676,8 +680,13 @@
 </ul>
 
     </div>
-</nav> <!-- To handle the deprecated key -->
-
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
 </div>
 
 
@@ -685,55 +694,102 @@
 
 
           
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<!-- A tiny helper pixel to detect if we've scrolled -->
 <div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+<!-- Main content -->
+<div class="col py-0 content-container">
     
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
-                
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
-            </div>
-            
-            <!-- Source interaction buttons -->
-
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
-        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
-    <div class="dropdown-buttons sourcebuttons">
-        <a class="repository-button"
-            href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
-                data-toggle="tooltip" data-placement="left" title="Source repository"><i
-                    class="fab fa-github"></i>repository</button></a>
-        <a class="issues-button"
-            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fguides/gui.html&body=Your%20issue%20content%20here."><button
-                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
-                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+    <div class="header-article row sticky-top noprint">
         
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/murthylab/sleap"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fguides/gui.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
     </div>
 </div>
 
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-            <div class="tocsection onthispage pt-5 pb-3">
-                <i class="fas fa-list"></i> Contents
-            </div>
-            <nav id="bd-toc-nav" aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#menus">
    Menus
@@ -801,12 +857,11 @@
  </li>
 </ul>
 
-            </nav>
-        </div>
-    </div>
+    </nav>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
                 <h1>GUI</h1>
@@ -890,26 +945,27 @@
                     </div>
                 </div>
             </div>
-            
+            <main id="main-content" role="main">
+                
               <div>
                 
-  <div class="section" id="gui">
-<span id="id1"></span><h1>GUI<a class="headerlink" href="#gui" title="Permalink to this headline">¶</a></h1>
+  <section id="gui">
+<span id="id1"></span><h1>GUI<a class="headerlink" href="#gui" title="Permalink to this headline">#</a></h1>
 <p>The SLEAP labeling interface is accessible via the <code class="code docutils literal notranslate"><span class="pre">sleap_label</span></code> command (see <a class="reference internal" href="cli.html#cli"><span class="std std-ref">Command line interfaces</span></a>).</p>
-<div class="section" id="menus">
-<h2>Menus<a class="headerlink" href="#menus" title="Permalink to this headline">¶</a></h2>
+<section id="menus">
+<h2>Menus<a class="headerlink" href="#menus" title="Permalink to this headline">#</a></h2>
 <p>Note that many of the menu command have keyboard shortcuts which can be configured from “<strong>Keyboard Reference</strong>” in the “<strong>Help</strong>” menu.</p>
-</div>
-<div class="section" id="file">
-<h2>File<a class="headerlink" href="#file" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="file">
+<h2>File<a class="headerlink" href="#file" title="Permalink to this headline">#</a></h2>
 <p>“<strong>New…</strong>”, “<strong>Open…</strong>”, “Save, and “<strong>Save As…</strong>” have their usual behavior.</p>
 <p>“<strong>Import…</strong>” allows you to import the data external formats into a new SLEAP dataset. This includes <a class="reference external" href="http://cocodataset.org/#format-data">COCO</a> keypoint detection (<code class="code docutils literal notranslate"><span class="pre">.json</span></code> files), <a class="reference external" href="http://deeplabcut.org">DeepLabCut</a> (<code class="code docutils literal notranslate"><span class="pre">.csv</span></code>), <a class="reference external" href="http://deepposekit.org">DeepPoseKit</a> (<code class="code docutils literal notranslate"><span class="pre">.h5</span></code>), and <a class="reference external" href="https://github.com/talmo/leap">LEAP</a> (<code class="code docutils literal notranslate"><span class="pre">.mat</span></code>).</p>
 <p>“<strong>Merge Data From…</strong>” allows you to copy labels and/or predictions from another SLEAP dataset into the currently open project. This is useful because you can only train on data from a single SLEAP dataset, so you may need to import data before training. For instance, suppose you’ve trained a model and use it to get predictions on another video. You then open the predictions file in the GUI and realize that you’d like to correct some of the predictions and add those corrections to your training data. You can do this by importing data from the predictions file into the SLEAP project which has your training data.</p>
 <p>“<strong>Add Videos…</strong>” allows you to add videos to your currently open project.</p>
 <p>“<strong>Replace Videos…</strong>” allows you to <em>swap</em> the videos currently in your project with other videos. This is useful if you want to have your project access copies of the videos at a different path, e.g., if you copy the videos between a network drive and a local drive and want to change which is used by your project. This can also be used if you want to replace you videos with copies that have been re-encoded, cropped, or edited in some other way that doesn’t affect the frame numbers (since your annotations will be placed directly on the corresponding frames of the new video).</p>
-</div>
-<div class="section" id="go">
-<h2>Go<a class="headerlink" href="#go" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="go">
+<h2>Go<a class="headerlink" href="#go" title="Permalink to this headline">#</a></h2>
 <p>“<strong>Next Labeled Frame</strong>” will take you to the next frame of the video which has any labeled data—either labels added by the user or predictions.</p>
 <p>“<strong>Next User Labeled Frame</strong>” will take you to the next frame which has labels added by the user, skipping any frames which are unlabeled or have only predictions.</p>
 <p>“<strong>Next Suggestion</strong>” will take you to the next frame in the list of suggested frames. If you are currently on a suggested frame, it will take you to the next frame in the list, which may not be a later frame in the video (or even a frame in the same video). If you are not currently on a suggested frame, it will take you to the nearest subsequent suggested frame.</p>
@@ -917,9 +973,9 @@
 <p>“<strong>Next Video</strong>” will show the next video in the project (if your project has multiple videos). All the videos are listed in the “Videos” window.</p>
 <p>“<strong>Go to Frame…</strong>” allows you to go to a specific frame (in the current video) by frame number. It’s also handy if you want to copy the current frame number to the clipboard.</p>
 <p>“<strong>Select to Frame…</strong>” allows you to select the clip from the current frame to a specified frame. If you want to select from frames X to Y, you can use <strong>Go to</strong> to go to X then <strong>Select to</strong> to select from X to Y.</p>
-</div>
-<div class="section" id="view">
-<span id="id2"></span><h2>View<a class="headerlink" href="#view" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="view">
+<span id="id2"></span><h2>View<a class="headerlink" href="#view" title="Permalink to this headline">#</a></h2>
 <p>“<strong>Color Predicted Instances</strong>” allows you to toggle whether <em>predicted</em> instances are all shown in yellow, or whether to apply distinct colors to (e.g.) track identities. You should turn this on when proofreading predictions for a video.</p>
 <p>“<strong>Color Palette</strong>” allows you to choose the palette which will be used for coloring instances. Most of the palettes cycle colors, so that if there are five colors in the palette, the sixth item to color will be the same as the first. A few things to know:</p>
 <ul class="simple">
@@ -935,9 +991,9 @@
 <p>“<strong>Fit Instances to View</strong>” allows you to toggle whether the view is auto-zoomed to the instances in each frame. This can be useful when proofreading predictions.</p>
 <p>“<strong>Seekbar Header</strong>” allows you to plot relevant information above the seekbar. Note that the seekbar is not updated when you modify instances; it only updates when you select a new seekbar header.</p>
 <p>“<strong>Videos</strong>”, “<strong>Skeleton</strong>”, “<strong>Instances</strong>”, and “<strong>Labeling Suggestions</strong>” allow you to toggle which information windows are shown (by default these are docked to the right side of the main GUI window).</p>
-</div>
-<div class="section" id="labels">
-<h2>Labels<a class="headerlink" href="#labels" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="labels">
+<h2>Labels<a class="headerlink" href="#labels" title="Permalink to this headline">#</a></h2>
 <p>“<strong>Add Instance</strong>” will add an instance to the current frame. You can also add an instance by right-clicking within the frame. For predicted instances, you can also “convert” the predicted instance to a regular, editable instance by double-clicking on the predicted instance (the predictions are still there, but they won’t be shown unless you delete the editable instance you just created).</p>
 <p>“<strong>Instance Placement Method</strong>” allows you to pick how we determine where to place the instance and its nodes on the video frame. “Best” (the default) will first check for predicted instances in the current frame and create a new editable instance from one of the predicted instances (if you add multiple instances, it will do this for each predicted instance in turn). Otherwise, it will copy the location from another instance in a prior or the current frame, or will use a force-directed graph algorithm to place the nodes. You can also choose the “average” method which creates an “average” instance from the instances you’ve already labeled.</p>
 <p>“<strong>Delete Instance</strong>” will delete the currently selected instance (the selected instance will have an outline drawn around it and will be highlighted in the “Instances” window).</p>
@@ -947,9 +1003,9 @@
 <p>“<strong>Custom Instance Delete…</strong>” allows you to delete all the instances which meet criteria you specify: whether they are user instances or predicted instances, which frames they are on, and which track identities they have.</p>
 <p>“<strong>Select Next Instance</strong>” allows you to cycle through the instances in the current frame.</p>
 <p>“<strong>Clear Selection</strong>” allows you to deselect the selected instance.</p>
-</div>
-<div class="section" id="predict">
-<h2>Predict<a class="headerlink" href="#predict" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="predict">
+<h2>Predict<a class="headerlink" href="#predict" title="Permalink to this headline">#</a></h2>
 <p>“<strong>Run Training…</strong>” allows you to train a set of models from the data in your open project, and then optionally predict on some frames in the project.</p>
 <p>“<strong>Run Inference…</strong>” allows you to generate predictions using a pre-trained set of models. Any trained models in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">models</span></code> directory next to your current project will be listed, and you also have the option to select models saved elsewhere.</p>
 <p>“<strong>Evaluate Metrics for Trained Models…</strong>” provides you with information to evaluate all of your trained models. For example, you can see the recall and precision of predictions on frames with ground truth validation data (i.e., data withheld when training).</p>
@@ -961,16 +1017,16 @@
 <p>“<strong>Delete All Predictions with Low Score…</strong>” deletes all instances with a prediction score below the specified value. You’ll be asked for the value, and then asked to confirm before instances are deleted. Instance scores are shown in the “Instances” table and below the selected instance in the current frame.</p>
 <p>“<strong>Delete All Predictions beyond Frame Limit…</strong>” deletes the lowest scoring instances beyond some set number of instances in each frame. For example, if you know that there are only two animals in the video, this would let you keep just the two best predicted instances. You’ll be asked for the number of instances to keep, and then asked to confirm before instances are deleted.</p>
 <p>“<strong>Export Video with Visual Annotations…</strong>” allows you to export a video clip with any instances drawn on the frame (much as you can see in the GUI). If you select a clip in the seekbar, just those frames will be included in the new video; otherwise the whole (current) video will be used.</p>
-</div>
-<div class="section" id="help">
-<h2>Help<a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="help">
+<h2>Help<a class="headerlink" href="#help" title="Permalink to this headline">#</a></h2>
 <p>“<strong>Keyboard Shortcuts</strong>” allows you to view and change keyboard shortcuts for common menu and GUI actions.</p>
-</div>
-<div class="section" id="application-gui">
-<h2>Application GUI<a class="headerlink" href="#application-gui" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="mouse">
-<h2>Mouse<a class="headerlink" href="#mouse" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="application-gui">
+<h2>Application GUI<a class="headerlink" href="#application-gui" title="Permalink to this headline">#</a></h2>
+</section>
+<section id="mouse">
+<h2>Mouse<a class="headerlink" href="#mouse" title="Permalink to this headline">#</a></h2>
 <p><strong>Right-click</strong> (or control + click) on node: Toggle visibility</p>
 <p><strong>Right-click</strong> (or control + click) elsewhere on image: Add instance (with pop-up menu)</p>
 <p><strong>Alt + drag</strong>: Zoom into region</p>
@@ -982,9 +1038,9 @@
 <p><strong>Double-click</strong> on editable instance: Any missing nodes (nodes added to the skeleton after this instance was created) will be added and marked as “non-visible”</p>
 <p><strong>Click</strong> on instance: Select that instance</p>
 <p><strong>Click</strong> elsewhere on image: Clear selection</p>
-</div>
-<div class="section" id="navigation-keys">
-<h2>Navigation Keys<a class="headerlink" href="#navigation-keys" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="navigation-keys">
+<h2>Navigation Keys<a class="headerlink" href="#navigation-keys" title="Permalink to this headline">#</a></h2>
 <p><strong>Right arrow</strong> key: Move one frame forward</p>
 <p><strong>Left arrow</strong> key: Move one frame back</p>
 <p><strong>Down arrow</strong> key: Move a <em>medium</em> step forward (4 frames by default)</p>
@@ -998,35 +1054,37 @@
 <p class="admonition-title">Note</p>
 <p>These keys are the defaults; you can configure them with <strong>Keyboard Shortcuts</strong> in the <strong>Help</strong> menu.</p>
 </div>
-</div>
-<div class="section" id="selection-keys">
-<h2>Selection Keys<a class="headerlink" href="#selection-keys" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="selection-keys">
+<h2>Selection Keys<a class="headerlink" href="#selection-keys" title="Permalink to this headline">#</a></h2>
 <p><em>Number</em> (e.g., <strong>2</strong>) key: Select the instance corresponding to that number</p>
 <p><strong>Escape</strong> key: Deselect all instances</p>
-</div>
-<div class="section" id="seekbar">
-<h2>Seekbar<a class="headerlink" href="#seekbar" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="seekbar">
+<h2>Seekbar<a class="headerlink" href="#seekbar" title="Permalink to this headline">#</a></h2>
 <p><strong>Shift + drag</strong>: Select a range of frames</p>
 <p><strong>Shift + click</strong>: Clear frame selection</p>
 <p><strong>Alt + drag</strong>: Zoom into a range of frames</p>
 <p><strong>Alt + click</strong>: Zoom out so that all frames are visible in seekbar</p>
-</div>
-<div class="section" id="labeling-suggestions">
-<span id="suggestion-methods"></span><h2>Labeling Suggestions<a class="headerlink" href="#labeling-suggestions" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="labeling-suggestions">
+<span id="suggestion-methods"></span><h2>Labeling Suggestions<a class="headerlink" href="#labeling-suggestions" title="Permalink to this headline">#</a></h2>
 <p>There are various methods to generate a list “suggested” frames for labeling or proofreading.</p>
 <p>The <strong>sample</strong> method is a quick way to get some number of frames for every video in your project. You can tell it how many samples (frames) to take from each video, and whether they should be evenly spaced throughout a video (the “stride” sampling method) or randomly distributed.</p>
 <p>The <strong>image feature</strong> method uses various algorithms to give you visually distinctive frames, since you will be able to train more robust models if the frames you’ve labeled are more representative of the visual variations in your videos. Generating suggestions based on image features can be slow.</p>
 <p>The <strong>prediction score</strong> method will identify frames which have more than some number of instances predicted and where the instance prediction score is below some threshold. This method can be useful when proofreading frame-by-frame prediction results. The instance score depends on your specific skeleton so you’ll need to look at the instance scores you’re getting to decide an appropriate threshold.</p>
 <p>The <strong>velocity</strong> method will identify frames where a predicted instance appears to move more than is typical in the video. This is based on the tracking results, so it can be useful for finding frames where the tracker incorrectly matched up two identities (since this will make the identity “jump”).</p>
-</div>
-</div>
+</section>
+</section>
 
 
               </div>
               
-            
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
     <a class='left-prev' id="prev-link" href="index.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
@@ -1042,24 +1100,28 @@
     <i class="fas fa-angle-right"></i>
     </a>
 </div>
-            
+            </footer>
         </div>
     </div>
-    <footer class="footer">
-  <p>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Talmo D. Pereira<br/>
+  
+      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+</p>
+        </footer>
+    </div>
     
-      By Talmo D. Pereira<br/>
-    
-        &copy; Copyright 2019–2022, Talmo Lab.<br/>
-  </p>
-</footer>
-</main>
+</div>
 
 
       </div>
     </div>
   
-  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
 
   </body>
 </html>

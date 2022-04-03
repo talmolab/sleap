@@ -4,11 +4,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sleap.nn.config.training_job &#8212; SLEAP (v1.2.1)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>sleap.nn.config.training_job &#8212; SLEAP (v1.2.2)</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet">
-  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,17 +20,14 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-
-    
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
@@ -40,8 +39,8 @@
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script src="../_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <link rel="canonical" href="/develop/api/sleap.nn.config.training_job.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -55,7 +54,21 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
     
     <div class="container-fluid" id="banner"></div>
 
@@ -64,14 +77,10 @@
     <div class="container-xl">
       <div class="row">
           
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
-    
-        <div class="navbar-brand-box">
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="../index.html">
       
         <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
@@ -81,7 +90,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.1)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -299,11 +308,6 @@
    <li class="toctree-l2">
     <a class="reference internal" href="sleap.nn.model.html">
      sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.monitor.html">
-     sleap.nn.monitor
     </a>
    </li>
    <li class="toctree-l2">
@@ -676,8 +680,13 @@
 </ul>
 
     </div>
-</nav> <!-- To handle the deprecated key -->
-
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
 </div>
 
 
@@ -685,55 +694,90 @@
 
 
           
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<!-- A tiny helper pixel to detect if we've scrolled -->
 <div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+<!-- Main content -->
+<div class="col py-0 content-container">
     
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
-                
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
-            </div>
-            
-            <!-- Source interaction buttons -->
+    <div class="header-article row sticky-top noprint">
+        
 
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
-        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
-    <div class="dropdown-buttons sourcebuttons">
-        <a class="repository-button"
-            href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
-                data-toggle="tooltip" data-placement="left" title="Source repository"><i
-                    class="fab fa-github"></i>repository</button></a>
-        <a class="issues-button"
-            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.config.training_job.html&body=Your%20issue%20content%20here."><button
-                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
-                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
         
     </div>
+    <div class="header-article__right">
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/murthylab/sleap"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.config.training_job.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
 </div>
 
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-        </div>
     </div>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
                 <h1>sleap.nn.config.training_job</h1>
@@ -744,11 +788,12 @@
                     </div>
                 </div>
             </div>
-            
+            <main id="main-content" role="main">
+                
               <div>
                 
-  <div class="section" id="module-sleap.nn.config.training_job">
-<span id="sleap-nn-config-training-job"></span><h1>sleap.nn.config.training_job<a class="headerlink" href="#module-sleap.nn.config.training_job" title="Permalink to this headline">¶</a></h1>
+  <section id="module-sleap.nn.config.training_job">
+<span id="sleap-nn-config-training-job"></span><h1>sleap.nn.config.training_job<a class="headerlink" href="#module-sleap.nn.config.training_job" title="Permalink to this headline">#</a></h1>
 <p>Serializable configuration classes for specifying all training job parameters.</p>
 <p>These configuration classes are intended to specify all the parameters required to run
 a training job or perform inference from a serialized one.</p>
@@ -779,11 +824,11 @@ to the high level parameters at creation time.</p>
 parameters are aggregated and documented for end users (as opposed to developers).</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.training_job.TrainingJobConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.training_job.</span></span><span class="sig-name descname"><span class="pre">TrainingJobConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.DataConfig" title="sleap.nn.config.data.DataConfig"><span class="pre">sleap.nn.config.data.DataConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.ModelConfig" title="sleap.nn.config.model.ModelConfig"><span class="pre">sleap.nn.config.model.ModelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig" title="sleap.nn.config.outputs.OutputsConfig"><span class="pre">sleap.nn.config.outputs.OutputsConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sleap_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'1.2.1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/config/training_job.py#L41-L143"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.training_job.</span></span><span class="sig-name descname"><span class="pre">TrainingJobConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.DataConfig" title="sleap.nn.config.data.DataConfig"><span class="pre">sleap.nn.config.data.DataConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.ModelConfig" title="sleap.nn.config.model.ModelConfig"><span class="pre">sleap.nn.config.model.ModelConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig" title="sleap.nn.config.outputs.OutputsConfig"><span class="pre">sleap.nn.config.outputs.OutputsConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sleap_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'1.2.2'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/config/training_job.py#L41-L143"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration of a training job.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.training_job.TrainingJobConfig.data">
-<span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.data" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.data" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration options related to the training data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -794,7 +839,7 @@ parameters are aggregated and documented for end users (as opposed to developers
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.training_job.TrainingJobConfig.model">
-<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.model" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.model" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration options related to the model architecture.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -805,7 +850,7 @@ parameters are aggregated and documented for end users (as opposed to developers
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.training_job.TrainingJobConfig.optimization">
-<span class="sig-name descname"><span class="pre">optimization</span></span><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.optimization" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">optimization</span></span><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.optimization" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration options related to the training.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -816,7 +861,7 @@ parameters are aggregated and documented for end users (as opposed to developers
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.training_job.TrainingJobConfig.outputs">
-<span class="sig-name descname"><span class="pre">outputs</span></span><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.outputs" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">outputs</span></span><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.outputs" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration options related to outputs during training.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -827,7 +872,7 @@ parameters are aggregated and documented for end users (as opposed to developers
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.training_job.TrainingJobConfig.name">
-<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.name" title="Permalink to this definition">#</a></dt>
 <dd><p>Optional name for this configuration profile.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -838,7 +883,7 @@ parameters are aggregated and documented for end users (as opposed to developers
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.training_job.TrainingJobConfig.description">
-<span class="sig-name descname"><span class="pre">description</span></span><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.description" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">description</span></span><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.description" title="Permalink to this definition">#</a></dt>
 <dd><p>Optional description of the configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -849,7 +894,7 @@ parameters are aggregated and documented for end users (as opposed to developers
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.training_job.TrainingJobConfig.sleap_version">
-<span class="sig-name descname"><span class="pre">sleap_version</span></span><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.sleap_version" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sleap_version</span></span><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.sleap_version" title="Permalink to this definition">#</a></dt>
 <dd><p>Version of SLEAP that generated this configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -860,7 +905,7 @@ parameters are aggregated and documented for end users (as opposed to developers
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.training_job.TrainingJobConfig.filename">
-<span class="sig-name descname"><span class="pre">filename</span></span><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.filename" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">filename</span></span><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.filename" title="Permalink to this definition">#</a></dt>
 <dd><p>Path to this config file if it was loaded from disk.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -871,7 +916,7 @@ parameters are aggregated and documented for end users (as opposed to developers
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.config.training_job.TrainingJobConfig.from_json">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/config/training_job.py#L78-L90"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.from_json" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/config/training_job.py#L78-L90"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.from_json" title="Permalink to this definition">#</a></dt>
 <dd><p>Create training job configuration from JSON text data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -885,7 +930,7 @@ parameters are aggregated and documented for end users (as opposed to developers
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.config.training_job.TrainingJobConfig.from_json_dicts">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_json_dicts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_data_dicts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/config/training_job.py#L64-L76"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.from_json_dicts" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_json_dicts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_data_dicts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/config/training_job.py#L64-L76"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.from_json_dicts" title="Permalink to this definition">#</a></dt>
 <dd><p>Create training job configuration from dictionaries decoded from JSON.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -900,7 +945,7 @@ typically generated by structuring raw JSON formatted text.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.config.training_job.TrainingJobConfig.load_json">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_training_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/config/training_job.py#L92-L124"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.load_json" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_training_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/config/training_job.py#L92-L124"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.load_json" title="Permalink to this definition">#</a></dt>
 <dd><p>Load a training job configuration from a file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -919,7 +964,7 @@ over <code class="xref py py-obj docutils literal notranslate"><span class="pre"
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.config.training_job.TrainingJobConfig.save_json">
-<span class="sig-name descname"><span class="pre">save_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/config/training_job.py#L135-L143"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.save_json" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">save_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/config/training_job.py#L135-L143"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.save_json" title="Permalink to this definition">#</a></dt>
 <dd><p>Save the configuration to a JSON file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -930,7 +975,7 @@ over <code class="xref py py-obj docutils literal notranslate"><span class="pre"
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.config.training_job.TrainingJobConfig.to_json">
-<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/config/training_job.py#L126-L133"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.to_json" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/config/training_job.py#L126-L133"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.training_job.TrainingJobConfig.to_json" title="Permalink to this definition">#</a></dt>
 <dd><p>Serialize the configuration into JSON-encoded string format.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -943,7 +988,7 @@ over <code class="xref py py-obj docutils literal notranslate"><span class="pre"
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.config.training_job.load_config">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.config.training_job.</span></span><span class="sig-name descname"><span class="pre">load_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_training_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/config/training_job.py#L146-L159"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.training_job.load_config" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.config.training_job.</span></span><span class="sig-name descname"><span class="pre">load_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_training_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/config/training_job.py#L146-L159"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.training_job.load_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Load a training job configuration for a model run.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -959,14 +1004,16 @@ over <code class="xref py py-obj docutils literal notranslate"><span class="pre"
 </dl>
 </dd></dl>
 
-</div>
+</section>
 
 
               </div>
               
-            
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
     <a class='left-prev' id="prev-link" href="sleap.nn.config.outputs.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
@@ -982,24 +1029,28 @@ over <code class="xref py py-obj docutils literal notranslate"><span class="pre"
     <i class="fas fa-angle-right"></i>
     </a>
 </div>
-            
+            </footer>
         </div>
     </div>
-    <footer class="footer">
-  <p>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Talmo D. Pereira<br/>
+  
+      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+</p>
+        </footer>
+    </div>
     
-      By Talmo D. Pereira<br/>
-    
-        &copy; Copyright 2019–2022, Talmo Lab.<br/>
-  </p>
-</footer>
-</main>
+</div>
 
 
       </div>
     </div>
   
-  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
 
   </body>
 </html>

@@ -4,11 +4,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Installation &#8212; SLEAP (v1.2.1)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Installation &#8212; SLEAP (v1.2.2)</title>
     
-  <link href="_static/css/theme.css" rel="stylesheet">
-  <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,17 +20,14 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-
-    
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.css" />
     
-  <link rel="preload" as="script" href="_static/js/index.be7d3bbb2ef33a8344ce.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
@@ -40,8 +39,8 @@
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="_static/togglebutton.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script src="_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <link rel="canonical" href="/develop/installation.html" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -55,7 +54,21 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
     
     <div class="container-fluid" id="banner"></div>
 
@@ -64,14 +77,10 @@
     <div class="container-xl">
       <div class="row">
           
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
-    
-        <div class="navbar-brand-box">
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="index.html">
       
         <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
@@ -81,7 +90,7 @@
       <img src="_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.1)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -299,11 +308,6 @@
    <li class="toctree-l2">
     <a class="reference internal" href="api/sleap.nn.model.html">
      sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="api/sleap.nn.monitor.html">
-     sleap.nn.monitor
     </a>
    </li>
    <li class="toctree-l2">
@@ -676,8 +680,13 @@
 </ul>
 
     </div>
-</nav> <!-- To handle the deprecated key -->
-
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
 </div>
 
 
@@ -685,55 +694,102 @@
 
 
           
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<!-- A tiny helper pixel to detect if we've scrolled -->
 <div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+<!-- Main content -->
+<div class="col py-0 content-container">
     
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
-                
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
-            </div>
-            
-            <!-- Source interaction buttons -->
-
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
-        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
-    <div class="dropdown-buttons sourcebuttons">
-        <a class="repository-button"
-            href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
-                data-toggle="tooltip" data-placement="left" title="Source repository"><i
-                    class="fab fa-github"></i>repository</button></a>
-        <a class="issues-button"
-            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Finstallation.html&body=Your%20issue%20content%20here."><button
-                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
-                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+    <div class="header-article row sticky-top noprint">
         
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/murthylab/sleap"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Finstallation.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
     </div>
 </div>
 
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-            <div class="tocsection onthispage pt-5 pb-3">
-                <i class="fas fa-list"></i> Contents
-            </div>
-            <nav id="bd-toc-nav" aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#installing-miniconda">
    Installing Miniconda
@@ -815,12 +871,11 @@
  </li>
 </ul>
 
-            </nav>
-        </div>
-    </div>
+    </nav>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
                 <h1>Installation</h1>
@@ -918,11 +973,12 @@
                     </div>
                 </div>
             </div>
-            
+            <main id="main-content" role="main">
+                
               <div>
                 
-  <div class="tex2jax_ignore mathjax_ignore section" id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">#</a></h1>
 <p>SLEAP can be installed as a Python package on Windows, Linux and Mac OS X. We currently provide <a class="reference internal" href="#m1mac"><span class="std std-ref">experimental support for M1 Macs</span></a>.</p>
 <p>SLEAP requires many complex dependencies, so we <strong>strongly</strong> recommend using <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a> to install it in its own isolated environment. See <a class="reference internal" href="#miniconda"><span class="std std-ref">Installing Miniconda</span></a> below for more instructions.</p>
 <p>The newest version of SLEAP can always be found in the <a class="reference external" href="https://github.com/murthylab/sleap/releases">Releases page</a>.</p>
@@ -949,8 +1005,8 @@
 <li><p><a class="reference internal" href="#getting-help" id="id12">Getting help</a></p></li>
 </ul>
 </div>
-<div class="section" id="installing-miniconda">
-<span id="miniconda"></span><h2><a class="toc-backref" href="#id1">Installing Miniconda</a><a class="headerlink" href="#installing-miniconda" title="Permalink to this headline">¶</a></h2>
+<section id="installing-miniconda">
+<span id="miniconda"></span><h2><a class="toc-backref" href="#id1">Installing Miniconda</a><a class="headerlink" href="#installing-miniconda" title="Permalink to this headline">#</a></h2>
 <p><strong>Anaconda</strong> is a Python environment manager that makes it easy to install SLEAP and its necessary dependencies without affecting other Python software on your computer.</p>
 <p><strong>Miniconda</strong> is a lightweight version of Anaconda that we recommend. To install it:</p>
 <ol class="simple">
@@ -975,9 +1031,9 @@ These will make sure that Anaconda is easily accessible from most places on your
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget -nc https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh <span class="o">&amp;&amp;</span> bash Miniconda3-latest-MacOSX-x86_64.sh -b <span class="o">&amp;&amp;</span> ~/miniconda3/bin/conda init zsh
 </pre></div>
 </div>
-</div>
-<div class="section" id="installation-methods">
-<h2><a class="toc-backref" href="#id2">Installation methods</a><a class="headerlink" href="#installation-methods" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="installation-methods">
+<h2><a class="toc-backref" href="#id2">Installation methods</a><a class="headerlink" href="#installation-methods" title="Permalink to this headline">#</a></h2>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
 <p>Installation requires entering commands in a terminal. To open one:</p>
@@ -989,9 +1045,9 @@ These will make sure that Anaconda is easily accessible from most places on your
 <p><strong>Linux:</strong> Launch a new terminal by pressing <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>.</p>
 <p><strong>Mac:</strong> Launch a new terminal by pressing <kbd>Cmd</kbd> + <kbd>Space</kbd> and searching for <em>Terminal</em>.</p>
 </div>
-<div class="section" id="conda-package">
-<h3><a class="toc-backref" href="#id3"><code class="docutils literal notranslate"><span class="pre">conda</span></code> package</a><a class="headerlink" href="#conda-package" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda create -y -n sleap -c sleap -c nvidia -c conda-forge <span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.2.1
+<section id="conda-package">
+<h3><a class="toc-backref" href="#id3"><code class="docutils literal notranslate"><span class="pre">conda</span></code> package</a><a class="headerlink" href="#conda-package" title="Permalink to this headline">#</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda create -y -n sleap -c sleap -c nvidia -c conda-forge <span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.2.2
 </pre></div>
 </div>
 <p><strong>This is the recommended installation method</strong>. Works on <strong>Windows</strong> and <strong>Linux</strong>.</p>
@@ -1003,9 +1059,9 @@ These will make sure that Anaconda is easily accessible from most places on your
 <li><p>This will also work in CPU mode if you don’t have a GPU on your machine.</p></li>
 </ul>
 </div>
-</div>
-<div class="section" id="conda-from-source">
-<h3><a class="toc-backref" href="#id4"><code class="docutils literal notranslate"><span class="pre">conda</span></code> from source</a><a class="headerlink" href="#conda-from-source" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="conda-from-source">
+<h3><a class="toc-backref" href="#id4"><code class="docutils literal notranslate"><span class="pre">conda</span></code> from source</a><a class="headerlink" href="#conda-from-source" title="Permalink to this headline">#</a></h3>
 <ol>
 <li><p>First, clone the repository:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/murthylab/sleap <span class="o">&amp;&amp;</span> <span class="nb">cd</span> sleap
@@ -1026,10 +1082,10 @@ These will make sure that Anaconda is easily accessible from most places on your
 <li><p>Change the <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">sleap</span></code> in the command to create an environment with a different name (e.g., <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">sleap_develop</span></code>).</p></li>
 </ul>
 </div>
-</div>
-<div class="section" id="pip-package">
-<h3><a class="toc-backref" href="#id5"><code class="docutils literal notranslate"><span class="pre">pip</span></code> package</a><a class="headerlink" href="#pip-package" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install <span class="nv">sleap</span><span class="o">==</span><span class="m">1</span>.2.1
+</section>
+<section id="pip-package">
+<h3><a class="toc-backref" href="#id5"><code class="docutils literal notranslate"><span class="pre">pip</span></code> package</a><a class="headerlink" href="#pip-package" title="Permalink to this headline">#</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install <span class="nv">sleap</span><span class="o">==</span><span class="m">1</span>.2.2
 </pre></div>
 </div>
 <p>This works on <strong>any OS</strong> and on <strong>Google Colab</strong>.</p>
@@ -1045,9 +1101,9 @@ These will make sure that Anaconda is easily accessible from most places on your
 <p>This will uninstall existing libraries and potentially install conflicting ones.</p>
 <p>We strongly recommend that you <strong>only use this method if you know what you’re doing</strong>!</p>
 </div>
-</div>
-<div class="section" id="m1-macs">
-<span id="m1mac"></span><h3><a class="toc-backref" href="#id6">M1 Macs</a><a class="headerlink" href="#m1-macs" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="m1-macs">
+<span id="m1mac"></span><h3><a class="toc-backref" href="#id6">M1 Macs</a><a class="headerlink" href="#m1-macs" title="Permalink to this headline">#</a></h3>
 <p>SLEAP can be installed on newer M1 Macs by following these instructions:</p>
 <ol>
 <li><p>In addition to being on an M1 Mac, make sure you’re on <strong>macOS Monterey</strong>, i.e., version 12+. I tested this on a MacBook Pro (14-inch, 2021) running macOS version 12.0.1.</p></li>
@@ -1090,10 +1146,10 @@ These will make sure that Anaconda is easily accessible from most places on your
 </li>
 </ol>
 <p>See <a class="reference external" href="https://github.com/murthylab/sleap/issues/579#issuecomment-1028602327">this Issue</a> for more information on M1 support.</p>
-</div>
-</div>
-<div class="section" id="testing-that-things-are-working">
-<h2><a class="toc-backref" href="#id7">Testing that things are working</a><a class="headerlink" href="#testing-that-things-are-working" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="testing-that-things-are-working">
+<h2><a class="toc-backref" href="#id7">Testing that things are working</a><a class="headerlink" href="#testing-that-things-are-working" title="Permalink to this headline">#</a></h2>
 <p>If you installed using <code class="docutils literal notranslate"><span class="pre">conda</span></code>, first activate the <code class="docutils literal notranslate"><span class="pre">sleap</span></code> environment by opening a terminal and typing:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda activate sleap
 </pre></div>
@@ -1105,16 +1161,16 @@ These will make sure that Anaconda is easily accessible from most places on your
 </pre></div>
 </div>
 </div>
-<div class="section" id="gui-support">
-<h3><a class="toc-backref" href="#id8">GUI support</a><a class="headerlink" href="#gui-support" title="Permalink to this headline">¶</a></h3>
+<section id="gui-support">
+<h3><a class="toc-backref" href="#id8">GUI support</a><a class="headerlink" href="#gui-support" title="Permalink to this headline">#</a></h3>
 <p>To check that the GUI is working, simply type:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sleap-label
 </pre></div>
 </div>
 <p>You should see the SLEAP labeling interface pop up within a few moments.</p>
-</div>
-<div class="section" id="importing">
-<h3><a class="toc-backref" href="#id9">Importing</a><a class="headerlink" href="#importing" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="importing">
+<h3><a class="toc-backref" href="#id9">Importing</a><a class="headerlink" href="#importing" title="Permalink to this headline">#</a></h3>
 <p>To check if SLEAP is installed correctly in non-interactive environments, such as remote servers, confirm that you can import it with:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -c <span class="s2">&quot;import sleap; sleap.versions()&quot;</span>
 </pre></div>
@@ -1128,9 +1184,9 @@ Python: 3.7.11
 OS: Windows-10-10.0.19041-SP0
 </pre></div>
 </div>
-</div>
-<div class="section" id="gpu-support">
-<h3><a class="toc-backref" href="#id10">GPU support</a><a class="headerlink" href="#gpu-support" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="gpu-support">
+<h3><a class="toc-backref" href="#id10">GPU support</a><a class="headerlink" href="#gpu-support" title="Permalink to this headline">#</a></h3>
 <p>Assuming you installed using either of the <code class="docutils literal notranslate"><span class="pre">conda</span></code>-based methods on Windows or Linux, SLEAP should automatically have GPU support enabled.</p>
 <p>To check, verify that SLEAP can detect the GPUs on your system:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -c <span class="s2">&quot;import sleap; sleap.system_summary()&quot;</span>
@@ -1175,10 +1231,10 @@ GPUs: 2/2 available
 </pre></div>
 </div>
 </div>
-</div>
-</div>
-<div class="section" id="upgrading-and-uninstalling">
-<h2><a class="toc-backref" href="#id11">Upgrading and uninstalling</a><a class="headerlink" href="#upgrading-and-uninstalling" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="upgrading-and-uninstalling">
+<h2><a class="toc-backref" href="#id11">Upgrading and uninstalling</a><a class="headerlink" href="#upgrading-and-uninstalling" title="Permalink to this headline">#</a></h2>
 <p>We <strong>strongly recommend</strong> installing SLEAP in a fresh environment when updating. This is because dependency versions might change, and depending on the state of your previous environment, directly updating might break compatibility with some of them.</p>
 <p>To uninstall an existing environment named <code class="docutils literal notranslate"><span class="pre">sleap</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda env remove -n sleap
@@ -1192,9 +1248,9 @@ GPUs: 2/2 available
 </div>
 </div>
 <p>Once the environment has been removed, you are free to install SLEAP using any of the installation methods above into an environment of the same name.</p>
-</div>
-<div class="section" id="getting-help">
-<h2><a class="toc-backref" href="#id12">Getting help</a><a class="headerlink" href="#getting-help" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="getting-help">
+<h2><a class="toc-backref" href="#id12">Getting help</a><a class="headerlink" href="#getting-help" title="Permalink to this headline">#</a></h2>
 <p>If you run into any problems, check out the <a class="reference external" href="https://github.com/murthylab/sleap/issues">GitHub Issues</a> to see if others have had the same problem.</p>
 <p>If you get any errors or the GUI fails to launch, try running the diagnostics to see what SLEAP is able to detect on your system:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sleap-diagnostic
@@ -1205,15 +1261,17 @@ GPUs: 2/2 available
 </pre></div>
 </div>
 <p>Then, <a class="reference external" href="https://github.com/murthylab/sleap/issues">open a new Issue</a> providing the versions from either command above, as well as any errors you saw in the console during the installation.</p>
-</div>
-</div>
+</section>
+</section>
 
 
               </div>
               
-            
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
     <a class='left-prev' id="prev-link" href="overview.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
@@ -1229,24 +1287,28 @@ GPUs: 2/2 available
     <i class="fas fa-angle-right"></i>
     </a>
 </div>
-            
+            </footer>
         </div>
     </div>
-    <footer class="footer">
-  <p>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Talmo D. Pereira<br/>
+  
+      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+</p>
+        </footer>
+    </div>
     
-      By Talmo D. Pereira<br/>
-    
-        &copy; Copyright 2019–2022, Talmo Lab.<br/>
-  </p>
-</footer>
-</main>
+</div>
 
 
       </div>
     </div>
   
-  <script src="_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
 
   </body>
 </html>

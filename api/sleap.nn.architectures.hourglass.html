@@ -4,11 +4,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sleap.nn.architectures.hourglass &#8212; SLEAP (v1.2.1)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>sleap.nn.architectures.hourglass &#8212; SLEAP (v1.2.2)</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet">
-  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,17 +20,14 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-
-    
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
@@ -40,8 +39,8 @@
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script src="../_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <link rel="canonical" href="/develop/api/sleap.nn.architectures.hourglass.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -55,7 +54,21 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
     
     <div class="container-fluid" id="banner"></div>
 
@@ -64,14 +77,10 @@
     <div class="container-xl">
       <div class="row">
           
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
-    
-        <div class="navbar-brand-box">
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="../index.html">
       
         <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
@@ -81,7 +90,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.1)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -299,11 +308,6 @@
    <li class="toctree-l2">
     <a class="reference internal" href="sleap.nn.model.html">
      sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.monitor.html">
-     sleap.nn.monitor
     </a>
    </li>
    <li class="toctree-l2">
@@ -676,8 +680,13 @@
 </ul>
 
     </div>
-</nav> <!-- To handle the deprecated key -->
-
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
 </div>
 
 
@@ -685,55 +694,90 @@
 
 
           
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<!-- A tiny helper pixel to detect if we've scrolled -->
 <div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+<!-- Main content -->
+<div class="col py-0 content-container">
     
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
-                
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
-            </div>
-            
-            <!-- Source interaction buttons -->
+    <div class="header-article row sticky-top noprint">
+        
 
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
-        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
-    <div class="dropdown-buttons sourcebuttons">
-        <a class="repository-button"
-            href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
-                data-toggle="tooltip" data-placement="left" title="Source repository"><i
-                    class="fab fa-github"></i>repository</button></a>
-        <a class="issues-button"
-            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.architectures.hourglass.html&body=Your%20issue%20content%20here."><button
-                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
-                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
         
     </div>
+    <div class="header-article__right">
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/murthylab/sleap"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.architectures.hourglass.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
 </div>
 
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-        </div>
     </div>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
                 <h1>sleap.nn.architectures.hourglass</h1>
@@ -744,16 +788,17 @@
                     </div>
                 </div>
             </div>
-            
+            <main id="main-content" role="main">
+                
               <div>
                 
-  <div class="section" id="module-sleap.nn.architectures.hourglass">
-<span id="sleap-nn-architectures-hourglass"></span><h1>sleap.nn.architectures.hourglass<a class="headerlink" href="#module-sleap.nn.architectures.hourglass" title="Permalink to this headline">¶</a></h1>
+  <section id="module-sleap.nn.architectures.hourglass">
+<span id="sleap-nn-architectures-hourglass"></span><h1>sleap.nn.architectures.hourglass<a class="headerlink" href="#module-sleap.nn.architectures.hourglass" title="Permalink to this headline">#</a></h1>
 <p>This module provides a generalized implementation of (stacked) hourglass.</p>
 <p>See the <a class="reference internal" href="#sleap.nn.architectures.hourglass.Hourglass" title="sleap.nn.architectures.hourglass.Hourglass"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Hourglass</span></code></a> class docstring for more information.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.DownsamplingBlock">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.hourglass.</span></span><span class="sig-name descname"><span class="pre">DownsamplingBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">256</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/architectures/hourglass.py#L104-L137"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.DownsamplingBlock" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.hourglass.</span></span><span class="sig-name descname"><span class="pre">DownsamplingBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">256</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/hourglass.py#L104-L137"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.DownsamplingBlock" title="Permalink to this definition">#</a></dt>
 <dd><p>Convolutional downsampling block of the hourglass.</p>
 <p>This block is the simplified convolution-only block described in the <a class="reference external" href="https://arxiv.org/abs/1611.05424">Associative
 Embedding paper</a>, not the original residual
@@ -765,7 +810,7 @@ This block is simpler and demonstrated similar performance to the residual block
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.DownsamplingBlock.filters">
-<span class="sig-name descname"><span class="pre">filters</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.DownsamplingBlock.filters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">filters</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.DownsamplingBlock.filters" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of filters in the convolutional layer of the block.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -776,7 +821,7 @@ This block is simpler and demonstrated similar performance to the residual block
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.DownsamplingBlock.make_block">
-<span class="sig-name descname"><span class="pre">make_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'downsample'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/architectures/hourglass.py#L121-L137"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.DownsamplingBlock.make_block" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">make_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'downsample'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/hourglass.py#L121-L137"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.DownsamplingBlock.make_block" title="Permalink to this definition">#</a></dt>
 <dd><p>Create the block from an input tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -797,7 +842,7 @@ name conflicts if existing layers have the same name.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.Hourglass">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.hourglass.</span></span><span class="sig-name descname"><span class="pre">Hourglass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">down_blocks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">up_blocks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stem_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stem_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_increase</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'nearest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stacks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/architectures/hourglass.py#L195-L305"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.hourglass.</span></span><span class="sig-name descname"><span class="pre">Hourglass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">down_blocks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">up_blocks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stem_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stem_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_increase</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'nearest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stacks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/hourglass.py#L195-L305"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass" title="Permalink to this definition">#</a></dt>
 <dd><p>Encoder-decoder definition of the (stacked) hourglass network backbone.</p>
 <p>This implements the architecture of the <a class="reference external" href="https://arxiv.org/abs/1611.05424">Associative Embedding paper</a>, which improves upon the architecture in the
 <a class="reference external" href="https://arxiv.org/abs/1603.06937">original hourglass paper</a>. The primary changes
@@ -809,7 +854,7 @@ sizes.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.Hourglass.down_blocks">
-<span class="sig-name descname"><span class="pre">down_blocks</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.down_blocks" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">down_blocks</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.down_blocks" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of downsampling blocks. The original implementation has 4
 downsampling blocks.</p>
 <dl class="field-list simple">
@@ -821,7 +866,7 @@ downsampling blocks.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.Hourglass.up_blocks">
-<span class="sig-name descname"><span class="pre">up_blocks</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.up_blocks" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">up_blocks</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.up_blocks" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of upsampling blocks. The original implementation is symmetric
 and has 4 upsampling blocks. If specifying more than 1 stack, this should be
 equal to down_blocks.</p>
@@ -834,7 +879,7 @@ equal to down_blocks.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.Hourglass.stem_filters">
-<span class="sig-name descname"><span class="pre">stem_filters</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.stem_filters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">stem_filters</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.stem_filters" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of filters to output from the stem block. This block of
 convolutions will not be repeated across stacks, so it serves as a
 convenient way to reduce the input image size while extracting fine-scale
@@ -848,7 +893,7 @@ image features. In the original implementation this is 128.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.Hourglass.stem_stride">
-<span class="sig-name descname"><span class="pre">stem_stride</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.stem_stride" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">stem_stride</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.stem_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Stride of the stem block. This can be set to 1, 2 or 4. If &gt;1, this
 increases the spatial receptive field at the cost of losing fine details at
 higher resolution. In the original implementation this is 4.</p>
@@ -861,7 +906,7 @@ higher resolution. In the original implementation this is 4.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.Hourglass.filters">
-<span class="sig-name descname"><span class="pre">filters</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.filters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">filters</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.filters" title="Permalink to this definition">#</a></dt>
 <dd><p>Base number of filters. This will be the number of filters in the first
 block, where subsequent blocks will have an linearly increasing number of
 filters (see <a class="reference internal" href="#sleap.nn.architectures.hourglass.Hourglass.filter_increase" title="sleap.nn.architectures.hourglass.Hourglass.filter_increase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_increase</span></code></a>). In the original implementation this is 256.</p>
@@ -874,7 +919,7 @@ filters (see <a class="reference internal" href="#sleap.nn.architectures.hourgla
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.Hourglass.filter_increase">
-<span class="sig-name descname"><span class="pre">filter_increase</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.filter_increase" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">filter_increase</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.filter_increase" title="Permalink to this definition">#</a></dt>
 <dd><p>Number to increment the number of filters in each subsequent
 block by. This number is added, not multiplied, at each block. In the
 original implementation this is 128.</p>
@@ -887,7 +932,7 @@ original implementation this is 128.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.Hourglass.interp_method">
-<span class="sig-name descname"><span class="pre">interp_method</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.interp_method" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">interp_method</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.interp_method" title="Permalink to this definition">#</a></dt>
 <dd><p>Method for interpolation in the upsampling blocks. In the
 original implementation this is nearest neighbor interpolation. Valid values
 are “nearest” or “bilinear”.</p>
@@ -900,7 +945,7 @@ are “nearest” or “bilinear”.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.Hourglass.stacks">
-<span class="sig-name descname"><span class="pre">stacks</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.stacks" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">stacks</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.stacks" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of repeated stacks of symmetric downsampling -&gt; upsampling
 stacks. Intermediate outputs are returned which can be used to apply
 intermediate supervision.</p>
@@ -913,19 +958,19 @@ intermediate supervision.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.Hourglass.decoder_stack">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decoder_stack</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.DecoderBlock" title="sleap.nn.architectures.encoder_decoder.DecoderBlock"><span class="pre">sleap.nn.architectures.encoder_decoder.DecoderBlock</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.decoder_stack" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decoder_stack</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.DecoderBlock" title="sleap.nn.architectures.encoder_decoder.DecoderBlock"><span class="pre">sleap.nn.architectures.encoder_decoder.DecoderBlock</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.decoder_stack" title="Permalink to this definition">#</a></dt>
 <dd><p>Define decoder stack configuration.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.Hourglass.encoder_stack">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">encoder_stack</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderBlock" title="sleap.nn.architectures.encoder_decoder.EncoderBlock"><span class="pre">sleap.nn.architectures.encoder_decoder.EncoderBlock</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.encoder_stack" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">encoder_stack</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderBlock" title="sleap.nn.architectures.encoder_decoder.EncoderBlock"><span class="pre">sleap.nn.architectures.encoder_decoder.EncoderBlock</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.encoder_stack" title="Permalink to this definition">#</a></dt>
 <dd><p>Define encoder stack configuration.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.Hourglass.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.HourglassConfig" title="sleap.nn.config.model.HourglassConfig"><span class="pre">sleap.nn.config.model.HourglassConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.architectures.hourglass.Hourglass" title="sleap.nn.architectures.hourglass.Hourglass"><span class="pre">sleap.nn.architectures.hourglass.Hourglass</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/architectures/hourglass.py#L283-L305"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.from_config" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.HourglassConfig" title="sleap.nn.config.model.HourglassConfig"><span class="pre">sleap.nn.config.model.HourglassConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.architectures.hourglass.Hourglass" title="sleap.nn.architectures.hourglass.Hourglass"><span class="pre">sleap.nn.architectures.hourglass.Hourglass</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/hourglass.py#L283-L305"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.from_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a model from a set of configuration parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -939,7 +984,7 @@ intermediate supervision.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.Hourglass.stem_stack">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stem_stack</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderBlock" title="sleap.nn.architectures.encoder_decoder.EncoderBlock"><span class="pre">sleap.nn.architectures.encoder_decoder.EncoderBlock</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.stem_stack" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stem_stack</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderBlock" title="sleap.nn.architectures.encoder_decoder.EncoderBlock"><span class="pre">sleap.nn.architectures.encoder_decoder.EncoderBlock</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.architectures.hourglass.Hourglass.stem_stack" title="Permalink to this definition">#</a></dt>
 <dd><p>Define stem stack configuration.</p>
 </dd></dl>
 
@@ -947,7 +992,7 @@ intermediate supervision.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.StemBlock">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.hourglass.</span></span><span class="sig-name descname"><span class="pre">StemBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">256</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/architectures/hourglass.py#L49-L100"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.StemBlock" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.hourglass.</span></span><span class="sig-name descname"><span class="pre">StemBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">256</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/hourglass.py#L49-L100"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.StemBlock" title="Permalink to this definition">#</a></dt>
 <dd><p>Stem layers of the hourglass. These are not repeated with multiple stacks.</p>
 <dl class="simple">
 <dt>The default structure of this block is:</dt><dd><p>Conv(7 x 7 x filters, stride 2) -&gt; Conv(3 x 3 x 2*filters) -&gt; MaxPool(stride 2)
@@ -956,7 +1001,7 @@ intermediate supervision.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.StemBlock.pool">
-<span class="sig-name descname"><span class="pre">pool</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.StemBlock.pool" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">pool</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.StemBlock.pool" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, pooling is applied. See <a class="reference internal" href="#sleap.nn.architectures.hourglass.StemBlock.pooling_stride" title="sleap.nn.architectures.hourglass.StemBlock.pooling_stride"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pooling_stride</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -967,7 +1012,7 @@ intermediate supervision.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.StemBlock.pooling_stride">
-<span class="sig-name descname"><span class="pre">pooling_stride</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.StemBlock.pooling_stride" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">pooling_stride</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.StemBlock.pooling_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Determines how much pooling is applied within the stem block. If
 set to 1, no pooling is applied. If set to 2, the max pooling layer will
 have a stride of 2. If set to 4, the first convolution and the max pooling
@@ -981,7 +1026,7 @@ layer will both have a stride of 2.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.StemBlock.filters">
-<span class="sig-name descname"><span class="pre">filters</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.StemBlock.filters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">filters</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.StemBlock.filters" title="Permalink to this definition">#</a></dt>
 <dd><p>Base number of convolutional filters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -992,7 +1037,7 @@ layer will both have a stride of 2.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.StemBlock.output_filters">
-<span class="sig-name descname"><span class="pre">output_filters</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.StemBlock.output_filters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">output_filters</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.StemBlock.output_filters" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of filters to output at the end of this block.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1003,14 +1048,14 @@ layer will both have a stride of 2.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.StemBlock.first_conv_stride">
-<span class="sig-name descname"><span class="pre">first_conv_stride</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.StemBlock.first_conv_stride" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">first_conv_stride</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.StemBlock.first_conv_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Stride of the first convolutional layer. Set to 1 to increase
 the effective spatial resolution of the initial activations.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.StemBlock.make_block">
-<span class="sig-name descname"><span class="pre">make_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'stem'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/architectures/hourglass.py#L73-L100"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.StemBlock.make_block" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">make_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'stem'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/hourglass.py#L73-L100"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.StemBlock.make_block" title="Permalink to this definition">#</a></dt>
 <dd><p>Create the block from an input tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1031,7 +1076,7 @@ name conflicts if existing layers have the same name.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.UpsamplingBlock">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.hourglass.</span></span><span class="sig-name descname"><span class="pre">UpsamplingBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upsampling_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'bilinear'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/architectures/hourglass.py#L141-L191"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.UpsamplingBlock" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.hourglass.</span></span><span class="sig-name descname"><span class="pre">UpsamplingBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upsampling_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'bilinear'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/hourglass.py#L141-L191"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.UpsamplingBlock" title="Permalink to this definition">#</a></dt>
 <dd><p>Upsampling block that integrates skip connections with refinement.</p>
 <p>This block implements both the intermediate block after the skip connection from the
 downsampling path, as well as the upsampling block from the main network backbone
@@ -1044,7 +1089,7 @@ x_up + x_middle -&gt; x_out</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.UpsamplingBlock.filters">
-<span class="sig-name descname"><span class="pre">filters</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.UpsamplingBlock.filters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">filters</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.UpsamplingBlock.filters" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of filters in the output tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1055,7 +1100,7 @@ x_up + x_middle -&gt; x_out</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.UpsamplingBlock.interp_method">
-<span class="sig-name descname"><span class="pre">interp_method</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.UpsamplingBlock.interp_method" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">interp_method</span></span><a class="headerlink" href="#sleap.nn.architectures.hourglass.UpsamplingBlock.interp_method" title="Permalink to this definition">#</a></dt>
 <dd><p>Interpolation method for the upsampling step. In the original
 implementation, nearest neighbor interpolation was used. Valid values are
 “nearest” or “bilinear”.</p>
@@ -1068,7 +1113,7 @@ implementation, nearest neighbor interpolation was used. Valid values are
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.UpsamplingBlock.make_block">
-<span class="sig-name descname"><span class="pre">make_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'upsample'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/architectures/hourglass.py#L163-L191"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.UpsamplingBlock.make_block" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">make_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'upsample'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/hourglass.py#L163-L191"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.UpsamplingBlock.make_block" title="Permalink to this definition">#</a></dt>
 <dd><p>Instantiate the upsampling block from an input tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1092,7 +1137,7 @@ name conflicts if existing layers have the same name.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.architectures.hourglass.conv">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.hourglass.</span></span><span class="sig-name descname"><span class="pre">conv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'conv'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/architectures/hourglass.py#L17-L45"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.conv" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.hourglass.</span></span><span class="sig-name descname"><span class="pre">conv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'conv'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/hourglass.py#L17-L45"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hourglass.conv" title="Permalink to this definition">#</a></dt>
 <dd><p>Apply basic convolution with ReLU and batch normalization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1110,14 +1155,16 @@ name conflicts if existing layers have the same name.</p></li>
 </dl>
 </dd></dl>
 
-</div>
+</section>
 
 
               </div>
               
-            
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
     <a class='left-prev' id="prev-link" href="sleap.nn.architectures.encoder_decoder.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
@@ -1133,24 +1180,28 @@ name conflicts if existing layers have the same name.</p></li>
     <i class="fas fa-angle-right"></i>
     </a>
 </div>
-            
+            </footer>
         </div>
     </div>
-    <footer class="footer">
-  <p>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Talmo D. Pereira<br/>
+  
+      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+</p>
+        </footer>
+    </div>
     
-      By Talmo D. Pereira<br/>
-    
-        &copy; Copyright 2019–2022, Talmo Lab.<br/>
-  </p>
-</footer>
-</main>
+</div>
 
 
       </div>
     </div>
   
-  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
 
   </body>
 </html>

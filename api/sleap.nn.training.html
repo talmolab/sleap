@@ -4,11 +4,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sleap.nn.training &#8212; SLEAP (v1.2.1)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>sleap.nn.training &#8212; SLEAP (v1.2.2)</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet">
-  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,17 +20,14 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-
-    
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
@@ -40,8 +39,8 @@
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script src="../_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <link rel="canonical" href="/develop/api/sleap.nn.training.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -55,7 +54,21 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
     
     <div class="container-fluid" id="banner"></div>
 
@@ -64,14 +77,10 @@
     <div class="container-xl">
       <div class="row">
           
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
-    
-        <div class="navbar-brand-box">
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="../index.html">
       
         <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
@@ -81,7 +90,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.1)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -299,11 +308,6 @@
    <li class="toctree-l2">
     <a class="reference internal" href="sleap.nn.model.html">
      sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.monitor.html">
-     sleap.nn.monitor
     </a>
    </li>
    <li class="toctree-l2">
@@ -676,8 +680,13 @@
 </ul>
 
     </div>
-</nav> <!-- To handle the deprecated key -->
-
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
 </div>
 
 
@@ -685,55 +694,90 @@
 
 
           
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
+<!-- A tiny helper pixel to detect if we've scrolled -->
 <div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+<!-- Main content -->
+<div class="col py-0 content-container">
     
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
-                
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
-            </div>
-            
-            <!-- Source interaction buttons -->
+    <div class="header-article row sticky-top noprint">
+        
 
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
-        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
-    <div class="dropdown-buttons sourcebuttons">
-        <a class="repository-button"
-            href="https://github.com/murthylab/sleap"><button type="button" class="btn btn-secondary topbarbtn"
-                data-toggle="tooltip" data-placement="left" title="Source repository"><i
-                    class="fab fa-github"></i>repository</button></a>
-        <a class="issues-button"
-            href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.training.html&body=Your%20issue%20content%20here."><button
-                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
-                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
         
     </div>
+    <div class="header-article__right">
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/murthylab/sleap"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.training.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
 </div>
 
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-        </div>
     </div>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
                 <h1>sleap.nn.training</h1>
@@ -744,31 +788,32 @@
                     </div>
                 </div>
             </div>
-            
+            <main id="main-content" role="main">
+                
               <div>
                 
-  <div class="section" id="module-sleap.nn.training">
-<span id="sleap-nn-training"></span><h1>sleap.nn.training<a class="headerlink" href="#module-sleap.nn.training" title="Permalink to this headline">¶</a></h1>
+  <section id="module-sleap.nn.training">
+<span id="sleap-nn-training"></span><h1>sleap.nn.training<a class="headerlink" href="#module-sleap.nn.training" title="Permalink to this headline">#</a></h1>
 <p>Training functionality and high level APIs.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.training.BottomUpModelTrainer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">BottomUpModelTrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_readers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L1339-L1476"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.BottomUpModelTrainer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">BottomUpModelTrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_readers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L1339-L1476"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.BottomUpModelTrainer" title="Permalink to this definition">#</a></dt>
 <dd><p>Trainer for models that output multi-instance confidence maps and PAFs.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.BottomUpModelTrainer.has_offsets">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_offsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#sleap.nn.training.BottomUpModelTrainer.has_offsets" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_offsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#sleap.nn.training.BottomUpModelTrainer.has_offsets" title="Permalink to this definition">#</a></dt>
 <dd><p>Whether model is configured to output refinement offsets.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.BottomUpModelTrainer.input_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.BottomUpModelTrainer.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.BottomUpModelTrainer.input_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return example keys to be mapped to model inputs.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.BottomUpModelTrainer.output_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.BottomUpModelTrainer.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.BottomUpModelTrainer.output_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return example keys to be mapped to model outputs.</p>
 </dd></dl>
 
@@ -776,23 +821,23 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.training.BottomUpMultiClassModelTrainer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">BottomUpMultiClassModelTrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_readers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L1480-L1615"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.BottomUpMultiClassModelTrainer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">BottomUpMultiClassModelTrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_readers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L1480-L1615"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.BottomUpMultiClassModelTrainer" title="Permalink to this definition">#</a></dt>
 <dd><p>Trainer for models that output multi-instance confidence maps and class maps.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.BottomUpMultiClassModelTrainer.has_offsets">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_offsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#sleap.nn.training.BottomUpMultiClassModelTrainer.has_offsets" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_offsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#sleap.nn.training.BottomUpMultiClassModelTrainer.has_offsets" title="Permalink to this definition">#</a></dt>
 <dd><p>Whether model is configured to output refinement offsets.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.BottomUpMultiClassModelTrainer.input_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.BottomUpMultiClassModelTrainer.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.BottomUpMultiClassModelTrainer.input_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return example keys to be mapped to model inputs.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.BottomUpMultiClassModelTrainer.output_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.BottomUpMultiClassModelTrainer.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.BottomUpMultiClassModelTrainer.output_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return example keys to be mapped to model outputs.</p>
 </dd></dl>
 
@@ -800,23 +845,23 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.training.CentroidConfmapsModelTrainer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">CentroidConfmapsModelTrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_readers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L1108-L1208"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.CentroidConfmapsModelTrainer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">CentroidConfmapsModelTrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_readers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L1108-L1208"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.CentroidConfmapsModelTrainer" title="Permalink to this definition">#</a></dt>
 <dd><p>Trainer for models that output centroid confidence maps.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.CentroidConfmapsModelTrainer.has_offsets">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_offsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#sleap.nn.training.CentroidConfmapsModelTrainer.has_offsets" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_offsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#sleap.nn.training.CentroidConfmapsModelTrainer.has_offsets" title="Permalink to this definition">#</a></dt>
 <dd><p>Whether model is configured to output refinement offsets.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.CentroidConfmapsModelTrainer.input_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.CentroidConfmapsModelTrainer.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.CentroidConfmapsModelTrainer.input_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return example keys to be mapped to model inputs.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.CentroidConfmapsModelTrainer.output_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.CentroidConfmapsModelTrainer.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.CentroidConfmapsModelTrainer.output_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return example keys to be mapped to model outputs.</p>
 </dd></dl>
 
@@ -824,11 +869,11 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.training.DataReaders">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">DataReaders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">training_labels_reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><span class="pre">sleap.nn.data.providers.LabelsReader</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_labels_reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><span class="pre">sleap.nn.data.providers.LabelsReader</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_labels_reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><span class="pre">sleap.nn.data.providers.LabelsReader</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L86-L265"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.DataReaders" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">DataReaders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">training_labels_reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><span class="pre">sleap.nn.data.providers.LabelsReader</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_labels_reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><span class="pre">sleap.nn.data.providers.LabelsReader</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_labels_reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.data.providers.html#sleap.nn.data.providers.LabelsReader" title="sleap.nn.data.providers.LabelsReader"><span class="pre">sleap.nn.data.providers.LabelsReader</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L86-L265"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.DataReaders" title="Permalink to this definition">#</a></dt>
 <dd><p>Container class for SLEAP labels that serve as training data sources.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.training.DataReaders.training_labels_reader">
-<span class="sig-name descname"><span class="pre">training_labels_reader</span></span><a class="headerlink" href="#sleap.nn.training.DataReaders.training_labels_reader" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">training_labels_reader</span></span><a class="headerlink" href="#sleap.nn.training.DataReaders.training_labels_reader" title="Permalink to this definition">#</a></dt>
 <dd><p>LabelsReader pipeline provider for a training data from
 a sleap.Labels instance.</p>
 <dl class="field-list simple">
@@ -840,7 +885,7 @@ a sleap.Labels instance.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.training.DataReaders.validation_labels_reader">
-<span class="sig-name descname"><span class="pre">validation_labels_reader</span></span><a class="headerlink" href="#sleap.nn.training.DataReaders.validation_labels_reader" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">validation_labels_reader</span></span><a class="headerlink" href="#sleap.nn.training.DataReaders.validation_labels_reader" title="Permalink to this definition">#</a></dt>
 <dd><p>LabelsReader pipeline provider for a validation data
 from a sleap.Labels instance.</p>
 <dl class="field-list simple">
@@ -852,7 +897,7 @@ from a sleap.Labels instance.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.training.DataReaders.test_labels_reader">
-<span class="sig-name descname"><span class="pre">test_labels_reader</span></span><a class="headerlink" href="#sleap.nn.training.DataReaders.test_labels_reader" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">test_labels_reader</span></span><a class="headerlink" href="#sleap.nn.training.DataReaders.test_labels_reader" title="Permalink to this definition">#</a></dt>
 <dd><p>LabelsReader pipeline provider for a test set data from a
 sleap.Labels instance. This is not necessary for training.</p>
 <dl class="field-list simple">
@@ -864,31 +909,31 @@ sleap.Labels instance. This is not necessary for training.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.training.DataReaders.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.LabelsConfig" title="sleap.nn.config.data.LabelsConfig"><span class="pre">sleap.nn.config.data.LabelsConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_search_paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_track_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L102-L151"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.DataReaders.from_config" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.LabelsConfig" title="sleap.nn.config.data.LabelsConfig"><span class="pre">sleap.nn.config.data.LabelsConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_search_paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_track_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L102-L151"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.DataReaders.from_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Create data readers from a (possibly incomplete) configuration.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.training.DataReaders.from_labels">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_search_paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.LabelsConfig" title="sleap.nn.config.data.LabelsConfig"><span class="pre">sleap.nn.config.data.LabelsConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_track_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L153-L248"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.DataReaders.from_labels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_search_paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.LabelsConfig" title="sleap.nn.config.data.LabelsConfig"><span class="pre">sleap.nn.config.data.LabelsConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_track_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L153-L248"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.DataReaders.from_labels" title="Permalink to this definition">#</a></dt>
 <dd><p>Create data readers from sleap.Labels datasets as data providers.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.DataReaders.test_labels">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">test_labels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></em><a class="headerlink" href="#sleap.nn.training.DataReaders.test_labels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">test_labels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></em><a class="headerlink" href="#sleap.nn.training.DataReaders.test_labels" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the sleap.Labels underlying the test data reader.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.DataReaders.training_labels">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">training_labels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></em><a class="headerlink" href="#sleap.nn.training.DataReaders.training_labels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">training_labels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></em><a class="headerlink" href="#sleap.nn.training.DataReaders.training_labels" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the sleap.Labels underlying the training data reader.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.DataReaders.validation_labels">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validation_labels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></em><a class="headerlink" href="#sleap.nn.training.DataReaders.validation_labels" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validation_labels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></em><a class="headerlink" href="#sleap.nn.training.DataReaders.validation_labels" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the sleap.Labels underlying the validation data reader.</p>
 </dd></dl>
 
@@ -896,23 +941,23 @@ sleap.Labels instance. This is not necessary for training.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.training.SingleInstanceModelTrainer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">SingleInstanceModelTrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_readers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L991-L1104"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.SingleInstanceModelTrainer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">SingleInstanceModelTrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_readers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L991-L1104"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.SingleInstanceModelTrainer" title="Permalink to this definition">#</a></dt>
 <dd><p>Trainer for models that output single-instance confidence maps.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.SingleInstanceModelTrainer.has_offsets">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_offsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#sleap.nn.training.SingleInstanceModelTrainer.has_offsets" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_offsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#sleap.nn.training.SingleInstanceModelTrainer.has_offsets" title="Permalink to this definition">#</a></dt>
 <dd><p>Whether model is configured to output refinement offsets.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.SingleInstanceModelTrainer.input_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.SingleInstanceModelTrainer.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.SingleInstanceModelTrainer.input_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return example keys to be mapped to model inputs.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.SingleInstanceModelTrainer.output_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.SingleInstanceModelTrainer.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.SingleInstanceModelTrainer.output_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return example keys to be mapped to model outputs.</p>
 </dd></dl>
 
@@ -920,23 +965,23 @@ sleap.Labels instance. This is not necessary for training.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.training.TopDownMultiClassModelTrainer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">TopDownMultiClassModelTrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_readers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L1619-L1771"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.TopDownMultiClassModelTrainer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">TopDownMultiClassModelTrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_readers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L1619-L1771"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.TopDownMultiClassModelTrainer" title="Permalink to this definition">#</a></dt>
 <dd><p>Trainer for models that output multi-instance confidence maps and class maps.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.TopDownMultiClassModelTrainer.has_offsets">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_offsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#sleap.nn.training.TopDownMultiClassModelTrainer.has_offsets" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_offsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#sleap.nn.training.TopDownMultiClassModelTrainer.has_offsets" title="Permalink to this definition">#</a></dt>
 <dd><p>Whether model is configured to output refinement offsets.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.TopDownMultiClassModelTrainer.input_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.TopDownMultiClassModelTrainer.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.TopDownMultiClassModelTrainer.input_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return example keys to be mapped to model inputs.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.TopDownMultiClassModelTrainer.output_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.TopDownMultiClassModelTrainer.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.TopDownMultiClassModelTrainer.output_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return example keys to be mapped to model outputs.</p>
 </dd></dl>
 
@@ -944,23 +989,23 @@ sleap.Labels instance. This is not necessary for training.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.training.TopdownConfmapsModelTrainer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">TopdownConfmapsModelTrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_readers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L1212-L1335"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.TopdownConfmapsModelTrainer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">TopdownConfmapsModelTrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_readers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L1212-L1335"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.TopdownConfmapsModelTrainer" title="Permalink to this definition">#</a></dt>
 <dd><p>Trainer for models that output instance centered confidence maps.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.TopdownConfmapsModelTrainer.has_offsets">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_offsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#sleap.nn.training.TopdownConfmapsModelTrainer.has_offsets" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_offsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#sleap.nn.training.TopdownConfmapsModelTrainer.has_offsets" title="Permalink to this definition">#</a></dt>
 <dd><p>Whether model is configured to output refinement offsets.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.TopdownConfmapsModelTrainer.input_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.TopdownConfmapsModelTrainer.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.TopdownConfmapsModelTrainer.input_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return example keys to be mapped to model inputs.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.TopdownConfmapsModelTrainer.output_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.TopdownConfmapsModelTrainer.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.TopdownConfmapsModelTrainer.output_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return example keys to be mapped to model outputs.</p>
 </dd></dl>
 
@@ -968,7 +1013,7 @@ sleap.Labels instance. This is not necessary for training.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">Trainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_readers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L558-L987"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.Trainer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">Trainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_readers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><span class="pre">sleap.nn.training.DataReaders</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.model.html#sleap.nn.model.Model" title="sleap.nn.model.Model"><span class="pre">sleap.nn.model.Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L558-L987"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.Trainer" title="Permalink to this definition">#</a></dt>
 <dd><p>Base trainer class that provides general model training functionality.</p>
 <p>This class is intended to be instantiated using the <a class="reference internal" href="#sleap.nn.training.Trainer.from_config" title="sleap.nn.training.Trainer.from_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_config()</span></code></a> class method,
 which will return the appropriate subclass based on the input configuration.</p>
@@ -976,7 +1021,7 @@ which will return the appropriate subclass based on the input configuration.</p>
 output type-specific trainer that provides more specific functionality.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.data_readers">
-<span class="sig-name descname"><span class="pre">data_readers</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.data_readers" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">data_readers</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.data_readers" title="Permalink to this definition">#</a></dt>
 <dd><p>A <a class="reference internal" href="#sleap.nn.training.DataReaders" title="sleap.nn.training.DataReaders"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataReaders</span></code></a> instance that contains training data providers.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -987,7 +1032,7 @@ output type-specific trainer that provides more specific functionality.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.model">
-<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.model" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.model" title="Permalink to this definition">#</a></dt>
 <dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">Model</span></code> instance describing the SLEAP model to train.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -998,7 +1043,7 @@ output type-specific trainer that provides more specific functionality.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.config">
-<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.config" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.config" title="Permalink to this definition">#</a></dt>
 <dd><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">TrainingJobConfig</span></code> that describes the training parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1009,7 +1054,7 @@ output type-specific trainer that provides more specific functionality.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.initial_config">
-<span class="sig-name descname"><span class="pre">initial_config</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.initial_config" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">initial_config</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.initial_config" title="Permalink to this definition">#</a></dt>
 <dd><p>This attribute will contain a copy of the input configuration
 before any attributes are updated in <a class="reference internal" href="#sleap.nn.training.Trainer.config" title="sleap.nn.training.Trainer.config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">config</span></code></a>.</p>
 <dl class="field-list simple">
@@ -1021,7 +1066,7 @@ before any attributes are updated in <a class="reference internal" href="#sleap.
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.pipeline_builder">
-<span class="sig-name descname"><span class="pre">pipeline_builder</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.pipeline_builder" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">pipeline_builder</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.pipeline_builder" title="Permalink to this definition">#</a></dt>
 <dd><p>A model output type-specific data pipeline builder to create
 pipelines that generate data used for training. This must be specified in
 subclasses.</p>
@@ -1034,7 +1079,7 @@ subclasses.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.training_pipeline">
-<span class="sig-name descname"><span class="pre">training_pipeline</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.training_pipeline" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">training_pipeline</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.training_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>The data pipeline that generates examples from the training
 set for optimization.</p>
 <dl class="field-list simple">
@@ -1046,7 +1091,7 @@ set for optimization.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.validation_pipeline">
-<span class="sig-name descname"><span class="pre">validation_pipeline</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.validation_pipeline" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">validation_pipeline</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.validation_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>The data pipeline that generates examples from the
 validation set for optimization.</p>
 <dl class="field-list simple">
@@ -1058,7 +1103,7 @@ validation set for optimization.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.training_viz_pipeline">
-<span class="sig-name descname"><span class="pre">training_viz_pipeline</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.training_viz_pipeline" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">training_viz_pipeline</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.training_viz_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>The data pipeline that generates examples from the
 training set for visualization.</p>
 <dl class="field-list simple">
@@ -1070,7 +1115,7 @@ training set for visualization.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.validation_viz_pipeline">
-<span class="sig-name descname"><span class="pre">validation_viz_pipeline</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.validation_viz_pipeline" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">validation_viz_pipeline</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.validation_viz_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>The data pipeline that generates examples from the
 validation set for visualization.</p>
 <dl class="field-list simple">
@@ -1082,7 +1127,7 @@ validation set for visualization.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.optimization_callbacks">
-<span class="sig-name descname"><span class="pre">optimization_callbacks</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.optimization_callbacks" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">optimization_callbacks</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.optimization_callbacks" title="Permalink to this definition">#</a></dt>
 <dd><p>Keras callbacks related to optimization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1093,7 +1138,7 @@ validation set for visualization.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.output_callbacks">
-<span class="sig-name descname"><span class="pre">output_callbacks</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.output_callbacks" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">output_callbacks</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.output_callbacks" title="Permalink to this definition">#</a></dt>
 <dd><p>Keras callbacks related to outputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1104,7 +1149,7 @@ validation set for visualization.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.visualization_callbacks">
-<span class="sig-name descname"><span class="pre">visualization_callbacks</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.visualization_callbacks" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">visualization_callbacks</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.visualization_callbacks" title="Permalink to this definition">#</a></dt>
 <dd><p>Keras callbacks related to visualization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1115,7 +1160,7 @@ validation set for visualization.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.run_path">
-<span class="sig-name descname"><span class="pre">run_path</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.run_path" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">run_path</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.run_path" title="Permalink to this definition">#</a></dt>
 <dd><p>The path to the run folder that will contain training results, if any.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1126,25 +1171,25 @@ validation set for visualization.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.callbacks">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">callbacks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.callbacks.Callback</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.Trainer.callbacks" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">callbacks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.callbacks.Callback</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.training.Trainer.callbacks" title="Permalink to this definition">#</a></dt>
 <dd><p>Return all callbacks currently configured.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.cleanup">
-<span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L966-L978"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.Trainer.cleanup" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L966-L978"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.Trainer.cleanup" title="Permalink to this definition">#</a></dt>
 <dd><p>Delete visualization images subdirectory.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.evaluate">
-<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L940-L964"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.Trainer.evaluate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L940-L964"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.Trainer.evaluate" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute evaluation metrics on data splits and save them.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_search_paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.training.Trainer" title="sleap.nn.training.Trainer"><span class="pre">sleap.nn.training.Trainer</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L613-L688"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.Trainer.from_config" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig" title="sleap.nn.config.training_job.TrainingJobConfig"><span class="pre">sleap.nn.config.training_job.TrainingJobConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_search_paths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.training.Trainer" title="sleap.nn.training.Trainer"><span class="pre">sleap.nn.training.Trainer</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L613-L688"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.Trainer.from_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Initialize the trainer from a training job configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1164,37 +1209,37 @@ If a path is specified, it will overwrite the one in the config.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.input_keys">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.input_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.input_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Implement in subclasses.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.keras_model">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">keras_model</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">keras.engine.training.Model</span></em><a class="headerlink" href="#sleap.nn.training.Trainer.keras_model" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">keras_model</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">keras.engine.training.Model</span></em><a class="headerlink" href="#sleap.nn.training.Trainer.keras_model" title="Permalink to this definition">#</a></dt>
 <dd><p>Alias for <code class="xref py py-obj docutils literal notranslate"><span class="pre">self.model.keras_model</span></code>.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.output_keys">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.output_keys" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><a class="headerlink" href="#sleap.nn.training.Trainer.output_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Implement in subclasses.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.package">
-<span class="sig-name descname"><span class="pre">package</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L980-L987"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.Trainer.package" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">package</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L980-L987"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.Trainer.package" title="Permalink to this definition">#</a></dt>
 <dd><p>Package model folder into a zip file for portability.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.setup">
-<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L884-L901"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.Trainer.setup" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L884-L901"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.Trainer.setup" title="Permalink to this definition">#</a></dt>
 <dd><p>Set up data pipeline and model for training.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.training.Trainer.train">
-<span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L903-L938"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.Trainer.train" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L903-L938"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.Trainer.train" title="Permalink to this definition">#</a></dt>
 <dd><p>Execute the optimization loop to train the model.</p>
 </dd></dl>
 
@@ -1202,90 +1247,92 @@ If a path is specified, it will overwrite the one in the config.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.training.get_timestamp">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">get_timestamp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L356-L358"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.get_timestamp" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">get_timestamp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L356-L358"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.get_timestamp" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the date and time as a string.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.training.main">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L1774-L1947"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.main" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L1774-L1947"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.main" title="Permalink to this definition">#</a></dt>
 <dd><p>Create CLI for training and run.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.training.sanitize_scope_name">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">sanitize_scope_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L537-L543"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.sanitize_scope_name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">sanitize_scope_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L537-L543"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.sanitize_scope_name" title="Permalink to this definition">#</a></dt>
 <dd><p>Sanitizes string which will be used as TensorFlow scope name.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.training.setup_checkpointing">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_checkpointing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.outputs.html#sleap.nn.config.outputs.CheckpointingConfig" title="sleap.nn.config.outputs.CheckpointingConfig"><span class="pre">sleap.nn.config.outputs.CheckpointingConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.callbacks.Callback</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L413-L458"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_checkpointing" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_checkpointing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.outputs.html#sleap.nn.config.outputs.CheckpointingConfig" title="sleap.nn.config.outputs.CheckpointingConfig"><span class="pre">sleap.nn.config.outputs.CheckpointingConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.callbacks.Callback</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L413-L458"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_checkpointing" title="Permalink to this definition">#</a></dt>
 <dd><p>Set up model checkpointing callbacks from config.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.training.setup_losses">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_losses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L286-L302"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_losses" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_losses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L286-L302"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_losses" title="Permalink to this definition">#</a></dt>
 <dd><p>Set up model loss function from config.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.training.setup_metrics">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.losses.Loss</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">keras.metrics.Metric</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L305-L318"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_metrics" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.losses.Loss</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">keras.metrics.Metric</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L305-L318"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_metrics" title="Permalink to this definition">#</a></dt>
 <dd><p>Set up training metrics from config.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.training.setup_new_run_folder">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_new_run_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig" title="sleap.nn.config.outputs.OutputsConfig"><span class="pre">sleap.nn.config.outputs.OutputsConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_run_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L361-L391"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_new_run_folder" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_new_run_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig" title="sleap.nn.config.outputs.OutputsConfig"><span class="pre">sleap.nn.config.outputs.OutputsConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_run_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L361-L391"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_new_run_folder" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a new run folder from config.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.training.setup_optimization_callbacks">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_optimization_callbacks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.callbacks.Callback</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L321-L353"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_optimization_callbacks" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_optimization_callbacks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.callbacks.Callback</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L321-L353"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_optimization_callbacks" title="Permalink to this definition">#</a></dt>
 <dd><p>Set up optimization callbacks from config.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.training.setup_optimizer">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_optimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">keras.optimizer_v2.optimizer_v2.OptimizerV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L268-L283"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_optimizer" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_optimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">keras.optimizer_v2.optimizer_v2.OptimizerV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L268-L283"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_optimizer" title="Permalink to this definition">#</a></dt>
 <dd><p>Set up model optimizer from config.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.training.setup_output_callbacks">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_output_callbacks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig" title="sleap.nn.config.outputs.OutputsConfig"><span class="pre">sleap.nn.config.outputs.OutputsConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.callbacks.Callback</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L482-L496"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_output_callbacks" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_output_callbacks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig" title="sleap.nn.config.outputs.OutputsConfig"><span class="pre">sleap.nn.config.outputs.OutputsConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.callbacks.Callback</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L482-L496"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_output_callbacks" title="Permalink to this definition">#</a></dt>
 <dd><p>Set up training outputs callbacks from config.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.training.setup_tensorboard">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_tensorboard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.outputs.html#sleap.nn.config.outputs.TensorBoardConfig" title="sleap.nn.config.outputs.TensorBoardConfig"><span class="pre">sleap.nn.config.outputs.TensorBoardConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.callbacks.Callback</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L461-L479"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_tensorboard" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_tensorboard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.outputs.html#sleap.nn.config.outputs.TensorBoardConfig" title="sleap.nn.config.outputs.TensorBoardConfig"><span class="pre">sleap.nn.config.outputs.TensorBoardConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.callbacks.Callback</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L461-L479"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_tensorboard" title="Permalink to this definition">#</a></dt>
 <dd><p>Set up TensorBoard callbacks from config.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.training.setup_visualization">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_visualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig" title="sleap.nn.config.outputs.OutputsConfig"><span class="pre">sleap.nn.config.outputs.OutputsConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">viz_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">matplotlib.figure.Figure</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.callbacks.Callback</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L499-L534"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_visualization" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_visualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig" title="sleap.nn.config.outputs.OutputsConfig"><span class="pre">sleap.nn.config.outputs.OutputsConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">viz_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">matplotlib.figure.Figure</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.callbacks.Callback</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L499-L534"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_visualization" title="Permalink to this definition">#</a></dt>
 <dd><p>Set up visualization callbacks from config.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.training.setup_zmq_callbacks">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_zmq_callbacks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zmq_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.outputs.html#sleap.nn.config.outputs.ZMQConfig" title="sleap.nn.config.outputs.ZMQConfig"><span class="pre">sleap.nn.config.outputs.ZMQConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.callbacks.Callback</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.1/sleap/nn/training.py#L394-L410"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_zmq_callbacks" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.training.</span></span><span class="sig-name descname"><span class="pre">setup_zmq_callbacks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zmq_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.outputs.html#sleap.nn.config.outputs.ZMQConfig" title="sleap.nn.config.outputs.ZMQConfig"><span class="pre">sleap.nn.config.outputs.ZMQConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.callbacks.Callback</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/training.py#L394-L410"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.training.setup_zmq_callbacks" title="Permalink to this definition">#</a></dt>
 <dd><p>Set up ZeroMQ callbacks from config.</p>
 </dd></dl>
 
-</div>
+</section>
 
 
               </div>
               
-            
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
     <a class='left-prev' id="prev-link" href="sleap.nn.tracking.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
@@ -1301,24 +1348,28 @@ If a path is specified, it will overwrite the one in the config.</p></li>
     <i class="fas fa-angle-right"></i>
     </a>
 </div>
-            
+            </footer>
         </div>
     </div>
-    <footer class="footer">
-  <p>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Talmo D. Pereira<br/>
+  
+      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+</p>
+        </footer>
+    </div>
     
-      By Talmo D. Pereira<br/>
-    
-        &copy; Copyright 2019–2022, Talmo Lab.<br/>
-  </p>
-</footer>
-</main>
+</div>
 
 
       </div>
     </div>
   
-  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
 
   </body>
 </html>
