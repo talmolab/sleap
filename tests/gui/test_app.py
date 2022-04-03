@@ -269,7 +269,7 @@ def test_app_new_window(qtbot):
 
 
 @pytest.mark.skipif(
-    sys.platform.startswith("ub"), reason="qtbot.waitActive times out on ubuntu"
+    sys.platform.startswith("li"), reason="qtbot.waitActive times out on ubuntu"
 )
 def test_menu_actions(qtbot, centered_pair_predictions: Labels):
     def verify_visibility(expected_visibility: bool = True):
