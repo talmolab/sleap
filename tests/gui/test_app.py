@@ -1,4 +1,4 @@
-from tkinter import Button
+import pytest
 from PySide2.QtWidgets import QApplication
 from PySide2.QtCore import Qt, QPoint
 
