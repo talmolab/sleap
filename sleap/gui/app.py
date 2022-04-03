@@ -1005,28 +1005,10 @@ class MainWindow(QMainWindow):
         hbw.setLayout(hb)
         skeleton_layout.addWidget(hbw)
 
-        ####### Instances #######
-        instances_layout = _make_dock("Instances")
-        self.instancesTable = GenericTableView(
-            state=self.state,
-            row_name="instance",
-            name_prefix="",
-            model=LabeledFrameTableModel(
-                items=self.state["labeled_frame"], context=self.commands
-            ),
-        )
-        instances_layout.addWidget(self.instancesTable)
-
-        hb = QHBoxLayout()
-        _add_button(hb, "New Instance", lambda x: self.commands.newInstance())
-        _add_button(hb, "Delete Instance", self.commands.deleteSelectedInstance)
-
-        hbw = QWidget()
-        hbw.setLayout(hb)
-        instances_layout.addWidget(hbw)
-
         ####### Suggestions #######
-        suggestions_layout = _make_dock("Labeling Suggestions")
+        suggestions_layout = _make_dock(
+            "Labeling Suggestions", tab_with=videos_layout.parent().parent()
+        )
         self.suggestionsTable = GenericTableView(
             state=self.state,
             is_sortable=True,
@@ -1105,6 +1087,31 @@ class MainWindow(QMainWindow):
         self.suggestionsTable.doubleClicked.connect(goto_suggestion)
 
         self.state.connect("suggestion_idx", self.suggestionsTable.selectRow)
+
+        ####### Instances #######
+        instances_layout = _make_dock(
+            "Instances", tab_with=videos_layout.parent().parent()
+        )
+        self.instancesTable = GenericTableView(
+            state=self.state,
+            row_name="instance",
+            name_prefix="",
+            model=LabeledFrameTableModel(
+                items=self.state["labeled_frame"], context=self.commands
+            ),
+        )
+        instances_layout.addWidget(self.instancesTable)
+
+        hb = QHBoxLayout()
+        _add_button(hb, "New Instance", lambda x: self.commands.newInstance())
+        _add_button(hb, "Delete Instance", self.commands.deleteSelectedInstance)
+
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        instances_layout.addWidget(hbw)
+
+        # Bring videos tab forward.
+        videos_layout.parent().parent().raise_()
 
     def _load_overlays(self):
         """Load all standard video overlays."""
