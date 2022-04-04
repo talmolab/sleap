@@ -16,7 +16,7 @@ SLEAP Documentation
     guides/index
     notebooks/index
     Developer API <api>
-    Sample datasets <https://github.com/murthylab/sleap-datasets>
-    Source code <https://github.com/murthylab/sleap>
+    datasets
+    GitHub <https://github.com/murthylab/sleap>
     Releases <https://github.com/murthylab/sleap/releases>
     help
