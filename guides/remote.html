@@ -177,13 +177,18 @@
     </a>
    </li>
    <li class="toctree-l2">
+    <a class="reference internal" href="troubleshooting-workflows.html">
+     Troubleshooting workflows
+    </a>
+   </li>
+   <li class="toctree-l2">
     <a class="reference internal" href="skeletons.html">
      Skeleton design
     </a>
    </li>
    <li class="toctree-l2">
     <a class="reference internal" href="choosing-models.html">
-     Choosing a set of models
+     Configuring models
     </a>
    </li>
    <li class="toctree-l2">
@@ -678,13 +683,13 @@
   </ul>
  </li>
  <li class="toctree-l1">
-  <a class="reference external" href="https://github.com/murthylab/sleap-datasets">
-   Sample datasets
+  <a class="reference internal" href="../datasets.html">
+   Datasets
   </a>
  </li>
  <li class="toctree-l1">
   <a class="reference external" href="https://github.com/murthylab/sleap">
-   Source code
+   GitHub
   </a>
  </li>
  <li class="toctree-l1">
@@ -911,7 +916,7 @@ title="Open an issue"
 </ul>
 <p>You’ll need both of these files for each model you’re going to use for inference.</p>
 <p>The directory may also contains other files with optional outputs from the training run (e.g., <code class="code docutils literal notranslate"><span class="pre">training_log.csv</span></code> or a <code class="code docutils literal notranslate"><span class="pre">viz/</span></code> subdirectory).</p>
-<p>Inference will run in different modes depending on the output types of the models you supply. See the instructions for <a class="reference internal" href="choosing-models.html#choosing-models"><span class="std std-ref">Choosing a set of models</span></a>.</p>
+<p>Inference will run in different modes depending on the output types of the models you supply. See the instructions for <a class="reference internal" href="choosing-models.html#choosing-models"><span class="std std-ref">Configuring models</span></a>.</p>
 <p>For this example, let’s suppose you have two models: centroids and instance-centered confidence maps. This is the typical “top-down” case for multi-instance predictions.</p>
 <p><strong>Video</strong></p>
 <p>SLEAP uses OpenCV to read a variety of video formats including <code class="docutils literal notranslate"><span class="pre">mp4</span></code> and <code class="docutils literal notranslate"><span class="pre">avi</span></code> files. You’ll just need the file path to run inference on such a video file.</p>

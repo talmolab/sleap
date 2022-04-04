@@ -6,7 +6,7 @@
 
 Hyperparameters include the model architecture, learning rate, and data augmentation settings. While model **parameters** are learned from your data during training, **hyperparameters** are not learned from your data—they have to be set before training since they control the training process.
 
-This guide will explain how to create a custom training profile but doesn't cover how to decide what the hyperpameters should be. For more information about the hyperparameters, see our guide to {ref}`choosing_models`.
+This guide will explain how to create a custom training profile but doesn't cover how to decide what the hyperpameters should be. For more information about the hyperparameters, see our guide to {ref}`choosing-models`.
 
 Training profiles are JSON files. The JSON format is fairly easy to read (and edit) with a text-editor and you can use the default "baseline" profiles as a starting point for creating your own training profiles. For example, take a look at the [baseline bottom-up profile](https://github.com/murthylab/sleap/blob/main/sleap/training_profiles/baseline_medium_rf.bottomup.json) or our [other baseline profiles](https://github.com/murthylab/sleap/blob/main/sleap/training_profiles).
 
@@ -24,7 +24,7 @@ You can click on each model configuration tab to configure the hyperpameters for
 ```{image} ../_static/training-model-dialog.jpg
 ```
 
-For advice about what you might want to customize with this dialog, see our guide to {ref}`choosing_models`.
+For advice about what you might want to customize with this dialog, see our guide to {ref}`choosing-models`.
 
 Once you've configured each of your models, click the "**Save configuration files...**" button at the bottom of the dialog. You'll be prompted for where to save the files. It's a good idea to create a new folder which will contain the files since there will be multiple files exported.
 

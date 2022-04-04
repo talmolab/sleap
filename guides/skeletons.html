@@ -45,8 +45,8 @@
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Choosing a set of models" href="choosing-models.html" />
-    <link rel="prev" title="Command line interfaces" href="cli.html" />
+    <link rel="next" title="Configuring models" href="choosing-models.html" />
+    <link rel="prev" title="Troubleshooting workflows" href="troubleshooting-workflows.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -176,6 +176,11 @@
      Command line interfaces
     </a>
    </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="troubleshooting-workflows.html">
+     Troubleshooting workflows
+    </a>
+   </li>
    <li class="toctree-l2 current active">
     <a class="current reference internal" href="#">
      Skeleton design
@@ -183,7 +188,7 @@
    </li>
    <li class="toctree-l2">
     <a class="reference internal" href="choosing-models.html">
-     Choosing a set of models
+     Configuring models
     </a>
    </li>
    <li class="toctree-l2">
@@ -678,13 +683,13 @@
   </ul>
  </li>
  <li class="toctree-l1">
-  <a class="reference external" href="https://github.com/murthylab/sleap-datasets">
-   Sample datasets
+  <a class="reference internal" href="../datasets.html">
+   Datasets
   </a>
  </li>
  <li class="toctree-l1">
   <a class="reference external" href="https://github.com/murthylab/sleap">
-   Source code
+   GitHub
   </a>
  </li>
  <li class="toctree-l1">
@@ -788,12 +793,36 @@ title="Open an issue"
     </ul>
   </div>
 </div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
 
     </div>
 </div>
 
 <!-- Table of contents -->
 <div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#tips">
+   Tips
+  </a>
+ </li>
+</ul>
+
+    </nav>
 </div>
     </div>
     <div class="article row">
@@ -805,6 +834,19 @@ title="Open an issue"
                 <div id="print-main-content">
                     <div id="jb-print-toc">
                         
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#tips">
+   Tips
+  </a>
+ </li>
+</ul>
+
+                        </nav>
                     </div>
                 </div>
             </div>
@@ -812,14 +854,36 @@ title="Open an issue"
                 
               <div>
                 
-  <section id="skeleton-design">
+  <section class="tex2jax_ignore mathjax_ignore" id="skeleton-design">
 <span id="skeletons"></span><h1>Skeleton design<a class="headerlink" href="#skeleton-design" title="Permalink to this headline">#</a></h1>
+<p>In SLEAP, skeletons are defined as a set of <em>nodes</em> (landmarks types) and <em>edges</em>
+(connections between landmarks).</p>
+<p><strong>Nodes</strong> are essentially just a list of body part names. The actual naming doesn’t
+matter; SLEAP just uses their relative order to keep track of which body part is which
+in the labels and in trained models.</p>
+<p><strong>Edges</strong> describe the way that the nodes are connected. Each edge is represented by a
+<em>source</em> and <em>destination</em> node. With the exception of bottom-up models, these edges
+serve primarily for visualization.</p>
+<p>In bottom-up models, the edges are important and must connect all nodes to one another.</p>
+<section id="tips">
+<h2>Tips<a class="headerlink" href="#tips" title="Permalink to this headline">#</a></h2>
+<p><strong>How do I choose the best skeleton for my data?</strong></p>
+<p>In general, here are the rules of thumb you want to follow for designing an ideal
+skeleton:</p>
+<ol class="simple">
+<li><p>Choose <em>nodes</em> that will be easy to locate in new images. It’s important to be as
+consistent as possible about the relative placement of body parts.</p></li>
+<li><p>When choosing <em>edges</em>, try to form a shallow tree. This is because it’s preferable to
+have fewer parent nodes, since if they are not detected, their children nodes cannot
+be grouped appropriately.</p></li>
+</ol>
 <p><strong>Can I add or remove nodes in the skeleton after I’ve already created instances?</strong></p>
 <p>Yes.</p>
 <p>Removing nodes is straightforward: just remove them. If you’re using part affinity fields for inference, you should make sure that the skeleton graph is still connected.</p>
 <p>Adding nodes is a little more complicated. First add the nodes to your skeleton. Then, to add these nodes to any instance which already exists, you’ll need to <strong>double-click</strong> on the instance (on the video frame image). The new nodes will be added and marked as “non-visible”; you’ll need to <strong>right-click</strong> on each node you want to make visible, and move it to the correct location.</p>
 <p><strong>Can I add or remove edges in the skeleton after I’ve already created instances?</strong></p>
 <p>Yes, adding or removed edges is straightforward and the change will be applied to all instances.</p>
+</section>
 </section>
 
 
@@ -830,17 +894,17 @@ title="Open an issue"
                 
     <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="cli.html" title="previous page">
+    <a class='left-prev' id="prev-link" href="troubleshooting-workflows.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">Command line interfaces</p>
+            <p class="prev-next-title">Troubleshooting workflows</p>
         </div>
     </a>
     <a class='right-next' id="next-link" href="choosing-models.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Choosing a set of models</p>
+        <p class="prev-next-title">Configuring models</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>

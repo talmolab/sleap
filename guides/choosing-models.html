@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Choosing a set of models &#8212; SLEAP (v1.2.2)</title>
+    <title>Configuring models &#8212; SLEAP (v1.2.2)</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -177,13 +177,18 @@
     </a>
    </li>
    <li class="toctree-l2">
+    <a class="reference internal" href="troubleshooting-workflows.html">
+     Troubleshooting workflows
+    </a>
+   </li>
+   <li class="toctree-l2">
     <a class="reference internal" href="skeletons.html">
      Skeleton design
     </a>
    </li>
    <li class="toctree-l2 current active">
     <a class="current reference internal" href="#">
-     Choosing a set of models
+     Configuring models
     </a>
    </li>
    <li class="toctree-l2">
@@ -678,13 +683,13 @@
   </ul>
  </li>
  <li class="toctree-l1">
-  <a class="reference external" href="https://github.com/murthylab/sleap-datasets">
-   Sample datasets
+  <a class="reference internal" href="../datasets.html">
+   Datasets
   </a>
  </li>
  <li class="toctree-l1">
   <a class="reference external" href="https://github.com/murthylab/sleap">
-   Source code
+   GitHub
   </a>
  </li>
  <li class="toctree-l1">
@@ -788,23 +793,70 @@ title="Open an issue"
     </ul>
   </div>
 </div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
 
     </div>
 </div>
 
 <!-- Table of contents -->
 <div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#model-type">
+   Model type
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#hyperparameters">
+   Hyperparameters
+  </a>
+ </li>
+</ul>
+
+    </nav>
 </div>
     </div>
     <div class="article row">
         <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
-                <h1>Choosing a set of models</h1>
+                <h1>Configuring models</h1>
                 <!-- Table of contents -->
                 <div id="print-main-content">
                     <div id="jb-print-toc">
                         
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#model-type">
+   Model type
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#hyperparameters">
+   Hyperparameters
+  </a>
+ </li>
+</ul>
+
+                        </nav>
                     </div>
                 </div>
             </div>
@@ -812,16 +864,21 @@ title="Open an issue"
                 
               <div>
                 
-  <section id="choosing-a-set-of-models">
-<span id="choosing-models"></span><h1>Choosing a set of models<a class="headerlink" href="#choosing-a-set-of-models" title="Permalink to this headline">#</a></h1>
-<p>Inference will run in different modes depending on the output types of the models you supply. SLEAP currently support two distinct modes for multi-animal inference.</p>
-<ol class="arabic simple">
+  <section class="tex2jax_ignore mathjax_ignore" id="configuring-models">
+<span id="choosing-models"></span><h1>Configuring models<a class="headerlink" href="#configuring-models" title="Permalink to this headline">#</a></h1>
+<section id="model-type">
+<h2>Model type<a class="headerlink" href="#model-type" title="Permalink to this headline">#</a></h2>
+<p>Training and inference will run in different modes depending on the output types of the models you supply. SLEAP currently support two distinct modes for multi-animal inference.</p>
+<ol class="simple">
 <li><p>The “<strong>bottom-up</strong>” approach uses a single model which outputs <strong>confidence maps</strong> and <strong>part affinity fields</strong> for all instances in a given frame. The confidence maps are used to predict node locations and the part affinity fields are used to group nodes into distinct animal instances.</p></li>
 <li><p>The “<strong>top-down</strong>” approach starts by using a <strong>centroid</strong> model to predict the location of each animal in a given frame, and then a <strong>instance centered confidence map</strong> model is used to predict the locations of all the nodes for each animal separately.</p></li>
 </ol>
 <p>Each approach has its advantages, and you may wish to try out both to see which gives you better results.</p>
+</section>
+<section id="hyperparameters">
+<h2>Hyperparameters<a class="headerlink" href="#hyperparameters" title="Permalink to this headline">#</a></h2>
 <p>You can configure the hyperparameters for training your model in the “Model Configuration” tabs of the Training Dialog:</p>
-<p><img alt="config-dialog" src="../_images/model-config.jpg" /></p>
+<p><img alt="Model configuration" src="../_images/model-config.jpg" /></p>
 <p>Hover over each field to get an explanation. Here are some hyperparameters which are especially worth your attention:</p>
 <p><strong>Batch Size</strong>: Number of examples per minibatch, i.e., a single step of training. Higher numbers can increase generalization performance by averaging model gradient updates over a larger number of examples at the cost of considerably more GPU memory, especially for larger sized images. Lower numbers may lead to overfitting, but may be beneficial to the optimization process when few but varied examples are available.</p>
 <p><strong>Max Stride</strong> and <strong>Input Scaling</strong>: These control the <a class="reference external" href="https://distill.pub/2019/computing-receptive-fields/">receptive field size</a> which should correspond to the size of the features you want to detect in your video. Decreasing the input scale of the image will result in a larger receptive field relative to the original image, but this won’t work if you are trying to detect fine features which will be lost by downsampling the image. Increasing the max stride will result in a larger receptive field at the cost of increasing the number of trainable parameters in the model—which requires more GPU memory and results in slower training and inference. (You may need to turn down the batch size if you run out of GPU memory when training a larger model, which will further slow down training.)</p>
@@ -831,6 +888,7 @@ title="Open an issue"
 <p>Likewise, if you turn on augmentation for brightness or contrast, then your model will produce better predictions on videos where the brightness or contrast isn’t exactly the same as your original (unaugmented) training data.</p>
 <p>For <strong>top-down</strong> models (i.e., the “centroid” model and the “centered instance” model), it’s important to choose a good <strong>anchor part</strong> which has a relatively stable position near the center of your animal and to choose as sufficiently large <strong>crop sizes</strong> so that the centered crops include the whole animal.</p>
 <p>If you have a large number of joints (nodes) in your skeleton, you should try <strong>Online Mining</strong>. <a class="reference external" href="https://arxiv.org/abs/1711.07319">Online Hard Keypoint Mining</a> will make it easier to train “hard” joints—at each epoch of training the worst performing joints make a larger contribution to the loss.</p>
+</section>
 </section>
 
 

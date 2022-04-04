@@ -28,7 +28,7 @@ We find that top-down mode works better for some multi-animal datasets while bot
 
 In addition, SLEAP uses UNET as its default backbone, but you can choose other backbones (LEAP, resnet, etc.) from a drop down menu.
 
-For more information about the types of models you can train, see :ref:`choosing_models`.
+For more information about the types of models you can train, see :ref:`choosing-models`.
 
 
 Start Training
