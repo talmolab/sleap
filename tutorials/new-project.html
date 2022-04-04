@@ -243,6 +243,26 @@
      Analysis examples
     </a>
    </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../notebooks/Data_structures.html">
+     Data structures
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../notebooks/Post_inference_tracking.html">
+     Post-inference tracking
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../notebooks/Interactive_and_resumable_training.html">
+     Interactive and resumable training
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../notebooks/Interactive_and_realtime_inference.html">
+     Interactive and realtime inference
+    </a>
+   </li>
   </ul>
  </li>
  <li class="toctree-l1 has-children">
@@ -791,6 +811,11 @@ title="Open an issue"
     <nav id="bd-toc-nav" aria-label="Page">
         <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#starting-sleap">
+   Starting SLEAP
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#opening-a-video">
    Opening a video
   </a>
@@ -820,6 +845,11 @@ title="Open an issue"
                         <nav aria-label="Page">
                             <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#starting-sleap">
+   Starting SLEAP
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#opening-a-video">
    Opening a video
   </a>
@@ -839,20 +869,44 @@ title="Open an issue"
                 
               <div>
                 
-  <section id="creating-a-project">
+  <section class="tex2jax_ignore mathjax_ignore" id="creating-a-project">
 <span id="new-project"></span><h1>Creating a project<a class="headerlink" href="#creating-a-project" title="Permalink to this headline">#</a></h1>
+<section id="starting-sleap">
+<h2>Starting SLEAP<a class="headerlink" href="#starting-sleap" title="Permalink to this headline">#</a></h2>
+<p>If you haven’t installed SLEAP yet, see <a class="reference internal" href="../installation.html"><span class="doc std std-doc">Installation</span></a> for instructions.</p>
+<p>Once you have SLEAP installed, start by opening a terminal. If you installed via the recommended <a class="reference internal" href="../installation.html#conda-package"><span class="std std-doc">conda package</span></a> method, activate the environment with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">activate</span> <span class="n">sleap</span>
+</pre></div>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>To open a terminal:</p>
+<p><strong>Windows:</strong> Open the <em>Start menu</em> and search for the <em>Anaconda Command Prompt</em> (if using Miniconda) or the <em>Command Prompt</em> if not.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On Windows, our personal preference is to use alternative terminal apps like <a class="reference external" href="https://cmder.net">Cmder</a> or <a class="reference external" href="https://aka.ms/terminal">Windows Terminal</a>.</p>
+</div>
+<p><strong>Linux:</strong> Launch a new terminal by pressing <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>.</p>
+<p><strong>Mac:</strong> Launch a new terminal by pressing <kbd>Cmd</kbd> + <kbd>Space</kbd> and searching for <em>Terminal</em>.</p>
+</div>
+<p>To launch the GUI, simply enter in the terminal:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sleap</span><span class="o">-</span><span class="n">label</span>
+</pre></div>
+</div>
 <p>When you first start SLEAP you’ll see a new, empty project.</p>
+</section>
 <section id="opening-a-video">
 <h2>Opening a video<a class="headerlink" href="#opening-a-video" title="Permalink to this headline">#</a></h2>
-<p>Add a <strong>video</strong> by clicking the “<strong>Add Video</strong>” button in the “Videos” panel
-on the right side of the main window.</p>
-<p><img alt="image0" src="../_images/add-video.gif" /></p>
+<p>Add a video by clicking the “<strong>Add Video</strong>” button in the “<strong>Videos</strong>” panel
+on the right side of the main window, or by dragging-and-dropping your video file from its
+folder into the SLEAP GUI.</p>
+<img alt="../_images/add-video.gif" src="../_images/add-video.gif" />
 <p>You’ll then be able to select one or more video files and click “<strong>Open</strong>”.
 SLEAP currently supports mp4, avi, and h5 files. For mp4 and avi files,
 you’ll be asked whether to import the video as grayscale. For h5 files,
 you’ll be asked the dataset and whether the video is stored with
 channels first or last.</p>
-<p><img alt="image1" src="../_images/video-options.gif" /></p>
+<img alt="../_images/video-options.gif" src="../_images/video-options.gif" />
 </section>
 <section id="creating-a-skeleton">
 <span id="new-skeleton"></span><h2>Creating a Skeleton<a class="headerlink" href="#creating-a-skeleton" title="Permalink to this headline">#</a></h2>
@@ -865,7 +919,7 @@ to connect the nodes with edges. Directly to the left of the “Add edge”
 button you’ll see two drop-down menus. Use these to select a pair of
 nodes, and then click “<strong>Add Edge</strong>”. Repeat until you’ve entered all the
 edges.</p>
-<p><img alt="image2" src="../_images/add-skeleton.gif" /></p>
+<img alt="../_images/add-skeleton.gif" src="../_images/add-skeleton.gif" />
 <p>Continue to <a class="reference internal" href="initial-labeling.html#initial-labeling"><span class="std std-ref">Initial Labeling</span></a>.</p>
 </section>
 </section>
@@ -899,7 +953,7 @@ edges.</p>
     <div class="footer-content row">
         <footer class="col footer"><p>
   
-    By Talmo D. Pereira<br/>
+    By SLEAP Developers<br/>
   
       &copy; Copyright 2019–2022, Talmo Lab.<br/>
 </p>

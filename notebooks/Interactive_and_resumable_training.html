@@ -1,0 +1,1468 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Interactive and resumable training &#8212; SLEAP (v1.2.2)</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <link rel="canonical" href="/develop/notebooks/Interactive_and_resumable_training.html" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Interactive and realtime inference" href="Interactive_and_realtime_inference.html" />
+    <link rel="prev" title="Post-inference tracking" href="Post_inference_tracking.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../index.html">
+   Home
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../overview.html">
+   Overview
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../installation.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../tutorials/tutorial.html">
+   Tutorial
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../tutorials/new-project.html">
+     Creating a project
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../tutorials/initial-labeling.html">
+     Initial Labeling
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../tutorials/initial-training.html">
+     Training and Inference
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../tutorials/assisted-labeling.html">
+     Prediction-assisted labeling
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../tutorials/proofreading.html">
+     Tracking instances across frames
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../tutorials/analysis.html">
+     Export Data For Analysis
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../guides/index.html">
+   Guides
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/gui.html">
+     GUI
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/cli.html">
+     Command line interfaces
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/skeletons.html">
+     Skeleton design
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/choosing-models.html">
+     Choosing a set of models
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/merging.html">
+     Importing predictions for labeling
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/proofreading.html">
+     Tracking and proofreading
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/colab.html">
+     Run training and inference on Colab
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/custom-training.html">
+     Creating a custom training profile
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../guides/remote.html">
+     Running SLEAP remotely
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="index.html">
+   Notebooks
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="Training_and_inference_on_an_example_dataset.html">
+     Training and inference on an example dataset
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Training_and_inference_using_Google_Drive.html">
+     Training and inference on your own data using Google Drive
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Model_evaluation.html">
+     Model evaluation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Analysis_examples.html">
+     Analysis examples
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Data_structures.html">
+     Data structures
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Post_inference_tracking.html">
+     Post-inference tracking
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     Interactive and resumable training
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Interactive_and_realtime_inference.html">
+     Interactive and realtime inference
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../api.html">
+   Developer API
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+  <label for="toctree-checkbox-4">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.instance.html">
+     sleap.instance
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.message.html">
+     sleap.message
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.skeleton.html">
+     sleap.skeleton
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.util.html">
+     sleap.util
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.callbacks.html">
+     sleap.nn.callbacks
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.evals.html">
+     sleap.nn.evals
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.heads.html">
+     sleap.nn.heads
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.identity.html">
+     sleap.nn.identity
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.inference.html">
+     sleap.nn.inference
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.losses.html">
+     sleap.nn.losses
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.model.html">
+     sleap.nn.model
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.paf_grouping.html">
+     sleap.nn.paf_grouping
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.peak_finding.html">
+     sleap.nn.peak_finding
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.system.html">
+     sleap.nn.system
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.tracking.html">
+     sleap.nn.tracking
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.training.html">
+     sleap.nn.training
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.utils.html">
+     sleap.nn.utils
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.viz.html">
+     sleap.nn.viz
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.config.data.html">
+     sleap.nn.config.data
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.config.model.html">
+     sleap.nn.config.model
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.config.optimization.html">
+     sleap.nn.config.optimization
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.config.outputs.html">
+     sleap.nn.config.outputs
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.config.training_job.html">
+     sleap.nn.config.training_job
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.config.utils.html">
+     sleap.nn.config.utils
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.augmentation.html">
+     sleap.nn.data.augmentation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.confidence_maps.html">
+     sleap.nn.data.confidence_maps
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.dataset_ops.html">
+     sleap.nn.data.dataset_ops
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.edge_maps.html">
+     sleap.nn.data.edge_maps
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.general.html">
+     sleap.nn.data.general
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.grouping.html">
+     sleap.nn.data.grouping
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.identity.html">
+     sleap.nn.data.identity
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.inference.html">
+     sleap.nn.data.inference
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.instance_centroids.html">
+     sleap.nn.data.instance_centroids
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.instance_cropping.html">
+     sleap.nn.data.instance_cropping
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.normalization.html">
+     sleap.nn.data.normalization
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.offset_regression.html">
+     sleap.nn.data.offset_regression
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.pipelines.html">
+     sleap.nn.data.pipelines
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.providers.html">
+     sleap.nn.data.providers
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.resizing.html">
+     sleap.nn.data.resizing
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.training.html">
+     sleap.nn.data.training
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.data.utils.html">
+     sleap.nn.data.utils
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.tracker.components.html">
+     sleap.nn.tracker.components
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.tracker.kalman.html">
+     sleap.nn.tracker.kalman
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.common.html">
+     sleap.nn.architectures.common
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.encoder_decoder.html">
+     sleap.nn.architectures.encoder_decoder
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.hourglass.html">
+     sleap.nn.architectures.hourglass
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.hrnet.html">
+     sleap.nn.architectures.hrnet
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.leap.html">
+     sleap.nn.architectures.leap
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.pretrained_encoders.html">
+     sleap.nn.architectures.pretrained_encoders
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.resnet.html">
+     sleap.nn.architectures.resnet
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.unet.html">
+     sleap.nn.architectures.unet
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.nn.architectures.upsampling.html">
+     sleap.nn.architectures.upsampling
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.asyncvideo.html">
+     sleap.io.asyncvideo
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.convert.html">
+     sleap.io.convert
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.dataset.html">
+     sleap.io.dataset
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.legacy.html">
+     sleap.io.legacy
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.pathutils.html">
+     sleap.io.pathutils
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.video.html">
+     sleap.io.video
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.videowriter.html">
+     sleap.io.videowriter
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.visuals.html">
+     sleap.io.visuals
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.adaptor.html">
+     sleap.io.format.adaptor
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.coco.html">
+     sleap.io.format.coco
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.deeplabcut.html">
+     sleap.io.format.deeplabcut
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.deepposekit.html">
+     sleap.io.format.deepposekit
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.dispatch.html">
+     sleap.io.format.dispatch
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.filehandle.html">
+     sleap.io.format.filehandle
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.genericjson.html">
+     sleap.io.format.genericjson
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.hdf5.html">
+     sleap.io.format.hdf5
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.labels_json.html">
+     sleap.io.format.labels_json
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.leap_matlab.html">
+     sleap.io.format.leap_matlab
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.main.html">
+     sleap.io.format.main
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.sleap_analysis.html">
+     sleap.io.format.sleap_analysis
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.io.format.text.html">
+     sleap.io.format.text
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.info.align.html">
+     sleap.info.align
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.info.feature_suggestions.html">
+     sleap.info.feature_suggestions
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.info.labels.html">
+     sleap.info.labels
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.info.metrics.html">
+     sleap.info.metrics
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.info.summary.html">
+     sleap.info.summary
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.info.trackcleaner.html">
+     sleap.info.trackcleaner
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../api/sleap.info.write_tracking_h5.html">
+     sleap.info.write_tracking_h5
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference external" href="https://github.com/murthylab/sleap-datasets">
+   Sample datasets
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference external" href="https://github.com/murthylab/sleap">
+   Source code
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference external" href="https://github.com/murthylab/sleap/releases">
+   Releases
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../help.html">
+   Help
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/murthylab/sleap"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fnotebooks/Interactive_and_resumable_training.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#setup-sleap">
+   1. Setup SLEAP
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#setup-training-data">
+   2. Setup training data
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#setup-training-job">
+   3. Setup training job
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#training">
+   4. Training
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#continuing-training">
+   5. Continuing training
+  </a>
+ </li>
+</ul>
+
+    </nav>
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>Interactive and resumable training</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#setup-sleap">
+   1. Setup SLEAP
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#setup-training-data">
+   2. Setup training data
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#setup-training-job">
+   3. Setup training job
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#training">
+   4. Training
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#continuing-training">
+   5. Continuing training
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
+  <p><a href="https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Interactive_and_resumable_training.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<section class="tex2jax_ignore mathjax_ignore" id="interactive-and-resumable-training">
+<h1>Interactive and resumable training<a class="headerlink" href="#interactive-and-resumable-training" title="Permalink to this headline">#</a></h1>
+<p>Most of the time, you will be training models through the GUI or using the <a class="reference external" href="https://sleap.ai/guides/cli.html#sleap-train"><code class="docutils literal notranslate"><span class="pre">sleap-train</span></code> CLI</a>.</p>
+<p>If you’d like to customize the training process, however, you can use SLEAP’s low-level training functionality interactively. This allows you to define scripts that train models according to your own workflow, for example, to <strong>resume training</strong> on an already trained model. Another possible application would be to train a model using <strong>transfer learning</strong>, where a pretrained model can be used to initialize the weights of the new model.</p>
+<p>In this notebook we will explore how to set up a training job and train a model for multiple rounds without the GUI or CLI.</p>
+<section id="setup-sleap">
+<h2>1. Setup SLEAP<a class="headerlink" href="#setup-sleap" title="Permalink to this headline">#</a></h2>
+<p>Run this cell first to install SLEAP. If you get a dependency error in subsequent cells, just click <strong>Runtime</strong> → <strong>Restart runtime</strong> to reload the packages.</p>
+<p>Don’t forget to set <strong>Runtime</strong> → <strong>Change runtime type</strong> → <strong>GPU</strong> as the accelerator.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># This should take care of all the dependencies on colab:
+!pip uninstall -y opencv-python opencv-contrib-python &amp;&amp; pip install sleap
+
+
+# But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):
+# conda create -n sleap -c sleap -c conda-forge -c nvidia sleap
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Found existing installation: opencv-python 4.1.2.30
+Uninstalling opencv-python-4.1.2.30:
+  Successfully uninstalled opencv-python-4.1.2.30
+Found existing installation: opencv-contrib-python 4.1.2.30
+Uninstalling opencv-contrib-python-4.1.2.30:
+  Successfully uninstalled opencv-contrib-python-4.1.2.30
+Collecting sleap
+  Downloading sleap-1.2.2-py3-none-any.whl (62.0 MB)
+     |████████████████████████████████| 62.0 MB 1.3 MB/s 
+?25hRequirement already satisfied: certifi&lt;=2021.10.8,&gt;=2017.4.17 in /usr/local/lib/python3.7/dist-packages (from sleap) (2021.10.8)
+Requirement already satisfied: tensorflow&lt;2.9.0,&gt;=2.6.3 in /usr/local/lib/python3.7/dist-packages (from sleap) (2.8.0)
+Requirement already satisfied: pyzmq in /usr/local/lib/python3.7/dist-packages (from sleap) (22.3.0)
+Collecting jsonpickle==1.2
+  Downloading jsonpickle-1.2-py2.py3-none-any.whl (32 kB)
+Requirement already satisfied: scikit-learn==1.0.* in /usr/local/lib/python3.7/dist-packages (from sleap) (1.0.2)
+Collecting opencv-python-headless&lt;=4.5.5.62,&gt;=4.2.0.34
+  Downloading opencv_python_headless-4.5.5.62-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (47.7 MB)
+     |████████████████████████████████| 47.7 MB 85 kB/s 
+?25hCollecting rich==10.16.1
+  Downloading rich-10.16.1-py3-none-any.whl (214 kB)
+     |████████████████████████████████| 214 kB 49.1 MB/s 
+?25hRequirement already satisfied: numpy&lt;=1.21.5,&gt;=1.19.5 in /usr/local/lib/python3.7/dist-packages (from sleap) (1.21.5)
+Requirement already satisfied: imageio&lt;=2.15.0 in /usr/local/lib/python3.7/dist-packages (from sleap) (2.4.1)
+Collecting scikit-video
+  Downloading scikit_video-1.1.11-py2.py3-none-any.whl (2.3 MB)
+     |████████████████████████████████| 2.3 MB 38.3 MB/s 
+?25hRequirement already satisfied: h5py&lt;=3.6.0,&gt;=3.1.0 in /usr/local/lib/python3.7/dist-packages (from sleap) (3.1.0)
+Collecting cattrs==1.1.1
+  Downloading cattrs-1.1.1-py3-none-any.whl (16 kB)
+Collecting python-rapidjson
+  Downloading python_rapidjson-1.6-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.6 MB)
+     |████████████████████████████████| 1.6 MB 39.3 MB/s 
+?25hCollecting imgaug==0.4.0
+  Downloading imgaug-0.4.0-py2.py3-none-any.whl (948 kB)
+     |████████████████████████████████| 948 kB 40.4 MB/s 
+?25hRequirement already satisfied: networkx in /usr/local/lib/python3.7/dist-packages (from sleap) (2.6.3)
+Requirement already satisfied: seaborn in /usr/local/lib/python3.7/dist-packages (from sleap) (0.11.2)
+Collecting pykalman==0.9.5
+  Downloading pykalman-0.9.5.tar.gz (228 kB)
+     |████████████████████████████████| 228 kB 52.8 MB/s 
+?25hRequirement already satisfied: pyyaml in /usr/local/lib/python3.7/dist-packages (from sleap) (3.13)
+Collecting PySide2&lt;=5.14.1,&gt;=5.13.2
+  Downloading PySide2-5.14.1-5.14.1-cp35.cp36.cp37.cp38-abi3-manylinux1_x86_64.whl (165.5 MB)
+     |████████████████████████████████| 165.5 MB 76 kB/s 
+?25hCollecting attrs==21.2.0
+  Downloading attrs-21.2.0-py2.py3-none-any.whl (53 kB)
+     |████████████████████████████████| 53 kB 2.3 MB/s 
+?25hRequirement already satisfied: psutil in /usr/local/lib/python3.7/dist-packages (from sleap) (5.4.8)
+Collecting imgstore==0.2.9
+  Downloading imgstore-0.2.9-py2.py3-none-any.whl (904 kB)
+     |████████████████████████████████| 904 kB 39.4 MB/s 
+?25hCollecting jsmin
+  Downloading jsmin-3.0.1.tar.gz (13 kB)
+Requirement already satisfied: pandas in /usr/local/lib/python3.7/dist-packages (from sleap) (1.3.5)
+Collecting segmentation-models==1.0.1
+  Downloading segmentation_models-1.0.1-py3-none-any.whl (33 kB)
+Requirement already satisfied: scipy&lt;=1.7.3,&gt;=1.4.1 in /usr/local/lib/python3.7/dist-packages (from sleap) (1.4.1)
+Requirement already satisfied: scikit-image in /usr/local/lib/python3.7/dist-packages (from sleap) (0.18.3)
+Collecting qimage2ndarray&lt;=1.8.3,&gt;=1.8.2
+  Downloading qimage2ndarray-1.8.3-py3-none-any.whl (11 kB)
+Requirement already satisfied: Shapely in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (1.8.1.post1)
+Requirement already satisfied: Pillow in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (7.1.2)
+Requirement already satisfied: matplotlib in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (3.2.2)
+Collecting opencv-python
+  Downloading opencv_python-4.5.5.64-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (60.5 MB)
+     |████████████████████████████████| 60.5 MB 1.4 MB/s 
+?25hRequirement already satisfied: six in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (1.15.0)
+Requirement already satisfied: pytz in /usr/local/lib/python3.7/dist-packages (from imgstore==0.2.9-&gt;sleap) (2018.9)
+Requirement already satisfied: python-dateutil in /usr/local/lib/python3.7/dist-packages (from imgstore==0.2.9-&gt;sleap) (2.8.2)
+Requirement already satisfied: tzlocal in /usr/local/lib/python3.7/dist-packages (from imgstore==0.2.9-&gt;sleap) (1.5.1)
+Collecting colorama&lt;0.5.0,&gt;=0.4.0
+  Downloading colorama-0.4.4-py2.py3-none-any.whl (16 kB)
+Requirement already satisfied: typing-extensions&lt;5.0,&gt;=3.7.4 in /usr/local/lib/python3.7/dist-packages (from rich==10.16.1-&gt;sleap) (3.10.0.2)
+Requirement already satisfied: pygments&lt;3.0.0,&gt;=2.6.0 in /usr/local/lib/python3.7/dist-packages (from rich==10.16.1-&gt;sleap) (2.6.1)
+Collecting commonmark&lt;0.10.0,&gt;=0.9.0
+  Downloading commonmark-0.9.1-py2.py3-none-any.whl (51 kB)
+     |████████████████████████████████| 51 kB 6.5 MB/s 
+?25hRequirement already satisfied: joblib&gt;=0.11 in /usr/local/lib/python3.7/dist-packages (from scikit-learn==1.0.*-&gt;sleap) (1.1.0)
+Requirement already satisfied: threadpoolctl&gt;=2.0.0 in /usr/local/lib/python3.7/dist-packages (from scikit-learn==1.0.*-&gt;sleap) (3.1.0)
+Collecting keras-applications&lt;=1.0.8,&gt;=1.0.7
+  Downloading Keras_Applications-1.0.8-py3-none-any.whl (50 kB)
+     |████████████████████████████████| 50 kB 6.0 MB/s 
+?25hCollecting image-classifiers==1.0.0
+  Downloading image_classifiers-1.0.0-py3-none-any.whl (19 kB)
+Collecting efficientnet==1.0.0
+  Downloading efficientnet-1.0.0-py3-none-any.whl (17 kB)
+Requirement already satisfied: cached-property in /usr/local/lib/python3.7/dist-packages (from h5py&lt;=3.6.0,&gt;=3.1.0-&gt;sleap) (1.5.2)
+Collecting shiboken2==5.14.1
+  Downloading shiboken2-5.14.1-5.14.1-cp35.cp36.cp37.cp38-abi3-manylinux1_x86_64.whl (847 kB)
+     |████████████████████████████████| 847 kB 39.4 MB/s 
+?25hRequirement already satisfied: tifffile&gt;=2019.7.26 in /usr/local/lib/python3.7/dist-packages (from scikit-image-&gt;sleap) (2021.11.2)
+Requirement already satisfied: PyWavelets&gt;=1.1.1 in /usr/local/lib/python3.7/dist-packages (from scikit-image-&gt;sleap) (1.3.0)
+Requirement already satisfied: cycler&gt;=0.10 in /usr/local/lib/python3.7/dist-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap) (0.11.0)
+Requirement already satisfied: kiwisolver&gt;=1.0.1 in /usr/local/lib/python3.7/dist-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap) (1.4.0)
+Requirement already satisfied: pyparsing!=2.0.4,!=2.1.2,!=2.1.6,&gt;=2.0.1 in /usr/local/lib/python3.7/dist-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap) (3.0.7)
+Requirement already satisfied: tensorflow-io-gcs-filesystem&gt;=0.23.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.24.0)
+Requirement already satisfied: flatbuffers&gt;=1.12 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.0)
+Requirement already satisfied: astunparse&gt;=1.6.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.6.3)
+Requirement already satisfied: opt-einsum&gt;=2.3.2 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.3.0)
+Requirement already satisfied: protobuf&gt;=3.9.2 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.17.3)
+Collecting tf-estimator-nightly==2.8.0.dev2021122109
+  Downloading tf_estimator_nightly-2.8.0.dev2021122109-py2.py3-none-any.whl (462 kB)
+     |████████████████████████████████| 462 kB 48.3 MB/s 
+?25hRequirement already satisfied: google-pasta&gt;=0.1.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.2.0)
+Requirement already satisfied: tensorboard&lt;2.9,&gt;=2.8 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.8.0)
+Requirement already satisfied: wrapt&gt;=1.11.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.14.0)
+Requirement already satisfied: setuptools in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (57.4.0)
+Requirement already satisfied: keras-preprocessing&gt;=1.1.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.1.2)
+Requirement already satisfied: termcolor&gt;=1.1.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.1.0)
+Requirement already satisfied: grpcio&lt;2.0,&gt;=1.24.3 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.44.0)
+Requirement already satisfied: gast&gt;=0.2.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.5.3)
+Requirement already satisfied: libclang&gt;=9.0.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (13.0.0)
+Requirement already satisfied: absl-py&gt;=0.4.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.0.0)
+Requirement already satisfied: keras&lt;2.9,&gt;=2.8.0rc0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.8.0)
+Requirement already satisfied: wheel&lt;1.0,&gt;=0.23.0 in /usr/local/lib/python3.7/dist-packages (from astunparse&gt;=1.6.0-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.37.1)
+Requirement already satisfied: markdown&gt;=2.6.8 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.3.6)
+Requirement already satisfied: tensorboard-plugin-wit&gt;=1.6.0 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.8.1)
+Requirement already satisfied: werkzeug&gt;=0.11.15 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.0.1)
+Requirement already satisfied: requests&lt;3,&gt;=2.21.0 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.23.0)
+Requirement already satisfied: google-auth&lt;3,&gt;=1.6.3 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.35.0)
+Requirement already satisfied: tensorboard-data-server&lt;0.7.0,&gt;=0.6.0 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.6.1)
+Requirement already satisfied: google-auth-oauthlib&lt;0.5,&gt;=0.4.1 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.4.6)
+Requirement already satisfied: pyasn1-modules&gt;=0.2.1 in /usr/local/lib/python3.7/dist-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.2.8)
+Requirement already satisfied: cachetools&lt;5.0,&gt;=2.0.0 in /usr/local/lib/python3.7/dist-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (4.2.4)
+Requirement already satisfied: rsa&lt;5,&gt;=3.1.4 in /usr/local/lib/python3.7/dist-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (4.8)
+Requirement already satisfied: requests-oauthlib&gt;=0.7.0 in /usr/local/lib/python3.7/dist-packages (from google-auth-oauthlib&lt;0.5,&gt;=0.4.1-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.3.1)
+Requirement already satisfied: importlib-metadata&gt;=4.4 in /usr/local/lib/python3.7/dist-packages (from markdown&gt;=2.6.8-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (4.11.3)
+Requirement already satisfied: zipp&gt;=0.5 in /usr/local/lib/python3.7/dist-packages (from importlib-metadata&gt;=4.4-&gt;markdown&gt;=2.6.8-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.7.0)
+Requirement already satisfied: pyasn1&lt;0.5.0,&gt;=0.4.6 in /usr/local/lib/python3.7/dist-packages (from pyasn1-modules&gt;=0.2.1-&gt;google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.4.8)
+Requirement already satisfied: chardet&lt;4,&gt;=3.0.2 in /usr/local/lib/python3.7/dist-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.0.4)
+Requirement already satisfied: urllib3!=1.25.0,!=1.25.1,&lt;1.26,&gt;=1.21.1 in /usr/local/lib/python3.7/dist-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.24.3)
+Requirement already satisfied: idna&lt;3,&gt;=2.5 in /usr/local/lib/python3.7/dist-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.10)
+Requirement already satisfied: oauthlib&gt;=3.0.0 in /usr/local/lib/python3.7/dist-packages (from requests-oauthlib&gt;=0.7.0-&gt;google-auth-oauthlib&lt;0.5,&gt;=0.4.1-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.2.0)
+Building wheels for collected packages: pykalman, jsmin
+  Building wheel for pykalman (setup.py) ... ?25l?25hdone
+  Created wheel for pykalman: filename=pykalman-0.9.5-py3-none-any.whl size=48462 sha256=dde739150408cee5e4cb98680575a79e9cf2574d606fea22d81dac69689e1b5f
+  Stored in directory: /root/.cache/pip/wheels/6a/04/02/2dda6ea59c66d9e685affc8af3a31ad3a5d87b7311689efce6
+  Building wheel for jsmin (setup.py) ... ?25l?25hdone
+  Created wheel for jsmin: filename=jsmin-3.0.1-py3-none-any.whl size=13782 sha256=28e30a78deeb41cb8a5a2a452ecd4209438e26a6f74af8de2e29a7da35b6fe93
+  Stored in directory: /root/.cache/pip/wheels/a4/0b/64/fb4f87526ecbdf7921769a39d91dcfe4860e621cf15b8250d6
+Successfully built pykalman jsmin
+Installing collected packages: keras-applications, tf-estimator-nightly, shiboken2, opencv-python, image-classifiers, efficientnet, commonmark, colorama, attrs, segmentation-models, scikit-video, rich, qimage2ndarray, python-rapidjson, PySide2, pykalman, opencv-python-headless, jsonpickle, jsmin, imgstore, imgaug, cattrs, sleap
+  Attempting uninstall: attrs
+    Found existing installation: attrs 21.4.0
+    Uninstalling attrs-21.4.0:
+      Successfully uninstalled attrs-21.4.0
+  Attempting uninstall: imgaug
+    Found existing installation: imgaug 0.2.9
+    Uninstalling imgaug-0.2.9:
+      Successfully uninstalled imgaug-0.2.9
+<span class=" -Color -Color-Red">ERROR: pip&#39;s dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.</span>
+<span class=" -Color -Color-Red">datascience 0.10.6 requires folium==0.2.1, but you have folium 0.8.3 which is incompatible.</span>
+<span class=" -Color -Color-Red">albumentations 0.1.12 requires imgaug&lt;0.2.7,&gt;=0.2.5, but you have imgaug 0.4.0 which is incompatible.</span>
+Successfully installed PySide2-5.14.1 attrs-21.2.0 cattrs-1.1.1 colorama-0.4.4 commonmark-0.9.1 efficientnet-1.0.0 image-classifiers-1.0.0 imgaug-0.4.0 imgstore-0.2.9 jsmin-3.0.1 jsonpickle-1.2 keras-applications-1.0.8 opencv-python-4.5.5.64 opencv-python-headless-4.5.5.62 pykalman-0.9.5 python-rapidjson-1.6 qimage2ndarray-1.8.3 rich-10.16.1 scikit-video-1.1.11 segmentation-models-1.0.1 shiboken2-5.14.1 sleap-1.2.2 tf-estimator-nightly-2.8.0.dev2021122109
+</pre></div>
+</div>
+</div>
+</div>
+<p>Import SLEAP to make sure it installed correctly and print out some information about the system:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sleap</span>
+<span class="n">sleap</span><span class="o">.</span><span class="n">versions</span><span class="p">()</span>
+<span class="n">sleap</span><span class="o">.</span><span class="n">system_summary</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:numexpr.utils:NumExpr defaulting to 2 threads.
+SLEAP: 1.2.2
+TensorFlow: 2.8.0
+Numpy: 1.21.5
+Python: 3.7.13
+OS: Linux-5.4.144+-x86_64-with-Ubuntu-18.04-bionic
+GPUs: 1/1 available
+  Device: /physical_device:GPU:0
+         Available: True
+        Initalized: False
+     Memory growth: None
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="setup-training-data">
+<h2>2. Setup training data<a class="headerlink" href="#setup-training-data" title="Permalink to this headline">#</a></h2>
+<p>Here we will download an existing training dataset package. This is an <code class="docutils literal notranslate"><span class="pre">.slp</span></code> file that contains both the labeled poses, as well as the image data for labeled frames.</p>
+<p>If running on Google Colab, you’ll want to replace this with mounting your Google Drive folder containing your own data, or if running locally, simply change the path to your labels below in <code class="docutils literal notranslate"><span class="pre">TRAINING_SLP_FILE</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># !curl -L --output labels.pkg.slp https://www.dropbox.com/s/b990gxjt3d3j3jh/210205.sleap_wt_gold.13pt.pkg.slp?dl=1
+!curl -L --output labels.pkg.slp https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/train.pkg.slp
+!ls -lah
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  619M  100  619M    0     0   106M      0  0:00:05  0:00:05 --:--:--  110M
+total 620M
+drwxr-xr-x 1 root root 4.0K Apr  3 23:48 .
+drwxr-xr-x 1 root root 4.0K Apr  3 23:40 ..
+drwxr-xr-x 4 root root 4.0K Mar 23 14:21 .config
+-rw-r--r-- 1 root root 620M Apr  3 23:48 labels.pkg.slp
+drwxr-xr-x 1 root root 4.0K Mar 23 14:22 sample_data
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">TRAINING_SLP_FILE</span> <span class="o">=</span> <span class="s2">&quot;labels.pkg.slp&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="setup-training-job">
+<h2>3. Setup training job<a class="headerlink" href="#setup-training-job" title="Permalink to this headline">#</a></h2>
+<p>A SLEAP <code class="docutils literal notranslate"><span class="pre">TrainingJobConfig</span></code> is a structure that contains all of the hyperparameters needed to train a SLEAP model. This is typically saved out to <code class="docutils literal notranslate"><span class="pre">initial_config.json</span></code> and <code class="docutils literal notranslate"><span class="pre">training_config.json</span></code> in the model folder so that training runs can be reproduced if needed, as well as to store metadata necessary for inference.</p>
+<p>Normally, these are generated interactively by the GUI, or manually by editing an existing JSON file in a text editor. Here, we will define a configuration interactively entirely in Python.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1"># Initialize the default training job configuration.</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">TrainingJobConfig</span><span class="p">()</span>
+
+<span class="c1"># Update path to training data we just downloaded.</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">training_labels</span> <span class="o">=</span> <span class="n">TRAINING_SLP_FILE</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">validation_fraction</span> <span class="o">=</span> <span class="mf">0.1</span>
+
+<span class="c1"># Preprocesssing and training parameters.</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">instance_cropping</span><span class="o">.</span><span class="n">center_on_part</span> <span class="o">=</span> <span class="s2">&quot;thorax&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">optimization</span><span class="o">.</span><span class="n">augmentation_config</span><span class="o">.</span><span class="n">rotate</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">optimization</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># This is the maximum number of training rounds.</span>
+
+<span class="c1"># These configures the actual neural network and the model type:</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">backbone</span><span class="o">.</span><span class="n">unet</span> <span class="o">=</span> <span class="n">UNetConfig</span><span class="p">(</span>
+    <span class="n">filters</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">output_stride</span><span class="o">=</span><span class="mi">4</span>
+<span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">heads</span><span class="o">.</span><span class="n">centered_instance</span> <span class="o">=</span> <span class="n">CenteredInstanceConfmapsHeadConfig</span><span class="p">(</span>
+    <span class="n">anchor_part</span><span class="o">=</span><span class="s2">&quot;thorax&quot;</span><span class="p">,</span>
+    <span class="n">sigma</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+    <span class="n">output_stride</span><span class="o">=</span><span class="mi">4</span>
+<span class="p">)</span>
+
+<span class="c1"># Setup how we want to save the trained model.</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">run_name</span> <span class="o">=</span> <span class="s2">&quot;baseline_model.topdown&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Existing configs can also be loaded from a <code class="docutils literal notranslate"><span class="pre">.json</span></code> file with:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="s2">&quot;training_config.json&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="training">
+<h2>4. Training<a class="headerlink" href="#training" title="Permalink to this headline">#</a></h2>
+<p>Next we will create a SLEAP <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> from the configuration we just specified. This handles all the nitty gritty mechanics necessary to setup training in the backend.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">Trainer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.training:Loading training labels from: labels.pkg.slp
+INFO:sleap.nn.training:Creating training and validation splits from validation fraction: 0.1
+INFO:sleap.nn.training:  Splits: Training = 1440 / Validation = 160.
+</pre></div>
+</div>
+</div>
+</div>
+<p>Great, now we’re ready to do the first round of training. This is when the model will actually start to improve over time:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.training:Setting up for training...
+INFO:sleap.nn.training:Setting up pipeline builders...
+INFO:sleap.nn.training:Setting up model...
+INFO:sleap.nn.training:Building test pipeline...
+INFO:sleap.nn.training:Loaded test example. [6.047s]
+INFO:sleap.nn.training:  Input shape: (160, 160, 1)
+INFO:sleap.nn.training:Created Keras model.
+INFO:sleap.nn.training:  Backbone: UNet(stacks=1, filters=16, filters_rate=2, kernel_size=3, stem_kernel_size=7, convs_per_block=2, stem_blocks=0, down_blocks=4, middle_block=True, up_blocks=2, up_interpolate=False, block_contraction=False)
+INFO:sleap.nn.training:  Max stride: 16
+INFO:sleap.nn.training:  Parameters: 2,101,501
+INFO:sleap.nn.training:  Heads: 
+INFO:sleap.nn.training:    [0] = CenteredInstanceConfmapsHead(part_names=[&#39;head&#39;, &#39;thorax&#39;, &#39;abdomen&#39;, &#39;wingL&#39;, &#39;wingR&#39;, &#39;forelegL4&#39;, &#39;forelegR4&#39;, &#39;midlegL4&#39;, &#39;midlegR4&#39;, &#39;hindlegL4&#39;, &#39;hindlegR4&#39;, &#39;eyeL&#39;, &#39;eyeR&#39;], anchor_part=&#39;thorax&#39;, sigma=1.5, output_stride=4, loss_weight=1.0)
+INFO:sleap.nn.training:  Outputs: 
+INFO:sleap.nn.training:    [0] = KerasTensor(type_spec=TensorSpec(shape=(None, 40, 40, 13), dtype=tf.float32, name=None), name=&#39;CenteredInstanceConfmapsHead/BiasAdd:0&#39;, description=&quot;created by layer &#39;CenteredInstanceConfmapsHead&#39;&quot;)
+INFO:sleap.nn.training:Setting up data pipelines...
+INFO:sleap.nn.training:Training set: n = 1440
+INFO:sleap.nn.training:Validation set: n = 160
+INFO:sleap.nn.training:Setting up optimization...
+INFO:sleap.nn.training:  Learning rate schedule: LearningRateScheduleConfig(reduce_on_plateau=True, reduction_factor=0.5, plateau_min_delta=1e-06, plateau_patience=5, plateau_cooldown=3, min_learning_rate=1e-08)
+INFO:sleap.nn.training:  Early stopping: EarlyStoppingConfig(stop_training_on_plateau=True, plateau_min_delta=1e-06, plateau_patience=10)
+INFO:sleap.nn.training:Setting up outputs...
+INFO:sleap.nn.training:Created run path: models/baseline_model.topdown
+INFO:sleap.nn.training:Setting up visualization...
+Unable to use Qt backend for matplotlib. This probably means Qt is running headless.
+INFO:sleap.nn.training:Finished trainer set up. [10.4s]
+INFO:sleap.nn.training:Creating tf.data.Datasets for training data generation...
+INFO:sleap.nn.training:Finished creating training datasets. [29.5s]
+INFO:sleap.nn.training:Starting training loop...
+Epoch 1/10
+360/360 - 70s - loss: 0.0037 - head: 0.0029 - thorax: 0.0030 - abdomen: 0.0037 - wingL: 0.0041 - wingR: 0.0041 - forelegL4: 0.0037 - forelegR4: 0.0038 - midlegL4: 0.0041 - midlegR4: 0.0041 - hindlegL4: 0.0039 - hindlegR4: 0.0040 - eyeL: 0.0033 - eyeR: 0.0034 - val_loss: 0.0033 - val_head: 0.0017 - val_thorax: 0.0025 - val_abdomen: 0.0035 - val_wingL: 0.0039 - val_wingR: 0.0039 - val_forelegL4: 0.0033 - val_forelegR4: 0.0036 - val_midlegL4: 0.0040 - val_midlegR4: 0.0040 - val_hindlegL4: 0.0040 - val_hindlegR4: 0.0040 - val_eyeL: 0.0022 - val_eyeR: 0.0023 - lr: 1.0000e-04 - 70s/epoch - 194ms/step
+Epoch 2/10
+360/360 - 53s - loss: 0.0028 - head: 0.0013 - thorax: 0.0020 - abdomen: 0.0028 - wingL: 0.0031 - wingR: 0.0031 - forelegL4: 0.0032 - forelegR4: 0.0033 - midlegL4: 0.0039 - midlegR4: 0.0039 - hindlegL4: 0.0037 - hindlegR4: 0.0038 - eyeL: 0.0013 - eyeR: 0.0014 - val_loss: 0.0025 - val_head: 9.5906e-04 - val_thorax: 0.0013 - val_abdomen: 0.0023 - val_wingL: 0.0025 - val_wingR: 0.0025 - val_forelegL4: 0.0029 - val_forelegR4: 0.0030 - val_midlegL4: 0.0037 - val_midlegR4: 0.0038 - val_hindlegL4: 0.0037 - val_hindlegR4: 0.0038 - val_eyeL: 8.8668e-04 - val_eyeR: 9.7728e-04 - lr: 1.0000e-04 - 53s/epoch - 148ms/step
+Epoch 3/10
+360/360 - 55s - loss: 0.0023 - head: 8.0222e-04 - thorax: 9.4507e-04 - abdomen: 0.0022 - wingL: 0.0022 - wingR: 0.0022 - forelegL4: 0.0027 - forelegR4: 0.0028 - midlegL4: 0.0035 - midlegR4: 0.0036 - hindlegL4: 0.0034 - hindlegR4: 0.0036 - eyeL: 8.5909e-04 - eyeR: 8.8003e-04 - val_loss: 0.0021 - val_head: 7.4704e-04 - val_thorax: 6.8354e-04 - val_abdomen: 0.0020 - val_wingL: 0.0018 - val_wingR: 0.0019 - val_forelegL4: 0.0024 - val_forelegR4: 0.0025 - val_midlegL4: 0.0031 - val_midlegR4: 0.0034 - val_hindlegL4: 0.0032 - val_hindlegR4: 0.0035 - val_eyeL: 7.6220e-04 - val_eyeR: 7.1808e-04 - lr: 1.0000e-04 - 55s/epoch - 154ms/step
+Epoch 4/10
+360/360 - 61s - loss: 0.0019 - head: 6.5537e-04 - thorax: 5.3996e-04 - abdomen: 0.0019 - wingL: 0.0018 - wingR: 0.0018 - forelegL4: 0.0023 - forelegR4: 0.0024 - midlegL4: 0.0027 - midlegR4: 0.0029 - hindlegL4: 0.0029 - hindlegR4: 0.0032 - eyeL: 7.4337e-04 - eyeR: 7.2396e-04 - val_loss: 0.0017 - val_head: 5.5193e-04 - val_thorax: 3.6303e-04 - val_abdomen: 0.0018 - val_wingL: 0.0016 - val_wingR: 0.0016 - val_forelegL4: 0.0020 - val_forelegR4: 0.0020 - val_midlegL4: 0.0023 - val_midlegR4: 0.0026 - val_hindlegL4: 0.0027 - val_hindlegR4: 0.0031 - val_eyeL: 6.5068e-04 - val_eyeR: 6.0169e-04 - lr: 1.0000e-04 - 61s/epoch - 169ms/step
+Epoch 5/10
+360/360 - 57s - loss: 0.0016 - head: 5.6982e-04 - thorax: 4.1064e-04 - abdomen: 0.0017 - wingL: 0.0016 - wingR: 0.0016 - forelegL4: 0.0020 - forelegR4: 0.0020 - midlegL4: 0.0021 - midlegR4: 0.0022 - hindlegL4: 0.0024 - hindlegR4: 0.0028 - eyeL: 6.5447e-04 - eyeR: 6.3768e-04 - val_loss: 0.0014 - val_head: 4.9811e-04 - val_thorax: 3.0411e-04 - val_abdomen: 0.0015 - val_wingL: 0.0014 - val_wingR: 0.0014 - val_forelegL4: 0.0017 - val_forelegR4: 0.0019 - val_midlegL4: 0.0018 - val_midlegR4: 0.0020 - val_hindlegL4: 0.0023 - val_hindlegR4: 0.0026 - val_eyeL: 5.9634e-04 - val_eyeR: 5.8405e-04 - lr: 1.0000e-04 - 57s/epoch - 157ms/step
+Epoch 6/10
+360/360 - 54s - loss: 0.0014 - head: 5.1206e-04 - thorax: 3.4952e-04 - abdomen: 0.0015 - wingL: 0.0014 - wingR: 0.0014 - forelegL4: 0.0017 - forelegR4: 0.0018 - midlegL4: 0.0017 - midlegR4: 0.0018 - hindlegL4: 0.0020 - hindlegR4: 0.0023 - eyeL: 6.0045e-04 - eyeR: 5.7847e-04 - val_loss: 0.0012 - val_head: 4.3860e-04 - val_thorax: 2.5352e-04 - val_abdomen: 0.0014 - val_wingL: 0.0013 - val_wingR: 0.0012 - val_forelegL4: 0.0015 - val_forelegR4: 0.0016 - val_midlegL4: 0.0014 - val_midlegR4: 0.0017 - val_hindlegL4: 0.0020 - val_hindlegR4: 0.0022 - val_eyeL: 5.1261e-04 - val_eyeR: 5.5203e-04 - lr: 1.0000e-04 - 54s/epoch - 151ms/step
+Epoch 7/10
+360/360 - 54s - loss: 0.0012 - head: 4.7131e-04 - thorax: 3.1231e-04 - abdomen: 0.0014 - wingL: 0.0012 - wingR: 0.0012 - forelegL4: 0.0016 - forelegR4: 0.0016 - midlegL4: 0.0015 - midlegR4: 0.0016 - hindlegL4: 0.0018 - hindlegR4: 0.0020 - eyeL: 5.7016e-04 - eyeR: 5.4539e-04 - val_loss: 0.0011 - val_head: 4.3133e-04 - val_thorax: 2.2694e-04 - val_abdomen: 0.0013 - val_wingL: 0.0011 - val_wingR: 0.0011 - val_forelegL4: 0.0014 - val_forelegR4: 0.0015 - val_midlegL4: 0.0013 - val_midlegR4: 0.0015 - val_hindlegL4: 0.0018 - val_hindlegR4: 0.0020 - val_eyeL: 5.5373e-04 - val_eyeR: 5.0355e-04 - lr: 1.0000e-04 - 54s/epoch - 149ms/step
+Epoch 8/10
+360/360 - 53s - loss: 0.0011 - head: 4.3369e-04 - thorax: 2.6750e-04 - abdomen: 0.0013 - wingL: 0.0011 - wingR: 0.0011 - forelegL4: 0.0015 - forelegR4: 0.0015 - midlegL4: 0.0014 - midlegR4: 0.0014 - hindlegL4: 0.0017 - hindlegR4: 0.0018 - eyeL: 5.2745e-04 - eyeR: 5.0480e-04 - val_loss: 0.0011 - val_head: 4.1774e-04 - val_thorax: 2.4407e-04 - val_abdomen: 0.0013 - val_wingL: 0.0011 - val_wingR: 0.0010 - val_forelegL4: 0.0013 - val_forelegR4: 0.0014 - val_midlegL4: 0.0012 - val_midlegR4: 0.0014 - val_hindlegL4: 0.0017 - val_hindlegR4: 0.0018 - val_eyeL: 6.2877e-04 - val_eyeR: 5.7243e-04 - lr: 1.0000e-04 - 53s/epoch - 148ms/step
+Epoch 9/10
+360/360 - 53s - loss: 0.0010 - head: 4.0425e-04 - thorax: 2.3597e-04 - abdomen: 0.0012 - wingL: 0.0010 - wingR: 0.0011 - forelegL4: 0.0014 - forelegR4: 0.0014 - midlegL4: 0.0013 - midlegR4: 0.0013 - hindlegL4: 0.0016 - hindlegR4: 0.0017 - eyeL: 5.0906e-04 - eyeR: 4.9227e-04 - val_loss: 0.0010 - val_head: 3.9088e-04 - val_thorax: 2.1458e-04 - val_abdomen: 0.0012 - val_wingL: 0.0010 - val_wingR: 9.4879e-04 - val_forelegL4: 0.0012 - val_forelegR4: 0.0013 - val_midlegL4: 0.0011 - val_midlegR4: 0.0014 - val_hindlegL4: 0.0016 - val_hindlegR4: 0.0017 - val_eyeL: 4.6829e-04 - val_eyeR: 4.7323e-04 - lr: 1.0000e-04 - 53s/epoch - 147ms/step
+Epoch 10/10
+360/360 - 55s - loss: 9.7632e-04 - head: 3.7896e-04 - thorax: 2.1828e-04 - abdomen: 0.0011 - wingL: 9.9185e-04 - wingR: 9.9033e-04 - forelegL4: 0.0014 - forelegR4: 0.0013 - midlegL4: 0.0012 - midlegR4: 0.0012 - hindlegL4: 0.0015 - hindlegR4: 0.0016 - eyeL: 4.7323e-04 - eyeR: 4.5868e-04 - val_loss: 9.2870e-04 - val_head: 3.3704e-04 - val_thorax: 1.5806e-04 - val_abdomen: 0.0010 - val_wingL: 9.5121e-04 - val_wingR: 9.2122e-04 - val_forelegL4: 0.0012 - val_forelegR4: 0.0014 - val_midlegL4: 0.0010 - val_midlegR4: 0.0012 - val_hindlegL4: 0.0015 - val_hindlegR4: 0.0016 - val_eyeL: 4.2130e-04 - val_eyeR: 4.1479e-04 - lr: 1.0000e-04 - 55s/epoch - 154ms/step
+INFO:sleap.nn.training:Finished training loop. [9.4 min]
+INFO:sleap.nn.training:Deleting visualization directory: models/baseline_model.topdown/viz
+INFO:sleap.nn.training:Saving evaluation metrics to model folder...
+</pre></div>
+</div>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "6b2a262ed72e4c659969f996ac889aa7"}
+</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.train.slp
+INFO:sleap.nn.evals:Saved metrics: models/baseline_model.topdown/metrics.train.npz
+INFO:sleap.nn.evals:OKS mAP: 0.518988
+</pre></div>
+</div>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "973660ab9cb2472786b368a18db11c63"}
+</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.val.slp
+INFO:sleap.nn.evals:Saved metrics: models/baseline_model.topdown/metrics.val.npz
+INFO:sleap.nn.evals:OKS mAP: 0.520377
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="continuing-training">
+<h2>5. Continuing training<a class="headerlink" href="#continuing-training" title="Permalink to this headline">#</a></h2>
+<p>If we still have the trainer in memory, we can continue training by simply calling <code class="docutils literal notranslate"><span class="pre">trainer.train()</span></code> again with a potentially different number of epochs:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">optimization</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.training:Creating tf.data.Datasets for training data generation...
+INFO:sleap.nn.training:Finished creating training datasets. [29.4s]
+INFO:sleap.nn.training:Starting training loop...
+Epoch 1/3
+360/360 - 57s - loss: 9.1732e-04 - head: 3.5629e-04 - thorax: 1.9609e-04 - abdomen: 0.0010 - wingL: 9.1318e-04 - wingR: 9.1330e-04 - forelegL4: 0.0013 - forelegR4: 0.0013 - midlegL4: 0.0011 - midlegR4: 0.0011 - hindlegL4: 0.0014 - hindlegR4: 0.0015 - eyeL: 4.4475e-04 - eyeR: 4.3944e-04 - val_loss: 9.2727e-04 - val_head: 3.8719e-04 - val_thorax: 1.5200e-04 - val_abdomen: 0.0011 - val_wingL: 9.3115e-04 - val_wingR: 8.9376e-04 - val_forelegL4: 0.0012 - val_forelegR4: 0.0012 - val_midlegL4: 9.9703e-04 - val_midlegR4: 0.0012 - val_hindlegL4: 0.0015 - val_hindlegR4: 0.0016 - val_eyeL: 4.5374e-04 - val_eyeR: 5.1839e-04 - lr: 1.0000e-04 - 57s/epoch - 158ms/step
+Epoch 2/3
+360/360 - 56s - loss: 8.7900e-04 - head: 3.4532e-04 - thorax: 1.7895e-04 - abdomen: 0.0010 - wingL: 8.7539e-04 - wingR: 8.8524e-04 - forelegL4: 0.0012 - forelegR4: 0.0012 - midlegL4: 0.0010 - midlegR4: 0.0010 - hindlegL4: 0.0014 - hindlegR4: 0.0014 - eyeL: 4.3484e-04 - eyeR: 4.2888e-04 - val_loss: 8.5310e-04 - val_head: 3.0429e-04 - val_thorax: 1.4837e-04 - val_abdomen: 0.0010 - val_wingL: 8.2237e-04 - val_wingR: 8.3093e-04 - val_forelegL4: 0.0011 - val_forelegR4: 0.0012 - val_midlegL4: 8.5634e-04 - val_midlegR4: 0.0011 - val_hindlegL4: 0.0014 - val_hindlegR4: 0.0015 - val_eyeL: 4.0362e-04 - val_eyeR: 3.8104e-04 - lr: 1.0000e-04 - 56s/epoch - 156ms/step
+Epoch 3/3
+360/360 - 56s - loss: 8.4466e-04 - head: 3.4540e-04 - thorax: 1.6180e-04 - abdomen: 9.6890e-04 - wingL: 8.4974e-04 - wingR: 8.5187e-04 - forelegL4: 0.0012 - forelegR4: 0.0012 - midlegL4: 9.5015e-04 - midlegR4: 9.8870e-04 - hindlegL4: 0.0013 - hindlegR4: 0.0014 - eyeL: 4.2245e-04 - eyeR: 4.0856e-04 - val_loss: 8.2153e-04 - val_head: 3.1832e-04 - val_thorax: 1.4803e-04 - val_abdomen: 9.4013e-04 - val_wingL: 8.4738e-04 - val_wingR: 8.4686e-04 - val_forelegL4: 0.0010 - val_forelegR4: 0.0011 - val_midlegL4: 8.5740e-04 - val_midlegR4: 0.0010 - val_hindlegL4: 0.0014 - val_hindlegR4: 0.0015 - val_eyeL: 3.7928e-04 - val_eyeR: 3.8285e-04 - lr: 1.0000e-04 - 56s/epoch - 156ms/step
+INFO:sleap.nn.training:Finished training loop. [2.8 min]
+INFO:sleap.nn.training:Deleting visualization directory: models/baseline_model.topdown/viz
+INFO:sleap.nn.training:Saving evaluation metrics to model folder...
+</pre></div>
+</div>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "d49529f91f6d4090a7820b081094823d"}
+</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.train.slp
+INFO:sleap.nn.evals:Saved metrics: models/baseline_model.topdown/metrics.train.npz
+INFO:sleap.nn.evals:OKS mAP: 0.551905
+</pre></div>
+</div>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "8291326df0b9435b8ba2298c8977778b"}
+</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.val.slp
+INFO:sleap.nn.evals:Saved metrics: models/baseline_model.topdown/metrics.val.npz
+INFO:sleap.nn.evals:OKS mAP: 0.551469
+</pre></div>
+</div>
+</div>
+</div>
+<p>As you can see, the loss and accuracy pick up from where it left off in the previous training.</p>
+<p>Usually, however, if you’re continuing training it’s likely because you’re starting off from an already trained model.</p>
+<p>In this case, all you need to do to continue training is to create a new <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> from the existing model configuration and load up the weights before continuing training:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load config.</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="s2">&quot;models/baseline_model.topdown&quot;</span><span class="p">)</span>
+<span class="c1"># cfg.outputs.run_name = &quot;new_folder&quot;  # Set the run_name to a new value if you want the model to be saved to a different folder.</span>
+
+<span class="c1"># Create and initialize the trainer.</span>
+<span class="n">trainer</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">Trainer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+<span class="n">trainer</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+
+<span class="c1"># Replace the randomly initialized weights with the saved weights.</span>
+<span class="n">trainer</span><span class="o">.</span><span class="n">keras_model</span><span class="o">.</span><span class="n">load_weights</span><span class="p">(</span><span class="s2">&quot;models/baseline_model.topdown/best_model.h5&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.training:Loading training labels from: labels.pkg.slp
+INFO:sleap.nn.training:Creating training and validation splits from validation fraction: 0.1
+INFO:sleap.nn.training:  Splits: Training = 1440 / Validation = 160.
+INFO:sleap.nn.training:Setting up for training...
+INFO:sleap.nn.training:Setting up pipeline builders...
+INFO:sleap.nn.training:Setting up model...
+INFO:sleap.nn.training:Building test pipeline...
+INFO:sleap.nn.training:Loaded test example. [1.909s]
+INFO:sleap.nn.training:  Input shape: (160, 160, 1)
+INFO:sleap.nn.training:Created Keras model.
+INFO:sleap.nn.training:  Backbone: UNet(stacks=1, filters=16, filters_rate=2.0, kernel_size=3, stem_kernel_size=7, convs_per_block=2, stem_blocks=0, down_blocks=4, middle_block=True, up_blocks=2, up_interpolate=False, block_contraction=False)
+INFO:sleap.nn.training:  Max stride: 16
+INFO:sleap.nn.training:  Parameters: 2,101,501
+INFO:sleap.nn.training:  Heads: 
+INFO:sleap.nn.training:    [0] = CenteredInstanceConfmapsHead(part_names=[&#39;head&#39;, &#39;thorax&#39;, &#39;abdomen&#39;, &#39;wingL&#39;, &#39;wingR&#39;, &#39;forelegL4&#39;, &#39;forelegR4&#39;, &#39;midlegL4&#39;, &#39;midlegR4&#39;, &#39;hindlegL4&#39;, &#39;hindlegR4&#39;, &#39;eyeL&#39;, &#39;eyeR&#39;], anchor_part=&#39;thorax&#39;, sigma=1.5, output_stride=4, loss_weight=1.0)
+INFO:sleap.nn.training:  Outputs: 
+INFO:sleap.nn.training:    [0] = KerasTensor(type_spec=TensorSpec(shape=(None, 40, 40, 13), dtype=tf.float32, name=None), name=&#39;CenteredInstanceConfmapsHead/BiasAdd:0&#39;, description=&quot;created by layer &#39;CenteredInstanceConfmapsHead&#39;&quot;)
+INFO:sleap.nn.training:Setting up data pipelines...
+INFO:sleap.nn.training:Training set: n = 1440
+INFO:sleap.nn.training:Validation set: n = 160
+INFO:sleap.nn.training:Setting up optimization...
+INFO:sleap.nn.training:  Learning rate schedule: LearningRateScheduleConfig(reduce_on_plateau=True, reduction_factor=0.5, plateau_min_delta=1e-06, plateau_patience=5, plateau_cooldown=3, min_learning_rate=1e-08)
+INFO:sleap.nn.training:  Early stopping: EarlyStoppingConfig(stop_training_on_plateau=True, plateau_min_delta=1e-06, plateau_patience=10)
+INFO:sleap.nn.training:Setting up outputs...
+INFO:sleap.nn.training:Created run path: models/baseline_model.topdown
+INFO:sleap.nn.training:Setting up visualization...
+INFO:sleap.nn.training:Finished trainer set up. [6.0s]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">optimization</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.training:Creating tf.data.Datasets for training data generation...
+INFO:sleap.nn.training:Finished creating training datasets. [28.9s]
+INFO:sleap.nn.training:Starting training loop...
+Epoch 1/3
+360/360 - 63s - loss: 8.2769e-04 - head: 3.4427e-04 - thorax: 1.6900e-04 - abdomen: 9.4941e-04 - wingL: 8.1514e-04 - wingR: 8.1826e-04 - forelegL4: 0.0012 - forelegR4: 0.0012 - midlegL4: 9.2980e-04 - midlegR4: 9.6439e-04 - hindlegL4: 0.0013 - hindlegR4: 0.0013 - eyeL: 4.2129e-04 - eyeR: 4.0767e-04 - val_loss: 7.8855e-04 - val_head: 3.2701e-04 - val_thorax: 1.8405e-04 - val_abdomen: 0.0010 - val_wingL: 7.3709e-04 - val_wingR: 7.1027e-04 - val_forelegL4: 0.0010 - val_forelegR4: 0.0011 - val_midlegL4: 9.3918e-04 - val_midlegR4: 9.0288e-04 - val_hindlegL4: 0.0012 - val_hindlegR4: 0.0013 - val_eyeL: 3.8746e-04 - val_eyeR: 3.3939e-04 - lr: 1.0000e-04 - 63s/epoch - 174ms/step
+Epoch 2/3
+360/360 - 58s - loss: 7.9662e-04 - head: 3.2407e-04 - thorax: 1.5127e-04 - abdomen: 9.1911e-04 - wingL: 7.6866e-04 - wingR: 7.8884e-04 - forelegL4: 0.0011 - forelegR4: 0.0011 - midlegL4: 8.8560e-04 - midlegR4: 9.3151e-04 - hindlegL4: 0.0012 - hindlegR4: 0.0013 - eyeL: 4.1677e-04 - eyeR: 3.9983e-04 - val_loss: 7.3673e-04 - val_head: 2.8314e-04 - val_thorax: 1.1026e-04 - val_abdomen: 9.4263e-04 - val_wingL: 6.7871e-04 - val_wingR: 6.4992e-04 - val_forelegL4: 0.0011 - val_forelegR4: 0.0011 - val_midlegL4: 8.0315e-04 - val_midlegR4: 8.3331e-04 - val_hindlegL4: 0.0012 - val_hindlegR4: 0.0012 - val_eyeL: 3.4531e-04 - val_eyeR: 3.5707e-04 - lr: 1.0000e-04 - 58s/epoch - 162ms/step
+Epoch 3/3
+360/360 - 58s - loss: 7.6463e-04 - head: 3.0854e-04 - thorax: 1.3497e-04 - abdomen: 8.9188e-04 - wingL: 7.4921e-04 - wingR: 7.5430e-04 - forelegL4: 0.0011 - forelegR4: 0.0011 - midlegL4: 8.3320e-04 - midlegR4: 8.7736e-04 - hindlegL4: 0.0012 - hindlegR4: 0.0013 - eyeL: 3.9640e-04 - eyeR: 3.7940e-04 - val_loss: 7.0126e-04 - val_head: 2.8905e-04 - val_thorax: 1.1305e-04 - val_abdomen: 9.0676e-04 - val_wingL: 6.4827e-04 - val_wingR: 6.2576e-04 - val_forelegL4: 0.0010 - val_forelegR4: 9.8253e-04 - val_midlegL4: 8.0471e-04 - val_midlegR4: 7.3788e-04 - val_hindlegL4: 0.0011 - val_hindlegR4: 0.0012 - val_eyeL: 3.1543e-04 - val_eyeR: 3.4044e-04 - lr: 1.0000e-04 - 58s/epoch - 161ms/step
+INFO:sleap.nn.training:Finished training loop. [3.0 min]
+INFO:sleap.nn.training:Deleting visualization directory: models/baseline_model.topdown/viz
+INFO:sleap.nn.training:Saving evaluation metrics to model folder...
+</pre></div>
+</div>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "c74d0a9e497146acaf8da36faf5f496a"}
+</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.train.slp
+INFO:sleap.nn.evals:Saved metrics: models/baseline_model.topdown/metrics.train.npz
+INFO:sleap.nn.evals:OKS mAP: 0.597609
+</pre></div>
+</div>
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "bf6a847899a24fcea5f14409a7ee1c33"}
+</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.val.slp
+INFO:sleap.nn.evals:Saved metrics: models/baseline_model.topdown/metrics.val.npz
+INFO:sleap.nn.evals:OKS mAP: 0.621393
+</pre></div>
+</div>
+</div>
+</div>
+<p>Again, the loss and accuracy pick up from where they left off prior to this round of training.</p>
+<p>The resulting model can be used as usual for inference on new data.</p>
+</section>
+</section>
+
+
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="Post_inference_tracking.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Post-inference tracking</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="Interactive_and_realtime_inference.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Interactive and realtime inference</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By SLEAP Developers<br/>
+  
+      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
+
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
+</html>

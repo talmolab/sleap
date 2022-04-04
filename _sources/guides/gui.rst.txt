@@ -64,6 +64,10 @@ View
 
 "**Apply Distinct Colors To**" allows you to determine whether distinct colors are used for distinct tracks (instance identities), nodes, or edges. Try it!
 
+"**Show Instances**" toggles the visibility of all instances in the frame. Useful for quickly hiding overlapping predictions.
+
+"**Show Non-Visible Nodes**" toggles the visibility of "non-visible" nodes. Non-visible here means they are landmarks that were manually marked as occluded or not present. Hiding them is useful when inspecting manual labels with many missing nodes.
+
 "**Show Node Names**" allows you to toggle the visibility of the node names. This is useful if you have lots of nearby instances or very dense skeletons and the node names make it hard to see where the nodes are located.
 
 "**Show Edges**" allows you to toggle the visibility of the edges which connect the nodes. This can be useful when you have lots of edges which make it hard to see the features of animals in your video.

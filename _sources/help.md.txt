@@ -7,7 +7,7 @@ Stuck? Can't get SLEAP to run? Crashing? Try the recommended tips below.
 
 ### I can't get SLEAP to install!
 
-Have you tried all of the steps in the {ref}`installation instructions <installation>`?
+Have you tried all of the steps in the [installation instructions](installation)?
 
 If so, please feel free to [open an issue](https://github.com/murthylab/sleap/issues) and tell us how you're trying to install it, what error messages you're getting and which operating system you're on.
 
@@ -17,7 +17,7 @@ Yes! You can install SLEAP as you normally would using the `conda` or `pip`-base
 
 ### What if I already have CUDA set up on my system?
 
-You can use the system CUDA installation by simply using the {ref}`pip <pip install>` installation method.
+You can use the system CUDA installation by simply using the [](./installation.md#pip-package) installation method.
 
 Note that you will need to use a version compatible with **TensorFlow 2.6+** (**CUDA Toolkit v11.3** and **cuDNN v8.2**).
 
