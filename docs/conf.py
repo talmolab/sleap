@@ -16,6 +16,7 @@ import os
 import sys
 import shutil
 import docs.utils
+from datetime import date
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -23,8 +24,8 @@ sys.path.insert(0, os.path.abspath(".."))
 # -- Project information -----------------------------------------------------
 
 project = "SLEAP"
-author = "Talmo D. Pereira"
-copyright = "2019–2022, Talmo Lab"
+author = "SLEAP Developers"
+copyright = f"2019–{date.today().year}, Talmo Lab"
 
 # The short X.Y version
 version = "1.2.2"
@@ -161,6 +162,9 @@ myst_enable_extensions = [
     "substitution",
     "tasklist",
 ]
+
+# https://myst-parser.readthedocs.io/en/latest/syntax/optional.html#auto-generated-header-anchors
+myst_heading_anchors = 3
 
 html_logo = "_static/logo.png"
 
