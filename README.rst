@@ -82,7 +82,7 @@ Learn to SLEAP
 - **Learn step-by-step**: `Tutorial <https://sleap.ai/tutorials/tutorial.html>`_
 - **Learn more advanced usage**: `Guides <https://sleap.ai/guides/>`__ and `Notebooks <https://sleap.ai/notebooks/>`__
 - **Learn by watching**: `MIT CBMM Tutorial <https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking>`_
-- **Learn by reading**: `Paper (Pereira et al., bioRxiv, 2020) <https://doi.org/10.1101/2020.08.31.276246>`_ and `Review on behavioral quantification (Pereira et al., Nature Neuroscience, 2020) <https://rdcu.be/caH3H>`_
+- **Learn by reading**: `Paper (Pereira et al., Nature Methods, 2022) <https://www.nature.com/articles/s41592-022-01426-1>`__ and `Review on behavioral quantification (Pereira et al., Nature Neuroscience, 2020) <https://rdcu.be/caH3H>`_
 
 
 References
@@ -91,24 +91,42 @@ SLEAP is the successor to the single-animal pose estimation software `LEAP <http
 
 If you use SLEAP in your research, please cite:
 
-    Pereira, Talmo D., Nathaniel Tabris, Junyu Li, Shruthi Ravindranath, Eleni S. Papadoyannis, Z. Yan Wang, David M. Turner, et al. 2020. "SLEAP: Multi-Animal Pose Tracking." *bioRxiv*. https://doi.org/10.1101/2020.08.31.276246.
+    T.D. Pereira, N. Tabris, A. Matsliah, D. M. Turner, J. Li, S. Ravindranath, E. S. Papadoyannis, E. Normand, D. S. Deutsch, Z. Y. Wang, G. C. McKenzie-Smith, C. C. Mitelut, M. D. Castro, J. D’Uva, M. Kislin, D. H. Sanes, S. D. Kocher, S. S-H, A. L. Falkner, J. W. Shaevitz, and M. Murthy. `Sleap: A deep learning system for multi-animal pose tracking <https://www.nature.com/articles/s41592-022-01426-1>`__. *Nature Methods*, 19(4), 2022
 
 
 **BibTeX:**
 
 .. code-block::
 
-   @ARTICLE{Pereira2020-tt,
-   title    = "{SLEAP}: Multi-animal pose tracking",
-   author   = "Pereira, Talmo D and Tabris, Nathaniel and Li, Junyu and
-               Ravindranath, Shruthi and Papadoyannis, Eleni S and Yan Wang, Z
-               and Turner, David M and McKenzie-Smith, Grace and Kocher, Sarah D
-               and Falkner, Annegret Lea and Shaevitz, Joshua W and Murthy, Mala",
-   journal  = "bioRxiv",
-   pages    = "2020.08.31.276246",
-   month    =  sep,
-   year     =  2020,
-   language = "en"
+   @ARTICLE{Pereira2022sleap,
+      title={SLEAP: A deep learning system for multi-animal pose tracking},
+      author={Pereira, Talmo D and 
+         Tabris, Nathaniel and
+         Matsliah, Arie and
+         Turner, David M and
+         Li, Junyu and
+         Ravindranath, Shruthi and
+         Papadoyannis, Eleni S and
+         Normand, Edna and
+         Deutsch, David S and
+         Wang, Z. Yan and
+         McKenzie-Smith, Grace C and
+         Mitelut, Catalin C and
+         Castro, Marielisa Diez and
+         D'Uva, John and
+         Kislin, Mikhail and
+         Sanes, Dan H and
+         Kocher, Sarah D and
+         Samuel S-H and
+         Falkner, Annegret L and
+         Shaevitz, Joshua W and
+         Murthy, Mala},
+      journal={Nature Methods},
+      volume={19},
+      number={4},
+      year={2022},
+      publisher={Nature Publishing Group}
+      }
    }
 
 
