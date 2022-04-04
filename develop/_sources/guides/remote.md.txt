@@ -77,7 +77,7 @@ You'll need both of these files for each model you're going to use for inference
 
 The directory may also contains other files with optional outputs from the training run (e.g., {code}`training_log.csv` or a {code}`viz/` subdirectory).
 
-Inference will run in different modes depending on the output types of the models you supply. See the instructions for {ref}`choosing_models`.
+Inference will run in different modes depending on the output types of the models you supply. See the instructions for {ref}`choosing-models`.
 
 For this example, let's suppose you have two models: centroids and instance-centered confidence maps. This is the typical "top-down" case for multi-instance predictions.
 

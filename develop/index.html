@@ -176,13 +176,18 @@
     </a>
    </li>
    <li class="toctree-l2">
+    <a class="reference internal" href="guides/troubleshooting-workflows.html">
+     Troubleshooting workflows
+    </a>
+   </li>
+   <li class="toctree-l2">
     <a class="reference internal" href="guides/skeletons.html">
      Skeleton design
     </a>
    </li>
    <li class="toctree-l2">
     <a class="reference internal" href="guides/choosing-models.html">
-     Choosing a set of models
+     Configuring models
     </a>
    </li>
    <li class="toctree-l2">
@@ -677,13 +682,13 @@
   </ul>
  </li>
  <li class="toctree-l1">
-  <a class="reference external" href="https://github.com/murthylab/sleap-datasets">
-   Sample datasets
+  <a class="reference internal" href="datasets.html">
+   Datasets
   </a>
  </li>
  <li class="toctree-l1">
   <a class="reference external" href="https://github.com/murthylab/sleap">
-   Source code
+   GitHub
   </a>
  </li>
  <li class="toctree-l1">
@@ -972,7 +977,7 @@ title="Open an issue"
 <li><p><strong>Learn step-by-step</strong>: <a class="reference external" href="https://sleap.ai/tutorials/tutorial.html">Tutorial</a></p></li>
 <li><p><strong>Learn more advanced usage</strong>: <a class="reference external" href="https://sleap.ai/guides/">Guides</a> and <a class="reference external" href="https://sleap.ai/notebooks/">Notebooks</a></p></li>
 <li><p><strong>Learn by watching</strong>: <a class="reference external" href="https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking">MIT CBMM Tutorial</a></p></li>
-<li><p><strong>Learn by reading</strong>: <a class="reference external" href="https://doi.org/10.1101/2020.08.31.276246">Paper (Pereira et al., bioRxiv, 2020)</a> and <a class="reference external" href="https://rdcu.be/caH3H">Review on behavioral quantification (Pereira et al., Nature Neuroscience, 2020)</a></p></li>
+<li><p><strong>Learn by reading</strong>: <a class="reference external" href="https://www.nature.com/articles/s41592-022-01426-1">Paper (Pereira et al., Nature Methods, 2022)</a> and <a class="reference external" href="https://rdcu.be/caH3H">Review on behavioral quantification (Pereira et al., Nature Neuroscience, 2020)</a></p></li>
 </ul>
 </section>
 <section id="references">
@@ -980,20 +985,38 @@ title="Open an issue"
 <p>SLEAP is the successor to the single-animal pose estimation software <a class="reference external" href="https://github.com/talmo/leap">LEAP</a> (<a class="reference external" href="https://www.nature.com/articles/s41592-018-0234-5">Pereira et al., Nature Methods, 2019</a>).</p>
 <p>If you use SLEAP in your research, please cite:</p>
 <blockquote>
-<div><p>Pereira, Talmo D., Nathaniel Tabris, Junyu Li, Shruthi Ravindranath, Eleni S. Papadoyannis, Z. Yan Wang, David M. Turner, et al. 2020. “SLEAP: Multi-Animal Pose Tracking.” <em>bioRxiv</em>. <a class="reference external" href="https://doi.org/10.1101/2020.08.31.276246">https://doi.org/10.1101/2020.08.31.276246</a>.</p>
+<div><p>T.D. Pereira, N. Tabris, A. Matsliah, D. M. Turner, J. Li, S. Ravindranath, E. S. Papadoyannis, E. Normand, D. S. Deutsch, Z. Y. Wang, G. C. McKenzie-Smith, C. C. Mitelut, M. D. Castro, J. D’Uva, M. Kislin, D. H. Sanes, S. D. Kocher, S. S-H, A. L. Falkner, J. W. Shaevitz, and M. Murthy. <a class="reference external" href="https://www.nature.com/articles/s41592-022-01426-1">Sleap: A deep learning system for multi-animal pose tracking</a>. <em>Nature Methods</em>, 19(4), 2022</p>
 </div></blockquote>
 <p><strong>BibTeX:</strong></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@ARTICLE</span><span class="p">{</span><span class="n">Pereira2020</span><span class="o">-</span><span class="n">tt</span><span class="p">,</span>
-<span class="n">title</span>    <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{SLEAP}</span><span class="s2">: Multi-animal pose tracking&quot;</span><span class="p">,</span>
-<span class="n">author</span>   <span class="o">=</span> <span class="s2">&quot;Pereira, Talmo D and Tabris, Nathaniel and Li, Junyu and</span>
-            <span class="n">Ravindranath</span><span class="p">,</span> <span class="n">Shruthi</span> <span class="ow">and</span> <span class="n">Papadoyannis</span><span class="p">,</span> <span class="n">Eleni</span> <span class="n">S</span> <span class="ow">and</span> <span class="n">Yan</span> <span class="n">Wang</span><span class="p">,</span> <span class="n">Z</span>
-            <span class="ow">and</span> <span class="n">Turner</span><span class="p">,</span> <span class="n">David</span> <span class="n">M</span> <span class="ow">and</span> <span class="n">McKenzie</span><span class="o">-</span><span class="n">Smith</span><span class="p">,</span> <span class="n">Grace</span> <span class="ow">and</span> <span class="n">Kocher</span><span class="p">,</span> <span class="n">Sarah</span> <span class="n">D</span>
-            <span class="ow">and</span> <span class="n">Falkner</span><span class="p">,</span> <span class="n">Annegret</span> <span class="n">Lea</span> <span class="ow">and</span> <span class="n">Shaevitz</span><span class="p">,</span> <span class="n">Joshua</span> <span class="n">W</span> <span class="ow">and</span> <span class="n">Murthy</span><span class="p">,</span> <span class="n">Mala</span><span class="s2">&quot;,</span>
-<span class="n">journal</span>  <span class="o">=</span> <span class="s2">&quot;bioRxiv&quot;</span><span class="p">,</span>
-<span class="n">pages</span>    <span class="o">=</span> <span class="s2">&quot;2020.08.31.276246&quot;</span><span class="p">,</span>
-<span class="n">month</span>    <span class="o">=</span>  <span class="n">sep</span><span class="p">,</span>
-<span class="n">year</span>     <span class="o">=</span>  <span class="mi">2020</span><span class="p">,</span>
-<span class="n">language</span> <span class="o">=</span> <span class="s2">&quot;en&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@ARTICLE</span><span class="p">{</span><span class="n">Pereira2022sleap</span><span class="p">,</span>
+   <span class="n">title</span><span class="o">=</span><span class="p">{</span><span class="n">SLEAP</span><span class="p">:</span> <span class="n">A</span> <span class="n">deep</span> <span class="n">learning</span> <span class="n">system</span> <span class="k">for</span> <span class="n">multi</span><span class="o">-</span><span class="n">animal</span> <span class="n">pose</span> <span class="n">tracking</span><span class="p">},</span>
+   <span class="n">author</span><span class="o">=</span><span class="p">{</span><span class="n">Pereira</span><span class="p">,</span> <span class="n">Talmo</span> <span class="n">D</span> <span class="ow">and</span>
+      <span class="n">Tabris</span><span class="p">,</span> <span class="n">Nathaniel</span> <span class="ow">and</span>
+      <span class="n">Matsliah</span><span class="p">,</span> <span class="n">Arie</span> <span class="ow">and</span>
+      <span class="n">Turner</span><span class="p">,</span> <span class="n">David</span> <span class="n">M</span> <span class="ow">and</span>
+      <span class="n">Li</span><span class="p">,</span> <span class="n">Junyu</span> <span class="ow">and</span>
+      <span class="n">Ravindranath</span><span class="p">,</span> <span class="n">Shruthi</span> <span class="ow">and</span>
+      <span class="n">Papadoyannis</span><span class="p">,</span> <span class="n">Eleni</span> <span class="n">S</span> <span class="ow">and</span>
+      <span class="n">Normand</span><span class="p">,</span> <span class="n">Edna</span> <span class="ow">and</span>
+      <span class="n">Deutsch</span><span class="p">,</span> <span class="n">David</span> <span class="n">S</span> <span class="ow">and</span>
+      <span class="n">Wang</span><span class="p">,</span> <span class="n">Z</span><span class="o">.</span> <span class="n">Yan</span> <span class="ow">and</span>
+      <span class="n">McKenzie</span><span class="o">-</span><span class="n">Smith</span><span class="p">,</span> <span class="n">Grace</span> <span class="n">C</span> <span class="ow">and</span>
+      <span class="n">Mitelut</span><span class="p">,</span> <span class="n">Catalin</span> <span class="n">C</span> <span class="ow">and</span>
+      <span class="n">Castro</span><span class="p">,</span> <span class="n">Marielisa</span> <span class="n">Diez</span> <span class="ow">and</span>
+      <span class="n">D</span><span class="s1">&#39;Uva, John and</span>
+      <span class="n">Kislin</span><span class="p">,</span> <span class="n">Mikhail</span> <span class="ow">and</span>
+      <span class="n">Sanes</span><span class="p">,</span> <span class="n">Dan</span> <span class="n">H</span> <span class="ow">and</span>
+      <span class="n">Kocher</span><span class="p">,</span> <span class="n">Sarah</span> <span class="n">D</span> <span class="ow">and</span>
+      <span class="n">Samuel</span> <span class="n">S</span><span class="o">-</span><span class="n">H</span> <span class="ow">and</span>
+      <span class="n">Falkner</span><span class="p">,</span> <span class="n">Annegret</span> <span class="n">L</span> <span class="ow">and</span>
+      <span class="n">Shaevitz</span><span class="p">,</span> <span class="n">Joshua</span> <span class="n">W</span> <span class="ow">and</span>
+      <span class="n">Murthy</span><span class="p">,</span> <span class="n">Mala</span><span class="p">},</span>
+   <span class="n">journal</span><span class="o">=</span><span class="p">{</span><span class="n">Nature</span> <span class="n">Methods</span><span class="p">},</span>
+   <span class="n">volume</span><span class="o">=</span><span class="p">{</span><span class="mi">19</span><span class="p">},</span>
+   <span class="n">number</span><span class="o">=</span><span class="p">{</span><span class="mi">4</span><span class="p">},</span>
+   <span class="n">year</span><span class="o">=</span><span class="p">{</span><span class="mi">2022</span><span class="p">},</span>
+   <span class="n">publisher</span><span class="o">=</span><span class="p">{</span><span class="n">Nature</span> <span class="n">Publishing</span> <span class="n">Group</span><span class="p">}</span>
+   <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -1044,8 +1067,8 @@ Reach out to <code class="xref py py-obj docutils literal notranslate"><span cla
 <li class="toctree-l1"><a class="reference internal" href="guides/index.html">Guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/index.html">Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">Developer API</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap-datasets">Sample datasets</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">Source code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap">GitHub</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/murthylab/sleap/releases">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="help.html">Help</a></li>
 </ul>
