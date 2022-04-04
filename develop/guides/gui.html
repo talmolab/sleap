@@ -243,6 +243,26 @@
      Analysis examples
     </a>
    </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../notebooks/Data_structures.html">
+     Data structures
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../notebooks/Post_inference_tracking.html">
+     Post-inference tracking
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../notebooks/Interactive_and_resumable_training.html">
+     Interactive and resumable training
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../notebooks/Interactive_and_realtime_inference.html">
+     Interactive and realtime inference
+    </a>
+   </li>
   </ul>
  </li>
  <li class="toctree-l1 has-children">
@@ -984,6 +1004,8 @@ title="Open an issue"
 <li><p>Color palettes can be customized by modifying the <code class="code docutils literal notranslate"><span class="pre">colors.yaml</span></code> file that SLEAP creates inside the <code class="code docutils literal notranslate"><span class="pre">.sleap</span></code> directory in your home directory. You can add your own palette or modify those already present in the file. Each color in a palette is listed on it’s own line as r,g,b values (between 0 and 255).</p></li>
 </ul>
 <p>“<strong>Apply Distinct Colors To</strong>” allows you to determine whether distinct colors are used for distinct tracks (instance identities), nodes, or edges. Try it!</p>
+<p>“<strong>Show Instances</strong>” toggles the visibility of all instances in the frame. Useful for quickly hiding overlapping predictions.</p>
+<p>“<strong>Show Non-Visible Nodes</strong>” toggles the visibility of “non-visible” nodes. Non-visible here means they are landmarks that were manually marked as occluded or not present. Hiding them is useful when inspecting manual labels with many missing nodes.</p>
 <p>“<strong>Show Node Names</strong>” allows you to toggle the visibility of the node names. This is useful if you have lots of nearby instances or very dense skeletons and the node names make it hard to see where the nodes are located.</p>
 <p>“<strong>Show Edges</strong>” allows you to toggle the visibility of the edges which connect the nodes. This can be useful when you have lots of edges which make it hard to see the features of animals in your video.</p>
 <p>“<strong>Edge Style</strong>” controls whether edges are drawn as thin lines or as wedges which indicate the <a class="reference internal" href="proofreading.html#orientation"><span class="std std-ref">Orientation</span></a> of the instance (as well as the direction of the part affinity field which would be used to predict the connection between nodes when using a “bottom-up” approach).</p>
@@ -1106,7 +1128,7 @@ title="Open an issue"
     <div class="footer-content row">
         <footer class="col footer"><p>
   
-    By Talmo D. Pereira<br/>
+    By SLEAP Developers<br/>
   
       &copy; Copyright 2019–2022, Talmo Lab.<br/>
 </p>
