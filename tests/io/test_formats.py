@@ -200,7 +200,7 @@ def test_madlc(test_data):
 # TODO: Add test data for old single animal DLC format
 @pytest.mark.parametrize(
     "test_data",
-    ["tests/data/dlc/dlc_testdata_v2.csv"],
+    ["tests/data/dlc/dlc_testdata.csv", "tests/data/dlc/dlc_testdata_v2.csv"],
 )
 def test_sadlc(test_data):
     labels = read(
