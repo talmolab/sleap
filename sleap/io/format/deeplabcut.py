@@ -133,7 +133,6 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
             # added by user later.
             start_col = 3 if is_new_format else 1
             node_names = [n[0] for n in list(data)[start_col::2]]
-        print(f"node_names = {node_names}")
 
         if skeleton is None:
             skeleton = Skeleton()
@@ -146,7 +145,6 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
         else:
             # Old format has filenames in a single column.
             img_files = data.iloc[:, 0]
-        print(f"img_files = {img_files}")
 
         if full_video:
             video = full_video
@@ -160,7 +158,6 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
             # rather than having their index from the original source video.
             index_frames_by_original_index = False
 
-        print(f"data.columns.tolist() = {data.columns.tolist()}")
         lfs = []
         for i in range(len(data)):
 
@@ -200,14 +197,18 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                         )
             else:
                 # Get points for each node.
+                any_not_missing = False
                 instance_points = dict()
                 for node in node_names:
                     x, y = data[(node, "x")][i], data[(node, "y")][i]
                     instance_points[node] = Point(x, y)
+                    if ~(np.isnan(x) and np.isnan(y)):
+                        any_not_missing = True
 
-                # Create instance with points assuming there's a single instance per
-                # frame.
-                instances.append(Instance(skeleton=skeleton, points=instance_points))
+                if any_not_missing:
+                    # Create instance with points assuming there's a single instance per
+                    # frame.
+                    instances.append(Instance(skeleton=skeleton, points=instance_points))
 
             if len(instances) > 0:
                 # Create LabeledFrame and add it to list.
