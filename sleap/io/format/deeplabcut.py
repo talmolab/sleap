@@ -131,7 +131,9 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
             # Create the skeleton from the list of nodes in the csv file.
             # Note that DeepLabCut doesn't have edges, so these will need to be
             # added by user later.
-            node_names = [n[0] for n in list(data)[1::2]]
+            start_col = 3 if is_new_format else 1
+            node_names = [n[0] for n in list(data)[start_col::2]]
+        print(f"node_names = {node_names}")
 
         if skeleton is None:
             skeleton = Skeleton()
@@ -144,6 +146,7 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
         else:
             # Old format has filenames in a single column.
             img_files = data.iloc[:, 0]
+        print(f"img_files = {img_files}")
 
         if full_video:
             video = full_video
@@ -157,6 +160,7 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
             # rather than having their index from the original source video.
             index_frames_by_original_index = False
 
+        print(f"data.columns.tolist() = {data.columns.tolist()}")
         lfs = []
         for i in range(len(data)):
 
