@@ -200,9 +200,7 @@ def test_madlc(test_data):
 # TODO: Add test data for old single animal DLC format
 @pytest.mark.parametrize(
     "test_data",
-    [
-        "tests/data/dlc/dlc_testdata_v2.csv"
-    ],
+    ["tests/data/dlc/dlc_testdata_v2.csv"],
 )
 def test_sadlc(test_data):
     labels = read(
@@ -221,7 +219,7 @@ def test_sadlc(test_data):
 
     # Assert frames without any coor are not labeled
     assert len(labels) == 3
-    
+
     # Assert number of instances per frame is correct
     assert len(labels[0]) == 1
     assert len(labels[1]) == 1

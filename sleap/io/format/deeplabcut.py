@@ -208,7 +208,9 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                 if any_not_missing:
                     # Create instance with points assuming there's a single instance per
                     # frame.
-                    instances.append(Instance(skeleton=skeleton, points=instance_points))
+                    instances.append(
+                        Instance(skeleton=skeleton, points=instance_points)
+                    )
 
             if len(instances) > 0:
                 # Create LabeledFrame and add it to list.
