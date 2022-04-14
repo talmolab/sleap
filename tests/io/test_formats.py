@@ -161,7 +161,10 @@ def test_matching_adaptor(centered_pair_predictions_hdf5_path):
 
 @pytest.mark.parametrize(
     "test_data",
-    ["tests/data/dlc/madlc_testdata.csv", "tests/data/dlc/madlc_testdata_v2.csv"],
+    [
+        "tests/data/dlc/madlc_testdata.csv",
+        "tests/data/dlc/madlc_testdata_v2.csv",
+    ],
 )
 def test_madlc(test_data):
     labels = read(
@@ -178,7 +181,10 @@ def test_madlc(test_data):
     assert labels.videos[0].filenames[2].endswith("img002.png")
     assert labels.videos[0].filenames[3].endswith("img003.png")
 
+    # Assert frames without any coor are not labeled
     assert len(labels) == 3
+
+    # Assert number of instances per frame is correct
     assert len(labels[0]) == 2
     assert len(labels[1]) == 2
     assert len(labels[2]) == 1
@@ -187,6 +193,40 @@ def test_madlc(test_data):
     assert_array_equal(labels[0][1].numpy(), [[6, 7], [8, 9], [10, 11]])
     assert_array_equal(labels[1][0].numpy(), [[12, 13], [np.nan, np.nan], [15, 16]])
     assert_array_equal(labels[1][1].numpy(), [[17, 18], [np.nan, np.nan], [20, 21]])
+    assert_array_equal(labels[2][0].numpy(), [[22, 23], [24, 25], [26, 27]])
+    assert labels[2].frame_idx == 3
+
+
+# TODO: Add test data for old single animal DLC format
+@pytest.mark.parametrize(
+    "test_data",
+    ["tests/data/dlc/dlc_testdata.csv", "tests/data/dlc/dlc_testdata_v2.csv"],
+)
+def test_sadlc(test_data):
+    labels = read(
+        test_data,
+        for_object="labels",
+        as_format="deeplabcut",
+    )
+
+    assert labels.skeleton.node_names == ["A", "B", "C"]
+    assert len(labels.videos) == 1
+    assert len(labels.video.filenames) == 4
+    assert labels.videos[0].filenames[0].endswith("img000.png")
+    assert labels.videos[0].filenames[1].endswith("img001.png")
+    assert labels.videos[0].filenames[2].endswith("img002.png")
+    assert labels.videos[0].filenames[3].endswith("img003.png")
+
+    # Assert frames without any coor are not labeled
+    assert len(labels) == 3
+
+    # Assert number of instances per frame is correct
+    assert len(labels[0]) == 1
+    assert len(labels[1]) == 1
+    assert len(labels[2]) == 1
+
+    assert_array_equal(labels[0][0].numpy(), [[0, 1], [2, 3], [4, 5]])
+    assert_array_equal(labels[1][0].numpy(), [[12, 13], [np.nan, np.nan], [15, 16]])
     assert_array_equal(labels[2][0].numpy(), [[22, 23], [24, 25], [26, 27]])
     assert labels[2].frame_idx == 3
 
