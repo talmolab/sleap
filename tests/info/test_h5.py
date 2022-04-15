@@ -14,7 +14,7 @@ from sleap.info.write_tracking_h5 import (
 from sleap.io.dataset import Labels
 
 
-def test_output_matrices(centered_pair_predictions : Labels):
+def test_output_matrices(centered_pair_predictions: Labels):
 
     names = get_tracks_as_np_strings(centered_pair_predictions)
     assert len(names) == 27
