@@ -261,6 +261,7 @@ def main(labels: Labels, output_path: str, all_frames: bool = True):
         track_names=track_names,
         node_names=get_nodes_as_np_strings(labels),
         edge_names=get_edges_as_np_strings(labels),
+        edge_inds=labels.skeletons[0].edge_inds,
         tracks=locations_matrix,
         track_occupancy=occupancy_matrix,
         point_scores=point_scores,

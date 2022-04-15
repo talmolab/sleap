@@ -11,9 +11,10 @@ from sleap.info.write_tracking_h5 import (
     get_nodes_as_np_strings,
     get_edges_as_np_strings,
 )
+from sleap.io.dataset import Labels
 
 
-def test_output_matrices(centered_pair_predictions):
+def test_output_matrices(centered_pair_predictions : Labels):
 
     names = get_tracks_as_np_strings(centered_pair_predictions)
     assert len(names) == 27
@@ -47,6 +48,8 @@ def test_output_matrices(centered_pair_predictions):
     assert node_names[16] == "midlegR2"
     assert node_names[17] == "midlegR3"
 
+    # Both lines check edge_names are read correctly, but latter is used in bento plugin
+    assert edge_names == centered_pair_predictions.skeleton.edge_names
     for (src_node, dst_node) in edge_names:
         assert src_node in node_names
         assert dst_node in node_names
