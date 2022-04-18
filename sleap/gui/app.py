@@ -1280,7 +1280,9 @@ class MainWindow(QMainWindow):
             if suggestion_list:
                 labeled_count = 0
                 for suggestion in suggestion_list:
-                    lf = self.labels.get((suggestion.video, suggestion.frame_idx), use_cache=True)
+                    lf = self.labels.get(
+                        (suggestion.video, suggestion.frame_idx), use_cache=True
+                    )
                     if lf is not None and lf.has_user_instances:
                         labeled_count += 1
                 prc = (labeled_count / len(suggestion_list)) * 100
