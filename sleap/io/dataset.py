@@ -630,8 +630,7 @@ class Labels(MutableSequence):
         raise ValueError("Item is not an object type contained in labels.")
 
 
-    # TODO(LM): allow kwargs to __getitem__ and get
-    def __getitem__(self, key, *args) -> Union[LabeledFrame, List[LabeledFrame]]:
+    def __getitem__(self, key, *args, **kwargs) -> Union[LabeledFrame, List[LabeledFrame]]:
         """Return labeled frames matching key.
 
         Args:
@@ -665,7 +664,7 @@ class Labels(MutableSequence):
                 raise KeyError("Video not found in labels.")
 
             if isinstance(key[1], int):
-                _hit = self.find_first(video=key[0], frame_idx=key[1])
+                _hit = self.find_first(video=key[0], frame_idx=key[1], **kwargs)
                 if _hit is None:
                     raise KeyError(
                         f"No label found for specified video at frame {key[1]}."
@@ -692,15 +691,14 @@ class Labels(MutableSequence):
             raise KeyError("Invalid label indexing arguments.")
 
 
-    # TODO(LM): allow kwargs to __getitem__ and get
-    def get(self, *args) -> Union[LabeledFrame, List[LabeledFrame]]:
+    def get(self, *args, **kwargs) -> Union[LabeledFrame, List[LabeledFrame]]:
         """Get an item from the labels or return `None` if not found.
 
         This is a safe version of `labels[...]` that will not raise an exception if the
         item is not found.
         """
         try:
-            return self.__getitem__(*args)
+            return self.__getitem__(*args, **kwargs)
         except KeyError:
             return None
 
