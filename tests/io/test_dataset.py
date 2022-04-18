@@ -1079,6 +1079,30 @@ def test_many_suggestions_hdf5(tmpdir):
     Labels.save_hdf5(filename=filename, labels=labels)
 
 
+def test_suggestions_cache(min_tracks_2node_labels: Labels):
+    """
+    Test suggestions look-up using LabelsDataCache through Labels.get().
+    """
+    labels = min_tracks_2node_labels
+    video = labels.video
+    num_samples = 5
+    frame_delta = video.num_frames // num_samples
+
+    labels.suggestions = VideoFrameSuggestions.suggest(
+        labels=labels,
+        params=dict(method="sample", per_video=num_samples, sampling_method="stride"),
+    )
+    assert len(labels.suggestions) == num_samples
+
+    prev_idx = -frame_delta
+    for suggestion in labels.get_suggestions():
+        lf = labels.get((suggestion.video, suggestion.frame_idx), use_cache=True)
+        assert type(lf) == LabeledFrame
+        assert lf.video == video
+        assert lf.frame_idx == prev_idx + frame_delta
+        prev_idx = suggestion.frame_idx
+
+
 def test_path_fix(tmpdir):
     labels = Labels()
     filename = os.path.join(tmpdir, "test.h5")
