@@ -629,6 +629,8 @@ class Labels(MutableSequence):
                 return self.find_first(item[0], item[1].tolist()) is not None
         raise ValueError("Item is not an object type contained in labels.")
 
+
+    # TODO(LM): allow kwargs to __getitem__ and get
     def __getitem__(self, key, *args) -> Union[LabeledFrame, List[LabeledFrame]]:
         """Return labeled frames matching key.
 
@@ -689,6 +691,8 @@ class Labels(MutableSequence):
         else:
             raise KeyError("Invalid label indexing arguments.")
 
+
+    # TODO(LM): allow kwargs to __getitem__ and get
     def get(self, *args) -> Union[LabeledFrame, List[LabeledFrame]]:
         """Get an item from the labels or return `None` if not found.
 
@@ -903,7 +907,7 @@ class Labels(MutableSequence):
             yield self._cache._frame_idx_map[video][idx]
 
     def find_first(
-        self, video: Video, frame_idx: Optional[int] = None
+        self, video: Video, frame_idx: Optional[int] = None, use_cache: bool = False
     ) -> Optional[LabeledFrame]:
         """Find the first occurrence of a matching labeled frame.
 
@@ -919,12 +923,16 @@ class Labels(MutableSequence):
             First `LabeledFrame` that match the criteria
             or None if none were found.
         """
-        if video in self.videos:
-            for label in self.labels:
-                if label.video == video and (
-                    frame_idx is None or (label.frame_idx == frame_idx)
-                ):
-                    return label
+        if use_cache:
+            label = self.find(video=video, frame_idx=frame_idx)
+            return None if len(label) == 0 else label[0]
+        else:
+            if video in self.videos:
+                for label in self.labels:
+                    if label.video == video and (
+                        frame_idx is None or (label.frame_idx == frame_idx)
+                    ):
+                        return label
 
     def find_last(
         self, video: Video, frame_idx: Optional[int] = None
