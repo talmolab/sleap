@@ -629,11 +629,17 @@ class Labels(MutableSequence):
                 return self.find_first(item[0], item[1].tolist()) is not None
         raise ValueError("Item is not an object type contained in labels.")
 
-    def __getitem__(self, *args) -> Union[LabeledFrame, List[LabeledFrame]]:
+    def __getitem__(self, key, *args) -> Union[LabeledFrame, List[LabeledFrame]]:
+        """Return labeled frames matching key or return `None` if not found.
+
+        This makes `labels[...]` save and will not raise an exception if the
+        item is not found.
+
+        Do not call __getitem__ directly, use get instead (get allows kwargs for logic).
+        If you happen to call __getitem__ directly, get will be called but without any
+        keyword arguments.
         """
-        Syntactic sugar for [] indexing.
-        """
-        return self.labels.__getitem__(*args)
+        return self.get(key, *args)
 
     def get(self, key, *args, **kwargs) -> Union[LabeledFrame, List[LabeledFrame]]:
         """Return labeled frames matching key or return `None` if not found.
@@ -652,7 +658,7 @@ class Labels(MutableSequence):
 
         Returns:
             A list with the matching `LabeledFrame`s, or a single `LabeledFrame` if a
-            scalar key was provided.
+            scalar key was provided, or `None` if not found.
         """
         try:
             if len(args) > 0:

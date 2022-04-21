@@ -226,13 +226,11 @@ def test_label_accessors(centered_pair_labels):
 
     assert len(labels.find(video, 101)) == 0
     assert labels.find_first(video, 101) is None
-    with pytest.raises(KeyError):
-        labels[video, 101]
+    assert labels[video, 101] is None
 
     dummy_video = Video(backend=MediaVideo)
     assert len(labels.find(dummy_video)) == 0
-    with pytest.raises(KeyError):
-        labels[dummy_video]
+    assert labels[dummy_video] is None
 
 
 def test_scalar_properties():
