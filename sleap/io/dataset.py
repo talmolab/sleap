@@ -629,10 +629,17 @@ class Labels(MutableSequence):
                 return self.find_first(item[0], item[1].tolist()) is not None
         raise ValueError("Item is not an object type contained in labels.")
 
-    def __getitem__(
-        self, key, *args, **kwargs
-    ) -> Union[LabeledFrame, List[LabeledFrame]]:
-        """Return labeled frames matching key.
+    def __getitem__(self, *args) -> Union[LabeledFrame, List[LabeledFrame]]:
+        """
+        Syntactic sugar for [] indexing.
+        """
+        return self.labels.__getitem__(*args)
+
+    def get(self, key, *args, **kwargs) -> Union[LabeledFrame, List[LabeledFrame]]:
+        """Return labeled frames matching key or return `None` if not found.
+
+        This is a safe version of `labels[...]` that will not raise an exception if the
+        item is not found.
 
         Args:
             key: Indexing argument to match against. If `key` is a `Video` or tuple of
@@ -647,58 +654,51 @@ class Labels(MutableSequence):
             A list with the matching `LabeledFrame`s, or a single `LabeledFrame` if a
             scalar key was provided.
         """
-        if len(args) > 0:
-            if type(key) != tuple:
-                key = (key,)
-            key = key + tuple(args)
+        try:
+            if len(args) > 0:
+                if type(key) != tuple:
+                    key = (key,)
+                key = key + tuple(args)
 
-        if isinstance(key, int):
-            return self.labels.__getitem__(key)
+            if isinstance(key, int):
+                return self.labels.__getitem__(key)
 
-        elif isinstance(key, Video):
-            if key not in self.videos:
-                raise KeyError("Video not found in labels.")
-            return self.find(video=key)
+            elif isinstance(key, Video):
+                if key not in self.videos:
+                    raise KeyError("Video not found in labels.")
+                return self.find(video=key)
 
-        elif isinstance(key, tuple) and len(key) == 2 and isinstance(key[0], Video):
-            if key[0] not in self.videos:
-                raise KeyError("Video not found in labels.")
+            elif isinstance(key, tuple) and len(key) == 2 and isinstance(key[0], Video):
+                if key[0] not in self.videos:
+                    raise KeyError("Video not found in labels.")
 
-            if isinstance(key[1], int):
-                _hit = self.find_first(video=key[0], frame_idx=key[1], **kwargs)
-                if _hit is None:
-                    raise KeyError(
-                        f"No label found for specified video at frame {key[1]}."
-                    )
-                return _hit
-            elif isinstance(key[1], (np.integer, np.ndarray)):
-                return self.__getitem__((key[0], key[1].tolist()))
-            elif isinstance(key[1], (list, range)):
-                return self.find(video=key[0], frame_idx=key[1])
+                if isinstance(key[1], int):
+                    _hit = self.find_first(video=key[0], frame_idx=key[1], **kwargs)
+                    if _hit is None:
+                        raise KeyError(
+                            f"No label found for specified video at frame {key[1]}."
+                        )
+                    return _hit
+                elif isinstance(key[1], (np.integer, np.ndarray)):
+                    return self.__getitem__((key[0], key[1].tolist()))
+                elif isinstance(key[1], (list, range)):
+                    return self.find(video=key[0], frame_idx=key[1])
+                else:
+                    raise KeyError("Invalid label indexing arguments.")
+
+            elif isinstance(key, slice):
+                start, stop, step = key.indices(len(self))
+                return self.__getitem__(range(start, stop, step))
+
+            elif isinstance(key, (list, range)):
+                return [self.__getitem__(i) for i in key]
+
+            elif isinstance(key, (np.integer, np.ndarray)):
+                return self.__getitem__(key.tolist())
+
             else:
                 raise KeyError("Invalid label indexing arguments.")
 
-        elif isinstance(key, slice):
-            start, stop, step = key.indices(len(self))
-            return self.__getitem__(range(start, stop, step))
-
-        elif isinstance(key, (list, range)):
-            return [self.__getitem__(i) for i in key]
-
-        elif isinstance(key, (np.integer, np.ndarray)):
-            return self.__getitem__(key.tolist())
-
-        else:
-            raise KeyError("Invalid label indexing arguments.")
-
-    def get(self, *args, **kwargs) -> Union[LabeledFrame, List[LabeledFrame]]:
-        """Get an item from the labels or return `None` if not found.
-
-        This is a safe version of `labels[...]` that will not raise an exception if the
-        item is not found.
-        """
-        try:
-            return self.__getitem__(*args, **kwargs)
         except KeyError:
             return None
 
