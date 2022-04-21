@@ -666,6 +666,16 @@ class Labels(MutableSequence):
                     key = (key,)
                 key = key + tuple(args)
 
+            # Do any conversions first.
+            if isinstance(key, slice):
+                start, stop, step = key.indices(len(self))
+                # return self.__getitem__(range(start, stop, step))
+                key = range(start, stop, step)
+
+            elif isinstance(key, (np.integer, np.ndarray)):
+                # return self.__getitem__(key.tolist())
+                key = key.tolist()
+
             if isinstance(key, int):
                 return self.labels.__getitem__(key)
 
@@ -678,6 +688,11 @@ class Labels(MutableSequence):
                 if key[0] not in self.videos:
                     raise KeyError("Video not found in labels.")
 
+                # Do any conversions first.
+                if isinstance(key[1], (np.integer, np.ndarray)):
+                    # return self.__getitem__((key[0], key[1].tolist()))
+                    key = (key[0], key[1].tolist)
+
                 if isinstance(key[1], int):
                     _hit = self.find_first(video=key[0], frame_idx=key[1], **kwargs)
                     if _hit is None:
@@ -685,22 +700,13 @@ class Labels(MutableSequence):
                             f"No label found for specified video at frame {key[1]}."
                         )
                     return _hit
-                elif isinstance(key[1], (np.integer, np.ndarray)):
-                    return self.__getitem__((key[0], key[1].tolist()))
                 elif isinstance(key[1], (list, range)):
                     return self.find(video=key[0], frame_idx=key[1])
                 else:
                     raise KeyError("Invalid label indexing arguments.")
 
-            elif isinstance(key, slice):
-                start, stop, step = key.indices(len(self))
-                return self.__getitem__(range(start, stop, step))
-
             elif isinstance(key, (list, range)):
                 return [self.__getitem__(i) for i in key]
-
-            elif isinstance(key, (np.integer, np.ndarray)):
-                return self.__getitem__(key.tolist())
 
             else:
                 raise KeyError("Invalid label indexing arguments.")
