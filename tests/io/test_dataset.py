@@ -214,23 +214,34 @@ def test_label_accessors(centered_pair_labels: Labels, min_tracks_2node_labels: 
     assert labels[np.int64(61)] == labels[61]
     assert labels[np.array([0, 61])] == labels[[0, 61]]
 
+    assert labels[slice(0, 5, 2)] == labels[[0, 2, 4]]
+
     assert len(labels.find(video, frame_idx=954)) == 1
     assert len(labels.find(video, 954)) == 1
     assert labels.find(video, 954)[0] == labels[61]
+    assert labels.get(video, 954, use_cache=True) == labels[61]
     assert labels.find_first(video) == labels[0]
     assert labels.find_first(video, 954) == labels[61]
+    assert labels.get(video, 954, use_cache=True) == labels[61]
     assert labels.find_last(video) == labels[69]
+
     assert labels[video, 954] == labels[61]
     assert labels[video, 0] == labels[0]
+    assert labels[video, np.int64(0)] == labels[0]
+    assert labels[video, np.array([0, 61])] == labels[(video, [0, 61])]
     assert labels[video] == labels.labels
 
     assert len(labels.find(video, 101)) == 0
     assert labels.find_first(video, 101) is None
     assert labels[video, 101] is None
+    assert labels[video, video] is None
+
+    assert labels["1"] is None
 
     dummy_video = Video(backend=MediaVideo)
     assert len(labels.find(dummy_video)) == 0
     assert labels[dummy_video] is None
+    assert labels[dummy_video, 1] is None
 
     # Test suggestions look-up using LabelsDataCache through Labels.get().
     labels = min_tracks_2node_labels

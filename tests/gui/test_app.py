@@ -210,7 +210,7 @@ def test_app_workflow(
     assert inst_31_2.track == track_a
     assert inst_31_1.track == track_b
 
-    # Set-up to test labeled frames data cache
+    # Set up to test labeled frames data cache
     app.labels = min_tracks_2node_labels
     video = app.labels.video
     num_samples = 5

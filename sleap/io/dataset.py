@@ -668,20 +668,16 @@ class Labels(MutableSequence):
     def get(
         self,
         key: Union[
-            # indices
             int,
             slice,
             np.integer,
             np.ndarray,
             list,
             range,
-            # video
             Video,
-            # video,indices pairs
             Tuple[Video, Union[np.integer, np.ndarray, int, list, range]],
         ],
         *secondary_key: Union[
-            # indices
             int,
             slice,
             np.integer,
@@ -701,6 +697,8 @@ class Labels(MutableSequence):
                 `(Video, frame_index)`, frames that match the criteria will be searched
                 for. If a scalar, list, range or array of integers are provided, the
                 labels with those linear indices will be returned.
+            secondary_key: Numerical indexing argument(s) which supplement `key`. Only
+                used when `key` is a `Video`.
 
         Raises:
             KeyError: If the specified key could not be found.
@@ -736,7 +734,7 @@ class Labels(MutableSequence):
 
                 # Do any conversions first.
                 if isinstance(key[1], (np.integer, np.ndarray)):
-                    key = (key[0], key[1].tolist)
+                    key = (key[0], key[1].tolist())
 
                 if isinstance(key[1], int):
                     _hit = self.find_first(
