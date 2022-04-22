@@ -180,7 +180,7 @@ def test_load_labels_json_old(tmpdir):
     check_labels(new_labels)
 
 
-def test_label_accessors(centered_pair_labels):
+def test_label_accessors(centered_pair_labels: Labels, min_tracks_2node_labels: Labels):
     labels = centered_pair_labels
 
     video = labels.videos[0]
@@ -231,6 +231,26 @@ def test_label_accessors(centered_pair_labels):
     dummy_video = Video(backend=MediaVideo)
     assert len(labels.find(dummy_video)) == 0
     assert labels[dummy_video] is None
+
+    # Test suggestions look-up using LabelsDataCache through Labels.get().
+    labels = min_tracks_2node_labels
+    video = labels.video
+    num_samples = 5
+    frame_delta = video.num_frames // num_samples
+
+    labels.suggestions = VideoFrameSuggestions.suggest(
+        labels=labels,
+        params=dict(method="sample", per_video=num_samples, sampling_method="stride"),
+    )
+    assert len(labels.suggestions) == num_samples
+
+    prev_idx = -frame_delta
+    for suggestion in labels.get_suggestions():
+        lf = labels.get((suggestion.video, suggestion.frame_idx), use_cache=True)
+        assert type(lf) == LabeledFrame
+        assert lf.video == video
+        assert lf.frame_idx == prev_idx + frame_delta
+        prev_idx = suggestion.frame_idx
 
 
 def test_scalar_properties():
@@ -1075,30 +1095,6 @@ def test_many_suggestions_hdf5(tmpdir):
     labels.suggestions = [SuggestionFrame(video, i) for i in range(3000)]
 
     Labels.save_hdf5(filename=filename, labels=labels)
-
-
-def test_suggestions_cache(min_tracks_2node_labels: Labels):
-    """
-    Test suggestions look-up using LabelsDataCache through Labels.get().
-    """
-    labels = min_tracks_2node_labels
-    video = labels.video
-    num_samples = 5
-    frame_delta = video.num_frames // num_samples
-
-    labels.suggestions = VideoFrameSuggestions.suggest(
-        labels=labels,
-        params=dict(method="sample", per_video=num_samples, sampling_method="stride"),
-    )
-    assert len(labels.suggestions) == num_samples
-
-    prev_idx = -frame_delta
-    for suggestion in labels.get_suggestions():
-        lf = labels.get((suggestion.video, suggestion.frame_idx), use_cache=True)
-        assert type(lf) == LabeledFrame
-        assert lf.video == video
-        assert lf.frame_idx == prev_idx + frame_delta
-        prev_idx = suggestion.frame_idx
 
 
 def test_path_fix(tmpdir):

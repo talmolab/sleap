@@ -5,7 +5,9 @@ from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
 
 
-def test_app_workflow(qtbot, centered_pair_vid, small_robot_mp4_vid):
+def test_app_workflow(
+    qtbot, centered_pair_vid, small_robot_mp4_vid, min_tracks_2node_labels: Labels
+):
     app = MainWindow()
 
     # Add nodes
@@ -207,6 +209,38 @@ def test_app_workflow(qtbot, centered_pair_vid, small_robot_mp4_vid):
     assert inst_31_0.track == track_c
     assert inst_31_2.track == track_a
     assert inst_31_1.track == track_b
+
+    # Set-up to test labeled frames data cache
+    app.labels = min_tracks_2node_labels
+    video = app.labels.video
+    num_samples = 5
+    frame_delta = video.num_frames // num_samples
+
+    # Add suggestions
+    app.labels.suggestions = VideoFrameSuggestions.suggest(
+        labels=app.labels,
+        params=dict(method="sample", per_video=num_samples, sampling_method="stride"),
+    )
+    assert len(app.labels.suggestions) == num_samples
+
+    # The on_data_update function uses labeled frames cache
+    app.on_data_update([UpdateTopic.suggestions])
+    assert len(app.suggestionsTable.model().items) == num_samples
+    assert f"{num_samples}/{num_samples}" in app.suggested_count_label.text()
+
+    # Check that frames returned by labeled frames cache are correct
+    prev_idx = -frame_delta
+    for l_suggestion, st_suggestion in list(
+        zip(app.labels.get_suggestions(), app.suggestionsTable.model().items)
+    ):
+        assert l_suggestion == st_suggestion["SuggestionFrame"]
+        lf = app.labels.get(
+            (l_suggestion.video, l_suggestion.frame_idx), use_cache=True
+        )
+        assert type(lf) == LabeledFrame
+        assert lf.video == video
+        assert lf.frame_idx == prev_idx + frame_delta
+        prev_idx = l_suggestion.frame_idx
 
 
 def test_app_new_window(qtbot):

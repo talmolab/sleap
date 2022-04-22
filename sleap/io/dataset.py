@@ -629,7 +629,31 @@ class Labels(MutableSequence):
                 return self.find_first(item[0], item[1].tolist()) is not None
         raise ValueError("Item is not an object type contained in labels.")
 
-    def __getitem__(self, key, *args) -> Union[LabeledFrame, List[LabeledFrame]]:
+    def __getitem__(
+        self,
+        key: Union[
+            # indices
+            int,
+            slice,
+            np.integer,
+            np.ndarray,
+            list,
+            range,
+            # video
+            Video,
+            # video,indices pairs
+            Tuple[Video, Union[np.integer, np.ndarray, int, list, range]],
+        ],
+        *secondary_key: Union[
+            # indices
+            int,
+            slice,
+            np.integer,
+            np.ndarray,
+            list,
+            range,
+        ],
+    ) -> Union[LabeledFrame, List[LabeledFrame]]:
         """Return labeled frames matching key or return `None` if not found.
 
         This makes `labels[...]` save and will not raise an exception if the
@@ -639,9 +663,34 @@ class Labels(MutableSequence):
         If you happen to call __getitem__ directly, get will be called but without any
         keyword arguments.
         """
-        return self.get(key, *args)
+        return self.get(key, *secondary_key)
 
-    def get(self, key, *args, **kwargs) -> Union[LabeledFrame, List[LabeledFrame]]:
+    def get(
+        self,
+        key: Union[
+            # indices
+            int,
+            slice,
+            np.integer,
+            np.ndarray,
+            list,
+            range,
+            # video
+            Video,
+            # video,indices pairs
+            Tuple[Video, Union[np.integer, np.ndarray, int, list, range]],
+        ],
+        *secondary_key: Union[
+            # indices
+            int,
+            slice,
+            np.integer,
+            np.ndarray,
+            list,
+            range,
+        ],
+        use_cache=False,
+    ) -> Union[LabeledFrame, List[LabeledFrame]]:
         """Return labeled frames matching key or return `None` if not found.
 
         This is a safe version of `labels[...]` that will not raise an exception if the
@@ -661,19 +710,16 @@ class Labels(MutableSequence):
             scalar key was provided, or `None` if not found.
         """
         try:
-            if len(args) > 0:
+            if len(secondary_key) > 0:
                 if type(key) != tuple:
                     key = (key,)
-                key = key + tuple(args)
+                key = key + tuple(secondary_key)
 
             # Do any conversions first.
             if isinstance(key, slice):
                 start, stop, step = key.indices(len(self))
-                # return self.__getitem__(range(start, stop, step))
                 key = range(start, stop, step)
-
             elif isinstance(key, (np.integer, np.ndarray)):
-                # return self.__getitem__(key.tolist())
                 key = key.tolist()
 
             if isinstance(key, int):
@@ -690,11 +736,12 @@ class Labels(MutableSequence):
 
                 # Do any conversions first.
                 if isinstance(key[1], (np.integer, np.ndarray)):
-                    # return self.__getitem__((key[0], key[1].tolist()))
                     key = (key[0], key[1].tolist)
 
                 if isinstance(key[1], int):
-                    _hit = self.find_first(video=key[0], frame_idx=key[1], **kwargs)
+                    _hit = self.find_first(
+                        video=key[0], frame_idx=key[1], use_cache=use_cache
+                    )
                     if _hit is None:
                         raise KeyError(
                             f"No label found for specified video at frame {key[1]}."
