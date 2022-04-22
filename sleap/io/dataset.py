@@ -632,20 +632,16 @@ class Labels(MutableSequence):
     def __getitem__(
         self,
         key: Union[
-            # indices
             int,
             slice,
             np.integer,
             np.ndarray,
             list,
             range,
-            # video
             Video,
-            # video,indices pairs
             Tuple[Video, Union[np.integer, np.ndarray, int, list, range]],
         ],
         *secondary_key: Union[
-            # indices
             int,
             slice,
             np.integer,
@@ -662,6 +658,14 @@ class Labels(MutableSequence):
         Do not call __getitem__ directly, use get instead (get allows kwargs for logic).
         If you happen to call __getitem__ directly, get will be called but without any
         keyword arguments.
+
+        Args:
+            key: Indexing argument to match against. If `key` is a `Video` or tuple of
+                `(Video, frame_index)`, frames that match the criteria will be searched
+                for. If a scalar, list, range or array of integers are provided, the
+                labels with those linear indices will be returned.
+            secondary_key: Numerical indexing argument(s) which supplement `key`. Only
+                used when `key` is a `Video`.
         """
         return self.get(key, *secondary_key)
 
