@@ -689,7 +689,8 @@ class Labels(MutableSequence):
             list,
             range,
         ],
-        use_cache=False,
+        use_cache: bool = False,
+        raise_errors: bool = False,
     ) -> Union[LabeledFrame, List[LabeledFrame]]:
         """Return labeled frames matching key or return `None` if not found.
 
@@ -760,7 +761,9 @@ class Labels(MutableSequence):
             else:
                 raise KeyError("Invalid label indexing arguments.")
 
-        except KeyError:
+        except KeyError as e:
+            if raise_errors:
+                raise e
             return None
 
     def extract(self, inds, copy: bool = False) -> "Labels":

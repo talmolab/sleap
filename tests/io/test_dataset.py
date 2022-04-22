@@ -235,13 +235,19 @@ def test_label_accessors(centered_pair_labels: Labels, min_tracks_2node_labels: 
     assert labels.find_first(video, 101) is None
     assert labels[video, 101] is None
     assert labels[video, video] is None
+    with pytest.raises(KeyError):
+        labels.get(video, 101, raise_errors=True)
 
     assert labels["1"] is None
+    with pytest.raises(KeyError):
+        labels.get("1", raise_errors=True)
 
     dummy_video = Video(backend=MediaVideo)
     assert len(labels.find(dummy_video)) == 0
     assert labels[dummy_video] is None
     assert labels[dummy_video, 1] is None
+    with pytest.raises(KeyError):
+        labels.get(dummy_video, raise_errors=True)
 
     # Test suggestions look-up using LabelsDataCache through Labels.get().
     labels = min_tracks_2node_labels
