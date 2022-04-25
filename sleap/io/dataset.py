@@ -652,7 +652,7 @@ class Labels(MutableSequence):
     ) -> Union[LabeledFrame, List[LabeledFrame]]:
         """Return labeled frames matching key or return `None` if not found.
 
-        This makes `labels[...]` save and will not raise an exception if the
+        This makes `labels[...]` safe and will not raise an exception if the
         item is not found.
 
         Do not call __getitem__ directly, use get instead (get allows kwargs for logic).
@@ -703,7 +703,13 @@ class Labels(MutableSequence):
                 for. If a scalar, list, range or array of integers are provided, the
                 labels with those linear indices will be returned.
             secondary_key: Numerical indexing argument(s) which supplement `key`. Only
-                used when `key` is a `Video`.
+                used when `key` is of type `Video`.
+            use_cache: Boolean that determines whether Labels.find_first() should
+                instead instead call Labels.find() which uses the labels data cache. If
+                True, use the labels data cache, else loop through all labels to search.
+            raise_errors: Boolean that determines whether KeyErrors should be raised. If
+                True, raises KeyErrors, else catches KeyErrors and returns None instead
+                of raising KeyError.
 
         Raises:
             KeyError: If the specified key could not be found.
@@ -976,10 +982,13 @@ class Labels(MutableSequence):
         Matches on frames for the given video and/or frame index.
 
         Args:
-            video: a `Video` instance that is associated with the
+            video: A `Video` instance that is associated with the
                 labeled frames
-            frame_idx: an integer specifying the frame index within
+            frame_idx: An integer specifying the frame index within
                 the video
+            use_cache: Boolean that determines whether Labels.find_first() should
+                instead instead call Labels.find() which uses the labels data cache. If
+                True, use the labels data cache, else loop through all labels to search.
 
         Returns:
             First `LabeledFrame` that match the criteria
