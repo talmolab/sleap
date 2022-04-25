@@ -629,75 +629,147 @@ class Labels(MutableSequence):
                 return self.find_first(item[0], item[1].tolist()) is not None
         raise ValueError("Item is not an object type contained in labels.")
 
-    def __getitem__(self, key, *args) -> Union[LabeledFrame, List[LabeledFrame]]:
-        """Return labeled frames matching key.
+    def __getitem__(
+        self,
+        key: Union[
+            int,
+            slice,
+            np.integer,
+            np.ndarray,
+            list,
+            range,
+            Video,
+            Tuple[Video, Union[np.integer, np.ndarray, int, list, range]],
+        ],
+        *secondary_key: Union[
+            int,
+            slice,
+            np.integer,
+            np.ndarray,
+            list,
+            range,
+        ],
+    ) -> Union[LabeledFrame, List[LabeledFrame]]:
+        """Return labeled frames matching key or return `None` if not found.
+
+        This makes `labels[...]` safe and will not raise an exception if the
+        item is not found.
+
+        Do not call __getitem__ directly, use get instead (get allows kwargs for logic).
+        If you happen to call __getitem__ directly, get will be called but without any
+        keyword arguments.
 
         Args:
             key: Indexing argument to match against. If `key` is a `Video` or tuple of
                 `(Video, frame_index)`, frames that match the criteria will be searched
                 for. If a scalar, list, range or array of integers are provided, the
                 labels with those linear indices will be returned.
+            secondary_key: Numerical indexing argument(s) which supplement `key`. Only
+                used when `key` is a `Video`.
+        """
+        return self.get(key, *secondary_key)
+
+    def get(
+        self,
+        key: Union[
+            int,
+            slice,
+            np.integer,
+            np.ndarray,
+            list,
+            range,
+            Video,
+            Tuple[Video, Union[np.integer, np.ndarray, int, list, range]],
+        ],
+        *secondary_key: Union[
+            int,
+            slice,
+            np.integer,
+            np.ndarray,
+            list,
+            range,
+        ],
+        use_cache: bool = False,
+        raise_errors: bool = False,
+    ) -> Union[LabeledFrame, List[LabeledFrame]]:
+        """Return labeled frames matching key or return `None` if not found.
+
+        This is a safe version of `labels[...]` that will not raise an exception if the
+        item is not found.
+
+        Args:
+            key: Indexing argument to match against. If `key` is a `Video` or tuple of
+                `(Video, frame_index)`, frames that match the criteria will be searched
+                for. If a scalar, list, range or array of integers are provided, the
+                labels with those linear indices will be returned.
+            secondary_key: Numerical indexing argument(s) which supplement `key`. Only
+                used when `key` is of type `Video`.
+            use_cache: Boolean that determines whether Labels.find_first() should
+                instead instead call Labels.find() which uses the labels data cache. If
+                True, use the labels data cache, else loop through all labels to search.
+            raise_errors: Boolean that determines whether KeyErrors should be raised. If
+                True, raises KeyErrors, else catches KeyErrors and returns None instead
+                of raising KeyError.
 
         Raises:
             KeyError: If the specified key could not be found.
 
         Returns:
             A list with the matching `LabeledFrame`s, or a single `LabeledFrame` if a
-            scalar key was provided.
+            scalar key was provided, or `None` if not found.
         """
-        if len(args) > 0:
-            if type(key) != tuple:
-                key = (key,)
-            key = key + tuple(args)
+        try:
+            if len(secondary_key) > 0:
+                if type(key) != tuple:
+                    key = (key,)
+                key = key + tuple(secondary_key)
 
-        if isinstance(key, int):
-            return self.labels.__getitem__(key)
+            # Do any conversions first.
+            if isinstance(key, slice):
+                start, stop, step = key.indices(len(self))
+                key = range(start, stop, step)
+            elif isinstance(key, (np.integer, np.ndarray)):
+                key = key.tolist()
 
-        elif isinstance(key, Video):
-            if key not in self.videos:
-                raise KeyError("Video not found in labels.")
-            return self.find(video=key)
+            if isinstance(key, int):
+                return self.labels.__getitem__(key)
 
-        elif isinstance(key, tuple) and len(key) == 2 and isinstance(key[0], Video):
-            if key[0] not in self.videos:
-                raise KeyError("Video not found in labels.")
+            elif isinstance(key, Video):
+                if key not in self.videos:
+                    raise KeyError("Video not found in labels.")
+                return self.find(video=key)
 
-            if isinstance(key[1], int):
-                _hit = self.find_first(video=key[0], frame_idx=key[1])
-                if _hit is None:
-                    raise KeyError(
-                        f"No label found for specified video at frame {key[1]}."
+            elif isinstance(key, tuple) and len(key) == 2 and isinstance(key[0], Video):
+                if key[0] not in self.videos:
+                    raise KeyError("Video not found in labels.")
+
+                # Do any conversions first.
+                if isinstance(key[1], (np.integer, np.ndarray)):
+                    key = (key[0], key[1].tolist())
+
+                if isinstance(key[1], int):
+                    _hit = self.find_first(
+                        video=key[0], frame_idx=key[1], use_cache=use_cache
                     )
-                return _hit
-            elif isinstance(key[1], (np.integer, np.ndarray)):
-                return self.__getitem__((key[0], key[1].tolist()))
-            elif isinstance(key[1], (list, range)):
-                return self.find(video=key[0], frame_idx=key[1])
+                    if _hit is None:
+                        raise KeyError(
+                            f"No label found for specified video at frame {key[1]}."
+                        )
+                    return _hit
+                elif isinstance(key[1], (list, range)):
+                    return self.find(video=key[0], frame_idx=key[1])
+                else:
+                    raise KeyError("Invalid label indexing arguments.")
+
+            elif isinstance(key, (list, range)):
+                return [self.__getitem__(i) for i in key]
+
             else:
                 raise KeyError("Invalid label indexing arguments.")
 
-        elif isinstance(key, slice):
-            start, stop, step = key.indices(len(self))
-            return self.__getitem__(range(start, stop, step))
-
-        elif isinstance(key, (list, range)):
-            return [self.__getitem__(i) for i in key]
-
-        elif isinstance(key, (np.integer, np.ndarray)):
-            return self.__getitem__(key.tolist())
-
-        else:
-            raise KeyError("Invalid label indexing arguments.")
-
-    def get(self, *args) -> Union[LabeledFrame, List[LabeledFrame]]:
-        """Get an item from the labels or return `None` if not found.
-
-        This is a safe version of `labels[...]` that will not raise an exception if the
-        item is not found.
-        """
-        try:
-            return self.__getitem__(*args)
-        except KeyError:
+        except KeyError as e:
+            if raise_errors:
+                raise e
             return None
 
     def extract(self, inds, copy: bool = False) -> "Labels":
@@ -903,28 +975,35 @@ class Labels(MutableSequence):
             yield self._cache._frame_idx_map[video][idx]
 
     def find_first(
-        self, video: Video, frame_idx: Optional[int] = None
+        self, video: Video, frame_idx: Optional[int] = None, use_cache: bool = False
     ) -> Optional[LabeledFrame]:
         """Find the first occurrence of a matching labeled frame.
 
         Matches on frames for the given video and/or frame index.
 
         Args:
-            video: a `Video` instance that is associated with the
+            video: A `Video` instance that is associated with the
                 labeled frames
-            frame_idx: an integer specifying the frame index within
+            frame_idx: An integer specifying the frame index within
                 the video
+            use_cache: Boolean that determines whether Labels.find_first() should
+                instead instead call Labels.find() which uses the labels data cache. If
+                True, use the labels data cache, else loop through all labels to search.
 
         Returns:
             First `LabeledFrame` that match the criteria
             or None if none were found.
         """
-        if video in self.videos:
-            for label in self.labels:
-                if label.video == video and (
-                    frame_idx is None or (label.frame_idx == frame_idx)
-                ):
-                    return label
+        if use_cache:
+            label = self.find(video=video, frame_idx=frame_idx)
+            return None if len(label) == 0 else label[0]
+        else:
+            if video in self.videos:
+                for label in self.labels:
+                    if label.video == video and (
+                        frame_idx is None or (label.frame_idx == frame_idx)
+                    ):
+                        return label
 
     def find_last(
         self, video: Video, frame_idx: Optional[int] = None
