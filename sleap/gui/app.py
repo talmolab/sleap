@@ -396,6 +396,12 @@ class MainWindow(QMainWindow):
         )
         add_menu_item(
             import_types_menu,
+            "import_at",
+            "AlphaTracker dataset...",
+            self.commands.importAT,
+        )
+        add_menu_item(
+            import_types_menu,
             "import_leap",
             "LEAP Matlab dataset...",
             self.commands.importLEAP,

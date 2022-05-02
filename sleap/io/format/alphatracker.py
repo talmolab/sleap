@@ -16,7 +16,7 @@ import os
 import json
 import copy
 
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from sleap.instance import Point, Instance
 from sleap.io.dataset import Labels, Skeleton, LabeledFrame
@@ -25,7 +25,7 @@ from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.format.filehandle import FileHandle
 
 
-class AlphaTracker(Adaptor):
+class AlphaTrackerAdaptor(Adaptor):
     """
     Reads AlphaTracker JSON file with annotations for both single and multiple animals.
     """
@@ -61,15 +61,15 @@ class AlphaTracker(Adaptor):
         Checks the format of the file at three different levels:
         - First, the upper-level format of file.json must be a list of dictionaries.
         - Second, the dictionaries that represent frames must contain the specific keys
-            that we read.
+            that the adaptor reads.
         - Third, the "annotations" key in must contain a list of dictionaries.
         - Fourth, the dictionaries used to define bounding boxes for instances must
-            contain the specific key that we read.
+            contain the specific key that the adaptor reads.
         - Fifth, the dictionaries used to define the points of instance node must
-            contain the specific keys that we read.
+            contain the specific keys that the adaptor reads.
         """
 
-        def expect_keys(expected_keys: List[str], data_dict: Dict) -> bool:
+        def expect_keys(expected_keys: List[str], data_dict: dict) -> bool:
             """Returns whether the expected keys are in the data dictionary."""
             for key in expected_keys:
                 if key not in data_dict:
@@ -80,8 +80,9 @@ class AlphaTracker(Adaptor):
         if not self.does_match_ext(file.filename):
             return False
 
-        # Check for valid AlphaTracker (AT) JSON.
-        data: List[Dict] = file.json
+        # Check for valid AlphaTracker JSON.
+
+        data: List[dict] = file.json
 
         if type(data) != list:
             # Data is not in the expected format.
@@ -92,8 +93,8 @@ class AlphaTracker(Adaptor):
             return False
 
         # Check that frame dictionaries are in expected format.
-        frame_data: Dict = data[0]
-        if type(frame_data) != Dict:
+        frame_data: dict = data[0]
+        if type(frame_data) != dict:
             # Data is not in the expected format.
             return False
 
@@ -113,8 +114,8 @@ class AlphaTracker(Adaptor):
             return False
 
         # Check that instance annootations are in expected format.
-        ann_data_inst: Dict = ann[0]
-        if type(ann_data_inst) != Dict:
+        ann_data_inst: dict = ann[0]
+        if type(ann_data_inst) != dict:
             # Data not in expected format.
             return False
 
@@ -124,8 +125,8 @@ class AlphaTracker(Adaptor):
             return False
 
         # Check that point annotations are in expected format.
-        ann_data_point: Dict = ann[1]
-        if type(ann_data_point) != Dict:
+        ann_data_point: dict = ann[1]
+        if type(ann_data_point) != dict:
             # Data not in expected format.
             return False
 
@@ -169,7 +170,7 @@ class AlphaTracker(Adaptor):
         # TODO: Does not support multiple videos.
 
         def parse_instances(
-            __frame_ann: List[Dict], skeleton: Skeleton = skeleton
+            __frame_ann: List[dict], skeleton: Skeleton = skeleton
         ) -> List[Instance]:
             """
             Parse out the instances and corresponding points for each frame annotations.
@@ -183,7 +184,7 @@ class AlphaTracker(Adaptor):
                 A list of :class:`Instance`s in the current frame.
             """
             __instances: List[Instance] = []  # Complete list of Instance objects.
-            __instance_points: List[Dict] = []  # Each dictionary is a unique instance.
+            __instance_points: List[dict] = []  # Each dictionary is a unique instance.
             __instance_num: int = -1  # Index of instance in __instance_points.
             __node_num: int = 0  # Acts as node name. Warning: assumes nodes are ordered
 
@@ -292,7 +293,7 @@ class AlphaTracker(Adaptor):
 
         return Video.from_image_filenames(filenames)
 
-    def get_alpha_tracker_frame_dict(annotations: List[Dict] = [], filename: str = ""):
+    def get_alpha_tracker_frame_dict(annotations: List[dict] = [], filename: str = ""):
         """Returns a deep copy of the dictionary used for frames.
 
         Args:
@@ -312,7 +313,7 @@ class AlphaTracker(Adaptor):
         width: int = 200,
         x: float = 200.0,
         y: float = 200.0,
-    ) -> Dict:
+    ) -> dict:
         """Returns a deep copy of the dictionary used for instances.
 
         Args:
@@ -336,7 +337,7 @@ class AlphaTracker(Adaptor):
             }
         )
 
-    def get_alpha_tracker_point_dict(x: float, y: float) -> Dict:
+    def get_alpha_tracker_point_dict(x: float = 200.0, y: float = 200.0) -> dict:
         """Returns a deep copy of the dictionary used for nodes.
 
         Args:
@@ -351,7 +352,7 @@ class AlphaTracker(Adaptor):
 
     # Methods with default implementation
 
-    def write(self, filename: str, source_object: Labels) -> List[Dict]:
+    def write(self, filename: str, source_object: Labels) -> List[dict]:
         """Writes the object to an AlphaTracker JSON file.
 
         Args:
@@ -369,11 +370,11 @@ class AlphaTracker(Adaptor):
 
         # Code below writes to AlphaTracker format, but bounding box and image file is
         # not implemented.
-        # raise NotImplementedError
+        raise NotImplementedError
 
         def parse_data(
             __lfs: List[LabeledFrame] = source_object.labeled_frames,
-        ) -> List[Dict]:
+        ) -> List[dict]:
             """Parses the data in the list of :class:`LabeledFrame`s to the format used
                 in AlphaTracker.
 
@@ -385,7 +386,7 @@ class AlphaTracker(Adaptor):
                 __data: A list of frames annotations in the AlphaTracker format.
             """
 
-            __data: List[Dict] = []
+            __data: List[dict] = []
 
             for __i, __lf in enumerate(__lfs):
                 # TODO: Extract image from video using frame index, then store the
@@ -401,10 +402,6 @@ class AlphaTracker(Adaptor):
                 # Case 3: Created in SLEAP and exporting to AlphaTracker
                 # -> No images exist for any labeled frames. New images must be created
                 # in an image directory for all labeled frames.
-
-                # __video = __lf.video
-                # __frame_idx = __lf.frame_idx
-                # __img = __video.get_frame(__frame_idx)  # Images need to be in directory
 
                 # TODO: Pass path to frame image from AT file to  get_frame_dict.
                 __frame_dict = self.get_alpha_tracker_frame_dict()
