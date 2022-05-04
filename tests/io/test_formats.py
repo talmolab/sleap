@@ -1,6 +1,10 @@
+from sleap.info import labels
+from sleap.io.dataset import Labels
 from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, filehandle
+from sleap.io.format.alphatracker import AlphaTrackerAdaptor
 import pytest
 import os
+from pathlib import Path
 import numpy as np
 from numpy.testing import assert_array_equal
 
@@ -197,7 +201,6 @@ def test_madlc(test_data):
     assert labels[2].frame_idx == 3
 
 
-# TODO: Add test data for old single animal DLC format
 @pytest.mark.parametrize(
     "test_data",
     ["tests/data/dlc/dlc_testdata.csv", "tests/data/dlc/dlc_testdata_v2.csv"],
@@ -229,6 +232,36 @@ def test_sadlc(test_data):
     assert_array_equal(labels[1][0].numpy(), [[12, 13], [np.nan, np.nan], [15, 16]])
     assert_array_equal(labels[2][0].numpy(), [[22, 23], [24, 25], [26, 27]])
     assert labels[2].frame_idx == 3
+
+
+def test_alphatracker():
+    filename = "tests/data/alphatracker/at_testdata.json"
+    disp = dispatch.Dispatch()
+    disp.register(AlphaTrackerAdaptor)
+
+    # Ensure reading works
+    labels: Labels = disp.read(filename)
+    lfs = labels.labeled_frames
+
+    # Ensure video and frames are read correctly
+    assert len(lfs) == 4
+    for file_idx, file in enumerate(labels.video.backend.filenames):
+        f = Path(file)
+        assert f.stem == f"img00{file_idx}"
+
+    # Ensure nodes are read correctly
+    nodes = labels.skeleton.node_names
+    assert nodes[0] == "1"
+    assert nodes[1] == "2"
+    assert nodes[2] == "3"
+
+    # Ensure points are read correctly
+    for lf_idx, lf in enumerate(lfs):
+        assert len(lf.instances) == 2
+        for inst_idx, inst in enumerate(lf.instances):
+            for point_idx, point in enumerate(inst.points):
+                assert point[0] == ((lf_idx + 1) * (inst_idx + 1))
+                assert point[1] == (point_idx + 2)
 
 
 def test_tracking_scores(tmpdir, centered_pair_predictions_slp_path):
