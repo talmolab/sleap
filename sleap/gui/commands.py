@@ -257,6 +257,10 @@ class CommandContext:
         """
         self.execute(OpenProject, filename=filename, first_open=first_open)
 
+    def importAT(self):
+        """Imports AlphaTracker datasets."""
+        self.execute(ImportAlphaTracker)
+
     def importDPK(self):
         """Imports DeepPoseKit datasets."""
         self.execute(ImportDeepPoseKit)
@@ -606,6 +610,46 @@ class OpenProject(AppCommand):
                 return False
 
             params["filename"] = filename
+        return True
+
+
+class ImportAlphaTracker(AppCommand):
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+
+        video_path = params["video_path"] if "video_path" in params else None
+
+        labels = Labels.load_alphatracker(
+            filename=params["filename"],
+            full_video=video_path,
+        )
+
+        new_window = context.app.__class__()
+        new_window.showMaximized()
+        new_window.loadLabelsObject(labels=labels)
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict) -> bool:
+        filters = ["JSON (*.json)"]
+
+        filename, selected_filter = FileDialog.open(
+            context.app,
+            dir=None,
+            caption="Import AlphaTracker dataset...",
+            filter=";;".join(filters),
+        )
+
+        if len(filename) == 0:
+            return False
+
+        file_dir = os.path.dirname(filename)
+        video_path = os.path.join(file_dir, "video.mp4")
+
+        if os.path.exists(video_path):
+            params["video_path"] = video_path
+
+        params["filename"] = filename
+
         return True
 
 
