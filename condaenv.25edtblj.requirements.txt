@@ -1,2 +1,0 @@
---editable=.
---requirement=./dev_requirements.txt
