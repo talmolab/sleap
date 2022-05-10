@@ -83,7 +83,10 @@ class ReleaseChecker:
         except (requests.ConnectionError, requests.Timeout):
             return False
 
-        self.releases = [Release.from_json(r) for r in response.json()]
+        try:
+            self.releases = [Release.from_json(r) for r in response.json()]
+        except:
+            return False
 
         return True
 
