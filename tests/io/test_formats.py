@@ -1,7 +1,10 @@
+from build.lib.sleap.gui.state import GuiState
 from sleap.info import labels
 from sleap.io.dataset import Labels
 from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, filehandle
 from sleap.io.format.alphatracker import AlphaTrackerAdaptor
+from sleap.gui.commands import CommandContext, ImportAlphaTracker
+from sleap.gui.app import MainWindow
 import pytest
 import os
 from pathlib import Path
@@ -234,7 +237,7 @@ def test_sadlc(test_data):
     assert labels[2].frame_idx == 3
 
 
-def test_alphatracker():
+def test_alphatracker(qtbot):
     filename = "tests/data/alphatracker/at_testdata.json"
     disp = dispatch.Dispatch()
     disp.register(AlphaTrackerAdaptor)
@@ -262,7 +265,15 @@ def test_alphatracker():
             for point_idx, point in enumerate(inst.points):
                 assert point[0] == ((lf_idx + 1) * (inst_idx + 1))
                 assert point[1] == (point_idx + 2)
+    
+    # Run through GUI display
 
+    app = MainWindow()
+    app.state = GuiState()
+    app.state["filename"] = filename
+
+    # Only test do_action because ask method opens FileDialog
+    ImportAlphaTracker().do_action(context=app.commands, params=app.state)
 
 def test_tracking_scores(tmpdir, centered_pair_predictions_slp_path):
 
