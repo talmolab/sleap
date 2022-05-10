@@ -7,7 +7,7 @@ import requests
 from typing import List, Dict, Optional
 
 
-REPO_ID = "murthylab/sleap"
+REPO_ID = "talmolab/sleap"
 
 
 @attr.s(auto_attribs=True)
@@ -59,7 +59,7 @@ class ReleaseChecker:
     https://docs.github.com/en/free-pro-team@latest/rest/reference/repos#releases
 
     Attributes:
-        repo_id: The name of the repository (defaults to: "murthylab/sleap")
+        repo_id: The name of the repository (defaults to: "talmolab/sleap")
         releases: A list of `Release`s from querying GitHub.
         checked: Indicates whether the releases page has been checked.
     """

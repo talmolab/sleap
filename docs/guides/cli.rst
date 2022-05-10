@@ -296,7 +296,7 @@ Debugging
 ``sleap-diagnostic``
 ++++++++++++++++++++
 
-There's also a script to output diagnostic information which may help us if you need to contact us about problems installing or running SLEAP. If you were able to install the SLEAP Python package, you can run this script with :code:`sleap-diagnostic`. Otherwise, you can download `diagnostic.py <https://raw.githubusercontent.com/murthylab/sleap/main/sleap/diagnostic.py>`_ and run :code:`python diagnostic.py`.
+There's also a script to output diagnostic information which may help us if you need to contact us about problems installing or running SLEAP. If you were able to install the SLEAP Python package, you can run this script with :code:`sleap-diagnostic`. Otherwise, you can download `diagnostic.py <https://raw.githubusercontent.com/talmolab/sleap/main/sleap/diagnostic.py>`_ and run :code:`python diagnostic.py`.
 
 
 .. code-block:: none

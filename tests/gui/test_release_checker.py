@@ -6,7 +6,7 @@ import pytest
 def test_release_from_json():
     rls = Release.from_json(
         {
-            "html_url": "https://github.com/murthylab/sleap/releases/tag/v1.0.10a7",
+            "html_url": "https://github.com/talmolab/sleap/releases/tag/v1.0.10a7",
             "tag_name": "v1.0.10a7",
             "name": "SLEAP v1.0.10a7",
             "prerelease": True,
@@ -19,14 +19,14 @@ def test_release_from_json():
     assert rls.title == "SLEAP v1.0.10a7"
     assert rls.version == "v1.0.10a7"
     assert rls.prerelease
-    assert rls.url == "https://github.com/murthylab/sleap/releases/tag/v1.0.10a7"
+    assert rls.url == "https://github.com/talmolab/sleap/releases/tag/v1.0.10a7"
     assert rls.description == "Body text"
 
 
 def test_release_checker():
     rls_stable = Release.from_json(
         {
-            "html_url": "https://github.com/murthylab/sleap/releases/tag/v1.0.9",
+            "html_url": "https://github.com/talmolab/sleap/releases/tag/v1.0.9",
             "tag_name": "v1.0.9",
             "name": "SLEAP v1.0.9",
             "prerelease": False,
@@ -36,7 +36,7 @@ def test_release_checker():
     )
     rls_pre = Release.from_json(
         {
-            "html_url": "https://github.com/murthylab/sleap/releases/tag/v1.0.10a7",
+            "html_url": "https://github.com/talmolab/sleap/releases/tag/v1.0.10a7",
             "tag_name": "v1.0.10a7",
             "name": "SLEAP v1.0.10a7",
             "prerelease": True,
@@ -46,7 +46,7 @@ def test_release_checker():
     )
     rls_test = Release.from_json(
         {
-            "html_url": "https://github.com/murthylab/sleap/releases/tag/v1.0.10a8",
+            "html_url": "https://github.com/talmolab/sleap/releases/tag/v1.0.10a8",
             "tag_name": "v1.0.10a8",
             "name": "SLEAP v1.0.10a8",
             "prerelease": True,

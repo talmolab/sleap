@@ -1,17 +1,17 @@
 |CI| |Coverage| |Documentation| |Downloads| |Stable version| |Latest version|
 
 .. |CI| image:: 
-   https://github.com/murthylab/sleap/workflows/CI/badge.svg?event=push&branch=develop
-   :target: https://github.com/murthylab/sleap/actions?query=workflow:CI
+   https://github.com/talmolab/sleap/workflows/CI/badge.svg?event=push&branch=develop
+   :target: https://github.com/talmolab/sleap/actions?query=workflow:CI
    :alt: Continuous integration status
 
 .. |Coverage| image::
-   https://codecov.io/gh/murthylab/sleap/branch/develop/graph/badge.svg?token=YWQYBN6820
-   :target: https://codecov.io/gh/murthylab/sleap
+   https://codecov.io/gh/talmolab/sleap/branch/develop/graph/badge.svg?token=YWQYBN6820
+   :target: https://codecov.io/gh/talmolab/sleap
    :alt: Coverage
 
 .. |Documentation| image:: 
-   https://img.shields.io/github/workflow/status/murthylab/sleap/Build%20website?label=Documentation
+   https://img.shields.io/github/workflow/status/talmolab/sleap/Build%20website?label=Documentation
    :target: https://sleap.ai
    :alt: Documentation
   
@@ -20,12 +20,12 @@
    :target: https://pepy.tech/project/sleap
    :alt: Downloads
 
-.. |Stable version| image:: https://img.shields.io/github/v/release/murthylab/sleap?label=stable
-   :target: https://github.com/murthylab/sleap/releases/
+.. |Stable version| image:: https://img.shields.io/github/v/release/talmolab/sleap?label=stable
+   :target: https://github.com/talmolab/sleap/releases/
    :alt: Stable version
 
-.. |Latest version| image:: https://img.shields.io/github/v/release/murthylab/sleap?include_prereleases&label=latest
-   :target: https://github.com/murthylab/sleap/releases/
+.. |Latest version| image:: https://img.shields.io/github/v/release/talmolab/sleap?include_prereleases&label=latest
+   :target: https://github.com/talmolab/sleap/releases/
    :alt: Latest version
 
 
@@ -57,7 +57,7 @@ Get some SLEAP
 --------------
 SLEAP is installed as a Python package. We strongly recommend using `Miniconda <https://https://docs.conda.io/en/latest/miniconda.html>`_ to install SLEAP in its own environment.
 
-You can find the latest version of SLEAP in the `Releases <https://github.com/murthylab/sleap/releases>`_ page.
+You can find the latest version of SLEAP in the `Releases <https://github.com/talmolab/sleap/releases>`_ page.
 
 Quick install
 ^^^^^^^^^^^^^
@@ -138,7 +138,7 @@ Follow `@talmop <https://twitter.com/talmop>`_ on Twitter for news and updates!
 **Technical issue with the software?**
 
 1. Check the `Help page <https://sleap.ai/help.html>`_.
-2. Search the `issues on GitHub <https://github.com/murthylab/sleap/issues>`_ or open a new one.
+2. Search the `issues on GitHub <https://github.com/talmolab/sleap/issues>`_ or open a new one.
 
 
 **General inquiries?**
@@ -170,7 +170,7 @@ This work was made possible through our funding sources, including:
 
 License
 -------
-SLEAP is released under a `Clear BSD License <https://raw.githubusercontent.com/murthylab/sleap/main/LICENSE>`_ and is intended for research/academic use only. For commercial use, please contact: Laurie Tzodikov (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256.
+SLEAP is released under a `Clear BSD License <https://raw.githubusercontent.com/talmolab/sleap/main/LICENSE>`_ and is intended for research/academic use only. For commercial use, please contact: Laurie Tzodikov (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256.
 
 
 .. end-inclusion-marker-do-not-remove
