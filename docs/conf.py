@@ -100,7 +100,7 @@ def linkcode_resolve(domain, info):
         filename = docs.utils.resolve(info["module"], info["fullname"])
         if filename is None:
             return None
-        return f"https://github.com/murthylab/sleap/blob/{release}/{filename}"
+        return f"https://github.com/talmolab/sleap/blob/{release}/{filename}"
     except:
         print(info)
         raise
@@ -132,7 +132,7 @@ html_theme_options = {
     # "light_logo": "logo.png",
     # "dark_logo": "logo.png",
     # https://sphinx-book-theme.readthedocs.io/en/stable/customize/index.html#theme-options
-    "repository_url": "https://github.com/murthylab/sleap",
+    "repository_url": "https://github.com/talmolab/sleap",
     "use_download_button": False,
     "use_fullscreen_button": False,
     "use_repository_button": True,
