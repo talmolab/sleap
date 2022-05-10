@@ -14,7 +14,7 @@ dependencies:
   # - cudatoolkit=11.3.1
   # - cudnn=8.2.1
   # - nvidia::cuda-nvcc=11.3
-  - conda-forge::pip=22.0.3
+  - conda-forge::pip<=22.0.3
   - pip:
       - "."
       - "--requirement=./dev_requirements.txt"

@@ -115,7 +115,7 @@ widths: 10 40
 * - Labels
   - 1000 frames, 2950 instances
 * - Download
-  - [Train](https://storage.googleapis.com/sleap-data/datasets/wang_4mice_john/labels.full/random_split1/test.pkg.slp) / [Validation](https://storage.googleapis.com/sleap-data/datasets/wang_4mice_john/labels.full/random_split1/val.pkg.slp) / [Test](https://storage.googleapis.com/sleap-data/datasets/wang_4mice_john/labels.full/random_split1/test.pkg.slp)
+  - [Train](https://storage.googleapis.com/sleap-data/datasets/wang_4mice_john/labels.full/random_split1/train.pkg.slp) / [Validation](https://storage.googleapis.com/sleap-data/datasets/wang_4mice_john/labels.full/random_split1/val.pkg.slp) / [Test](https://storage.googleapis.com/sleap-data/datasets/wang_4mice_john/labels.full/random_split1/test.pkg.slp)
 * - Credit
   - [Pereira et al. (2022)](https://www.nature.com/articles/s41592-022-01426-1), John D'Uva, Mikhail Kislin, Samuel S.-H. Wang
 ```
