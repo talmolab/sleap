@@ -9,7 +9,7 @@ Stuck? Can't get SLEAP to run? Crashing? Try the recommended tips below.
 
 Have you tried all of the steps in the [installation instructions](installation)?
 
-If so, please feel free to [open an issue](https://github.com/murthylab/sleap/issues) and tell us how you're trying to install it, what error messages you're getting and which operating system you're on.
+If so, please feel free to [open an issue](https://github.com/talmolab/sleap/issues) and tell us how you're trying to install it, what error messages you're getting and which operating system you're on.
 
 ### Can I install it on a computer without a GPU?
 
@@ -73,7 +73,7 @@ Check out the [Analysis examples](notebooks/Analysis_examples) notebooks.
 
 ### I've found a bug or have another problem!
 
-Feel free to [open an issue](https://github.com/murthylab/sleap/issues) and we'll get back to you as soon as we can!
+Feel free to [open an issue](https://github.com/talmolab/sleap/issues) and we'll get back to you as soon as we can!
 
 ### Can I just talk to someone?
 

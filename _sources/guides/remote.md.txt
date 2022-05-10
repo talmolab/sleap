@@ -28,7 +28,7 @@ But in most cases it's best to create a training job package and just use that f
 
 **Training profile**:
 
-SLEAP comes with "default" training profiles for training confidence maps, part affinity fields, centroids, or top-down confidence maps (which allow multi-instance inference without using part affinity fields). Any file in the [training_profiles](https://github.com/murthylab/sleap/tree/main/sleap/training_profiles) directory of the SLEAP package can be used by specifying its filename (e.g., {code}`baseline_medium_rf.bottomup.json`) as the training profile—the full path isn't required to use these built-in profiles.
+SLEAP comes with "default" training profiles for training confidence maps, part affinity fields, centroids, or top-down confidence maps (which allow multi-instance inference without using part affinity fields). Any file in the [training_profiles](https://github.com/talmolab/sleap/tree/main/sleap/training_profiles) directory of the SLEAP package can be used by specifying its filename (e.g., {code}`baseline_medium_rf.bottomup.json`) as the training profile—the full path isn't required to use these built-in profiles.
 
 Our guide to [custom-training] explains how to use the GUI to export custom training profiles. You can also use the {code}`initial_config.json` file saved from previous training run as a template for a new training config. You can copy the {code}`json` file and edit it in any text editor.
 

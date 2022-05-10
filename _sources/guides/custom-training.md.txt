@@ -8,7 +8,7 @@ Hyperparameters include the model architecture, learning rate, and data augmenta
 
 This guide will explain how to create a custom training profile but doesn't cover how to decide what the hyperpameters should be. For more information about the hyperparameters, see our guide to {ref}`choosing-models`.
 
-Training profiles are JSON files. The JSON format is fairly easy to read (and edit) with a text-editor and you can use the default "baseline" profiles as a starting point for creating your own training profiles. For example, take a look at the [baseline bottom-up profile](https://github.com/murthylab/sleap/blob/main/sleap/training_profiles/baseline_medium_rf.bottomup.json) or our [other baseline profiles](https://github.com/murthylab/sleap/blob/main/sleap/training_profiles).
+Training profiles are JSON files. The JSON format is fairly easy to read (and edit) with a text-editor and you can use the default "baseline" profiles as a starting point for creating your own training profiles. For example, take a look at the [baseline bottom-up profile](https://github.com/talmolab/sleap/blob/main/sleap/training_profiles/baseline_medium_rf.bottomup.json) or our [other baseline profiles](https://github.com/talmolab/sleap/blob/main/sleap/training_profiles).
 
 But if this sounds intimidating, you don't have to edit the JSON file by hand! You can use the same GUI that's used for training on a local machine to export custom training profiles.
 
