@@ -2058,6 +2058,23 @@ class Labels(MutableSequence):
         return read(filename, for_object="labels", as_format="leap", *args, **kwargs)
 
     @classmethod
+    def load_alphatracker(
+        cls,
+        filename: str,
+        skeleton: Optional[Skeleton] = None,
+        full_video: Optional[Video] = None,
+    ) -> "Labels":
+        from .format import read
+
+        return read(
+            filename,
+            for_object="labels",
+            as_format="alphatracker",
+            skeleton=skeleton,
+            full_video=full_video,
+        )
+
+    @classmethod
     def load_deeplabcut(cls, filename: str) -> "Labels":
         from .format import read
 
