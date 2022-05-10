@@ -37,6 +37,14 @@ def get_nodes_as_np_strings(labels: Labels) -> List[np.string_]:
     return [np.string_(node.name) for node in labels.skeletons[0].nodes]
 
 
+def get_edges_as_np_strings(labels: Labels) -> List[Tuple[np.string_, np.string_]]:
+    """Get list of edge names as `np.string_`."""
+    return [
+        (np.string_(src_name), np.string_(dst_name))
+        for (src_name, dst_name) in labels.skeletons[0].edge_names
+    ]
+
+
 def get_occupancy_and_points_matrices(
     labels: Labels, all_frames: bool
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -252,6 +260,8 @@ def main(labels: Labels, output_path: str, all_frames: bool = True):
     data_dict = dict(
         track_names=track_names,
         node_names=get_nodes_as_np_strings(labels),
+        edge_names=get_edges_as_np_strings(labels),
+        edge_inds=labels.skeletons[0].edge_inds,
         tracks=locations_matrix,
         track_occupancy=occupancy_matrix,
         point_scores=point_scores,

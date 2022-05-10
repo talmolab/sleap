@@ -180,7 +180,7 @@ def test_load_labels_json_old(tmpdir):
     check_labels(new_labels)
 
 
-def test_label_accessors(centered_pair_labels):
+def test_label_accessors(centered_pair_labels: Labels, min_tracks_2node_labels: Labels):
     labels = centered_pair_labels
 
     video = labels.videos[0]
@@ -214,25 +214,60 @@ def test_label_accessors(centered_pair_labels):
     assert labels[np.int64(61)] == labels[61]
     assert labels[np.array([0, 61])] == labels[[0, 61]]
 
+    assert labels[slice(0, 5, 2)] == labels[[0, 2, 4]]
+
     assert len(labels.find(video, frame_idx=954)) == 1
     assert len(labels.find(video, 954)) == 1
     assert labels.find(video, 954)[0] == labels[61]
+    assert labels.get(video, 954, use_cache=True) == labels[61]
     assert labels.find_first(video) == labels[0]
     assert labels.find_first(video, 954) == labels[61]
+    assert labels.get(video, 954, use_cache=True) == labels[61]
     assert labels.find_last(video) == labels[69]
+
     assert labels[video, 954] == labels[61]
     assert labels[video, 0] == labels[0]
+    assert labels[video, np.int64(0)] == labels[0]
+    assert labels[video, np.array([0, 61])] == labels[(video, [0, 61])]
     assert labels[video] == labels.labels
 
     assert len(labels.find(video, 101)) == 0
     assert labels.find_first(video, 101) is None
+    assert labels[video, 101] is None
+    assert labels[video, video] is None
     with pytest.raises(KeyError):
-        labels[video, 101]
+        labels.get(video, 101, raise_errors=True)
+
+    assert labels["1"] is None
+    with pytest.raises(KeyError):
+        labels.get("1", raise_errors=True)
 
     dummy_video = Video(backend=MediaVideo)
     assert len(labels.find(dummy_video)) == 0
+    assert labels[dummy_video] is None
+    assert labels[dummy_video, 1] is None
     with pytest.raises(KeyError):
-        labels[dummy_video]
+        labels.get(dummy_video, raise_errors=True)
+
+    # Test suggestions look-up using LabelsDataCache through Labels.get().
+    labels = min_tracks_2node_labels
+    video = labels.video
+    num_samples = 5
+    frame_delta = video.num_frames // num_samples
+
+    labels.suggestions = VideoFrameSuggestions.suggest(
+        labels=labels,
+        params=dict(method="sample", per_video=num_samples, sampling_method="stride"),
+    )
+    assert len(labels.suggestions) == num_samples
+
+    prev_idx = -frame_delta
+    for suggestion in labels.get_suggestions():
+        lf = labels.get((suggestion.video, suggestion.frame_idx), use_cache=True)
+        assert type(lf) == LabeledFrame
+        assert lf.video == video
+        assert lf.frame_idx == prev_idx + frame_delta
+        prev_idx = suggestion.frame_idx
 
 
 def test_scalar_properties():

@@ -1,6 +1,14 @@
+from build.lib.sleap.gui.state import GuiState
+from sleap.info import labels
+from sleap.io.dataset import Labels
 from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, filehandle
+from sleap.io.format.adaptor import SleapObjectType
+from sleap.io.format.alphatracker import AlphaTrackerAdaptor
+from sleap.gui.commands import ImportAlphaTracker
+from sleap.gui.app import MainWindow
 import pytest
 import os
+from pathlib import Path
 import numpy as np
 from numpy.testing import assert_array_equal
 
@@ -161,7 +169,10 @@ def test_matching_adaptor(centered_pair_predictions_hdf5_path):
 
 @pytest.mark.parametrize(
     "test_data",
-    ["tests/data/dlc/madlc_testdata.csv", "tests/data/dlc/madlc_testdata_v2.csv"],
+    [
+        "tests/data/dlc/madlc_testdata.csv",
+        "tests/data/dlc/madlc_testdata_v2.csv",
+    ],
 )
 def test_madlc(test_data):
     labels = read(
@@ -178,7 +189,10 @@ def test_madlc(test_data):
     assert labels.videos[0].filenames[2].endswith("img002.png")
     assert labels.videos[0].filenames[3].endswith("img003.png")
 
+    # Assert frames without any coor are not labeled
     assert len(labels) == 3
+
+    # Assert number of instances per frame is correct
     assert len(labels[0]) == 2
     assert len(labels[1]) == 2
     assert len(labels[2]) == 1
@@ -189,6 +203,93 @@ def test_madlc(test_data):
     assert_array_equal(labels[1][1].numpy(), [[17, 18], [np.nan, np.nan], [20, 21]])
     assert_array_equal(labels[2][0].numpy(), [[22, 23], [24, 25], [26, 27]])
     assert labels[2].frame_idx == 3
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    ["tests/data/dlc/dlc_testdata.csv", "tests/data/dlc/dlc_testdata_v2.csv"],
+)
+def test_sadlc(test_data):
+    labels = read(
+        test_data,
+        for_object="labels",
+        as_format="deeplabcut",
+    )
+
+    assert labels.skeleton.node_names == ["A", "B", "C"]
+    assert len(labels.videos) == 1
+    assert len(labels.video.filenames) == 4
+    assert labels.videos[0].filenames[0].endswith("img000.png")
+    assert labels.videos[0].filenames[1].endswith("img001.png")
+    assert labels.videos[0].filenames[2].endswith("img002.png")
+    assert labels.videos[0].filenames[3].endswith("img003.png")
+
+    # Assert frames without any coor are not labeled
+    assert len(labels) == 3
+
+    # Assert number of instances per frame is correct
+    assert len(labels[0]) == 1
+    assert len(labels[1]) == 1
+    assert len(labels[2]) == 1
+
+    assert_array_equal(labels[0][0].numpy(), [[0, 1], [2, 3], [4, 5]])
+    assert_array_equal(labels[1][0].numpy(), [[12, 13], [np.nan, np.nan], [15, 16]])
+    assert_array_equal(labels[2][0].numpy(), [[22, 23], [24, 25], [26, 27]])
+    assert labels[2].frame_idx == 3
+
+
+def test_alphatracker(qtbot):
+
+    # Checks on properties
+    at_adaptor = AlphaTrackerAdaptor()
+    assert at_adaptor.handles == SleapObjectType.labels
+    assert at_adaptor.default_ext == "json"
+    assert at_adaptor.name == "AlphaTracker Dataset JSON"
+    assert at_adaptor.can_write_filename("cannot_write_this.txt") == False
+    assert at_adaptor.does_read() == True
+    assert at_adaptor.does_write() == False
+    with pytest.raises(NotImplementedError):
+        at_adaptor.write("file_that_will_not_be_written", Labels())
+    assert at_adaptor.formatted_ext_options == f"AlphaTracker Dataset JSON (json)"
+
+    # Begin checks on functionality
+
+    filename = "tests/data/alphatracker/at_testdata.json"
+    disp = dispatch.Dispatch()
+    disp.register(AlphaTrackerAdaptor)
+
+    # Ensure reading works
+    labels: Labels = disp.read(filename)
+    lfs = labels.labeled_frames
+
+    # Ensure video and frames are read correctly
+    assert len(lfs) == 4
+    for file_idx, file in enumerate(labels.video.backend.filenames):
+        f = Path(file)
+        assert f.stem == f"img00{file_idx}"
+
+    # Ensure nodes are read correctly
+    nodes = labels.skeleton.node_names
+    assert nodes[0] == "1"
+    assert nodes[1] == "2"
+    assert nodes[2] == "3"
+
+    # Ensure points are read correctly
+    for lf_idx, lf in enumerate(lfs):
+        assert len(lf.instances) == 2
+        for inst_idx, inst in enumerate(lf.instances):
+            for point_idx, point in enumerate(inst.points):
+                assert point[0] == ((lf_idx + 1) * (inst_idx + 1))
+                assert point[1] == (point_idx + 2)
+
+    # Run through GUI display
+
+    app = MainWindow()
+    app.state = GuiState()
+    app.state["filename"] = filename
+
+    # Only test do_action because ask method opens FileDialog
+    ImportAlphaTracker().do_action(context=app.commands, params=app.state)
 
 
 def test_tracking_scores(tmpdir, centered_pair_predictions_slp_path):

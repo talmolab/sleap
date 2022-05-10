@@ -17,7 +17,7 @@ dependencies:
     - conda-build=3.21.7
     - anaconda-client
     - conda-verify
-    - pip
+    - conda-forge::pip<=22.0.3
     - pip:
         - "."
         - "--requirement=./dev_requirements.txt"

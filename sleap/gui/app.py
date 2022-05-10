@@ -65,7 +65,7 @@ from PySide2.QtWidgets import QMessageBox
 import sleap
 from sleap.gui.dialogs.metrics import MetricsTableDialog
 from sleap.skeleton import Skeleton
-from sleap.instance import Instance
+from sleap.instance import Instance, LabeledFrame
 from sleap.io.dataset import Labels
 from sleap.info.summary import StatisticSeries
 from sleap.gui.commands import CommandContext, UpdateTopic
@@ -265,7 +265,7 @@ class MainWindow(QMainWindow):
             self.commands.showImportVideos(filenames=filenames)
 
     @property
-    def labels(self):
+    def labels(self) -> Labels:
         return self.state["labels"]
 
     @labels.setter
@@ -393,6 +393,12 @@ class MainWindow(QMainWindow):
             "import_dpk",
             "DeepPoseKit dataset...",
             self.commands.importDPK,
+        )
+        add_menu_item(
+            import_types_menu,
+            "import_at",
+            "AlphaTracker dataset...",
+            self.commands.importAT,
         )
         add_menu_item(
             import_types_menu,
@@ -828,7 +834,7 @@ class MainWindow(QMainWindow):
             "training on colab",
             "Train on Google Colab...",
             lambda: self.commands.openWebsite(
-                "https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
+                "https://colab.research.google.com/github/talmolab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
             ),
         )
 
@@ -841,12 +847,12 @@ class MainWindow(QMainWindow):
         )
         helpMenu.addAction(
             "GitHub",
-            lambda: self.commands.openWebsite("https://github.com/murthylab/sleap"),
+            lambda: self.commands.openWebsite("https://github.com/talmolab/sleap"),
         )
         helpMenu.addAction(
             "Releases",
             lambda: self.commands.openWebsite(
-                "https://github.com/murthylab/sleap/releases"
+                "https://github.com/talmolab/sleap/releases"
             ),
         )
 
@@ -1280,7 +1286,9 @@ class MainWindow(QMainWindow):
             if suggestion_list:
                 labeled_count = 0
                 for suggestion in suggestion_list:
-                    lf = self.labels.get((suggestion.video, suggestion.frame_idx))
+                    lf = self.labels.get(
+                        (suggestion.video, suggestion.frame_idx), use_cache=True
+                    )
                     if lf is not None and lf.has_user_instances:
                         labeled_count += 1
                 prc = (labeled_count / len(suggestion_list)) * 100
