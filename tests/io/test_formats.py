@@ -2,8 +2,9 @@ from build.lib.sleap.gui.state import GuiState
 from sleap.info import labels
 from sleap.io.dataset import Labels
 from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, filehandle
+from sleap.io.format.adaptor import SleapObjectType
 from sleap.io.format.alphatracker import AlphaTrackerAdaptor
-from sleap.gui.commands import CommandContext, ImportAlphaTracker
+from sleap.gui.commands import ImportAlphaTracker
 from sleap.gui.app import MainWindow
 import pytest
 import os
@@ -238,6 +239,21 @@ def test_sadlc(test_data):
 
 
 def test_alphatracker(qtbot):
+
+    # Checks on properties
+    at_adaptor = AlphaTrackerAdaptor()
+    assert at_adaptor.handles == SleapObjectType.labels
+    assert at_adaptor.default_ext == "json"
+    assert at_adaptor.name == "AlphaTracker Dataset JSON"
+    assert at_adaptor.can_write_filename("cannot_write_this.txt") == False
+    assert at_adaptor.does_read() == True
+    assert at_adaptor.does_write() == False
+    with pytest.raises(NotImplementedError):
+        at_adaptor.write("file_that_will_not_be_written", Labels())
+    assert at_adaptor.formatted_ext_options == f"AlphaTracker Dataset JSON (json)"
+
+    # Begin checks on functionality
+
     filename = "tests/data/alphatracker/at_testdata.json"
     disp = dispatch.Dispatch()
     disp.register(AlphaTrackerAdaptor)
@@ -265,7 +281,7 @@ def test_alphatracker(qtbot):
             for point_idx, point in enumerate(inst.points):
                 assert point[0] == ((lf_idx + 1) * (inst_idx + 1))
                 assert point[1] == (point_idx + 2)
-    
+
     # Run through GUI display
 
     app = MainWindow()
@@ -274,6 +290,7 @@ def test_alphatracker(qtbot):
 
     # Only test do_action because ask method opens FileDialog
     ImportAlphaTracker().do_action(context=app.commands, params=app.state)
+
 
 def test_tracking_scores(tmpdir, centered_pair_predictions_slp_path):
 
