@@ -1527,7 +1527,7 @@ class OpenSkeleton(EditCommand):
                 context.state["skeleton"] = sk_list[0]
 
         if context.state["skeleton"] not in context.labels:
-            context.labels.skeletons.append(context.state["skeleton"])
+            context.labels.skeletons = [context.state["skeleton"]]
 
 
 class SaveSkeleton(AppCommand):
