@@ -2,8 +2,10 @@ from sleap.gui.commands import (
     CommandContext,
     ImportDeepLabCutFolder,
     get_new_version_filename,
+    OpenSkeleton,
 )
 from sleap.io.pathutils import fix_path_separator
+from sleap.io.dataset import Labels
 from pathlib import PurePath
 
 
@@ -63,3 +65,20 @@ def test_get_new_version_filename():
     assert get_new_version_filename("/a/b/labels.v01.slp") == str(
         PurePath("/a/b/labels.v02.slp")
     )
+
+
+def test_open_skeleton(min_labels):
+    """Ensure CommandContext.OpenSkeleton only allows one skeleton in Labels.skeletons."""
+
+    # Load in labels with a single skeleton.
+    labels: Labels = min_labels
+    assert len(labels.skeletons) == 1
+
+    # Create command context and params. Load skeleton.
+    commands: CommandContext = CommandContext.from_labels(labels)
+    skeleton_filename = "tests\\data\\skeleton\\fly_skeleton_legs.json"
+    params: dict = {"filename": skeleton_filename}
+
+    # Check that new skeleton replaced skeleton instead of appending to skeletons list.
+    OpenSkeleton().do_action(context=commands, params=params)
+    assert len(labels.skeletons) == 1
