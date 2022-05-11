@@ -76,7 +76,7 @@ def test_open_skeleton(min_labels):
 
     # Create command context and params. Load skeleton.
     commands: CommandContext = CommandContext.from_labels(labels)
-    skeleton_filename = "tests\\data\\skeleton\\fly_skeleton_legs.json"
+    skeleton_filename = "tests/data/skeleton/fly_skeleton_legs.json"
     params: dict = {"filename": skeleton_filename}
 
     # Check that new skeleton replaced skeleton instead of appending to skeletons list.
