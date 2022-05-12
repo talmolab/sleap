@@ -1,11 +1,11 @@
-from build.lib.sleap.gui.state import GuiState
-from sleap.info import labels
 from sleap.io.dataset import Labels
 from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, filehandle
 from sleap.io.format.adaptor import SleapObjectType
 from sleap.io.format.alphatracker import AlphaTrackerAdaptor
 from sleap.gui.commands import ImportAlphaTracker
 from sleap.gui.app import MainWindow
+from sleap.gui.state import GuiState
+
 import pytest
 import os
 from pathlib import Path
