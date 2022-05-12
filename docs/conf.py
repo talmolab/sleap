@@ -28,7 +28,7 @@ author = "SLEAP Developers"
 copyright = f"2019–{date.today().year}, Talmo Lab"
 
 # The short X.Y version
-version = "1.2.2"
+version = "1.2.3"
 
 # Get the sleap version
 # with open("../sleap/version.py") as f:
@@ -36,7 +36,7 @@ version = "1.2.2"
 #     version = re.search("\d.+(?=['\"])", version_file).group(0)
 
 # Release should be the full branch name
-release = "v1.2.2"
+release = "v1.2.3"
 
 html_title = f"SLEAP ({release})"
 html_short_title = "SLEAP"
@@ -100,7 +100,7 @@ def linkcode_resolve(domain, info):
         filename = docs.utils.resolve(info["module"], info["fullname"])
         if filename is None:
             return None
-        return f"https://github.com/murthylab/sleap/blob/{release}/{filename}"
+        return f"https://github.com/talmolab/sleap/blob/{release}/{filename}"
     except:
         print(info)
         raise
@@ -132,7 +132,7 @@ html_theme_options = {
     # "light_logo": "logo.png",
     # "dark_logo": "logo.png",
     # https://sphinx-book-theme.readthedocs.io/en/stable/customize/index.html#theme-options
-    "repository_url": "https://github.com/murthylab/sleap",
+    "repository_url": "https://github.com/talmolab/sleap",
     "use_download_button": False,
     "use_fullscreen_button": False,
     "use_repository_button": True,
