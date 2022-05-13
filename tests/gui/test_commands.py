@@ -73,6 +73,7 @@ def test_open_skeleton(min_labels):
     # Load in labels with a single skeleton.
     labels: Labels = min_labels
     assert len(labels.skeletons) == 1
+    assert labels.skeleton.name == "Skeleton-0"
 
     # Create command context and params. Load skeleton.
     commands: CommandContext = CommandContext.from_labels(labels)
@@ -82,3 +83,20 @@ def test_open_skeleton(min_labels):
     # Check that new skeleton replaced skeleton instead of appending to skeletons list.
     OpenSkeleton().do_action(context=commands, params=params)
     assert len(labels.skeletons) == 1
+    assert labels.skeleton.name == "skeleton_legs.mat"
+
+    # Check that skeletons, nodes, and edges for instances are updated to new skeleton.
+    # TODO: Instance skeletons are unchanged and need to be merged.
+    #   Possibly reuse code from MergeDialog.__init__, Labels.complex_merge_between,
+    #   LabeledFrame.complex_merge_between, and LabeledFrame.complex_frame_merge.
+    #       Code could be implemented in OpenSkeleton.do_action or in callback
+    #       MainWindow.on_data_update.
+    print(f"\n\nlabels.skeleton.nodes = {labels.skeleton.nodes}")
+    print(f"\nlabels.nodes = {labels.nodes}")
+    print(f"\n\nlabels.skeleton.name = {labels.skeleton.name}")
+    print(
+        f"\nlabels.labeled_frames[0].instances[0].skeleton.name = "
+        "{labels.labeled_frames[0].instances[0].skeleton.name}"
+    )
+    assert labels.labeled_frames[0].instances[0].skeleton.name == labels.skeleton.name
+    assert labels.nodes == labels.skeleton.nodes
