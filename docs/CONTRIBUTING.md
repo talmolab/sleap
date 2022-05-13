@@ -16,7 +16,7 @@ As our community grows it is important to adhere to a set of contribution guidel
 
 ## Code of Conduct
 
-Everyone contributing to SLEAP is governed by the (add code of conduct). As such, all are expected to abide by this code. Please report any unacceptable behavior to (add email).
+Everyone contributing to SLEAP is governed by the [SLEAP Code of Conduct](CODE_OF_CONDUCT.md). As such, all are expected to abide by this code. Please report any unacceptable behavior to (add email).
 
 ## Contributing
 
