@@ -7,7 +7,7 @@
     "id": "view-in-github"
    },
    "source": [
-    "<a href=\"https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Analysis_examples.ipynb\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+    "<a href=\"https://colab.research.google.com/github/talmolab/sleap/blob/main/docs/notebooks/Analysis_examples.ipynb\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
    ]
   },
   {
@@ -38,7 +38,7 @@
    "source": [
     "## Example analysis data\n",
     "\n",
-    "Let's start by download a sample HDF5. These predictions were created with models trained on our [sample Drosophila melanogaster courtship dataset](https://github.com/murthylab/sleap-datasets). Using these models we can inference on a video clip with 3000 frames. The video clip, resulting predictions, and exported HDF5 are all available [here](https://github.com/murthylab/sleap/tree/main/docs/notebooks/analysis_example).\n",
+    "Let's start by download a sample HDF5. These predictions were created with models trained on our [sample Drosophila melanogaster courtship dataset](https://github.com/talmolab/sleap-datasets). Using these models we can inference on a video clip with 3000 frames. The video clip, resulting predictions, and exported HDF5 are all available [here](https://github.com/talmolab/sleap/tree/main/docs/notebooks/analysis_example).\n",
     "\n",
     "We'll just download the `predictions.analysis.h5` file:"
    ]
@@ -58,12 +58,12 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "--2021-01-04 03:24:05--  https://github.com/murthylab/sleap/raw/main/docs/notebooks/analysis_example/predictions.analysis.h5\n",
+      "--2021-01-04 03:24:05--  https://github.com/talmolab/sleap/raw/main/docs/notebooks/analysis_example/predictions.analysis.h5\n",
       "Resolving github.com (github.com)... 140.82.113.4\n",
       "Connecting to github.com (github.com)|140.82.113.4|:443... connected.\n",
       "HTTP request sent, awaiting response... 302 Found\n",
-      "Location: https://raw.githubusercontent.com/murthylab/sleap/main/docs/notebooks/analysis_example/predictions.analysis.h5 [following]\n",
-      "--2021-01-04 03:24:05--  https://raw.githubusercontent.com/murthylab/sleap/tree/main/docs/notebooks/analysis_example/predictions.analysis.h5\n",
+      "Location: https://raw.githubusercontent.com/talmolab/sleap/main/docs/notebooks/analysis_example/predictions.analysis.h5 [following]\n",
+      "--2021-01-04 03:24:05--  https://raw.githubusercontent.com/talmolab/sleap/tree/main/docs/notebooks/analysis_example/predictions.analysis.h5\n",
       "Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 151.101.0.133, 151.101.64.133, 151.101.128.133, ...\n",
       "Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|151.101.0.133|:443... connected.\n",
       "HTTP request sent, awaiting response... 200 OK\n",
@@ -78,7 +78,7 @@
     }
    ],
    "source": [
-    "!wget -O predictions.analysis.h5 https://github.com/murthylab/sleap/raw/main/docs/notebooks/analysis_example/predictions.analysis.h5"
+    "!wget -O predictions.analysis.h5 https://github.com/talmolab/sleap/raw/main/docs/notebooks/analysis_example/predictions.analysis.h5"
    ]
   },
   {

@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>sleap.nn.data.pipelines &#8212; SLEAP (v1.2.2)</title>
+    <title>sleap.nn.data.pipelines &#8212; SLEAP (v1.2.3)</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -45,8 +45,6 @@
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="sleap.nn.data.providers" href="sleap.nn.data.providers.html" />
-    <link rel="prev" title="sleap.nn.data.offset_regression" href="sleap.nn.data.offset_regression.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -90,7 +88,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.3)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -98,7 +96,7 @@
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item active">
-        <ul class="current nav bd-sidenav">
+        <ul class="nav bd-sidenav">
  <li class="toctree-l1">
   <a class="reference internal" href="../index.html">
    Home
@@ -270,416 +268,16 @@
    </li>
   </ul>
  </li>
- <li class="toctree-l1 current active has-children">
+ <li class="toctree-l1 has-children">
   <a class="reference internal" href="../api.html">
    Developer API
   </a>
-  <input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+  <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
   <label for="toctree-checkbox-4">
    <i class="fas fa-chevron-down">
    </i>
   </label>
-  <ul class="current">
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.instance.html">
-     sleap.instance
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.message.html">
-     sleap.message
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.skeleton.html">
-     sleap.skeleton
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.util.html">
-     sleap.util
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.callbacks.html">
-     sleap.nn.callbacks
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.evals.html">
-     sleap.nn.evals
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.heads.html">
-     sleap.nn.heads
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.identity.html">
-     sleap.nn.identity
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.inference.html">
-     sleap.nn.inference
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.losses.html">
-     sleap.nn.losses
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.model.html">
-     sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.paf_grouping.html">
-     sleap.nn.paf_grouping
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.peak_finding.html">
-     sleap.nn.peak_finding
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.system.html">
-     sleap.nn.system
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.tracking.html">
-     sleap.nn.tracking
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.training.html">
-     sleap.nn.training
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.utils.html">
-     sleap.nn.utils
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.viz.html">
-     sleap.nn.viz
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.data.html">
-     sleap.nn.config.data
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.model.html">
-     sleap.nn.config.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.optimization.html">
-     sleap.nn.config.optimization
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.outputs.html">
-     sleap.nn.config.outputs
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.training_job.html">
-     sleap.nn.config.training_job
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.utils.html">
-     sleap.nn.config.utils
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.augmentation.html">
-     sleap.nn.data.augmentation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.confidence_maps.html">
-     sleap.nn.data.confidence_maps
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.dataset_ops.html">
-     sleap.nn.data.dataset_ops
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.edge_maps.html">
-     sleap.nn.data.edge_maps
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.general.html">
-     sleap.nn.data.general
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.grouping.html">
-     sleap.nn.data.grouping
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.identity.html">
-     sleap.nn.data.identity
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.inference.html">
-     sleap.nn.data.inference
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.instance_centroids.html">
-     sleap.nn.data.instance_centroids
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.instance_cropping.html">
-     sleap.nn.data.instance_cropping
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.normalization.html">
-     sleap.nn.data.normalization
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.offset_regression.html">
-     sleap.nn.data.offset_regression
-    </a>
-   </li>
-   <li class="toctree-l2 current active">
-    <a class="current reference internal" href="#">
-     sleap.nn.data.pipelines
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.providers.html">
-     sleap.nn.data.providers
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.resizing.html">
-     sleap.nn.data.resizing
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.training.html">
-     sleap.nn.data.training
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.utils.html">
-     sleap.nn.data.utils
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.tracker.components.html">
-     sleap.nn.tracker.components
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.tracker.kalman.html">
-     sleap.nn.tracker.kalman
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.common.html">
-     sleap.nn.architectures.common
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">
-     sleap.nn.architectures.encoder_decoder
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.hourglass.html">
-     sleap.nn.architectures.hourglass
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.hrnet.html">
-     sleap.nn.architectures.hrnet
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.leap.html">
-     sleap.nn.architectures.leap
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.pretrained_encoders.html">
-     sleap.nn.architectures.pretrained_encoders
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.resnet.html">
-     sleap.nn.architectures.resnet
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.unet.html">
-     sleap.nn.architectures.unet
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.upsampling.html">
-     sleap.nn.architectures.upsampling
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.asyncvideo.html">
-     sleap.io.asyncvideo
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.convert.html">
-     sleap.io.convert
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.dataset.html">
-     sleap.io.dataset
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.legacy.html">
-     sleap.io.legacy
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.pathutils.html">
-     sleap.io.pathutils
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.video.html">
-     sleap.io.video
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.videowriter.html">
-     sleap.io.videowriter
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.visuals.html">
-     sleap.io.visuals
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.adaptor.html">
-     sleap.io.format.adaptor
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.coco.html">
-     sleap.io.format.coco
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.deeplabcut.html">
-     sleap.io.format.deeplabcut
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.deepposekit.html">
-     sleap.io.format.deepposekit
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.dispatch.html">
-     sleap.io.format.dispatch
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.filehandle.html">
-     sleap.io.format.filehandle
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.genericjson.html">
-     sleap.io.format.genericjson
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.hdf5.html">
-     sleap.io.format.hdf5
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.labels_json.html">
-     sleap.io.format.labels_json
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.leap_matlab.html">
-     sleap.io.format.leap_matlab
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.main.html">
-     sleap.io.format.main
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.sleap_analysis.html">
-     sleap.io.format.sleap_analysis
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.text.html">
-     sleap.io.format.text
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.align.html">
-     sleap.info.align
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.feature_suggestions.html">
-     sleap.info.feature_suggestions
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.labels.html">
-     sleap.info.labels
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.metrics.html">
-     sleap.info.metrics
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.summary.html">
-     sleap.info.summary
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.trackcleaner.html">
-     sleap.info.trackcleaner
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.write_tracking_h5.html">
-     sleap.info.write_tracking_h5
-    </a>
-   </li>
+  <ul class="simple">
   </ul>
  </li>
  <li class="toctree-l1">
@@ -688,12 +286,12 @@
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference external" href="https://github.com/murthylab/sleap">
+  <a class="reference external" href="https://github.com/talmolab/sleap">
    GitHub
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference external" href="https://github.com/murthylab/sleap/releases">
+  <a class="reference external" href="https://github.com/talmolab/sleap/releases">
    Releases
   </a>
  </li>
@@ -757,7 +355,7 @@ title="Toggle navigation"
   <div class="menu-dropdown__content">
     <ul>
       <li>
-        <a href="https://github.com/murthylab/sleap"
+        <a href="https://github.com/talmolab/sleap"
    class="headerbtn"
    data-toggle="tooltip"
 data-placement="left"
@@ -774,7 +372,7 @@ title="Source repository"
       </li>
       
       <li>
-        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.data.pipelines.html&body=Your%20issue%20content%20here."
+        <a href="https://github.com/talmolab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.data.pipelines.html&body=Your%20issue%20content%20here."
    class="headerbtn"
    data-toggle="tooltip"
 data-placement="left"
@@ -826,7 +424,7 @@ operations wrapped in a <code class="xref py py-obj docutils literal notranslate
 well as to define training vs inference versions based on the same configurations.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.BottomUpMultiClassPipeline">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.pipelines.</span></span><span class="sig-name descname"><span class="pre">BottomUpMultiClassPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.DataConfig" title="sleap.nn.config.data.DataConfig"><span class="pre">sleap.nn.config.data.DataConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">confmaps_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.MultiInstanceConfmapsHead" title="sleap.nn.heads.MultiInstanceConfmapsHead"><span class="pre">sleap.nn.heads.MultiInstanceConfmapsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_maps_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.ClassMapsHead" title="sleap.nn.heads.ClassMapsHead"><span class="pre">sleap.nn.heads.ClassMapsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead" title="sleap.nn.heads.OffsetRefinementHead"><span class="pre">sleap.nn.heads.OffsetRefinementHead</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L953-L1113"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.BottomUpMultiClassPipeline" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.pipelines.</span></span><span class="sig-name descname"><span class="pre">BottomUpMultiClassPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.DataConfig" title="sleap.nn.config.data.DataConfig"><span class="pre">sleap.nn.config.data.DataConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">confmaps_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.MultiInstanceConfmapsHead" title="sleap.nn.heads.MultiInstanceConfmapsHead"><span class="pre">sleap.nn.heads.MultiInstanceConfmapsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_maps_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.ClassMapsHead" title="sleap.nn.heads.ClassMapsHead"><span class="pre">sleap.nn.heads.ClassMapsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead" title="sleap.nn.heads.OffsetRefinementHead"><span class="pre">sleap.nn.heads.OffsetRefinementHead</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L953-L1113"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.BottomUpMultiClassPipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Pipeline builder for confidence maps and class maps models.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.BottomUpMultiClassPipeline.data_config">
@@ -885,7 +483,7 @@ well as to define training vs inference versions based on the same configuration
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.BottomUpMultiClassPipeline.make_base_pipeline">
-<span class="sig-name descname"><span class="pre">make_base_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L970-L993"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.BottomUpMultiClassPipeline.make_base_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_base_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L970-L993"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.BottomUpMultiClassPipeline.make_base_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create base pipeline with input data only.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -900,7 +498,7 @@ well as to define training vs inference versions based on the same configuration
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.BottomUpMultiClassPipeline.make_training_pipeline">
-<span class="sig-name descname"><span class="pre">make_training_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L995-L1077"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.BottomUpMultiClassPipeline.make_training_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_training_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L995-L1077"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.BottomUpMultiClassPipeline.make_training_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create full training pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -921,7 +519,7 @@ with the appropriate format for the instantiated <code class="xref py py-obj doc
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.BottomUpMultiClassPipeline.make_viz_pipeline">
-<span class="sig-name descname"><span class="pre">make_viz_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keras_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">keras.engine.training.Model</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L1079-L1113"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.BottomUpMultiClassPipeline.make_viz_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_viz_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keras_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">keras.engine.training.Model</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L1079-L1113"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.BottomUpMultiClassPipeline.make_viz_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create visualization pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -942,7 +540,7 @@ predictions useful for visualization during training.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.BottomUpPipeline">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.pipelines.</span></span><span class="sig-name descname"><span class="pre">BottomUpPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.DataConfig" title="sleap.nn.config.data.DataConfig"><span class="pre">sleap.nn.config.data.DataConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">confmaps_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.MultiInstanceConfmapsHead" title="sleap.nn.heads.MultiInstanceConfmapsHead"><span class="pre">sleap.nn.heads.MultiInstanceConfmapsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pafs_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.PartAffinityFieldsHead" title="sleap.nn.heads.PartAffinityFieldsHead"><span class="pre">sleap.nn.heads.PartAffinityFieldsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead" title="sleap.nn.heads.OffsetRefinementHead"><span class="pre">sleap.nn.heads.OffsetRefinementHead</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L789-L949"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.BottomUpPipeline" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.pipelines.</span></span><span class="sig-name descname"><span class="pre">BottomUpPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.DataConfig" title="sleap.nn.config.data.DataConfig"><span class="pre">sleap.nn.config.data.DataConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">confmaps_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.MultiInstanceConfmapsHead" title="sleap.nn.heads.MultiInstanceConfmapsHead"><span class="pre">sleap.nn.heads.MultiInstanceConfmapsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pafs_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.PartAffinityFieldsHead" title="sleap.nn.heads.PartAffinityFieldsHead"><span class="pre">sleap.nn.heads.PartAffinityFieldsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead" title="sleap.nn.heads.OffsetRefinementHead"><span class="pre">sleap.nn.heads.OffsetRefinementHead</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L789-L949"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.BottomUpPipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Pipeline builder for confidence maps + part affinity fields models.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.BottomUpPipeline.data_config">
@@ -1001,7 +599,7 @@ predictions useful for visualization during training.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.BottomUpPipeline.make_base_pipeline">
-<span class="sig-name descname"><span class="pre">make_base_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L806-L829"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.BottomUpPipeline.make_base_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_base_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L806-L829"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.BottomUpPipeline.make_base_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create base pipeline with input data only.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1016,7 +614,7 @@ predictions useful for visualization during training.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.BottomUpPipeline.make_training_pipeline">
-<span class="sig-name descname"><span class="pre">make_training_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L831-L912"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.BottomUpPipeline.make_training_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_training_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L831-L912"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.BottomUpPipeline.make_training_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create full training pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1037,7 +635,7 @@ with the appropriate format for the instantiated <code class="xref py py-obj doc
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.BottomUpPipeline.make_viz_pipeline">
-<span class="sig-name descname"><span class="pre">make_viz_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keras_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">keras.engine.training.Model</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L914-L949"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.BottomUpPipeline.make_viz_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_viz_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keras_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">keras.engine.training.Model</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L914-L949"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.BottomUpPipeline.make_viz_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create visualization pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1058,7 +656,7 @@ predictions useful for visualization during training.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.CentroidConfmapsPipeline">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.pipelines.</span></span><span class="sig-name descname"><span class="pre">CentroidConfmapsPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.DataConfig" title="sleap.nn.config.data.DataConfig"><span class="pre">sleap.nn.config.data.DataConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroid_confmap_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.CentroidConfmapsHead" title="sleap.nn.heads.CentroidConfmapsHead"><span class="pre">sleap.nn.heads.CentroidConfmapsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead" title="sleap.nn.heads.OffsetRefinementHead"><span class="pre">sleap.nn.heads.OffsetRefinementHead</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L474-L637"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.CentroidConfmapsPipeline" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.pipelines.</span></span><span class="sig-name descname"><span class="pre">CentroidConfmapsPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.DataConfig" title="sleap.nn.config.data.DataConfig"><span class="pre">sleap.nn.config.data.DataConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroid_confmap_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.CentroidConfmapsHead" title="sleap.nn.heads.CentroidConfmapsHead"><span class="pre">sleap.nn.heads.CentroidConfmapsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead" title="sleap.nn.heads.OffsetRefinementHead"><span class="pre">sleap.nn.heads.OffsetRefinementHead</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L474-L637"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.CentroidConfmapsPipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Pipeline builder for centroid confidence map models.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.CentroidConfmapsPipeline.data_config">
@@ -1107,7 +705,7 @@ confidence maps tensor.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.CentroidConfmapsPipeline.make_base_pipeline">
-<span class="sig-name descname"><span class="pre">make_base_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L490-L517"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.CentroidConfmapsPipeline.make_base_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_base_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L490-L517"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.CentroidConfmapsPipeline.make_base_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create base pipeline with input data only.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1122,7 +720,7 @@ confidence maps tensor.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.CentroidConfmapsPipeline.make_training_pipeline">
-<span class="sig-name descname"><span class="pre">make_training_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L519-L599"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.CentroidConfmapsPipeline.make_training_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_training_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L519-L599"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.CentroidConfmapsPipeline.make_training_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create full training pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1143,7 +741,7 @@ with the appropriate format for the instantiated <code class="xref py py-obj doc
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.CentroidConfmapsPipeline.make_viz_pipeline">
-<span class="sig-name descname"><span class="pre">make_viz_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keras_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">keras.engine.training.Model</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L601-L637"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.CentroidConfmapsPipeline.make_viz_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_viz_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keras_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">keras.engine.training.Model</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L601-L637"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.CentroidConfmapsPipeline.make_viz_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create visualization pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1164,7 +762,7 @@ predictions useful for visualization during training.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.Pipeline">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.pipelines.</span></span><span class="sig-name descname"><span class="pre">Pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">providers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L113-L330"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.pipelines.</span></span><span class="sig-name descname"><span class="pre">Pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">providers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L113-L330"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Pipeline composed of providers and transformers.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.Pipeline.providers">
@@ -1190,7 +788,7 @@ predictions useful for visualization during training.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.Pipeline.append">
-<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">sleap.nn.data.pipelines.Transformer</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.data.pipelines.Transformer</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L180-L206"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline.append" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">sleap.nn.data.pipelines.Transformer</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.data.pipelines.Transformer</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L180-L206"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline.append" title="Permalink to this definition">#</a></dt>
 <dd><p>Append one or more blocks to this pipeline instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1206,7 +804,7 @@ append to the end of this pipeline.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.Pipeline.describe">
-<span class="sig-name descname"><span class="pre">describe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L319-L330"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline.describe" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">describe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L319-L330"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline.describe" title="Permalink to this definition">#</a></dt>
 <dd><p>Prints the keys in the examples generated by the pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1221,7 +819,7 @@ printing it.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.Pipeline.from_blocks">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_blocks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">blocks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.data.pipelines.Provider</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">sleap.nn.data.pipelines.Transformer</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.data.pipelines.Provider</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">sleap.nn.data.pipelines.Transformer</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L124-L152"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline.from_blocks" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_blocks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">blocks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.data.pipelines.Provider</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">sleap.nn.data.pipelines.Transformer</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.data.pipelines.Provider</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">sleap.nn.data.pipelines.Transformer</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L124-L152"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline.from_blocks" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a pipeline from a sequence of providers and transformers.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1235,7 +833,7 @@ printing it.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.Pipeline.from_pipelines">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_pipelines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipelines</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L154-L170"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline.from_pipelines" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_pipelines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipelines</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L154-L170"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline.from_pipelines" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a new pipeline instance by chaining together multiple pipelines.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1249,7 +847,7 @@ printing it.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.Pipeline.make_dataset">
-<span class="sig-name descname"><span class="pre">make_dataset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L268-L290"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline.make_dataset" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_dataset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L268-L290"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline.make_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a dataset instance that generates examples from the pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1267,7 +865,7 @@ keys in the <a class="reference internal" href="#sleap.nn.data.pipelines.Pipelin
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.Pipeline.peek">
-<span class="sig-name descname"><span class="pre">peek</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L300-L317"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline.peek" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">peek</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L300-L317"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline.peek" title="Permalink to this definition">#</a></dt>
 <dd><p>Build and return the first <code class="xref py py-obj docutils literal notranslate"><span class="pre">n</span></code> examples from the pipeline.</p>
 <p>This function is useful for quickly inspecting the output of a pipeline.</p>
 <dl class="field-list simple">
@@ -1282,7 +880,7 @@ keys in the <a class="reference internal" href="#sleap.nn.data.pipelines.Pipelin
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.Pipeline.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L292-L298"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline.run" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L292-L298"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline.run" title="Permalink to this definition">#</a></dt>
 <dd><p>Build and evaluate the pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1293,7 +891,7 @@ keys in the <a class="reference internal" href="#sleap.nn.data.pipelines.Pipelin
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.Pipeline.validate_pipeline">
-<span class="sig-name descname"><span class="pre">validate_pipeline</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L218-L261"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline.validate_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">validate_pipeline</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L218-L261"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.Pipeline.validate_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Check that all pipeline blocks meet the data requirements.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1310,7 +908,7 @@ keys in the <a class="reference internal" href="#sleap.nn.data.pipelines.Pipelin
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.pipelines.</span></span><span class="sig-name descname"><span class="pre">SingleInstanceConfmapsPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.DataConfig" title="sleap.nn.config.data.DataConfig"><span class="pre">sleap.nn.config.data.DataConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_instance_confmap_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.SingleInstanceConfmapsHead" title="sleap.nn.heads.SingleInstanceConfmapsHead"><span class="pre">sleap.nn.heads.SingleInstanceConfmapsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead" title="sleap.nn.heads.OffsetRefinementHead"><span class="pre">sleap.nn.heads.OffsetRefinementHead</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L334-L470"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.pipelines.</span></span><span class="sig-name descname"><span class="pre">SingleInstanceConfmapsPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.DataConfig" title="sleap.nn.config.data.DataConfig"><span class="pre">sleap.nn.config.data.DataConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_instance_confmap_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.SingleInstanceConfmapsHead" title="sleap.nn.heads.SingleInstanceConfmapsHead"><span class="pre">sleap.nn.heads.SingleInstanceConfmapsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead" title="sleap.nn.heads.OffsetRefinementHead"><span class="pre">sleap.nn.heads.OffsetRefinementHead</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L334-L470"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Pipeline builder for single-instance confidence map models.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.data_config">
@@ -1359,7 +957,7 @@ maps tensor.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.make_base_pipeline">
-<span class="sig-name descname"><span class="pre">make_base_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L350-L373"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.make_base_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_base_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L350-L373"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.make_base_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create base pipeline with input data only.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1374,7 +972,7 @@ maps tensor.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.make_training_pipeline">
-<span class="sig-name descname"><span class="pre">make_training_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L375-L446"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.make_training_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_training_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L375-L446"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.make_training_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create full training pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1395,7 +993,7 @@ with the appropriate format for the instantiated <code class="xref py py-obj doc
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.make_viz_pipeline">
-<span class="sig-name descname"><span class="pre">make_viz_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keras_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">keras.engine.training.Model</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L448-L470"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.make_viz_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_viz_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keras_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">keras.engine.training.Model</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L448-L470"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.SingleInstanceConfmapsPipeline.make_viz_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create visualization pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1416,7 +1014,7 @@ predictions useful for visualization during training.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.TopDownMultiClassPipeline">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.pipelines.</span></span><span class="sig-name descname"><span class="pre">TopDownMultiClassPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.DataConfig" title="sleap.nn.config.data.DataConfig"><span class="pre">sleap.nn.config.data.DataConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance_confmap_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.CenteredInstanceConfmapsHead" title="sleap.nn.heads.CenteredInstanceConfmapsHead"><span class="pre">sleap.nn.heads.CenteredInstanceConfmapsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_vectors_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.ClassVectorsHead" title="sleap.nn.heads.ClassVectorsHead"><span class="pre">sleap.nn.heads.ClassVectorsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead" title="sleap.nn.heads.OffsetRefinementHead"><span class="pre">sleap.nn.heads.OffsetRefinementHead</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L1117-L1260"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.TopDownMultiClassPipeline" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.pipelines.</span></span><span class="sig-name descname"><span class="pre">TopDownMultiClassPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.DataConfig" title="sleap.nn.config.data.DataConfig"><span class="pre">sleap.nn.config.data.DataConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance_confmap_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.CenteredInstanceConfmapsHead" title="sleap.nn.heads.CenteredInstanceConfmapsHead"><span class="pre">sleap.nn.heads.CenteredInstanceConfmapsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_vectors_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.ClassVectorsHead" title="sleap.nn.heads.ClassVectorsHead"><span class="pre">sleap.nn.heads.ClassVectorsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead" title="sleap.nn.heads.OffsetRefinementHead"><span class="pre">sleap.nn.heads.OffsetRefinementHead</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L1117-L1260"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.TopDownMultiClassPipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Pipeline builder for confidence maps and class maps models.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.TopDownMultiClassPipeline.data_config">
@@ -1471,7 +1069,7 @@ tensor.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.TopDownMultiClassPipeline.make_base_pipeline">
-<span class="sig-name descname"><span class="pre">make_base_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L1135-L1158"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.TopDownMultiClassPipeline.make_base_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_base_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L1135-L1158"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.TopDownMultiClassPipeline.make_base_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create base pipeline with input data only.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1486,7 +1084,7 @@ tensor.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.TopDownMultiClassPipeline.make_training_pipeline">
-<span class="sig-name descname"><span class="pre">make_training_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L1160-L1233"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.TopDownMultiClassPipeline.make_training_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_training_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L1160-L1233"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.TopDownMultiClassPipeline.make_training_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create full training pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1507,7 +1105,7 @@ with the appropriate format for the instantiated <code class="xref py py-obj doc
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.TopDownMultiClassPipeline.make_viz_pipeline">
-<span class="sig-name descname"><span class="pre">make_viz_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L1235-L1260"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.TopDownMultiClassPipeline.make_viz_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_viz_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L1235-L1260"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.TopDownMultiClassPipeline.make_viz_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create visualization pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1525,7 +1123,7 @@ predictions useful for visualization during training.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.TopdownConfmapsPipeline">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.pipelines.</span></span><span class="sig-name descname"><span class="pre">TopdownConfmapsPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.DataConfig" title="sleap.nn.config.data.DataConfig"><span class="pre">sleap.nn.config.data.DataConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance_confmap_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.CenteredInstanceConfmapsHead" title="sleap.nn.heads.CenteredInstanceConfmapsHead"><span class="pre">sleap.nn.heads.CenteredInstanceConfmapsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead" title="sleap.nn.heads.OffsetRefinementHead"><span class="pre">sleap.nn.heads.OffsetRefinementHead</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L641-L785"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.TopdownConfmapsPipeline" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.pipelines.</span></span><span class="sig-name descname"><span class="pre">TopdownConfmapsPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.DataConfig" title="sleap.nn.config.data.DataConfig"><span class="pre">sleap.nn.config.data.DataConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig" title="sleap.nn.config.optimization.OptimizationConfig"><span class="pre">sleap.nn.config.optimization.OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance_confmap_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.CenteredInstanceConfmapsHead" title="sleap.nn.heads.CenteredInstanceConfmapsHead"><span class="pre">sleap.nn.heads.CenteredInstanceConfmapsHead</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.heads.html#sleap.nn.heads.OffsetRefinementHead" title="sleap.nn.heads.OffsetRefinementHead"><span class="pre">sleap.nn.heads.OffsetRefinementHead</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L641-L785"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.TopdownConfmapsPipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Pipeline builder for instance-centered confidence map models.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.TopdownConfmapsPipeline.data_config">
@@ -1574,7 +1172,7 @@ confidence maps tensor.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.TopdownConfmapsPipeline.make_base_pipeline">
-<span class="sig-name descname"><span class="pre">make_base_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L657-L680"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.TopdownConfmapsPipeline.make_base_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_base_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L657-L680"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.TopdownConfmapsPipeline.make_base_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create base pipeline with input data only.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1589,7 +1187,7 @@ confidence maps tensor.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.TopdownConfmapsPipeline.make_training_pipeline">
-<span class="sig-name descname"><span class="pre">make_training_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L682-L758"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.TopdownConfmapsPipeline.make_training_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_training_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L682-L758"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.TopdownConfmapsPipeline.make_training_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create full training pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1610,7 +1208,7 @@ with the appropriate format for the instantiated <code class="xref py py-obj doc
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.pipelines.TopdownConfmapsPipeline.make_viz_pipeline">
-<span class="sig-name descname"><span class="pre">make_viz_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/pipelines.py#L760-L785"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.TopdownConfmapsPipeline.make_viz_pipeline" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_viz_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.data.pipelines.Provider</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.pipelines.Pipeline" title="sleap.nn.data.pipelines.Pipeline"><span class="pre">sleap.nn.data.pipelines.Pipeline</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/pipelines.py#L760-L785"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.pipelines.TopdownConfmapsPipeline.make_viz_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create visualization pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1636,20 +1234,6 @@ generate predictions useful for visualization during training.</p>
                 
     <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="sleap.nn.data.offset_regression.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">sleap.nn.data.offset_regression</p>
-        </div>
-    </a>
-    <a class='right-next' id="next-link" href="sleap.nn.data.providers.html" title="next page">
-    <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">sleap.nn.data.providers</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
-    </a>
 </div>
             </footer>
         </div>

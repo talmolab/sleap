@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>sleap.nn.tracking &#8212; SLEAP (v1.2.2)</title>
+    <title>sleap.nn.tracking &#8212; SLEAP (v1.2.3)</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -45,8 +45,6 @@
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="sleap.nn.training" href="sleap.nn.training.html" />
-    <link rel="prev" title="sleap.nn.system" href="sleap.nn.system.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -90,7 +88,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.3)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -98,7 +96,7 @@
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item active">
-        <ul class="current nav bd-sidenav">
+        <ul class="nav bd-sidenav">
  <li class="toctree-l1">
   <a class="reference internal" href="../index.html">
    Home
@@ -270,416 +268,16 @@
    </li>
   </ul>
  </li>
- <li class="toctree-l1 current active has-children">
+ <li class="toctree-l1 has-children">
   <a class="reference internal" href="../api.html">
    Developer API
   </a>
-  <input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+  <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
   <label for="toctree-checkbox-4">
    <i class="fas fa-chevron-down">
    </i>
   </label>
-  <ul class="current">
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.instance.html">
-     sleap.instance
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.message.html">
-     sleap.message
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.skeleton.html">
-     sleap.skeleton
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.util.html">
-     sleap.util
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.callbacks.html">
-     sleap.nn.callbacks
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.evals.html">
-     sleap.nn.evals
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.heads.html">
-     sleap.nn.heads
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.identity.html">
-     sleap.nn.identity
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.inference.html">
-     sleap.nn.inference
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.losses.html">
-     sleap.nn.losses
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.model.html">
-     sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.paf_grouping.html">
-     sleap.nn.paf_grouping
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.peak_finding.html">
-     sleap.nn.peak_finding
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.system.html">
-     sleap.nn.system
-    </a>
-   </li>
-   <li class="toctree-l2 current active">
-    <a class="current reference internal" href="#">
-     sleap.nn.tracking
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.training.html">
-     sleap.nn.training
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.utils.html">
-     sleap.nn.utils
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.viz.html">
-     sleap.nn.viz
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.data.html">
-     sleap.nn.config.data
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.model.html">
-     sleap.nn.config.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.optimization.html">
-     sleap.nn.config.optimization
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.outputs.html">
-     sleap.nn.config.outputs
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.training_job.html">
-     sleap.nn.config.training_job
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.utils.html">
-     sleap.nn.config.utils
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.augmentation.html">
-     sleap.nn.data.augmentation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.confidence_maps.html">
-     sleap.nn.data.confidence_maps
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.dataset_ops.html">
-     sleap.nn.data.dataset_ops
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.edge_maps.html">
-     sleap.nn.data.edge_maps
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.general.html">
-     sleap.nn.data.general
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.grouping.html">
-     sleap.nn.data.grouping
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.identity.html">
-     sleap.nn.data.identity
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.inference.html">
-     sleap.nn.data.inference
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.instance_centroids.html">
-     sleap.nn.data.instance_centroids
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.instance_cropping.html">
-     sleap.nn.data.instance_cropping
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.normalization.html">
-     sleap.nn.data.normalization
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.offset_regression.html">
-     sleap.nn.data.offset_regression
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.pipelines.html">
-     sleap.nn.data.pipelines
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.providers.html">
-     sleap.nn.data.providers
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.resizing.html">
-     sleap.nn.data.resizing
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.training.html">
-     sleap.nn.data.training
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.utils.html">
-     sleap.nn.data.utils
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.tracker.components.html">
-     sleap.nn.tracker.components
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.tracker.kalman.html">
-     sleap.nn.tracker.kalman
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.common.html">
-     sleap.nn.architectures.common
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">
-     sleap.nn.architectures.encoder_decoder
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.hourglass.html">
-     sleap.nn.architectures.hourglass
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.hrnet.html">
-     sleap.nn.architectures.hrnet
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.leap.html">
-     sleap.nn.architectures.leap
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.pretrained_encoders.html">
-     sleap.nn.architectures.pretrained_encoders
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.resnet.html">
-     sleap.nn.architectures.resnet
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.unet.html">
-     sleap.nn.architectures.unet
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.upsampling.html">
-     sleap.nn.architectures.upsampling
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.asyncvideo.html">
-     sleap.io.asyncvideo
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.convert.html">
-     sleap.io.convert
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.dataset.html">
-     sleap.io.dataset
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.legacy.html">
-     sleap.io.legacy
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.pathutils.html">
-     sleap.io.pathutils
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.video.html">
-     sleap.io.video
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.videowriter.html">
-     sleap.io.videowriter
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.visuals.html">
-     sleap.io.visuals
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.adaptor.html">
-     sleap.io.format.adaptor
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.coco.html">
-     sleap.io.format.coco
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.deeplabcut.html">
-     sleap.io.format.deeplabcut
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.deepposekit.html">
-     sleap.io.format.deepposekit
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.dispatch.html">
-     sleap.io.format.dispatch
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.filehandle.html">
-     sleap.io.format.filehandle
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.genericjson.html">
-     sleap.io.format.genericjson
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.hdf5.html">
-     sleap.io.format.hdf5
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.labels_json.html">
-     sleap.io.format.labels_json
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.leap_matlab.html">
-     sleap.io.format.leap_matlab
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.main.html">
-     sleap.io.format.main
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.sleap_analysis.html">
-     sleap.io.format.sleap_analysis
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.text.html">
-     sleap.io.format.text
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.align.html">
-     sleap.info.align
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.feature_suggestions.html">
-     sleap.info.feature_suggestions
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.labels.html">
-     sleap.info.labels
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.metrics.html">
-     sleap.info.metrics
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.summary.html">
-     sleap.info.summary
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.trackcleaner.html">
-     sleap.info.trackcleaner
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.write_tracking_h5.html">
-     sleap.info.write_tracking_h5
-    </a>
-   </li>
+  <ul class="simple">
   </ul>
  </li>
  <li class="toctree-l1">
@@ -688,12 +286,12 @@
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference external" href="https://github.com/murthylab/sleap">
+  <a class="reference external" href="https://github.com/talmolab/sleap">
    GitHub
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference external" href="https://github.com/murthylab/sleap/releases">
+  <a class="reference external" href="https://github.com/talmolab/sleap/releases">
    Releases
   </a>
  </li>
@@ -757,7 +355,7 @@ title="Toggle navigation"
   <div class="menu-dropdown__content">
     <ul>
       <li>
-        <a href="https://github.com/murthylab/sleap"
+        <a href="https://github.com/talmolab/sleap"
    class="headerbtn"
    data-toggle="tooltip"
 data-placement="left"
@@ -774,7 +372,7 @@ title="Source repository"
       </li>
       
       <li>
-        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.tracking.html&body=Your%20issue%20content%20here."
+        <a href="https://github.com/talmolab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.tracking.html&body=Your%20issue%20content%20here."
    class="headerbtn"
    data-toggle="tooltip"
 data-placement="left"
@@ -822,16 +420,16 @@ title="Open an issue"
 <p>Tracking tools for linking grouped instances over time.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.tracking.BaseTracker">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">BaseTracker</span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/tracking.py#L289-L314"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.BaseTracker" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">BaseTracker</span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/tracking.py#L289-L314"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.BaseTracker" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.tracking.FlowCandidateMaker">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">FlowCandidateMaker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">of_window_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">21</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">of_max_levels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_shifted_instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shifted_instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.tracking.ShiftedInstance</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/tracking.py#L92-L245"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.FlowCandidateMaker" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">FlowCandidateMaker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">of_window_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">21</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">of_max_levels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_shifted_instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shifted_instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.tracking.ShiftedInstance</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/tracking.py#L92-L245"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.FlowCandidateMaker" title="Permalink to this definition">#</a></dt>
 <dd><p>Class for producing optical flow shift matching candidates.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.tracking.FlowCandidateMaker.flow_shift_instances">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flow_shift_instances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref_instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.tracker.components.InstanceType</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_shifted_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">21</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_levels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.tracking.ShiftedInstance</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/tracking.py#L143-L245"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.FlowCandidateMaker.flow_shift_instances" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flow_shift_instances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref_instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.tracker.components.InstanceType</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_shifted_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">21</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_levels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.tracking.ShiftedInstance</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/tracking.py#L143-L245"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.FlowCandidateMaker.flow_shift_instances" title="Permalink to this definition">#</a></dt>
 <dd><p>Generates instances in a new frame by applying optical flow displacements.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -866,13 +464,13 @@ as NaNs in the points array for each shifted instance.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.tracking.FlowTracker">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">FlowTracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">track_window:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cleaner:</span> <span class="pre">typing.Optional[typing.Callable]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_instance_count:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_cull_function:</span> <span class="pre">typing.Optional[typing.Callable]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_connect_single_breaks:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_new_track_points:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">track_matching_queue:</span> <span class="pre">typing.Deque[sleap.nn.tracking.MatchedFrameInstances]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spawned_tracks:</span> <span class="pre">typing.List[sleap.instance.Track]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_tracked_instances:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_instances:</span> <span class="pre">typing.Dict[int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typing.List[sleap.nn.tracker.components.InstanceType]]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_matches:</span> <span class="pre">typing.Optional[sleap.nn.tracker.components.FrameMatches]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_function:</span> <span class="pre">typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">instance_similarity&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matching_function:</span> <span class="pre">typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">greedy_matching&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">candidate_maker:</span> <span class="pre">object</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/tracking.py#L755-L760"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.FlowTracker" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">FlowTracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">track_window:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cleaner:</span> <span class="pre">typing.Optional[typing.Callable]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_instance_count:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_cull_function:</span> <span class="pre">typing.Optional[typing.Callable]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_connect_single_breaks:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_new_track_points:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">track_matching_queue:</span> <span class="pre">typing.Deque[sleap.nn.tracking.MatchedFrameInstances]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spawned_tracks:</span> <span class="pre">typing.List[sleap.instance.Track]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_tracked_instances:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_instances:</span> <span class="pre">typing.Dict[int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typing.List[sleap.nn.tracker.components.InstanceType]]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_matches:</span> <span class="pre">typing.Optional[sleap.nn.tracker.components.FrameMatches]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_function:</span> <span class="pre">typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">instance_similarity&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matching_function:</span> <span class="pre">typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">greedy_matching&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">candidate_maker:</span> <span class="pre">object</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/tracking.py#L755-L760"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.FlowTracker" title="Permalink to this definition">#</a></dt>
 <dd><p>A Tracker pre-configured to use optical flow shifted candidates.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.tracking.KalmanTracker">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">KalmanTracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_tracker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.nn.tracking.Tracker" title="sleap.nn.tracking.Tracker"><span class="pre">sleap.nn.tracking.Tracker</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.tracking.KalmanInitSet</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kalman_tracker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.tracker.kalman.BareKalmanTracker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cull_function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_frame_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">re_init_cooldown</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">re_init_after</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_done</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_tracked</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_init_t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/tracking.py#L849-L1042"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.KalmanTracker" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">KalmanTracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_tracker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.nn.tracking.Tracker" title="sleap.nn.tracking.Tracker"><span class="pre">sleap.nn.tracking.Tracker</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.tracking.KalmanInitSet</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kalman_tracker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.nn.tracker.kalman.BareKalmanTracker</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cull_function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_frame_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">re_init_cooldown</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">re_init_after</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_done</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_tracked</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_init_t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/tracking.py#L849-L1042"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.KalmanTracker" title="Permalink to this definition">#</a></dt>
 <dd><p>Class for Kalman filter-based tracking pipeline.</p>
 <p>Kalman filters need to be initialized with a certain number of already
 tracked instances.</p>
@@ -913,7 +511,7 @@ initialized; used to checking cooldown period.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.tracking.KalmanTracker.make_tracker">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">make_tracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_tracker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.nn.tracking.Tracker" title="sleap.nn.tracking.Tracker"><span class="pre">sleap.nn.tracking.Tracker</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance_iou_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_frame_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/tracking.py#L901-L952"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.KalmanTracker.make_tracker" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">make_tracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_tracker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.nn.tracking.Tracker" title="sleap.nn.tracking.Tracker"><span class="pre">sleap.nn.tracking.Tracker</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance_iou_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_frame_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/tracking.py#L901-L952"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.KalmanTracker.make_tracker" title="Permalink to this definition">#</a></dt>
 <dd><p>Creates KalmanTracker object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -938,7 +536,7 @@ initializing Kalman filters.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.tracking.KalmanTracker.track">
-<span class="sig-name descname"><span class="pre">track</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">untracked_instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.tracker.components.InstanceType</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.tracker.components.InstanceType</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/tracking.py#L954-L1032"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.KalmanTracker.track" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">track</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">untracked_instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.tracker.components.InstanceType</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.tracker.components.InstanceType</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/tracking.py#L954-L1032"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.KalmanTracker.track" title="Permalink to this definition">#</a></dt>
 <dd><p>Tracks individual frame, using Kalman filters if possible.</p>
 </dd></dl>
 
@@ -946,19 +544,19 @@ initializing Kalman filters.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.tracking.SimpleCandidateMaker">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">SimpleCandidateMaker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/tracking.py#L249-L268"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.SimpleCandidateMaker" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">SimpleCandidateMaker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/tracking.py#L249-L268"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.SimpleCandidateMaker" title="Permalink to this definition">#</a></dt>
 <dd><p>Class for producing list of matching candidates from prior frames.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.tracking.SimpleTracker">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">SimpleTracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">track_window:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cleaner:</span> <span class="pre">typing.Optional[typing.Callable]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_instance_count:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_cull_function:</span> <span class="pre">typing.Optional[typing.Callable]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_connect_single_breaks:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_new_track_points:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">track_matching_queue:</span> <span class="pre">typing.Deque[sleap.nn.tracking.MatchedFrameInstances]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spawned_tracks:</span> <span class="pre">typing.List[sleap.instance.Track]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_tracked_instances:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_instances:</span> <span class="pre">typing.Dict[int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typing.List[sleap.nn.tracker.components.InstanceType]]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_matches:</span> <span class="pre">typing.Optional[sleap.nn.tracker.components.FrameMatches]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_function:</span> <span class="pre">typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">instance_iou&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matching_function:</span> <span class="pre">typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">hungarian_matching&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">candidate_maker:</span> <span class="pre">object</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/tracking.py#L764-L769"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.SimpleTracker" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">SimpleTracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">track_window:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cleaner:</span> <span class="pre">typing.Optional[typing.Callable]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_instance_count:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_cull_function:</span> <span class="pre">typing.Optional[typing.Callable]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_connect_single_breaks:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_new_track_points:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">track_matching_queue:</span> <span class="pre">typing.Deque[sleap.nn.tracking.MatchedFrameInstances]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spawned_tracks:</span> <span class="pre">typing.List[sleap.instance.Track]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_tracked_instances:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_instances:</span> <span class="pre">typing.Dict[int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typing.List[sleap.nn.tracker.components.InstanceType]]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_matches:</span> <span class="pre">typing.Optional[sleap.nn.tracker.components.FrameMatches]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_function:</span> <span class="pre">typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">instance_iou&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matching_function:</span> <span class="pre">typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">hungarian_matching&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">candidate_maker:</span> <span class="pre">object</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/tracking.py#L764-L769"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.SimpleTracker" title="Permalink to this definition">#</a></dt>
 <dd><p>A Tracker pre-configured to use simple, non-image-based candidates.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.tracking.TrackCleaner">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">TrackCleaner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iou_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/tracking.py#L1046-L1071"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.TrackCleaner" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">TrackCleaner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iou_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/tracking.py#L1046-L1071"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.TrackCleaner" title="Permalink to this definition">#</a></dt>
 <dd><p>Class for merging breaks in the predicted tracks.</p>
 <p>Method:
 1. You specify how many instances there should be in each frame.
@@ -997,7 +595,7 @@ only use score to determine which instances to remove.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.tracking.Tracker">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">Tracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">track_window:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_function:</span> <span class="pre">typing.Optional[typing.Callable]</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">instance_similarity&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matching_function:</span> <span class="pre">typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">greedy_matching&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">candidate_maker:</span> <span class="pre">object</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cleaner:</span> <span class="pre">typing.Optional[typing.Callable]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_instance_count:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_cull_function:</span> <span class="pre">typing.Optional[typing.Callable]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_connect_single_breaks:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_new_track_points:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">track_matching_queue:</span> <span class="pre">typing.Deque[sleap.nn.tracking.MatchedFrameInstances]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spawned_tracks:</span> <span class="pre">typing.List[sleap.instance.Track]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_tracked_instances:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_instances:</span> <span class="pre">typing.Dict[int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typing.List[sleap.nn.tracker.components.InstanceType]]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_matches:</span> <span class="pre">typing.Optional[sleap.nn.tracker.components.FrameMatches]</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/tracking.py#L318-L751"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.Tracker" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">Tracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">track_window:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_function:</span> <span class="pre">typing.Optional[typing.Callable]</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">instance_similarity&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matching_function:</span> <span class="pre">typing.Callable</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">greedy_matching&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">candidate_maker:</span> <span class="pre">object</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cleaner:</span> <span class="pre">typing.Optional[typing.Callable]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_instance_count:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_cull_function:</span> <span class="pre">typing.Optional[typing.Callable]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_connect_single_breaks:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_new_track_points:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">track_matching_queue:</span> <span class="pre">typing.Deque[sleap.nn.tracking.MatchedFrameInstances]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spawned_tracks:</span> <span class="pre">typing.List[sleap.instance.Track]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_tracked_instances:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_instances:</span> <span class="pre">typing.Dict[int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typing.List[sleap.nn.tracker.components.InstanceType]]</span> <span class="pre">=</span> <span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_matches:</span> <span class="pre">typing.Optional[sleap.nn.tracker.components.FrameMatches]</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/tracking.py#L318-L751"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.Tracker" title="Permalink to this definition">#</a></dt>
 <dd><p>Instance pose tracker.</p>
 <p>Use by instantiated with the desired parameters and then calling the
 <a class="reference internal" href="#sleap.nn.tracking.Tracker.track" title="sleap.nn.tracking.Tracker.track"><code class="xref py py-obj docutils literal notranslate"><span class="pre">track</span></code></a> method for each frame.</p>
@@ -1076,13 +674,13 @@ fewer than this many points.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.tracking.Tracker.final_pass">
-<span class="sig-name descname"><span class="pre">final_pass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/tracking.py#L505-L517"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.Tracker.final_pass" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">final_pass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/tracking.py#L505-L517"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.Tracker.final_pass" title="Permalink to this definition">#</a></dt>
 <dd><p>Called after tracking has run on all frames to do any post-processing.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.tracking.Tracker.track">
-<span class="sig-name descname"><span class="pre">track</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">untracked_instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.tracker.components.InstanceType</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.tracker.components.InstanceType</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/tracking.py#L391-L470"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.Tracker.track" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">track</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">untracked_instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.tracker.components.InstanceType</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">sleap.nn.tracker.components.InstanceType</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/tracking.py#L391-L470"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.Tracker.track" title="Permalink to this definition">#</a></dt>
 <dd><p>Performs a single step of tracking.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1108,7 +706,7 @@ fewer than this many points.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.tracking.run_tracker">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">run_tracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.tracking.BaseTracker" title="sleap.nn.tracking.BaseTracker"><span class="pre">sleap.nn.tracking.BaseTracker</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/tracking.py#L1074-L1111"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.run_tracker" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.tracking.</span></span><span class="sig-name descname"><span class="pre">run_tracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.tracking.BaseTracker" title="sleap.nn.tracking.BaseTracker"><span class="pre">sleap.nn.tracking.BaseTracker</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.instance.html#sleap.instance.LabeledFrame" title="sleap.instance.LabeledFrame"><span class="pre">sleap.instance.LabeledFrame</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/tracking.py#L1074-L1111"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.tracking.run_tracker" title="Permalink to this definition">#</a></dt>
 <dd><p>Run a tracker on a set of labeled frames.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1134,20 +732,6 @@ they will be cleared if the tracker has been re-initialized.</p>
                 
     <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="sleap.nn.system.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">sleap.nn.system</p>
-        </div>
-    </a>
-    <a class='right-next' id="next-link" href="sleap.nn.training.html" title="next page">
-    <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">sleap.nn.training</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
-    </a>
 </div>
             </footer>
         </div>

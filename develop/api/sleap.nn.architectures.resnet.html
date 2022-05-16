@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>sleap.nn.architectures.resnet &#8212; SLEAP (v1.2.2)</title>
+    <title>sleap.nn.architectures.resnet &#8212; SLEAP (v1.2.3)</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -45,8 +45,6 @@
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="sleap.nn.architectures.unet" href="sleap.nn.architectures.unet.html" />
-    <link rel="prev" title="sleap.nn.architectures.pretrained_encoders" href="sleap.nn.architectures.pretrained_encoders.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -90,7 +88,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.3)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -98,7 +96,7 @@
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item active">
-        <ul class="current nav bd-sidenav">
+        <ul class="nav bd-sidenav">
  <li class="toctree-l1">
   <a class="reference internal" href="../index.html">
    Home
@@ -270,416 +268,16 @@
    </li>
   </ul>
  </li>
- <li class="toctree-l1 current active has-children">
+ <li class="toctree-l1 has-children">
   <a class="reference internal" href="../api.html">
    Developer API
   </a>
-  <input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+  <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
   <label for="toctree-checkbox-4">
    <i class="fas fa-chevron-down">
    </i>
   </label>
-  <ul class="current">
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.instance.html">
-     sleap.instance
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.message.html">
-     sleap.message
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.skeleton.html">
-     sleap.skeleton
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.util.html">
-     sleap.util
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.callbacks.html">
-     sleap.nn.callbacks
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.evals.html">
-     sleap.nn.evals
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.heads.html">
-     sleap.nn.heads
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.identity.html">
-     sleap.nn.identity
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.inference.html">
-     sleap.nn.inference
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.losses.html">
-     sleap.nn.losses
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.model.html">
-     sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.paf_grouping.html">
-     sleap.nn.paf_grouping
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.peak_finding.html">
-     sleap.nn.peak_finding
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.system.html">
-     sleap.nn.system
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.tracking.html">
-     sleap.nn.tracking
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.training.html">
-     sleap.nn.training
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.utils.html">
-     sleap.nn.utils
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.viz.html">
-     sleap.nn.viz
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.data.html">
-     sleap.nn.config.data
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.model.html">
-     sleap.nn.config.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.optimization.html">
-     sleap.nn.config.optimization
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.outputs.html">
-     sleap.nn.config.outputs
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.training_job.html">
-     sleap.nn.config.training_job
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.utils.html">
-     sleap.nn.config.utils
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.augmentation.html">
-     sleap.nn.data.augmentation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.confidence_maps.html">
-     sleap.nn.data.confidence_maps
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.dataset_ops.html">
-     sleap.nn.data.dataset_ops
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.edge_maps.html">
-     sleap.nn.data.edge_maps
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.general.html">
-     sleap.nn.data.general
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.grouping.html">
-     sleap.nn.data.grouping
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.identity.html">
-     sleap.nn.data.identity
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.inference.html">
-     sleap.nn.data.inference
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.instance_centroids.html">
-     sleap.nn.data.instance_centroids
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.instance_cropping.html">
-     sleap.nn.data.instance_cropping
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.normalization.html">
-     sleap.nn.data.normalization
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.offset_regression.html">
-     sleap.nn.data.offset_regression
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.pipelines.html">
-     sleap.nn.data.pipelines
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.providers.html">
-     sleap.nn.data.providers
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.resizing.html">
-     sleap.nn.data.resizing
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.training.html">
-     sleap.nn.data.training
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.utils.html">
-     sleap.nn.data.utils
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.tracker.components.html">
-     sleap.nn.tracker.components
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.tracker.kalman.html">
-     sleap.nn.tracker.kalman
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.common.html">
-     sleap.nn.architectures.common
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">
-     sleap.nn.architectures.encoder_decoder
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.hourglass.html">
-     sleap.nn.architectures.hourglass
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.hrnet.html">
-     sleap.nn.architectures.hrnet
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.leap.html">
-     sleap.nn.architectures.leap
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.pretrained_encoders.html">
-     sleap.nn.architectures.pretrained_encoders
-    </a>
-   </li>
-   <li class="toctree-l2 current active">
-    <a class="current reference internal" href="#">
-     sleap.nn.architectures.resnet
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.unet.html">
-     sleap.nn.architectures.unet
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.upsampling.html">
-     sleap.nn.architectures.upsampling
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.asyncvideo.html">
-     sleap.io.asyncvideo
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.convert.html">
-     sleap.io.convert
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.dataset.html">
-     sleap.io.dataset
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.legacy.html">
-     sleap.io.legacy
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.pathutils.html">
-     sleap.io.pathutils
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.video.html">
-     sleap.io.video
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.videowriter.html">
-     sleap.io.videowriter
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.visuals.html">
-     sleap.io.visuals
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.adaptor.html">
-     sleap.io.format.adaptor
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.coco.html">
-     sleap.io.format.coco
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.deeplabcut.html">
-     sleap.io.format.deeplabcut
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.deepposekit.html">
-     sleap.io.format.deepposekit
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.dispatch.html">
-     sleap.io.format.dispatch
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.filehandle.html">
-     sleap.io.format.filehandle
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.genericjson.html">
-     sleap.io.format.genericjson
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.hdf5.html">
-     sleap.io.format.hdf5
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.labels_json.html">
-     sleap.io.format.labels_json
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.leap_matlab.html">
-     sleap.io.format.leap_matlab
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.main.html">
-     sleap.io.format.main
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.sleap_analysis.html">
-     sleap.io.format.sleap_analysis
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.text.html">
-     sleap.io.format.text
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.align.html">
-     sleap.info.align
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.feature_suggestions.html">
-     sleap.info.feature_suggestions
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.labels.html">
-     sleap.info.labels
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.metrics.html">
-     sleap.info.metrics
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.summary.html">
-     sleap.info.summary
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.trackcleaner.html">
-     sleap.info.trackcleaner
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.write_tracking_h5.html">
-     sleap.info.write_tracking_h5
-    </a>
-   </li>
+  <ul class="simple">
   </ul>
  </li>
  <li class="toctree-l1">
@@ -688,12 +286,12 @@
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference external" href="https://github.com/murthylab/sleap">
+  <a class="reference external" href="https://github.com/talmolab/sleap">
    GitHub
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference external" href="https://github.com/murthylab/sleap/releases">
+  <a class="reference external" href="https://github.com/talmolab/sleap/releases">
    Releases
   </a>
  </li>
@@ -757,7 +355,7 @@ title="Toggle navigation"
   <div class="menu-dropdown__content">
     <ul>
       <li>
-        <a href="https://github.com/murthylab/sleap"
+        <a href="https://github.com/talmolab/sleap"
    class="headerbtn"
    data-toggle="tooltip"
 data-placement="left"
@@ -774,7 +372,7 @@ title="Source repository"
       </li>
       
       <li>
-        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.architectures.resnet.html&body=Your%20issue%20content%20here."
+        <a href="https://github.com/talmolab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.architectures.resnet.html&body=Your%20issue%20content%20here."
    class="headerbtn"
    data-toggle="tooltip"
 data-placement="left"
@@ -827,7 +425,7 @@ stride based on atrous convolutions, DeepLabv2-style (<a class="reference extern
 <a class="reference external" href="https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py">https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py</a></p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.architectures.resnet.ResNet101">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">ResNet101</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upsampling_stack</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.upsampling.html#sleap.nn.architectures.upsampling.UpsamplingStack" title="sleap.nn.architectures.upsampling.UpsamplingStack"><span class="pre">sleap.nn.architectures.upsampling.UpsamplingStack</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frozen</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_connections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_configs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/resnet.py#L598-L648"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.ResNet101" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">ResNet101</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upsampling_stack</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.upsampling.html#sleap.nn.architectures.upsampling.UpsamplingStack" title="sleap.nn.architectures.upsampling.UpsamplingStack"><span class="pre">sleap.nn.architectures.upsampling.UpsamplingStack</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frozen</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_connections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_configs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/architectures/resnet.py#L598-L648"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.ResNet101" title="Permalink to this definition">#</a></dt>
 <dd><p>ResNet101 backbone.</p>
 <p>This model has a stack of 3, 4, 23 and 3 residual blocks.</p>
 <dl class="py attribute">
@@ -906,7 +504,7 @@ in the ResNet backbone and the upsampling stack.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.architectures.resnet.ResNet152">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">ResNet152</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upsampling_stack</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.upsampling.html#sleap.nn.architectures.upsampling.UpsamplingStack" title="sleap.nn.architectures.upsampling.UpsamplingStack"><span class="pre">sleap.nn.architectures.upsampling.UpsamplingStack</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frozen</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_connections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_configs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/resnet.py#L652-L702"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.ResNet152" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">ResNet152</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upsampling_stack</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.upsampling.html#sleap.nn.architectures.upsampling.UpsamplingStack" title="sleap.nn.architectures.upsampling.UpsamplingStack"><span class="pre">sleap.nn.architectures.upsampling.UpsamplingStack</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frozen</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_connections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_configs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/architectures/resnet.py#L652-L702"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.ResNet152" title="Permalink to this definition">#</a></dt>
 <dd><p>ResNet152 backbone.</p>
 <p>This model has a stack of 3, 4, 23 and 3 residual blocks.</p>
 <dl class="py attribute">
@@ -985,7 +583,7 @@ in the ResNet backbone and the upsampling stack.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.architectures.resnet.ResNet50">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">ResNet50</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upsampling_stack</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.upsampling.html#sleap.nn.architectures.upsampling.UpsamplingStack" title="sleap.nn.architectures.upsampling.UpsamplingStack"><span class="pre">sleap.nn.architectures.upsampling.UpsamplingStack</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frozen</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_connections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_configs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/resnet.py#L544-L594"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.ResNet50" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">ResNet50</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upsampling_stack</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.upsampling.html#sleap.nn.architectures.upsampling.UpsamplingStack" title="sleap.nn.architectures.upsampling.UpsamplingStack"><span class="pre">sleap.nn.architectures.upsampling.UpsamplingStack</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frozen</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_connections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_configs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/architectures/resnet.py#L544-L594"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.ResNet50" title="Permalink to this definition">#</a></dt>
 <dd><p>ResNet50 backbone.</p>
 <p>This model has a stack of 3, 4, 6 and 3 residual blocks.</p>
 <dl class="py attribute">
@@ -1064,7 +662,7 @@ in the ResNet backbone and the upsampling stack.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.architectures.resnet.ResNetv1">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">ResNetv1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upsampling_stack</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.upsampling.html#sleap.nn.architectures.upsampling.UpsamplingStack" title="sleap.nn.architectures.upsampling.UpsamplingStack"><span class="pre">sleap.nn.architectures.upsampling.UpsamplingStack</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frozen</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_connections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/resnet.py#L364-L540"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.ResNetv1" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">ResNetv1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upsampling_stack</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.upsampling.html#sleap.nn.architectures.upsampling.UpsamplingStack" title="sleap.nn.architectures.upsampling.UpsamplingStack"><span class="pre">sleap.nn.architectures.upsampling.UpsamplingStack</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frozen</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_connections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/architectures/resnet.py#L364-L540"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.ResNetv1" title="Permalink to this definition">#</a></dt>
 <dd><p>ResNetv1 backbone with configurable output stride and pretrained weights.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.resnet.ResNetv1.model_name">
@@ -1174,7 +772,7 @@ in the ResNet backbone and the upsampling stack.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.architectures.resnet.ResNetv1.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.ResNetConfig" title="sleap.nn.config.model.ResNetConfig"><span class="pre">sleap.nn.config.model.ResNetConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.architectures.resnet.ResNetv1" title="sleap.nn.architectures.resnet.ResNetv1"><span class="pre">sleap.nn.architectures.resnet.ResNetv1</span></a></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/resnet.py#L407-L442"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.ResNetv1.from_config" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.ResNetConfig" title="sleap.nn.config.model.ResNetConfig"><span class="pre">sleap.nn.config.model.ResNetConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.architectures.resnet.ResNetv1" title="sleap.nn.architectures.resnet.ResNetv1"><span class="pre">sleap.nn.architectures.resnet.ResNetv1</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/architectures/resnet.py#L407-L442"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.ResNetv1.from_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a model from a set of configuration parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1188,7 +786,7 @@ in the ResNet backbone and the upsampling stack.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.architectures.resnet.ResNetv1.make_backbone">
-<span class="sig-name descname"><span class="pre">make_backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/resnet.py#L467-L540"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.ResNetv1.make_backbone" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/architectures/resnet.py#L467-L540"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.ResNetv1.make_backbone" title="Permalink to this definition">#</a></dt>
 <dd><p>Create the full backbone starting with the specified input tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1227,7 +825,7 @@ with different output strides for the heads.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.architectures.resnet.block_v1">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">block_v1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_shortcut</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/resnet.py#L168-L224"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.block_v1" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">block_v1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_shortcut</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/architectures/resnet.py#L168-L224"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.block_v1" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a ResNetv1 residual block.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1250,7 +848,7 @@ otherwise identity shortcut.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.architectures.resnet.imagenet_preproc_v1">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">imagenet_preproc_v1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/resnet.py#L341-L360"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.imagenet_preproc_v1" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">imagenet_preproc_v1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/architectures/resnet.py#L341-L360"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.imagenet_preproc_v1" title="Permalink to this definition">#</a></dt>
 <dd><p>Preprocess images according to ImageNet/caffe/channels_last.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1268,7 +866,7 @@ range of values will then be around ~[-128, 127].</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.architectures.resnet.make_backbone_fn">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">make_backbone_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stack_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/resnet.py#L256-L323"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.make_backbone_fn" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">make_backbone_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stack_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/architectures/resnet.py#L256-L323"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.make_backbone_fn" title="Permalink to this definition">#</a></dt>
 <dd><p>Return a function that creates a block stack with output stride adjustments.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1304,7 +902,7 @@ input stride.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.architectures.resnet.make_resnet_model">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">make_resnet_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preact</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'resnet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'imagenet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_tensor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stem_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stem_stride1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stem_stride2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.engine.training.Model</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/resnet.py#L45-L165"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.make_resnet_model" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">make_resnet_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preact</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'resnet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'imagenet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_tensor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stem_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stem_stride1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stem_stride2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.engine.training.Model</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/architectures/resnet.py#L45-L165"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.make_resnet_model" title="Permalink to this definition">#</a></dt>
 <dd><p>Instantiate the ResNet, ResNetV2 (TODO), and ResNeXt (TODO) architecture.</p>
 <p>Optionally loads weights pre-trained on ImageNet.</p>
 <dl class="field-list simple">
@@ -1344,7 +942,7 @@ list of <a href="#id1"><span class="problematic" id="id2">`</span></a>Intermedia
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.architectures.resnet.stack_v1">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">stack_v1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blocks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/resnet.py#L227-L253"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.stack_v1" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">stack_v1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blocks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/architectures/resnet.py#L227-L253"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.stack_v1" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a set of stacked ResNetv1 residual blocks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1365,7 +963,7 @@ list of <a href="#id1"><span class="problematic" id="id2">`</span></a>Intermedia
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.architectures.resnet.tile_channels">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">tile_channels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/architectures/resnet.py#L326-L338"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.tile_channels" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.resnet.</span></span><span class="sig-name descname"><span class="pre">tile_channels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/architectures/resnet.py#L326-L338"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.resnet.tile_channels" title="Permalink to this definition">#</a></dt>
 <dd><p>Tile single channel to 3 channel tensor.</p>
 <p>This functon is useful to replicate grayscale single-channel images into 3-channel
 monochrome RGB images.</p>
@@ -1389,20 +987,6 @@ monochrome RGB images.</p>
                 
     <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="sleap.nn.architectures.pretrained_encoders.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">sleap.nn.architectures.pretrained_encoders</p>
-        </div>
-    </a>
-    <a class='right-next' id="next-link" href="sleap.nn.architectures.unet.html" title="next page">
-    <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">sleap.nn.architectures.unet</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
-    </a>
 </div>
             </footer>
         </div>

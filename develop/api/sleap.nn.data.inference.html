@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>sleap.nn.data.inference &#8212; SLEAP (v1.2.2)</title>
+    <title>sleap.nn.data.inference &#8212; SLEAP (v1.2.3)</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -45,8 +45,6 @@
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="sleap.nn.data.instance_centroids" href="sleap.nn.data.instance_centroids.html" />
-    <link rel="prev" title="sleap.nn.data.identity" href="sleap.nn.data.identity.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -90,7 +88,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.2)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.3)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -98,7 +96,7 @@
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item active">
-        <ul class="current nav bd-sidenav">
+        <ul class="nav bd-sidenav">
  <li class="toctree-l1">
   <a class="reference internal" href="../index.html">
    Home
@@ -270,416 +268,16 @@
    </li>
   </ul>
  </li>
- <li class="toctree-l1 current active has-children">
+ <li class="toctree-l1 has-children">
   <a class="reference internal" href="../api.html">
    Developer API
   </a>
-  <input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+  <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
   <label for="toctree-checkbox-4">
    <i class="fas fa-chevron-down">
    </i>
   </label>
-  <ul class="current">
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.instance.html">
-     sleap.instance
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.message.html">
-     sleap.message
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.skeleton.html">
-     sleap.skeleton
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.util.html">
-     sleap.util
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.callbacks.html">
-     sleap.nn.callbacks
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.evals.html">
-     sleap.nn.evals
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.heads.html">
-     sleap.nn.heads
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.identity.html">
-     sleap.nn.identity
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.inference.html">
-     sleap.nn.inference
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.losses.html">
-     sleap.nn.losses
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.model.html">
-     sleap.nn.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.paf_grouping.html">
-     sleap.nn.paf_grouping
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.peak_finding.html">
-     sleap.nn.peak_finding
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.system.html">
-     sleap.nn.system
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.tracking.html">
-     sleap.nn.tracking
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.training.html">
-     sleap.nn.training
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.utils.html">
-     sleap.nn.utils
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.viz.html">
-     sleap.nn.viz
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.data.html">
-     sleap.nn.config.data
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.model.html">
-     sleap.nn.config.model
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.optimization.html">
-     sleap.nn.config.optimization
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.outputs.html">
-     sleap.nn.config.outputs
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.training_job.html">
-     sleap.nn.config.training_job
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.config.utils.html">
-     sleap.nn.config.utils
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.augmentation.html">
-     sleap.nn.data.augmentation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.confidence_maps.html">
-     sleap.nn.data.confidence_maps
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.dataset_ops.html">
-     sleap.nn.data.dataset_ops
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.edge_maps.html">
-     sleap.nn.data.edge_maps
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.general.html">
-     sleap.nn.data.general
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.grouping.html">
-     sleap.nn.data.grouping
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.identity.html">
-     sleap.nn.data.identity
-    </a>
-   </li>
-   <li class="toctree-l2 current active">
-    <a class="current reference internal" href="#">
-     sleap.nn.data.inference
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.instance_centroids.html">
-     sleap.nn.data.instance_centroids
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.instance_cropping.html">
-     sleap.nn.data.instance_cropping
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.normalization.html">
-     sleap.nn.data.normalization
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.offset_regression.html">
-     sleap.nn.data.offset_regression
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.pipelines.html">
-     sleap.nn.data.pipelines
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.providers.html">
-     sleap.nn.data.providers
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.resizing.html">
-     sleap.nn.data.resizing
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.training.html">
-     sleap.nn.data.training
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.data.utils.html">
-     sleap.nn.data.utils
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.tracker.components.html">
-     sleap.nn.tracker.components
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.tracker.kalman.html">
-     sleap.nn.tracker.kalman
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.common.html">
-     sleap.nn.architectures.common
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.encoder_decoder.html">
-     sleap.nn.architectures.encoder_decoder
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.hourglass.html">
-     sleap.nn.architectures.hourglass
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.hrnet.html">
-     sleap.nn.architectures.hrnet
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.leap.html">
-     sleap.nn.architectures.leap
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.pretrained_encoders.html">
-     sleap.nn.architectures.pretrained_encoders
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.resnet.html">
-     sleap.nn.architectures.resnet
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.unet.html">
-     sleap.nn.architectures.unet
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.nn.architectures.upsampling.html">
-     sleap.nn.architectures.upsampling
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.asyncvideo.html">
-     sleap.io.asyncvideo
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.convert.html">
-     sleap.io.convert
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.dataset.html">
-     sleap.io.dataset
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.legacy.html">
-     sleap.io.legacy
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.pathutils.html">
-     sleap.io.pathutils
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.video.html">
-     sleap.io.video
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.videowriter.html">
-     sleap.io.videowriter
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.visuals.html">
-     sleap.io.visuals
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.adaptor.html">
-     sleap.io.format.adaptor
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.coco.html">
-     sleap.io.format.coco
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.deeplabcut.html">
-     sleap.io.format.deeplabcut
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.deepposekit.html">
-     sleap.io.format.deepposekit
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.dispatch.html">
-     sleap.io.format.dispatch
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.filehandle.html">
-     sleap.io.format.filehandle
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.genericjson.html">
-     sleap.io.format.genericjson
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.hdf5.html">
-     sleap.io.format.hdf5
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.labels_json.html">
-     sleap.io.format.labels_json
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.leap_matlab.html">
-     sleap.io.format.leap_matlab
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.main.html">
-     sleap.io.format.main
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.sleap_analysis.html">
-     sleap.io.format.sleap_analysis
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.io.format.text.html">
-     sleap.io.format.text
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.align.html">
-     sleap.info.align
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.feature_suggestions.html">
-     sleap.info.feature_suggestions
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.labels.html">
-     sleap.info.labels
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.metrics.html">
-     sleap.info.metrics
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.summary.html">
-     sleap.info.summary
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.trackcleaner.html">
-     sleap.info.trackcleaner
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="sleap.info.write_tracking_h5.html">
-     sleap.info.write_tracking_h5
-    </a>
-   </li>
+  <ul class="simple">
   </ul>
  </li>
  <li class="toctree-l1">
@@ -688,12 +286,12 @@
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference external" href="https://github.com/murthylab/sleap">
+  <a class="reference external" href="https://github.com/talmolab/sleap">
    GitHub
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference external" href="https://github.com/murthylab/sleap/releases">
+  <a class="reference external" href="https://github.com/talmolab/sleap/releases">
    Releases
   </a>
  </li>
@@ -757,7 +355,7 @@ title="Toggle navigation"
   <div class="menu-dropdown__content">
     <ul>
       <li>
-        <a href="https://github.com/murthylab/sleap"
+        <a href="https://github.com/talmolab/sleap"
    class="headerbtn"
    data-toggle="tooltip"
 data-placement="left"
@@ -774,7 +372,7 @@ title="Source repository"
       </li>
       
       <li>
-        <a href="https://github.com/murthylab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.data.inference.html&body=Your%20issue%20content%20here."
+        <a href="https://github.com/talmolab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.nn.data.inference.html&body=Your%20issue%20content%20here."
    class="headerbtn"
    data-toggle="tooltip"
 data-placement="left"
@@ -822,31 +420,31 @@ title="Open an issue"
 <p>Transformers for performing inference.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.inference.GlobalPeakFinder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.inference.</span></span><span class="sig-name descname"><span class="pre">GlobalPeakFinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">confmaps_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_instance_confidence_maps'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confmaps_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peaks_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_center_instance_points'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_vals_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_center_instance_confidences'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_confmaps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integral</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integral_patch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/inference.py#L75-L141"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.inference.GlobalPeakFinder" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.inference.</span></span><span class="sig-name descname"><span class="pre">GlobalPeakFinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">confmaps_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_instance_confidence_maps'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confmaps_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peaks_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_center_instance_points'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_vals_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_center_instance_confidences'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_confmaps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integral</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integral_patch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/inference.py#L75-L141"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.inference.GlobalPeakFinder" title="Permalink to this definition">#</a></dt>
 <dd><p>Global peak finding transformer.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.inference.KerasModelPredictor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.inference.</span></span><span class="sig-name descname"><span class="pre">KerasModelPredictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">keras.engine.training.Model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_input_keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'instance_image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_output_keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_instance_confidence_maps'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/inference.py#L18-L71"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.inference.KerasModelPredictor" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.inference.</span></span><span class="sig-name descname"><span class="pre">KerasModelPredictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">keras.engine.training.Model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_input_keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'instance_image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_output_keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_instance_confidence_maps'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/inference.py#L18-L71"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.inference.KerasModelPredictor" title="Permalink to this definition">#</a></dt>
 <dd><p>Transformer for performing tf.keras model inference.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.inference.LocalPeakFinder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.inference.</span></span><span class="sig-name descname"><span class="pre">LocalPeakFinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">confmaps_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'centroid_confidence_maps'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confmaps_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peaks_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_centroids'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_vals_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_centroid_confidences'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_sample_inds_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_centroid_sample_inds'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_channel_inds_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_centroid_channel_inds'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_confmaps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integral</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/inference.py#L204-L280"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.inference.LocalPeakFinder" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.inference.</span></span><span class="sig-name descname"><span class="pre">LocalPeakFinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">confmaps_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'centroid_confidence_maps'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confmaps_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peaks_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_centroids'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_vals_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_centroid_confidences'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_sample_inds_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_centroid_sample_inds'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_channel_inds_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_centroid_channel_inds'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_confmaps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integral</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/inference.py#L204-L280"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.inference.LocalPeakFinder" title="Permalink to this definition">#</a></dt>
 <dd><p>Local peak finding transformer.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.inference.MockGlobalPeakFinder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.inference.</span></span><span class="sig-name descname"><span class="pre">MockGlobalPeakFinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_peaks_in_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'instances'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peaks_out_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_center_instance_points'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_vals_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_center_instance_confidences'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_confmaps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confmaps_in_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'instance_confidence_maps'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confmaps_out_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_instance_confidence_maps'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/inference.py#L145-L200"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.inference.MockGlobalPeakFinder" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.inference.</span></span><span class="sig-name descname"><span class="pre">MockGlobalPeakFinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_peaks_in_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'instances'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peaks_out_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_center_instance_points'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_vals_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_center_instance_confidences'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_confmaps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confmaps_in_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'instance_confidence_maps'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confmaps_out_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_instance_confidence_maps'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/inference.py#L145-L200"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.inference.MockGlobalPeakFinder" title="Permalink to this definition">#</a></dt>
 <dd><p>Transformer that mimics <a class="reference internal" href="#sleap.nn.data.inference.GlobalPeakFinder" title="sleap.nn.data.inference.GlobalPeakFinder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GlobalPeakFinder</span></code></a> but passes ground truth data.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.inference.PredictedCenterInstanceNormalizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.inference.</span></span><span class="sig-name descname"><span class="pre">PredictedCenterInstanceNormalizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centroid_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'centroid'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroid_confidence_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'centroid_confidence'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peaks_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_center_instance_points'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_confidences_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_center_instance_confidences'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_centroid_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_centroid'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_centroid_confidence_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_centroid_confidence'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_peaks_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_instance'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_peak_confidences_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_instance_confidences'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/inference.py#L284-L348"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.inference.PredictedCenterInstanceNormalizer" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.inference.</span></span><span class="sig-name descname"><span class="pre">PredictedCenterInstanceNormalizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centroid_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'centroid'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroid_confidence_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'centroid_confidence'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peaks_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_center_instance_points'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_confidences_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_center_instance_confidences'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_centroid_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_centroid'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_centroid_confidence_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_centroid_confidence'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_peaks_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_instance'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_peak_confidences_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predicted_instance_confidences'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/inference.py#L284-L348"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.inference.PredictedCenterInstanceNormalizer" title="Permalink to this definition">#</a></dt>
 <dd><p>Transformer for adjusting centered instance coordinates.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.data.inference.PredictedCenterInstanceNormalizer.input_keys">
@@ -862,7 +460,7 @@ title="Open an issue"
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.inference.PredictedCenterInstanceNormalizer.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/murthylab/sleap/blob/v1.2.2/sleap/nn/data/inference.py#L320-L348"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.inference.PredictedCenterInstanceNormalizer.transform_dataset" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.3/sleap/nn/data/inference.py#L320-L348"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.inference.PredictedCenterInstanceNormalizer.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a dataset that contains instance cropped data.</p>
 </dd></dl>
 
@@ -878,20 +476,6 @@ title="Open an issue"
                 
     <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="sleap.nn.data.identity.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">sleap.nn.data.identity</p>
-        </div>
-    </a>
-    <a class='right-next' id="next-link" href="sleap.nn.data.instance_centroids.html" title="next page">
-    <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">sleap.nn.data.instance_centroids</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
-    </a>
 </div>
             </footer>
         </div>

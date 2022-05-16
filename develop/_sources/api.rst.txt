@@ -7,13 +7,14 @@
 Developer API
 =============
 
+.. Hint:: Head to our `discussions page <https://github.com/talmolab/sleap/discussions>`_ to get help from the SLEAP community.
+
 .. toctree::
    :caption: API
    :maxdepth: 1
 
 .. autosummary::
    :toctree: api
-
    sleap.instance
    sleap.message
    sleap.skeleton
@@ -32,12 +33,6 @@ Developer API
    sleap.nn.training
    sleap.nn.utils
    sleap.nn.viz
-   sleap.nn.config.data
-   sleap.nn.config.model
-   sleap.nn.config.optimization
-   sleap.nn.config.outputs
-   sleap.nn.config.training_job
-   sleap.nn.config.utils
    sleap.nn.data.augmentation
    sleap.nn.data.confidence_maps
    sleap.nn.data.dataset_ops
@@ -55,8 +50,6 @@ Developer API
    sleap.nn.data.resizing
    sleap.nn.data.training
    sleap.nn.data.utils
-   sleap.nn.tracker.components
-   sleap.nn.tracker.kalman
    sleap.nn.architectures.common
    sleap.nn.architectures.encoder_decoder
    sleap.nn.architectures.hourglass
@@ -66,6 +59,21 @@ Developer API
    sleap.nn.architectures.resnet
    sleap.nn.architectures.unet
    sleap.nn.architectures.upsampling
+   sleap.nn.config.data
+   sleap.nn.config.model
+   sleap.nn.config.optimization
+   sleap.nn.config.outputs
+   sleap.nn.config.training_job
+   sleap.nn.config.utils
+   sleap.nn.tracker.components
+   sleap.nn.tracker.kalman
+   sleap.info.align
+   sleap.info.feature_suggestions
+   sleap.info.labels
+   sleap.info.metrics
+   sleap.info.summary
+   sleap.info.trackcleaner
+   sleap.info.write_tracking_h5
    sleap.io.asyncvideo
    sleap.io.convert
    sleap.io.dataset
@@ -75,6 +83,7 @@ Developer API
    sleap.io.videowriter
    sleap.io.visuals
    sleap.io.format.adaptor
+   sleap.io.format.alphatracker
    sleap.io.format.coco
    sleap.io.format.deeplabcut
    sleap.io.format.deepposekit
@@ -87,10 +96,3 @@ Developer API
    sleap.io.format.main
    sleap.io.format.sleap_analysis
    sleap.io.format.text
-   sleap.info.align
-   sleap.info.feature_suggestions
-   sleap.info.labels
-   sleap.info.metrics
-   sleap.info.summary
-   sleap.info.trackcleaner
-   sleap.info.write_tracking_h5

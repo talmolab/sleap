@@ -25,6 +25,6 @@ performance by tuning hyperparameters that don't perform as well with little dat
 ![Stage 3 troubleshooting workflow](../_static/troubleshooting_stage3.png)
 
 If you still aren't getting good results, feel free to reach out by emailing us at
-`talmo@salk.edu` or opening a [Github Issue](https://github.com/murthylab/sleap/issues) 
+`talmo@salk.edu` or opening a [Github Issue](https://github.com/talmolab/sleap/issues) 
 and tell us a bit about your data (preferably with sample screenshots/clips) and what
 kinds of problems you're facing.
