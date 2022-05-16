@@ -2,14 +2,13 @@
 
 Stuck? Can't get SLEAP to run? Crashing? Try the recommended tips below.
 
-
 ## Installation
 
 ### I can't get SLEAP to install!
 
 Have you tried all of the steps in the [installation instructions](installation)?
 
-If so, please feel free to [open an issue](https://github.com/talmolab/sleap/issues) and tell us how you're trying to install it, what error messages you're getting and which operating system you're on.
+If so, please feel free to [start a discussion](https://github.com/talmolab/sleap/discussions) or [open an issue](https://github.com/talmolab/sleap/issues) and tell us how you're trying to install it, what error messages you're getting and which operating system you're on.
 
 ### Can I install it on a computer without a GPU?
 
@@ -21,12 +20,11 @@ You can use the system CUDA installation by simply using the [](./installation.m
 
 Note that you will need to use a version compatible with **TensorFlow 2.6+** (**CUDA Toolkit v11.3** and **cuDNN v8.2**).
 
-
 ## Usage
 
 ### How do I use SLEAP?
 
-If you're new to pose tracking in general, check out [this talk](https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking) or our review in *[Nature Neuroscience](https://rdcu.be/caH3H)*.
+If you're new to pose tracking in general, check out [this talk](https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking) or our review in _[Nature Neuroscience](https://rdcu.be/caH3H)_.
 
 If you're just new to SLEAP, we suggest starting with the {ref}`high-level overview` and then following the {ref}`tutorial`.
 
@@ -73,7 +71,8 @@ Check out the [Analysis examples](notebooks/Analysis_examples) notebooks.
 
 ### I've found a bug or have another problem!
 
-Feel free to [open an issue](https://github.com/talmolab/sleap/issues) and we'll get back to you as soon as we can!
+Feel free to [start a discussion](https://github.com/talmolab/sleap/discussions) for help from the developers and community.
+Or [open an issue](https://github.com/talmolab/sleap/issues) and we'll get back to you as soon as we can!
 
 ### Can I just talk to someone?
 
