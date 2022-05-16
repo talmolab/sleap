@@ -71,7 +71,7 @@ Check out the [Analysis examples](notebooks/Analysis_examples) notebooks.
 
 ### I've found a bug or have another problem!
 
-Feel free to [start a discussion](https://github.com/talmolab/sleap/discussions) for help from the developers and community.
+Feel free to [start a discussion](https://github.com/talmolab/sleap/discussions) to get help from the developers and community.
 Or [open an issue](https://github.com/talmolab/sleap/issues) and we'll get back to you as soon as we can!
 
 ### Can I just talk to someone?
