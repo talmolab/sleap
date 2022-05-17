@@ -479,9 +479,6 @@ class LearningDialog(QtWidgets.QDialog):
         frame_selection = self.get_selected_frames_to_predict(pipeline_form_data)
         frame_count = self.count_total_frames_for_selection_option(frame_selection)
 
-        print(f"\n\nframe_selection = {frame_selection}")
-        print(f"\nframe_count = {frame_count}")
-
         if predict_frames_choice.startswith("user"):
             items_for_inference = runners.ItemsForInference(
                 items=[
@@ -587,10 +584,6 @@ class LearningDialog(QtWidgets.QDialog):
         items_for_inference = self.get_items_for_inference(pipeline_form_data)
 
         config_info_list = self.get_every_head_config_data(pipeline_form_data)
-
-        print(f"\n\npipeline_forma_data = {pipeline_form_data}")
-        print(f"\nitems_for_inference = {items_for_inference}")
-        print(f"\nconfig_info_list = {config_info_list}")
 
         # Close the dialog now that we have the data from it
         self.accept()

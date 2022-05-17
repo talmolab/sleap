@@ -1588,7 +1588,6 @@ class MainWindow(QMainWindow):
                 for video in self.labels.videos
             }
 
-        print(f"\n\nselection = {selection}")
         return selection
 
     def _show_learning_dialog(self, mode: str):
