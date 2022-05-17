@@ -193,6 +193,7 @@ class LearningDialog(QtWidgets.QDialog):
             random_video = 0
             clip_length = 0
             video_length = 0
+            all_videos_length = 0
 
             # Determine which options are available given _frame_selection
             if "random" in self._frame_selection:
@@ -218,6 +219,10 @@ class LearningDialog(QtWidgets.QDialog):
             if "video" in self._frame_selection:
                 video_length = self.count_total_frames_for_selection_option(
                     self._frame_selection["video"]
+                )
+            if "all_videos" in self._frame_selection:
+                all_videos_length = self.count_total_frames_for_selection_option(
+                    self._frame_selection["all_videos"]
                 )
 
             # Build list of options
@@ -252,7 +257,12 @@ class LearningDialog(QtWidgets.QDialog):
                 prediction_options.append(option)
                 default_option = option
 
-            prediction_options.append(f"entire video ({video_length} frames)")
+            prediction_options.append(f"entire current video ({video_length} frames)")
+
+            if len(self.labels.videos) > 1:
+                prediction_options.append(
+                    f"entire video all videos ({all_videos_length} frames)"
+                )
 
             self.pipeline_form_widget.fields["_predict_frames"].set_options(
                 prediction_options, default_option
@@ -454,8 +464,10 @@ class LearningDialog(QtWidgets.QDialog):
                 frames_to_predict = self._frame_selection["clip"]
             elif predict_frames_choice.startswith("suggested"):
                 frames_to_predict = self._frame_selection["suggestions"]
-            elif predict_frames_choice.startswith("entire video"):
+            elif predict_frames_choice.startswith("entire current video"):
                 frames_to_predict = self._frame_selection["video"]
+            elif predict_frames_choice.startswith("entire video all videos"):
+                frames_to_predict = self._frame_selection["all_videos"]
             elif predict_frames_choice.startswith("user"):
                 frames_to_predict = self._frame_selection["user"]
 
@@ -466,6 +478,9 @@ class LearningDialog(QtWidgets.QDialog):
 
         frame_selection = self.get_selected_frames_to_predict(pipeline_form_data)
         frame_count = self.count_total_frames_for_selection_option(frame_selection)
+
+        print(f"\n\nframe_selection = {frame_selection}")
+        print(f"\nframe_count = {frame_count}")
 
         if predict_frames_choice.startswith("user"):
             items_for_inference = runners.ItemsForInference(
@@ -572,6 +587,10 @@ class LearningDialog(QtWidgets.QDialog):
         items_for_inference = self.get_items_for_inference(pipeline_form_data)
 
         config_info_list = self.get_every_head_config_data(pipeline_form_data)
+
+        print(f"\n\npipeline_forma_data = {pipeline_form_data}")
+        print(f"\nitems_for_inference = {items_for_inference}")
+        print(f"\nconfig_info_list = {config_info_list}")
 
         # Close the dialog now that we have the data from it
         self.accept()
