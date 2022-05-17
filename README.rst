@@ -83,6 +83,7 @@ Learn to SLEAP
 - **Learn more advanced usage**: `Guides <https://sleap.ai/guides/>`__ and `Notebooks <https://sleap.ai/notebooks/>`__
 - **Learn by watching**: `MIT CBMM Tutorial <https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking>`_
 - **Learn by reading**: `Paper (Pereira et al., Nature Methods, 2022) <https://www.nature.com/articles/s41592-022-01426-1>`__ and `Review on behavioral quantification (Pereira et al., Nature Neuroscience, 2020) <https://rdcu.be/caH3H>`_
+- **Learn from others**: `Discussions on Github <https://github.com/talmolab/sleap/discussions>`_
 
 
 References
@@ -138,7 +139,8 @@ Follow `@talmop <https://twitter.com/talmop>`_ on Twitter for news and updates!
 **Technical issue with the software?**
 
 1. Check the `Help page <https://sleap.ai/help.html>`_.
-2. Search the `issues on GitHub <https://github.com/talmolab/sleap/issues>`_ or open a new one.
+2. Ask the community via `discussions on Github <https://github.com/talmolab/sleap/discussions>`_.
+3. Search the `issues on GitHub <https://github.com/talmolab/sleap/issues>`_ or open a new one.
 
 
 **General inquiries?**
