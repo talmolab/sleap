@@ -6,7 +6,7 @@
    :alt: Continuous integration status
 
 .. |Coverage| image::
-   https://codecov.io/gh/talmolab/sleap/branch/develop/graph/badge.svg?token=YWQYBN6820
+   https://codecov.io/gh/talmolab/sleap/branch/develop/graph/badge.svg?token=oBmTlGIQRn
    :target: https://codecov.io/gh/talmolab/sleap
    :alt: Coverage
 
