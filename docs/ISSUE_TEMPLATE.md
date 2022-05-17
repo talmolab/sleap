@@ -1,5 +1,7 @@
 # Issue Template
 
+* Generally speaking, issues should consist of bugs in SLEAP that will require a pull request. For general questions and suggestions for enhancements, you can start a new discussion [here](https://github.com/talmolab/sleap/discussions)
+
 ## Description of issue
 
 * Please provide a clear and concise explanation of the issue
