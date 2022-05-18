@@ -170,6 +170,7 @@ SLEAP can be installed on newer M1 Macs by following these instructions:
 
 See [this Issue](https://github.com/talmolab/sleap/issues/579#issuecomment-1028602327) for more information on M1 support.
 
+
 ## Testing that things are working
 
 If you installed using `conda`, first activate the `sleap` environment by opening a terminal and typing:
@@ -285,6 +286,7 @@ Once the environment has been removed, you are free to install SLEAP using any o
 
 If you run into any problems, check out the [Github Discussions](https://github.com/talmolab/sleap/discussions) and [GitHub Issues](https://github.com/talmolab/sleap/issues) to see if others have had the same problem.
 
+
 If you get any errors or the GUI fails to launch, try running the diagnostics to see what SLEAP is able to detect on your system:
 
 ```bash
@@ -298,3 +300,4 @@ conda list
 ```
 
 Then, [open a new Issue](https://github.com/talmolab/sleap/issues) providing the versions from either command above, as well as any errors you saw in the console during the installation. Or [start a discussion](https://github.com/talmolab/sleap/discussions) to get help from the community.
+
