@@ -142,7 +142,6 @@ Follow `@talmop <https://twitter.com/talmop>`_ on Twitter for news and updates!
 2. Ask the community via `discussions on Github <https://github.com/talmolab/sleap/discussions>`_.
 3. Search the `issues on GitHub <https://github.com/talmolab/sleap/issues>`_ or open a new one.
 
-
 **General inquiries?**
 Reach out to `talmo@salk.edu`.
 
