@@ -193,6 +193,7 @@ class LearningDialog(QtWidgets.QDialog):
             random_video = 0
             clip_length = 0
             video_length = 0
+            all_videos_length = 0
 
             # Determine which options are available given _frame_selection
             if "random" in self._frame_selection:
@@ -218,6 +219,10 @@ class LearningDialog(QtWidgets.QDialog):
             if "video" in self._frame_selection:
                 video_length = self.count_total_frames_for_selection_option(
                     self._frame_selection["video"]
+                )
+            if "all_videos" in self._frame_selection:
+                all_videos_length = self.count_total_frames_for_selection_option(
+                    self._frame_selection["all_videos"]
                 )
 
             # Build list of options
@@ -252,7 +257,10 @@ class LearningDialog(QtWidgets.QDialog):
                 prediction_options.append(option)
                 default_option = option
 
-            prediction_options.append(f"entire video ({video_length} frames)")
+            prediction_options.append(f"entire current video ({video_length} frames)")
+
+            if len(self.labels.videos) > 1:
+                prediction_options.append(f"all videos ({all_videos_length} frames)")
 
             self.pipeline_form_widget.fields["_predict_frames"].set_options(
                 prediction_options, default_option
@@ -454,8 +462,10 @@ class LearningDialog(QtWidgets.QDialog):
                 frames_to_predict = self._frame_selection["clip"]
             elif predict_frames_choice.startswith("suggested"):
                 frames_to_predict = self._frame_selection["suggestions"]
-            elif predict_frames_choice.startswith("entire video"):
+            elif predict_frames_choice.startswith("entire current video"):
                 frames_to_predict = self._frame_selection["video"]
+            elif predict_frames_choice.startswith("all videos"):
+                frames_to_predict = self._frame_selection["all_videos"]
             elif predict_frames_choice.startswith("user"):
                 frames_to_predict = self._frame_selection["user"]
 

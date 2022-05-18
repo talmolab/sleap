@@ -1556,6 +1556,9 @@ class MainWindow(QMainWindow):
 
         selection["clip"] = {current_video: encode_range(*clip_range)}
         selection["video"] = {current_video: encode_range(0, current_video.num_frames)}
+        selection["all_videos"] = {
+            video: encode_range(0, video.num_frames) for video in self.labels.videos
+        }
 
         selection["suggestions"] = {
             video: remove_user_labeled(video, self.labels.get_video_suggestions(video))
