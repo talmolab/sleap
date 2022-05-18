@@ -260,9 +260,7 @@ class LearningDialog(QtWidgets.QDialog):
             prediction_options.append(f"entire current video ({video_length} frames)")
 
             if len(self.labels.videos) > 1:
-                prediction_options.append(
-                    f"entire video all videos ({all_videos_length} frames)"
-                )
+                prediction_options.append(f"all videos ({all_videos_length} frames)")
 
             self.pipeline_form_widget.fields["_predict_frames"].set_options(
                 prediction_options, default_option
@@ -466,7 +464,7 @@ class LearningDialog(QtWidgets.QDialog):
                 frames_to_predict = self._frame_selection["suggestions"]
             elif predict_frames_choice.startswith("entire current video"):
                 frames_to_predict = self._frame_selection["video"]
-            elif predict_frames_choice.startswith("entire video all videos"):
+            elif predict_frames_choice.startswith("all videos"):
                 frames_to_predict = self._frame_selection["all_videos"]
             elif predict_frames_choice.startswith("user"):
                 frames_to_predict = self._frame_selection["user"]
