@@ -1438,28 +1438,40 @@ class ReplaceVideo(EditCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         import_list = params["import_list"]
-        print(f"\nimport_list = {import_list}")
+        new_paths = params["new_paths"]
+        all_videos = context.labels.videos
 
-        for video, import_item in zip(context.labels.videos, import_list):
-            params = import_item["params"]
-            print(f"params = {params}")
-            print(f"video")
-            if params["filename"] != video.backend.filename:
-                video.backend.filename = params["filename"]
+        for import_item, (path, video_idx) in zip(import_list, new_paths):
+            import_params = import_item["params"]
+            video = all_videos[video_idx]
+
+            video.backend.filename = import_params["filename"]
             # TODO: Should implement reset on all backends and add grayscale kwarg
-            video.backend.reset(grayscale=params["grayscale"])
+            if "grayscale" in import_params:
+                video.backend.reset(grayscale=import_params["grayscale"])
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         """Shows gui for replacing videos in project."""
-        paths = [video.backend.filename for video in context.labels.videos]
+        old_paths = [video.backend.filename for video in context.labels.videos]
+        paths = list(old_paths)
 
         okay = MissingFilesDialog(filenames=paths, replace=True).exec_()
 
         if not okay:
             return False
 
-        params["import_list"] = ImportVideos().ask(filenames=paths)
+        # Only return an import list for videos we swap
+
+        params["new_paths"] = [
+            (path, video_idx)
+            for video_idx, (path, old_path) in enumerate(zip(paths, old_paths))
+            if path != old_path
+        ]
+
+        new_paths_only = [path_tuple[0] for path_tuple in params["new_paths"]]
+
+        params["import_list"] = ImportVideos().ask(filenames=new_paths_only)
 
         return True
 
