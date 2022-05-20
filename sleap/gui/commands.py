@@ -1433,7 +1433,7 @@ class ShowImportVideos(EditCommand):
 
 
 class ReplaceVideo(EditCommand):
-    topics = [UpdateTopic.video]
+    topics = [UpdateTopic.video, UpdateTopic.frame]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
@@ -1448,6 +1448,14 @@ class ReplaceVideo(EditCommand):
             # TODO: Should implement reset on all backends and add grayscale kwarg
             if "grayscale" in import_params:
                 video.backend.reset(grayscale=import_params["grayscale"])
+
+            context.changestack_push("replace video")
+
+        # Update seekbar and goto last labeled frame
+        context.state.emit("video")
+
+        # BUG when replacement video is shorter than last labeled frame index.
+        # TODO: Delete all labels past replacement video size (warn user).
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
