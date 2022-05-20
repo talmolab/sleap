@@ -461,9 +461,16 @@ class MediaVideo:
         """See :class:`Video`."""
         return self.test_frame.dtype
 
-    def reset(self):
+    def reset(self, grayscale: bool = None):
         """Reloads the video."""
+
+        if grayscale is not None:
+            self.grayscale = grayscale
+        else:
+            self._detect_grayscale = True
+
         self._reader_ = None
+        self._test_frame_ = None
 
     def get_frame(self, idx: int, grayscale: bool = None) -> np.ndarray:
         """See :class:`Video`."""
@@ -788,7 +795,7 @@ class SingleImageVideo:
     """
 
     filename: Optional[str] = attr.ib(default=None)
-    filenames: Optional[List[str]] = attr.ib(factory=list)
+    filenames: List[str] = attr.ib(factory=list)
     height_: Optional[int] = attr.ib(default=None)
     width_: Optional[int] = attr.ib(default=None)
     channels_: Optional[int] = attr.ib(default=None)

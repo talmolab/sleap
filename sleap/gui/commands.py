@@ -1394,6 +1394,7 @@ class AddVideo(EditCommand):
         import_list = params["import_list"]
 
         new_videos = ImportVideos.create_videos(import_list)
+        print(f"import_list = {import_list}")
         video = None
         for video in new_videos:
             # Add to labels
@@ -1436,12 +1437,17 @@ class ReplaceVideo(EditCommand):
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        new_paths = params["new_video_paths"]
+        import_list = params["import_list"]
+        print(f"\nimport_list = {import_list}")
 
-        for video, new_path in zip(context.labels.videos, new_paths):
-            if new_path != video.backend.filename:
-                video.backend.filename = new_path
-                video.backend.reset()
+        for video, import_item in zip(context.labels.videos, import_list):
+            params = import_item["params"]
+            print(f"params = {params}")
+            print(f"video")
+            if params["filename"] != video.backend.filename:
+                video.backend.filename = params["filename"]
+            # TODO: Should implement reset on all backends and add grayscale kwarg
+            video.backend.reset(grayscale=params["grayscale"])
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
@@ -1453,7 +1459,7 @@ class ReplaceVideo(EditCommand):
         if not okay:
             return False
 
-        params["new_video_paths"] = paths
+        params["import_list"] = ImportVideos().ask(filenames=paths)
 
         return True
 
