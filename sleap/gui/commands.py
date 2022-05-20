@@ -1445,9 +1445,13 @@ class ReplaceVideo(EditCommand):
             video = all_videos[video_idx]
 
             video.backend.filename = import_params["filename"]
-            # TODO: Should implement reset on all backends and add grayscale kwarg
-            if "grayscale" in import_params:
-                video.backend.reset(grayscale=import_params["grayscale"])
+            # See ImportParamDialog: Grayscale is only in params if .mp4 or .avi.
+            grayscale = (
+                None
+                if ("grayscale" not in import_params)
+                else import_params["grayscale"]
+            )
+            video.backend.reset(grayscale=grayscale)
 
             context.changestack_push("replace video")
 
