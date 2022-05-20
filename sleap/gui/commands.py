@@ -1438,10 +1438,9 @@ class ReplaceVideo(EditCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         import_list = params["import_list"]
-        new_paths = params["new_paths"]
         all_videos = context.labels.videos
 
-        for import_item, (path, video_idx) in zip(import_list, new_paths):
+        for import_item, video_idx in import_list:
             import_params = import_item["params"]
             video = all_videos[video_idx]
 
@@ -1463,15 +1462,20 @@ class ReplaceVideo(EditCommand):
 
         # Only return an import list for videos we swap
 
-        params["new_paths"] = [
+        new_paths = [
             (path, video_idx)
             for video_idx, (path, old_path) in enumerate(zip(paths, old_paths))
             if path != old_path
         ]
 
-        new_paths_only = [path_tuple[0] for path_tuple in params["new_paths"]]
+        new_paths = []
+        video_idxs = []
+        for video_idx, (path, old_path) in enumerate(zip(paths, old_paths)):
+            if path != old_path:
+                new_paths.append(path)
+                video_idxs.append(video_idx)
 
-        params["import_list"] = ImportVideos().ask(filenames=new_paths_only)
+        params["import_list"] = zip(ImportVideos().ask(filenames=new_paths), video_idxs)
 
         return True
 
