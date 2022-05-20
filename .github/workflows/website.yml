@@ -8,11 +8,11 @@ on:
       # 'main' triggers updates to 'sleap.ai', 'develop' to 'sleap.ai/develop'
       - main
       - develop
-      - talmo/update-docs-pre-migration
+      - liezl/discussion_links
     paths:
-      - 'docs/**'
-      - 'README.rst'
-      - '.github/workflows/website.yml'
+      - "docs/**"
+      - "README.rst"
+      - ".github/workflows/website.yml"
 
 jobs:
   build:
