@@ -64,6 +64,8 @@ class HDF5Video:
     """
 
     filename: str = attr.ib(default=None)
+    # TODO: Implement grayscale
+    grayscale: bool = attr.ib(default=None)
     dataset: str = attr.ib(default=None)
     input_format: str = attr.ib(default="channels_last")
     convert_range: bool = attr.ib(default=True)
@@ -291,10 +293,22 @@ class HDF5Video:
             return last_key
         return self.frames - 1
 
-    def reset(self):
+    def reset(
+        self,
+        filename: str = None,
+        grayscale: bool = None,
+        dataset: str = None,
+        input_format: str = "channels_last",
+        convert_range: bool = True,
+    ):
         """Reloads the video."""
-        # TODO
-        pass
+        self.filename = filename
+        # TODO: detect grayscale if None
+        self.grayscale = grayscale
+        self.dataset = dataset
+        self.input_format = input_format
+        self.convert_range = convert_range
+        self.__attrs_post_init__()
 
     def get_frame(self, idx) -> np.ndarray:
         """
@@ -461,8 +475,10 @@ class MediaVideo:
         """See :class:`Video`."""
         return self.test_frame.dtype
 
-    def reset(self, grayscale: bool = None):
+    def reset(self, filename: str, grayscale: bool = None, bgr: bool = True):
         """Reloads the video."""
+        self.filename = filename
+        self.bgr = bgr
 
         if grayscale is not None:
             self.grayscale = grayscale
@@ -577,10 +593,14 @@ class NumpyVideo:
         """See :class:`Video`."""
         return self.__data.dtype
 
-    def reset(self):
+    def reset(self, filename, grayscale: bool = None):
         """Reload the video."""
-        # TODO
-        pass
+        self.filename = filename
+
+        try:
+            self.__data = np.load(self.filename)
+        except OSError as ex:
+            raise FileNotFoundError(f"Could not find filename {self.filename}") from ex
 
     def get_frame(self, idx):
         """See :class:`Video`."""
@@ -617,6 +637,8 @@ class ImgStoreVideo:
 
     filename: str = attr.ib(default=None)
     index_by_original: bool = attr.ib(default=True)
+    # TODO: Implement grayscale
+    grayscale: bool = attr.ib(default=None)
     _store_ = None
     _img_ = None
 
@@ -710,10 +732,16 @@ class ImgStoreVideo:
             return self.__store.frame_max
         return self.frames - 1
 
-    def reset(self):
+    def reset(
+        self, filename: str, grayscale: bool = None, index_by_original: bool = True
+    ):
         """Reloads the video."""
-        # TODO
-        pass
+        self.filename = filename
+        self.grayscale = grayscale
+        self.index_by_original = index_by_original
+        self._store_ = None
+        self._img_ = None
+        self.__attrs_post_init__()
 
     def get_frame(self, frame_number: int) -> np.ndarray:
         """
@@ -796,6 +824,8 @@ class SingleImageVideo:
 
     filename: Optional[str] = attr.ib(default=None)
     filenames: List[str] = attr.ib(factory=list)
+    # TODO: Implement grayscale
+    grayscale = attr.ib(default=None)
     height_: Optional[int] = attr.ib(default=None)
     width_: Optional[int] = attr.ib(default=None)
     channels_: Optional[int] = attr.ib(default=None)
@@ -909,10 +939,24 @@ class SingleImageVideo:
         """See :class:`Video`."""
         return self.__data.dtype
 
-    def reset(self):
+    def reset(
+        self,
+        filename: Optional[str] = None,
+        grayscale: bool = None,
+        filenames: List[str] = list(),
+        height_: Optional[int] = None,
+        width_: Optional[int] = None,
+        channels_: Optional[int] = None,
+    ):
         """Reloads the video."""
-        # TODO
-        pass
+        self.filename = filename
+        # TODO: detect grayscale if grayscale is None
+        self.grayscale = grayscale
+        self.filenames = filenames
+        self.height_ = height_
+        self.width_ = width_
+        self.channels_ = channels_
+        self.__attrs_post_init__()
 
     def get_frame(self, idx):
         """See :class:`Video`."""

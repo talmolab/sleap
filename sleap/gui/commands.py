@@ -1444,14 +1444,14 @@ class ReplaceVideo(EditCommand):
             import_params = import_item["params"]
             video = all_videos[video_idx]
 
-            video.backend.filename = import_params["filename"]
-            # See ImportParamDialog: Grayscale is only in params if .mp4 or .avi.
+            # See ImportParamDialog: Grayscale is only in params if MediaVideo (mp4,avi)
             grayscale = (
                 None
                 if ("grayscale" not in import_params)
                 else import_params["grayscale"]
             )
-            video.backend.reset(grayscale=grayscale)
+            # BUG when backend changes
+            video.backend.reset(import_params["filename"], grayscale=grayscale)
 
             context.changestack_push("replace video")
 
