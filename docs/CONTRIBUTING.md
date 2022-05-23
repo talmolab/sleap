@@ -1,7 +1,5 @@
 # Contributing to SLEAP
 
-Thank you for contributing to SLEAP!
-
 As our community grows it is important to adhere to a set of contribution guidelines. These guidelines may change as needed. Please feel free to propose changes in a pull request! 
 
 #### Table Of Contents
@@ -12,7 +10,6 @@ As our community grows it is important to adhere to a set of contribution guidel
     * [Discussions](#discussions)
     * [Pull Requests](#pull-requests)
 3) [Style Guides](#style-guides)
-4) [Miscellaneous](#miscellaneous)
 
 ## Code of Conduct
 
@@ -31,31 +28,30 @@ Github has made it easy to separate issues from discussions. Generally speaking,
 
 * This is a place to go to ask questions and propose new ideas
 * 3 categories: general, help, ideas
-   * help - having trouble with software, user experience issue, etc
-   * ideas - enhancements, things that would make the user experience nicer but not necessarily a problem with the code
-   * general - if it doesn't fall into help/ideas it goes here as long as it isn't bug fix (issue)
+   * **Help** - having trouble with software, user experience issue, etc
+   * **Ideas** - enhancements, things that would make the user experience nicer but not necessarily a problem with the code
+   * **General** - if it doesn't fall into help/ideas it goes here as long as it isn't bug fix (issue)
 
 ### Pull Requests
 
-1) install source code develop branch: https://sleap.ai/installation.html#conda-from-source
-2) follow instructions to create conda env etc
-3) create fork
+1) install source code [develop branch](https://sleap.ai/installation.html#conda-from-source) and follow instructions to create conda env etc
+2) create fork
    * either work on develop branch in own fork or can create branch on either github or cli
    * if creating a branch, use your name followed by a relevant keyword for your changes, eg: `git checkout -b john/some_issue`
-4) make some changes to source code or additions that tackle the issue(s)
-5) write [tests](https://github.com/talmolab/sleap/tree/develop/tests)
+3) make some changes to source code or additions that tackle the issue(s)
+4) write [tests](https://github.com/talmolab/sleap/tree/develop/tests)
    * can either write before pr or submit draft pr and then write tests to narrow down error prone lines 
    * the test(s) should go into relevant subtest folders to the proposed change(s)
    * test(s) should aim to hit every point in the proposed change(s) - cover edge cases to best of your ability
    * try to hit code coverage points
-6) add files and commit (make sure to correct branch!)
-7) create Draft PR (on github - follow instructions in template)
+5) add files and commit (make sure to correct branch!)
+6) create Draft PR (on github - follow instructions in template)
    * make sure tests pass and code coverage is good
    * if tests fail, repeat steps 4-7
-8) once draft pr looks good, submit a PR (hit `ready for review` button)
+7) once draft pr looks good, submit a PR (hit `ready for review` button)
    *  optionally assign a reviewer on right of screen
-9) if reviewer requests changes, repeat steps 4-8
-10) once reviewer signs off they will squash + merge
+8) if reviewer requests changes, repeat steps 4-8
+9) once reviewer signs off they will squash + merge
 
 ## Style Guides
 
