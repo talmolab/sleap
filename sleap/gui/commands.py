@@ -1400,6 +1400,7 @@ class AddVideo(EditCommand):
             # Add to labels
             context.labels.add_video(video)
             context.changestack_push("add video")
+        context.labels.update_cache()
 
         # Load if no video currently loaded
         if context.state["video"] is None:
@@ -1438,28 +1439,47 @@ class ReplaceVideo(EditCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         import_list = params["import_list"]
-        all_videos = context.labels.videos
+        video_state = context.state["video"]
 
-        for import_item, video_idx in import_list:
-            import_params = import_item["params"]
-            video = all_videos[video_idx]
+        for import_item, video in import_list:
+            # Create new video based on extension (.mp4, .h5, etc)
+            new_video = ImportVideos.create_video(import_item)
 
-            # See ImportParamDialog: Grayscale is only in params if MediaVideo (mp4,avi)
-            grayscale = (
-                None
-                if ("grayscale" not in import_params)
-                else import_params["grayscale"]
-            )
-            # BUG when backend changes
-            video.backend.reset(import_params["filename"], grayscale=grayscale)
+            # Warn users that labels will be removed if proceed
+            last_frame = new_video.last_frame_idx
+            last_label = context.labels.find_last(video)
+            okay = False
+            if (last_label is not None) and (last_label.frame_idx > last_frame):
+                # TODO: Warn user that we plan on truncating labeled frames.
+                okay = True
 
-            context.changestack_push("replace video")
+            if okay:
+                lfs = context.labels.get(video)
+                if lfs is not None:
+                    for lf in lfs:
+                        # Remove labeled frames which
+                        if lf.frame_idx > last_frame:
+                            context.labels.remove_frame(lf)
+                        else:
+                            lf.video = new_video
 
-        # Update seekbar and goto last labeled frame
-        context.state.emit("video")
+                # XXX(LM): Using remove_video followed by add_video changes ordering of videos.
+                # Update the video in labels and in cache
+                context.labels.remove_video(video)
+                context.labels.add_video(new_video)
 
-        # BUG when replacement video is shorter than last labeled frame index.
-        # TODO: Delete all labels past replacement video size (warn user).
+                # Change video state if needed
+                if video_state == video:
+                    video_state = new_video
+
+                context.changestack_push("replace video")
+
+        # TODO: Create replace_video function in labels that also updates cache
+        # Update the data cache to reflect labeled frame video swap
+        context.labels.update_cache()
+
+        # Update video and seekbar, goto last labeled frame
+        context.state["video"] = video_state
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
@@ -1481,13 +1501,14 @@ class ReplaceVideo(EditCommand):
         ]
 
         new_paths = []
-        video_idxs = []
+        old_videos = []
+        all_videos = context.labels.videos
         for video_idx, (path, old_path) in enumerate(zip(paths, old_paths)):
             if path != old_path:
                 new_paths.append(path)
-                video_idxs.append(video_idx)
+                old_videos.append(all_videos[video_idx])
 
-        params["import_list"] = zip(ImportVideos().ask(filenames=new_paths), video_idxs)
+        params["import_list"] = zip(ImportVideos().ask(filenames=new_paths), old_videos)
 
         return True
 
