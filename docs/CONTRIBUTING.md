@@ -1,6 +1,6 @@
 # Contributing to SLEAP
 
-As our community grows it is important to adhere to a set of contribution guidelines. These guidelines may change as needed. Please feel free to propose changes in a pull request! 
+As our community grows it is important to adhere to a set of contribution guidelines. These guidelines may change as needed. Please feel free to propose changes to source code in a pull request! 
 
 #### Table Of Contents
 
@@ -13,7 +13,7 @@ As our community grows it is important to adhere to a set of contribution guidel
 
 ## Code of Conduct
 
-Everyone contributing to SLEAP is governed by the [SLEAP Code of Conduct](CODE_OF_CONDUCT.md). As such, all are expected to abide by this code. Please report any unacceptable behavior to talmo@salk.edu.
+Everyone contributing to SLEAP is governed by the [SLEAP Code of Conduct](CODE_OF_CONDUCT.md). As such, all are expected to abide by this code. Please report any unacceptable behavior to `talmo@salk.edu`.
 
 ## Contributing
 
@@ -34,30 +34,32 @@ Github has made it easy to separate issues from discussions. Generally speaking,
 
 ### Pull Requests
 
-1) Install source code [develop branch](https://sleap.ai/installation.html#conda-from-source) and follow instructions to create conda env, etc.
-2) Create fork.
-   * Either work on develop branch in own fork or can create branch on either github or cli.
+1) Install source code [`develop` branch](https://sleap.ai/installation.html#conda-from-source) and follow instructions to create conda env, etc.
+2) Create a fork from the `develop` branch.
+   * Either work on the `develop` branch or create a new branch (recommended if tackling multiple issues at a time).
    * If creating a branch, use your name followed by a relevant keyword for your changes, eg: `git checkout -b john/some_issue`
-3) Make some changes to source code or additions that tackle the issue(s).
+3) Make some changes/additions to the source code that tackle the issue(s).
 4) Write [tests](https://github.com/talmolab/sleap/tree/develop/tests).
-   * Can either write before PR or submit draft PR and then write tests to narrow down error prone lines.
+   * Can either write tests before creating a draft PR, or submit draft PR (to get code coverage statistics via codecov) and then write tests to narrow down error prone lines.
    * The test(s) should go into relevant subtest folders to the proposed change(s).
    * Test(s) should aim to hit every point in the proposed change(s) - cover edge cases to best of your ability.
    * Try to hit code coverage points.
-5) Add files and commit (make sure to correct branch!).
-6) Create Draft PR (on github - follow instructions in template).
-   * Make sure tests pass and code coverage is good.
-   * If tests fail, repeat steps 4-7.
-7) Once draft pr looks good, submit a PR (hit `ready for review` button).
-   * Optionally assign a reviewer on right of screen.
-8) If reviewer requests changes, repeat steps 4-8.
-9) Once reviewer signs off they will squash + merge.
+5) Add files, commit, and push to origin.
+6) Create a draft PR on [Github](https://github.com/talmolab/sleap/pulls) (follow instructions in template).
+   * Make sure the tests pass and code coverage is good.
+   * If either the tests or code coverage fail, repeat steps 3-5.
+7) Once the draft PR looks good, convert to a finalized PR (hit the `ready for review` button).
+   * IMPORTANT: Only convert to a finalized PR when you believe your changes are ready to be merged.
+   * Optionally assign a reviewer on the right of the screen - otherwise a member of the SLEAP developer team will self-assign themselves.
+8) If the reviewer requests changes, repeat steps 3-5 and `Re-request review`.
+9) Once the reviewer signs off they will squash + merge the PR into the `develop` branch.
+   * New feautures will be available on the `main` branch when a new release of SLEAP is released.
 
 ## Style Guides
 
-* **Linting** - [black](https://black.readthedocs.io/en/stable/) version 21.6b0 (see [dev_requirements](https://github.com/talmolab/sleap/blob/develop/dev_requirements.txt) for any changes).
-* **Coding** - generally follow pep8, type hinting is encouraged.
-* Use Google style [docstrings](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) to document code.
+* **Lint** - [Black](https://black.readthedocs.io/en/stable/) version 21.6b0 (see [dev_requirements](https://github.com/talmolab/sleap/blob/develop/dev_requirements.txt) for any changes).
+* **Code** - Generally follow [PEP8](https://peps.python.org/pep-0008/). Type hinting is encouraged.
+* **Documentation** - Use [Google-style comments and docstrings]([https://google.github.io/styleguide/pyguide.html](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)) to document code.
 
 #### Thank you for contributing to SLEAP! 
 :heart:
