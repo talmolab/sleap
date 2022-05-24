@@ -1,0 +1,10 @@
+contact_links:
+  - name: "\U0001F914 Ask any general questions relating to SLEAP"
+    url: https://github.com/talmolab/sleap/discussions/categories/help
+    about: Ask general questions or get help.
+  - name: "\U0001F4A1 Propose new features or enhancements for SLEAP"
+    url: https://github.com/talmolab/sleap/discussions/categories/ideas
+    about: Propose new features or enhancements.
+  - name: "\U0001F4DD See the SLEAP documentation"
+    url: https://sleap.ai
+    about: See the documentation
