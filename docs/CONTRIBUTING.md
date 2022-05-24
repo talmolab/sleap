@@ -21,42 +21,43 @@ Github has made it easy to separate issues from discussions. Generally speaking,
 
 ### Issues
 
-* Check [open/closed issues](https://github.com/talmolab/sleap/issues), [discussions](https://github.com/talmolab/sleap/discussions), and [sleap.ai help page](https://sleap.ai/help.html) to make sure issue doesn't already exist / has been solved
-* Create new issue using the [issue template](https://github.com/talmolab/sleap/blob/arlo/contributing_guide/docs/ISSUE_TEMPLATE.md)
+* Check [open/closed issues](https://github.com/talmolab/sleap/issues), [ideas](https://github.com/talmolab/sleap/discussions/categories/ideas), and [the help page](https://github.com/talmolab/sleap/discussions/categories/help) to make sure issue doesn't already exist / has been solved.
+* Create new issue using the [issue template](https://github.com/talmolab/sleap/blob/arlo/contributing_guide/.github/ISSUE_TEMPLATE/bug_report.md).
 
 ### Discussions
 
-* This is a place to go to ask questions and propose new ideas
-* 3 categories: general, help, ideas
-   * **Help** - having trouble with software, user experience issue, etc
-   * **Ideas** - enhancements, things that would make the user experience nicer but not necessarily a problem with the code
-   * **General** - if it doesn't fall into help/ideas it goes here as long as it isn't bug fix (issue)
+* This is a place to go to ask questions and propose new ideas.
+* 3 categories: Help, Ideas, General
+   * **Help** - Having trouble with software, user experience issue, etc.
+   * **Ideas** - Enhancements, things that would make the user experience nicer but not necessarily a problem with the code.
+   * **General** - If it doesn't fall into help/ideas it goes here as long as it isn't bug fix (issue).
 
 ### Pull Requests
 
-1) install source code [develop branch](https://sleap.ai/installation.html#conda-from-source) and follow instructions to create conda env etc
-2) create fork
-   * either work on develop branch in own fork or can create branch on either github or cli
-   * if creating a branch, use your name followed by a relevant keyword for your changes, eg: `git checkout -b john/some_issue`
-3) make some changes to source code or additions that tackle the issue(s)
-4) write [tests](https://github.com/talmolab/sleap/tree/develop/tests)
-   * can either write before pr or submit draft pr and then write tests to narrow down error prone lines 
-   * the test(s) should go into relevant subtest folders to the proposed change(s)
-   * test(s) should aim to hit every point in the proposed change(s) - cover edge cases to best of your ability
-   * try to hit code coverage points
-5) add files and commit (make sure to correct branch!)
-6) create Draft PR (on github - follow instructions in template)
-   * make sure tests pass and code coverage is good
-   * if tests fail, repeat steps 4-7
-7) once draft pr looks good, submit a PR (hit `ready for review` button)
-   *  optionally assign a reviewer on right of screen
-8) if reviewer requests changes, repeat steps 4-8
-9) once reviewer signs off they will squash + merge
+1) Install source code [develop branch](https://sleap.ai/installation.html#conda-from-source) and follow instructions to create conda env, etc.
+2) Create fork.
+   * Either work on develop branch in own fork or can create branch on either github or cli.
+   * If creating a branch, use your name followed by a relevant keyword for your changes, eg: `git checkout -b john/some_issue`
+3) Make some changes to source code or additions that tackle the issue(s).
+4) Write [tests](https://github.com/talmolab/sleap/tree/develop/tests).
+   * Can either write before PR or submit draft PR and then write tests to narrow down error prone lines.
+   * The test(s) should go into relevant subtest folders to the proposed change(s).
+   * Test(s) should aim to hit every point in the proposed change(s) - cover edge cases to best of your ability.
+   * Try to hit code coverage points.
+5) Add files and commit (make sure to correct branch!).
+6) Create Draft PR (on github - follow instructions in template).
+   * Make sure tests pass and code coverage is good.
+   * If tests fail, repeat steps 4-7.
+7) Once draft pr looks good, submit a PR (hit `ready for review` button).
+   * Optionally assign a reviewer on right of screen.
+8) If reviewer requests changes, repeat steps 4-8.
+9) Once reviewer signs off they will squash + merge.
 
 ## Style Guides
 
-* linting - [black](https://black.readthedocs.io/en/stable/) version 21.6b0 (see [dev_requirements](https://github.com/talmolab/sleap/blob/develop/dev_requirements.txt) for any changes)
-* coding - generally follow pep8, type hinting is encouraged
+* **Linting** - [black](https://black.readthedocs.io/en/stable/) version 21.6b0 (see [dev_requirements](https://github.com/talmolab/sleap/blob/develop/dev_requirements.txt) for any changes).
+* **Coding** - generally follow pep8, type hinting is encouraged.
+* Use Google style [docstrings](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) to document code.
 
 #### Thank you for contributing to SLEAP! 
 :heart:
