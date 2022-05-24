@@ -23,8 +23,6 @@ Please include information about how you installed.
 
  - OS:
  <!-- [e.g. ubuntu 20.04, macOS 11.0] -->
- - Browser:
- <!-- [e.g. chrome, firefox, safari] -->
  - Version(s):
  <!-- e.g. [SLEAP v1.2.3, python 3.8] --->
  - SLEAP installation method (listed [here](https://sleap.ai/installation.html#)):
