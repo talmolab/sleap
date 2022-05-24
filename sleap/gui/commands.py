@@ -36,7 +36,7 @@ import subprocess
 from abc import ABC
 from enum import Enum
 from glob import glob
-from pathlib import PurePath
+from pathlib import PurePath, Path
 from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
 
 import numpy as np
@@ -46,6 +46,7 @@ from PySide2 import QtCore, QtWidgets, QtGui
 from PySide2.QtWidgets import QMessageBox, QProgressDialog
 
 from sleap.gui.dialogs.delete import DeleteDialog
+from sleap.gui.dialogs.query import QueryDialog
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
 from sleap.io.video import Video
@@ -53,6 +54,7 @@ from sleap.io.dataset import Labels
 from sleap.gui.dialogs.importvideos import ImportVideos
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
+from sleap.gui.dialogs.query import QueryDialog
 from sleap.gui.dialogs.merge import MergeDialog
 from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
@@ -1400,7 +1402,6 @@ class AddVideo(EditCommand):
             # Add to labels
             context.labels.add_video(video)
             context.changestack_push("add video")
-        context.labels.update_cache()
 
         # Load if no video currently loaded
         if context.state["video"] is None:
@@ -1438,48 +1439,62 @@ class ReplaceVideo(EditCommand):
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
+        def _replace_video(
+            context: CommandContext, video: Video, new_video: Video, video_state: Video
+        ):
+            print("was run!")
+            lfs = context.labels.get(video)
+            if lfs is not None:
+                for lf in lfs:
+                    # Remove labeled frames which
+                    if lf.frame_idx > last_frame:
+                        context.labels.remove_frame(lf)
+                    else:
+                        lf.video = new_video
+
+            # XXX(LM): Using remove_video followed by add_video changes ordering of videos.
+            # Update the video in labels and in cache
+            context.labels.remove_video(video)
+            context.labels.add_video(new_video)
+
+            # Update video and seekbar, goto last labeled frame
+            if video_state == video:
+                context.state["video"] = new_video
+
+            context.changestack_push("replace video")
+
         import_list = params["import_list"]
         video_state = context.state["video"]
 
         for import_item, video in import_list:
             # Create new video based on extension (.mp4, .h5, etc)
-            new_video = ImportVideos.create_video(import_item)
+            new_video: Video = ImportVideos.create_video(import_item)
 
             # Warn users that labels will be removed if proceed
             last_frame = new_video.last_frame_idx
             last_label = context.labels.find_last(video)
-            okay = False
             if (last_label is not None) and (last_label.frame_idx > last_frame):
-                # TODO: Warn user that we plan on truncating labeled frames.
-                okay = True
-
-            if okay:
-                lfs = context.labels.get(video)
-                if lfs is not None:
-                    for lf in lfs:
-                        # Remove labeled frames which
-                        if lf.frame_idx > last_frame:
-                            context.labels.remove_frame(lf)
-                        else:
-                            lf.video = new_video
-
-                # XXX(LM): Using remove_video followed by add_video changes ordering of videos.
-                # Update the video in labels and in cache
-                context.labels.remove_video(video)
-                context.labels.add_video(new_video)
-
-                # Change video state if needed
-                if video_state == video:
-                    video_state = new_video
-
-                context.changestack_push("replace video")
+                message = (
+                    "<p><strong>Warning:</strong> The replacement video is shorter than"
+                    " the frame index of 1 or more labeled frames.</p>"
+                    f"<p><em>Current video</em>: <b>{Path(video.filename).name}</b> (last "
+                    f"label at frame {last_label.frame_idx})<br>"
+                    f"<em>Replacement video</em>: <b>{Path(new_video.filename).name}</b> "
+                    f"({last_frame} frames)</p>"
+                    "<p>Replace video (and truncate labeled frames past frame "
+                    f"{last_frame})?</p>"
+                )
+                query = QueryDialog(
+                    "Replace Video: Truncate Labeled Frames", message, context.app
+                )
+                query.accepted.connect(
+                    lambda: _replace_video(context, video, new_video, video_state)
+                )
+                query.exec_()
 
         # TODO: Create replace_video function in labels that also updates cache
         # Update the data cache to reflect labeled frame video swap
         context.labels.update_cache()
-
-        # Update video and seekbar, goto last labeled frame
-        context.state["video"] = video_state
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
