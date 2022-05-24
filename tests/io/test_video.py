@@ -2,7 +2,6 @@ import pytest
 import os
 import h5py
 
-import attr
 import numpy as np
 
 from sleap.io.video import Video, HDF5Video, MediaVideo, DummyVideo, load_video

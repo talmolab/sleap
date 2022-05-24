@@ -29,13 +29,13 @@ class DummyVideo:
     """
 
     filename: str = ""
-    # TODO: Impement grayscale
-    grayscale: bool = None
     height: int = 2000
     width: int = 2000
     frames: int = 10000
     channels: int = 1
     dummy: bool = True
+    # TODO: Impement grayscale
+    grayscale: bool = None
 
     @property
     def test_frame(self):
@@ -66,11 +66,11 @@ class HDF5Video:
     """
 
     filename: str = attr.ib(default=None)
-    # TODO: Implement grayscale
-    grayscale: bool = attr.ib(default=None)
     dataset: str = attr.ib(default=None)
     input_format: str = attr.ib(default="channels_last")
     convert_range: bool = attr.ib(default=True)
+    # TODO: Implement grayscale
+    grayscale: bool = attr.ib(default=None)
 
     def __attrs_post_init__(self):
         """Called by attrs after __init__()."""
@@ -642,10 +642,10 @@ class ImgStoreVideo:
 
     filename: str = attr.ib(default=None)
     index_by_original: bool = attr.ib(default=True)
-    # TODO: Implement grayscale
-    grayscale: bool = attr.ib(default=None)
     _store_ = None
     _img_ = None
+    # TODO: Implement grayscale
+    grayscale: bool = attr.ib(default=None)
 
     def __attrs_post_init__(self):
 
@@ -834,11 +834,11 @@ class SingleImageVideo:
 
     filename: Optional[str] = attr.ib(default=None)
     filenames: List[str] = attr.ib(factory=list)
-    # TODO: Implement grayscale
-    grayscale: bool = attr.ib(default=None)
     height_: Optional[int] = attr.ib(default=None)
     width_: Optional[int] = attr.ib(default=None)
     channels_: Optional[int] = attr.ib(default=None)
+    # TODO: Implement grayscale
+    grayscale: bool = attr.ib(default=None)
 
     def __attrs_post_init__(self):
         if not self.filename and self.filenames:
