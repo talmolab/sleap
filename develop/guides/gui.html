@@ -574,7 +574,7 @@ title="Open an issue"
                 
               <div>
                 
-  <section id="gui">
+  <section class="tex2jax_ignore mathjax_ignore" id="gui">
 <span id="id1"></span><h1>GUI<a class="headerlink" href="#gui" title="Permalink to this headline">#</a></h1>
 <p>The SLEAP labeling interface is accessible via the <code class="code docutils literal notranslate"><span class="pre">sleap_label</span></code> command (see <a class="reference internal" href="cli.html#cli"><span class="std std-ref">Command line interfaces</span></a>).</p>
 <section id="menus">
@@ -625,6 +625,9 @@ title="Open an issue"
 <p>“<strong>Instance Placement Method</strong>” allows you to pick how we determine where to place the instance and its nodes on the video frame. “Best” (the default) will first check for predicted instances in the current frame and create a new editable instance from one of the predicted instances (if you add multiple instances, it will do this for each predicted instance in turn). Otherwise, it will copy the location from another instance in a prior or the current frame, or will use a force-directed graph algorithm to place the nodes. You can also choose the “average” method which creates an “average” instance from the instances you’ve already labeled.</p>
 <p>“<strong>Delete Instance</strong>” will delete the currently selected instance (the selected instance will have an outline drawn around it and will be highlighted in the “Instances” window).</p>
 <p>“<strong>Set Instance Track</strong>” sets the track for the currently selected instance. If the new track already has an instance assigned to it, then the tracks are swapped (the other instance is assigned to the track currently assigned to the selected instance). These changes are applied to instances in the same tracks in every subsequent frame, not just the current frame.</p>
+<p>“<strong>Propagate Track Labels</strong>” refers to manually switching tracking identities to
+fix swaps that happen during multi-instance tracking. If selected, switching the
+tracks in one frame will be applied in all subsequent frames.</p>
 <p>“<strong>Transpose Instance Tracks</strong>” swaps the tracks assigned to two instances. If there are only two instances in the current frame, then this command will be applied to those. If there are more then two instances, then you’ll be prompted to select the two instances in sequence. (This has the same functionality as selecting an instance and using “<strong>Set Instance Track</strong>” with the track of the other instance).</p>
 <p>“<strong>Delete Instance and Track</strong>” deletes all instances in the track of the currently selected instance. This applied to <em>all</em> frames in the current video.</p>
 <p>“<strong>Custom Instance Delete…</strong>” allows you to delete all the instances which meet criteria you specify: whether they are user instances or predicted instances, which frames they are on, and which track identities they have.</p>
@@ -634,7 +637,7 @@ title="Open an issue"
 <section id="predict">
 <h2>Predict<a class="headerlink" href="#predict" title="Permalink to this headline">#</a></h2>
 <p>“<strong>Run Training…</strong>” allows you to train a set of models from the data in your open project, and then optionally predict on some frames in the project.</p>
-<p>“<strong>Run Inference…</strong>” allows you to generate predictions using a pre-trained set of models. Any trained models in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">models</span></code> directory next to your current project will be listed, and you also have the option to select models saved elsewhere.</p>
+<p>“<strong>Run Inference…</strong>” allows you to generate predictions using a pre-trained set of models. Any trained models in the <code class="docutils literal notranslate"><span class="pre">models</span></code> directory next to your current project will be listed, and you also have the option to select models saved elsewhere.</p>
 <p>“<strong>Evaluate Metrics for Trained Models…</strong>” provides you with information to evaluate all of your trained models. For example, you can see the recall and precision of predictions on frames with ground truth validation data (i.e., data withheld when training).</p>
 <p>“<strong>Visualize Model Outputs…</strong>” allows you to select a trained model and see the intermediate inference data plotted on the frame image. In particular, looking at the confidence maps used to predict each node can be helpful for understanding why and where your model isn’t preforming well.</p>
 <p>“<strong>Add Instances from All Predictions on Current Frame</strong>” converts ever predicted instance on the current frame into a user editable instance (which allows you to make corrections and/or use it for training).</p>
