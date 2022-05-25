@@ -6,16 +6,16 @@ labels: bug
 ---
 <!-- Thank you for contributing. These HTML comments will not render in the issue, but you can delete them once you've read them if you prefer! -->
 
-### Bug description
+# Bug description
 <!-- Use this section to clearly and concisely describe the bug. -->
 
-#### Expected behaviour
+## Expected behaviour
 <!-- Tell us what you thought would happen. -->
 
-#### Actual behaviour
+## Actual behaviour
 <!-- Tell us what actually happens. -->
 
-### Your personal set up
+## Your personal set up
 <!--
 Tell us a little about the system you're using.
 Please include information about how you installed.
@@ -31,7 +31,7 @@ Please include information about how you installed.
     * [ ] [pip package](https://sleap.ai/installation.html#pip-package)
     * [ ] [M1 Macs](https://sleap.ai/installation.html#m1-macs)
 
-- <details><summary>Environment packages</summary>
+<details><summary>Environment packages</summary>
 <!-- For reproduction, it's useful to have the full environment. For example, the output of `pip freeze` or `conda list` --->
 
 ```
@@ -39,7 +39,7 @@ Please include information about how you installed.
 ```
 </details>
 
-- <details><summary>Logs</summary>
+<details><summary>Logs</summary>
 <!--
 Please share any applicable terminal logs. optionally share output from sleap-diagnostic
 -->
@@ -49,10 +49,10 @@ Please share any applicable terminal logs. optionally share output from sleap-di
 ```
 </details>
 
-### Screenshots
+## Screenshots
 <!-- Provide any relevant screenshots -->
 
-### How to reproduce
+## How to reproduce
 <!-- Use this section to describe the steps that a user would take to experience this bug. eg:-->
 
 1. Go to '...'
