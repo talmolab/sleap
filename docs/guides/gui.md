@@ -1,28 +1,18 @@
-.. _gui:
+(gui)=
 
-GUI
-====
+# GUI
 
-The SLEAP labeling interface is accessible via the :code:`sleap_label` command (see :ref:`cli`).
+The SLEAP labeling interface is accessible via the {code}`sleap_label` command (see {ref}`cli`).
 
-
-
-Menus
------
+## Menus
 
 Note that many of the menu command have keyboard shortcuts which can be configured from "**Keyboard Reference**" in the "**Help**" menu.
 
-File
-----
+## File
 
 "**New...**", "**Open...**", "Save, and "**Save As...**" have their usual behavior.
 
-"**Import...**" allows you to import the data external formats into a new SLEAP dataset. This includes COCO_ keypoint detection (:code:`.json` files), DeepLabCut_ (:code:`.csv`), DeepPoseKit_ (:code:`.h5`), and LEAP_ (:code:`.mat`).
-
-.. _COCO: http://cocodataset.org/#format-data
-.. _DeepPoseKit: http://deepposekit.org
-.. _DeepLabCut: http://deeplabcut.org
-.. _LEAP: https://github.com/talmo/leap
+"**Import...**" allows you to import the data external formats into a new SLEAP dataset. This includes [COCO] keypoint detection ({code}`.json` files), [DeepLabCut] ({code}`.csv`), [DeepPoseKit] ({code}`.h5`), and [LEAP] ({code}`.mat`).
 
 "**Merge Data From...**" allows you to copy labels and/or predictions from another SLEAP dataset into the currently open project. This is useful because you can only train on data from a single SLEAP dataset, so you may need to import data before training. For instance, suppose you've trained a model and use it to get predictions on another video. You then open the predictions file in the GUI and realize that you'd like to correct some of the predictions and add those corrections to your training data. You can do this by importing data from the predictions file into the SLEAP project which has your training data.
 
@@ -30,8 +20,7 @@ File
 
 "**Replace Videos...**" allows you to *swap* the videos currently in your project with other videos. This is useful if you want to have your project access copies of the videos at a different path, e.g., if you copy the videos between a network drive and a local drive and want to change which is used by your project. This can also be used if you want to replace you videos with copies that have been re-encoded, cropped, or edited in some other way that doesn't affect the frame numbers (since your annotations will be placed directly on the corresponding frames of the new video).
 
-Go
---
+## Go
 
 "**Next Labeled Frame**" will take you to the next frame of the video which has any labeled data—either labels added by the user or predictions.
 
@@ -47,20 +36,17 @@ Go
 
 "**Select to Frame...**" allows you to select the clip from the current frame to a specified frame. If you want to select from frames X to Y, you can use **Go to** to go to X then **Select to** to select from X to Y.
 
-.. _view:
+(view)=
 
-View
-----
+## View
 
 "**Color Predicted Instances**" allows you to toggle whether *predicted* instances are all shown in yellow, or whether to apply distinct colors to (e.g.) track identities. You should turn this on when proofreading predictions for a video.
 
 "**Color Palette**" allows you to choose the palette which will be used for coloring instances. Most of the palettes cycle colors, so that if there are five colors in the palette, the sixth item to color will be the same as the first. A few things to know:
 
 - The "alphabet" palette has 26 visually distinct colors, which can be useful when there are many items to color.
-
 - If the palette name ends with "+", the colors won't cycle and everything beyond the number of colors in the palette will use the last color in the palette. This is especially useful for proofreading when you're trying to merge all the track identities in the first few tracks (assuming you have a small number of instances in each frame). In particular, the "five+" palette will show any instance in the fourth or subsequent track as orange.
-
-- Color palettes can be customized by modifying the :code:`colors.yaml` file that SLEAP creates inside the :code:`.sleap` directory in your home directory. You can add your own palette or modify those already present in the file. Each color in a palette is listed on it's own line as r,g,b values (between 0 and 255).
+- Color palettes can be customized by modifying the {code}`colors.yaml` file that SLEAP creates inside the {code}`.sleap` directory in your home directory. You can add your own palette or modify those already present in the file. Each color in a palette is listed on it's own line as r,g,b values (between 0 and 255).
 
 "**Apply Distinct Colors To**" allows you to determine whether distinct colors are used for distinct tracks (instance identities), nodes, or edges. Try it!
 
@@ -72,7 +58,7 @@ View
 
 "**Show Edges**" allows you to toggle the visibility of the edges which connect the nodes. This can be useful when you have lots of edges which make it hard to see the features of animals in your video.
 
-"**Edge Style**" controls whether edges are drawn as thin lines or as wedges which indicate the :ref:`orientation` of the instance (as well as the direction of the part affinity field which would be used to predict the connection between nodes when using a "bottom-up" approach).
+"**Edge Style**" controls whether edges are drawn as thin lines or as wedges which indicate the {ref}`orientation` of the instance (as well as the direction of the part affinity field which would be used to predict the connection between nodes when using a "bottom-up" approach).
 
 "**Trail Length**" allows you to show a trail of where each instance was located in prior frames (the length of the trail is the number of prior frames). This can be useful when proofreading predictions since it can help you detect swaps in the identities of animals across frames.
 
@@ -82,8 +68,7 @@ View
 
 "**Videos**", "**Skeleton**", "**Instances**", and "**Labeling Suggestions**" allow you to toggle which information windows are shown (by default these are docked to the right side of the main GUI window).
 
-Labels
-------
+## Labels
 
 "**Add Instance**" will add an instance to the current frame. You can also add an instance by right-clicking within the frame. For predicted instances, you can also "convert" the predicted instance to a regular, editable instance by double-clicking on the predicted instance (the predictions are still there, but they won't be shown unless you delete the editable instance you just created).
 
@@ -92,6 +77,10 @@ Labels
 "**Delete Instance**" will delete the currently selected instance (the selected instance will have an outline drawn around it and will be highlighted in the "Instances" window).
 
 "**Set Instance Track**" sets the track for the currently selected instance. If the new track already has an instance assigned to it, then the tracks are swapped (the other instance is assigned to the track currently assigned to the selected instance). These changes are applied to instances in the same tracks in every subsequent frame, not just the current frame.
+
+"**Propagate Track Labels**" refers to manually switching tracking identities to
+fix swaps that happen during multi-instance tracking. If selected, switching the
+tracks in one frame will be applied in all subsequent frames.
 
 "**Transpose Instance Tracks**" swaps the tracks assigned to two instances. If there are only two instances in the current frame, then this command will be applied to those. If there are more then two instances, then you'll be prompted to select the two instances in sequence. (This has the same functionality as selecting an instance and using "**Set Instance Track**" with the track of the other instance).
 
@@ -103,8 +92,8 @@ Labels
 
 "**Clear Selection**" allows you to deselect the selected instance.
 
-Predict
--------
+## Predict
+
 "**Run Training...**" allows you to train a set of models from the data in your open project, and then optionally predict on some frames in the project.
 
 "**Run Inference...**" allows you to generate predictions using a pre-trained set of models. Any trained models in the `models` directory next to your current project will be listed, and you also have the option to select models saved elsewhere.
@@ -127,15 +116,13 @@ Predict
 
 "**Export Video with Visual Annotations...**" allows you to export a video clip with any instances drawn on the frame (much as you can see in the GUI). If you select a clip in the seekbar, just those frames will be included in the new video; otherwise the whole (current) video will be used.
 
-Help
-----
+## Help
+
 "**Keyboard Shortcuts**" allows you to view and change keyboard shortcuts for common menu and GUI actions.
 
-Application GUI
----------------
+## Application GUI
 
-Mouse
------
+## Mouse
 
 **Right-click** (or control + click) on node: Toggle visibility
 
@@ -159,8 +146,7 @@ Mouse
 
 **Click** elsewhere on image: Clear selection
 
-Navigation Keys
----------------
+## Navigation Keys
 
 **Right arrow** key: Move one frame forward
 
@@ -180,19 +166,17 @@ Navigation Keys
 
 **Shift** + *any navigation key*: Select the frames over which you've moved
 
-.. note::
+:::{note}
+These keys are the defaults; you can configure them with **Keyboard Shortcuts** in the **Help** menu.
+:::
 
-    These keys are the defaults; you can configure them with **Keyboard Shortcuts** in the **Help** menu.
-
-Selection Keys
---------------
+## Selection Keys
 
 *Number* (e.g., **2**) key: Select the instance corresponding to that number
 
 **Escape** key: Deselect all instances
 
-Seekbar
--------
+## Seekbar
 
 **Shift + drag**: Select a range of frames
 
@@ -202,10 +186,9 @@ Seekbar
 
 **Alt + click**: Zoom out so that all frames are visible in seekbar
 
-.. _suggestion-methods:
+(suggestion-methods)=
 
-Labeling Suggestions
----------------------
+## Labeling Suggestions
 
 There are various methods to generate a list "suggested" frames for labeling or proofreading.
 
@@ -216,3 +199,8 @@ The **image feature** method uses various algorithms to give you visually distin
 The **prediction score** method will identify frames which have more than some number of instances predicted and where the instance prediction score is below some threshold. This method can be useful when proofreading frame-by-frame prediction results. The instance score depends on your specific skeleton so you'll need to look at the instance scores you're getting to decide an appropriate threshold.
 
 The **velocity** method will identify frames where a predicted instance appears to move more than is typical in the video. This is based on the tracking results, so it can be useful for finding frames where the tracker incorrectly matched up two identities (since this will make the identity "jump").
+
+[coco]: http://cocodataset.org/#format-data
+[deeplabcut]: http://deeplabcut.org
+[deepposekit]: http://deepposekit.org
+[leap]: https://github.com/talmo/leap
