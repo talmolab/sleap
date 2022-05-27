@@ -55,7 +55,7 @@ def test_output_matrices(centered_pair_predictions: Labels):
         assert dst_node in node_names
 
     # Remove the first labeled frame
-    del centered_pair_predictions[0]
+    centered_pair_predictions.remove_frame(centered_pair_predictions[0])
     assert len(centered_pair_predictions) == 1099
 
     (
