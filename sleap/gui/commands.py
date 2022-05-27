@@ -956,7 +956,9 @@ class ExportAnalysisFile(AppCommand):
     def do_action(cls, context: CommandContext, params: dict):
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 
-        SleapAnalysisAdaptor.write(params["output_path"], context.labels)
+        SleapAnalysisAdaptor.write(
+            params["output_path"], context.labels, video=params["analysis_video"]
+        )
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
@@ -968,9 +970,7 @@ class ExportAnalysisFile(AppCommand):
 
         default_name = context.state["filename"] or "labels"
         fn = PurePath(default_name)
-
         default_name = str(fn.with_name(f"{fn.stem}.{vn.stem}.analysis.h5"))
-        print(f"default_name = {default_name}")
 
         filename, selected_filter = FileDialog.save(
             context.app,

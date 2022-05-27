@@ -124,7 +124,9 @@ class SleapAnalysisAdaptor(Adaptor):
         return Labels(labeled_frames=frames)
 
     @classmethod
-    def write(cls, filename: str, source_object: Labels):
+    def write(cls, filename: str, source_object: Labels, video: Video = None):
         from sleap.info.write_tracking_h5 import main as write_analysis
 
-        write_analysis(source_object, output_path=filename, all_frames=True)
+        write_analysis(
+            source_object, output_path=filename, all_frames=True, video=video
+        )
