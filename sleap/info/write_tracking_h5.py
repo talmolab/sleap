@@ -24,6 +24,7 @@ import numpy as np
 from typing import Any, Dict, List, Tuple
 
 from sleap.io.dataset import Labels
+from sleap.io.dataset import Video
 from sleap import PredictedInstance
 
 
@@ -46,7 +47,7 @@ def get_edges_as_np_strings(labels: Labels) -> List[Tuple[np.string_, np.string_
 
 
 def get_occupancy_and_points_matrices(
-    labels: Labels, all_frames: bool
+    labels: Labels, all_frames: bool, video: Video = None
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Builds numpy matrices with track occupancy and point location data.
@@ -70,7 +71,12 @@ def get_occupancy_and_points_matrices(
     track_count = len(labels.tracks) or 1
     node_count = len(labels.skeletons[0].nodes)
 
-    frame_idxs = [lf.frame_idx for lf in labels]
+    # Retrieve frames from current video only
+    if video is None:
+        video = labels.videos[0]
+    labeled_frames = labels.get(video)
+
+    frame_idxs = [lf.frame_idx for lf in labeled_frames]
     frame_idxs.sort()
 
     first_frame_idx = 0 if all_frames else frame_idxs[0]
@@ -95,7 +101,7 @@ def get_occupancy_and_points_matrices(
     instance_scores = np.full((frame_count, track_count), np.nan, dtype=float)
     tracking_scores = np.full((frame_count, track_count), np.nan, dtype=float)
 
-    for lf, inst in [(lf, inst) for lf in labels for inst in lf.instances]:
+    for lf, inst in [(lf, inst) for lf in labeled_frames for inst in lf.instances]:
         frame_i = lf.frame_idx - first_frame_idx
         if inst.track is None:
             # We could use lf.instances.index(inst) but then we'd need
@@ -216,7 +222,9 @@ def write_occupancy_file(
     print(f"Saved as {output_path}")
 
 
-def main(labels: Labels, output_path: str, all_frames: bool = True):
+def main(
+    labels: Labels, output_path: str, all_frames: bool = True, video: Video = None
+):
     """
     Writes HDF5 file with matrices of track occupancy and coordinates.
 
@@ -239,7 +247,7 @@ def main(labels: Labels, output_path: str, all_frames: bool = True):
         point_scores,
         instance_scores,
         tracking_scores,
-    ) = get_occupancy_and_points_matrices(labels, all_frames)
+    ) = get_occupancy_and_points_matrices(labels, all_frames, video)
 
     (
         track_names,

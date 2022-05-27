@@ -960,9 +960,17 @@ class ExportAnalysisFile(AppCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
+        if len(context.labels.labeled_frames) == 0:
+            return False
+
+        default_video = context.state["video"] or context.labels.videos[0]
+        vn = PurePath(default_video.filename)
+
         default_name = context.state["filename"] or "labels"
-        p = PurePath(default_name)
-        default_name = str(p.with_name(f"{p.stem}.analysis.h5"))
+        fn = PurePath(default_name)
+
+        default_name = str(fn.with_name(f"{fn.stem}.{vn.stem}.analysis.h5"))
+        print(f"default_name = {default_name}")
 
         filename, selected_filter = FileDialog.save(
             context.app,
@@ -975,6 +983,7 @@ class ExportAnalysisFile(AppCommand):
             return False
 
         params["output_path"] = filename
+        params["analysis_video"] = default_video
         return True
 
 
