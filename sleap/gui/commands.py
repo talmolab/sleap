@@ -293,9 +293,9 @@ class CommandContext:
         """Show gui to save project as a new file."""
         self.execute(SaveProjectAs)
 
-    def exportAnalysisFile(self):
+    def exportAnalysisFile(self, all_videos: bool = False):
         """Shows gui for exporting analysis h5 file."""
-        self.execute(ExportAnalysisFile)
+        self.execute(ExportAnalysisFile, all_videos=all_videos)
 
     def exportLabeledClip(self):
         """Shows gui for exporting clip with visual annotations."""
@@ -956,34 +956,47 @@ class ExportAnalysisFile(AppCommand):
     def do_action(cls, context: CommandContext, params: dict):
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 
-        SleapAnalysisAdaptor.write(
-            params["output_path"], context.labels, video=params["analysis_video"]
-        )
+        # Do this action in a loop for all videos if true
+        for output_path, video in params["analysis_videos"]:
+            SleapAnalysisAdaptor.write(output_path, context.labels, video=video)
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
+        print(f'params["all_videos"] = {params["all_videos"]}')
+
         if len(context.labels.labeled_frames) == 0:
             return False
 
-        default_video = context.state["video"] or context.labels.videos[0]
-        vn = PurePath(default_video.filename)
+        if params["all_videos"]:
+            videos = context.labels.videos
+        else:
+            videos = [context.state["video"] or context.labels.videos[0]]
 
         default_name = context.state["filename"] or "labels"
         fn = PurePath(default_name)
-        default_name = str(fn.with_name(f"{fn.stem}.{vn.stem}.analysis.h5"))
 
-        filename, selected_filter = FileDialog.save(
-            context.app,
-            caption="Export Analysis File...",
-            dir=default_name,
-            filter="SLEAP Analysis HDF5 (*.h5)",
-        )
+        output_paths = []
+        analysis_videos = list(videos)
+        for video_idx, video in enumerate(videos):
+            vn = PurePath(video.filename)
+            default_name = str(fn.with_name(f"{fn.stem}.{vn.stem}.analysis.h5"))
 
-        if len(filename) == 0:
+            filename, selected_filter = FileDialog.save(
+                context.app,
+                caption="Export Analysis File...",
+                dir=default_name,
+                filter="SLEAP Analysis HDF5 (*.h5)",
+            )
+
+            if len(filename) == 0:
+                analysis_videos.pop(video_idx)
+            else:
+                output_paths.append(filename)
+
+        if len(output_paths) == 0:
             return False
 
-        params["output_path"] = filename
-        params["analysis_video"] = default_video
+        params["analysis_videos"] = zip(output_paths, videos)
         return True
 
 
