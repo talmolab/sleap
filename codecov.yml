@@ -4,11 +4,24 @@ coverage:
       default: false
       gui:
         target: auto
-        threshold: 0.03%
-        paths: 
+        threshold: 0.5%
+        paths:
           - "sleap/gui/"
       backend:
         target: auto
         threshold: 0%
-        paths: 
+        paths:
           - "!sleap/gui/"
+    patch:
+      default: false
+      gui:
+        target: auto
+        threshold: 0.5%
+        paths:
+          - "sleap/gui/"
+      backend:
+        target: auto
+        threshold: 0%
+        paths:
+          - "!sleap/gui/"
+          
