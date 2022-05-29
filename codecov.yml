@@ -24,3 +24,4 @@ coverage:
         threshold: 0%
         paths:
           - "!sleap/gui/"
+          
