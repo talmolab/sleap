@@ -72,18 +72,26 @@ def get_occupancy_and_points_matrices(
     node_count = len(labels.skeletons[0].nodes)
 
     # Retrieve frames from current video only
-    if video is None:
-        video = labels.videos[0]
+    try:
+        if video is None:
+            video = labels.videos[0]
+    except IndexError:
+        print(f"There are no videos in this project. No occupancy matrix to return.")
+        return
     labeled_frames = labels.get(video)
 
     frame_idxs = [lf.frame_idx for lf in labeled_frames]
     frame_idxs.sort()
 
-    first_frame_idx = 0 if all_frames else frame_idxs[0]
+    try:
+        first_frame_idx = 0 if all_frames else frame_idxs[0]
 
-    frame_count = (
-        frame_idxs[-1] - first_frame_idx + 1
-    )  # count should include unlabeled frames
+        frame_count = (
+            frame_idxs[-1] - first_frame_idx + 1
+        )  # count should include unlabeled frames
+    except IndexError:
+        print(f"No labeled frames in {video.filename}. No occupancy matrix to return.")
+        return
 
     # Desired MATLAB format:
     # "track_occupancy"     tracks * frames
@@ -241,13 +249,28 @@ def main(
     """
     track_names = get_tracks_as_np_strings(labels)
 
-    (
-        occupancy_matrix,
-        locations_matrix,
-        point_scores,
-        instance_scores,
-        tracking_scores,
-    ) = get_occupancy_and_points_matrices(labels, all_frames, video)
+    # Export analysis of current video only
+    try:
+        if video is None:
+            video = labels.videos[0]
+    except IndexError:
+        print(f"There are no videos in this project. No occupancy matrix to return.")
+        return
+
+    try:
+        (
+            occupancy_matrix,
+            locations_matrix,
+            point_scores,
+            instance_scores,
+            tracking_scores,
+        ) = get_occupancy_and_points_matrices(labels, all_frames, video)
+    except TypeError:
+        print(
+            f"No labeled frames in {video.filename}. "
+            "Skipping the analysis for this video."
+        )
+        return
 
     (
         track_names,
