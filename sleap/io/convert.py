@@ -42,6 +42,8 @@ import argparse
 import os
 import re
 
+from pathlib import PurePath
+
 from sleap import Labels
 
 
@@ -67,7 +69,7 @@ def main():
 
     video_callback = Labels.make_video_callback([os.path.dirname(args.input_path)])
     try:
-        labels = Labels.load_file(args.input_path, video_search=video_callback)
+        labels: Labels = Labels.load_file(args.input_path, video_search=video_callback)
     except TypeError:
         print("Input file isn't SLEAP dataset so attempting other importers...")
         from sleap.io.format import read
@@ -85,14 +87,16 @@ def main():
     if args.format == "analysis":
         from sleap.info.write_tracking_h5 import main as write_analysis
 
-        if args.output:
-            output_path = args.output
-        else:
-            output_path = args.input_path
-            output_path = re.sub("(\.json(\.zip)?|\.h5|\.slp)$", "", output_path)
-            output_path = output_path + ".analysis.h5"
+        fn = args.input_path if (len(args.output) == 0) else args.output
+        fn = re.sub("(\.json(\.zip)?|\.h5|\.slp)$", "", fn)
+        fn = PurePath(fn)
 
-        write_analysis(labels, output_path=output_path, all_frames=True)
+        for video in labels.videos:
+            vn = PurePath(video.filename)
+            output_path = str(fn.with_name(f"{fn.stem}.{vn.stem}.analysis.h5"))
+            write_analysis(
+                labels, output_path=output_path, all_frames=True, video=video
+            )
 
     elif args.output:
         print(f"Output SLEAP dataset: {args.output}")
