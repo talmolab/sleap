@@ -48,7 +48,7 @@ from pathlib import PurePath
 from sleap import Labels
 
 
-def main():
+def create_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("input_path", help="Path to input file.")
     parser.add_argument(
@@ -69,8 +69,12 @@ def main():
     parser.add_argument(
         "--video", default="", help="Path to video (if needed for conversion)."
     )
+    return parser
 
-    args = parser.parse_args()
+
+def main(args: list = None):
+    parser = create_parser()
+    args = parser.parse_args(args=args)
 
     video_callback = Labels.make_video_callback([os.path.dirname(args.input_path)])
     try:
