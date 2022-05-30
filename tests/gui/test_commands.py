@@ -10,6 +10,7 @@ from sleap.io.video import Video
 from sleap.instance import Instance
 
 from pathlib import PurePath, Path
+import shutil
 
 
 def test_delete_user_dialog(centered_pair_predictions):
@@ -127,16 +128,20 @@ def test_ExportAnalysisFile(
         return True
 
     def assert_videos_written(num_videos: int):
+        output_paths = []
         for video_idx, (output_path, video) in enumerate(
             params["eval_analysis_videos"]
         ):
             assert Path(output_path).exists()
-        assert num_videos == video_idx + 1
+            output_paths.append(output_path)
 
-    tmpdir = PurePath(tmpdir)
+        assert len(output_paths) == num_videos, "Wrong number of outputs written"
+        assert len(set(output_paths)) == num_videos, "Some output paths overwritten"
 
-    context = CommandContext.from_labels(centered_pair_predictions)
-    labels = context.labels
+    tmpdir = Path(tmpdir)
+
+    labels = centered_pair_predictions.copy()
+    context = CommandContext.from_labels(labels)
 
     # Test with all_videos False (single video)
     params = {"all_videos": False}
@@ -183,6 +188,24 @@ def test_ExportAnalysisFile(
     assert_videos_written(num_videos=1)
 
     # Test with all videos True
+    params = {"all_videos": True}
+    okay = ExportAnalysisFile_ask(context=context, params=params)
+    assert okay == True
+    ExportAnalysisFile.do_action(context=context, params=params)
+    assert_videos_written(num_videos=2)
+
+    # Test with videos with the same filename
+    (tmpdir / "session1").mkdir()
+    (tmpdir / "session2").mkdir()
+    shutil.copy(
+        centered_pair_predictions.video.backend.filename,
+        tmpdir / "session1" / "video.mp4",
+    )
+    shutil.copy(small_robot_mp4_vid.backend.filename, tmpdir / "session2" / "video.mp4")
+
+    labels.videos[0].backend.filename = str(tmpdir / "session1" / "video.mp4")
+    labels.videos[1].backend.filename = str(tmpdir / "session2" / "video.mp4")
+
     params = {"all_videos": True}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
