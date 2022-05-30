@@ -4,9 +4,7 @@ from sleap.gui.commands import (
     ExportAnalysisFile,
     get_new_version_filename,
 )
-from sleap.gui.app import MainWindow
 from sleap.io.dataset import Labels
-from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 from sleap.io.pathutils import fix_path_separator
 from sleap.io.video import Video
 from sleap.instance import Instance

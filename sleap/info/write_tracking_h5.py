@@ -1,5 +1,4 @@
-"""
-Generate an HDF5 file with track occupancy and point location data.
+"""Generate an HDF5 file with track occupancy and point location data.
 
 Ignores tracks that are entirely empty. By default will also ignore
 empty frames from the beginning and end of video, although
@@ -8,10 +7,15 @@ of video.
 
 The HDF5 file has these datasets:
 
-* "track_occupancy"     shape: tracks * frames
-* "tracks"              shape: frames * nodes * 2 * tracks
-* "track_names"         shape: tracks
-* "node_names"         shape: nodes
+* "track_occupancy"    (shape: tracks * frames)
+* "tracks"             (shape: frames * nodes * 2 * tracks)
+* "track_names"        (shape: tracks)
+* "node_names"         (shape: nodes)
+* "edge_names"         (shape: nodes - 1)
+* "edge_inds"          (shape: nodes - 1)
+* "point_scores"       (shape: frames * nodes * tracks)
+* "instance_scores"    (shape: frames * tracks)
+* "tracking_scores"    (shape: frames * tracks)
 
 Note: the datasets are stored column-major as expected by MATLAB.
 """
@@ -49,8 +53,7 @@ def get_edges_as_np_strings(labels: Labels) -> List[Tuple[np.string_, np.string_
 def get_occupancy_and_points_matrices(
     labels: Labels, all_frames: bool, video: Video = None
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Builds numpy matrices with track occupancy and point location data.
+    """Builds numpy matrices with track occupancy and point location data.
 
     Args:
         labels: The :py:class:`Labels` from which to get data.
@@ -148,8 +151,7 @@ def remove_empty_tracks_from_matrices(
     instance_scores: np.ndarray,
     tracking_scores: np.ndarray,
 ) -> Tuple[List, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Removes matrix rows/columns for unoccupied tracks.
+    """Removes matrix rows/columns for unoccupied tracks.
 
     Args:
         track_names: List of track names
@@ -193,8 +195,7 @@ def remove_empty_tracks_from_matrices(
 def write_occupancy_file(
     output_path: str, data_dict: Dict[str, Any], transpose: bool = True
 ):
-    """
-    Write HDF5 file with data from given dictionary.
+    """Write HDF5 file with data from given dictionary.
 
     Args:
         output_path: Path of HDF5 file.
