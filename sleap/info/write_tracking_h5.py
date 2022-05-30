@@ -28,7 +28,7 @@ import numpy as np
 from typing import Any, Dict, List, Tuple
 
 from sleap.io.dataset import Labels
-from sleap.io.dataset import Video
+from sleap.io.video import Video
 from sleap import PredictedInstance
 
 

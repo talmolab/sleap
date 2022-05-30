@@ -28,17 +28,22 @@ def test_analysis_format(
             else:
                 assert video_exists
 
+    def sleap_convert_assert(output_prefix, slp_path, with_output: bool = True):
+        args = (
+            f"--format analysis -o {output_prefix} {slp_path}".split()
+            if with_output
+            else f"--format analysis {slp_path}".split()
+        )
+        sleap_convert(args)
+        assert_analysis_existance(output_prefix)
+
     # No output specified
     output_prefix = slp_path.with_suffix("")
-    args = f"--format analysis {slp_path}".split()
-    sleap_convert(args)
-    assert_analysis_existance(output_prefix)
+    sleap_convert_assert(output_prefix, slp_path, with_output=False)
 
     # Specify output and retest
     output_prefix = tmpdir.with_name("prefix")
-    args = f"--format analysis -o {output_prefix} {slp_path}".split()
-    sleap_convert(args)
-    assert_analysis_existance(output_prefix)
+    sleap_convert_assert(output_prefix, slp_path, with_output=True)
 
     # Add video and retest
     labels.add_video(small_robot_mp4_vid)
@@ -46,9 +51,7 @@ def test_analysis_format(
     labels.save(filename=slp_path)
 
     output_prefix = tmpdir.with_name("prefix")
-    args = f"--format analysis -o {output_prefix} {slp_path}".split()
-    sleap_convert(args)
-    assert_analysis_existance(output_prefix)
+    sleap_convert_assert(output_prefix, slp_path, with_output=True)
 
     # Add labeled frame to video and retest
     labeled_frame = labels.find(video=labels.videos[1], frame_idx=0, return_new=True)[0]
@@ -59,6 +62,4 @@ def test_analysis_format(
     labels.save(filename=slp_path)
 
     output_prefix = tmpdir.with_name("prefix")
-    args = f"--format analysis -o {output_prefix} {slp_path}".split()
-    sleap_convert(args)
-    assert_analysis_existance(output_prefix)
+    sleap_convert_assert(output_prefix, slp_path, with_output=True)
