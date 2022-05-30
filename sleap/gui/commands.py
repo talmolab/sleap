@@ -56,10 +56,9 @@ from sleap.gui.dialogs.merge import MergeDialog
 from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
-from sleap.gui.app import MainWindow
 
 
-# whether we support multiple project windows (i.e., "open" opens new window)
+# Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
 
 
@@ -186,7 +185,7 @@ class CommandContext:
     """
 
     state: GuiState
-    app: MainWindow
+    app: "MainWindow"
 
     update_callback: Optional[Callable] = None
     _change_stack: List = attr.ib(default=attr.Factory(list))

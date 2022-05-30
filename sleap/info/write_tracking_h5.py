@@ -236,8 +236,7 @@ def write_occupancy_file(
 def main(
     labels: Labels, output_path: str, all_frames: bool = True, video: Video = None
 ):
-    """
-    Writes HDF5 file with matrices of track occupancy and coordinates.
+    """Writes HDF5 file with matrices of track occupancy and coordinates.
 
     Args:
         labels: The :class:`Labels` from which to get data.

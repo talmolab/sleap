@@ -129,12 +129,11 @@ class SleapAnalysisAdaptor(Adaptor):
 
         Args:
             filename: The filename for the output file.
-            source_object: The :py:class:`Labels` object from which the analysis file is
-                written.
-            video: The :py:class:`Video` object from which to make the analysis file
-                for. If no `video` is specified, then the first video in `source_object`
-                videos list will be used. If there are no labeled frames in the `video`,
-                then no analysis file will be written.
+            source_object: The :py:class:`Labels` from which to get data from.
+            video: The :py:class:`Video` from which toget data from. If no `video` is
+                specified, then the first video in `source_object` videos list will be
+                used. If there are no :py:class:`Labeled Frame`s in the `video`, then no
+                analysis file will be written.
         """
         from sleap.info.write_tracking_h5 import main as write_analysis
 
