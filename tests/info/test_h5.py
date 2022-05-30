@@ -238,10 +238,12 @@ def test_hdf5_video_arg(
     dset_lens = read_lens_hdf5(output_paths[1])
     assert_dset_lens(dset_lens, num_tracks=1, num_frames=1, num_nodes=24)
 
-    # Remove all videos from project and reapeat process
+    # Remove all videos from project and repeat process
     all_videos = list(labels.videos)
     for video in all_videos:
         labels.remove_video(labels.videos[-1])
+
+    assert get_occupancy_and_points_matrices(labels=labels, all_frames=True) is None
 
     for output_path in output_paths:
         Path(output_path).unlink()
