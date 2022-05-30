@@ -43,6 +43,7 @@ import numpy as np
 from PySide2 import QtCore, QtWidgets, QtGui
 
 from PySide2.QtWidgets import QMessageBox, QProgressDialog
+from traitlets import default
 
 from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.skeleton import Node, Skeleton
@@ -958,6 +959,16 @@ class ExportAnalysisFile(AppCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
+        def ask_for_filename(default_name: str) -> str:
+            """Allow user to specify the filename"""
+            filename, selected_filter = FileDialog.save(
+                context.app,
+                caption="Export Analysis File...",
+                dir=default_name,
+                filter="SLEAP Analysis HDF5 (*.h5)",
+            )
+            return filename
+
         labels = context.labels
         if len(labels.labeled_frames) == 0:
             return False
@@ -976,26 +987,39 @@ class ExportAnalysisFile(AppCommand):
         if len(videos) == 0:
             return False
 
+        # Specify (how to get) the output filename
         default_name = context.state["filename"] or "labels"
         fn = PurePath(default_name)
+        if len(videos) == 1:
+            # Allow user to specify the filename
+            use_default = False
+            dirname = str(fn.parent)
+        else:
+            # Allow user to specify directory, but use default filenames
+            use_default = True
+            dirname = FileDialog.openDir(
+                context.app,
+                caption="Select Folder to Export Analysis Files...",
+                dir=str(PurePath(default_name).parent),
+            )
+            if len(dirname) == 0:
+                return False
 
+        # Create list of video / output paths
         output_paths = []
         analysis_videos = []
         for video in videos:
+            # Create filename
             vn = PurePath(video.filename)
-            default_name = str(fn.with_name(f"{fn.stem}.{vn.stem}.analysis.h5"))
+            default_name = str(PurePath(dirname, f"{fn.stem}.{vn.stem}.analysis.h5"))
+            filename = default_name if use_default else ask_for_filename(default_name)
 
-            filename, selected_filter = FileDialog.save(
-                context.app,
-                caption="Export Analysis File...",
-                dir=default_name,
-                filter="SLEAP Analysis HDF5 (*.h5)",
-            )
-
+            # Check that filename is valid and create list of video / ouput paths
             if len(filename) != 0:
                 analysis_videos.append(video)
                 output_paths.append(filename)
 
+        # Chack that output paths are valid
         if len(output_paths) == 0:
             return False
 

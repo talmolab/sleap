@@ -75,6 +75,12 @@ def test_ExportAnalysisFile(
 ):
     def ExportAnalysisFile_ask(context: CommandContext, params: dict):
         """Taken from ExportAnalysisFile.ask()"""
+
+        def ask_for_filename(default_name: str) -> str:
+            """Allow user to specify the filename"""
+            # MODIFIED: Does not open dialog.
+            return default_name
+
         labels = context.labels
         if len(labels.labeled_frames) == 0:
             return False
@@ -95,32 +101,30 @@ def test_ExportAnalysisFile(
 
         default_name = context.state["filename"] or "labels"
         fn = PurePath(tmpdir, default_name)
+        if len(videos) == 1:
+            # Allow user to specify the filename
+            use_default = False
+            dirname = str(fn.parent)
+        else:
+            # Allow user to specify directory, but use default filenames
+            use_default = True
+            dirname = str(fn.parent)  # MODIFIED: Does not open dialog.
+            if len(dirname) == 0:
+                return False
 
         output_paths = []
         analysis_videos = []
         for video in videos:
             vn = PurePath(video.filename)
-            default_name = str(fn.with_name(f"{fn.stem}.{vn.stem}.analysis.h5"))
+            default_name = str(PurePath(dirname, f"{fn.stem}.{vn.stem}.analysis.h5"))
+            filename = default_name if use_default else ask_for_filename(default_name)
 
-            """
-            # Do not use the following code b/c opens dialog.
-            filename, selected_filter = FileDialog.save(
-                context.app,
-                caption="Export Analysis File...",
-                dir=default_name,
-                filter="SLEAP Analysis HDF5 (*.h5)",
-            )
-            """
-
-            if len(default_name) != 0:
+            if len(filename) != 0:
                 analysis_videos.append(video)
-                output_paths.append(default_name)
+                output_paths.append(filename)
 
         if len(output_paths) == 0:
             return False
-
-        print(f"output_paths = {output_paths}")
-        print(f"videos = {videos}")
 
         params["analysis_videos"] = zip(output_paths, videos)
         params["eval_analysis_videos"] = zip(output_paths, videos)
