@@ -91,11 +91,7 @@ def test_ExportAnalysisFile(
             all_videos = [context.state["video"] or context.labels.videos[0]]
 
         # Check for labeled frames in each video
-        videos = []
-        for video in all_videos:
-            lfs = labels.get(video)
-            if len(lfs) != 0:
-                videos.append(video)
+        videos = [video for video in all_videos if len(labels.get(video)) != 0]
         if len(videos) == 0:
             return False
 

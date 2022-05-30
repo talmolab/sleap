@@ -969,21 +969,19 @@ class ExportAnalysisFile(AppCommand):
             )
             return filename
 
+        # Ensure labels has labeled frames
         labels = context.labels
         if len(labels.labeled_frames) == 0:
             return False
 
+        # Get a subset of videos
         if params["all_videos"]:
             all_videos = context.labels.videos
         else:
             all_videos = [context.state["video"] or context.labels.videos[0]]
 
-        # Check for labeled frames in each video
-        videos = []
-        for video in all_videos:
-            lfs = labels.get(video)
-            if len(lfs) != 0:
-                videos.append(video)
+        # Only use videos with labeled frames
+        videos = [video for video in all_videos if len(labels.get(video)) != 0]
         if len(videos) == 0:
             return False
 
@@ -1000,7 +998,7 @@ class ExportAnalysisFile(AppCommand):
             dirname = FileDialog.openDir(
                 context.app,
                 caption="Select Folder to Export Analysis Files...",
-                dir=str(PurePath(default_name).parent),
+                dir=str(fn.parent),
             )
             if len(dirname) == 0:
                 return False
@@ -1009,7 +1007,7 @@ class ExportAnalysisFile(AppCommand):
         output_paths = []
         analysis_videos = []
         for video in videos:
-            # Create filename
+            # Create the filename
             vn = PurePath(video.filename)
             default_name = str(PurePath(dirname, f"{fn.stem}.{vn.stem}.analysis.h5"))
             filename = default_name if use_default else ask_for_filename(default_name)
