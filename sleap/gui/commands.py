@@ -33,7 +33,6 @@ import re
 import sys
 import subprocess
 
-from abc import ABC
 from enum import Enum
 from glob import glob
 from pathlib import PurePath
@@ -46,7 +45,7 @@ from PySide2 import QtCore, QtWidgets, QtGui
 from PySide2.QtWidgets import QMessageBox, QProgressDialog
 
 from sleap.gui.dialogs.delete import DeleteDialog
-from sleap.skeleton import Skeleton
+from sleap.skeleton import Node, Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
 from sleap.io.video import Video
 from sleap.io.dataset import Labels
@@ -57,6 +56,7 @@ from sleap.gui.dialogs.merge import MergeDialog
 from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
+from sleap.gui.app import MainWindow
 
 
 # whether we support multiple project windows (i.e., "open" opens new window)
@@ -186,7 +186,7 @@ class CommandContext:
     """
 
     state: GuiState
-    app: "MainWindow"
+    app: MainWindow
 
     update_callback: Optional[Callable] = None
     _change_stack: List = attr.ib(default=attr.Factory(list))
@@ -475,7 +475,7 @@ class CommandContext:
         )
 
     def setPointLocations(
-        self, instance: Instance, nodes_locations: Dict["Node", Tuple[int, int]]
+        self, instance: Instance, nodes_locations: Dict[Node, Tuple[int, int]]
     ):
         """Sets locations for node(s) for an instance."""
         self.execute(
@@ -484,9 +484,7 @@ class CommandContext:
             nodes_locations=nodes_locations,
         )
 
-    def setInstancePointVisibility(
-        self, instance: Instance, node: "Node", visible: bool
-    ):
+    def setInstancePointVisibility(self, instance: Instance, node: Node, visible: bool):
         """Toggles visibility set for a node for an instance."""
         self.execute(
             SetInstancePointVisibility, instance=instance, node=node, visible=visible
@@ -956,28 +954,35 @@ class ExportAnalysisFile(AppCommand):
     def do_action(cls, context: CommandContext, params: dict):
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 
-        # Do this action in a loop for all videos if true
         for output_path, video in params["analysis_videos"]:
             SleapAnalysisAdaptor.write(output_path, context.labels, video=video)
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        print(f'params["all_videos"] = {params["all_videos"]}')
-
-        if len(context.labels.labeled_frames) == 0:
+        labels = context.labels
+        if len(labels.labeled_frames) == 0:
             return False
 
         if params["all_videos"]:
-            videos = context.labels.videos
+            all_videos = context.labels.videos
         else:
-            videos = [context.state["video"] or context.labels.videos[0]]
+            all_videos = [context.state["video"] or context.labels.videos[0]]
+
+        # Check for labeled frames in each video
+        videos = []
+        for video in all_videos:
+            lfs = labels.get(video)
+            if len(lfs) != 0:
+                videos.append(video)
+        if len(videos) == 0:
+            return False
 
         default_name = context.state["filename"] or "labels"
         fn = PurePath(default_name)
 
         output_paths = []
-        analysis_videos = list(videos)
-        for video_idx, video in enumerate(videos):
+        analysis_videos = []
+        for video in videos:
             vn = PurePath(video.filename)
             default_name = str(fn.with_name(f"{fn.stem}.{vn.stem}.analysis.h5"))
 
@@ -988,9 +993,8 @@ class ExportAnalysisFile(AppCommand):
                 filter="SLEAP Analysis HDF5 (*.h5)",
             )
 
-            if len(filename) == 0:
-                analysis_videos.pop(video_idx)
-            else:
+            if len(filename) != 0:
+                analysis_videos.append(video)
                 output_paths.append(filename)
 
         if len(output_paths) == 0:

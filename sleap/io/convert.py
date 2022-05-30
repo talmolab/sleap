@@ -1,8 +1,6 @@
-"""
-Command line utility for converting between various dataset formats.
+"""Command line utility for converting between various dataset formats.
 
 Reads:
-
 * SLEAP dataset in .slp, .h5, .json, or .json.zip file
 * SLEAP "analysis" file in .h5 format
 * LEAP dataset in .mat file
@@ -11,7 +9,6 @@ Reads:
 * COCO keypoints dataset in .json file
 
 Writes:
-
 * SLEAP dataset (defaults to .slp if no extension specified)
 * SLEAP "analysis" file (.h5)
 
@@ -31,11 +28,15 @@ The analysis HDF5 file has these datasets:
 * "tracks"             (shape: frames * nodes * 2 * tracks)
 * "track_names"        (shape: tracks)
 * "node_names"         (shape: nodes)
+* "edge_names"         (shape: nodes - 1)
+* "edge_inds"          (shape: nodes - 1)
+* "point_scores"       (shape: frames * nodes * tracks)
+* "instance_scores"    (shape: frames * tracks)
+* "tracking_scores"    (shape: frames * tracks)
 
 Note: the datasets are stored column-major as expected by MATLAB.
 This means that if you're working with the file in Python you may want to
 first transpose the datasets so they matche the shapes described above.
-
 """
 
 import argparse
@@ -51,7 +52,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("input_path", help="Path to input file.")
     parser.add_argument(
-        "-o", "--output", default="", help="Path to output file (optional)."
+        "-o",
+        "--output",
+        default="",
+        help="Path to output file (optional). Note: all analysis files will be written "
+        "to `output`.<video name>.analysis.h5",
     )
     parser.add_argument(
         "--format",

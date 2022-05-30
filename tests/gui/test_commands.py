@@ -1,10 +1,21 @@
 from sleap.gui.commands import (
     CommandContext,
     ImportDeepLabCutFolder,
+    ExportAnalysisFile,
     get_new_version_filename,
 )
+
+from sleap.gui.app import MainWindow
+from sleap.io.dataset import Labels
+from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 from sleap.io.pathutils import fix_path_separator
-from pathlib import PurePath
+from sleap.io.video import Video
+from sleap.instance import Instance
+from tests.fixtures.videos import small_robot_mp4_vid
+
+from tests.info.test_h5 import read_lens_hdf5, assert_dset_lens
+
+from pathlib import PurePath, Path
 
 
 def test_delete_user_dialog(centered_pair_predictions):
@@ -63,3 +74,132 @@ def test_get_new_version_filename():
     assert get_new_version_filename("/a/b/labels.v01.slp") == str(
         PurePath("/a/b/labels.v02.slp")
     )
+
+
+def test_ExportAnalysisFile(
+    centered_pair_predictions: Labels, small_robot_mp4_vid: Video, tmpdir
+):
+    def ExportAnalysisFile_ask(context: CommandContext, params: dict):
+        """Taken from ExportAnalysisFile.ask()"""
+        labels = context.labels
+        if len(labels.labeled_frames) == 0:
+            return False
+
+        if params["all_videos"]:
+            all_videos = context.labels.videos
+        else:
+            all_videos = [context.state["video"] or context.labels.videos[0]]
+
+        # Check for labeled frames in each video
+        videos = []
+        for video in all_videos:
+            lfs = labels.get(video)
+            if len(lfs) != 0:
+                videos.append(video)
+        if len(videos) == 0:
+            return False
+
+        default_name = context.state["filename"] or "labels"
+        fn = PurePath(tmpdir, default_name)
+
+        output_paths = []
+        analysis_videos = []
+        for video in videos:
+            vn = PurePath(video.filename)
+            default_name = str(fn.with_name(f"{fn.stem}.{vn.stem}.analysis.h5"))
+
+            """
+            # Do not use the following code b/c opens dialog.
+            filename, selected_filter = FileDialog.save(
+                context.app,
+                caption="Export Analysis File...",
+                dir=default_name,
+                filter="SLEAP Analysis HDF5 (*.h5)",
+            )
+            """
+
+            if len(default_name) != 0:
+                analysis_videos.append(video)
+                output_paths.append(default_name)
+
+        if len(output_paths) == 0:
+            return False
+
+        print(f"output_paths = {output_paths}")
+        print(f"videos = {videos}")
+
+        params["analysis_videos"] = zip(output_paths, videos)
+        params["eval_analysis_videos"] = zip(output_paths, videos)
+        return True
+
+    def assert_videos_written(num_videos: int):
+        for video_idx, (output_path, video) in enumerate(
+            params["eval_analysis_videos"]
+        ):
+            assert Path(output_path).exists()
+        assert num_videos == video_idx + 1
+
+    tmpdir = PurePath(tmpdir)
+
+    context = CommandContext.from_labels(centered_pair_predictions)
+    labels = context.labels
+
+    # Test with all_videos False (single video)
+    params = {"all_videos": False}
+    okay = ExportAnalysisFile_ask(context=context, params=params)
+    assert okay == True
+    ExportAnalysisFile.do_action(context=context, params=params)
+    assert_videos_written(num_videos=1)
+
+    # Test with all_videos True (single video)
+    params = {"all_videos": True}
+    okay = ExportAnalysisFile_ask(context=context, params=params)
+    assert okay == True
+    ExportAnalysisFile.do_action(context=context, params=params)
+    assert_videos_written(num_videos=1)
+
+    # Add a video (no labels) and test with all_videos True
+    labels.add_video(small_robot_mp4_vid)
+
+    params = {"all_videos": True}
+    okay = ExportAnalysisFile_ask(context=context, params=params)
+    assert okay == True
+    ExportAnalysisFile.do_action(context=context, params=params)
+    assert_videos_written(num_videos=1)
+
+    # Add labels and test with all_videos False
+    labeled_frame = labels.find(video=labels.videos[1], frame_idx=0, return_new=True)[0]
+    instance = Instance(skeleton=labels.skeleton, frame=labeled_frame)
+    labels.add_instance(frame=labeled_frame, instance=instance)
+    labels.append(labeled_frame)
+
+    params = {"all_videos": False}
+    okay = ExportAnalysisFile_ask(context=context, params=params)
+    assert okay == True
+    ExportAnalysisFile.do_action(context=context, params=params)
+    assert_videos_written(num_videos=1)
+
+    # Add specific video and test with all_videos False
+    context.state["videos"] = labels.videos[1]
+
+    params = {"all_videos": False}
+    okay = ExportAnalysisFile_ask(context=context, params=params)
+    assert okay == True
+    ExportAnalysisFile.do_action(context=context, params=params)
+    assert_videos_written(num_videos=1)
+
+    # Test with all videos True
+    params = {"all_videos": True}
+    okay = ExportAnalysisFile_ask(context=context, params=params)
+    assert okay == True
+    ExportAnalysisFile.do_action(context=context, params=params)
+    assert_videos_written(num_videos=2)
+
+    # Remove all videos and test
+    all_videos = list(labels.videos)
+    for video in all_videos:
+        labels.remove_video(labels.videos[-1])
+
+    params = {"all_videos": True}
+    okay = ExportAnalysisFile_ask(context=context, params=params)
+    assert okay == False

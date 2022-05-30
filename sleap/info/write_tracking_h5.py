@@ -53,11 +53,14 @@ def get_occupancy_and_points_matrices(
     Builds numpy matrices with track occupancy and point location data.
 
     Args:
-        labels: The :class:`Labels` from which to get data.
+        labels: The :py:class:`Labels` from which to get data.
         all_frames: If True, then includes zeros so that frame index
             will line up with columns in the output. Otherwise,
             there will only be columns for the frames between the
             first and last frames with labeling data.
+        video: The :py:class:`Video` from which to get data. If no `video` is specified,
+            then the first video in `source_object` videos list will be used. If there
+            are no labeled frames in the `video`, then None will be returned.
 
     Returns:
         tuple of arrays:
@@ -243,6 +246,9 @@ def main(
             will line up with columns in the output. Otherwise,
             there will only be columns for the frames between the
             first and last frames with labeling data.
+        video: The :py:class:`Video` from which to get data. If no `video` is specified,
+            then the first video in `source_object` videos list will be used. If there
+            are no labeled frames in the `video`, then no output file will be written.
 
     Returns:
         None
@@ -254,7 +260,7 @@ def main(
         if video is None:
             video = labels.videos[0]
     except IndexError:
-        print(f"There are no videos in this project. No occupancy matrix to return.")
+        print(f"There are no videos in this project. Output file will not be written.")
         return
 
     try:
