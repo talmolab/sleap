@@ -33,7 +33,6 @@ import re
 import sys
 import subprocess
 
-from abc import ABC
 from enum import Enum
 from glob import glob
 from pathlib import PurePath
@@ -45,11 +44,12 @@ from PySide2 import QtCore, QtWidgets, QtGui
 
 from PySide2.QtWidgets import QMessageBox, QProgressDialog
 
-from sleap.gui.dialogs.delete import DeleteDialog
-from sleap.skeleton import Skeleton
+from sleap.skeleton import Node, Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
 from sleap.io.video import Video
+from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
+from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.gui.dialogs.importvideos import ImportVideos
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
@@ -59,7 +59,7 @@ from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
 
 
-# whether we support multiple project windows (i.e., "open" opens new window)
+# Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
 
 
@@ -293,9 +293,9 @@ class CommandContext:
         """Show gui to save project as a new file."""
         self.execute(SaveProjectAs)
 
-    def exportAnalysisFile(self):
+    def exportAnalysisFile(self, all_videos: bool = False):
         """Shows gui for exporting analysis h5 file."""
-        self.execute(ExportAnalysisFile)
+        self.execute(ExportAnalysisFile, all_videos=all_videos)
 
     def exportLabeledClip(self):
         """Shows gui for exporting clip with visual annotations."""
@@ -475,7 +475,7 @@ class CommandContext:
         )
 
     def setPointLocations(
-        self, instance: Instance, nodes_locations: Dict["Node", Tuple[int, int]]
+        self, instance: Instance, nodes_locations: Dict[Node, Tuple[int, int]]
     ):
         """Sets locations for node(s) for an instance."""
         self.execute(
@@ -484,9 +484,7 @@ class CommandContext:
             nodes_locations=nodes_locations,
         )
 
-    def setInstancePointVisibility(
-        self, instance: Instance, node: "Node", visible: bool
-    ):
+    def setInstancePointVisibility(self, instance: Instance, node: Node, visible: bool):
         """Toggles visibility set for a node for an instance."""
         self.execute(
             SetInstancePointVisibility, instance=instance, node=node, visible=visible
@@ -956,25 +954,83 @@ class ExportAnalysisFile(AppCommand):
     def do_action(cls, context: CommandContext, params: dict):
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 
-        SleapAnalysisAdaptor.write(params["output_path"], context.labels)
+        for output_path, video in params["analysis_videos"]:
+            SleapAnalysisAdaptor.write(
+                filename=output_path,
+                source_object=context.labels,
+                source_path=context.state["filename"],
+                video=video,
+            )
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        default_name = context.state["filename"] or "labels"
-        p = PurePath(default_name)
-        default_name = str(p.with_name(f"{p.stem}.analysis.h5"))
+        def ask_for_filename(default_name: str) -> str:
+            """Allow user to specify the filename"""
+            filename, selected_filter = FileDialog.save(
+                context.app,
+                caption="Export Analysis File...",
+                dir=default_name,
+                filter="SLEAP Analysis HDF5 (*.h5)",
+            )
+            return filename
 
-        filename, selected_filter = FileDialog.save(
-            context.app,
-            caption="Export Analysis File...",
-            dir=default_name,
-            filter="SLEAP Analysis HDF5 (*.h5)",
-        )
-
-        if len(filename) == 0:
+        # Ensure labels has labeled frames
+        labels = context.labels
+        if len(labels.labeled_frames) == 0:
             return False
 
-        params["output_path"] = filename
+        # Get a subset of videos
+        if params["all_videos"]:
+            all_videos = context.labels.videos
+        else:
+            all_videos = [context.state["video"] or context.labels.videos[0]]
+
+        # Only use videos with labeled frames
+        videos = [video for video in all_videos if len(labels.get(video)) != 0]
+        if len(videos) == 0:
+            return False
+
+        # Specify (how to get) the output filename
+        default_name = context.state["filename"] or "labels"
+        fn = PurePath(default_name)
+        if len(videos) == 1:
+            # Allow user to specify the filename
+            use_default = False
+            dirname = str(fn.parent)
+        else:
+            # Allow user to specify directory, but use default filenames
+            use_default = True
+            dirname = FileDialog.openDir(
+                context.app,
+                caption="Select Folder to Export Analysis Files...",
+                dir=str(fn.parent),
+            )
+            if len(dirname) == 0:
+                return False
+
+        # Create list of video / output paths
+        output_paths = []
+        analysis_videos = []
+        for video in videos:
+            # Create the filename
+            default_name = default_analysis_filename(
+                labels=labels,
+                video=video,
+                output_path=dirname,
+                output_prefix=str(fn.stem),
+            )
+            filename = default_name if use_default else ask_for_filename(default_name)
+
+            # Check that filename is valid and create list of video / ouput paths
+            if len(filename) != 0:
+                analysis_videos.append(video)
+                output_paths.append(filename)
+
+        # Chack that output paths are valid
+        if len(output_paths) == 0:
+            return False
+
+        params["analysis_videos"] = zip(output_paths, videos)
         return True
 
 

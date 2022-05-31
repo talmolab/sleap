@@ -407,6 +407,7 @@ class Labels(MutableSequence):
             which to crop as negative samples when training.
             Dictionary key is :class:`Video`, value is list of
             (frame index, x, y) tuples.
+        provenance: Dictionary that denotes the origin of the :py:class:`Labels`.
     """
 
     labeled_frames: List[LabeledFrame] = attr.ib(default=attr.Factory(list))
