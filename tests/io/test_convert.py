@@ -1,4 +1,4 @@
-from sleap.io.convert import main as sleap_convert
+from sleap.io.convert import default_analysis_filename, main as sleap_convert
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
 from sleap.instance import Instance
@@ -16,13 +16,16 @@ def test_analysis_format(
     slp_path = PurePath(min_labels_slp_path)
     tmpdir = PurePath(tmpdir)
 
-    def assert_analysis_existance(output_prefix):
+    def assert_analysis_existance(output_prefix: str):
+        output_prefix = PurePath(output_prefix)
         for video in labels.videos:
-            vn = PurePath(video.filename)
-            output_name = f"{output_prefix}.{vn.stem}.analysis.h5"
+            output_name = default_analysis_filename(
+                labels=labels,
+                video=video,
+                output_path=str(output_prefix.parent),
+                output_prefix=str(output_prefix.stem),
+            )
             video_exists = Path(output_name).exists()
-            print(f"output_name = {output_name}")
-            print(f"len(labels.labeled_frames) = {len(labels.labeled_frames)}\n")
             if len(labels.get(video)) == 0:
                 assert not video_exists
             else:

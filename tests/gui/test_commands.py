@@ -7,7 +7,10 @@ from sleap.gui.commands import (
 from sleap.io.dataset import Labels
 from sleap.io.pathutils import fix_path_separator
 from sleap.io.video import Video
+from sleap.io.convert import default_analysis_filename
 from sleap.instance import Instance
+
+from tests.info.test_h5 import extract_meta_hdf5
 
 from pathlib import PurePath, Path
 import shutil
@@ -112,8 +115,13 @@ def test_ExportAnalysisFile(
         output_paths = []
         analysis_videos = []
         for video in videos:
-            vn = PurePath(video.filename)
-            default_name = str(PurePath(dirname, f"{fn.stem}.{vn.stem}.analysis.h5"))
+            # Create the filename
+            default_name = default_analysis_filename(
+                labels=labels,
+                video=video,
+                output_path=dirname,
+                output_prefix=str(fn.stem),
+            )
             filename = default_name if use_default else ask_for_filename(default_name)
 
             if len(filename) != 0:
@@ -127,13 +135,17 @@ def test_ExportAnalysisFile(
         params["eval_analysis_videos"] = zip(output_paths, videos)
         return True
 
-    def assert_videos_written(num_videos: int):
+    def assert_videos_written(num_videos: int, labels_path: str = None):
         output_paths = []
-        for video_idx, (output_path, video) in enumerate(
-            params["eval_analysis_videos"]
-        ):
+        for output_path, video in params["eval_analysis_videos"]:
             assert Path(output_path).exists()
             output_paths.append(output_path)
+
+            if labels_path is not None:
+                read_meta = extract_meta_hdf5(
+                    output_path, dset_names_in=["labels_path"]
+                )
+                assert read_meta["labels_path"] == labels_path
 
         assert len(output_paths) == num_videos, "Wrong number of outputs written"
         assert len(set(output_paths)) == num_videos, "Some output paths overwritten"
@@ -142,20 +154,22 @@ def test_ExportAnalysisFile(
 
     labels = centered_pair_predictions.copy()
     context = CommandContext.from_labels(labels)
+    context.state["filename"] = None
 
     # Test with all_videos False (single video)
     params = {"all_videos": False}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
-    assert_videos_written(num_videos=1)
+    assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
-    # Test with all_videos True (single video)
+    # Add labels path and test with all_videos True (single video)
+    context.state["filename"] = str(tmpdir.with_name("path.to.labels"))
     params = {"all_videos": True}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
-    assert_videos_written(num_videos=1)
+    assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
     # Add a video (no labels) and test with all_videos True
     labels.add_video(small_robot_mp4_vid)
@@ -164,7 +178,7 @@ def test_ExportAnalysisFile(
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
-    assert_videos_written(num_videos=1)
+    assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
     # Add labels and test with all_videos False
     labeled_frame = labels.find(video=labels.videos[1], frame_idx=0, return_new=True)[0]
@@ -176,7 +190,7 @@ def test_ExportAnalysisFile(
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
-    assert_videos_written(num_videos=1)
+    assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
     # Add specific video and test with all_videos False
     context.state["videos"] = labels.videos[1]
@@ -185,14 +199,14 @@ def test_ExportAnalysisFile(
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
-    assert_videos_written(num_videos=1)
+    assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
     # Test with all videos True
     params = {"all_videos": True}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
-    assert_videos_written(num_videos=2)
+    assert_videos_written(num_videos=2, labels_path=context.state["filename"])
 
     # Test with videos with the same filename
     (tmpdir / "session1").mkdir()
@@ -210,7 +224,7 @@ def test_ExportAnalysisFile(
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
-    assert_videos_written(num_videos=2)
+    assert_videos_written(num_videos=2, labels_path=context.state["filename"])
 
     # Remove all videos and test
     all_videos = list(labels.videos)

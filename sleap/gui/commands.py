@@ -43,13 +43,13 @@ import numpy as np
 from PySide2 import QtCore, QtWidgets, QtGui
 
 from PySide2.QtWidgets import QMessageBox, QProgressDialog
-from traitlets import default
 
-from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.skeleton import Node, Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
 from sleap.io.video import Video
+from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
+from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.gui.dialogs.importvideos import ImportVideos
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
@@ -955,7 +955,12 @@ class ExportAnalysisFile(AppCommand):
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 
         for output_path, video in params["analysis_videos"]:
-            SleapAnalysisAdaptor.write(output_path, context.labels, video=video)
+            SleapAnalysisAdaptor.write(
+                filename=output_path,
+                source_object=context.labels,
+                source_path=context.state["filename"],
+                video=video,
+            )
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
@@ -1008,8 +1013,12 @@ class ExportAnalysisFile(AppCommand):
         analysis_videos = []
         for video in videos:
             # Create the filename
-            vn = PurePath(video.filename)
-            default_name = str(PurePath(dirname, f"{fn.stem}.{vn.stem}.analysis.h5"))
+            default_name = default_analysis_filename(
+                labels=labels,
+                video=video,
+                output_path=dirname,
+                output_prefix=str(fn.stem),
+            )
             filename = default_name if use_default else ask_for_filename(default_name)
 
             # Check that filename is valid and create list of video / ouput paths

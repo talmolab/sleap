@@ -45,7 +45,7 @@ import re
 
 from pathlib import PurePath
 
-from sleap import Labels
+from sleap import Labels, Video
 
 
 def create_parser():
@@ -72,6 +72,20 @@ def create_parser():
     return parser
 
 
+def default_analysis_filename(
+    labels: Labels, video: Video, output_path: str, output_prefix: PurePath
+) -> str:
+    video_idx = labels.videos.index(video)
+    vn = PurePath(video.backend.filename)
+    filename = str(
+        PurePath(
+            output_path,
+            f"{output_prefix}.{video_idx:03}_{vn.stem}.analysis.h5",
+        )
+    )
+    return filename
+
+
 def main(args: list = None):
     parser = create_parser()
     args = parser.parse_args(args=args)
@@ -96,15 +110,24 @@ def main(args: list = None):
     if args.format == "analysis":
         from sleap.info.write_tracking_h5 import main as write_analysis
 
-        fn = args.input_path if (len(args.output) == 0) else args.output
+        labels_path = args.input_path
+        fn = labels_path if (len(args.output) == 0) else args.output
         fn = re.sub("(\.json(\.zip)?|\.h5|\.slp)$", "", fn)
         fn = PurePath(fn)
 
         for video in labels.videos:
-            vn = PurePath(video.filename)
-            output_path = str(fn.with_name(f"{fn.stem}.{vn.stem}.analysis.h5"))
+            output_path = default_analysis_filename(
+                labels=labels,
+                video=video,
+                output_path=str(fn.parent),
+                output_prefix=str(fn.stem),
+            )
             write_analysis(
-                labels, output_path=output_path, all_frames=True, video=video
+                labels,
+                output_path=output_path,
+                labels_path=labels_path,
+                all_frames=True,
+                video=video,
             )
 
     elif args.output:
