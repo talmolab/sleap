@@ -126,11 +126,11 @@ which track.
 
 Mistaken identities are harder to correct since there's no certain way to find them—if we knew where they were, then we wouldn't have gotten them wrong in the first place. But there are some strategies to make it easier to locate them in your predictions.
 
-One strategy is to set the trail length to a **number greater than 0** (e.g 50) and jump through the predictions using the **frame next large step** hotkey. It's usually possible to see identity swaps by looking at the shape of the track trails, as here:
+One strategy is to set the trail length to a **number greater than 0** (e.g. 50) and jump through the predictions using the **frame next large step** hotkey. It's usually possible to see identity swaps by looking at the shape of the track trails, as here:
 
 {{ swap_trails }}
 
-The downside of this method is that when you find the frames which contain a swap, you'll then have to go through the frames individually to find exactly where the swap occurs. (You may want to turn off trails while doing this, since they can make it harder to see where the instances are in the current frame, and they also make it slower to move between frames.)
+The downside of this method is that when you find the set of frames which contain a swap, you'll then have to go through the frames individually to find exactly where the swap occurs. (You may want to turn off trails while doing this, since they can make it harder to see where the instances are in the current frame, and they also make it slower to move between frames.)
 
 Another strategy is to generate **velocity**-based frame suggestions:
 
