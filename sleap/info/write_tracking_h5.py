@@ -120,7 +120,11 @@ def get_occupancy_and_points_matrices(
     instance_scores = np.full((frame_count, track_count), np.nan, dtype=float)
     tracking_scores = np.full((frame_count, track_count), np.nan, dtype=float)
 
-    for lf, inst in [(lf, inst) for lf in labeled_frames for inst in lf.instances]:
+    # TODO: Revisit with LabeledFrames.unused_predictions() & instances_to_show()
+    lfs_instances = [
+        (lf, inst) for lf in labeled_frames for inst in lf.instances_to_show
+    ]
+    for lf, inst in lfs_instances:
         frame_i = lf.frame_idx - first_frame_idx
         if inst.track is None:
             # We could use lf.instances.index(inst) but then we'd need
