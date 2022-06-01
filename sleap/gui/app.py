@@ -429,11 +429,19 @@ class MainWindow(QMainWindow):
         fileMenu.addSeparator()
         add_menu_item(fileMenu, "save", "Save", self.commands.saveProject)
         add_menu_item(fileMenu, "save as", "Save As...", self.commands.saveProjectAs)
+
+        export_analysis_menu = fileMenu.addMenu("Export Analysis HDF5...")
         add_menu_item(
-            fileMenu,
-            "export analysis",
-            "Export Analysis HDF5...",
+            export_analysis_menu,
+            "export_analysis_current",
+            "Current Video...",
             self.commands.exportAnalysisFile,
+        )
+        add_menu_item(
+            export_analysis_menu,
+            "export_analysis_video",
+            "All Videos...",
+            lambda: self.commands.exportAnalysisFile(all_videos=True),
         )
 
         fileMenu.addSeparator()

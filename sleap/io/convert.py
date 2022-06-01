@@ -1,8 +1,6 @@
-"""
-Command line utility for converting between various dataset formats.
+"""Command line utility for converting between various dataset formats.
 
 Reads:
-
 * SLEAP dataset in .slp, .h5, .json, or .json.zip file
 * SLEAP "analysis" file in .h5 format
 * LEAP dataset in .mat file
@@ -11,7 +9,6 @@ Reads:
 * COCO keypoints dataset in .json file
 
 Writes:
-
 * SLEAP dataset (defaults to .slp if no extension specified)
 * SLEAP "analysis" file (.h5)
 
@@ -31,25 +28,35 @@ The analysis HDF5 file has these datasets:
 * "tracks"             (shape: frames * nodes * 2 * tracks)
 * "track_names"        (shape: tracks)
 * "node_names"         (shape: nodes)
+* "edge_names"         (shape: nodes - 1)
+* "edge_inds"          (shape: nodes - 1)
+* "point_scores"       (shape: frames * nodes * tracks)
+* "instance_scores"    (shape: frames * tracks)
+* "tracking_scores"    (shape: frames * tracks)
 
 Note: the datasets are stored column-major as expected by MATLAB.
 This means that if you're working with the file in Python you may want to
 first transpose the datasets so they matche the shapes described above.
-
 """
 
 import argparse
 import os
 import re
 
-from sleap import Labels
+from pathlib import PurePath
+
+from sleap import Labels, Video
 
 
-def main():
+def create_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("input_path", help="Path to input file.")
     parser.add_argument(
-        "-o", "--output", default="", help="Path to output file (optional)."
+        "-o",
+        "--output",
+        default="",
+        help="Path to output file (optional). Note: all analysis files will be written "
+        "to `output`.<video name>.analysis.h5",
     )
     parser.add_argument(
         "--format",
@@ -62,12 +69,30 @@ def main():
     parser.add_argument(
         "--video", default="", help="Path to video (if needed for conversion)."
     )
+    return parser
 
-    args = parser.parse_args()
+
+def default_analysis_filename(
+    labels: Labels, video: Video, output_path: str, output_prefix: PurePath
+) -> str:
+    video_idx = labels.videos.index(video)
+    vn = PurePath(video.backend.filename)
+    filename = str(
+        PurePath(
+            output_path,
+            f"{output_prefix}.{video_idx:03}_{vn.stem}.analysis.h5",
+        )
+    )
+    return filename
+
+
+def main(args: list = None):
+    parser = create_parser()
+    args = parser.parse_args(args=args)
 
     video_callback = Labels.make_video_callback([os.path.dirname(args.input_path)])
     try:
-        labels = Labels.load_file(args.input_path, video_search=video_callback)
+        labels: Labels = Labels.load_file(args.input_path, video_search=video_callback)
     except TypeError:
         print("Input file isn't SLEAP dataset so attempting other importers...")
         from sleap.io.format import read
@@ -85,14 +110,25 @@ def main():
     if args.format == "analysis":
         from sleap.info.write_tracking_h5 import main as write_analysis
 
-        if args.output:
-            output_path = args.output
-        else:
-            output_path = args.input_path
-            output_path = re.sub("(\.json(\.zip)?|\.h5|\.slp)$", "", output_path)
-            output_path = output_path + ".analysis.h5"
+        labels_path = args.input_path
+        fn = labels_path if (len(args.output) == 0) else args.output
+        fn = re.sub("(\.json(\.zip)?|\.h5|\.slp)$", "", fn)
+        fn = PurePath(fn)
 
-        write_analysis(labels, output_path=output_path, all_frames=True)
+        for video in labels.videos:
+            output_path = default_analysis_filename(
+                labels=labels,
+                video=video,
+                output_path=str(fn.parent),
+                output_prefix=str(fn.stem),
+            )
+            write_analysis(
+                labels,
+                output_path=output_path,
+                labels_path=labels_path,
+                all_frames=True,
+                video=video,
+            )
 
     elif args.output:
         print(f"Output SLEAP dataset: {args.output}")
