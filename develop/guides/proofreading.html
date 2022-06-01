@@ -506,8 +506,11 @@ title="Open an issue"
                 
   <section class="tex2jax_ignore mathjax_ignore" id="tracking-and-proofreading">
 <span id="proofreading"></span><h1>Tracking and proofreading<a class="headerlink" href="#tracking-and-proofreading" title="Permalink to this headline">#</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <p><em>Case: You’re happy enough with the frame-by-frame predictions but you need to correct the identities tracked across frames.</em></p>
 <p>The basics of <a class="reference internal" href="../tutorials/proofreading.html#track-proofreading"><span class="std std-ref">Track proofreading</span></a> are covered in the <a class="reference internal" href="../tutorials/tutorial.html#tutorial"><span class="std std-ref">Tutorial</span></a>. You should go read that if you haven’t already. Here we’ll go into more details.</p>
+</div>
 <section id="tracking-methods">
 <span id="tracking-method-details"></span><h2>Tracking methods<a class="headerlink" href="#tracking-methods" title="Permalink to this headline">#</a></h2>
 <p>The process of predicting instances frame-by-frame and the process of putting these together into <strong>tracks</strong> (i.e., identities across frames) are distinct, although it’s common to run them together during the inference pipeline. Obviously you can only track identities after you’ve predicted instances, but once you have predictions, it’s easy to then run tracking by itself to try out different methods and parameters.</p>
@@ -521,9 +524,13 @@ title="Open an issue"
 <li><p>“<strong>instance</strong>” measures similarity by looking at the distances between corresponding nodes in the instances, normalized by the number of valid nodes in the candidate instance.</p></li>
 </ul>
 <p>Once SLEAP has measured the similarity between all the candidates and the instances in frame N, you need to choose a way to pair them up. You can do this either by picking the best match, and the picking the best remaining match for each remaining instance in turn—this is “<strong>greedy</strong>” matching—or you can find the way of matching identities which minimizes the total cost (or: maximizes the total similarity)—this is “<strong>Hungarian</strong>” matching.</p>
-<p>Finally, you have an option second-pass method which “cleans” the resulting identities. To use this method, you specify a target number of tracks (i.e., how many animals there are in your video). SLEAP then goes frame by frame and removes instances over this target number.</p>
-<p>To set the number of tracks, navigate to the Inference Pipeline via Predict &gt;&gt;
-Inference, then:</p>
+<p>Finally, you have an optional second-pass method which “cleans” the resulting
+identities with <strong>“Cull to Target Instance Count”</strong>. To use this method, you
+specify a target number of tracks by setting the <strong>“Target Number of Instances
+Per Frame”</strong> (i.e., how many animals there are in your video). SLEAP then goes
+frame by frame and removes (or culls) instances over this target number. To cull
+to a target number of instances per frame, navigate to the Inference Pipeline
+via Predict &gt;&gt; Inference, then:</p>
 <ol class="simple">
 <li><p>Specify the <strong>Tracker (cross-frame identity) Method</strong></p></li>
 <li><p>Uncheck the <strong>No target</strong> checkbox</p></li>
@@ -565,24 +572,24 @@ frame with any instances from previous frames.</p>
 <ol class="simple">
 <li><p>Turn on colors for predicted instances and use a good color palette (as explained above).</p></li>
 <li><p>Change the “<strong>Trail Length</strong>” to a number greater than zero. These trails show where instances in each track were in prior frames.</p></li>
-<li><p>Use the keyboard shortcut for the “<strong>Next Track Spawn Frame</strong>” command in the “Go” menu to jump to frames where a new track identity is spawned.</p></li>
-<li><p>Select the instance with the new track identity—either use the mouse, type a number key to jump to that instance, or use the <strong>`</strong> key to cycle through instances.</p></li>
+<li><p>Use the keyboard shortcut for the “<strong>Next Track Spawn Frame</strong>” command in the <strong>“Go”</strong> menu to jump to frames where a new track identity is spawned.</p></li>
+<li><p>Select the instance with the new track identity—either use the mouse, type a number key to jump to that instance, or use the <strong>Select Next</strong> key to cycle through instances.</p></li>
 <li><p>The color of the track trail may help you determine which track identity should have been used.</p></li>
-<li><p>Hold down the <strong>Control</strong> key (or <strong>Command</strong> key on a Mac) with an instance already selected and you’ll see a color-coded list of numbered tracks, like so:</p></li>
+<li><p>Hold down the <strong>Show tracks legend</strong> key (see <a class="reference internal" href="gui.html#selection-keys"><span class="std std-ref">Selection Keys</span></a>) with an instance already selected and you’ll see a color-coded list of numbered tracks, like so:</p></li>
 </ol>
 <img alt="../_images/track-fixing-list.jpg" src="../_images/track-fixing-list.jpg" />
-<p>You can then type the number key listed next to the track (while still holding down the control or command key) to assign the selected instance to the corresponding track. In the image above, you’d want to type <strong>command-1</strong> to assign the orange instance to the red “F” track.</p>
+<p>You can then type the number key listed next to the track (while still holding down the <strong>Show tracks legend</strong> key) to assign the selected instance to the corresponding track. In the image above, you’d want to hit <strong>Command + 1</strong> to assign the orange instance to the red <strong>“F”</strong> track.</p>
 <p><strong>Mistaken Identities:</strong> The code may misidentify which instance goes in
 which track.</p>
 <p>Mistaken identities are harder to correct since there’s no certain way to find them—if we knew where they were, then we wouldn’t have gotten them wrong in the first place. But there are some strategies to make it easier to locate them in your predictions.</p>
-<p>One strategy is to set the trail length to <strong>50</strong> and jump through the predictions 50 frames at a time using the <strong>down arrow</strong> key. It’s usually possible to see identity swaps by looking at the shape of the track trails, as here:</p>
+<p>One strategy is to set the trail length to a <strong>number greater than 0</strong> (e.g 50) and jump through the predictions using the <strong>frame next large step</strong> hotkey. It’s usually possible to see identity swaps by looking at the shape of the track trails, as here:</p>
 <img alt="../_images/swap-trails.jpg" src="../_images/swap-trails.jpg" />
-<p>The downside of this method is that when you find the 50-frames which contain a swap, you’ll then have to go through the frames individually to find exactly where the swap occurs. (You may want to turn off trails while doing this, since they can make it harder to see where the instances are in the current frame, and they also make it slower to move between frames.)</p>
+<p>The downside of this method is that when you find the frames which contain a swap, you’ll then have to go through the frames individually to find exactly where the swap occurs. (You may want to turn off trails while doing this, since they can make it harder to see where the instances are in the current frame, and they also make it slower to move between frames.)</p>
 <p>Another strategy is to generate <strong>velocity</strong>-based frame suggestions:</p>
 <img alt="../_images/velocity-suggestions.jpg" src="../_images/velocity-suggestions.jpg" />
-<p>In the “<strong>Labeling Suggestions</strong>” panel, choose the “velocity” method. You should select a node with a relatively stable position relative to the position of the body (i.e., not an appendage), and start with the default threshold.</p>
+<p>In the “<strong>Labeling Suggestions</strong>” panel, choose the <strong>“velocity”</strong> method. You should select a node with a relatively stable position relative to the position of the body (i.e., not an appendage), and start with the default threshold.</p>
 <p>If there are far too many frame suggestions, then make the threshold higher. If there aren’t very many, you might try lowering the threshold (or this may indicate that this method won’t work well for this file).</p>
-<p>Once you’re happy with the number of suggested frames, you can step between these (use the keyboard shortcut for the “<strong>Next Suggestion</strong>” command in the “Go” menu) and quickly review whether this is in fact a swap by looking at the track trails or reviewing adjacent frames. If you’ve found a swap, either use the keyboard shortcut for the “<strong>Transpose Instance Tracks</strong>” command in the “Labels” menu, or select one of the swapped instances and use <strong>Control</strong> (or command) plus a number key, just like you do for fixing lost identities (as explained above).</p>
+<p>Once you’re happy with the number of suggested frames, you can step between these (using the “<strong>Next Suggestion</strong>” hotkey in the “Go” menu) and quickly review whether this is in fact a swap by looking at the track trails or reviewing adjacent frames. If you’ve found a swap, either use the keyboard shortcut for the “<strong>Transpose Instance Tracks</strong>” hotkey in the “Labels” menu, or select one of the swapped instances and use <strong>Show tracks legend</strong> hotkey plus a number key, just like you do for fixing lost identities (as explained above).</p>
 <p>You can optionally select “<strong>Propagate Track Labels</strong>”. This means that
 switching the tracks in one frame will also be applied in all subsequent frames.</p>
 </section>

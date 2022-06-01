@@ -78,9 +78,7 @@ Note that many of the menu command have keyboard shortcuts which can be configur
 
 "**Set Instance Track**" sets the track for the currently selected instance. If the new track already has an instance assigned to it, then the tracks are swapped (the other instance is assigned to the track currently assigned to the selected instance). These changes are applied to instances in the same tracks in every subsequent frame, not just the current frame.
 
-"**Propagate Track Labels**" refers to manually switching tracking identities to
-fix swaps that happen during multi-instance tracking. If selected, switching the
-tracks in one frame will be applied in all subsequent frames.
+"**Propagate Track Labels**" propagates manual track selection (via proofreading) for the entirety of the selected instance's track. If selected, the track switch of an instance in the current frame will be applied in all subsequent frames. Otherwise, the track switch of an instance will only be applied in the current frame.
 
 "**Transpose Instance Tracks**" swaps the tracks assigned to two instances. If there are only two instances in the current frame, then this command will be applied to those. If there are more then two instances, then you'll be prompted to select the two instances in sequence. (This has the same functionality as selecting an instance and using "**Set Instance Track**" with the track of the other instance).
 
@@ -124,17 +122,21 @@ tracks in one frame will be applied in all subsequent frames.
 
 ## Mouse
 
+**Mouse wheel** on image: zoom in / out
+
+**Left-click (hold) + drag** on image: drag image
+
 **Right-click** (or control + click) on node: Toggle visibility
 
 **Right-click** (or control + click) elsewhere on image: Add instance (with pop-up menu)
 
-**Alt + drag**: Zoom into region
+**Alt + left-click (hold) + drag** on image: Zoom into region
 
 **Alt + double-click**: Zoom out
 
-**Alt + drag** on node (or node label): Move entire instance
+**Alt + left-click (hold) + drag** on node (or node label): Move entire instance
 
-**Alt + click and hold** on node (or node label) **+ mouse wheel**: Rotate entire instance
+**Alt + left-click (hold) + mouse wheel** on node (or node label): Rotate entire instance
 
 (On a Mac, substitute **Option** for **Alt**.)
 
@@ -148,21 +150,21 @@ tracks in one frame will be applied in all subsequent frames.
 
 ## Navigation Keys
 
-**Right arrow** key: Move one frame forward
+**Right arrow**: Move one frame forward
 
-**Left arrow** key: Move one frame back
+**Left arrow**: Move one frame back
 
-**Down arrow** key: Move a *medium* step forward (4 frames by default)
+**Control + Right arrow**: Move a *medium* step forward (4 frames by default)
 
-**Up arrow** key: Move a *medium* step backward (4 frames by default)
+**Control + Left arrow**: Move a *medium* step backward (4 frames by default)
 
-**Space** key: Move a *large* step forward (100 frames by default)
+**Control + Alt + Right arrow**: Move a *large* step forward (100 frames by default)
 
-**/** key: Move a *large* step backward (100 frames by default)
+**Control + Alt + Left arrow**: Move a *large* step backward (100 frames by default)
 
-**Home** key: Move to the first frame of the video
+**Home**: Move to the first frame of the video
 
-**End** key: Move to the last frame of the video
+**End**: Move to the last frame of the video
 
 **Shift** + *any navigation key*: Select the frames over which you've moved
 
@@ -170,21 +172,28 @@ tracks in one frame will be applied in all subsequent frames.
 These keys are the defaults; you can configure them with **Keyboard Shortcuts** in the **Help** menu.
 :::
 
+(selection_keys)=
+
 ## Selection Keys
 
-*Number* (e.g., **2**) key: Select the instance corresponding to that number
+*Number* (e.g., **2**): Select the instance corresponding to that number
 
-**Escape** key: Deselect all instances
+**Control (hold)** while instance is selected: Show color-coded list of numbered
+tracks (**Show tracks legend** key)
+
+(On a Mac, substitute **Control** for **Command**.)
+
+**Escape**: Deselect all instances
 
 ## Seekbar
 
 **Shift + drag**: Select a range of frames
 
-**Shift + click**: Clear frame selection
+**Shift + left-click**: Clear frame selection
 
-**Alt + drag**: Zoom into a range of frames
+**Alt + left-click (hold) + drag**: Zoom into a range of frames
 
-**Alt + click**: Zoom out so that all frames are visible in seekbar
+**Alt + left-click**: Zoom out so that all frames are visible in seekbar
 
 (suggestion-methods)=
 
