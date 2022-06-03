@@ -574,7 +574,7 @@ title="Open an issue"
                 
               <div>
                 
-  <section id="gui">
+  <section class="tex2jax_ignore mathjax_ignore" id="gui">
 <span id="id1"></span><h1>GUI<a class="headerlink" href="#gui" title="Permalink to this headline">#</a></h1>
 <p>The SLEAP labeling interface is accessible via the <code class="code docutils literal notranslate"><span class="pre">sleap_label</span></code> command (see <a class="reference internal" href="cli.html#cli"><span class="std std-ref">Command line interfaces</span></a>).</p>
 <section id="menus">
@@ -625,6 +625,7 @@ title="Open an issue"
 <p>“<strong>Instance Placement Method</strong>” allows you to pick how we determine where to place the instance and its nodes on the video frame. “Best” (the default) will first check for predicted instances in the current frame and create a new editable instance from one of the predicted instances (if you add multiple instances, it will do this for each predicted instance in turn). Otherwise, it will copy the location from another instance in a prior or the current frame, or will use a force-directed graph algorithm to place the nodes. You can also choose the “average” method which creates an “average” instance from the instances you’ve already labeled.</p>
 <p>“<strong>Delete Instance</strong>” will delete the currently selected instance (the selected instance will have an outline drawn around it and will be highlighted in the “Instances” window).</p>
 <p>“<strong>Set Instance Track</strong>” sets the track for the currently selected instance. If the new track already has an instance assigned to it, then the tracks are swapped (the other instance is assigned to the track currently assigned to the selected instance). These changes are applied to instances in the same tracks in every subsequent frame, not just the current frame.</p>
+<p>“<strong>Propagate Track Labels</strong>” propagates manual track selection (via proofreading) for the entirety of the selected instance’s track. If selected, the track switch of an instance in the current frame will be applied in all subsequent frames. Otherwise, the track switch of an instance will only be applied in the current frame.</p>
 <p>“<strong>Transpose Instance Tracks</strong>” swaps the tracks assigned to two instances. If there are only two instances in the current frame, then this command will be applied to those. If there are more then two instances, then you’ll be prompted to select the two instances in sequence. (This has the same functionality as selecting an instance and using “<strong>Set Instance Track</strong>” with the track of the other instance).</p>
 <p>“<strong>Delete Instance and Track</strong>” deletes all instances in the track of the currently selected instance. This applied to <em>all</em> frames in the current video.</p>
 <p>“<strong>Custom Instance Delete…</strong>” allows you to delete all the instances which meet criteria you specify: whether they are user instances or predicted instances, which frames they are on, and which track identities they have.</p>
@@ -634,7 +635,7 @@ title="Open an issue"
 <section id="predict">
 <h2>Predict<a class="headerlink" href="#predict" title="Permalink to this headline">#</a></h2>
 <p>“<strong>Run Training…</strong>” allows you to train a set of models from the data in your open project, and then optionally predict on some frames in the project.</p>
-<p>“<strong>Run Inference…</strong>” allows you to generate predictions using a pre-trained set of models. Any trained models in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">models</span></code> directory next to your current project will be listed, and you also have the option to select models saved elsewhere.</p>
+<p>“<strong>Run Inference…</strong>” allows you to generate predictions using a pre-trained set of models. Any trained models in the <code class="docutils literal notranslate"><span class="pre">models</span></code> directory next to your current project will be listed, and you also have the option to select models saved elsewhere.</p>
 <p>“<strong>Evaluate Metrics for Trained Models…</strong>” provides you with information to evaluate all of your trained models. For example, you can see the recall and precision of predictions on frames with ground truth validation data (i.e., data withheld when training).</p>
 <p>“<strong>Visualize Model Outputs…</strong>” allows you to select a trained model and see the intermediate inference data plotted on the frame image. In particular, looking at the confidence maps used to predict each node can be helpful for understanding why and where your model isn’t preforming well.</p>
 <p>“<strong>Add Instances from All Predictions on Current Frame</strong>” converts ever predicted instance on the current frame into a user editable instance (which allows you to make corrections and/or use it for training).</p>
@@ -654,12 +655,14 @@ title="Open an issue"
 </section>
 <section id="mouse">
 <h2>Mouse<a class="headerlink" href="#mouse" title="Permalink to this headline">#</a></h2>
+<p><strong>Mouse wheel</strong> on image: zoom in / out</p>
+<p><strong>Left-click (hold) + drag</strong> on image: drag image</p>
 <p><strong>Right-click</strong> (or control + click) on node: Toggle visibility</p>
 <p><strong>Right-click</strong> (or control + click) elsewhere on image: Add instance (with pop-up menu)</p>
-<p><strong>Alt + drag</strong>: Zoom into region</p>
+<p><strong>Alt + left-click (hold) + drag</strong> on image: Zoom into region</p>
 <p><strong>Alt + double-click</strong>: Zoom out</p>
-<p><strong>Alt + drag</strong> on node (or node label): Move entire instance</p>
-<p><strong>Alt + click and hold</strong> on node (or node label) <strong>+ mouse wheel</strong>: Rotate entire instance</p>
+<p><strong>Alt + left-click (hold) + drag</strong> on node (or node label): Move entire instance</p>
+<p><strong>Alt + left-click (hold) + mouse wheel</strong> on node (or node label): Rotate entire instance</p>
 <p>(On a Mac, substitute <strong>Option</strong> for <strong>Alt</strong>.)</p>
 <p><strong>Double-click</strong> on predicted instance: Create new editable instance from prediction</p>
 <p><strong>Double-click</strong> on editable instance: Any missing nodes (nodes added to the skeleton after this instance was created) will be added and marked as “non-visible”</p>
@@ -668,14 +671,14 @@ title="Open an issue"
 </section>
 <section id="navigation-keys">
 <h2>Navigation Keys<a class="headerlink" href="#navigation-keys" title="Permalink to this headline">#</a></h2>
-<p><strong>Right arrow</strong> key: Move one frame forward</p>
-<p><strong>Left arrow</strong> key: Move one frame back</p>
-<p><strong>Down arrow</strong> key: Move a <em>medium</em> step forward (4 frames by default)</p>
-<p><strong>Up arrow</strong> key: Move a <em>medium</em> step backward (4 frames by default)</p>
-<p><strong>Space</strong> key: Move a <em>large</em> step forward (100 frames by default)</p>
-<p><strong>/</strong> key: Move a <em>large</em> step backward (100 frames by default)</p>
-<p><strong>Home</strong> key: Move to the first frame of the video</p>
-<p><strong>End</strong> key: Move to the last frame of the video</p>
+<p><strong>Right arrow</strong>: Move one frame forward</p>
+<p><strong>Left arrow</strong>: Move one frame back</p>
+<p><strong>Control + Right arrow</strong>: Move a <em>medium</em> step forward (4 frames by default)</p>
+<p><strong>Control + Left arrow</strong>: Move a <em>medium</em> step backward (4 frames by default)</p>
+<p><strong>Control + Alt + Right arrow</strong>: Move a <em>large</em> step forward (100 frames by default)</p>
+<p><strong>Control + Alt + Left arrow</strong>: Move a <em>large</em> step backward (100 frames by default)</p>
+<p><strong>Home</strong>: Move to the first frame of the video</p>
+<p><strong>End</strong>: Move to the last frame of the video</p>
 <p><strong>Shift</strong> + <em>any navigation key</em>: Select the frames over which you’ve moved</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -683,16 +686,19 @@ title="Open an issue"
 </div>
 </section>
 <section id="selection-keys">
-<h2>Selection Keys<a class="headerlink" href="#selection-keys" title="Permalink to this headline">#</a></h2>
-<p><em>Number</em> (e.g., <strong>2</strong>) key: Select the instance corresponding to that number</p>
-<p><strong>Escape</strong> key: Deselect all instances</p>
+<span id="id3"></span><h2>Selection Keys<a class="headerlink" href="#selection-keys" title="Permalink to this headline">#</a></h2>
+<p><em>Number</em> (e.g., <strong>2</strong>): Select the instance corresponding to that number</p>
+<p><strong>Control (hold)</strong> while instance is selected: Show color-coded list of numbered
+tracks (<strong>Show tracks legend</strong> key)</p>
+<p>(On a Mac, substitute <strong>Control</strong> for <strong>Command</strong>.)</p>
+<p><strong>Escape</strong>: Deselect all instances</p>
 </section>
 <section id="seekbar">
 <h2>Seekbar<a class="headerlink" href="#seekbar" title="Permalink to this headline">#</a></h2>
 <p><strong>Shift + drag</strong>: Select a range of frames</p>
-<p><strong>Shift + click</strong>: Clear frame selection</p>
-<p><strong>Alt + drag</strong>: Zoom into a range of frames</p>
-<p><strong>Alt + click</strong>: Zoom out so that all frames are visible in seekbar</p>
+<p><strong>Shift + left-click</strong>: Clear frame selection</p>
+<p><strong>Alt + left-click (hold) + drag</strong>: Zoom into a range of frames</p>
+<p><strong>Alt + left-click</strong>: Zoom out so that all frames are visible in seekbar</p>
 </section>
 <section id="labeling-suggestions">
 <span id="suggestion-methods"></span><h2>Labeling Suggestions<a class="headerlink" href="#labeling-suggestions" title="Permalink to this headline">#</a></h2>
