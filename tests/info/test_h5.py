@@ -22,7 +22,7 @@ from sleap.instance import Instance, Point, PredictedInstance
 from sleap.gui.commands import AddUserInstancesFromPredictions
 
 
-def test_output_matrices(centered_pair_predictions: Labels):
+def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: Labels):
     def assert_output_matrices_shape(
         num_tracks, num_frames, num_nodes, check_names: bool = False
     ):
@@ -33,6 +33,12 @@ def test_output_matrices(centered_pair_predictions: Labels):
         assert point_scores.shape == (num_frames, num_nodes, num_tracks)
         assert instance_scores.shape == (num_frames, num_tracks)
         assert tracking_scores.shape == (num_frames, num_tracks)
+
+    def assert_instance_points(points, inst: Instance, track_idx: int, frame_idx: int):
+        instance_points = points[frame_idx, :, :, track_idx]
+        for node_idx, _ in enumerate(inst.nodes):
+            assert instance_points[node_idx][0] == inst[node_idx].x
+            assert instance_points[node_idx][1] == inst[node_idx].y
 
     names = get_tracks_as_np_strings(centered_pair_predictions)
     assert len(names) == 27
@@ -160,9 +166,9 @@ def test_output_matrices(centered_pair_predictions: Labels):
     )
     centered_pair_predictions.add_instance(lf, user_instance)
 
-    # # XXX(LM): Possible for unused predicted-instance on same track as user-instance?
-    # # Add another predicted instance incase ordering matters
-    # centered_pair_predictions.add_instance(lf, lf.predicted_instances[0])
+    # XXX(LM): Possible for unused predicted-instance on same track as user-instance?
+    # Add another predicted instance (same track) incase ordering matters
+    centered_pair_predictions.add_instance(lf, lf.predicted_instances[0])
 
     # Ensure user-instance is used in occupancy matrix instead of predicted-instance
     (
@@ -173,11 +179,27 @@ def test_output_matrices(centered_pair_predictions: Labels):
         tracking_scores,
     ) = get_occupancy_and_points_matrices(centered_pair_predictions, all_frames=True)
     assert_output_matrices_shape(num_tracks=27, num_frames=1100, num_nodes=24)
-    instance_node_points = points[
-        lf.frame_idx, node_idx, :, user_instance.track.spawned_on
-    ]
-    assert instance_node_points[0] == user_instance[node_idx].x
-    assert instance_node_points[1] == user_instance[node_idx].y
+    assert_instance_points(
+        points,
+        user_instance,
+        track_idx=user_instance.track.spawned_on,
+        frame_idx=lf.frame_idx,
+    )
+
+    # Check that output matrices are correct for single instance projects
+    labels = min_labels_robot
+    (
+        occupancy,
+        points,
+        point_scores,
+        instance_scores,
+        tracking_scores,
+    ) = get_occupancy_and_points_matrices(labels, all_frames=True)
+    assert_output_matrices_shape(num_tracks=1, num_frames=80, num_nodes=2)
+
+    frame_idx = 0
+    user_instance = labels[frame_idx].instances[0]
+    assert_instance_points(points, user_instance, track_idx=0, frame_idx=frame_idx)
 
 
 def test_hdf5_saving(tmpdir):
@@ -296,9 +318,13 @@ def test_hdf5_video_arg(
 
     # Add labeled frames to second video, repeat process
     labeled_frame = labels.find(video=labels.videos[1], frame_idx=0, return_new=True)[0]
-    instance = Instance(skeleton=labels.skeleton, frame=labeled_frame)
+    instance = AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
+        copy_instance=labels[0].predicted_instances[0]
+    )
     labels.add_instance(frame=labeled_frame, instance=instance)
     labels.append(labeled_frame)
+    print(f"labels.tracks = {labels.tracks}")
+    print(f"None in labels.tracks = {None in labels.tracks}")
 
     main(
         labels=labels,
