@@ -80,9 +80,11 @@ class VideoFrameSuggestions(object):
 
         for video in labels.videos:
             if sampling_method == "stride":
-                vid_suggestions = list(
-                    range(0, video.frames, video.frames // per_video)
-                )[:per_video]
+                frame_increment = video.frames // per_video
+                frame_increment = per_video if frame_increment == 0 else frame_increment
+                vid_suggestions = list(range(0, video.frames, frame_increment))[
+                    :per_video
+                ]
             else:
                 # random sampling
                 vid_suggestions = random.sample(range(video.frames), per_video)
