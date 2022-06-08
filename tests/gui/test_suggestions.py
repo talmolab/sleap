@@ -15,10 +15,8 @@ def test_velocity_suggestions(centered_pair_predictions):
 def test_frame_increment(centered_pair_predictions: Labels):
 
     # Testing videos that have less frames than desired Samples per Video (stride)
-
     # Expected result is there should be n suggestions where n is equal to the frames
     # in the video.
-
     vid_frames = centered_pair_predictions.video.num_frames
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
@@ -32,7 +30,6 @@ def test_frame_increment(centered_pair_predictions: Labels):
 
     # Testing typical videos that have more frames than Samples per Video (stride)
     # Expected result is the desired Samples per Video number of frames.
-
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
@@ -44,10 +41,8 @@ def test_frame_increment(centered_pair_predictions: Labels):
     assert len(suggestions) == 20
 
     # Testing videos that have less frames than desired Samples per Video (random)
-
     # Expected result is there should be n suggestions where n is equal to the frames
     # in the video.
-
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
@@ -60,7 +55,6 @@ def test_frame_increment(centered_pair_predictions: Labels):
 
     # Testing typical videos that have more frames than Samples per Video (random)
     # Expected result is the desired Samples per Video number of frames.
-
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
