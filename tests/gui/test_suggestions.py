@@ -26,7 +26,7 @@ def test_frame_increment(centered_pair_predictions: Labels):
             "sampling_method": "stride",
         },
     )
-    assert len(suggestions) == 1
+    assert len(suggestions) == vid_frames
 
     # Testing typical videos that have more frames than desired Samples per Video value using stride method.
     # Expected result is the desired Samples per Video number of frames.
@@ -40,3 +40,28 @@ def test_frame_increment(centered_pair_predictions: Labels):
         },
     )
     assert len(suggestions) == 20
+
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=centered_pair_predictions,
+        params={
+            "method": "sample",
+            "per_video": 2 * vid_frames,
+            "sampling_method": "random",
+        },
+    )
+    assert len(suggestions) == vid_frames
+
+    # Testing typical videos that have more frames than desired Samples per Video value using stride method.
+    # Expected result is the desired Samples per Video number of frames.
+
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=centered_pair_predictions,
+        params={
+            "method": "sample",
+            "per_video": 20,
+            "sampling_method": "random",
+        },
+    )
+    assert len(suggestions) == 20
+
+    print("worked")
