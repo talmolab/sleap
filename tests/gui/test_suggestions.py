@@ -64,4 +64,3 @@ def test_frame_increment(centered_pair_predictions: Labels):
         },
     )
     assert len(suggestions) == 20
-    
