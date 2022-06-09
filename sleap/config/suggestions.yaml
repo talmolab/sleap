@@ -180,5 +180,3 @@ main:
   label: Generate Suggestions
   type: button
   default: main action 
-
-
