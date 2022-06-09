@@ -405,4 +405,3 @@ def test_load_video():
     video = load_video(TEST_SMALL_CENTERED_PAIR_VID)
     assert video.shape == (1100, 384, 384, 1)
     assert video[:3].shape == (3, 384, 384, 1)
-    
