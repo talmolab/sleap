@@ -344,10 +344,11 @@ def test_dummy_video():
     assert vid[0].shape == (1, 10, 20, 3)
 
 
-def test_images_video(small_robot_single_image_vid):
-    vid = small_robot_single_image_vid
+def test_images_video():
+    filenames = [f"tests/data/videos/robot{i}.jpg" for i in range(3)]
+    vid = Video.from_image_filenames(filenames)
 
-    assert vid.frames == 3
+    assert vid.frames == len(filenames)
     assert vid.height == 320
     assert vid.width == 560
     assert vid.channels == 3
@@ -404,3 +405,4 @@ def test_load_video():
     video = load_video(TEST_SMALL_CENTERED_PAIR_VID)
     assert video.shape == (1100, 384, 384, 1)
     assert video[:3].shape == (3, 384, 384, 1)
+    
