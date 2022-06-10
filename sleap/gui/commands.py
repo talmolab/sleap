@@ -35,7 +35,7 @@ import subprocess
 
 from enum import Enum
 from glob import glob
-from pathlib import PurePath
+from pathlib import PurePath, Path
 from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
 
 import numpy as np
@@ -51,6 +51,7 @@ from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.gui.dialogs.importvideos import ImportVideos
+from sleap.gui.dialogs.query import QueryDialog
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.dialogs.merge import MergeDialog
@@ -1488,28 +1489,101 @@ class ShowImportVideos(EditCommand):
 
 
 class ReplaceVideo(EditCommand):
-    topics = [UpdateTopic.video]
+    topics = [UpdateTopic.video, UpdateTopic.frame]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        new_paths = params["new_video_paths"]
+        def _trim_labeled_frames(lfs_to_remove):
+            for lf in lfs_to_remove:
+                context.labels.remove_frame(lf)
 
-        for video, new_path in zip(context.labels.videos, new_paths):
+        def _reset_video_backend(video, filename):
+            """Reset video back to original if operation aborted."""
+            video.backend.filename = filename
+            video.backend.reset()
+
+        import_list = params["import_list"]
+        video_state = context.state["video"]
+
+        for import_item, video in import_list:
+            print(f"import_item = {import_item}")
+            old_filename = video.backend.filename
+
+            new_path = import_item["params"]["filename"]
+
+            # TODO: Will need to create a new backend if allow import of other backends.
+            # Currently only allow replacement of mp4/avi videos (MediaVideo backend).
             if new_path != video.backend.filename:
-                video.backend.filename = new_path
-                video.backend.reset()
+                _reset_video_backend(video, new_path)  # Set backend to extract info.
+
+            # Remove frames in video past last frame index
+            last_vid_frame = video.last_frame_idx
+            lfs: List[LabeledFrame] = list(context.labels.get(video))
+            if lfs is not None:
+                lfs.sort(key=lambda lf: lf.frame_idx)
+                last_lf_frame = lfs[-1].frame_idx
+                lfs = [lf for lf in lfs if lf.frame_idx > last_vid_frame]
+
+                # Warn users that labels will be removed if proceed
+                if last_lf_frame > last_vid_frame:
+                    message = (
+                        "<p><strong>Warning:</strong> The replacement video is shorter "
+                        f"than the frame index of {len(lfs)} labeled frames.</p>"
+                        f"<p><em>Current video</em>: <b>{Path(old_filename).name}</b> "
+                        f"(last label at frame {last_lf_frame})<br>"
+                        f"<em>Replacement video</em>: <b>{Path(video.filename).name}"
+                        f"</b> ({last_vid_frame} frames)</p>"
+                        f"<p>Replace video (and remove {len(lfs)} labeled frames past "
+                        f"frame {last_vid_frame})?</p>"
+                    )
+                    query = QueryDialog(
+                        "Replace Video: Truncate Labeled Frames", message, context.app
+                    )
+                    query.accepted.connect(lambda: _trim_labeled_frames(lfs))
+                    query.rejected.connect(
+                        lambda: _reset_video_backend(video, old_filename)
+                    )
+                    query.exec_()
+                else:
+                    _trim_labeled_frames(lfs)
+
+            # Update seekbar and video length through callbacks
+            context.state.emit("video")
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         """Shows gui for replacing videos in project."""
-        paths = [video.backend.filename for video in context.labels.videos]
 
+        # Warn user: newly added labels will be discarded if project is unsaved
+        if not context.state["filename"] or context.state["has_changes"]:
+            QMessageBox(
+                text=("You have unsaved changes. Please save before replacing videos.")
+            ).exec_()
+            return False
+
+        # Select the videos we want to swap
+        old_paths = [video.backend.filename for video in context.labels.videos]
+        paths = list(old_paths)
         okay = MissingFilesDialog(filenames=paths, replace=True).exec_()
-
         if not okay:
             return False
 
-        params["new_video_paths"] = paths
+        # Only return an import list for videos we swap
+        new_paths = [
+            (path, video_idx)
+            for video_idx, (path, old_path) in enumerate(zip(paths, old_paths))
+            if path != old_path
+        ]
+
+        new_paths = []
+        old_videos = []
+        all_videos = context.labels.videos
+        for video_idx, (path, old_path) in enumerate(zip(paths, old_paths)):
+            if path != old_path:
+                new_paths.append(path)
+                old_videos.append(all_videos[video_idx])
+
+        params["import_list"] = zip(ImportVideos().ask(filenames=new_paths), old_videos)
 
         return True
 
