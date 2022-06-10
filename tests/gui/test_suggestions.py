@@ -21,6 +21,7 @@ def test_frame_increment(centered_pair_predictions: Labels):
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
+            "videos": centered_pair_predictions.videos
             "method": "sample",
             "per_video": 2 * vid_frames,
             "sampling_method": "stride",
@@ -33,6 +34,7 @@ def test_frame_increment(centered_pair_predictions: Labels):
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
+            "videos": centered_pair_predictions.videos
             "method": "sample",
             "per_video": 20,
             "sampling_method": "stride",
@@ -46,6 +48,7 @@ def test_frame_increment(centered_pair_predictions: Labels):
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
+            "videos": centered_pair_predictions.videos
             "method": "sample",
             "per_video": 2 * vid_frames,
             "sampling_method": "random",
@@ -58,6 +61,7 @@ def test_frame_increment(centered_pair_predictions: Labels):
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
+            "videos": centered_pair_predictions.videos
             "method": "sample",
             "per_video": 20,
             "sampling_method": "random",
