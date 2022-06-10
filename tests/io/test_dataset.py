@@ -257,7 +257,12 @@ def test_label_accessors(centered_pair_labels: Labels, min_tracks_2node_labels: 
 
     labels.suggestions = VideoFrameSuggestions.suggest(
         labels=labels,
-        params=dict(method="sample", per_video=num_samples, sampling_method="stride"),
+        params=dict(
+            videos=labels.videos,
+            method="sample",
+            per_video=num_samples,
+            sampling_method="stride",
+        ),
     )
     assert len(labels.suggestions) == num_samples
 
@@ -781,7 +786,7 @@ def test_basic_suggestions(small_robot_mp4_vid):
     labels.append(dummy_frame)
 
     suggestions = VideoFrameSuggestions.suggest(
-        labels=labels, params=dict(method="sample", per_video=13)
+        labels=labels, params=dict(vidoes=labels.videos, method="sample", per_video=13)
     )
     labels.set_suggestions(suggestions)
 
@@ -798,7 +803,7 @@ def test_deserialize_suggestions(small_robot_mp4_vid, tmpdir):
     labels.append(dummy_frame)
 
     suggestions = VideoFrameSuggestions.suggest(
-        labels=labels, params=dict(method="sample", per_video=13)
+        labels=labels, params=dict(videos=labels.videos, method="sample", per_video=13)
     )
     labels.set_suggestions(suggestions)
 

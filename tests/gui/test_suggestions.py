@@ -5,7 +5,12 @@ from sleap.io.dataset import Labels
 def test_velocity_suggestions(centered_pair_predictions):
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
-        params=dict(method="velocity", node="", threshold=0.5),
+        params=dict(
+            videos=centered_pair_predictions.videos,
+            method="velocity",
+            node="",
+            threshold=0.5,
+        ),
     )
     assert len(suggestions) == 45
     assert suggestions[0].frame_idx == 21
@@ -17,7 +22,7 @@ def test_frame_increment(centered_pair_predictions: Labels):
     # Testing videos that have less frames than desired Samples per Video (stride)
     # Expected result is there should be n suggestions where n is equal to the frames
     # in the video.
-    vid_frames = centered_pair_presdictions.video.num_frames
+    vid_frames = centered_pair_predictions.video.num_frames
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
