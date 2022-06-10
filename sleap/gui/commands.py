@@ -1494,27 +1494,32 @@ class ReplaceVideo(EditCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         def _trim_labeled_frames(lfs_to_remove):
+            """Trim labels past new video length."""
             for lf in lfs_to_remove:
                 context.labels.remove_frame(lf)
 
-        def _reset_video_backend(video, filename):
+        def _reset_video_backend(video, filename, grayscale):
             """Reset video back to original if operation aborted."""
-            video.backend.filename = filename
-            video.backend.reset()
+            # video.backend.filename = filename
+            video.backend.reset(
+                filename=filename,
+                grayscale=grayscale,
+            )
 
         import_list = params["import_list"]
-        video_state = context.state["video"]
 
         for import_item, video in import_list:
-            print(f"import_item = {import_item}")
-            old_filename = video.backend.filename
+            import_params = import_item["params"]
+            old_path = video.backend.filename
+            old_grayscale = video.backend.grayscale
+            new_path = import_params["filename"]
 
-            new_path = import_item["params"]["filename"]
-
-            # TODO: Will need to create a new backend if allow import of other backends.
-            # Currently only allow replacement of mp4/avi videos (MediaVideo backend).
+            # TODO: Will need to create a new backend if import has different extension.
+            # Currently reset is only functional for MediaVideo backend.
+            # FIXME: Ideally we would only mess with the backend after getting approval
+            # ...but, use this to read in the number of frames. Could use cv2 here....
             if new_path != video.backend.filename:
-                _reset_video_backend(video, new_path)  # Set backend to extract info.
+                _reset_video_backend(video, new_path, import_params)
 
             # Remove frames in video past last frame index
             last_vid_frame = video.last_frame_idx
@@ -1529,7 +1534,7 @@ class ReplaceVideo(EditCommand):
                     message = (
                         "<p><strong>Warning:</strong> The replacement video is shorter "
                         f"than the frame index of {len(lfs)} labeled frames.</p>"
-                        f"<p><em>Current video</em>: <b>{Path(old_filename).name}</b> "
+                        f"<p><em>Current video</em>: <b>{Path(old_path).name}</b> "
                         f"(last label at frame {last_lf_frame})<br>"
                         f"<em>Replacement video</em>: <b>{Path(video.filename).name}"
                         f"</b> ({last_vid_frame} frames)</p>"
@@ -1540,8 +1545,9 @@ class ReplaceVideo(EditCommand):
                         "Replace Video: Truncate Labeled Frames", message, context.app
                     )
                     query.accepted.connect(lambda: _trim_labeled_frames(lfs))
+                    # FIXME: Ideally we do not mess with backend before approval
                     query.rejected.connect(
-                        lambda: _reset_video_backend(video, old_filename)
+                        lambda: _reset_video_backend(video, old_path, old_grayscale)
                     )
                     query.exec_()
                 else:
@@ -1554,7 +1560,7 @@ class ReplaceVideo(EditCommand):
     def ask(context: CommandContext, params: dict) -> bool:
         """Shows gui for replacing videos in project."""
 
-        # Warn user: newly added labels will be discarded if project is unsaved
+        # Warn user: newly added labels will be discarded if project is not saved
         if not context.state["filename"] or context.state["has_changes"]:
             QMessageBox(
                 text=("You have unsaved changes. Please save before replacing videos.")
