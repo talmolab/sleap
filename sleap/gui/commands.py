@@ -1492,7 +1492,42 @@ class ReplaceVideo(EditCommand):
     topics = [UpdateTopic.video, UpdateTopic.frame]
 
     @staticmethod
-    def do_action(context: CommandContext, params: dict):
+    def ask_and_do(context: CommandContext, params: dict) -> bool:
+        """Shows gui for replacing videos in project."""
+
+        # Warn user: newly added labels will be discarded if project is not saved
+        if not context.state["filename"] or context.state["has_changes"]:
+            QMessageBox(
+                text=("You have unsaved changes. Please save before replacing videos.")
+            ).exec_()
+            return False
+
+        # Select the videos we want to swap
+        old_paths = [video.backend.filename for video in context.labels.videos]
+        paths = list(old_paths)
+        okay = MissingFilesDialog(filenames=paths, replace=True).exec_()
+        if not okay:
+            return False
+
+        # Only return an import list for videos we swap
+        new_paths = [
+            (path, video_idx)
+            for video_idx, (path, old_path) in enumerate(zip(paths, old_paths))
+            if path != old_path
+        ]
+
+        new_paths = []
+        old_videos = []
+        all_videos = context.labels.videos
+        for video_idx, (path, old_path) in enumerate(zip(paths, old_paths)):
+            if path != old_path:
+                new_paths.append(path)
+                old_videos.append(all_videos[video_idx])
+
+        params["import_list"] = zip(ImportVideos().ask(filenames=new_paths), old_videos)
+
+        # This is the beginning of the "do" part of the funtion, but has a GUI pop-up.
+
         def _trim_labeled_frames(lfs_to_remove):
             """Trim labels past new video length."""
             for lf in lfs_to_remove:
@@ -1500,7 +1535,6 @@ class ReplaceVideo(EditCommand):
 
         def _reset_video_backend(video, filename, grayscale):
             """Reset video back to original if operation aborted."""
-            # video.backend.filename = filename
             video.backend.reset(
                 filename=filename,
                 grayscale=grayscale,
@@ -1555,43 +1589,6 @@ class ReplaceVideo(EditCommand):
 
             # Update seekbar and video length through callbacks
             context.state.emit("video")
-
-    @staticmethod
-    def ask(context: CommandContext, params: dict) -> bool:
-        """Shows gui for replacing videos in project."""
-
-        # Warn user: newly added labels will be discarded if project is not saved
-        if not context.state["filename"] or context.state["has_changes"]:
-            QMessageBox(
-                text=("You have unsaved changes. Please save before replacing videos.")
-            ).exec_()
-            return False
-
-        # Select the videos we want to swap
-        old_paths = [video.backend.filename for video in context.labels.videos]
-        paths = list(old_paths)
-        okay = MissingFilesDialog(filenames=paths, replace=True).exec_()
-        if not okay:
-            return False
-
-        # Only return an import list for videos we swap
-        new_paths = [
-            (path, video_idx)
-            for video_idx, (path, old_path) in enumerate(zip(paths, old_paths))
-            if path != old_path
-        ]
-
-        new_paths = []
-        old_videos = []
-        all_videos = context.labels.videos
-        for video_idx, (path, old_path) in enumerate(zip(paths, old_paths)):
-            if path != old_path:
-                new_paths.append(path)
-                old_videos.append(all_videos[video_idx])
-
-        params["import_list"] = zip(ImportVideos().ask(filenames=new_paths), old_videos)
-
-        return True
 
 
 class RemoveVideo(EditCommand):
