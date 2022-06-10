@@ -151,7 +151,7 @@ class VideoFrameSuggestions(object):
 
     @classmethod
     def prediction_score(
-        cls, videos, labels: "Labels", score_limit, instance_limit, **kwargs
+        cls, labels: "Labels", videos, score_limit, instance_limit, **kwargs
     ):
         """
         Method to generate suggestions for proofreading frames with low score.
@@ -197,7 +197,12 @@ class VideoFrameSuggestions(object):
 
     @classmethod
     def velocity(
-        cls, videos, labels: "Labels", node: Union[int, str], threshold: float, **kwargs
+        cls,
+        labels: "Labels",
+        videos: list,
+        node: Union[int, str],
+        threshold: float,
+        **kwargs,
     ):
         """
         Finds frames for proofreading with high node velocity.
@@ -264,6 +269,7 @@ def demo_gui():
     )
 
     def demo_suggestions(params):
+        print(params)
         x = VideoFrameSuggestions.suggest(params=params, labels=labels)
 
         for suggested_frame in x:
