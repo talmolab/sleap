@@ -89,7 +89,7 @@ def test_video_selection(centered_pair_predictions: Labels):
         params={
             "videos": [centered_pair_predictions.videos[0]],
             "method": "image features",
-            "per_video": 200,
+            "per_video": 5,
             "sample_method": "stride",
             "scale": 1,
             "merge_video_features": "per_video",
@@ -100,8 +100,8 @@ def test_video_selection(centered_pair_predictions: Labels):
         },
     )
     for i in range(len(suggestions)):
-        assert suggestions[i].video == centered_pair_predictions.videos[0]
         # Confirming every suggestion is only for the video that is chosen and no other videos
+        assert suggestions[i].video == centered_pair_predictions.videos[0]
 
     # Testing suggestion generation from Sample
     suggestions = VideoFrameSuggestions.suggest(
@@ -109,14 +109,14 @@ def test_video_selection(centered_pair_predictions: Labels):
         params={
             "videos": [centered_pair_predictions.videos[0]],
             "method": "sample",
-            "per_video": 20,
+            "per_video": 3,
             "sampling_method": "random",
         },
     )
 
     for i in range(len(suggestions)):
-        assert suggestions[i].video == centered_pair_predictions.videos[0]
         # Confirming every suggestion is only for the video that is chosen and no other videos
+        assert suggestions[i].video == centered_pair_predictions.videos[0]
 
     # Testing suggestion generation from prediction score
     suggestions = VideoFrameSuggestions.suggest(
@@ -124,14 +124,14 @@ def test_video_selection(centered_pair_predictions: Labels):
         params={
             "videos": [centered_pair_predictions.videos[0]],
             "method": "prediction_score",
-            "score_limit": 3,
-            "instance_limit": 2,
+            "score_limit": 2,
+            "instance_limit": 1,
         },
     )
 
     for i in range(len(suggestions)):
-        assert suggestions[i].video == centered_pair_predictions.videos[0]
         # Confirming every suggestion is only for the video that is chosen and no other videos
+        assert suggestions[i].video == centered_pair_predictions.videos[0]
 
     # Testing suggestion generation from velocity
     suggestions = VideoFrameSuggestions.suggest(
@@ -140,10 +140,9 @@ def test_video_selection(centered_pair_predictions: Labels):
             "videos": [centered_pair_predictions.videos[0]],
             "method": "velocity",
             "node": "",
-            "threshold": 0.5,
+            "threshold": 0.8,
         },
     )
-
     for i in range(len(suggestions)):
-        assert suggestions[i].video == centered_pair_predictions.videos[0]
         # Confirming every suggestion is only for the video that is chosen and no other videos
+        assert suggestions[i].video == centered_pair_predictions.videos[0]
