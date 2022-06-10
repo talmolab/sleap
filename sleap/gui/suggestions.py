@@ -70,10 +70,15 @@ class VideoFrameSuggestions(object):
             return []
 
     # Functions corresponding to "method" param
-        
+
     @classmethod
     def basic_sample_suggestion_method(
-        cls, labels, videos, per_video: int = 20, sampling_method: str = "random", **kwargs
+        cls,
+        labels,
+        videos,
+        per_video: int = 20,
+        sampling_method: str = "random",
+        **kwargs,
     ):
         """Method to generate suggestions by taking strides through video."""
         suggestions = []
@@ -145,7 +150,9 @@ class VideoFrameSuggestions(object):
             return suggestions
 
     @classmethod
-    def prediction_score(cls, videos, labels: "Labels", score_limit, instance_limit, **kwargs):
+    def prediction_score(
+        cls, videos, labels: "Labels", score_limit, instance_limit, **kwargs
+    ):
         """
         Method to generate suggestions for proofreading frames with low score.
         """
