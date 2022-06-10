@@ -17,11 +17,11 @@ def test_frame_increment(centered_pair_predictions: Labels):
     # Testing videos that have less frames than desired Samples per Video (stride)
     # Expected result is there should be n suggestions where n is equal to the frames
     # in the video.
-    vid_frames = centered_pair_predictions.video.num_frames
+    vid_frames = centered_pair_presdictions.video.num_frames
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
-            "videos": centered_pair_predictions.videos
+            "videos": centered_pair_predictions.videos,
             "method": "sample",
             "per_video": 2 * vid_frames,
             "sampling_method": "stride",
@@ -34,7 +34,7 @@ def test_frame_increment(centered_pair_predictions: Labels):
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
-            "videos": centered_pair_predictions.videos
+            "videos": centered_pair_predictions.videos,
             "method": "sample",
             "per_video": 20,
             "sampling_method": "stride",
@@ -48,7 +48,7 @@ def test_frame_increment(centered_pair_predictions: Labels):
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
-            "videos": centered_pair_predictions.videos
+            "videos": centered_pair_predictions.videos,
             "method": "sample",
             "per_video": 2 * vid_frames,
             "sampling_method": "random",
@@ -61,7 +61,7 @@ def test_frame_increment(centered_pair_predictions: Labels):
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
-            "videos": centered_pair_predictions.videos
+            "videos": centered_pair_predictions.videos,
             "method": "sample",
             "per_video": 20,
             "sampling_method": "random",
