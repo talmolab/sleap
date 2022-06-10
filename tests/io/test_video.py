@@ -447,7 +447,7 @@ def test_reset_video(small_robot_mp4_vid: Video):
 
     # Reset the backend
     video.backend.reset(filename=filename, grayscale=False)
-    assert_video_params(filename=filename, grayscale=False, reset=True)
+    assert_video_params(filename=filename, grayscale=False, bgr=True, reset=True)
 
     # Get a frame to test that reset parameters persist (namely grayscale and channels)
     frame = video.get_frame(idx=0)
