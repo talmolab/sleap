@@ -461,20 +461,23 @@ class MediaVideo:
         """See :class:`Video`."""
         return self.test_frame.dtype
 
-    def reset(self, filename: str = None, grayscale: bool = None, bgr: bool = True):
+    def reset(self, filename: str = None, grayscale: bool = None, bgr: bool = None):
         """Reloads the video."""
         if filename is not None:
             self.filename = filename
-            self.bgr = bgr
+            self._test_frame_ = None  # Test frame does not depend on num channels
 
         if grayscale is not None:
             self.grayscale = grayscale
+            self._detect_grayscale = False
         else:
             self._detect_grayscale = True
 
-        if (grayscale is not None) or (filename is not None):
-            self._reader_ = None
-            self._test_frame_ = None
+        if bgr is not None:
+            self.bgr = bgr
+
+        if (filename is not None) or (grayscale is not None):
+            self._reader_ = None  # Reader depends on both filename and grayscale
 
     def get_frame(self, idx: int, grayscale: bool = None) -> np.ndarray:
         """See :class:`Video`."""
