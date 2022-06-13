@@ -806,6 +806,9 @@ class SingleImageVideo:
     height_: Optional[int] = attr.ib(default=None)
     width_: Optional[int] = attr.ib(default=None)
     channels_: Optional[int] = attr.ib(default=None)
+    grayscale: Optional[bool] = attr.ib()
+
+    _detect_grayscale = False
 
     def __attrs_post_init__(self):
         if not self.filename and self.filenames:
@@ -815,6 +818,11 @@ class SingleImageVideo:
 
         self.__data = dict()
         self.test_frame_ = None
+
+    @grayscale.default
+    def __grayscale_default__(self):
+        self._detect_grayscale = True
+        return False
 
     def _load_idx(self, idx):
         img = cv2.imread(self._get_filename(idx))
@@ -840,6 +848,11 @@ class SingleImageVideo:
     def _load_test_frame(self):
         if self.test_frame_ is None:
             self.test_frame_ = self._load_idx(0)
+
+            if self._detect_grayscale is True:
+                self.grayscale = bool(
+                    np.alltrue(self.test_frame_[..., 0] == self.test_frame_[..., -1])
+                )
 
             if self.height_ is None:
                 self.height_ = self.test_frame.shape[0]
@@ -882,7 +895,9 @@ class SingleImageVideo:
     @property
     def channels(self):
         """See :class:`Video`."""
-        if self.channels_ is None:
+        if self.grayscale:
+            return 1  # Return the number of channels we plan on presenting
+        elif self.channels_ is None:
             self._load_test_frame()
 
         return self.channels_
@@ -916,17 +931,53 @@ class SingleImageVideo:
         """See :class:`Video`."""
         return self.__data.dtype
 
-    def reset(self):
+    def reset(
+        self,
+        filename: str = None,
+        filenames: List[str] = None,
+        height_: int = None,
+        width_: int = None,
+        channels_: int = None,
+        grayscale: bool = None,
+    ):
         """Reloads the video."""
-        # TODO
-        pass
+        if filename and filenames:
+            print(f"Cannot specify both filename and filenames for SingleImageVideo.")
+            return
+        elif filename or filenames:
+            self.__data = dict()
+            self.test_frame_ = None
+            self.height_ = height_
+            self.width_ = width_
+            self.channels_ = channels_
 
-    def get_frame(self, idx):
+        if not filename and filenames:
+            self.filenames = filenames
+            self.filename = filenames[0]
+        elif filename and not filenames:
+            self.filename = filename
+            self.filenames = [filename]
+
+        if grayscale is not None:
+            self.grayscale = grayscale
+            self._detect_grayscale = False
+        else:
+            self._detect_grayscale = True
+
+    def get_frame(self, idx: int, grayscale: bool = None) -> np.ndarray:
         """See :class:`Video`."""
         if idx not in self.__data:
             self.__data[idx] = self._load_idx(idx)
 
-        return self.__data[idx]
+        frame = self.__data[idx]  # Manipulate a copy of self.__data[idx]
+
+        if grayscale is None:
+            grayscale = self.grayscale
+
+        if grayscale:
+            frame = frame[..., 0][..., None]
+
+        return frame
 
 
 @attr.s(auto_attribs=True, eq=False, order=False)
