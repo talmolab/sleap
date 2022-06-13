@@ -1178,7 +1178,7 @@ class MainWindow(QMainWindow):
 
         has_frame_range = bool(self.state["has_frame_range"])
         has_unsaved_changes = bool(self.state["has_changes"])
-        has_videos = len(self.labels.videos) > 0
+        has_videos = self.labels is not None and len(self.labels.videos) > 0
         has_multiple_videos = self.labels is not None and len(self.labels.videos) > 1
         has_labeled_frames = self.labels is not None and any(
             (lf.video == self.state["video"] for lf in self.labels)
