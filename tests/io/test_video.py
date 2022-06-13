@@ -1,7 +1,6 @@
 import pytest
 import os
 import h5py
-
 import numpy as np
 
 from sleap.io.video import Video, HDF5Video, MediaVideo, DummyVideo, load_video
@@ -405,3 +404,67 @@ def test_load_video():
     video = load_video(TEST_SMALL_CENTERED_PAIR_VID)
     assert video.shape == (1100, 384, 384, 1)
     assert video[:3].shape == (3, 384, 384, 1)
+
+
+def assert_video_params(
+    video: Video,
+    filename: str,
+    grayscale: bool = None,
+    bgr: bool = None,
+    reset: bool = False,
+):
+    assert video.backend.filename == filename
+    if grayscale is not None:
+        assert video.backend.grayscale == grayscale
+    else:
+        assert video.backend._detect_grayscale == bool(grayscale is None)
+    if bgr is not None:
+        assert video.backend.bgr == bgr
+    if reset:
+        assert video.backend._reader_ == None
+        assert video.backend._test_frame_ == None
+    # Getting the channels will assert some of the above are not None
+    if grayscale is not None:
+        assert video.backend.channels == 3 ** (not grayscale)
+
+
+def test_reset_video_mp4(small_robot_mp4_vid: Video):
+
+    video = small_robot_mp4_vid
+    filename = video.backend.filename
+
+    # Get a frame to set the video parameters in the backend
+    video.get_frame(idx=0)
+    assert_video_params(
+        video=video, filename=filename, grayscale=video.backend.grayscale
+    )
+
+    # Test reset works for color to grayscale
+
+    # Reset the backend: grasyscale = True
+    video.backend.reset(filename=filename, grayscale=True)
+    assert_video_params(video=video, filename=filename, grayscale=True, reset=True)
+
+    # Get a frame to test that reset parameters persist (namely grayscale and channels)
+    frame = video.get_frame(idx=0)
+    assert frame.shape[2] == 1
+    assert_video_params(video=video, filename=filename, grayscale=True)
+
+    # Test reset works for grayscale to color
+
+    # Reset the backend: grasyscale = False
+    video.backend.reset(filename=filename, grayscale=False)
+    assert_video_params(
+        video=video, filename=filename, grayscale=False, bgr=True, reset=True
+    )
+
+    # Get a frame to test that reset parameters persist (namely grayscale and channels)
+    frame = video.get_frame(idx=0)
+    assert frame.shape[2] == 3
+    assert_video_params(video=video, filename=filename, grayscale=False)
+
+    # Test reset works when grayscale is None
+
+    # Reset the backend: grayscale = None (and set bgr)
+    video.backend.reset(filename=filename, bgr=True)
+    assert_video_params(video=video, filename=filename, bgr=True, reset=True)
