@@ -371,8 +371,8 @@ class CommandContext:
 
     def toggleGrayscale(self):
         """Toggles grayscale setting for current video."""
-        self.execute(ToggleGrayscale)    
-    
+        self.execute(ToggleGrayscale)
+
     def addVideo(self):
         """Shows gui for adding videos to project."""
         self.execute(AddVideo)
@@ -1471,29 +1471,29 @@ class ToggleGrayscale(EditCommand):
 
 
 class AddVideo(EditCommand):
-topics = [UpdateTopic.video]
+    topics = [UpdateTopic.video]
 
-@staticmethod
-def do_action(context: CommandContext, params: dict):
-    import_list = params["import_list"]
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        import_list = params["import_list"]
 
-    new_videos = ImportVideos.create_videos(import_list)
-    video = None
-    for video in new_videos:
-        # Add to labels
-        context.labels.add_video(video)
-        context.changestack_push("add video")
+        new_videos = ImportVideos.create_videos(import_list)
+        video = None
+        for video in new_videos:
+            # Add to labels
+            context.labels.add_video(video)
+            context.changestack_push("add video")
 
-    # Load if no video currently loaded
-    if context.state["video"] is None:
-        context.state["video"] = video
+        # Load if no video currently loaded
+        if context.state["video"] is None:
+            context.state["video"] = video
 
-@staticmethod
-def ask(context: CommandContext, params: dict) -> bool:
-    """Shows gui for adding video to project."""
-    params["import_list"] = ImportVideos().ask()
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        """Shows gui for adding video to project."""
+        params["import_list"] = ImportVideos().ask()
 
-    return len(params["import_list"]) > 0
+        return len(params["import_list"]) > 0
 
 
 class ShowImportVideos(EditCommand):
@@ -2167,6 +2167,7 @@ class GenerateSuggestions(EditCommand):
         new_suggestions = VideoFrameSuggestions.suggest(
             labels=context.labels, params=params
         )
+
         context.labels.set_suggestions(new_suggestions)
 
         win.hide()
