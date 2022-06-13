@@ -82,7 +82,7 @@ def get_occupancy_and_points_matrices(
         * instance scores array with shape (frames, tracks)
         * tracking scores array with shape (frames, tracks)
     """
-    # XXX(LM): Assumes either all instances have tracks or no instances have tracks
+    # Assumes either all instances have tracks or no instances have tracks
     track_count = len(labels.tracks) or 1
     node_count = len(labels.skeletons[0].nodes)
 
@@ -124,7 +124,7 @@ def get_occupancy_and_points_matrices(
     instance_scores = np.full((frame_count, track_count), np.nan, dtype=float)
     tracking_scores = np.full((frame_count, track_count), np.nan, dtype=float)
 
-    # XXX(LM): Assumes either all instances have tracks or no instances have tracks
+    # Assumes either all instances have tracks or no instances have tracks
     # Prefer user-labeled instances over predicted instances
     tracks = labels.tracks or [None]  # Comparator in case of project with no tracks
     lfs_instances = list()
@@ -163,7 +163,7 @@ def get_occupancy_and_points_matrices(
 
     for lf, inst in lfs_instances:
         frame_i = lf.frame_idx - first_frame_idx
-        # XXX(LM): Assumes either all instances have tracks or no instances have tracks
+        # Assumes either all instances have tracks or no instances have tracks
         if inst.track is None:
             # We could use lf.instances.index(inst) but then we'd need
             # to calculate the number of "tracks" based on the max number of

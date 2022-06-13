@@ -166,7 +166,6 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
     )
     centered_pair_predictions.add_instance(lf, user_instance)
 
-    # XXX(LM): Possible for unused predicted-instance on same track as user-instance?
     # Add another predicted instance (same track) incase ordering matters
     centered_pair_predictions.add_instance(lf, lf.predicted_instances[0])
 
