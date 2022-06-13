@@ -2119,18 +2119,23 @@ class GenerateSuggestions(EditCommand):
             "Generating list of suggested frames... " "This may take a few minutes.",
             context.app,
         )
-
-        if (
-            params["target"] == "current video"
-        ):  # checks if current video is selected in gui
-            params["videos"] = [context.state["video"]]
+        if len(context.labels.videos) == 0:
+            print("Error: no videos to generate suggestions for")
         else:
-            params["videos"] = context.labels.videos
-        new_suggestions = VideoFrameSuggestions.suggest(
-            labels=context.labels, params=params
-        )
+            if (
+                params["target"] == "current video"
+            ):  # checks if current video is selected in gui
+                if context.state["video"] is not None:
+                    params["videos"] = [context.state["video"]]
+                else:
+                    params["videos"] = [context.labels.videos[0]]
+            else:
+                params["videos"] = context.labels.videos
 
-        context.labels.set_suggestions(new_suggestions)
+            new_suggestions = VideoFrameSuggestions.suggest(
+                labels=context.labels, params=params
+            )
+            context.labels.set_suggestions(new_suggestions)
 
         win.hide()
 
