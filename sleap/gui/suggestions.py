@@ -75,7 +75,7 @@ class VideoFrameSuggestions(object):
     def basic_sample_suggestion_method(
         cls,
         labels,
-        videos,
+        videos: List[Video],
         per_video: int = 20,
         sampling_method: str = "random",
         **kwargs,
@@ -107,7 +107,7 @@ class VideoFrameSuggestions(object):
     def image_feature_based_method(
         cls,
         labels,
-        videos,
+        videos: List[Video],
         per_video,
         sample_method,
         scale,
@@ -151,7 +151,12 @@ class VideoFrameSuggestions(object):
 
     @classmethod
     def prediction_score(
-        cls, labels: "Labels", videos, score_limit, instance_limit, **kwargs
+        cls,
+        labels: "Labels",
+        videos: List[Video],
+        score_limit,
+        instance_limit,
+        **kwargs,
     ):
         """
         Method to generate suggestions for proofreading frames with low score.
@@ -199,7 +204,7 @@ class VideoFrameSuggestions(object):
     def velocity(
         cls,
         labels: "Labels",
-        videos: list,
+        videos: List[Video],
         node: Union[int, str],
         threshold: float,
         **kwargs,
