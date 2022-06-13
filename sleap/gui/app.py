@@ -1178,6 +1178,7 @@ class MainWindow(QMainWindow):
 
         has_frame_range = bool(self.state["has_frame_range"])
         has_unsaved_changes = bool(self.state["has_changes"])
+        has_videos = len(self.labels.videos) > 0
         has_multiple_videos = self.labels is not None and len(self.labels.videos) > 1
         has_labeled_frames = self.labels is not None and any(
             (lf.video == self.state["video"] for lf in self.labels)
@@ -1227,6 +1228,7 @@ class MainWindow(QMainWindow):
         self._buttons["show video"].setEnabled(has_selected_video)
         self._buttons["remove video"].setEnabled(has_selected_video)
         self._buttons["delete instance"].setEnabled(has_selected_instance)
+        self.suggestions_form_widget.buttons["generate_button"].setEnabled(has_videos)
 
         # Update overlays
         self.overlays["track_labels"].visible = (
