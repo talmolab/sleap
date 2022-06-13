@@ -408,23 +408,27 @@ def test_load_video():
 
 def assert_video_params(
     video: Video,
-    filename: str = None,
+    filename: str,
     grayscale: bool = None,
-    bgr: bool = True,
+    bgr: bool = None,
     reset: bool = False,
 ):
     assert video.backend.filename == filename
-    assert video.backend.grayscale == grayscale
-    assert video.backend.bgr == bgr
+    if grayscale is not None:
+        assert video.backend.grayscale == grayscale
+    else:
+        assert video.backend._detect_grayscale == bool(grayscale is None)
+    if bgr is not None:
+        assert video.backend.bgr == bgr
     if reset:
         assert video.backend._reader_ == None
         assert video.backend._test_frame_ == None
-        assert video.backend._detect_grayscale == bool(grayscale is None)
     # Getting the channels will assert some of the above are not None
-    assert video.backend.channels == 3 ** (not grayscale)
+    if grayscale is not None:
+        assert video.backend.channels == 3 ** (not grayscale)
 
 
-def test_reset_video(small_robot_mp4_vid: Video):
+def test_reset_video_mp4(small_robot_mp4_vid: Video):
 
     video = small_robot_mp4_vid
     filename = video.backend.filename
@@ -437,7 +441,7 @@ def test_reset_video(small_robot_mp4_vid: Video):
 
     # Test reset works for color to grayscale
 
-    # Reset the backend
+    # Reset the backend: grasyscale = True
     video.backend.reset(filename=filename, grayscale=True)
     assert_video_params(video=video, filename=filename, grayscale=True, reset=True)
 
@@ -448,7 +452,7 @@ def test_reset_video(small_robot_mp4_vid: Video):
 
     # Test reset works for grayscale to color
 
-    # Reset the backend
+    # Reset the backend: grasyscale = False
     video.backend.reset(filename=filename, grayscale=False)
     assert_video_params(
         video=video, filename=filename, grayscale=False, bgr=True, reset=True
@@ -458,3 +462,9 @@ def test_reset_video(small_robot_mp4_vid: Video):
     frame = video.get_frame(idx=0)
     assert frame.shape[2] == 3
     assert_video_params(video=video, filename=filename, grayscale=False)
+
+    # Test reset works when grayscale is None
+
+    # Reset the backend: grayscale = None (and set bgr)
+    video.backend.reset(filename=filename, bgr=True)
+    assert_video_params(video=video, filename=filename, bgr=True, reset=True)
