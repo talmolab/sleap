@@ -369,6 +369,10 @@ class CommandContext:
 
     # Editing Commands
 
+    def toggleGrayscale(self):
+        """Toggles grayscale setting for current video."""
+        self.execute(ToggleGrayscale)    
+    
     def addVideo(self):
         """Shows gui for adding videos to project."""
         self.execute(AddVideo)
@@ -1442,7 +1446,31 @@ class EditCommand(AppCommand):
     does_edits = True
 
 
-class AddVideo(EditCommand):
+class ToggleGrayscale(EditCommand):
+    topics = [UpdateTopic.video, UpdateTopic.frame]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        """Reset the video backend."""
+        video: Video = context.state["video"]
+        try:
+            grayscale = video.backend.grayscale
+            video.backend.reset(grayscale=(not grayscale))
+        except:
+            print(
+                f"This video type {type(video.backend)} does not support grayscale yet."
+            )
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        """Check that video can be reset."""
+        # Check that current video is set
+        if context.state["video"] is None:
+            return False
+        return True
+
+
+ class AddVideo(EditCommand):
     topics = [UpdateTopic.video]
 
     @staticmethod
