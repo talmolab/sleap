@@ -47,7 +47,11 @@ class ImportVideos:
     def __init__(self):
         self.result = []
 
-    def ask(self, filenames: Optional[List[str]] = None):
+    def ask(
+        self,
+        filenames: Optional[List[str]] = None,
+        messages: Optional[dict] = dict(),
+    ):
         """Runs the import UI.
 
         1. Show file selection dialog.
@@ -67,7 +71,7 @@ class ImportVideos:
                 "Any Video (*.h5 *.hd5v *.mp4 *.avi *.json);;HDF5 (*.h5 *.hd5v);;ImgStore (*.json);;Media Video (*.mp4 *.avi);;Any File (*.*)",
             )
         if len(filenames) > 0:
-            importer = ImportParamDialog(filenames)
+            importer = ImportParamDialog(filenames, messages)
             importer.accepted.connect(lambda: importer.get_data(self.result))
             importer.exec_()
         return self.result
@@ -91,7 +95,7 @@ class ImportParamDialog(QDialog):
         filenames (list): List of files we want to import.
     """
 
-    def __init__(self, filenames: List[str], *args, **kwargs):
+    def __init__(self, filenames: List[str], messages: dict = dict(), *args, **kwargs):
         super(ImportParamDialog, self).__init__(*args, **kwargs)
 
         self.import_widgets = []
@@ -135,7 +139,6 @@ class ImportParamDialog(QDialog):
         outer_layout = QVBoxLayout()
 
         scroll_widget = QScrollArea()
-        # scroll_widget.setWidgetResizable(False)
         scroll_widget.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         scroll_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
@@ -152,7 +155,10 @@ class ImportParamDialog(QDialog):
                             this_type = import_type
                             break
                 if this_type is not None:
-                    import_item_widget = ImportItemWidget(file_name, this_type)
+                    message = messages[file_name] if file_name in messages else str()
+                    import_item_widget = ImportItemWidget(
+                        file_name, this_type, message=message
+                    )
                     self.import_widgets.append(import_item_widget)
                     scroll_layout.addWidget(import_item_widget)
                 else:
@@ -197,6 +203,7 @@ class ImportParamDialog(QDialog):
         button_layout.addWidget(import_button)
 
         outer_layout.addLayout(button_layout)
+        self.adjustSize()
 
         self.setLayout(outer_layout)
 
@@ -269,7 +276,9 @@ class ImportItemWidget(QFrame):
         import_type (dict): Data about user-selectable import parameters.
     """
 
-    def __init__(self, file_path: str, import_type: dict, *args, **kwargs):
+    def __init__(
+        self, file_path: str, import_type: dict, message: str = str(), *args, **kwargs
+    ):
         super(ImportItemWidget, self).__init__(*args, **kwargs)
 
         self.file_path = file_path
@@ -287,6 +296,9 @@ class ImportItemWidget(QFrame):
         self.options_widget = ImportParamWidget(
             parent=self, file_path=self.file_path, import_type=self.import_type
         )
+
+        self.message_widget = MessageWidget(parent=self, message=message)
+
         self.preview_widget = VideoPreviewWidget(parent=self)
         self.preview_widget.setFixedSize(200, 200)
 
@@ -295,6 +307,7 @@ class ImportItemWidget(QFrame):
         )
 
         inner_layout.addWidget(self.options_widget)
+        inner_layout.addWidget(self.message_widget)
         inner_layout.addWidget(self.preview_widget)
         import_item_layout.addLayout(inner_layout)
         self.setLayout(import_item_layout)
@@ -525,6 +538,26 @@ class ImportParamWidget(QWidget):
         pass
 
 
+class MessageWidget(QWidget):
+    """Widget to show message."""
+
+    def __init__(self, message: str = str(), *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.message = QLabel(message)
+        self.message.setStyleSheet("color: red")
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.message)
+        self.setLayout(self.layout)
+
+    def boundingRect(self) -> QRectF:
+        """Method required by Qt."""
+        return QRectF()
+
+    def paint(self, painter, option, widget=None):
+        """Method required by Qt."""
+        pass
+
+
 class VideoPreviewWidget(QWidget):
     """Widget to show video preview. Based on :class:`Video` class.
 
@@ -605,8 +638,10 @@ if __name__ == "__main__":
         "tests/data/videos/small_robot.mp4",
     ]
 
+    messages = {"tests/data/videos/small_robot.mp4": "Testing messages"}
+
     import_list = []
-    importer = ImportParamDialog(filenames)
+    importer = ImportParamDialog(filenames, messages=messages)
     importer.accepted.connect(lambda: importer.get_data(import_list))
     importer.exec_()
 

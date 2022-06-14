@@ -29,6 +29,7 @@ for now it's at least easy to see where this separation is violated.
 import attr
 import operator
 import os
+import cv2
 import re
 import sys
 import subprocess
@@ -1520,8 +1521,53 @@ class ReplaceVideo(EditCommand):
     topics = [UpdateTopic.video, UpdateTopic.frame]
 
     @staticmethod
-    def ask_and_do(context: CommandContext, params: dict) -> bool:
+    def do_action(context: CommandContext, params: dict) -> bool:
+
+        import_list = params["import_list"]
+
+        for import_item, video in import_list:
+            import_params = import_item["params"]
+
+            # TODO: Will need to create a new backend if import has different extension.
+            video.backend.reset(**import_params)
+
+            # Remove frames in video past last frame index
+            last_vid_frame = video.last_frame_idx
+            lfs: List[LabeledFrame] = list(context.labels.get(video))
+            if lfs is not None:
+                lfs = [lf for lf in lfs if lf.frame_idx > last_vid_frame]
+                context.labels.remove_frames(lfs)
+
+            # Update seekbar and video length through callbacks
+            context.state.emit("video")
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
         """Shows gui for replacing videos in project."""
+
+        def _get_truncation_message(truncation_messages, path, video):
+            reader = cv2.VideoCapture(path)
+            last_vid_frame = int(reader.get(cv2.CAP_PROP_FRAME_COUNT))
+            lfs: List[LabeledFrame] = list(context.labels.get(video))
+            if lfs is not None:
+                lfs.sort(key=lambda lf: lf.frame_idx)
+                last_lf_frame = lfs[-1].frame_idx
+                lfs = [lf for lf in lfs if lf.frame_idx > last_vid_frame]
+
+                # Message to warn users that labels will be removed if proceed
+                if last_lf_frame > last_vid_frame:
+                    message = (
+                        "<p><strong>Warning:</strong> Replacing this video will "
+                        f"remove {len(lfs)} labeled frames.</p>"
+                        f"<p><em>Current video</em>: <b>{Path(video.filename).name}</b>"
+                        f" (last label at frame {last_lf_frame})<br>"
+                        f"<em>Replacement video</em>: <b>{Path(path).name}"
+                        f"</b> ({last_vid_frame} frames)</p>"
+                    )
+                    # Assumes that a project won't import the same video multiple times
+                    truncation_messages[path] = message
+
+            return truncation_messages
 
         # Warn user: newly added labels will be discarded if project is not saved
         if not context.state["filename"] or context.state["has_changes"]:
@@ -1547,76 +1593,21 @@ class ReplaceVideo(EditCommand):
         new_paths = []
         old_videos = []
         all_videos = context.labels.videos
+        truncation_messages = dict()
         for video_idx, (path, old_path) in enumerate(zip(paths, old_paths)):
             if path != old_path:
                 new_paths.append(path)
                 old_videos.append(all_videos[video_idx])
+                truncation_messages = _get_truncation_message(
+                    truncation_messages, path, video=all_videos[video_idx]
+                )
 
-        params["import_list"] = zip(ImportVideos().ask(filenames=new_paths), old_videos)
+        import_list = ImportVideos().ask(
+            filenames=new_paths, messages=truncation_messages
+        )
+        params["import_list"] = zip(import_list, old_videos)
 
-        # This is the beginning of the "do" part of the funtion, but has a GUI pop-up.
-
-        def _trim_labeled_frames(lfs_to_remove):
-            """Trim labels past new video length."""
-            for lf in lfs_to_remove:
-                context.labels.remove_frame(lf)
-
-        def _reset_video_backend(video, filename, grayscale):
-            """Reset video back to original if operation aborted."""
-            video.backend.reset(
-                filename=filename,
-                grayscale=grayscale,
-            )
-
-        import_list = params["import_list"]
-
-        for import_item, video in import_list:
-            import_params = import_item["params"]
-            old_path = video.backend.filename
-            old_grayscale = video.backend.grayscale
-            new_path = import_params["filename"]
-
-            # TODO: Will need to create a new backend if import has different extension.
-            # Currently reset is only functional for MediaVideo backend.
-            # FIXME: Ideally we would only mess with the backend after getting approval
-            # ...but, use this to read in the number of frames. Could use cv2 here....
-            if new_path != video.backend.filename:
-                _reset_video_backend(video, new_path, import_params)
-
-            # Remove frames in video past last frame index
-            last_vid_frame = video.last_frame_idx
-            lfs: List[LabeledFrame] = list(context.labels.get(video))
-            if lfs is not None:
-                lfs.sort(key=lambda lf: lf.frame_idx)
-                last_lf_frame = lfs[-1].frame_idx
-                lfs = [lf for lf in lfs if lf.frame_idx > last_vid_frame]
-
-                # Warn users that labels will be removed if proceed
-                if last_lf_frame > last_vid_frame:
-                    message = (
-                        "<p><strong>Warning:</strong> The replacement video is shorter "
-                        f"than the frame index of {len(lfs)} labeled frames.</p>"
-                        f"<p><em>Current video</em>: <b>{Path(old_path).name}</b> "
-                        f"(last label at frame {last_lf_frame})<br>"
-                        f"<em>Replacement video</em>: <b>{Path(video.filename).name}"
-                        f"</b> ({last_vid_frame} frames)</p>"
-                        f"<p>Replace video (and remove {len(lfs)} labeled frames past "
-                        f"frame {last_vid_frame})?</p>"
-                    )
-                    query = QueryDialog(
-                        "Replace Video: Truncate Labeled Frames", message, context.app
-                    )
-                    query.accepted.connect(lambda: _trim_labeled_frames(lfs))
-                    # FIXME: Ideally we do not mess with backend before approval
-                    query.rejected.connect(
-                        lambda: _reset_video_backend(video, old_path, old_grayscale)
-                    )
-                    query.exec_()
-                else:
-                    _trim_labeled_frames(lfs)
-
-            # Update seekbar and video length through callbacks
-            context.state.emit("video")
+        return len(import_list) > 0
 
 
 class RemoveVideo(EditCommand):
