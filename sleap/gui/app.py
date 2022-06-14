@@ -935,6 +935,7 @@ class MainWindow(QMainWindow):
         videos_layout.addWidget(self.videosTable)
 
         hb = QHBoxLayout()
+        _add_button(hb, "Toggle Grayscale", self.commands.toggleGrayscale)
         _add_button(hb, "Show Video", self.videosTable.activateSelected)
         _add_button(hb, "Add Videos", self.commands.addVideo)
         _add_button(hb, "Remove Video", self.commands.removeVideo)
@@ -1172,12 +1173,14 @@ class MainWindow(QMainWindow):
     def _update_gui_state(self):
         """Enable/disable gui items based on current state."""
         has_selected_instance = self.state["instance"] is not None
-        has_selected_video = self.state["selected_video"] is not None
         has_selected_node = self.state["selected_node"] is not None
         has_selected_edge = self.state["selected_edge"] is not None
+        has_selected_video = self.state["selected_video"] is not None
+        has_video = self.state["video"] is not None
 
         has_frame_range = bool(self.state["has_frame_range"])
         has_unsaved_changes = bool(self.state["has_changes"])
+        has_videos = self.labels is not None and len(self.labels.videos) > 0
         has_multiple_videos = self.labels is not None and len(self.labels.videos) > 1
         has_labeled_frames = self.labels is not None and any(
             (lf.video == self.state["video"] for lf in self.labels)
@@ -1224,9 +1227,11 @@ class MainWindow(QMainWindow):
         self._buttons["add edge"].setEnabled(has_nodes_selected)
         self._buttons["delete edge"].setEnabled(has_selected_edge)
         self._buttons["delete node"].setEnabled(has_selected_node)
+        self._buttons["toggle grayscale"].setEnabled(has_video)
         self._buttons["show video"].setEnabled(has_selected_video)
         self._buttons["remove video"].setEnabled(has_selected_video)
         self._buttons["delete instance"].setEnabled(has_selected_instance)
+        self.suggestions_form_widget.buttons["generate_button"].setEnabled(has_videos)
 
         # Update overlays
         self.overlays["track_labels"].visible = (

@@ -60,6 +60,9 @@ def get_occupancy_and_points_matrices(
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Builds numpy matrices with track occupancy and point location data.
 
+    Note: This function assumes either all instances have tracks or no instances have
+    tracks.
+
     Args:
         labels: The :py:class:`Labels` from which to get data.
         all_frames: If True, then includes zeros so that frame index
@@ -79,6 +82,7 @@ def get_occupancy_and_points_matrices(
         * instance scores array with shape (frames, tracks)
         * tracking scores array with shape (frames, tracks)
     """
+    # Assumes either all instances have tracks or no instances have tracks
     track_count = len(labels.tracks) or 1
     node_count = len(labels.skeletons[0].nodes)
 
@@ -120,8 +124,46 @@ def get_occupancy_and_points_matrices(
     instance_scores = np.full((frame_count, track_count), np.nan, dtype=float)
     tracking_scores = np.full((frame_count, track_count), np.nan, dtype=float)
 
-    for lf, inst in [(lf, inst) for lf in labeled_frames for inst in lf.instances]:
+    # Assumes either all instances have tracks or no instances have tracks
+    # Prefer user-labeled instances over predicted instances
+    tracks = labels.tracks or [None]  # Comparator in case of project with no tracks
+    lfs_instances = list()
+    warning_flag = False
+    for lf in labeled_frames:
+        user_instances = lf.user_instances
+        predicted_instances = lf.predicted_instances
+        for track in tracks:
+            track_instances = list()
+            # If a user-instance exists for this track, then use user-instance
+            user_track_instances = [
+                inst for inst in user_instances if inst.track == track
+            ]
+            if len(user_track_instances) > 0:
+                track_instances = user_track_instances
+            else:
+                # Otherwise, if a predicted instance exists, then use the predicted
+                predicted_track_instances = [
+                    inst for inst in predicted_instances if inst.track == track
+                ]
+                if len(predicted_track_instances) > 0:
+                    track_instances = predicted_track_instances
+
+            lfs_instances.extend([(lf, inst) for inst in track_instances])
+
+            # Set warning flag if more than one instances on a track in a single frame
+            warning_flag = warning_flag or (
+                (track is not None) and (len(track_instances) > 1)
+            )
+
+    if warning_flag:
+        print(
+            "\nWarning! "
+            "There are more than one instances per track on a single frame.\n"
+        )
+
+    for lf, inst in lfs_instances:
         frame_i = lf.frame_idx - first_frame_idx
+        # Assumes either all instances have tracks or no instances have tracks
         if inst.track is None:
             # We could use lf.instances.index(inst) but then we'd need
             # to calculate the number of "tracks" based on the max number of

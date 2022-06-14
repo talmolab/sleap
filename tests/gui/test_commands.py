@@ -11,6 +11,7 @@ from sleap.io.convert import default_analysis_filename
 from sleap.instance import Instance
 
 from tests.info.test_h5 import extract_meta_hdf5
+from tests.io.test_video import assert_video_params
 
 from pathlib import PurePath, Path
 import shutil
@@ -234,3 +235,22 @@ def test_ExportAnalysisFile(
     params = {"all_videos": True}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == False
+
+
+def test_ToggleGrayscale(centered_pair_predictions: Labels):
+    """Test functionality for ToggleGrayscale on mp4/avi video"""
+    labels = centered_pair_predictions
+    video = labels.video
+    grayscale = video.backend.grayscale
+    filename = video.backend.filename
+
+    context = CommandContext.from_labels(labels)
+    context.state["video"] = video
+
+    # Toggle grayscale to "not grayscale"
+    context.toggleGrayscale()
+    assert_video_params(video=video, filename=filename, grayscale=(not grayscale))
+
+    # Toggle grayscale back to "grayscale"
+    context.toggleGrayscale()
+    assert_video_params(video=video, filename=filename, grayscale=grayscale)

@@ -5,7 +5,6 @@ main:
   type: stacked
   default: " "
   options: " ,image features,sample,prediction score,velocity"
-
   " ":
 
   sample:
@@ -165,7 +164,19 @@ main:
     default: 0.1
     range: 0.1,1.0
 
+
+- name: target
+  label: Target
+  type: stacked
+  options: "all videos,current video"
+  default: "all videos"
+
+  # Type is stacked because this makes the boxes aligned.
+
+  "all videos":
+  "current video":
+
 - name: generate_button
   label: Generate Suggestions
   type: button
-  default: main action
+  default: main action 

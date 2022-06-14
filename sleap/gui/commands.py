@@ -370,6 +370,10 @@ class CommandContext:
 
     # Editing Commands
 
+    def toggleGrayscale(self):
+        """Toggles grayscale setting for current video."""
+        self.execute(ToggleGrayscale)
+
     def addVideo(self):
         """Shows gui for adding videos to project."""
         self.execute(AddVideo)
@@ -1443,6 +1447,30 @@ class EditCommand(AppCommand):
     does_edits = True
 
 
+class ToggleGrayscale(EditCommand):
+    topics = [UpdateTopic.video, UpdateTopic.frame]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        """Reset the video backend."""
+        video: Video = context.state["video"]
+        try:
+            grayscale = video.backend.grayscale
+            video.backend.reset(grayscale=(not grayscale))
+        except:
+            print(
+                f"This video type {type(video.backend)} does not support grayscale yet."
+            )
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        """Check that video can be reset."""
+        # Check that current video is set
+        if context.state["video"] is None:
+            return False
+        return True
+
+
 class AddVideo(EditCommand):
     topics = [UpdateTopic.video]
 
@@ -2191,11 +2219,27 @@ class GenerateSuggestions(EditCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
 
+        if len(context.labels.videos) == 0:
+            print("Error: no videos to generate suggestions for")
+            return
+
         # TODO: Progress bar
         win = MessageDialog(
             "Generating list of suggested frames... " "This may take a few minutes.",
             context.app,
         )
+
+        if (
+            params["target"]
+            == "current video"  # Checks if current video is selected in gui
+        ):
+            params["videos"] = (
+                [context.labels.videos[0]]
+                if context.state["video"] is None
+                else [context.state["video"]]
+            )
+        else:
+            params["videos"] = context.labels.videos
 
         new_suggestions = VideoFrameSuggestions.suggest(
             labels=context.labels, params=params
