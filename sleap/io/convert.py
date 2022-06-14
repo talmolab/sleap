@@ -150,7 +150,7 @@ def main(args: list = None):
         frames = int(args.frames)
         frames = (
             input_label.video.frames
-            if args.frames == 0 or args.frames > input_label.video.frames
+            if int(args.frames) == 0 or int(args.frames) > input_label.video.frames
             else frames
         )
 
