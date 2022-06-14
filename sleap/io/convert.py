@@ -148,14 +148,18 @@ def main(args: list = None):
         input_label = sleap.load_file(args.input_path)
 
         frames = int(args.frames)
-        frames = input_label.video.frames if args.frames == 0 or args.frames > input_label.video.frames else frames
-            
+        frames = (
+            input_label.video.frames
+            if args.frames == 0 or args.frames > input_label.video.frames
+            else frames
+        )
+
         sleap.io.visuals.save_labeled_video(
-        filename="sleap_render.mp4",
-        labels=input_label,
-        video=input_label.video,
-        frames=list(range(frames)),
-    )
+            filename="sleap_render.mp4",
+            labels=input_label,
+            video=input_label.video,
+            frames=list(range(frames)),
+        )
 
     else:
         print("You didn't specify how to convert the file.")
