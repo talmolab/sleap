@@ -563,7 +563,7 @@ def resize_images(images: np.ndarray, scale: float) -> np.ndarray:
     return np.stack([resize_image(img, scale) for img in images])
 
 
-def main_cli():
+def main():
     import argparse
     from sleap.util import frame_list
 
@@ -628,4 +628,4 @@ def main_cli():
 
 
 if __name__ == "__main__":
-    main_cli()
+    main()
