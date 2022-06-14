@@ -1,4 +1,3 @@
-from cgitb import reset
 import pytest
 import os
 import h5py
