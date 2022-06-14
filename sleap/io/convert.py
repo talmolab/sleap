@@ -89,6 +89,7 @@ def default_analysis_filename(
 def main(args: list = None):
     parser = create_parser()
     args = parser.parse_args(args=args)
+    print(args)
 
     video_callback = Labels.make_video_callback([os.path.dirname(args.input_path)])
     try:
@@ -138,6 +139,18 @@ def main(args: list = None):
         output_path = f"{args.input_path}.{args.format}"
         print(f"Output SLEAP dataset: {output_path}")
         Labels.save_file(labels, output_path)
+
+    elif args.format == "mp4":
+        import sleap.io.visuals
+
+        input_label = sleap.load_file(args.input_path)
+
+        sleap.io.visuals.save_labeled_video(
+        filename="sleap_render.mp4",
+        labels=input_label,
+        video=input_label.video,
+        frames=list(range(input_label.video.frames)),
+    )
 
     else:
         print("You didn't specify how to convert the file.")
