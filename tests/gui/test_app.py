@@ -219,7 +219,12 @@ def test_app_workflow(
     # Add suggestions
     app.labels.suggestions = VideoFrameSuggestions.suggest(
         labels=app.labels,
-        params=dict(method="sample", per_video=num_samples, sampling_method="stride"),
+        params=dict(
+            videos=app.labels.videos,
+            method="sample",
+            per_video=num_samples,
+            sampling_method="stride",
+        ),
     )
     assert len(app.labels.suggestions) == num_samples
 
