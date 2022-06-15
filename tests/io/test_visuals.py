@@ -1,6 +1,11 @@
 import numpy as np
 import os
-from sleap.io.visuals import save_labeled_video, resize_images, VideoMarkerThread
+from sleap.io.visuals import (
+    save_labeled_video,
+    resize_images,
+    VideoMarkerThread,
+    main as sleap_render,
+)
 
 
 def test_resize(small_robot_mp4_vid):
@@ -54,6 +59,12 @@ def test_serial_pipeline(centered_pair_predictions, tmpdir):
     assert np.allclose(
         marked_image_list[0][10:20, :10, 0], small_images[0, 10:20, :10, 0]
     )
+
+
+def test_sleap_render(centered_pair_predictions):
+    args = f"-o testvis.avi -f 2 --scale 1.2 --frames 1,2 --video-index 0 tests/data/json_format_v2/centered_pair_predictions.json".split()
+    sleap_render(args)
+    assert os.path.exists("testvis.avi")
 
 
 def test_write_visuals(tmpdir, centered_pair_predictions):

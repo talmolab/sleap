@@ -49,9 +49,10 @@ setup(
     license="BSD 3-Clause License",
     packages=find_packages(exclude=["tensorflow"]),
     include_package_data=True,
-    entry_points={
+    entry_points={ 
         "console_scripts": [
             "sleap-convert=sleap.io.convert:main",
+            "sleap-render=sleap.io.visuals:main",
             "sleap-label=sleap.gui.app:main",
             "sleap-train=sleap.nn.training:main",
             "sleap-track=sleap.nn.inference:main",
