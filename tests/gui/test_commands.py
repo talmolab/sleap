@@ -2,18 +2,20 @@ from sleap.gui.commands import (
     CommandContext,
     ImportDeepLabCutFolder,
     ExportAnalysisFile,
+    ReplaceVideo,
     get_new_version_filename,
 )
 from sleap.io.dataset import Labels
 from sleap.io.pathutils import fix_path_separator
 from sleap.io.video import Video
 from sleap.io.convert import default_analysis_filename
-from sleap.instance import Instance
+from sleap.instance import Instance, LabeledFrame
 
 from tests.info.test_h5 import extract_meta_hdf5
 from tests.io.test_video import assert_video_params
 
 from pathlib import PurePath, Path
+from typing import List
 import shutil
 
 
@@ -254,3 +256,41 @@ def test_ToggleGrayscale(centered_pair_predictions: Labels):
     # Toggle grayscale back to "grayscale"
     context.toggleGrayscale()
     assert_video_params(video=video, filename=filename, grayscale=grayscale)
+
+
+def test_ReplaceVideo(centered_pair_predictions: Labels, small_robot_mp4_vid: Video):
+    """Test functionality for ToggleGrayscale on mp4/avi video"""
+
+    def get_last_lf_in_video(labels, video):
+        lfs: List[LabeledFrame] = list(labels.get(videos[0]))
+        lfs.sort(key=lambda lf: lf.frame_idx)
+        return lfs[-1].frame_idx
+
+    # Labels and video to be replaced
+    labels = centered_pair_predictions
+    videos = labels.videos
+    last_lf_frame = get_last_lf_in_video(labels, videos[0])
+
+    # Video to be imported
+    new_video = small_robot_mp4_vid
+    new_video_filename = new_video.backend.filename
+    grayscale = True
+
+    # Replace the video
+    context = CommandContext.from_labels(labels)
+    import_item_list = [
+        {"params": {"filename": new_video_filename, "grayscale": grayscale}}
+    ]
+    params = {"import_list": zip(import_item_list, videos)}
+    ReplaceVideo.do_action(context=context, params=params)
+
+    # Ensure video backend was replaced
+    video = labels.video
+    assert len(labels.videos) == 1
+    assert video.backend.grayscale == True
+    assert video.backend.filename == new_video_filename
+
+    # Ensure labels were truncated (Original video was fully labeled)
+    new_last_lf_frame = get_last_lf_in_video(labels, video)
+    # Original video was fully labeled
+    assert new_last_lf_frame == labels.video.last_frame_idx
