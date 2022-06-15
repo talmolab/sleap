@@ -563,10 +563,11 @@ def resize_images(images: np.ndarray, scale: float) -> np.ndarray:
     return np.stack([resize_image(img, scale) for img in images])
 
 
-def main():
+def main(args: list = None):
     import argparse
     from sleap.util import frame_list
 
+    
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="Path to labels json file")
     parser.add_argument(
@@ -591,8 +592,7 @@ def main():
     parser.add_argument(
         "--video-index", type=int, default=0, help="Index of video in labels dataset"
     )
-    args = parser.parse_args()
-
+    args = parser.parse_args(args=args)
     labels = Labels.load_file(
         args.data_path, video_search=[os.path.dirname(args.data_path)]
     )
