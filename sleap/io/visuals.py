@@ -626,5 +626,5 @@ def main(args: list = None):
     print(f"Video saved as: {filename}")
 
 
-if __name__ == "__main__":
-    main()
+#if __name__ == "__main__":
+#    main()
