@@ -52,7 +52,6 @@ from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.gui.dialogs.importvideos import ImportVideos
-from sleap.gui.dialogs.query import QueryDialog
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.dialogs.merge import MergeDialog
