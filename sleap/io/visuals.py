@@ -567,7 +567,6 @@ def main(args: list = None):
     import argparse
     from sleap.util import frame_list
 
-    
     parser = argparse.ArgumentParser()
     parser.add_argument("data_path", help="Path to labels json file")
     parser.add_argument(
