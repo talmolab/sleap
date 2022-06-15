@@ -278,7 +278,7 @@ optional arguments:
 
 ### `sleap-render`
 
-{code}`sleap-render` allows you to render videos (mp4) directly from the CLI. It is used to render video clips with Instances.
+{code}`sleap-render` allows you to render videos directly from the CLI. It is used to render video clips with Instances.
 
 ```none
 usage: sleap-render [-h] [-o OUTPUT] [-f FPS] [--scale SCALE] [--crop CROP] [--frames FRAMES] [--video-index VIDEO_INDEX] data_path
