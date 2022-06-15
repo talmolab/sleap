@@ -155,7 +155,7 @@ class ImportParamDialog(QDialog):
                             this_type = import_type
                             break
                 if this_type is not None:
-                    message = messages[file_name] if file_name in messages else str()
+                    message = messages[file_name] if file_name in messages else ""
                     import_item_widget = ImportItemWidget(
                         file_name, this_type, message=message
                     )
@@ -226,14 +226,6 @@ class ImportParamDialog(QDialog):
             if import_item.is_enabled():
                 import_result.append(import_item.get_data())
         return import_result
-
-    def boundingRect(self) -> QRectF:
-        """Method required by Qt."""
-        return QRectF()
-
-    def paint(self, painter, option, widget=None):
-        """Method required by Qt."""
-        pass
 
     def set_all_grayscale(self):
         for import_item in self.import_widgets:
@@ -529,14 +521,6 @@ class ImportParamWidget(QWidget):
                 )
         return options
 
-    def boundingRect(self) -> QRectF:
-        """Method required by Qt."""
-        return QRectF()
-
-    def paint(self, painter, option, widget=None):
-        """Method required by Qt."""
-        pass
-
 
 class MessageWidget(QWidget):
     """Widget to show message."""
@@ -548,14 +532,6 @@ class MessageWidget(QWidget):
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.message)
         self.setLayout(self.layout)
-
-    def boundingRect(self) -> QRectF:
-        """Method required by Qt."""
-        return QRectF()
-
-    def paint(self, painter, option, widget=None):
-        """Method required by Qt."""
-        pass
 
 
 class VideoPreviewWidget(QWidget):
@@ -617,14 +593,6 @@ class VideoPreviewWidget(QWidget):
         image = qimage2ndarray.array2qimage(frame)
         # Display image
         self.view.setImage(image)
-
-    def boundingRect(self) -> QRectF:
-        """Method required by Qt."""
-        return QRectF()
-
-    def paint(self, painter, option, widget=None):
-        """Method required by Qt."""
-        pass
 
 
 if __name__ == "__main__":

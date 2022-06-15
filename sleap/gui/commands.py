@@ -1528,6 +1528,13 @@ class ReplaceVideo(EditCommand):
             import_params = import_item["params"]
 
             # TODO: Will need to create a new backend if import has different extension.
+            if (
+                Path(video.backend.filename).suffix
+                != Path(import_params["filename"]).suffix
+            ):
+                raise TypeError(
+                    "Importing videos with different extensions is not supported."
+                )
             video.backend.reset(**import_params)
 
             # Remove frames in video past last frame index
@@ -1590,13 +1597,13 @@ class ReplaceVideo(EditCommand):
         ]
 
         new_paths = []
-        old_videos = []
+        old_videos = dict()
         all_videos = context.labels.videos
         truncation_messages = dict()
         for video_idx, (path, old_path) in enumerate(zip(paths, old_paths)):
             if path != old_path:
                 new_paths.append(path)
-                old_videos.append(all_videos[video_idx])
+                old_videos[path] = all_videos[video_idx]
                 truncation_messages = _get_truncation_message(
                     truncation_messages, path, video=all_videos[video_idx]
                 )
@@ -1604,7 +1611,11 @@ class ReplaceVideo(EditCommand):
         import_list = ImportVideos().ask(
             filenames=new_paths, messages=truncation_messages
         )
-        params["import_list"] = zip(import_list, old_videos)
+        # Remove videos that no longer correlate to filenames.
+        old_videos_to_replace = [
+            old_videos[imp["params"]["filename"]] for imp in import_list
+        ]
+        params["import_list"] = zip(import_list, old_videos_to_replace)
 
         return len(import_list) > 0
 
