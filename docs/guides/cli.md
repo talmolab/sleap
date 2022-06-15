@@ -288,13 +288,13 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -o OUTPUT, --output OUTPUT
-                        Path for saving output
-  -f FPS, --fps FPS     Frames per second for output video
-  --scale SCALE         Output image scale
-  --crop CROP           Crop size as <width>,<height>
+                        Path for saving output (default: None)
+  -f FPS, --fps FPS     Frames per second for output video (default: 25)
+  --scale SCALE         Output image scale (default: 1.0)
+  --crop CROP           Crop size as <width>,<height> (default: None)
   --frames FRAMES       List of frames to predict. Either comma separated list (e.g. 1,2,3) or a range separated by hyphen (e.g. 1-3). (default is entire video)
   -video-index VIDEO_INDEX
-                        Index of video in labels dataset
+                        Index of video in labels dataset (default: 0)
 ```
 
 ## Debugging
