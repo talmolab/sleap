@@ -8,7 +8,7 @@ on:
       # 'main' triggers updates to 'sleap.ai', 'develop' to 'sleap.ai/develop'
       - main
       - develop
-      - arlo/fix_tracking_docs
+      - david/add-CLI-to-render-videos
     paths:
       - "docs/**"
       - "README.rst"
