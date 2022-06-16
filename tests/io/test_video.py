@@ -2,6 +2,7 @@ import pytest
 import os
 import h5py
 import numpy as np
+from sleap.io.dataset import Labels
 
 from sleap.io.video import (
     SingleImageVideo,
@@ -11,6 +12,7 @@ from sleap.io.video import (
     DummyVideo,
     load_video,
 )
+from tests.fixtures.datasets import TEST_SLP_SIV_ROBOT
 from tests.fixtures.videos import (
     TEST_H5_FILE,
     TEST_SMALL_ROBOT_MP4_FILE,
@@ -495,7 +497,7 @@ def test_reset_video_mp4(small_robot_mp4_vid: Video):
     assert_video_params(video=video, filename=filename, bgr=True, reset=True)
 
 
-def test_reset_video_siv(small_robot_single_image_vid: Video):
+def test_reset_video_siv(small_robot_single_image_vid: Video, siv_robot: Labels):
     video = small_robot_single_image_vid
     filename = video.backend.filename
 
@@ -543,5 +545,13 @@ def test_reset_video_siv(small_robot_single_image_vid: Video):
     assert_video_params(video=video, filenames=filenames, reset=True)
 
     # Test reset does nothing if specify both filenames and filename
-    video.backend.reset(filename=filename, filenames=filenames)
+    with pytest.raises(ValueError):
+        video.backend.reset(filename=filename, filenames=filenames)
     assert_video_params(video=video, filenames=filenames, reset=True)
+
+    # Test reset does not break deserialization of older slp
+    labels: Labels = Labels.load_file(TEST_SLP_SIV_ROBOT)
+    video: Video = labels.video
+    filename = labels.video.backend.filename
+    labels.video.backend.reset(filename=filename, grayscale=True)
+    assert_video_params(video=video, filenames=filenames, grayscale=True, reset=True)

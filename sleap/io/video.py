@@ -942,8 +942,9 @@ class SingleImageVideo:
     ):
         """Reloads the video."""
         if filename and filenames:
-            print(f"Cannot specify both filename and filenames for SingleImageVideo.")
-            return
+            raise ValueError(
+                f"Cannot specify both filename and filenames for SingleImageVideo."
+            )
         elif filename or filenames:
             self.__data = dict()
             self.test_frame_ = None
