@@ -50,7 +50,7 @@ class ImportVideos:
     def ask(
         self,
         filenames: Optional[List[str]] = None,
-        messages: Optional[dict] = dict(),
+        messages: Optional[Dict[str, str]] = None,
     ):
         """Runs the import UI.
 
@@ -63,6 +63,8 @@ class ImportVideos:
         Returns:
             List with dict of the parameters for each file to import.
         """
+        messages = dict() if messages is None else messages
+
         if filenames is None:
             filenames, filter = FileDialog.openMultiple(
                 None,
@@ -70,10 +72,12 @@ class ImportVideos:
                 ".",  # initial path
                 "Any Video (*.h5 *.hd5v *.mp4 *.avi *.json);;HDF5 (*.h5 *.hd5v);;ImgStore (*.json);;Media Video (*.mp4 *.avi);;Any File (*.*)",
             )
+
         if len(filenames) > 0:
             importer = ImportParamDialog(filenames, messages)
             importer.accepted.connect(lambda: importer.get_data(self.result))
             importer.exec_()
+
         return self.result
 
     @classmethod
@@ -95,9 +99,12 @@ class ImportParamDialog(QDialog):
         filenames (list): List of files we want to import.
     """
 
-    def __init__(self, filenames: List[str], messages: dict = dict(), *args, **kwargs):
+    def __init__(
+        self, filenames: List[str], messages: Dict[str, str] = None, *args, **kwargs
+    ):
         super(ImportParamDialog, self).__init__(*args, **kwargs)
 
+        messages = dict() if messages is None else messages
         self.import_widgets = []
 
         self.setWindowTitle("Video Import Options")
@@ -269,7 +276,12 @@ class ImportItemWidget(QFrame):
     """
 
     def __init__(
-        self, file_path: str, import_type: dict, message: str = str(), *args, **kwargs
+        self,
+        file_path: str,
+        import_type: Dict[str, Any],
+        message: str = "",
+        *args,
+        **kwargs,
     ):
         super(ImportItemWidget, self).__init__(*args, **kwargs)
 
@@ -384,7 +396,7 @@ class ImportParamWidget(QWidget):
 
     changed = Signal()
 
-    def __init__(self, file_path: str, import_type: dict, *args, **kwargs):
+    def __init__(self, file_path: str, import_type: Dict[str, Any], *args, **kwargs):
         super(ImportParamWidget, self).__init__(*args, **kwargs)
 
         self.file_path = file_path
@@ -595,27 +607,27 @@ class VideoPreviewWidget(QWidget):
         self.view.setImage(image)
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    app = QApplication([])
+#     app = QApplication([])
 
-    # import_list = ImportVideos().ask()
+#     # import_list = ImportVideos().ask()
 
-    filenames = [
-        "tests/data/videos/centered_pair_small.mp4",
-        "tests/data/videos/small_robot.mp4",
-    ]
+#     filenames = [
+#         "tests/data/videos/centered_pair_small.mp4",
+#         "tests/data/videos/small_robot.mp4",
+#     ]
 
-    messages = {"tests/data/videos/small_robot.mp4": "Testing messages"}
+#     messages = {"tests/data/videos/small_robot.mp4": "Testing messages"}
 
-    import_list = []
-    importer = ImportParamDialog(filenames, messages=messages)
-    importer.accepted.connect(lambda: importer.get_data(import_list))
-    importer.exec_()
+#     import_list = []
+#     importer = ImportParamDialog(filenames, messages=messages)
+#     importer.accepted.connect(lambda: importer.get_data(import_list))
+#     importer.exec_()
 
-    for import_item in import_list:
-        vid = import_item["video_class"](**import_item["params"])
-        print(
-            "Imported video data: (%d, %d), %d f, %d c"
-            % (vid.width, vid.height, vid.frames, vid.channels)
-        )
+#     for import_item in import_list:
+#         vid = import_item["video_class"](**import_item["params"])
+#         print(
+#             "Imported video data: (%d, %d), %d f, %d c"
+#             % (vid.width, vid.height, vid.frames, vid.channels)
+#         )
