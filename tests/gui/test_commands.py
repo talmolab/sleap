@@ -16,7 +16,9 @@ from tests.io.test_video import assert_video_params
 
 from pathlib import PurePath, Path
 from typing import List
+
 import shutil
+import pytest
 
 
 def test_delete_user_dialog(centered_pair_predictions):
@@ -258,7 +260,9 @@ def test_ToggleGrayscale(centered_pair_predictions: Labels):
     assert_video_params(video=video, filename=filename, grayscale=grayscale)
 
 
-def test_ReplaceVideo(centered_pair_predictions: Labels, small_robot_mp4_vid: Video):
+def test_ReplaceVideo(
+    centered_pair_predictions: Labels, small_robot_mp4_vid: Video, hdf5_vid: Video
+):
     """Test functionality for ToggleGrayscale on mp4/avi video"""
 
     def get_last_lf_in_video(labels, video):
@@ -266,23 +270,28 @@ def test_ReplaceVideo(centered_pair_predictions: Labels, small_robot_mp4_vid: Vi
         lfs.sort(key=lambda lf: lf.frame_idx)
         return lfs[-1].frame_idx
 
+    def replace_video(
+        new_video: Video, videos_to_replace: List[Video], context: CommandContext
+    ):
+        # Video to be imported
+        new_video_filename = new_video.backend.filename
+
+        # Replace the video
+        import_item_list = [
+            {"params": {"filename": new_video_filename, "grayscale": True}}
+        ]
+        params = {"import_list": zip(import_item_list, videos_to_replace)}
+        ReplaceVideo.do_action(context=context, params=params)
+        return new_video_filename
+
     # Labels and video to be replaced
     labels = centered_pair_predictions
+    context = CommandContext.from_labels(labels)
     videos = labels.videos
     last_lf_frame = get_last_lf_in_video(labels, videos[0])
 
-    # Video to be imported
-    new_video = small_robot_mp4_vid
-    new_video_filename = new_video.backend.filename
-    grayscale = True
-
     # Replace the video
-    context = CommandContext.from_labels(labels)
-    import_item_list = [
-        {"params": {"filename": new_video_filename, "grayscale": grayscale}}
-    ]
-    params = {"import_list": zip(import_item_list, videos)}
-    ReplaceVideo.do_action(context=context, params=params)
+    new_video_filename = replace_video(small_robot_mp4_vid, videos, context)
 
     # Ensure video backend was replaced
     video = labels.video
@@ -294,3 +303,7 @@ def test_ReplaceVideo(centered_pair_predictions: Labels, small_robot_mp4_vid: Vi
     new_last_lf_frame = get_last_lf_in_video(labels, video)
     # Original video was fully labeled
     assert new_last_lf_frame == labels.video.last_frame_idx
+
+    # Attempt to replace an mp4 with an hdf5 video
+    with pytest.raises(TypeError):
+        replace_video(hdf5_vid, labels.videos, context)
