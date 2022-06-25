@@ -4,7 +4,7 @@ cattrs==1.1.1
 jsonpickle==1.2
 networkx
 tensorflow>=2.6.3,<2.9.0
-h5py>=3.1.0,<=3.6.0
+h5py==3.1.0
 python-rapidjson
 opencv-python-headless>=4.2.0.34,<=4.5.5.62
 # opencv-python @ git+https://github.com/talmolab/wrap_opencv-python-headless.git@ede49f6a23a73033216339f29515e59d594ba921
