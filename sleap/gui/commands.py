@@ -29,13 +29,14 @@ for now it's at least easy to see where this separation is violated.
 import attr
 import operator
 import os
+import cv2
 import re
 import sys
 import subprocess
 
 from enum import Enum
 from glob import glob
-from pathlib import PurePath
+from pathlib import PurePath, Path
 from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
 
 import numpy as np
@@ -1516,30 +1517,107 @@ class ShowImportVideos(EditCommand):
 
 
 class ReplaceVideo(EditCommand):
-    topics = [UpdateTopic.video]
+    topics = [UpdateTopic.video, UpdateTopic.frame]
 
     @staticmethod
-    def do_action(context: CommandContext, params: dict):
-        new_paths = params["new_video_paths"]
+    def do_action(context: CommandContext, params: dict) -> bool:
 
-        for video, new_path in zip(context.labels.videos, new_paths):
-            if new_path != video.backend.filename:
-                video.backend.filename = new_path
-                video.backend.reset()
+        import_list = params["import_list"]
+
+        for import_item, video in import_list:
+            import_params = import_item["params"]
+
+            # TODO: Will need to create a new backend if import has different extension.
+            if (
+                Path(video.backend.filename).suffix
+                != Path(import_params["filename"]).suffix
+            ):
+                raise TypeError(
+                    "Importing videos with different extensions is not supported."
+                )
+            video.backend.reset(**import_params)
+
+            # Remove frames in video past last frame index
+            last_vid_frame = video.last_frame_idx
+            lfs: List[LabeledFrame] = list(context.labels.get(video))
+            if lfs is not None:
+                lfs = [lf for lf in lfs if lf.frame_idx > last_vid_frame]
+                context.labels.remove_frames(lfs)
+
+            # Update seekbar and video length through callbacks
+            context.state.emit("video")
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         """Shows gui for replacing videos in project."""
-        paths = [video.backend.filename for video in context.labels.videos]
 
+        def _get_truncation_message(truncation_messages, path, video):
+            reader = cv2.VideoCapture(path)
+            last_vid_frame = int(reader.get(cv2.CAP_PROP_FRAME_COUNT))
+            lfs: List[LabeledFrame] = list(context.labels.get(video))
+            if lfs is not None:
+                lfs.sort(key=lambda lf: lf.frame_idx)
+                last_lf_frame = lfs[-1].frame_idx
+                lfs = [lf for lf in lfs if lf.frame_idx > last_vid_frame]
+
+                # Message to warn users that labels will be removed if proceed
+                if last_lf_frame > last_vid_frame:
+                    message = (
+                        "<p><strong>Warning:</strong> Replacing this video will "
+                        f"remove {len(lfs)} labeled frames.</p>"
+                        f"<p><em>Current video</em>: <b>{Path(video.filename).name}</b>"
+                        f" (last label at frame {last_lf_frame})<br>"
+                        f"<em>Replacement video</em>: <b>{Path(path).name}"
+                        f"</b> ({last_vid_frame} frames)</p>"
+                    )
+                    # Assumes that a project won't import the same video multiple times
+                    truncation_messages[path] = message
+
+            return truncation_messages
+
+        # Warn user: newly added labels will be discarded if project is not saved
+        if not context.state["filename"] or context.state["has_changes"]:
+            QMessageBox(
+                text=("You have unsaved changes. Please save before replacing videos.")
+            ).exec_()
+            return False
+
+        # Select the videos we want to swap
+        old_paths = [video.backend.filename for video in context.labels.videos]
+        paths = list(old_paths)
         okay = MissingFilesDialog(filenames=paths, replace=True).exec_()
-
         if not okay:
             return False
 
-        params["new_video_paths"] = paths
+        # Only return an import list for videos we swap
+        new_paths = [
+            (path, video_idx)
+            for video_idx, (path, old_path) in enumerate(zip(paths, old_paths))
+            if path != old_path
+        ]
 
-        return True
+        new_paths = []
+        old_videos = dict()
+        all_videos = context.labels.videos
+        truncation_messages = dict()
+        for video_idx, (path, old_path) in enumerate(zip(paths, old_paths)):
+            if path != old_path:
+                new_paths.append(path)
+                old_videos[path] = all_videos[video_idx]
+                truncation_messages = _get_truncation_message(
+                    truncation_messages, path, video=all_videos[video_idx]
+                )
+
+        import_list = ImportVideos().ask(
+            filenames=new_paths, messages=truncation_messages
+        )
+        # Remove videos that no longer correlate to filenames.
+        old_videos_to_replace = [
+            old_videos[imp["params"]["filename"]] for imp in import_list
+        ]
+        params["import_list"] = zip(import_list, old_videos_to_replace)
+
+        return len(import_list) > 0
 
 
 class RemoveVideo(EditCommand):
