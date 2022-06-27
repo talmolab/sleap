@@ -47,3 +47,18 @@ def small_robot_mp4_vid():
 @pytest.fixture
 def centered_pair_vid():
     return Video.from_media(TEST_SMALL_CENTERED_PAIR_VID)
+
+
+TEST_SMALL_ROBOT_SIV_FILE0 = "tests/data/videos/robot0.jpg"
+TEST_SMALL_ROBOT_SIV_FILE1 = "tests/data/videos/robot1.jpg"
+TEST_SMALL_ROBOT_SIV_FILE2 = "tests/data/videos/robot2.jpg"
+
+
+@pytest.fixture
+def small_robot_single_image_vid():
+    filenames = [
+        TEST_SMALL_ROBOT_SIV_FILE0,
+        TEST_SMALL_ROBOT_SIV_FILE1,
+        TEST_SMALL_ROBOT_SIV_FILE2,
+    ]
+    return Video.from_image_filenames(filenames)
