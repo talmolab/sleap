@@ -489,6 +489,22 @@ title="Open an issue"
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#rendering">
+   Rendering
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#sleap-render">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       sleap-render
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#debugging">
    Debugging
   </a>
@@ -597,6 +613,22 @@ title="Open an issue"
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#rendering">
+   Rendering
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#sleap-render">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       sleap-render
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#debugging">
    Debugging
   </a>
@@ -622,7 +654,7 @@ title="Open an issue"
                 
               <div>
                 
-  <section id="command-line-interfaces">
+  <section class="tex2jax_ignore mathjax_ignore" id="command-line-interfaces">
 <span id="cli"></span><h1>Command line interfaces<a class="headerlink" href="#command-line-interfaces" title="Permalink to this headline">#</a></h1>
 <p>SLEAP provides several types of functionality accessible through a command prompt.</p>
 <section id="gui">
@@ -859,7 +891,7 @@ optional arguments:
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sleap</span><span class="o">-</span><span class="n">convert</span> <span class="o">--</span><span class="nb">format</span> <span class="n">analysis</span> <span class="o">-</span><span class="n">o</span> <span class="s2">&quot;session1.predictions.analysis.h5&quot;</span> <span class="s2">&quot;session1.predictions.slp&quot;</span>
 </pre></div>
 </div>
-<p>See <a class="reference external" href="../notebooks/Analysis_examples.html">Analysis examples</a> for how to work with these outputs.</p>
+<p>See <span class="xref myst">Analysis examples</span> for how to work with these outputs.</p>
 </section>
 <section id="sleap-inspect">
 <span id="id5"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-inspect</span></code><a class="headerlink" href="#sleap-inspect" title="Permalink to this headline">#</a></h3>
@@ -877,10 +909,34 @@ optional arguments:
 </div>
 </section>
 </section>
+<section id="rendering">
+<h2>Rendering<a class="headerlink" href="#rendering" title="Permalink to this headline">#</a></h2>
+<section id="sleap-render">
+<span id="id6"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-render</span></code><a class="headerlink" href="#sleap-render" title="Permalink to this headline">#</a></h3>
+<p><code class="code docutils literal notranslate"><span class="pre">sleap-render</span></code> allows you to render videos directly from the CLI. It is used to render video clips with Instances.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-render [-h] [-o OUTPUT] [-f FPS] [--scale SCALE] [--crop CROP] [--frames FRAMES] [--video-index VIDEO_INDEX] data_path
+positional arguments:
+  data_path             Path to labels json file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -o OUTPUT, --output OUTPUT
+                        Path for saving output (default: None)
+  -f FPS, --fps FPS     Frames per second for output video (default: 25)
+  --scale SCALE         Output image scale (default: 1.0)
+  --crop CROP           Crop size as &lt;width&gt;,&lt;height&gt; (default: None)
+  --frames FRAMES       List of frames to predict. Either comma separated list (e.g. 1,2,3) 
+                        or a range separated by hyphen (e.g. 1-3). (default is entire video)
+  -video-index VIDEO_INDEX
+                        Index of video in labels dataset (default: 0)
+</pre></div>
+</div>
+</section>
+</section>
 <section id="debugging">
 <h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">#</a></h2>
 <section id="sleap-diagnostic">
-<span id="id6"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-diagnostic</span></code><a class="headerlink" href="#sleap-diagnostic" title="Permalink to this headline">#</a></h3>
+<span id="id7"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-diagnostic</span></code><a class="headerlink" href="#sleap-diagnostic" title="Permalink to this headline">#</a></h3>
 <p>There’s also a script to output diagnostic information which may help us if you need to contact us about problems installing or running SLEAP. If you were able to install the SLEAP Python package, you can run this script with <code class="code docutils literal notranslate"><span class="pre">sleap-diagnostic</span></code>. Otherwise, you can download <a class="reference external" href="https://raw.githubusercontent.com/talmolab/sleap/main/sleap/diagnostic.py">diagnostic.py</a> and run <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">diagnostic.py</span></code>.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-diagnostic [-h] [-o OUTPUT] [--gui-check]
 
