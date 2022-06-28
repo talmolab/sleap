@@ -64,7 +64,7 @@ On Windows, our personal preference is to use alternative terminal apps like [Cm
 ### `conda` package
 
 ```bash
-conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap=1.2.3
+conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap=1.2.4
 ```
 
 **This is the recommended installation method**. Works on **Windows** and **Linux**.
@@ -97,7 +97,7 @@ conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap=1.2.3
 ### `pip` package
 
 ```bash
-pip install sleap==1.2.3
+pip install sleap==1.2.4
 ```
 
 This works on **any OS** and on **Google Colab**.
