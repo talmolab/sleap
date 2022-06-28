@@ -147,5 +147,5 @@ def test_inference_merging():
     assert labels[1].has_predicted_instances
     assert labels[2].frame_idx == 2
     assert len(labels[2].user_instances) == 1
-    # Only predicted instances without graphable points should be merged
+    # Only predicted instances with graphable points should be merged
     assert len(labels[2].predicted_instances) == 2
