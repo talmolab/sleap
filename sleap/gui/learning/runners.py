@@ -310,9 +310,19 @@ class InferenceTask:
 
     def merge_results(self):
         """Merges result frames into labels dataset."""
-        # Remove any frames without instances.
-        new_lfs = list(filter(lambda lf: len(lf.instances), self.results))
-        new_labels = Labels(new_lfs)
+
+        def remove_empty_instances_and_frames(lf: LabeledFrame):
+            """Removes instances without visible points and empty frames."""
+            for inst in lf.instances:
+                print(f"inst.points = {inst.points}\n")
+            lf.remove_empty_instances()
+            return len(lf.instances) > 0
+
+        # Remove instances without graphable points and any frames without instances.
+        self.results = list(
+            filter(lambda lf: remove_empty_instances_and_frames(lf), self.results)
+        )
+        new_labels = Labels(self.results)
 
         # Remove potentially conflicting predictions from the base dataset.
         self.labels.remove_predictions(new_labels=new_labels)
