@@ -312,12 +312,13 @@ class InferenceTask:
         """Merges result frames into labels dataset."""
 
         def remove_empty_instances_and_frames(lf: LabeledFrame):
+            """Removes instances without visible points and empty frames."""
             for inst in lf.instances:
                 print(f"inst.points = {inst.points}\n")
             lf.remove_empty_instances()
             return len(lf.instances) > 0
 
-        # Remove instances with all nan points and any frames without instances.
+        # Remove instances without graphable points and any frames without instances.
         self.results = list(
             filter(lambda lf: remove_empty_instances_and_frames(lf), self.results)
         )
