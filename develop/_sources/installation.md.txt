@@ -64,11 +64,7 @@ On Windows, our personal preference is to use alternative terminal apps like [Cm
 ### `conda` package
 
 ```bash
-<<<<<<< HEAD
 conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap=1.2.4
-=======
-conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap=1.2.3
->>>>>>> origin/main
 ```
 
 **This is the recommended installation method**. Works on **Windows** and **Linux**.
@@ -173,10 +169,6 @@ SLEAP can be installed on newer M1 Macs by following these instructions:
    ```
 
 See [this Issue](https://github.com/talmolab/sleap/issues/579#issuecomment-1028602327) for more information on M1 support.
-<<<<<<< HEAD
-=======
-
-> > > > > > > origin/main
 
 ## Testing that things are working
 
@@ -292,10 +284,6 @@ Once the environment has been removed, you are free to install SLEAP using any o
 ## Getting help
 
 If you run into any problems, check out the [Github Discussions](https://github.com/talmolab/sleap/discussions) and [GitHub Issues](https://github.com/talmolab/sleap/issues) to see if others have had the same problem.
-<<<<<<< HEAD
-=======
-
-> > > > > > > origin/main
 
 If you get any errors or the GUI fails to launch, try running the diagnostics to see what SLEAP is able to detect on your system:
 
@@ -310,7 +298,3 @@ conda list
 ```
 
 Then, [open a new Issue](https://github.com/talmolab/sleap/issues) providing the versions from either command above, as well as any errors you saw in the console during the installation. Or [start a discussion](https://github.com/talmolab/sleap/discussions) to get help from the community.
-<<<<<<< HEAD
-=======
-
-> > > > > > > origin/main
