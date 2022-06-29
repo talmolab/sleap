@@ -6,7 +6,7 @@
    :alt: Continuous integration status
 
 .. |Coverage| image::
-   https://codecov.io/gh/talmolab/sleap/branch/develop/graph/badge.svg?token=YWQYBN6820
+   https://codecov.io/gh/talmolab/sleap/branch/develop/graph/badge.svg?token=oBmTlGIQRn
    :target: https://codecov.io/gh/talmolab/sleap
    :alt: Coverage
 
@@ -141,6 +141,10 @@ Follow `@talmop <https://twitter.com/talmop>`_ on Twitter for news and updates!
 1. Check the `Help page <https://sleap.ai/help.html>`_.
 2. Ask the community via `discussions on Github <https://github.com/talmolab/sleap/discussions>`_.
 3. Search the `issues on GitHub <https://github.com/talmolab/sleap/issues>`_ or open a new one.
+<<<<<<< HEAD
+
+=======
+>>>>>>> origin/main
 
 **General inquiries?**
 Reach out to `talmo@salk.edu`.

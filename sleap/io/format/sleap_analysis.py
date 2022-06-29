@@ -124,7 +124,29 @@ class SleapAnalysisAdaptor(Adaptor):
         return Labels(labeled_frames=frames)
 
     @classmethod
-    def write(cls, filename: str, source_object: Labels):
+    def write(
+        cls,
+        filename: str,
+        source_object: Labels,
+        source_path: str = None,
+        video: Video = None,
+    ):
+        """Writes analysis file for :py:class:`Labels` `source_object`.
+
+        Args:
+            filename: The filename for the output file.
+            source_object: The :py:class:`Labels` from which to get data from.
+            video: The :py:class:`Video` from which toget data from. If no `video` is
+                specified, then the first video in `source_object` videos list will be
+                used. If there are no :py:class:`Labeled Frame`s in the `video`, then no
+                analysis file will be written.
+        """
         from sleap.info.write_tracking_h5 import main as write_analysis
 
-        write_analysis(source_object, output_path=filename, all_frames=True)
+        write_analysis(
+            labels=source_object,
+            output_path=filename,
+            labels_path=source_path,
+            all_frames=True,
+            video=video,
+        )

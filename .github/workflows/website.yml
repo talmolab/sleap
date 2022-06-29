@@ -8,7 +8,7 @@ on:
       # 'main' triggers updates to 'sleap.ai', 'develop' to 'sleap.ai/develop'
       - main
       - develop
-      - liezl/fix_tracking_docs(main)
+      - david/add-CLI-to-render-videos
     paths:
       - "docs/**"
       - "README.rst"

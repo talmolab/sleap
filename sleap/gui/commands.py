@@ -29,14 +29,14 @@ for now it's at least easy to see where this separation is violated.
 import attr
 import operator
 import os
+import cv2
 import re
 import sys
 import subprocess
 
-from abc import ABC
 from enum import Enum
 from glob import glob
-from pathlib import PurePath
+from pathlib import PurePath, Path
 from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
 
 import numpy as np
@@ -45,11 +45,12 @@ from PySide2 import QtCore, QtWidgets, QtGui
 
 from PySide2.QtWidgets import QMessageBox, QProgressDialog
 
-from sleap.gui.dialogs.delete import DeleteDialog
-from sleap.skeleton import Skeleton
+from sleap.skeleton import Node, Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
 from sleap.io.video import Video
+from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
+from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.gui.dialogs.importvideos import ImportVideos
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
@@ -59,7 +60,7 @@ from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
 
 
-# whether we support multiple project windows (i.e., "open" opens new window)
+# Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
 
 
@@ -293,9 +294,9 @@ class CommandContext:
         """Show gui to save project as a new file."""
         self.execute(SaveProjectAs)
 
-    def exportAnalysisFile(self):
+    def exportAnalysisFile(self, all_videos: bool = False):
         """Shows gui for exporting analysis h5 file."""
-        self.execute(ExportAnalysisFile)
+        self.execute(ExportAnalysisFile, all_videos=all_videos)
 
     def exportLabeledClip(self):
         """Shows gui for exporting clip with visual annotations."""
@@ -368,6 +369,10 @@ class CommandContext:
         NavCommand.go_to(self, frame_idx, video)
 
     # Editing Commands
+
+    def toggleGrayscale(self):
+        """Toggles grayscale setting for current video."""
+        self.execute(ToggleGrayscale)
 
     def addVideo(self):
         """Shows gui for adding videos to project."""
@@ -475,7 +480,7 @@ class CommandContext:
         )
 
     def setPointLocations(
-        self, instance: Instance, nodes_locations: Dict["Node", Tuple[int, int]]
+        self, instance: Instance, nodes_locations: Dict[Node, Tuple[int, int]]
     ):
         """Sets locations for node(s) for an instance."""
         self.execute(
@@ -484,9 +489,7 @@ class CommandContext:
             nodes_locations=nodes_locations,
         )
 
-    def setInstancePointVisibility(
-        self, instance: Instance, node: "Node", visible: bool
-    ):
+    def setInstancePointVisibility(self, instance: Instance, node: Node, visible: bool):
         """Toggles visibility set for a node for an instance."""
         self.execute(
             SetInstancePointVisibility, instance=instance, node=node, visible=visible
@@ -956,25 +959,83 @@ class ExportAnalysisFile(AppCommand):
     def do_action(cls, context: CommandContext, params: dict):
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 
-        SleapAnalysisAdaptor.write(params["output_path"], context.labels)
+        for output_path, video in params["analysis_videos"]:
+            SleapAnalysisAdaptor.write(
+                filename=output_path,
+                source_object=context.labels,
+                source_path=context.state["filename"],
+                video=video,
+            )
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        default_name = context.state["filename"] or "labels"
-        p = PurePath(default_name)
-        default_name = str(p.with_name(f"{p.stem}.analysis.h5"))
+        def ask_for_filename(default_name: str) -> str:
+            """Allow user to specify the filename"""
+            filename, selected_filter = FileDialog.save(
+                context.app,
+                caption="Export Analysis File...",
+                dir=default_name,
+                filter="SLEAP Analysis HDF5 (*.h5)",
+            )
+            return filename
 
-        filename, selected_filter = FileDialog.save(
-            context.app,
-            caption="Export Analysis File...",
-            dir=default_name,
-            filter="SLEAP Analysis HDF5 (*.h5)",
-        )
-
-        if len(filename) == 0:
+        # Ensure labels has labeled frames
+        labels = context.labels
+        if len(labels.labeled_frames) == 0:
             return False
 
-        params["output_path"] = filename
+        # Get a subset of videos
+        if params["all_videos"]:
+            all_videos = context.labels.videos
+        else:
+            all_videos = [context.state["video"] or context.labels.videos[0]]
+
+        # Only use videos with labeled frames
+        videos = [video for video in all_videos if len(labels.get(video)) != 0]
+        if len(videos) == 0:
+            return False
+
+        # Specify (how to get) the output filename
+        default_name = context.state["filename"] or "labels"
+        fn = PurePath(default_name)
+        if len(videos) == 1:
+            # Allow user to specify the filename
+            use_default = False
+            dirname = str(fn.parent)
+        else:
+            # Allow user to specify directory, but use default filenames
+            use_default = True
+            dirname = FileDialog.openDir(
+                context.app,
+                caption="Select Folder to Export Analysis Files...",
+                dir=str(fn.parent),
+            )
+            if len(dirname) == 0:
+                return False
+
+        # Create list of video / output paths
+        output_paths = []
+        analysis_videos = []
+        for video in videos:
+            # Create the filename
+            default_name = default_analysis_filename(
+                labels=labels,
+                video=video,
+                output_path=dirname,
+                output_prefix=str(fn.stem),
+            )
+            filename = default_name if use_default else ask_for_filename(default_name)
+
+            # Check that filename is valid and create list of video / ouput paths
+            if len(filename) != 0:
+                analysis_videos.append(video)
+                output_paths.append(filename)
+
+        # Chack that output paths are valid
+        if len(output_paths) == 0:
+            return False
+
+        params["analysis_videos"] = zip(output_paths, videos)
         return True
 
 
@@ -1386,6 +1447,30 @@ class EditCommand(AppCommand):
     does_edits = True
 
 
+class ToggleGrayscale(EditCommand):
+    topics = [UpdateTopic.video, UpdateTopic.frame]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        """Reset the video backend."""
+        video: Video = context.state["video"]
+        try:
+            grayscale = video.backend.grayscale
+            video.backend.reset(grayscale=(not grayscale))
+        except:
+            print(
+                f"This video type {type(video.backend)} does not support grayscale yet."
+            )
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        """Check that video can be reset."""
+        # Check that current video is set
+        if context.state["video"] is None:
+            return False
+        return True
+
+
 class AddVideo(EditCommand):
     topics = [UpdateTopic.video]
 
@@ -1432,30 +1517,107 @@ class ShowImportVideos(EditCommand):
 
 
 class ReplaceVideo(EditCommand):
-    topics = [UpdateTopic.video]
+    topics = [UpdateTopic.video, UpdateTopic.frame]
 
     @staticmethod
-    def do_action(context: CommandContext, params: dict):
-        new_paths = params["new_video_paths"]
+    def do_action(context: CommandContext, params: dict) -> bool:
 
-        for video, new_path in zip(context.labels.videos, new_paths):
-            if new_path != video.backend.filename:
-                video.backend.filename = new_path
-                video.backend.reset()
+        import_list = params["import_list"]
+
+        for import_item, video in import_list:
+            import_params = import_item["params"]
+
+            # TODO: Will need to create a new backend if import has different extension.
+            if (
+                Path(video.backend.filename).suffix
+                != Path(import_params["filename"]).suffix
+            ):
+                raise TypeError(
+                    "Importing videos with different extensions is not supported."
+                )
+            video.backend.reset(**import_params)
+
+            # Remove frames in video past last frame index
+            last_vid_frame = video.last_frame_idx
+            lfs: List[LabeledFrame] = list(context.labels.get(video))
+            if lfs is not None:
+                lfs = [lf for lf in lfs if lf.frame_idx > last_vid_frame]
+                context.labels.remove_frames(lfs)
+
+            # Update seekbar and video length through callbacks
+            context.state.emit("video")
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         """Shows gui for replacing videos in project."""
-        paths = [video.backend.filename for video in context.labels.videos]
 
+        def _get_truncation_message(truncation_messages, path, video):
+            reader = cv2.VideoCapture(path)
+            last_vid_frame = int(reader.get(cv2.CAP_PROP_FRAME_COUNT))
+            lfs: List[LabeledFrame] = list(context.labels.get(video))
+            if lfs is not None:
+                lfs.sort(key=lambda lf: lf.frame_idx)
+                last_lf_frame = lfs[-1].frame_idx
+                lfs = [lf for lf in lfs if lf.frame_idx > last_vid_frame]
+
+                # Message to warn users that labels will be removed if proceed
+                if last_lf_frame > last_vid_frame:
+                    message = (
+                        "<p><strong>Warning:</strong> Replacing this video will "
+                        f"remove {len(lfs)} labeled frames.</p>"
+                        f"<p><em>Current video</em>: <b>{Path(video.filename).name}</b>"
+                        f" (last label at frame {last_lf_frame})<br>"
+                        f"<em>Replacement video</em>: <b>{Path(path).name}"
+                        f"</b> ({last_vid_frame} frames)</p>"
+                    )
+                    # Assumes that a project won't import the same video multiple times
+                    truncation_messages[path] = message
+
+            return truncation_messages
+
+        # Warn user: newly added labels will be discarded if project is not saved
+        if not context.state["filename"] or context.state["has_changes"]:
+            QMessageBox(
+                text=("You have unsaved changes. Please save before replacing videos.")
+            ).exec_()
+            return False
+
+        # Select the videos we want to swap
+        old_paths = [video.backend.filename for video in context.labels.videos]
+        paths = list(old_paths)
         okay = MissingFilesDialog(filenames=paths, replace=True).exec_()
-
         if not okay:
             return False
 
-        params["new_video_paths"] = paths
+        # Only return an import list for videos we swap
+        new_paths = [
+            (path, video_idx)
+            for video_idx, (path, old_path) in enumerate(zip(paths, old_paths))
+            if path != old_path
+        ]
 
-        return True
+        new_paths = []
+        old_videos = dict()
+        all_videos = context.labels.videos
+        truncation_messages = dict()
+        for video_idx, (path, old_path) in enumerate(zip(paths, old_paths)):
+            if path != old_path:
+                new_paths.append(path)
+                old_videos[path] = all_videos[video_idx]
+                truncation_messages = _get_truncation_message(
+                    truncation_messages, path, video=all_videos[video_idx]
+                )
+
+        import_list = ImportVideos().ask(
+            filenames=new_paths, messages=truncation_messages
+        )
+        # Remove videos that no longer correlate to filenames.
+        old_videos_to_replace = [
+            old_videos[imp["params"]["filename"]] for imp in import_list
+        ]
+        params["import_list"] = zip(import_list, old_videos_to_replace)
+
+        return len(import_list) > 0
 
 
 class RemoveVideo(EditCommand):
@@ -2058,11 +2220,27 @@ class GenerateSuggestions(EditCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
 
+        if len(context.labels.videos) == 0:
+            print("Error: no videos to generate suggestions for")
+            return
+
         # TODO: Progress bar
         win = MessageDialog(
             "Generating list of suggested frames... " "This may take a few minutes.",
             context.app,
         )
+
+        if (
+            params["target"]
+            == "current video"  # Checks if current video is selected in gui
+        ):
+            params["videos"] = (
+                [context.labels.videos[0]]
+                if context.state["video"] is None
+                else [context.state["video"]]
+            )
+        else:
+            params["videos"] = context.labels.videos
 
         new_suggestions = VideoFrameSuggestions.suggest(
             labels=context.labels, params=params
