@@ -1121,11 +1121,15 @@ class ExportAnalysisFile(AppCommand):
     def ask(context: CommandContext, params: dict) -> bool:
         def ask_for_filename(default_name: str) -> str:
             """Allow user to specify the filename"""
+            from ..io.format.nix import nix_available
+            export_filter = "SLEAP Analysis HDF5 (*.h5)"
+            if nix_available:
+                export_filter += ";; NIX for Tracking data (*.nix)"
             filename, selected_filter = FileDialog.save(
                 context.app,
                 caption="Export Analysis File...",
                 dir=default_name,
-                filter="SLEAP Analysis HDF5 (*.h5);; NIX for Tracking data (*.nix)",
+                filter=export_filter,
             )
             return filename
 
