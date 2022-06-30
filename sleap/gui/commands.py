@@ -1103,9 +1103,14 @@ class ExportAnalysisFile(AppCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
+        from ..io.format.nix import NixAdaptor
 
         for output_path, video in params["analysis_videos"]:
-            SleapAnalysisAdaptor.write(
+            if output_path.split(".")[-1] == "nix":
+                adaptor = NixAdaptor
+            else:
+                adaptor = SleapAnalysisAdaptor
+            adaptor.write(
                 filename=output_path,
                 source_object=context.labels,
                 source_path=context.state["filename"],
@@ -1120,7 +1125,7 @@ class ExportAnalysisFile(AppCommand):
                 context.app,
                 caption="Export Analysis File...",
                 dir=default_name,
-                filter="SLEAP Analysis HDF5 (*.h5)",
+                filter="SLEAP Analysis HDF5 (*.h5);; NIX for Tracking data (*.nix)",
             )
             return filename
 
