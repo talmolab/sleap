@@ -132,7 +132,53 @@ class NixAdaptor(Adaptor):
             array.append_set_dimension(node_names)
             return array
 
-        def write(block, source: Labels, video:Video):
+
+        def chunked_write(instances, frameid_array, positions_array, track_array, skeleton_array, pointscore_array,
+                          instancescore_array, trackingscore_array, track_map, node_map, skeleton_map, chunksize=10000):
+            data_written = 0
+            indices = np.zeros(chunksize, dtype=int)
+            positions = np.zeros((chunksize, 2, len(node_map.keys())), dtype=float)
+            track = np.zeros_like(indices)
+            skeleton = np.zeros_like(indices)
+            pointscore = np.zeros((chunksize, len(node_map.keys())), dtype=float)
+            instscore = np.zeros_like(track, dtype=float)
+            trackscore = np.zeros_like(instscore)
+            dflt_pointscore = [0.0 for n in range(len(node_map.keys()))]
+
+            while data_written < len(instances):
+                print(".")
+                start = data_written
+                end = len(instances) if start + chunksize >= len(instances) else start + chunksize
+                for i in range(start, end):
+                    inst = instances[i]
+                    index = i - start
+                    indices [index] = inst.frame_idx
+                    if inst.track is not None:
+                        track[index] = track_map[inst.track.name]
+                    else:
+                        track[index] = -1
+                    skeleton[index] = skeleton_map[inst.skeleton.name]
+                    for node, point in zip(inst.nodes, inst.points_array):
+                        positions[index, :, node_map[node.name]] = point
+                    if hasattr(inst, "score"):
+                        instscore[index] = inst.score
+                        trackscore[index] = inst.tracking_score
+                        pointscore[index,:] = inst.scores
+                    else:
+                        instscore[index] = 0.0
+                        trackscore[index] = 0.0
+                        pointscore[index,:] = dflt_pointscore
+
+                frameid_array[start:end] = indices[:end-start]
+                track_array[start:end] = track[:end-start]
+                positions_array[start:end,:,:] = positions[:end-start,:,:]
+                skeleton_array[start:end] = skeleton[:end-start]
+                pointscore_array[start:end] = pointscore[:end-start]
+                instancescore_array[start:end] = instscore[:end-start]
+                trackingscore_array[start:end] = trackscore[:end-start]
+                data_written += (end-start)
+
+        def write_data(block, source: Labels, video:Video):
             instances = list(source.instances(video=video))
             instances = sorted(instances, key=lambda i: i.frame_idx)
             nodes = node_map(source)
@@ -158,6 +204,7 @@ class NixAdaptor(Adaptor):
                                                   frameid_array, (len(instances),), nix.DataType.Float)
             tracking_score = create_feature_array("tracking score", "nix.tracking.score", block, 
                                                    frameid_array, (len(instances),), nix.DataType.Float)
+
             # bind all together using a nix.MultiTag
             mtag = block.create_multi_tag("tracking results", "nix.tracking.results", positions=frameid_array)
             mtag.references.append(positions_array)
@@ -167,24 +214,6 @@ class NixAdaptor(Adaptor):
             mtag.create_feature(point_score, nix.LinkType.Indexed)
             mtag.create_feature(instance_score, nix.LinkType.Indexed)
             mtag.create_feature(tracking_score, nix.LinkType.Indexed)
-
-            for i, inst in enumerate(instances):
-                frameid_array[i] = inst.frame_idx
-                if inst.track is not None:
-                    track_array[i] = tracks[inst.track.name]
-                else:
-                    track_array[i] = -1
-                skeleton_array[i] = skeletons[inst.skeleton.name]
-                for node, point in zip(inst.nodes, inst.points_array):
-                     positions_array[i, :, nodes[node.name]] = point
-                if isinstance(inst, PredictedInstance):
-                    instance_score[i] = inst.score
-                    tracking_score[i] = inst.tracking_score
-                    point_score[i,:] = inst.scores
-                else:
-                    instance_score[i] = 0.0
-                    tracking_score[i] = 0.0
-                    point_score[i,:] = [0.0 for n in nodes]
 
             sm = block.create_data_frame("skeleton map", "nix.tracking.skeleton_map", 
                                          col_names=["name", "index"],
@@ -201,12 +230,16 @@ class NixAdaptor(Adaptor):
             for k in tracks.keys():
                 table_data.append((k, tracks[k]))
             tm.append_rows(table_data)
+            chunked_write(instances, frameid_array, positions_array, track_array, skeleton_array,
+                          point_score, instance_score, tracking_score, tracks, nodes, skeletons)
 
         if not nix_available:
             raise ImportError("NIX library not installed, export to nix not possible. (run pip install nixio)")
         if not check(source_object, video):
             raise ValueError(f"There are no videos in this project. Output file will not be written.")
 
+        print("Exporting analyses to nix file ...", end="")
         nix_file = create_file(filename, source_path, video)
-        write(nix_file.blocks[0], source_object, video)
+        write_data(nix_file.blocks[0], source_object, video)
         nix_file.close()
+        print(" done")
