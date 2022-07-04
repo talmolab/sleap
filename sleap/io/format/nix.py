@@ -198,7 +198,7 @@ class NixAdaptor(Adaptor):
                                                 shape=(len(instances),), dtype=nix.DataType.Int64)
             skeleton_array = create_feature_array("skeleton", "nix.tracking.instance_skeleton", block, 
                                                   frameid_array, (len(instances),), nix.DataType.Int64)
-            point_score = create_feature_array("point score", "nix.tracking.score", block, 
+            point_score = create_feature_array("node score", "nix.tracking.score", block, 
                                                 frameid_array, (len(instances), len(nodes)), nix.DataType.Float)
             instance_score = create_feature_array("instance score", "nix.tracking.score", block, 
                                                   frameid_array, (len(instances),), nix.DataType.Float)
