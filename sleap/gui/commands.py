@@ -1154,7 +1154,7 @@ class ExportAnalysisFile(AppCommand):
         # Specify (how to get) the output filename
         default_name = context.state["filename"] or "labels"
         fn = PurePath(default_name)
-        file_extension = ".h5"
+        file_extension = "h5"
         if len(videos) == 1:
             # Allow user to specify the filename
             use_default = False
@@ -1190,8 +1190,8 @@ class ExportAnalysisFile(AppCommand):
                 output_prefix=str(fn.stem),
                 format_suffix=file_extension
             )
+            
             filename = default_name if use_default else ask_for_filename(default_name)
-
             # Check that filename is valid and create list of video / output paths
             if len(filename) != 0:
                 analysis_videos.append(video)
