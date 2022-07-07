@@ -164,8 +164,16 @@ class NixAdaptor(Adaptor):
                     else:
                         track[index] = -1
                     skeleton[index] = skeleton_map[inst.skeleton.name]
-                    for node, point in zip(inst.nodes, inst.points_array):
-                        positions[index, :, node_map[node.name]] = point
+
+                    fnames = set([n.name for n in inst.nodes])
+                    nnames = set(list(node_map.keys()))
+                    missing = nnames.difference(fnames)
+
+                    for n, p in zip(inst.nodes, inst.points):
+                        positions[index, :, node_map[n.name]] = np.array([p.x, p.y])
+                    for m in missing:
+                        positions[index, :, node_map[m]] = np.array([np.nan, np.nan])
+
                     centroids[index,:] = inst.centroid
                     if hasattr(inst, "score"):
                         instscore[index] = inst.score
