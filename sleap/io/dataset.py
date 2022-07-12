@@ -2295,7 +2295,7 @@ class Labels(MutableSequence):
         video: Optional[Union[Video, int]] = None,
         all_frames: bool = True,
         untracked: bool = False,
-        get_confidence: bool = False,
+        return_confidence: bool = False,
     ) -> np.ndarray:
         """Construct a numpy array from instance points.
 
@@ -2308,9 +2308,13 @@ class Labels(MutableSequence):
             untracked: If `False` (the default), include only instances that have a
                 track assignment. If `True`, includes all instances in each frame in
                 arbitrary order.
+            return_confidence: If `False` (the default), only return points of nodes. If
+                `True`, return the points and scores of nodes.
 
         Returns:
-            An array of tracks of shape `(n_frames, n_tracks, n_nodes, 2)`.
+            An array of tracks of shape `(n_frames, n_tracks, n_nodes, 2)` if
+            `return_confidence` is `False`. Otherwise returned shape is
+            `(n_frames, n_tracks, n_nodes, 3)` if `return_confidence` is `True`.
 
             Missing data will be replaced with `np.nan`.
 
@@ -2362,7 +2366,7 @@ class Labels(MutableSequence):
         n_frames = last_frame - first_frame + 1
         n_nodes = len(self.skeleton.nodes)
 
-        if get_confidence:
+        if return_confidence:
             tracks = np.full((n_frames, n_tracks, n_nodes, 3), np.nan, dtype="float32")
         else:
             tracks = np.full((n_frames, n_tracks, n_nodes, 2), np.nan, dtype="float32")
@@ -2371,13 +2375,17 @@ class Labels(MutableSequence):
             if untracked:
                 for j, inst in enumerate(lf.predicted_instances):
                     tracks[i, j] = (
-                        inst.points_and_scores_array if get_confidence else inst.numpy()
+                        inst.points_and_scores_array
+                        if return_confidence
+                        else inst.numpy()
                     )
             else:
                 for inst in lf.tracked_instances:
                     j = self.tracks.index(inst.track)
                     tracks[i, j] = (
-                        inst.points_and_scores_array if get_confidence else inst.numpy()
+                        inst.points_and_scores_array
+                        if return_confidence
+                        else inst.numpy()
                     )
 
         return tracks

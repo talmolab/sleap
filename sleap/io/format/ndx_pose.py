@@ -275,7 +275,7 @@ class NDXPoseAdaptor(Adaptor):
                     original_videos=[f"{video_fn}"],
                     labeled_videos=[f"{video_fn}"],
                     dimensions=np.array([[video.backend.height, video.backend.width]]),
-                    # scorer="DLC_resnet50_openfieldOct30shuffle1_1600",
+                    scorer=str(labels.provenance),
                     source_software="SLEAP",
                     source_software_version=f"{sleap.__version__}",
                     nodes=skeleton.node_names,
