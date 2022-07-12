@@ -237,7 +237,10 @@ class NDXPoseAdaptor(Adaptor):
             # Get tracks for each video
             untracked = True if len(labels.tracks) == 0 else False
             tracks_numpy = labels.numpy(
-                video=video, all_frames=True, untracked=untracked, get_confidence=True
+                video=video,
+                all_frames=True,
+                untracked=untracked,
+                return_confidence=True,
             )
             n_frames, n_tracks, n_nodes, _ = tracks_numpy.shape
             timestamps = np.arange(n_frames)
