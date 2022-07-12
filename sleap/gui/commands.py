@@ -262,6 +262,10 @@ class CommandContext:
         """Imports AlphaTracker datasets."""
         self.execute(ImportAlphaTracker)
 
+    def importNWB(self):
+        """Imports NWB datasets."""
+        self.execute(ImportNWB)
+
     def importDPK(self):
         """Imports DeepPoseKit datasets."""
         self.execute(ImportDeepPoseKit)
@@ -650,6 +654,37 @@ class ImportAlphaTracker(AppCommand):
 
         if os.path.exists(video_path):
             params["video_path"] = video_path
+
+        params["filename"] = filename
+
+        return True
+
+
+class ImportNWB(AppCommand):
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+
+        labels = Labels.load_nwb(filename=params["filename"])
+
+        new_window = context.app.__class__()
+        new_window.showMaximized()
+        new_window.loadLabelsObject(labels=labels)
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict) -> bool:
+        filters = ["NWB (*.nwb)"]
+
+        filename, selected_filter = FileDialog.open(
+            context.app,
+            dir=None,
+            caption="Import NWB dataset...",
+            filter=";;".join(filters),
+        )
+
+        if len(filename) == 0:
+            return False
+
+        file_dir = os.path.dirname(filename)
 
         params["filename"] = filename
 
