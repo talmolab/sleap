@@ -450,6 +450,8 @@ class MainWindow(QMainWindow):
             lambda: self.commands.exportAnalysisFile(all_videos=True),
         )
 
+        add_menu_item(fileMenu, "export_nwb", "Export NWB...", self.commands.exportNWB)
+
         fileMenu.addSeparator()
         add_menu_item(
             fileMenu, "reset prefs", "Reset preferences to defaults...", self.resetPrefs

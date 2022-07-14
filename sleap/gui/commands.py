@@ -302,6 +302,10 @@ class CommandContext:
         """Shows gui for exporting analysis h5 file."""
         self.execute(ExportAnalysisFile, all_videos=all_videos)
 
+    def exportNWB(self):
+        """Show gui for exporting nwb file."""
+        self.execute(SaveProjectAs, extension="nwb")
+
     def exportLabeledClip(self):
         """Shows gui for exporting clip with visual annotations."""
         self.execute(ExportLabeledClip)
@@ -943,7 +947,8 @@ class SaveProjectAs(AppCommand):
         """Helper function which attempts save and handles errors."""
         success = False
         try:
-            Labels.save_file(labels=labels, filename=filename)
+            extension = filename.split(".")[-1]
+            Labels.save_file(labels=labels, filename=filename, as_format=extension)
             success = True
             # Mark savepoint in change stack
             context.changestack_savepoint()
@@ -970,11 +975,16 @@ class SaveProjectAs(AppCommand):
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         default_name = context.state["filename"]
-        if default_name:
-            default_name = get_new_version_filename(default_name)
+        if "extension" in params:
+            default_name += f".{params['extension']}"
+            filters = [f"(*.{params['extension']})"]
         else:
-            default_name = "labels.v000.slp"
-        filters = ["SLEAP labels dataset (*.slp)"]
+            filters = ["SLEAP labels dataset (*.slp)"]
+            if default_name:
+                default_name = get_new_version_filename(default_name)
+            else:
+                default_name = "labels.v000.slp"
+
         filename, selected_filter = FileDialog.save(
             context.app,
             caption="Save As...",

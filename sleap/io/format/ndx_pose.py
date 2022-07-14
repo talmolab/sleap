@@ -2,6 +2,7 @@
 
 import attr
 import datetime
+import re
 import numpy as np
 
 from pathlib import PurePath
@@ -87,6 +88,7 @@ class NDXPoseAdaptor(Adaptor):
                 track_keys: List[str] = list(
                     processing_module.fields["data_interfaces"]
                 )
+                is_tracked: bool = re.sub("[0-9]+", "", track_keys[0]) == "track"
 
                 # Extract info needed to create video and tracks_numpy
                 test_pose_estimation = processing_module[track_keys[0]]
@@ -111,13 +113,14 @@ class NDXPoseAdaptor(Adaptor):
                         tracks_numpy[
                             :, track_idx, node_idx, :
                         ] = pose_estimation_series.data[:]
-                        confidence[:, track_idx, node_idx, :] = np.expand_dims(
+                        confidence[:, track_idx, node_idx] = np.expand_dims(
                             pose_estimation_series.confidence[:], axis=1
                         )
 
                 video_tracks[str(PurePath(test_pose_estimation.original_videos[0]))] = (
                     tracks_numpy,
                     confidence,
+                    is_tracked,
                 )
 
         except Exception as e:
@@ -132,48 +135,35 @@ class NDXPoseAdaptor(Adaptor):
         )
         labels.skeletons = [skeleton]
 
-        # Now add instances to Labels object
-        for video_fn, (tracks_numpy, confidence) in zip(
-            video_tracks.keys(), video_tracks.values()
-        ):
+        # Add instances to labeled frames
+        lfs = []
+        for video_fn, (tracks_numpy, confidence, is_tracked) in video_tracks.items():
             video = Video.from_filename(video_fn)
-            labels.add_video(video=video)
             n_frames, n_tracks, n_nodes, _ = tracks_numpy.shape
-            for track_idx in list(range(n_tracks)):
-                # Decide whether to create new track
-                add_track = True
-                new_track = Track(name=str(track_idx))
-                track = new_track
-                for l_track in labels.tracks:
-                    if l_track.matches(new_track):
-                        add_track = False
-                        track = l_track
+            tracks = [Track(name=f"track{track_idx}") for track_idx in range(n_tracks)]
+            for frame_idx, (frame_pts, frame_confs) in enumerate(
+                zip(tracks_numpy, confidence)
+            ):
+                insts = []
+                for track, (inst_pts, inst_confs) in zip(
+                    tracks, zip(frame_pts, frame_confs)
+                ):
+                    if np.isnan(inst_pts).all():
                         continue
-
-                for frame_idx in list(range(n_frames)):
-                    points = tracks_numpy[frame_idx, track_idx, :, :]
-                    if np.isnan(points).all():
-                        continue
-
-                    frame = LabeledFrame(video=video, frame_idx=frame_idx)
-                    labels.append(frame)
-
-                    if not np.isnan(points).all():
-                        inst_confidence = confidence[frame_idx, track_idx, :, :]
-                        instance = PredictedInstance.from_numpy(
-                            track=track,
-                            points=tracks_numpy[frame_idx, track_idx, :, :],
-                            point_confidences=inst_confidence,
-                            instance_score=np.mean(inst_confidence),
+                    insts.append(
+                        PredictedInstance.from_numpy(
+                            points=inst_pts,  # (n_nodes, 2)
+                            point_confidences=inst_confs,  # (n_nodes,)
+                            instance_score=inst_confs.mean(),  # ()
                             skeleton=skeleton,
+                            track=track if is_tracked else None,
                         )
-
-                        labels.add_instance(frame=frame, instance=instance)
-
-                # Need to add track AFTER adding instances (see LabelsDataCache)
-                if add_track:
-                    labels.add_track(video=video, track=track)
-
+                    )
+                if len(insts) > 0:
+                    lfs.append(
+                        LabeledFrame(video=video, frame_idx=frame_idx, instances=insts)
+                    )
+        labels = Labels(lfs)
         return labels
 
     def write(self, filename: str, labels: Labels):
@@ -193,10 +183,11 @@ class NDXPoseAdaptor(Adaptor):
             each unique track in the `Video`.
 
             The `ndx_pose.PoseEstimation` for each unique `Track` is stored under the
-            key 'Track{track_idx:03}' where `track_idx` ranges from
+            key 'track{track_idx:03}' if tracks are set or 'untrack{track_idx:03}' if
+            untracked where `track_idx` ranges from
             0 to (number of tracks) - 1. Ex:
                 track_idx: 1
-                key: 'Track001'
+                key: 'track001'
 
             Each `ndx_pose.PoseEstimation` has a `ndx_pose.PoseEstimationSeries` for
             every `Node` in the `Skeleton`.
@@ -218,6 +209,13 @@ class NDXPoseAdaptor(Adaptor):
 
         skeleton = labels.skeleton
 
+        # Check that this project contains predicted instances
+        if len(labels.predicted_instances) == 0:
+            raise TypeError(
+                "Only predicted instances are written to the NWB format. "
+                "This project has no predicted instances"
+            )
+
         print(f"\nCreating NWB file...")
         nwb_file = NWBFile(
             session_description="session_description",
@@ -235,7 +233,10 @@ class NDXPoseAdaptor(Adaptor):
             )
 
             # Get tracks for each video
-            untracked = True if len(labels.tracks) == 0 else False
+            video_lfs = labels.get(video)
+            untracked = all(
+                [inst.track is None for lf in video_lfs for inst in lf.instances]
+            )
             tracks_numpy = labels.numpy(
                 video=video,
                 all_frames=True,
@@ -267,9 +268,10 @@ class NDXPoseAdaptor(Adaptor):
                         )
                     )
 
-                # Combine each nodes PoseEstimationSeries to create a PoseEstimation
+                # Combine each node's PoseEstimationSeries to create a PoseEstimation
+                name_prefix = "untracked" if untracked else "track"
                 pose_estimation = PoseEstimation(
-                    name=f"Track{track_idx:03}",
+                    name=f"{name_prefix}{track_idx:03}",
                     pose_estimation_series=pose_estimation_series,
                     description=(
                         f"Estimated positions of {skeleton.name} in video {video_fn} "
