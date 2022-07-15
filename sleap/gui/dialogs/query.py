@@ -11,7 +11,15 @@ from PySide2.QtWidgets import (
 
 
 class QueryDialog(QDialog):
+    """Opens `QDialog` to ask user permission to complete an action.
+
+    Args:
+        title: Text to be displayed in the header of dialog box.
+        message: Test to be displayed in the body of dialog box.
+    """
+
     def __init__(self, title: str, message: str, *args, **kwargs):
+        """Initialize and display `QDialog`."""
         super().__init__(*args, **kwargs)
 
         self.user_response = False
