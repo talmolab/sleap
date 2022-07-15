@@ -2,6 +2,14 @@ import pytest
 
 from sleap.skeleton import Skeleton
 
+TEST_FLY_LEGS_SKELETON = "tests/data/skeleton/fly_skeleton_legs.json"
+
+
+@pytest.fixture
+def fly_legs_skeleton_json():
+    """Path to fly_skeleton_legs.json"""
+    return TEST_FLY_LEGS_SKELETON
+
 
 @pytest.fixture
 def stickman():

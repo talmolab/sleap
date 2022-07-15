@@ -58,6 +58,7 @@ from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.dialogs.merge import MergeDialog
 from sleap.gui.dialogs.message import MessageDialog
+from sleap.gui.dialogs.query import QueryDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
 
@@ -1715,7 +1716,52 @@ class OpenSkeleton(EditCommand):
     topics = [UpdateTopic.skeleton]
 
     @staticmethod
+    def load_skeleton(filename: str):
+        if filename.endswith(".json"):
+            new_skeleton = Skeleton.load_json(filename)
+        elif filename.endswith((".h5", ".hdf5")):
+            sk_list = Skeleton.load_all_hdf5(filename)
+            new_skeleton = sk_list[0]
+        return new_skeleton
+
+    @staticmethod
+    def compare_skeletons(
+        skeleton: Skeleton, new_skeleton: Skeleton
+    ) -> Tuple[List[str], List[str]]:
+
+        delete_nodes = []
+        add_nodes = []
+        if skeleton.node_names != new_skeleton.node_names:
+            # Compare skeletons
+            base_nodes = skeleton.node_names
+            new_nodes = new_skeleton.node_names
+            delete_nodes = [node for node in base_nodes if node not in new_nodes]
+            add_nodes = [node for node in new_nodes if node not in base_nodes]
+
+        return delete_nodes, add_nodes
+
+    @staticmethod
+    def delete_extra_skeletons(labels: Labels):
+        if len(labels.skeletons) > 1:
+            skeletons_used = list(
+                set(
+                    [
+                        inst.skeleton
+                        for lf in labels.labeled_frames
+                        for inst in lf.instances
+                    ]
+                )
+            )
+            try:
+                assert len(skeletons_used) == 1
+            except AssertionError:
+                raise ValueError("Too many skeletons used in project.")
+
+            labels.skeletons = skeletons_used
+
+    @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
+
         filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
         filename, selected_filter = FileDialog.open(
             context.app, dir=None, caption="Open skeleton...", filter=";;".join(filters)
@@ -1724,21 +1770,94 @@ class OpenSkeleton(EditCommand):
         if len(filename) == 0:
             return False
 
+        okay = True
+        if len(context.labels.skeletons) > 0:
+            # Ask user permission to merge skeletons
+            okay = False
+            skeleton: Skeleton = context.labels.skeleton  # Assumes single skeleton
+
+            # Load new skeleton and compare
+            new_skeleton = OpenSkeleton.load_skeleton(filename)
+            (delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
+                skeleton, new_skeleton
+            )
+
+            if (len(delete_nodes) > 0) or (len(add_nodes) > 0):
+                # Warn about mismatching skeletons
+                title = "Replace Skeleton"
+                message = (
+                    "<p><b>Warning:</b> Pre-existing skeleton found."
+                    "<p>The following nodes will be <b>deleted</b> from all instances:"
+                    f"<br><em>From base labels</em>: {','.join(delete_nodes)}<br></p>"
+                    "<p>The following nodes will be <b>added</b> to all instances:<br>"
+                    f"<em>From new labels</em>: {','.join(add_nodes)}</p>"
+                    "<p>Nodes can be deleted or merged from the skeleton editor after "
+                    "merging labels.</p>"
+                )
+                query = QueryDialog(title=title, message=message)
+                query.exec_()
+
+                # Give the okay to add/delete nodes
+                okay = bool(query.result())
+
+            params["delete_nodes"] = delete_nodes
+            params["add_nodes"] = add_nodes
+
         params["filename"] = filename
-        return True
+        return okay
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        filename = params["filename"]
-        if filename.endswith(".json"):
-            context.state["skeleton"] = Skeleton.load_json(filename)
-        elif filename.endswith((".h5", ".hdf5")):
-            sk_list = Skeleton.load_all_hdf5(filename)
-            if len(sk_list):
-                context.state["skeleton"] = sk_list[0]
 
-        if context.state["skeleton"] not in context.labels:
+        # Load new skeleton
+        filename = params["filename"]
+        new_skeleton = OpenSkeleton.load_skeleton(filename)
+
+        # Case 1: No skeleton exists in project
+        if len(context.labels.skeletons) == 0:
+            context.state["skeleton"] = new_skeleton
             context.labels.skeletons.append(context.state["skeleton"])
+            return
+
+        # Case 2: Skeleton(s) already exist(s) in project
+
+        # Delete extra skeletons in project
+        OpenSkeleton.delete_extra_skeletons(context.labels)
+        skeleton = context.labels.skeleton  # Assume single skeleton
+
+        if "delete_nodes" in params.keys():
+            # We already compared skeletons in ask() method
+            delete_nodes: List[str] = params["delete_nodes"]
+            add_nodes: List[str] = params["add_nodes"]
+        else:
+            # Otherwise, load new skeleton and compare
+            (delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
+                skeleton, new_skeleton
+            )
+
+        # Delete pre-existing symmetry
+        for src, dst in skeleton.symmetries:
+            skeleton.delete_symmetry(src, dst)
+
+        # Delete nodes from skeleton that are not in new skeleton
+        for node in delete_nodes:
+            skeleton.delete_node(node)
+
+        # Add nodes that only exist in the new skeleton
+        for node in add_nodes:
+            skeleton.add_node(node)
+
+        # Add edges
+        skeleton.clear_edges()
+        for src, dest in new_skeleton.edges:
+            skeleton.add_edge(src.name, dest.name)
+
+        # Add new symmetry
+        for src, dst in new_skeleton.symmetries:
+            skeleton.add_symmetry(src.name, dst.name)
+
+        # Set state of context
+        context.state["skeleton"] = skeleton
 
 
 class SaveSkeleton(AppCommand):
