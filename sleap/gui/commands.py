@@ -1856,7 +1856,7 @@ class OpenSkeleton(EditCommand):
         for src, dst in new_skeleton.symmetries:
             skeleton.add_symmetry(src.name, dst.name)
 
-        # Only add skeleton if no errors occur above
+        # Set state of context
         context.state["skeleton"] = skeleton
 
 
