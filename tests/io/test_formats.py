@@ -1,16 +1,20 @@
+from sleap.instance import Instance, LabeledFrame, PredictedInstance, Track
 from sleap.io.dataset import Labels
 from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, filehandle
 from sleap.io.format.adaptor import SleapObjectType
 from sleap.io.format.alphatracker import AlphaTrackerAdaptor
+from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.gui.commands import ImportAlphaTracker
 from sleap.gui.app import MainWindow
 from sleap.gui.state import GuiState
 
 import pytest
 import os
-from pathlib import Path
+from pathlib import Path, PurePath
 import numpy as np
 from numpy.testing import assert_array_equal
+
+from sleap.io.video import Video
 
 
 def test_text_adaptor(tmpdir):
@@ -314,3 +318,69 @@ def test_tracking_scores(tmpdir, centered_pair_predictions_slp_path):
 
     for instance in labels.instances():
         assert hasattr(instance, "tracking_score")
+
+
+def test_nwb(centered_pair_predictions: Labels, small_robot_mp4_vid: Video, tmpdir):
+    """Test that `Labels` can be written to and recreated from an NWB file."""
+    labels = centered_pair_predictions
+    filename = str(PurePath(tmpdir, "ndx_pose_test.nwb"))
+
+    # Add another video with an untracked PredictedInstance
+    labels.videos.append(small_robot_mp4_vid)
+    pred_instance: PredictedInstance = PredictedInstance.from_instance(
+        labels[0].instances[0], score=5
+    )
+    pred_instance.track = None
+    lf = LabeledFrame(video=small_robot_mp4_vid, frame_idx=6, instances=[pred_instance])
+    labels.append(lf)
+
+    # Write to NWB file
+    NDXPoseAdaptor.write(NDXPoseAdaptor, filename, labels)
+
+    # Read from NWB file
+    read_labels = NDXPoseAdaptor.read(NDXPoseAdaptor, filehandle.FileHandle(filename))
+
+    # Labeled Frames
+    assert len(read_labels.labeled_frames) == len(labels.labeled_frames)
+
+    # Instances
+    frame_idx = 7
+    read_instances = read_labels[frame_idx].instances
+    instances = labels[frame_idx]
+    assert len(instances) == len(read_instances)
+
+    # Points
+    for read_inst, inst in zip(read_instances, instances):
+        for read_points, points in zip(read_inst.points, inst.points):
+            assert read_points == points
+
+    # Video
+    assert len(read_labels.videos) == len(labels.videos)
+    for video_idx, _ in enumerate(labels.videos):
+        # The ordering of reading processing modules from NWB files seems to vary
+        try:
+            assert PurePath(read_labels.videos[video_idx].backend.filename) == PurePath(
+                labels.videos[video_idx].backend.filename
+            )
+            assert isinstance(
+                read_labels.videos[video_idx].backend,
+                type(labels.videos[video_idx].backend),
+            )
+        except:
+            assert PurePath(read_labels.videos[video_idx].backend.filename) == PurePath(
+                labels.videos[video_idx - 1].backend.filename
+            )
+            assert isinstance(
+                read_labels.videos[video_idx].backend,
+                type(labels.videos[video_idx - 1].backend),
+            )
+
+    # Skeleton
+    assert read_labels.skeleton.node_names == labels.skeleton.node_names
+    assert read_labels.skeleton.edge_inds == labels.skeleton.edge_inds
+    assert len(read_labels.tracks) == len(labels.tracks)
+
+    # Project with no predicted instances
+    labels.instances = []
+    with pytest.raises(TypeError):
+        NDXPoseAdaptor.write(NDXPoseAdaptor, filename, labels)

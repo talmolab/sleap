@@ -402,6 +402,12 @@ class MainWindow(QMainWindow):
         )
         add_menu_item(
             import_types_menu,
+            "import_nwb",
+            "NWB dataset...",
+            self.commands.importNWB,
+        )
+        add_menu_item(
+            import_types_menu,
             "import_leap",
             "LEAP Matlab dataset...",
             self.commands.importLEAP,
@@ -443,6 +449,8 @@ class MainWindow(QMainWindow):
             "All Videos...",
             lambda: self.commands.exportAnalysisFile(all_videos=True),
         )
+
+        add_menu_item(fileMenu, "export_nwb", "Export NWB...", self.commands.exportNWB)
 
         fileMenu.addSeparator()
         add_menu_item(

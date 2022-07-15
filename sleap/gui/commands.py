@@ -50,6 +50,8 @@ from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFra
 from sleap.io.video import Video
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
+from sleap.io.format.adaptor import Adaptor
+from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.gui.dialogs.importvideos import ImportVideos
 from sleap.gui.dialogs.filedialog import FileDialog
@@ -263,6 +265,10 @@ class CommandContext:
         """Imports AlphaTracker datasets."""
         self.execute(ImportAlphaTracker)
 
+    def importNWB(self):
+        """Imports NWB datasets."""
+        self.execute(ImportNWB)
+
     def importDPK(self):
         """Imports DeepPoseKit datasets."""
         self.execute(ImportDeepPoseKit)
@@ -298,6 +304,10 @@ class CommandContext:
     def exportAnalysisFile(self, all_videos: bool = False):
         """Shows gui for exporting analysis h5 file."""
         self.execute(ExportAnalysisFile, all_videos=all_videos)
+
+    def exportNWB(self):
+        """Show gui for exporting nwb file."""
+        self.execute(SaveProjectAs, adaptor=NDXPoseAdaptor())
 
     def exportLabeledClip(self):
         """Shows gui for exporting clip with visual annotations."""
@@ -657,6 +667,39 @@ class ImportAlphaTracker(AppCommand):
         return True
 
 
+class ImportNWB(AppCommand):
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+
+        labels = Labels.load_nwb(filename=params["filename"])
+
+        new_window = context.app.__class__()
+        new_window.showMaximized()
+        new_window.loadLabelsObject(labels=labels)
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict) -> bool:
+        adaptor = NDXPoseAdaptor()
+        filters = [f"(*.{ext})" for ext in adaptor.all_exts]
+        filters[0] = f"{adaptor.name} {filters[0]}"
+
+        filename, selected_filter = FileDialog.open(
+            context.app,
+            dir=None,
+            caption="Import NWB dataset...",
+            filter=";;".join(filters),
+        )
+
+        if len(filename) == 0:
+            return False
+
+        file_dir = os.path.dirname(filename)
+
+        params["filename"] = filename
+
+        return True
+
+
 class ImportDeepPoseKit(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
@@ -909,7 +952,8 @@ class SaveProjectAs(AppCommand):
         """Helper function which attempts save and handles errors."""
         success = False
         try:
-            Labels.save_file(labels=labels, filename=filename)
+            extension = (PurePath(filename).suffix)[1:]
+            Labels.save_file(labels=labels, filename=filename, as_format=extension)
             success = True
             # Mark savepoint in change stack
             context.changestack_savepoint()
@@ -935,12 +979,17 @@ class SaveProjectAs(AppCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        default_name = context.state["filename"]
-        if default_name:
-            default_name = get_new_version_filename(default_name)
+        default_name = context.state["filename"] or "labels.v000.slp"
+        if "adaptor" in params:
+            adaptor: Adaptor = params["adaptor"]
+            default_name += f".{adaptor.default_ext}"
+            filters = [f"(*.{ext})" for ext in adaptor.all_exts]
+            filters[0] = f"{adaptor.name} {filters[0]}"
         else:
-            default_name = "labels.v000.slp"
-        filters = ["SLEAP labels dataset (*.slp)"]
+            filters = ["SLEAP labels dataset (*.slp)"]
+            if default_name:
+                default_name = get_new_version_filename(default_name)
+
         filename, selected_filter = FileDialog.save(
             context.app,
             caption="Save As...",
