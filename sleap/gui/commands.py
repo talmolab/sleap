@@ -1737,13 +1737,13 @@ class OpenSkeleton(EditCommand):
                 # Warn about mismatching skeletons
                 title = "Replace Skeleton"
                 message = (
-                    "<p><strong>Warning:</strong> Pre-existing skeleton found. "
-                    "The following nodes will be deleted from all instances:<p>"
-                    f"<p><em>From base labels</em>: {','.join(delete_nodes)}<br>"
-                    "The following nodes will be added to all instances:<p>"
+                    "<p><b>Warning:</b> Pre-existing skeleton found."
+                    "<p>The following nodes will be <b>deleted</b> from all instances:"
+                    f"<br><em>From base labels</em>: {','.join(delete_nodes)}<br></p>"
+                    "<p>The following nodes will be <b>added</b> to all instances:<br>"
                     f"<em>From new labels</em>: {','.join(add_nodes)}</p>"
                     "<p>Nodes can be deleted or merged from the skeleton editor after "
-                    "merging labels.</p><br>"
+                    "merging labels.</p>"
                 )
                 query = QueryDialog(title=title, message=message)
                 query.exec_()
