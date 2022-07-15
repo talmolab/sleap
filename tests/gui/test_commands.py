@@ -368,11 +368,15 @@ def test_OpenSkeleton(
     skeleton.add_symmetry(skeleton.nodes[0].name, skeleton.nodes[1].name)
     context = CommandContext.from_labels(labels)
 
+    # Add multiple skeletons to and ensure the unused skeleton is removed
+    labels.skeletons.append(stickman)
+
     # Run without OpenSkeleton.ask()
     params = {"filename": fly_legs_skeleton_json}
     new_skeleton = OpenSkeleton.load_skeleton(fly_legs_skeleton_json)
     new_skeleton.add_symmetry(new_skeleton.nodes[0], new_skeleton.nodes[1])
     OpenSkeleton.do_action(context, params)
+    assert len(labels.skeletons) == 1
 
     # State is updated
     assert context.state["skeleton"] == skeleton

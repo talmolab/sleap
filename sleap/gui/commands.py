@@ -1770,11 +1770,11 @@ class OpenSkeleton(EditCommand):
             context.labels.skeletons.append(context.state["skeleton"])
             return
 
-        # Case 2: Skeleton already exists in project
-        skeleton = context.labels.skeleton  # Assume single skeleton
+        # Case 2: Skeleton(s) already exist(s) in project
 
         # Delete extra skeletons in project
         OpenSkeleton.delete_extra_skeletons(context.labels)
+        skeleton = context.labels.skeleton  # Assume single skeleton
 
         if "delete_nodes" in params.keys():
             # We already compared skeletons in ask() method
