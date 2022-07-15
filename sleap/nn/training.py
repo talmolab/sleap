@@ -1224,12 +1224,16 @@ class TopdownConfmapsModelTrainer(Trainer):
         if self.config.data.preprocessing.pad_to_stride is None:
             self.config.data.preprocessing.pad_to_stride = 1
 
-        if self.config.data.instance_cropping.crop_size is None:
+        if (self.config.data.instance_cropping.crop_size is None) or (
+            self.config.data.instance_cropping.crop_size % self.model.maximum_stride > 0
+        ):
+            # Compute crop size that is divisible by max stride
             self.config.data.instance_cropping.crop_size = sleap.nn.data.instance_cropping.find_instance_crop_size(
                 self.data_readers.training_labels,
                 padding=self.config.data.instance_cropping.crop_size_detection_padding,
                 maximum_stride=self.model.maximum_stride,
                 input_scaling=self.config.data.preprocessing.input_scaling,
+                crop_size=self.config.data.instance_cropping.crop_size,
             )
 
         if self.config.optimization.batches_per_epoch is None:
@@ -1631,12 +1635,16 @@ class TopDownMultiClassModelTrainer(Trainer):
         if self.config.data.preprocessing.pad_to_stride is None:
             self.config.data.preprocessing.pad_to_stride = self.model.maximum_stride
 
-        if self.config.data.instance_cropping.crop_size is None:
+        if (self.config.data.instance_cropping.crop_size is None) or (
+            self.config.data.instance_cropping.crop_size % self.model.maximum_stride > 0
+        ):
+            # Compute crop size which is divisible by max stride
             self.config.data.instance_cropping.crop_size = sleap.nn.data.instance_cropping.find_instance_crop_size(
                 self.data_readers.training_labels,
                 padding=self.config.data.instance_cropping.crop_size_detection_padding,
                 maximum_stride=self.model.maximum_stride,
                 input_scaling=self.config.data.preprocessing.input_scaling,
+                crop_size=self.config.data.instance_cropping.crop_size,
             )
 
         if self.config.optimization.batches_per_epoch is None:
