@@ -1,11 +1,15 @@
+from tempfile import tempdir
 from sleap.gui.commands import (
     CommandContext,
     ImportDeepLabCutFolder,
     ExportAnalysisFile,
     ReplaceVideo,
+    SaveProjectAs,
     get_new_version_filename,
 )
+from sleap.io.format.adaptor import Adaptor
 from sleap.io.dataset import Labels
+from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.pathutils import fix_path_separator
 from sleap.io.video import Video
 from sleap.io.convert import default_analysis_filename
@@ -307,3 +311,57 @@ def test_ReplaceVideo(
     # Attempt to replace an mp4 with an hdf5 video
     with pytest.raises(TypeError):
         replace_video(hdf5_vid, labels.videos, context)
+
+
+def test_exportNWB(centered_pair_predictions, tmpdir):
+    """Test that exportNWB command writes an nwb file."""
+
+    def SaveProjectAs_ask(context: CommandContext, params: dict) -> bool:
+        """Replica of SaveProject.ask without the GUI element."""
+        default_name = context.state["filename"]
+        if "adaptor" in params:
+            adaptor: Adaptor = params["adaptor"]
+            default_name += f".{adaptor.default_ext}"
+            filters = [f"(*.{ext})" for ext in adaptor.all_exts]
+            filters[0] = f"{adaptor.name} {filters[0]}"
+        else:
+            filters = ["SLEAP labels dataset (*.slp)"]
+            if default_name:
+                default_name = get_new_version_filename(default_name)
+            else:
+                default_name = "labels.v000.slp"
+
+        # Original function opens GUI here
+        filename = default_name
+
+        if len(filename) == 0:
+            return False
+
+        params["filename"] = filename
+        return True
+
+    # Set-up Labels and context
+    labels: Labels = centered_pair_predictions
+    context = CommandContext.from_labels(centered_pair_predictions)
+    # Add fake method required by SaveProjectAs.do_action
+    context.app.__setattr__("plotFrame", lambda: None)
+    fn = PurePath(tmpdir, "test_nwb.slp")
+    context.state["filename"] = str(fn)
+    context.state["labels"] = labels
+
+    # Ensure ".nwb" extension is appended to filename
+    params = {"adaptor": NDXPoseAdaptor()}
+    SaveProjectAs_ask(context, params=params)
+    assert PurePath(params["filename"]).suffix == ".nwb"
+
+    # Ensure file was created
+    SaveProjectAs.do_action(context=context, params=params)
+    assert Path(params["filename"]).exists()
+
+    # Test import nwb
+    read_labels = Labels.load_nwb(params["filename"])
+    assert len(read_labels.labeled_frames) == len(labels.labeled_frames)
+    assert len(read_labels.videos) == len(labels.videos)
+    assert read_labels.skeleton.node_names == labels.skeleton.node_names
+    assert read_labels.skeleton.edge_inds == labels.skeleton.edge_inds
+    assert len(read_labels.tracks) == len(labels.tracks)
