@@ -101,9 +101,7 @@ class NDXPoseAdaptor(Adaptor):
                 tracks_numpy = np.full(
                     (n_frames, n_tracks, n_nodes, 2), np.nan, np.float32
                 )
-                confidence = np.full(
-                    (n_frames, n_tracks, n_nodes, 1), np.nan, np.float32
-                )
+                confidence = np.full((n_frames, n_tracks, n_nodes), np.nan, np.float32)
                 for track_idx, track_key in enumerate(track_keys):
                     pose_estimation = processing_module[track_key]
 
@@ -113,9 +111,9 @@ class NDXPoseAdaptor(Adaptor):
                         tracks_numpy[
                             :, track_idx, node_idx, :
                         ] = pose_estimation_series.data[:]
-                        confidence[:, track_idx, node_idx] = np.expand_dims(
-                            pose_estimation_series.confidence[:], axis=1
-                        )
+                        confidence[
+                            :, track_idx, node_idx
+                        ] = pose_estimation_series.confidence[:]
 
                 video_tracks[str(PurePath(test_pose_estimation.original_videos[0]))] = (
                     tracks_numpy,
@@ -251,7 +249,6 @@ class NDXPoseAdaptor(Adaptor):
                 for node_idx, node in enumerate(skeleton.nodes):
 
                     # Create instance of PoseEstimationSeries for each node
-                    # Get confidence value of every frame (-1 if user labeled)
                     data = tracks_numpy[:, track_idx, node_idx, :2]
                     confidence = tracks_numpy[:, track_idx, node_idx, 2]
 

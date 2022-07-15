@@ -50,6 +50,8 @@ from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFra
 from sleap.io.video import Video
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
+from sleap.io.format.adaptor import Adaptor
+from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.gui.dialogs.importvideos import ImportVideos
 from sleap.gui.dialogs.filedialog import FileDialog
@@ -304,7 +306,7 @@ class CommandContext:
 
     def exportNWB(self):
         """Show gui for exporting nwb file."""
-        self.execute(SaveProjectAs, extension="nwb")
+        self.execute(SaveProjectAs, adaptor=NDXPoseAdaptor())
 
     def exportLabeledClip(self):
         """Shows gui for exporting clip with visual annotations."""
@@ -947,7 +949,7 @@ class SaveProjectAs(AppCommand):
         """Helper function which attempts save and handles errors."""
         success = False
         try:
-            extension = filename.split(".")[-1]
+            extension = (PurePath(filename).suffix)[1:]
             Labels.save_file(labels=labels, filename=filename, as_format=extension)
             success = True
             # Mark savepoint in change stack
@@ -975,9 +977,11 @@ class SaveProjectAs(AppCommand):
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         default_name = context.state["filename"]
-        if "extension" in params:
-            default_name += f".{params['extension']}"
-            filters = [f"(*.{params['extension']})"]
+        if "adaptor" in params:
+            adaptor: Adaptor = params["adaptor"]
+            default_name += f".{adaptor.default_ext}"
+            filters = [f"(*.{ext})" for ext in adaptor.all_exts]
+            filters[0] = f"{adaptor.name} {filters[0]}"
         else:
             filters = ["SLEAP labels dataset (*.slp)"]
             if default_name:

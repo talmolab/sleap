@@ -7,7 +7,9 @@ from sleap.gui.commands import (
     SaveProjectAs,
     get_new_version_filename,
 )
+from sleap.io.format.adaptor import Adaptor
 from sleap.io.dataset import Labels
+from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.pathutils import fix_path_separator
 from sleap.io.video import Video
 from sleap.io.convert import default_analysis_filename
@@ -317,9 +319,11 @@ def test_exportNWB(centered_pair_predictions, tmpdir):
     def SaveProjectAs_ask(context: CommandContext, params: dict) -> bool:
         """Replica of SaveProject.ask without the GUI element."""
         default_name = context.state["filename"]
-        if "extension" in params:
-            default_name += f".{params['extension']}"
-            filters = [f"(*.{params['extension']})"]
+        if "adaptor" in params:
+            adaptor: Adaptor = params["adaptor"]
+            default_name += f".{adaptor.default_ext}"
+            filters = [f"(*.{ext})" for ext in adaptor.all_exts]
+            filters[0] = f"{adaptor.name} {filters[0]}"
         else:
             filters = ["SLEAP labels dataset (*.slp)"]
             if default_name:
@@ -327,7 +331,7 @@ def test_exportNWB(centered_pair_predictions, tmpdir):
             else:
                 default_name = "labels.v000.slp"
 
-        # Original function opens FileDialog here
+        # Original function opens GUI here
         filename = default_name
 
         if len(filename) == 0:
@@ -346,7 +350,7 @@ def test_exportNWB(centered_pair_predictions, tmpdir):
     context.state["labels"] = labels
 
     # Ensure ".nwb" extension is appended to filename
-    params = {"extension": "nwb"}
+    params = {"adaptor": NDXPoseAdaptor()}
     SaveProjectAs_ask(context, params=params)
     assert PurePath(params["filename"]).suffix == ".nwb"
 
