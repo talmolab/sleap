@@ -678,7 +678,9 @@ class ImportNWB(AppCommand):
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
-        filters = ["NWB (*.nwb)"]
+        adaptor = NDXPoseAdaptor()
+        filters = [f"(*.{ext})" for ext in adaptor.all_exts]
+        filters[0] = f"{adaptor.name} {filters[0]}"
 
         filename, selected_filter = FileDialog.open(
             context.app,
@@ -976,7 +978,7 @@ class SaveProjectAs(AppCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        default_name = context.state["filename"]
+        default_name = context.state["filename"] or "labels.v000.slp"
         if "adaptor" in params:
             adaptor: Adaptor = params["adaptor"]
             default_name += f".{adaptor.default_ext}"
@@ -986,8 +988,6 @@ class SaveProjectAs(AppCommand):
             filters = ["SLEAP labels dataset (*.slp)"]
             if default_name:
                 default_name = get_new_version_filename(default_name)
-            else:
-                default_name = "labels.v000.slp"
 
         filename, selected_filter = FileDialog.save(
             context.app,
