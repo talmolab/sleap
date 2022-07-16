@@ -75,7 +75,7 @@ def test_write_visuals(tmpdir, centered_pair_predictions: Labels, crop: str):
     video = centered_pair_predictions.videos[0]
 
     # Determine crop size relative to original size and scale
-    crop_size = None
+    crop_size_xy = None
     w = int(video.backend.width)
     h = int(video.backend.height)
     if crop == "Half":
