@@ -112,34 +112,38 @@ def writer(
     total_frames_written = 0
     start_time = perf_counter()
     i = 0
-    while True:
-        data = in_q.get()
+    try:
+        while True:
+            data = in_q.get()
 
-        if data is _sentinel:
-            # no more data to be received so stop
-            in_q.put(_sentinel)
-            break
+            if data is _sentinel:
+                # no more data to be received so stop
+                in_q.put(_sentinel)
+                break
 
-        if writer_object is None and data:
-            h, w = data[0].shape[:2]
-            writer_object = VideoWriter.safe_builder(
-                filename, height=h, width=w, fps=fps
-            )
+            if writer_object is None and data:
+                h, w = data[0].shape[:2]
+                writer_object = VideoWriter.safe_builder(
+                    filename, height=h, width=w, fps=fps
+                )
 
-        t0 = perf_counter()
-        for img in data:
-            writer_object.add_frame(img, bgr=True)
+            t0 = perf_counter()
+            for img in data:
+                writer_object.add_frame(img, bgr=True)
 
-        elapsed = perf_counter() - t0
-        fps = len(data) / elapsed
-        logger.debug(f"writing chunk {i} in {elapsed} s = {fps} fps")
-        i += 1
+            elapsed = perf_counter() - t0
+            fps = len(data) / elapsed
+            logger.debug(f"writing chunk {i} in {elapsed} s = {fps} fps")
+            i += 1
 
-        total_frames_written += len(data)
-        total_elapsed = perf_counter() - start_time
-        progress_queue.put((total_frames_written, total_elapsed))
-
-    writer_object.close()
+            total_frames_written += len(data)
+            total_elapsed = perf_counter() - start_time
+            progress_queue.put((total_frames_written, total_elapsed))
+    except Exception as e:
+        raise (e)
+    finally:
+        if writer_object is not None:
+            writer_object.close()
     # send (-1, time) to signal done
     progress_queue.put((-1, total_elapsed))
 
@@ -255,7 +259,7 @@ class VideoMarkerThread(Thread):
         return imgs
 
     def _mark_single_frame(self, video_frame: np.ndarray, frame_idx: int) -> np.ndarray:
-        """Returns single annotated frame image.
+        """Return single annotated frame image.
 
         Args:
             video_frame: The ndarray of the frame image.
@@ -264,21 +268,20 @@ class VideoMarkerThread(Thread):
         Returns:
             ndarray of frame image with visual annotations added.
         """
-
         # Use OpenCV to convert to BGR color image
         video_frame = img_to_cv(video_frame)
 
         # Add the instances to the image
         overlay = self._plot_instances_cv(video_frame.copy(), frame_idx)
 
-        return cv2.addWeighted(overlay, self.alpha, video_frame, 1 - self.alpha, 0)
+        return overlay
 
     def _plot_instances_cv(
         self,
         img: np.ndarray,
         frame_idx: int,
-    ) -> Optional[np.ndarray]:
-        """Adds visuals annotations to single frame image.
+    ) -> np.ndarray:
+        """Add visual annotations to single frame image.
 
         Args:
             img: The ndarray of the frame image.
@@ -293,7 +296,7 @@ class VideoMarkerThread(Thread):
         lfs = labels.find(labels.videos[video_idx], frame_idx)
 
         if len(lfs) == 0:
-            return self._crop_frame(img) if self.crop else img
+            return self._crop_frame(img)[0] if self.crop else img
 
         instances = lfs[0].instances_to_show
 
@@ -311,9 +314,9 @@ class VideoMarkerThread(Thread):
     ) -> Tuple[int, int]:
         if instances:
             centroids = np.array([inst.centroid for inst in instances])
-            center_xy = np.median(centroids, axis=0)
-
+            center_xy = np.nanmedian(centroids, axis=0)
             self._crop_centers.append(center_xy)
+
         elif not self._crop_centers:
             # no crops so far and no instances yet so just use image center
             img_w, img_h = img.shape[:2]
@@ -322,7 +325,7 @@ class VideoMarkerThread(Thread):
             self._crop_centers.append(center_xy)
 
         # use a running average of the last N centers to smooth movement
-        center_xy = tuple(np.mean(np.stack(self._crop_centers), axis=0))
+        center_xy = tuple(np.nanmean(np.stack(self._crop_centers), axis=0))
 
         return center_xy
 

@@ -1,5 +1,7 @@
 import numpy as np
 import os
+import pytest
+from sleap.io.dataset import Labels
 from sleap.io.visuals import (
     save_labeled_video,
     resize_images,
@@ -67,13 +69,27 @@ def test_sleap_render(centered_pair_predictions):
     assert os.path.exists("testvis.avi")
 
 
-def test_write_visuals(tmpdir, centered_pair_predictions):
+@pytest.mark.parametrize("crop", ["Half", "Quarter", None])
+def test_write_visuals(tmpdir, centered_pair_predictions: Labels, crop: str):
+    labels = centered_pair_predictions
+    video = centered_pair_predictions.videos[0]
+
+    # Determine crop size relative to original size and scale
+    crop_size = None
+    w = int(video.backend.width)
+    h = int(video.backend.height)
+    if crop == "Half":
+        crop_size_xy = (w // 2, h // 2)
+    elif crop == "Quarter":
+        crop_size_xy = (w // 4, h // 4)
+
     path = os.path.join(tmpdir, "clip.avi")
     save_labeled_video(
         filename=path,
         labels=centered_pair_predictions,
-        video=centered_pair_predictions.videos[0],
+        video=video,
         frames=(0, 1, 2),
         fps=15,
+        crop_size_xy=crop_size_xy,
     )
     assert os.path.exists(path)
