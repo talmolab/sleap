@@ -449,3 +449,18 @@ def test_OpenSkeleton(
     assert params["filename"] == fly_legs_skeleton_json
     OpenSkeleton.do_action(context, params)
     assert_skeletons_match(new_skeleton, stickman)
+
+
+def test_SaveProjectAs(centered_pair_predictions: Labels, tmpdir):
+    """Test that project can be saved as default slp extension"""
+
+    context = CommandContext.from_labels(centered_pair_predictions)
+    # Add fake method required by SaveProjectAs.do_action
+    context.app.__setattr__("plotFrame", lambda: None)
+    params = {}
+    fn = PurePath(tmpdir, "test_save-project-as.slp")
+    params["filename"] = str(fn)
+    context.state["labels"] = centered_pair_predictions
+
+    SaveProjectAs.do_action(context=context, params=params)
+    assert Path(params["filename"]).exists()
