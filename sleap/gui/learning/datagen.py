@@ -122,7 +122,7 @@ def make_datagen_results(reader: LabelsReader, cfg: TrainingJobConfig) -> np.nda
                 labels=reader.labels,
                 padding=cfg.data.instance_cropping.crop_size_detection_padding,
                 maximum_stride=cfg.model.backbone.which_oneof().max_stride,
-                crop_size=cfg.data.instance_cropping.crop_size,
+                min_crop_size=cfg.data.instance_cropping.crop_size,
             )
 
         pipeline += pipelines.InstanceCentroidFinder.from_config(

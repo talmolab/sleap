@@ -13,7 +13,7 @@ def find_instance_crop_size(
     padding: int = 0,
     maximum_stride: int = 2,
     input_scaling: float = 1.0,
-    crop_size: Optional[int] = None,
+    min_crop_size: Optional[int] = None,
 ) -> int:
     """Compute the size of the largest instance bounding box from labels.
 
@@ -25,7 +25,7 @@ def find_instance_crop_size(
             architecture.
         input_scaling: Float factor indicating the scale of the input images if any
             scaling will be done before cropping.
-        crop_size: The (optional) crop size set by the user. None if not set.
+        min_crop_size: The (optional) crop size set by the user. None if not set.
 
     Returns:
         An integer crop size denoting the length of the side of the bounding boxes that
@@ -34,15 +34,20 @@ def find_instance_crop_size(
 
         This accounts for stride, padding and scaling when ensuring divisibility.
     """
-    crop_size = 0 if crop_size is None else crop_size
+    # Check if user-specified crop size is divisible by max stride
+    min_crop_size = 0 if min_crop_size is None else min_crop_size
+    if (min_crop_size > 0) and (min_crop_size % maximum_stride == 0):
+        return min_crop_size
 
+    # Calculate crop size
+    min_crop_size_no_pad = min_crop_size - padding
     max_length = 0.0
     for inst in labels.user_instances:
         pts = inst.points_array
         pts *= input_scaling
         max_length = np.maximum(max_length, np.nanmax(pts[:, 0]) - np.nanmin(pts[:, 0]))
         max_length = np.maximum(max_length, np.nanmax(pts[:, 1]) - np.nanmin(pts[:, 1]))
-        max_length = np.maximum(max_length, crop_size)
+        max_length = np.maximum(max_length, min_crop_size_no_pad)
 
     max_length += float(padding)
     crop_size = np.math.ceil(max_length / float(maximum_stride)) * maximum_stride
