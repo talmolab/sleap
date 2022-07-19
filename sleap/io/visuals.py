@@ -274,7 +274,14 @@ class VideoMarkerThread(Thread):
         # Add the instances to the image
         overlay = self._plot_instances_cv(video_frame.copy(), frame_idx)
 
-        return overlay
+        # Crop video_frame to same size as overlay
+        video_frame_cropped = (
+            self._crop_frame(video_frame.copy())[0] if self.crop else video_frame
+        )
+
+        return cv2.addWeighted(
+            overlay, self.alpha, video_frame_cropped, 1 - self.alpha, 0
+        )
 
     def _plot_instances_cv(
         self,
