@@ -21,21 +21,22 @@ class NixAdaptor(Adaptor):
 
     So far the adaptor exports the tracked positions for each node of each instance, the track and skeleton information along with the respective scores and the centroid. Additionally, the video information is exported as metadata.
     For more information on the mapping from sleap to nix see the docs on [nixtrack](https://github.com/bendalab/nixtrack) (work in progress).
+    The adaptor uses a chunked writing approach which avoids numpy out of memory exceptions when exporting large datasets.
 
     author: Jan Grewe (jan.grewe@g-node.org)
     """
     @property
     def default_ext(self):
         return "nix"
-    
+
     @property
     def all_exts(self) -> List[str]:
         return [self.default_ext]
-    
+
     @property
     def handles(self):
         return SleapObjectType.misc
-    
+
     @property
     def name(self) -> str:
         """Human-reading name of the file format"""
@@ -60,7 +61,7 @@ class NixAdaptor(Adaptor):
     def does_write() -> bool:
         """Returns whether this adaptor supports writing."""
         return nix_available
-     
+
     @classmethod
     def read(file: FileHandle) -> object:
         """Reads the file and returns the appropriate deserialized object."""
