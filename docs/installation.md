@@ -77,20 +77,36 @@ conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap=1.2.4
 
 ### `conda` from source
 
-1. First, clone the repository:
+1. First, ensure git is installed:
+
+   ```bash
+   git --version
+   ```
+
+   If 'git' is not recognized, then [install git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
+
+2. Then, clone the repository:
 
    ```bash
    git clone https://github.com/talmolab/sleap && cd sleap
    ```
 
-2. Then, install from the environment file:
+3. Finally, install from the environment file:
+
    ```bash
    conda env create -f environment.yml -n sleap
    ```
+
+   If you do not have a NVIDIA GPU, then you should use the no CUDA environment file:
+
+   ```bash
+   conda env create -f environment_no_cuda.yml -n sleap
+   ```
+
    This works on **Windows**, **Linux** and **Mac OS X** (pre-M1). This is the **recommended method for development**.
 
 ```{note}
-- This install SLEAP in development mode, which means that edits to the source code will be applied the next time you run SLEAP.
+- This installs SLEAP in development mode, which means that edits to the source code will be applied the next time you run SLEAP.
 - Change the `-n sleap` in the command to create an environment with a different name (e.g., `-n sleap_develop`).
 ```
 
