@@ -953,6 +953,7 @@ class SaveProjectAs(AppCommand):
         success = False
         try:
             extension = (PurePath(filename).suffix)[1:]
+            extension = None if (extension == "slp") else extension
             Labels.save_file(labels=labels, filename=filename, as_format=extension)
             success = True
             # Mark savepoint in change stack
