@@ -21,7 +21,7 @@
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
@@ -39,7 +39,7 @@
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
     <script src="../_static/togglebutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <link rel="canonical" href="/develop/tutorials/assisted-labeling.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -464,7 +464,7 @@ title="Open an issue"
                 
               <div>
                 
-  <section id="prediction-assisted-labeling">
+  <section class="tex2jax_ignore mathjax_ignore" id="prediction-assisted-labeling">
 <span id="assisted-labeling"></span><h1>Prediction-assisted labeling<a class="headerlink" href="#prediction-assisted-labeling" title="Permalink to this headline">#</a></h1>
 <p><em>Prediction-assisted labeling</em> has two main goals. First, it speeds up the labeling
 process as it is faster to correct a predicted instance which is mostly
@@ -478,7 +478,7 @@ although it will alert you if an error occurs during inference.</p>
 predicted. Suggested frames with predicted instances will be marked in
 red on the seekbar.</p>
 </section>
-<section id="reviewing-and-fixing-predictions">
+<section class="tex2jax_ignore mathjax_ignore" id="reviewing-and-fixing-predictions">
 <h1>Reviewing and fixing predictions<a class="headerlink" href="#reviewing-and-fixing-predictions" title="Permalink to this headline">#</a></h1>
 <p>After you’ve successfully trained models and predicted some instances,
 you’ll get a message that inference has finished.
@@ -488,10 +488,16 @@ that you manually labeled will be marked with a thicker black line. (For
 predicted frames will have a lighter blue.)</p>
 <p>Predicted instances will <em>not</em> be used for future model training unless you
 correct the predictions in the GUI.</p>
-<p><img alt="imagefix" src="../_images/fixing-predictions.gif" /></p>
+<img alt="../_images/fixing-predictions.gif" src="../_images/fixing-predictions.gif" />
 <p>Predicted instances in the frame are displayed in grey with yellow
 nodes. To edit a prediction, you’ll need to replace it with an editable
 instance. <strong>Double-click</strong> the predicted instance and it will be converted into a regular instance.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All node labels on the regular instance will be colored red.
+After moving nodes, the node labels will colored green. This is just a visual indicator
+to keep track of which nodes have been moved from the original prediction.</p>
+</div>
 <p>You can now edit the instance as before. Once you’ve added and/or
 corrected more instances, you can repeat the process:
 train a new model, predict on more frames, correct those predictions,

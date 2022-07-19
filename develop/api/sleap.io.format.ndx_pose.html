@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>sleap.io.format.deepposekit &#8212; SLEAP (v1.2.4)</title>
+    <title>sleap.io.format.ndx_pose &#8212; SLEAP (v1.2.4)</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -41,7 +41,7 @@
     <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <link rel="canonical" href="/develop/api/sleap.io.format.deepposekit.html" />
+    <link rel="canonical" href="/develop/api/sleap.io.format.ndx_pose.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -372,7 +372,7 @@ title="Source repository"
       </li>
       
       <li>
-        <a href="https://github.com/talmolab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.io.format.deepposekit.html&body=Your%20issue%20content%20here."
+        <a href="https://github.com/talmolab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.io.format.ndx_pose.html&body=Your%20issue%20content%20here."
    class="headerbtn"
    data-toggle="tooltip"
 data-placement="left"
@@ -403,7 +403,7 @@ title="Open an issue"
         <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
-                <h1>sleap.io.format.deepposekit</h1>
+                <h1>sleap.io.format.ndx_pose</h1>
                 <!-- Table of contents -->
                 <div id="print-main-content">
                     <div id="jb-print-toc">
@@ -415,66 +415,123 @@ title="Open an issue"
                 
               <div>
                 
-  <section id="module-sleap.io.format.deepposekit">
-<span id="sleap-io-format-deepposekit"></span><h1>sleap.io.format.deepposekit<a class="headerlink" href="#module-sleap.io.format.deepposekit" title="Permalink to this headline">#</a></h1>
-<p>Adaptor for reading DeepPoseKit datasets (HDF5).</p>
+  <section id="module-sleap.io.format.ndx_pose">
+<span id="sleap-io-format-ndx-pose"></span><h1>sleap.io.format.ndx_pose<a class="headerlink" href="#module-sleap.io.format.ndx_pose" title="Permalink to this headline">#</a></h1>
+<p>Adaptor to read and write ndx-pose files.</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.format.deepposekit.</span></span><span class="sig-name descname"><span class="pre">LabelsDeepPoseKitAdaptor</span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.4/sleap/io/format/deepposekit.py#L16-L95"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor" title="Permalink to this definition">#</a></dt>
-<dd><dl class="py property">
-<dt class="sig sig-object py" id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.all_exts">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_exts</span></span><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.all_exts" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.ndx_pose.NDXPoseAdaptor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.format.ndx_pose.</span></span><span class="sig-name descname"><span class="pre">NDXPoseAdaptor</span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.4/sleap/io/format/ndx_pose.py#L22-L294"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.ndx_pose.NDXPoseAdaptor" title="Permalink to this definition">#</a></dt>
+<dd><p>Adaptor to read and write ndx-pose files.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="sleap.io.format.ndx_pose.NDXPoseAdaptor.all_exts">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_exts</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.io.format.ndx_pose.NDXPoseAdaptor.all_exts" title="Permalink to this definition">#</a></dt>
 <dd><p>List of all file extensions supported by adaptor.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.can_read_file">
-<span class="sig-name descname"><span class="pre">can_read_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.4/sleap/io/format/deepposekit.py#L33-L40"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.can_read_file" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.ndx_pose.NDXPoseAdaptor.can_read_file">
+<span class="sig-name descname"><span class="pre">can_read_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.4/sleap/io/format/ndx_pose.py#L41-L42"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.ndx_pose.NDXPoseAdaptor.can_read_file" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns whether this adaptor can read this file.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.can_write_filename">
-<span class="sig-name descname"><span class="pre">can_write_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.4/sleap/io/format/deepposekit.py#L42-L43"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.can_write_filename" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.ndx_pose.NDXPoseAdaptor.can_write_filename">
+<span class="sig-name descname"><span class="pre">can_write_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.4/sleap/io/format/ndx_pose.py#L44-L45"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.ndx_pose.NDXPoseAdaptor.can_write_filename" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns whether this adaptor can write format of this filename.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.default_ext">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_ext</span></span><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.default_ext" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.ndx_pose.NDXPoseAdaptor.default_ext">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_ext</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.io.format.ndx_pose.NDXPoseAdaptor.default_ext" title="Permalink to this definition">#</a></dt>
 <dd><p>The default file extension, e.g., ‘json’ (without ‘.’).</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.does_read">
-<span class="sig-name descname"><span class="pre">does_read</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.4/sleap/io/format/deepposekit.py#L45-L46"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.does_read" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.ndx_pose.NDXPoseAdaptor.does_read">
+<span class="sig-name descname"><span class="pre">does_read</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.4/sleap/io/format/ndx_pose.py#L47-L48"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.ndx_pose.NDXPoseAdaptor.does_read" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns whether this adaptor supports reading.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.does_write">
-<span class="sig-name descname"><span class="pre">does_write</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.4/sleap/io/format/deepposekit.py#L48-L49"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.does_write" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.ndx_pose.NDXPoseAdaptor.does_write">
+<span class="sig-name descname"><span class="pre">does_write</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.4/sleap/io/format/ndx_pose.py#L50-L51"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.ndx_pose.NDXPoseAdaptor.does_write" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns whether this adaptor supports writing.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.handles">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">handles</span></span><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.handles" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.ndx_pose.NDXPoseAdaptor.handles">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.format.adaptor.html#sleap.io.format.adaptor.SleapObjectType" title="sleap.io.format.adaptor.SleapObjectType"><span class="pre">sleap.io.format.adaptor.SleapObjectType</span></a></em><a class="headerlink" href="#sleap.io.format.ndx_pose.NDXPoseAdaptor.handles" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the type of object that can be read/written.</p>
 <p>The Dispatch class calls this method on all registered adaptors to
 determine which to use for reading/writing.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.name" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.ndx_pose.NDXPoseAdaptor.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.io.format.ndx_pose.NDXPoseAdaptor.name" title="Permalink to this definition">#</a></dt>
 <dd><p>Human-reading name of the file format</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.read">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">video_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skeleton_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.4/sleap/io/format/deepposekit.py#L51-L95"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.deepposekit.LabelsDeepPoseKitAdaptor.read" title="Permalink to this definition">#</a></dt>
-<dd><p>Reads the file and returns the appropriate deserialized object.</p>
+<dt class="sig sig-object py" id="sleap.io.format.ndx_pose.NDXPoseAdaptor.read">
+<span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.4/sleap/io/format/ndx_pose.py#L53-L165"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.ndx_pose.NDXPoseAdaptor.read" title="Permalink to this definition">#</a></dt>
+<dd><p>Read the NWB file and returns the appropriate deserialized <code class="xref py py-obj docutils literal notranslate"><span class="pre">Labels</span></code> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file</strong> – <code class="xref py py-obj docutils literal notranslate"><span class="pre">FileHandle</span></code> object for the NWB file to read.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">Labels</span></code> object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sleap.io.format.ndx_pose.NDXPoseAdaptor.write">
+<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.4/sleap/io/format/ndx_pose.py#L167-L294"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.ndx_pose.NDXPoseAdaptor.write" title="Permalink to this definition">#</a></dt>
+<dd><p>Write all <code class="xref py py-obj docutils literal notranslate"><span class="pre">PredictedInstance</span></code> objects in a <code class="xref py py-obj docutils literal notranslate"><span class="pre">Labels</span></code> object to an NWB file.</p>
+<blockquote>
+<div><p>Use <code class="xref py py-obj docutils literal notranslate"><span class="pre">Labels.numpy</span></code> to create a <code class="xref py py-obj docutils literal notranslate"><span class="pre">pynwb.NWBFile</span></code> with a separate
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">pynwb.ProcessingModule</span></code> for each <code class="xref py py-obj docutils literal notranslate"><span class="pre">Video</span></code> in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">Labels</span></code> object.</p>
+<p>To access the <code class="xref py py-obj docutils literal notranslate"><span class="pre">pynwb.ProcessingModule</span></code> for a specific <code class="xref py py-obj docutils literal notranslate"><span class="pre">Video</span></code>, use the key
+‘{video_idx:03}_{video_fn.stem}’ where
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">isinstance(video_fn,</span> <span class="pre">pathlib.PurePath)</span></code>. Ex:</p>
+<blockquote>
+<div><p>video: ‘path_to_video/my_video.mp4’
+video index: 3/5
+key: ‘003_my_video’</p>
+</div></blockquote>
+<p>Within each <code class="xref py py-obj docutils literal notranslate"><span class="pre">pynwb.ProcessingModule</span></code> is a <code class="xref py py-obj docutils literal notranslate"><span class="pre">ndx_pose.PoseEstimation</span></code> for
+each unique track in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">Video</span></code>.</p>
+<p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">ndx_pose.PoseEstimation</span></code> for each unique <code class="xref py py-obj docutils literal notranslate"><span class="pre">Track</span></code> is stored under the
+key ‘track{track_idx:03}’ if tracks are set or ‘untrack{track_idx:03}’ if
+untracked where <code class="xref py py-obj docutils literal notranslate"><span class="pre">track_idx</span></code> ranges from
+0 to (number of tracks) - 1. Ex:</p>
+<blockquote>
+<div><p>track_idx: 1
+key: ‘track001’</p>
+</div></blockquote>
+<p>Each <code class="xref py py-obj docutils literal notranslate"><span class="pre">ndx_pose.PoseEstimation</span></code> has a <code class="xref py py-obj docutils literal notranslate"><span class="pre">ndx_pose.PoseEstimationSeries</span></code> for
+every <code class="xref py py-obj docutils literal notranslate"><span class="pre">Node</span></code> in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">Skeleton</span></code>.</p>
+<p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">ndx_pose.PoseEstimationSeries</span></code> for a specific <code class="xref py py-obj docutils literal notranslate"><span class="pre">Node</span></code> is stored under
+the key ‘<code class="xref py py-obj docutils literal notranslate"><span class="pre">Node.name</span></code>’. Ex:</p>
+<blockquote>
+<div><p>node name: ‘head’
+key: ‘head’</p>
+</div></blockquote>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> – Output path for the NWB format file.</p></li>
+<li><p><strong>labels</strong> – The <code class="xref py py-obj docutils literal notranslate"><span class="pre">Labels</span></code> object to covert to a NWB format file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">pynwb.NWBFile</span></code> with a separate <code class="xref py py-obj docutils literal notranslate"><span class="pre">pynwb.ProcessingModule</span></code> for each
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">Video</span></code> in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">Labels</span></code> object.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
