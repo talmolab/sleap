@@ -1,5 +1,7 @@
+import ast
 import pytest
 import numpy as np
+import json
 import tensorflow as tf
 import sleap
 from numpy.testing import assert_array_equal, assert_allclose
@@ -20,9 +22,12 @@ from sleap.nn.inference import (
     SingleInstancePredictor,
     CentroidCropGroundTruth,
     CentroidCrop,
+    CentroidInferenceModel,
     FindInstancePeaksGroundTruth,
     FindInstancePeaks,
+    TopDownMultiClassFindPeaks,
     TopDownInferenceModel,
+    TopDownMultiClassInferenceModel,
     TopDownPredictor,
     BottomUpPredictor,
     BottomUpMultiClassPredictor,
@@ -74,6 +79,51 @@ def test_pipeline(test_labels):
     )
     p += sleap.nn.data.pipelines.Batcher(batch_size=4, unrag=False)
     return p
+
+
+@pytest.mark.skip
+def test_save(model, preds, output_path):
+
+    tensors = {}
+
+    for key, val in preds.items():
+        dtype = str(val.dtype) if isinstance(val.dtype, np.dtype) else repr(val.dtype)
+        tensors[key] = {
+            "type": f"{type(val).__name__}",
+            "shape": f"{val.shape}",
+            "dtype": dtype,
+            "device": f"{val.device if hasattr(val, 'device') else 'N/A'}",
+        }
+
+    with output_path as d:
+        model.save_model(d.as_posix(), tensors=tensors)
+
+        tf.compat.v1.reset_default_graph()
+        with tf.compat.v2.io.gfile.GFile(f"{d}/frozen_graph.pb", "rb") as f:
+            graph_def = tf.compat.v1.GraphDef()
+            graph_def.ParseFromString(f.read())
+
+        with tf.Graph().as_default() as graph:
+            tf.import_graph_def(graph_def)
+
+        with open(f"{d}/info.json") as json_file:
+            info = json.load(json_file)
+
+        for tensor_info in info["frozen_model_inputs"] + info["frozen_model_outputs"]:
+
+            saved_name = (
+                tensor_info.split("Tensor(")[1].split(", shape")[0].replace('"', "")
+            )
+            saved_shape = ast.literal_eval(
+                tensor_info.split("shape=", 1)[1].split("), ")[0] + ")"
+            )
+            saved_dtype = tensor_info.split("dtype=")[1].split(")")[0]
+
+            loaded_shape = tuple(graph.get_tensor_by_name(f"import/{saved_name}").shape)
+            loaded_dtype = graph.get_tensor_by_name(f"import/{saved_name}").dtype.name
+
+            assert saved_shape == loaded_shape
+            assert saved_dtype == loaded_dtype
 
 
 def test_centroid_crop_gt_layer(test_labels, test_pipeline):
@@ -788,3 +838,98 @@ def test_ensure_numpy(
     assert type(out["centroids"]) == np.ndarray
     assert type(out["centroid_vals"]) == np.ndarray
     assert type(out["n_valid"]) == np.ndarray
+
+
+def test_centroid_inference(tmp_path):
+
+    xv, yv = make_grid_vectors(image_height=12, image_width=12, output_stride=1)
+    points = tf.cast([[[1.75, 2.75]], [[3.75, 4.75]], [[5.75, 6.75]]], tf.float32)
+    cms = tf.expand_dims(make_multi_confmaps(points, xv, yv, sigma=1.5), axis=0)
+
+    x_in = tf.keras.layers.Input([12, 12, 1])
+    x_out = tf.keras.layers.Lambda(lambda x: x, name="CentroidConfmapsHead")(x_in)
+    model = tf.keras.Model(inputs=x_in, outputs=x_out)
+
+    layer = CentroidCrop(
+        keras_model=model,
+        input_scale=1.0,
+        crop_size=3,
+        pad_to_stride=1,
+        output_stride=None,
+        refinement="local",
+        integral_patch_size=5,
+        peak_threshold=0.2,
+        return_confmaps=False,
+    )
+
+    out = layer(cms)
+    assert tuple(out["centroids"].shape) == (1, None, 2)
+    assert tuple(out["centroid_vals"].shape) == (1, None)
+    assert tuple(out["crops"].shape) == (1, None, 3, 3, 1)
+    assert tuple(out["crop_offsets"].shape) == (1, None, 2)
+
+    assert tuple(out["centroids"].bounding_shape()) == (1, 3, 2)
+    assert tuple(out["centroid_vals"].bounding_shape()) == (1, 3)
+    assert tuple(out["crops"].bounding_shape()) == (1, 3, 3, 3, 1)
+    assert tuple(out["crop_offsets"].bounding_shape()) == (1, 3, 2)
+
+    assert_allclose(out["centroids"][0].numpy(), points.numpy().squeeze(axis=1))
+    assert_allclose(out["centroid_vals"][0].numpy(), [1, 1, 1], atol=0.1)
+
+    model = CentroidInferenceModel(layer)
+
+    preds = model.predict(cms)
+
+    test_save(model, preds, tmp_path)
+
+
+def test_single_instance_inference_save(tmp_path):
+    xv, yv = make_grid_vectors(image_height=12, image_width=12, output_stride=1)
+    points = tf.cast([[1.75, 2.75], [3.75, 4.75], [5.75, 6.75]], tf.float32)
+    points = np.stack([points, points + 1], axis=0)
+    cms = tf.stack(
+        [
+            make_confmaps(points[0], xv, yv, sigma=1.0),
+            make_confmaps(points[1], xv, yv, sigma=1.0),
+        ],
+        axis=0,
+    )
+
+    x_in = tf.keras.layers.Input([12, 12, 3])
+    x = tf.keras.layers.Lambda(lambda x: x, name="SingleInstanceConfmapsHead")(x_in)
+    keras_model = tf.keras.Model(x_in, x)
+
+    layer = SingleInstanceInferenceLayer(keras_model=keras_model, refinement="local")
+    assert layer.output_stride == 1
+
+    out = layer(cms)
+
+    assert tuple(out["instance_peaks"].shape) == (2, 1, 3, 2)
+    out["instance_peaks"] = tf.squeeze(out["instance_peaks"], axis=1)
+    assert tuple(out["instance_peak_vals"].shape) == (2, 1, 3)
+    out["instance_peak_vals"] = tf.squeeze(out["instance_peak_vals"], axis=1)
+    assert_array_equal(out["instance_peaks"], points)
+    assert_allclose(out["instance_peak_vals"], 1.0, atol=0.1)
+    assert "confmaps" not in out
+
+    out = layer({"image": cms})
+    assert tuple(out["instance_peaks"].shape) == (2, 1, 3, 2)
+    out["instance_peaks"] = tf.squeeze(out["instance_peaks"], axis=1)
+    assert_array_equal(out["instance_peaks"], points)
+
+    layer = SingleInstanceInferenceLayer(
+        keras_model=keras_model, refinement="local", return_confmaps=True
+    )
+    out = layer(cms)
+    assert "confmaps" in out
+    assert_array_equal(out["confmaps"], cms)
+
+    model = SingleInstanceInferenceModel(layer)
+    preds = model.predict(cms)
+    assert preds["instance_peaks"].shape == (2, 1, 3, 2)
+    preds["instance_peaks"] = preds["instance_peaks"].squeeze(axis=1)
+    assert_array_equal(preds["instance_peaks"], points)
+    assert "instance_peak_vals" in preds
+    assert "confmaps" in preds
+
+    test_save(model, preds, tmp_path)
