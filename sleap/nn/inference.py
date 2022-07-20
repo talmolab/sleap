@@ -1873,6 +1873,49 @@ class FindInstancePeaks(InferenceLayer):
         return outputs
 
 
+class CentroidInferenceModel(InferenceModel):
+    """Centroid only instance prediction model.
+
+    This model encapsulates the first step in a top-down approach where instances are detected by
+    local peak detection of an anchor point and then cropped.
+
+    Attributes:
+        centroid_crop: A centroid cropping layer. This can be either `CentroidCrop` or
+            `CentroidCropGroundTruth`. This layer takes the full image as input and
+            outputs a set of centroids and cropped boxes.
+    """
+
+    def __init__(self, centroid_crop: Union[CentroidCrop, CentroidCropGroundTruth]):
+        super().__init__()
+        self.centroid_crop = centroid_crop
+
+    def call(
+        self, example: Union[Dict[str, tf.Tensor], tf.Tensor]
+    ) -> Dict[str, tf.Tensor]:
+        """Predict instances for one batch of images.
+
+        Args:
+            example: This may be either a single batch of images as a 4-D tensor of
+                shape `(batch_size, height, width, channels)`, or a dictionary
+                containing the image batch in the `"images"` key. If using a ground
+                truth model for either centroid cropping or instance peaks, the full
+                example from a `Pipeline` is required for providing the metadata.
+
+        Returns:
+            The predicted instances as a dictionary of tensors with keys:
+
+            `"centroids": (batch_size, n_instances, 2)`: Instance centroids.
+            `"centroid_vals": (batch_size, n_instances)`: Instance centroid confidence
+                values.
+        """
+        if isinstance(example, tf.Tensor):
+            example = dict(image=example)
+
+        crop_output = self.centroid_crop(example)
+
+        return crop_output
+
+
 class TopDownInferenceModel(InferenceModel):
     """Top-down instance prediction model.
 
