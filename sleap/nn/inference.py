@@ -65,6 +65,9 @@ from sleap.nn.data.pipelines import (
 )
 from sleap.util import frame_list
 
+from tensorflow.python.framework.convert_to_constants import (
+    convert_variables_to_constants_v2,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -925,6 +928,63 @@ class InferenceModel(tf.keras.Model):
         return outs
 
 
+    def save_model(
+            self,
+            filepath,
+            model_name,
+            tensors,
+            save_format="tf",
+            signatures="serving_default",
+            save_traces=True,
+            **kwargs):
+
+        os.makedirs(filepath, exist_ok=True)
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+
+            self.save(tmp_dir, save_format=save_format, save_traces=save_traces)
+
+            imported = tf.saved_model.load(tmp_dir)
+
+        model = imported.signatures[signatures]
+
+        info = {
+            'model_name': str(model_name),
+            'predicted_tensors': tensors,
+            'model_structured_input_signature': model.structured_input_signature,
+            'model_structured_outputs_signature': model.structured_outputs
+        }
+
+        full_model = tf.function(lambda x: model(x))
+
+        full_model = full_model.get_concrete_function(
+            tf.TensorSpec(model.inputs[0].shape, model.inputs[0].dtype)
+        )
+
+        frozen_func = convert_variables_to_constants_v2(full_model)
+        frozen_func.graph.as_graph_def()
+
+        info['frozen_model_inputs'] = frozen_func.inputs
+        info['frozen_model_outputs'] = frozen_func.outputs
+
+        with open(os.path.join(filepath, 'info.json'), 'w') as fp:
+            json.dump(
+                info,
+                fp,
+                indent=4,
+                sort_keys=True,
+                separators=(',', ': '),
+                default=str
+            )
+
+        tf.io.write_graph(
+            graph_or_graph_def=frozen_func.graph,
+            logdir=filepath,
+            name="frozen_graph.pb",
+            as_text=False,
+        )
+
+
 def get_model_output_stride(
     model: tf.keras.Model, input_ind: int = 0, output_ind: int = -1
 ) -> int:
@@ -1424,6 +1484,7 @@ class CentroidCrop(InferenceLayer):
         self.integral_patch_size = integral_patch_size
         self.return_confmaps = return_confmaps
 
+    @tf.function
     def call(self, inputs):
         """Predict centroid confidence maps and crop around peaks.
 
