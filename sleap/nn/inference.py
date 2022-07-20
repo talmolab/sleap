@@ -927,18 +927,43 @@ class InferenceModel(tf.keras.Model):
 
         return outs
 
-
     def save_model(
-            self,
-            filepath,
-            model_name,
-            tensors,
-            save_format="tf",
-            signatures="serving_default",
-            save_traces=True,
-            **kwargs):
+        self,
+        output_path: str,
+        save_format: str = "tf",
+        signatures: str = "serving_default",
+        save_traces: bool = True,
+        model_name: Optional[str] = None,
+        tensors: Optional[dict] = None,
+        **kwargs,
+    ):
+        """Save the frozen graph of a model.
 
-        os.makedirs(filepath, exist_ok=True)
+        Args:
+            output_path: Path to output directory to store the frozen graph
+            save_format: Whether to save the initial model to tensorflow or HDF5
+            signatures: String defining the input and output types for
+                computation.
+            save_traces: If `True` (default) the SavedModel will store the
+                function traces for each layer
+            model_name: (Optional) Name to give the model. If given, will be
+                added to the output json file containing meta information about the
+                model
+            tensors: (Optional) Dictionary describing the predicted tensors (see
+                sleap/nn/data/utils.py function `describe_tensors` as an example)
+
+        Returns:
+            None
+
+        Notes:
+            This function call writes relevant meta data to an `info.json` file
+            in the given output_path in addition to the frozen_graph.pb file
+
+        """
+        os.makedirs(output_path, exist_ok=True)
+
+        if isinstance(self, TopDownMultiClassInferenceModel):
+            self.instance_peaks.optimal_grouping = False
 
         with tempfile.TemporaryDirectory() as tmp_dir:
 
@@ -949,11 +974,14 @@ class InferenceModel(tf.keras.Model):
         model = imported.signatures[signatures]
 
         info = {
-            'model_name': str(model_name),
-            'predicted_tensors': tensors,
-            'model_structured_input_signature': model.structured_input_signature,
-            'model_structured_outputs_signature': model.structured_outputs
+            "model_structured_input_signature": model.structured_input_signature,
+            "model_structured_outputs_signature": model.structured_outputs,
         }
+
+        if model_name:
+            info["model_name"] = model_name
+        if tensors:
+            info["predicted_tensors"] = tensors
 
         full_model = tf.function(lambda x: model(x))
 
@@ -964,22 +992,17 @@ class InferenceModel(tf.keras.Model):
         frozen_func = convert_variables_to_constants_v2(full_model)
         frozen_func.graph.as_graph_def()
 
-        info['frozen_model_inputs'] = frozen_func.inputs
-        info['frozen_model_outputs'] = frozen_func.outputs
+        info["frozen_model_inputs"] = frozen_func.inputs
+        info["frozen_model_outputs"] = frozen_func.outputs
 
-        with open(os.path.join(filepath, 'info.json'), 'w') as fp:
+        with open(os.path.join(output_path, "info.json"), "w") as fp:
             json.dump(
-                info,
-                fp,
-                indent=4,
-                sort_keys=True,
-                separators=(',', ': '),
-                default=str
+                info, fp, indent=4, sort_keys=True, separators=(",", ": "), default=str
             )
 
         tf.io.write_graph(
             graph_or_graph_def=frozen_func.graph,
-            logdir=filepath,
+            logdir=output_path,
             name="frozen_graph.pb",
             as_text=False,
         )
@@ -3300,6 +3323,9 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
             classification vectors. If `None` (the default), this will be detected
             automatically by searching for the first tensor that contains
             `"ClassVectorsHead"` in its name.
+        optimal_grouping: If `True`, group peaks from classification
+            probabilities. If saving a frozen graph of the model, this will be
+            overridden to `False`.
     """
 
     def __init__(
@@ -3315,6 +3341,7 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
         confmaps_ind: Optional[int] = None,
         offsets_ind: Optional[int] = None,
         class_vectors_ind: Optional[int] = None,
+        optimal_grouping: bool = True,
         **kwargs,
     ):
         super().__init__(
@@ -3328,6 +3355,7 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
         self.confmaps_ind = confmaps_ind
         self.class_vectors_ind = class_vectors_ind
         self.offsets_ind = offsets_ind
+        self.optimal_grouping = optimal_grouping
 
         if self.confmaps_ind is None:
             self.confmaps_ind = find_head(
@@ -3475,17 +3503,30 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
             crop_offsets = inputs["crop_offsets"].merge_dims(0, 1)
             peak_points = peak_points + tf.expand_dims(crop_offsets, axis=1)
 
-        # Group peaks from classification probabilities.
-        points, point_vals, class_probs = sleap.nn.identity.classify_peaks_from_vectors(
-            peak_points, peak_vals, peak_class_probs, crop_sample_inds, samples
-        )
+        if self.optimal_grouping:
+            # Group peaks from classification probabilities.
+            (
+                points,
+                point_vals,
+                class_probs,
+            ) = sleap.nn.identity.classify_peaks_from_vectors(
+                peak_points, peak_vals, peak_class_probs, crop_sample_inds, samples
+            )
 
-        # Build outputs.
-        outputs = {
-            "instance_peaks": points,
-            "instance_peak_vals": point_vals,
-            "instance_scores": class_probs,
-        }
+            # Build outputs.
+            outputs = {
+                "instance_peaks": points,
+                "instance_peak_vals": point_vals,
+                "instance_scores": class_probs,
+            }
+
+        else:
+            outputs = {
+                "instance_peaks": peak_points,
+                "instance_peak_vals": peak_vals,
+                "instance_scores": peak_class_probs,
+            }
+
         if "centroids" in inputs:
             outputs["centroids"] = inputs["centroids"]
         if "centroids" in inputs:
@@ -3495,7 +3536,7 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
                 cms, crop_sample_inds, nrows=samples
             )
             outputs["instance_confmaps"] = cms
-        if self.return_class_vectors:
+        if self.return_class_vectors and self.optimal_grouping:
             outputs["class_vectors"] = peak_class_probs
         return outputs
 
