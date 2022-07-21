@@ -840,7 +840,7 @@ def test_ensure_numpy(
     assert type(out["n_valid"]) == np.ndarray
 
 
-def test_centroid_inference(tmp_path):
+def test_centroid_inference():
 
     xv, yv = make_grid_vectors(image_height=12, image_width=12, output_stride=1)
     points = tf.cast([[[1.75, 2.75]], [[3.75, 4.75]], [[5.75, 6.75]]], tf.float32)
@@ -880,56 +880,35 @@ def test_centroid_inference(tmp_path):
 
     preds = model.predict(cms)
 
+    assert preds["centroids"].shape == (1, 3, 2)
+    assert preds["centroid_vals"].shape == (1, 3)
+
+
+def test_single_instance_save(min_single_instance_robot_model_path, tmp_path):
+
+    single_instance_model = tf.keras.models.load_model(
+        min_single_instance_robot_model_path + "/best_model.h5", compile=False
+    )
+
+    model = SingleInstanceInferenceModel(
+        SingleInstanceInferenceLayer(keras_model=single_instance_model)
+    )
+
+    preds = model.predict(np.zeros((4, 160, 280, 3), dtype="uint8"))
+
     test_save(model, preds, tmp_path)
 
 
-def test_single_instance_inference_save(tmp_path):
-    xv, yv = make_grid_vectors(image_height=12, image_width=12, output_stride=1)
-    points = tf.cast([[1.75, 2.75], [3.75, 4.75], [5.75, 6.75]], tf.float32)
-    points = np.stack([points, points + 1], axis=0)
-    cms = tf.stack(
-        [
-            make_confmaps(points[0], xv, yv, sigma=1.0),
-            make_confmaps(points[1], xv, yv, sigma=1.0),
-        ],
-        axis=0,
+def test_centroid_save(min_centroid_model_path, tmp_path):
+
+    centroid_base_model = tf.keras.models.load_model(
+        min_centroid_model_path + "/best_model.h5", compile=False
     )
 
-    x_in = tf.keras.layers.Input([12, 12, 3])
-    x = tf.keras.layers.Lambda(lambda x: x, name="SingleInstanceConfmapsHead")(x_in)
-    keras_model = tf.keras.Model(x_in, x)
+    centroid = CentroidCrop(keras_model=centroid_base_model, crop_size=160)
 
-    layer = SingleInstanceInferenceLayer(keras_model=keras_model, refinement="local")
-    assert layer.output_stride == 1
+    model = CentroidInferenceModel(centroid)
 
-    out = layer(cms)
-
-    assert tuple(out["instance_peaks"].shape) == (2, 1, 3, 2)
-    out["instance_peaks"] = tf.squeeze(out["instance_peaks"], axis=1)
-    assert tuple(out["instance_peak_vals"].shape) == (2, 1, 3)
-    out["instance_peak_vals"] = tf.squeeze(out["instance_peak_vals"], axis=1)
-    assert_array_equal(out["instance_peaks"], points)
-    assert_allclose(out["instance_peak_vals"], 1.0, atol=0.1)
-    assert "confmaps" not in out
-
-    out = layer({"image": cms})
-    assert tuple(out["instance_peaks"].shape) == (2, 1, 3, 2)
-    out["instance_peaks"] = tf.squeeze(out["instance_peaks"], axis=1)
-    assert_array_equal(out["instance_peaks"], points)
-
-    layer = SingleInstanceInferenceLayer(
-        keras_model=keras_model, refinement="local", return_confmaps=True
-    )
-    out = layer(cms)
-    assert "confmaps" in out
-    assert_array_equal(out["confmaps"], cms)
-
-    model = SingleInstanceInferenceModel(layer)
-    preds = model.predict(cms)
-    assert preds["instance_peaks"].shape == (2, 1, 3, 2)
-    preds["instance_peaks"] = preds["instance_peaks"].squeeze(axis=1)
-    assert_array_equal(preds["instance_peaks"], points)
-    assert "instance_peak_vals" in preds
-    assert "confmaps" in preds
+    preds = model.predict(np.zeros((4, 384, 384, 1), dtype="uint8"))
 
     test_save(model, preds, tmp_path)
