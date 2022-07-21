@@ -154,9 +154,12 @@ def test_find_local_peaks_rough():
         [cms, make_multi_confmaps(instances2, xv=xv, yv=yv, sigma=1.0)], axis=0
     )
 
-    peak_points, peak_vals, peak_sample_inds, peak_channel_inds = find_local_peaks(
-        cms, threshold=0.1, refinement=None
-    )
+    (
+        peak_points,
+        peak_vals,
+        peak_sample_inds,
+        peak_channel_inds,
+    ) = find_local_peaks.__wrapped__(cms, threshold=0.1, refinement=None)
 
     assert peak_points.shape == (9, 2)
     assert peak_vals.shape == (9,)
@@ -181,9 +184,14 @@ def test_find_local_peaks_rough():
     assert_array_equal(peak_sample_inds, [0, 0, 0, 0, 0, 1, 1, 1, 1])
     assert_array_equal(peak_channel_inds, [0, 1, 0, 1, 1, 0, 1, 0, 1])
 
-    peak_points, peak_vals, peak_sample_inds, peak_channel_inds = find_local_peaks(
+    (
+        peak_points,
+        peak_vals,
+        peak_sample_inds,
+        peak_channel_inds,
+    ) = find_local_peaks.__wrapped__(
         tf.zeros([1, 4, 4, 3], tf.float32), threshold=0.1, refinement=None
-    )
+    )  # Use __wrapped__ for codecov to catch coverage of unwrapped function
     assert peak_points.shape == (0, 2)
     assert peak_vals.shape == (0,)
     assert peak_sample_inds.shape == (0,)
@@ -210,9 +218,14 @@ def test_find_local_peaks_integral():
         [cms, make_multi_confmaps(instances2, xv=xv, yv=yv, sigma=1.0)], axis=0
     )
 
-    peak_points, peak_vals, peak_sample_inds, peak_channel_inds = find_local_peaks(
+    (
+        peak_points,
+        peak_vals,
+        peak_sample_inds,
+        peak_channel_inds,
+    ) = find_local_peaks.__wrapped__(
         cms, threshold=0.1, refinement="integral", integral_patch_size=5
-    )
+    )  # Use __wrapped__ for codecov to catch coverage of unwrapped function
 
     assert peak_points.shape == (9, 2)
     assert peak_vals.shape == (9,)
@@ -242,9 +255,14 @@ def test_find_local_peaks_integral():
     assert_array_equal(peak_sample_inds, [0, 0, 0, 0, 0, 1, 1, 1, 1])
     assert_array_equal(peak_channel_inds, [0, 1, 0, 1, 1, 0, 1, 0, 1])
 
-    peak_points, peak_vals, peak_sample_inds, peak_channel_inds = find_local_peaks(
+    (
+        peak_points,
+        peak_vals,
+        peak_sample_inds,
+        peak_channel_inds,
+    ) = find_local_peaks.__wrapped__(
         tf.zeros([1, 4, 4, 3], tf.float32), refinement="integral", integral_patch_size=5
-    )
+    )  # Use __wrapped__ for codecov to catch coverage of unwrapped function
     assert peak_points.shape == (0, 2)
     assert peak_vals.shape == (0,)
     assert peak_sample_inds.shape == (0,)
@@ -282,9 +300,14 @@ def test_find_local_peaks_local():
         [cms, make_multi_confmaps(instances2, xv=xv, yv=yv, sigma=1.0)], axis=0
     )
 
-    peak_points, peak_vals, peak_sample_inds, peak_channel_inds = find_local_peaks(
+    (
+        peak_points,
+        peak_vals,
+        peak_sample_inds,
+        peak_channel_inds,
+    ) = find_local_peaks.__wrapped__(
         cms, threshold=0.1, refinement="local"
-    )
+    )  # Use __wrapped__ for codecov to catch coverage of unwrapped function
 
     assert peak_points.shape == (9, 2)
     assert peak_vals.shape == (9,)
