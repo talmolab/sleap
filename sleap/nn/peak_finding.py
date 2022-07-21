@@ -333,6 +333,7 @@ def integral_regression(
 
     return x_hat, y_hat
 
+
 @tf.function
 def find_global_peaks(
     cms: tf.Tensor,
@@ -445,6 +446,7 @@ def find_global_peaks_integral(
     return find_global_peaks(
         cms, threshold=threshold, refinement="integral", integral_patch_size=crop_size
     )
+
 
 @tf.function
 def find_local_peaks(
