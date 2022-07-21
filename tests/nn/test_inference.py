@@ -81,51 +81,6 @@ def test_pipeline(test_labels):
     return p
 
 
-@pytest.mark.skip
-def test_save(model, preds, output_path):
-
-    tensors = {}
-
-    for key, val in preds.items():
-        dtype = str(val.dtype) if isinstance(val.dtype, np.dtype) else repr(val.dtype)
-        tensors[key] = {
-            "type": f"{type(val).__name__}",
-            "shape": f"{val.shape}",
-            "dtype": dtype,
-            "device": f"{val.device if hasattr(val, 'device') else 'N/A'}",
-        }
-
-    with output_path as d:
-        model.save_model(d.as_posix(), tensors=tensors)
-
-        tf.compat.v1.reset_default_graph()
-        with tf.compat.v2.io.gfile.GFile(f"{d}/frozen_graph.pb", "rb") as f:
-            graph_def = tf.compat.v1.GraphDef()
-            graph_def.ParseFromString(f.read())
-
-        with tf.Graph().as_default() as graph:
-            tf.import_graph_def(graph_def)
-
-        with open(f"{d}/info.json") as json_file:
-            info = json.load(json_file)
-
-        for tensor_info in info["frozen_model_inputs"] + info["frozen_model_outputs"]:
-
-            saved_name = (
-                tensor_info.split("Tensor(")[1].split(", shape")[0].replace('"', "")
-            )
-            saved_shape = ast.literal_eval(
-                tensor_info.split("shape=", 1)[1].split("), ")[0] + ")"
-            )
-            saved_dtype = tensor_info.split("dtype=")[1].split(")")[0]
-
-            loaded_shape = tuple(graph.get_tensor_by_name(f"import/{saved_name}").shape)
-            loaded_dtype = graph.get_tensor_by_name(f"import/{saved_name}").dtype.name
-
-            assert saved_shape == loaded_shape
-            assert saved_dtype == loaded_dtype
-
-
 def test_centroid_crop_gt_layer(test_labels, test_pipeline):
     ex = test_pipeline.peek()
 
@@ -884,6 +839,50 @@ def test_centroid_inference():
     assert preds["centroid_vals"].shape == (1, 3)
 
 
+def save_frozen_graph(model, preds, output_path):
+
+    tensors = {}
+
+    for key, val in preds.items():
+        dtype = str(val.dtype) if isinstance(val.dtype, np.dtype) else repr(val.dtype)
+        tensors[key] = {
+            "type": f"{type(val).__name__}",
+            "shape": f"{val.shape}",
+            "dtype": dtype,
+            "device": f"{val.device if hasattr(val, 'device') else 'N/A'}",
+        }
+
+    with output_path as d:
+        model.save_model(d.as_posix(), tensors=tensors)
+
+        tf.compat.v1.reset_default_graph()
+        with tf.compat.v2.io.gfile.GFile(f"{d}/frozen_graph.pb", "rb") as f:
+            graph_def = tf.compat.v1.GraphDef()
+            graph_def.ParseFromString(f.read())
+
+        with tf.Graph().as_default() as graph:
+            tf.import_graph_def(graph_def)
+
+        with open(f"{d}/info.json") as json_file:
+            info = json.load(json_file)
+
+        for tensor_info in info["frozen_model_inputs"] + info["frozen_model_outputs"]:
+
+            saved_name = (
+                tensor_info.split("Tensor(")[1].split(", shape")[0].replace('"', "")
+            )
+            saved_shape = ast.literal_eval(
+                tensor_info.split("shape=", 1)[1].split("), ")[0] + ")"
+            )
+            saved_dtype = tensor_info.split("dtype=")[1].split(")")[0]
+
+            loaded_shape = tuple(graph.get_tensor_by_name(f"import/{saved_name}").shape)
+            loaded_dtype = graph.get_tensor_by_name(f"import/{saved_name}").dtype.name
+
+            assert saved_shape == loaded_shape
+            assert saved_dtype == loaded_dtype
+
+
 def test_single_instance_save(min_single_instance_robot_model_path, tmp_path):
 
     single_instance_model = tf.keras.models.load_model(
@@ -896,7 +895,7 @@ def test_single_instance_save(min_single_instance_robot_model_path, tmp_path):
 
     preds = model.predict(np.zeros((4, 160, 280, 3), dtype="uint8"))
 
-    test_save(model, preds, tmp_path)
+    save_frozen_graph(model, preds, tmp_path)
 
 
 def test_centroid_save(min_centroid_model_path, tmp_path):
@@ -911,4 +910,4 @@ def test_centroid_save(min_centroid_model_path, tmp_path):
 
     preds = model.predict(np.zeros((4, 384, 384, 1), dtype="uint8"))
 
-    test_save(model, preds, tmp_path)
+    save_frozen_graph(model, preds, tmp_path)

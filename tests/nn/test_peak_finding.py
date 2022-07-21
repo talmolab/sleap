@@ -53,7 +53,9 @@ def test_find_global_peaks_rough():
     points2 = points + 1
     cms = tf.stack([cm, make_confmaps(points2, xv, yv, sigma=1.0)])
 
-    peaks, peak_vals = find_global_peaks(cms, threshold=0.1, refinement=None)
+    peaks, peak_vals = find_global_peaks.__wrapped__(
+        cms, threshold=0.1, refinement=None
+    )  # Use __wrapped__ for codecov to catch coverage of unwrapped function
 
     assert peaks.shape == (2, 3, 2)
     assert peak_vals.shape == (2, 3)
@@ -76,35 +78,35 @@ def test_find_global_peaks_integral():
     points = tf.cast([[1.5, 2.5], [3.5, 4.5], [5.5, 6.5]], tf.float32)
     cm = make_confmaps(points, xv, yv, sigma=1.0)
 
-    peaks, peak_vals = find_global_peaks(
+    peaks, peak_vals = find_global_peaks.__wrapped__(
         tf.expand_dims(cm, axis=0),
         threshold=0.1,
         refinement="integral",
         integral_patch_size=5,
-    )
+    )  # Use __wrapped__ for codecov to catch coverage of unwrapped function
 
     assert peaks.shape == (1, 3, 2)
     assert peak_vals.shape == (1, 3)
     assert_allclose(peaks[0].numpy(), points.numpy(), atol=0.1)
     assert_allclose(peak_vals[0].numpy(), [1, 1, 1], atol=0.3)
 
-    peaks, peak_vals = find_global_peaks(
+    peaks, peak_vals = find_global_peaks.__wrapped__(
         tf.zeros((1, 8, 8, 3), dtype=tf.float32),
         threshold=0.1,
         refinement="integral",
         integral_patch_size=5,
-    )
+    )  # Use __wrapped__ for codecov to catch coverage of unwrapped function
     assert peaks.shape == (1, 3, 2)
     assert peak_vals.shape == (1, 3)
     assert tf.reduce_all(tf.math.is_nan(peaks))
     assert_array_equal(peak_vals, [[0, 0, 0]])
 
-    peaks, peak_vals = find_global_peaks(
+    peaks, peak_vals = find_global_peaks.__wrapped__(
         tf.stack([tf.zeros([12, 12, 3], dtype=tf.float32), cm], axis=0),
         threshold=0.1,
         refinement="integral",
         integral_patch_size=5,
-    )
+    )  # Use __wrapped__ for codecov to catch coverage of unwrapped function
     assert peaks.shape == (2, 3, 2)
     assert tf.reduce_all(tf.math.is_nan(peaks[0]))
     assert_allclose(peaks[1].numpy(), points.numpy(), atol=0.1)
@@ -124,9 +126,9 @@ def test_find_global_peaks_local():
     points = tf.cast([[1.6, 2.6], [3.6, 4.6], [5.6, 6.6]], tf.float32)
     cm = make_confmaps(points, xv, yv, sigma=1.0)
 
-    peaks, peak_vals = find_global_peaks(
+    peaks, peak_vals = find_global_peaks.__wrapped__(
         tf.expand_dims(cm, axis=0), threshold=0.1, refinement="local"
-    )
+    )  # Use __wrapped__ for codecov to catch coverage of unwrapped function
 
     assert peaks.shape == (1, 3, 2)
     assert peak_vals.shape == (1, 3)
