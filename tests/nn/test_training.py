@@ -1,5 +1,6 @@
 import pytest
 import sleap
+from sleap.io.dataset import Labels
 from sleap.nn.config.data import LabelsConfig
 from sleap.nn.config.model import (
     CenteredInstanceConfmapsHeadConfig,
@@ -16,6 +17,8 @@ from sleap.nn.training import (
     DataReaders,
     SingleInstanceModelTrainer,
     TopdownConfmapsModelTrainer,
+    TopDownMultiClassModelTrainer,
+    Trainer,
 )
 
 sleap.use_cpu_only()
@@ -227,3 +230,28 @@ def test_train_topdown_multiclass(min_tracks_2node_labels, cfg):
     assert trainer.keras_model.output_names[1] == "ClassVectorsHead"
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 64, 64, 2)
     assert tuple(trainer.keras_model.outputs[1].shape) == (None, 2)
+
+
+@pytest.mark.parametrize(
+    "trainer_class", [TopdownConfmapsModelTrainer, TopDownMultiClassModelTrainer]
+)
+def test_train_cropping(
+    training_labels: Labels, cfg: TrainingJobConfig, trainer_class: Trainer
+):
+    # Set model head
+    cfg.model.heads.centered_instance = CenteredInstanceConfmapsHeadConfig(
+        sigma=1.5, output_stride=1, offset_refinement=False
+    )
+
+    # Create trainer
+    trainer = trainer_class.from_config(cfg, training_labels=training_labels)
+
+    # Change trainer.config s.t. crop size not divisible by max stride
+    trainer.config.data.instance_cropping.crop_size = trainer.model.maximum_stride + 1
+
+    # Ensure crop size is updated to be divisible by max stride
+    trainer._update_config()
+    assert (
+        trainer.config.data.instance_cropping.crop_size % trainer.model.maximum_stride
+        == 0
+    )
