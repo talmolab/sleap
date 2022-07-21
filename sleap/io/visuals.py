@@ -49,38 +49,41 @@ def reader(out_q: Queue, video: Video, frames: List[int], scale: float = 1.0):
 
     logger.info(f"Chunks: {chunk_count}, chunk size: {chunk_size}")
 
-    i = 0
-    for chunk_i in range(chunk_count):
+    try:
+        i = 0
+        for chunk_i in range(chunk_count):
 
-        # Read the next chunk of frames
-        frame_start = chunk_size * chunk_i
-        frame_end = min(frame_start + chunk_size, total_count)
-        frames_idx_chunk = frames[frame_start:frame_end]
+            # Read the next chunk of frames
+            frame_start = chunk_size * chunk_i
+            frame_end = min(frame_start + chunk_size, total_count)
+            frames_idx_chunk = frames[frame_start:frame_end]
 
-        t0 = perf_counter()
+            t0 = perf_counter()
 
-        # Safely load frames from video, skipping frames we can't load
-        loaded_chunk_idxs, video_frame_images = video.get_frames_safely(
-            frames_idx_chunk
-        )
+            # Safely load frames from video, skipping frames we can't load
+            loaded_chunk_idxs, video_frame_images = video.get_frames_safely(
+                frames_idx_chunk
+            )
 
-        if not loaded_chunk_idxs:
-            print(f"No frames could be loaded from chunk {chunk_i}")
+            if not loaded_chunk_idxs:
+                print(f"No frames could be loaded from chunk {chunk_i}")
+                i += 1
+                continue
+
+            if scale != 1.0:
+                video_frame_images = resize_images(video_frame_images, scale)
+
+            elapsed = perf_counter() - t0
+            fps = len(loaded_chunk_idxs) / elapsed
+            logger.debug(f"reading chunk {i} in {elapsed} s = {fps} fps")
             i += 1
-            continue
 
-        if scale != 1.0:
-            video_frame_images = resize_images(video_frame_images, scale)
-
-        elapsed = perf_counter() - t0
-        fps = len(loaded_chunk_idxs) / elapsed
-        logger.debug(f"reading chunk {i} in {elapsed} s = {fps} fps")
-        i += 1
-
-        out_q.put((loaded_chunk_idxs, video_frame_images))
-
-    # send _sentinal object into queue to signal that we're done
-    out_q.put(_sentinel)
+            out_q.put((loaded_chunk_idxs, video_frame_images))
+    except Exception as e:
+        raise e
+    finally:
+        # send _sentinal object into queue to signal that we're done
+        out_q.put(_sentinel)
 
 
 def writer(
@@ -140,12 +143,14 @@ def writer(
             total_elapsed = perf_counter() - start_time
             progress_queue.put((total_frames_written, total_elapsed))
     except Exception as e:
-        raise (e)
+        # Stop receiving data
+        in_q.put(_sentinel)
+        raise e
     finally:
         if writer_object is not None:
             writer_object.close()
-    # send (-1, time) to signal done
-    progress_queue.put((-1, total_elapsed))
+        # Send (-1, time) to signal done
+        progress_queue.put((-1, total_elapsed))
 
 
 class VideoMarkerThread(Thread):
@@ -221,32 +226,38 @@ class VideoMarkerThread(Thread):
     def marker(self):
         cv2.setNumThreads(usable_cpu_count())
 
-        chunk_i = 0
-        while True:
-            data = self.in_q.get()
+        try:
+            chunk_i = 0
+            while True:
+                data = self.in_q.get()
 
-            if data is _sentinel:
-                # no more data to be received so stop
-                self.in_q.put(_sentinel)
-                break
+                if data is _sentinel:
+                    # no more data to be received so stop
+                    self.in_q.put(_sentinel)
+                    break
 
-            frames_idx_chunk, video_frame_images = data
+                frames_idx_chunk, video_frame_images = data
 
-            t0 = perf_counter()
+                t0 = perf_counter()
 
-            imgs = self._mark_images(
-                frame_indices=frames_idx_chunk,
-                frame_images=video_frame_images,
-            )
+                imgs = self._mark_images(
+                    frame_indices=frames_idx_chunk,
+                    frame_images=video_frame_images,
+                )
 
-            elapsed = perf_counter() - t0
-            fps = len(imgs) / elapsed
-            logger.debug(f"drawing chunk {chunk_i} in {elapsed} s = {fps} fps")
-            chunk_i += 1
-            self.out_q.put(imgs)
+                elapsed = perf_counter() - t0
+                fps = len(imgs) / elapsed
+                logger.debug(f"drawing chunk {chunk_i} in {elapsed} s = {fps} fps")
+                chunk_i += 1
+                self.out_q.put(imgs)
+        except Exception as e:
+            # Stop receiving data
+            self.in_q.put(_sentinel)
+            raise e
 
-        # send _sentinal object into queue to signal that we're done
-        self.out_q.put(_sentinel)
+        finally:
+            # Send _sentinal object into queue to signal that we're done
+            self.out_q.put(_sentinel)
 
     def _mark_images(self, frame_indices, frame_images):
         imgs = []
@@ -530,7 +541,7 @@ def save_labeled_video(
             progress_win.setValue(frames_complete)
         else:
             print(
-                f"Finished {frames_complete} frames in {elapsed} s, fps = {fps}, approx {remaining_time} s remaining"
+                f"Finished {frames_complete} frames in {elapsed:.1f} s, fps = {round(fps)}, approx {remaining_time:.1f} s remaining"
             )
 
     elapsed = perf_counter() - t0
