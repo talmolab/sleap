@@ -203,6 +203,13 @@ def test_centroid_crop_layer():
         return_confmaps=False,
     )
 
+    # For Codecov to realize the wrapped CentroidCrop.call is tested/covered,
+    # we need to unbind CentroidCrop.call from its bind with TfMethodTarget object
+    # and then rebind the standalone function with the CentroidCrop object
+    TfMethodTarget_object = layer.call.__wrapped__.__self__  # Get the bound object
+    original_func = TfMethodTarget_object.weakrefself_func__()  # Get unbound function
+    layer.call = original_func.__get__(layer, layer.__class__)  # Bind function
+
     out = layer(cms)
     assert tuple(out["centroids"].shape) == (1, None, 2)
     assert tuple(out["centroid_vals"].shape) == (1, None)
@@ -816,6 +823,13 @@ def test_centroid_inference():
         peak_threshold=0.2,
         return_confmaps=False,
     )
+
+    # For Codecov to realize the wrapped CentroidCrop.call is tested/covered,
+    # we need to unbind CentroidCrop.call from its bind with TfMethodTarget object
+    # and then rebind the standalone function with the CentroidCrop object
+    TfMethodTarget_object = layer.call.__wrapped__.__self__  # Get the bound object
+    original_func = TfMethodTarget_object.weakrefself_func__()  # Get unbound function
+    layer.call = original_func.__get__(layer, layer.__class__)  # Bind function
 
     out = layer(cms)
     assert tuple(out["centroids"].shape) == (1, None, 2)
