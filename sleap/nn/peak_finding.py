@@ -563,6 +563,7 @@ def find_local_peaks_integral(
     )
 
 
+@tf.function
 def find_global_peaks_with_offsets(
     cms: tf.Tensor, offsets: tf.Tensor, threshold: float = 0.2
 ) -> Tuple[tf.Tensor, tf.Tensor]:
@@ -642,6 +643,7 @@ def find_global_peaks_with_offsets(
     return refined_peaks, peak_vals
 
 
+@tf.function
 def find_local_peaks_with_offsets(
     cms: tf.Tensor,
     offsets: tf.Tensor,

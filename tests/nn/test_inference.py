@@ -925,3 +925,51 @@ def test_centroid_save(min_centroid_model_path, tmp_path):
     preds = model.predict(np.zeros((4, 384, 384, 1), dtype="uint8"))
 
     save_frozen_graph(model, preds, tmp_path)
+
+
+def test_topdown_save(
+    min_centroid_model_path, min_centered_instance_model_path, min_labels_slp, tmp_path
+):
+
+    centroid_base_model = tf.keras.models.load_model(
+        min_centroid_model_path + "/best_model.h5", compile=False
+    )
+
+    td_model = tf.keras.models.load_model(
+        min_centered_instance_model_path + "/best_model.h5", compile=False
+    )
+
+    centroid = CentroidCrop(keras_model=centroid_base_model, crop_size=96)
+
+    instance_peaks = FindInstancePeaks(keras_model=td_model)
+
+    model = TopDownInferenceModel(centroid, instance_peaks)
+
+    imgs = min_labels_slp.video[:4]
+    preds = model.predict(imgs)
+
+    save_frozen_graph(model, preds, tmp_path)
+
+
+def test_topdown_mc_save(
+    min_centroid_model_path, min_topdown_multiclass_model_path, min_labels_slp, tmp_path
+):
+
+    centroid_base_model = tf.keras.models.load_model(
+        min_centroid_model_path + "/best_model.h5", compile=False
+    )
+
+    td_mc_model = tf.keras.models.load_model(
+        min_topdown_multiclass_model_path + "/best_model.h5", compile=False
+    )
+
+    centroid = CentroidCrop(keras_model=centroid_base_model, crop_size=128)
+
+    instance_peaks = TopDownMultiClassFindPeaks(keras_model=td_mc_model)
+
+    model = TopDownMultiClassInferenceModel(centroid, instance_peaks)
+
+    imgs = min_labels_slp.video[:4]
+    preds = model.predict(imgs)
+
+    save_frozen_graph(model, preds, tmp_path)
