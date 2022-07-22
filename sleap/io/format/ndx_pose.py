@@ -4,9 +4,10 @@ import attr
 import datetime
 import re
 import numpy as np
+import uuid
 
-from pathlib import PurePath
-from typing import List
+from pathlib import Path, PurePath
+from typing import List, Optional
 from pynwb import NWBFile, NWBHDF5IO, ProcessingModule
 from ndx_pose import PoseEstimationSeries, PoseEstimation
 
@@ -68,7 +69,9 @@ class NDXPoseAdaptor(Adaptor):
             nwb_file = read_nwbfile.processing
 
             # Get list of videos
-            video_keys: List[str] = list(nwb_file.keys())
+            video_keys: List[str] = [
+                key for key in nwb_file.keys() if "SLEAP_VIDEO" in key
+            ]
             video_tracks = dict()
 
             # Get track keys
@@ -164,7 +167,15 @@ class NDXPoseAdaptor(Adaptor):
         labels = Labels(lfs)
         return labels
 
-    def write(self, filename: str, labels: Labels):
+    def write(
+        self,
+        filename: str,
+        labels: Labels,
+        overwrite: bool = False,
+        session_description: str = "Processed SLEAP pose data",
+        identifier: Optional[str] = None,
+        session_start_time: Optional[datetime.datetime] = None,
+    ):
         """Write all `PredictedInstance` objects in a `Labels` object to an NWB file.
 
             Use `Labels.numpy` to create a `pynwb.NWBFile` with a separate
@@ -198,6 +209,18 @@ class NDXPoseAdaptor(Adaptor):
         Args:
             filename: Output path for the NWB format file.
             labels: The `Labels` object to covert to a NWB format file.
+            overwrite: Boolean that overwrites existing NWB file if True. If False, data
+                will be appended to existing NWB file.
+            session_description: Description for entire project. Stored under
+                NWBFile "session_description" key. If appending data to a preexisting
+                file, then the session_description will not be used.
+            identifier: Unique identifier for project. If no identifier is
+                specified, then will generate a GUID. If appending data to a
+                preexisting file, then the identifier will not be used.
+            session_start_time: THe datetime associated with the project. If no
+                session_start_time is given, then the current datetime will be used. If
+                appending data to a preexisting file, then the session_start_time will
+                not be used.
 
         Returns:
             A `pynwb.NWBFile` with a separate `pynwb.ProcessingModule` for each
@@ -205,90 +228,123 @@ class NDXPoseAdaptor(Adaptor):
 
         """
 
-        skeleton = labels.skeleton
-
         # Check that this project contains predicted instances
         if len(labels.predicted_instances) == 0:
             raise TypeError(
                 "Only predicted instances are written to the NWB format. "
-                "This project has no predicted instances"
+                "This project has no predicted instances."
             )
 
-        print(f"\nCreating NWB file...")
-        nwb_file = NWBFile(
-            session_description="session_description",
-            identifier="identifier",
-            session_start_time=datetime.datetime.now(datetime.timezone.utc),
-        )
+        # Set optional kwargs if not specified by user
+        if session_start_time is None:
+            session_start_time = datetime.datetime.now(datetime.timezone.utc)
+        identifier = str(uuid.uuid4()) if identifier is None else identifier
 
-        for video_idx, video in enumerate(labels.videos):
-            # Create new processing module for each video
-            video_fn = PurePath(video.backend.filename)
-            nwb_processing_module = nwb_file.create_processing_module(
-                name=f"{video_idx:03}_{video_fn.stem}",
-                description=f"Processed SLEAP pose data for {video_fn.name} with "
-                f"{skeleton.name} skeleton.",
-            )
+        try:
+            io = None
+            if Path(filename).exists() and not overwrite:
+                # Append to file if it exists and we do not want to overwrite
+                print(f"\nOpening existing NWB file...")
+                io = NWBHDF5IO(filename, mode="a", load_namespaces=True)
+                nwb_file = io.read()
+            else:
+                # If file does not exist or we want to overwrite, create new file
+                if not overwrite:
+                    print(f"\nCould not find the file specified: {filename}")
+                print(f"\nCreating NWB file...")
+                nwb_file = NWBFile(
+                    session_description=session_description,
+                    identifier=identifier,
+                    session_start_time=session_start_time,
+                )
+                io = NWBHDF5IO(filename, mode="w")
 
-            # Get tracks for each video
-            video_lfs = labels.get(video)
-            untracked = all(
-                [inst.track is None for lf in video_lfs for inst in lf.instances]
-            )
-            tracks_numpy = labels.numpy(
-                video=video,
-                all_frames=True,
-                untracked=untracked,
-                return_confidence=True,
-            )
-            n_frames, n_tracks, n_nodes, _ = tracks_numpy.shape
-            timestamps = np.arange(n_frames)
-            for track_idx in list(range(n_tracks)):
-                pose_estimation_series: List[PoseEstimationSeries] = []
+            skeleton = labels.skeleton
 
-                for node_idx, node in enumerate(skeleton.nodes):
+            for video_idx, video in enumerate(labels.videos):
+                # Create new processing module for each video
+                video_fn = PurePath(video.backend.filename)
+                try:
+                    name = f"SLEAP_VIDEO_{video_idx:03}_{video_fn.stem}"
+                    nwb_processing_module = nwb_file.create_processing_module(
+                        name=name,
+                        description=f"{session_description} for {video_fn.name} with "
+                        f"{skeleton.name} skeleton.",
+                    )
+                except ValueError:
+                    # Cannot overwrite or delete processing modules
+                    print(
+                        f"Processing module for {video_fn.name} already exists... "
+                        f"Skipping: {name}"
+                    )
+                    continue
 
-                    # Create instance of PoseEstimationSeries for each node
-                    data = tracks_numpy[:, track_idx, node_idx, :2]
-                    confidence = tracks_numpy[:, track_idx, node_idx, 2]
+                # Get tracks for each video
+                video_lfs = labels.get(video)
+                untracked = all(
+                    [inst.track is None for lf in video_lfs for inst in lf.instances]
+                )
+                tracks_numpy = labels.numpy(
+                    video=video,
+                    all_frames=True,
+                    untracked=untracked,
+                    return_confidence=True,
+                )
+                n_frames, n_tracks, n_nodes, _ = tracks_numpy.shape
+                timestamps = np.arange(n_frames)
+                for track_idx in list(range(n_tracks)):
+                    pose_estimation_series: List[PoseEstimationSeries] = []
 
-                    pose_estimation_series.append(
-                        PoseEstimationSeries(
-                            name=f"{node.name}",
-                            description=f"Sequential trajectory of {node.name}.",
-                            data=data,
-                            unit="pixels",
-                            reference_frame="No reference.",
-                            timestamps=timestamps,
-                            confidence=confidence,
-                            confidence_definition="Point-wise confidence scores.",
+                    for node_idx, node in enumerate(skeleton.nodes):
+
+                        # Create instance of PoseEstimationSeries for each node
+                        data = tracks_numpy[:, track_idx, node_idx, :2]
+                        confidence = tracks_numpy[:, track_idx, node_idx, 2]
+
+                        pose_estimation_series.append(
+                            PoseEstimationSeries(
+                                name=f"{node.name}",
+                                description=f"Sequential trajectory of {node.name}.",
+                                data=data,
+                                unit="pixels",
+                                reference_frame="No reference.",
+                                timestamps=timestamps,
+                                confidence=confidence,
+                                confidence_definition="Point-wise confidence scores.",
+                            )
                         )
+
+                    # Combine each node's PoseEstimationSeries to create a PoseEstimation
+                    name_prefix = "untracked" if untracked else "track"
+                    pose_estimation = PoseEstimation(
+                        name=f"{name_prefix}{track_idx:03}",
+                        pose_estimation_series=pose_estimation_series,
+                        description=(
+                            f"Estimated positions of {skeleton.name} in video {video_fn} "
+                            f"using SLEAP."
+                        ),
+                        original_videos=[f"{video_fn}"],
+                        labeled_videos=[f"{video_fn}"],
+                        dimensions=np.array(
+                            [[video.backend.height, video.backend.width]]
+                        ),
+                        scorer=str(labels.provenance),
+                        source_software="SLEAP",
+                        source_software_version=f"{sleap.__version__}",
+                        nodes=skeleton.node_names,
+                        edges=skeleton.edge_inds,
                     )
 
-                # Combine each node's PoseEstimationSeries to create a PoseEstimation
-                name_prefix = "untracked" if untracked else "track"
-                pose_estimation = PoseEstimation(
-                    name=f"{name_prefix}{track_idx:03}",
-                    pose_estimation_series=pose_estimation_series,
-                    description=(
-                        f"Estimated positions of {skeleton.name} in video {video_fn} "
-                        f"using SLEAP."
-                    ),
-                    original_videos=[f"{video_fn}"],
-                    labeled_videos=[f"{video_fn}"],
-                    dimensions=np.array([[video.backend.height, video.backend.width]]),
-                    scorer=str(labels.provenance),
-                    source_software="SLEAP",
-                    source_software_version=f"{sleap.__version__}",
-                    nodes=skeleton.node_names,
-                    edges=skeleton.edge_inds,
-                )
+                    # Create a processing module for each
+                    nwb_processing_module.add(pose_estimation)
 
-                # Create a processing module for each
-                nwb_processing_module.add(pose_estimation)
-
-        path = filename
-        with NWBHDF5IO(path, mode="w") as io:
             io.write(nwb_file)
+
+        except Exception as e:
+            raise e
+
+        finally:
+            if io is not None:
+                io.close()
 
         print(f"Finished writing NWB file to {filename}\n")
