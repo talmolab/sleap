@@ -1,7 +1,7 @@
 import os
 import pytest
 import numpy as np
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import sleap
 from sleap.skeleton import Skeleton
@@ -9,7 +9,10 @@ from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Tra
 from sleap.io.video import Video, MediaVideo
 from sleap.io.dataset import Labels, load_file
 from sleap.io.legacy import load_labels_json_old
+from sleap.io.format.ndx_pose import NDXPoseAdaptor
+from sleap.io.format import filehandle
 from sleap.gui.suggestions import VideoFrameSuggestions, SuggestionFrame
+from tests.io.test_formats import assert_read_labels_match
 
 TEST_H5_DATASET = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
 
@@ -1493,3 +1496,14 @@ def test_remove_untracked_instances(min_tracks_2node_labels):
     # Test function with remove_empty_frames=True
     labels.remove_untracked_instances(remove_empty_frames=True)
     assert all([len(lf.instances) > 0 for lf in labels.labeled_frames])
+
+
+def test_export_nwb(centered_pair_predictions: Labels, tmpdir):
+    filename = str(PurePath(tmpdir, "ndx_pose_test.nwb"))
+
+    # Export to NWB file
+    centered_pair_predictions.export_nwb(filename)
+
+    # Read from NWB file
+    read_labels = NDXPoseAdaptor.read(NDXPoseAdaptor, filehandle.FileHandle(filename))
+    assert_read_labels_match(centered_pair_predictions, read_labels)

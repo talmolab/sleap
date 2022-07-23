@@ -58,6 +58,7 @@ import attr
 import cattr
 import h5py as h5
 import numpy as np
+import datetime
 from sklearn.model_selection import train_test_split
 
 try:
@@ -2027,6 +2028,26 @@ class Labels(MutableSequence):
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 
         SleapAnalysisAdaptor.write(filename, self)
+
+    def export_nwb(
+        self,
+        filename: str,
+        overwrite: bool = False,
+        session_description: str = "Processed SLEAP pose data",
+        identifier: Optional[str] = None,
+        session_start_time: Optional[datetime.datetime] = None,
+    ):
+        from sleap.io.format.ndx_pose import NDXPoseAdaptor
+
+        NDXPoseAdaptor.write(
+            NDXPoseAdaptor,
+            filename=filename,
+            labels=self,
+            overwrite=overwrite,
+            session_description=session_description,
+            identifier=identifier,
+            session_start_time=session_start_time,
+        )
 
     @classmethod
     def load_json(cls, filename: str, *args, **kwargs) -> "Labels":

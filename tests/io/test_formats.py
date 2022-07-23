@@ -320,26 +320,7 @@ def test_tracking_scores(tmpdir, centered_pair_predictions_slp_path):
         assert hasattr(instance, "tracking_score")
 
 
-def test_nwb(centered_pair_predictions: Labels, small_robot_mp4_vid: Video, tmpdir):
-    """Test that `Labels` can be written to and recreated from an NWB file."""
-    labels = centered_pair_predictions
-    filename = str(PurePath(tmpdir, "ndx_pose_test.nwb"))
-
-    # Add another video with an untracked PredictedInstance
-    labels.videos.append(small_robot_mp4_vid)
-    pred_instance: PredictedInstance = PredictedInstance.from_instance(
-        labels[0].instances[0], score=5
-    )
-    pred_instance.track = None
-    lf = LabeledFrame(video=small_robot_mp4_vid, frame_idx=6, instances=[pred_instance])
-    labels.append(lf)
-
-    # Write to NWB file
-    NDXPoseAdaptor.write(NDXPoseAdaptor, filename, labels)
-
-    # Read from NWB file
-    read_labels = NDXPoseAdaptor.read(NDXPoseAdaptor, filehandle.FileHandle(filename))
-
+def assert_read_labels_match(labels, read_labels):
     # Labeled Frames
     assert len(read_labels.labeled_frames) == len(labels.labeled_frames)
 
@@ -379,6 +360,38 @@ def test_nwb(centered_pair_predictions: Labels, small_robot_mp4_vid: Video, tmpd
     assert read_labels.skeleton.node_names == labels.skeleton.node_names
     assert read_labels.skeleton.edge_inds == labels.skeleton.edge_inds
     assert len(read_labels.tracks) == len(labels.tracks)
+
+
+def test_nwb(
+    centered_pair_predictions: Labels,
+    small_robot_mp4_vid: Video,
+    tmpdir,
+):
+    """Test that `Labels` can be written to and recreated from an NWB file."""
+
+    labels = centered_pair_predictions
+    filename = str(PurePath(tmpdir, "ndx_pose_test.nwb"))
+
+    # Add another video with an untracked PredictedInstance
+    labels.videos.append(small_robot_mp4_vid)
+    pred_instance: PredictedInstance = PredictedInstance.from_instance(
+        labels[0].instances[0], score=5
+    )
+    pred_instance.track = None
+    lf = LabeledFrame(video=small_robot_mp4_vid, frame_idx=6, instances=[pred_instance])
+    labels.append(lf)
+
+    # Write to NWB file
+    NDXPoseAdaptor.write(NDXPoseAdaptor, filename, labels)
+
+    # Read from NWB file
+    read_labels = NDXPoseAdaptor.read(NDXPoseAdaptor, filehandle.FileHandle(filename))
+    assert_read_labels_match(labels, read_labels)
+
+    # Append to NWB File (no changes expected)
+    NDXPoseAdaptor.write(NDXPoseAdaptor, filename, labels)
+    read_labels = NDXPoseAdaptor.read(NDXPoseAdaptor, filehandle.FileHandle(filename))
+    assert_read_labels_match(labels, read_labels)
 
     # Project with no predicted instances
     labels.instances = []
