@@ -1,15 +1,21 @@
+from tempfile import tempdir
 from sleap.gui.commands import (
     CommandContext,
     ImportDeepLabCutFolder,
     ExportAnalysisFile,
     ReplaceVideo,
+    OpenSkeleton,
+    SaveProjectAs,
     get_new_version_filename,
 )
+from sleap.io.format.adaptor import Adaptor
 from sleap.io.dataset import Labels
+from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.pathutils import fix_path_separator
 from sleap.io.video import Video
 from sleap.io.convert import default_analysis_filename
 from sleap.instance import Instance, LabeledFrame
+from sleap import Skeleton
 
 from tests.info.test_h5 import extract_meta_hdf5
 from tests.io.test_video import assert_video_params
@@ -307,3 +313,154 @@ def test_ReplaceVideo(
     # Attempt to replace an mp4 with an hdf5 video
     with pytest.raises(TypeError):
         replace_video(hdf5_vid, labels.videos, context)
+
+
+def test_exportNWB(centered_pair_predictions, tmpdir):
+    """Test that exportNWB command writes an nwb file."""
+
+    def SaveProjectAs_ask(context: CommandContext, params: dict) -> bool:
+        """Replica of SaveProject.ask without the GUI element."""
+        default_name = context.state["filename"]
+        if "adaptor" in params:
+            adaptor: Adaptor = params["adaptor"]
+            default_name += f".{adaptor.default_ext}"
+            filters = [f"(*.{ext})" for ext in adaptor.all_exts]
+            filters[0] = f"{adaptor.name} {filters[0]}"
+        else:
+            filters = ["SLEAP labels dataset (*.slp)"]
+            if default_name:
+                default_name = get_new_version_filename(default_name)
+            else:
+                default_name = "labels.v000.slp"
+
+        # Original function opens GUI here
+        filename = default_name
+
+        if len(filename) == 0:
+            return False
+
+        params["filename"] = filename
+        return True
+
+    # Set-up Labels and context
+    labels: Labels = centered_pair_predictions
+    context = CommandContext.from_labels(centered_pair_predictions)
+    # Add fake method required by SaveProjectAs.do_action
+    context.app.__setattr__("plotFrame", lambda: None)
+    fn = PurePath(tmpdir, "test_nwb.slp")
+    context.state["filename"] = str(fn)
+    context.state["labels"] = labels
+
+    # Ensure ".nwb" extension is appended to filename
+    params = {"adaptor": NDXPoseAdaptor()}
+    SaveProjectAs_ask(context, params=params)
+    assert PurePath(params["filename"]).suffix == ".nwb"
+
+    # Ensure file was created
+    SaveProjectAs.do_action(context=context, params=params)
+    assert Path(params["filename"]).exists()
+
+    # Test import nwb
+    read_labels = Labels.load_nwb(params["filename"])
+    assert len(read_labels.labeled_frames) == len(labels.labeled_frames)
+    assert len(read_labels.videos) == len(labels.videos)
+    assert read_labels.skeleton.node_names == labels.skeleton.node_names
+    assert read_labels.skeleton.edge_inds == labels.skeleton.edge_inds
+    assert len(read_labels.tracks) == len(labels.tracks)
+
+
+def test_OpenSkeleton(
+    centered_pair_predictions: Labels, stickman: Skeleton, fly_legs_skeleton_json: str
+):
+    def assert_skeletons_match(new_skeleton: Skeleton, skeleton: Skeleton):
+        # Node names match
+        for new_node, node in zip(new_skeleton.nodes, skeleton.nodes):
+            assert new_node.name == node.name
+
+        # Edges match
+        for (new_src, new_dst), (src, dst) in zip(new_skeleton.edges, skeleton.edges):
+            assert new_src.name == src.name
+            assert new_dst.name == dst.name
+
+        # Symmetries match
+        for (new_src, new_dst), (src, dst) in zip(
+            new_skeleton.symmetries, skeleton.symmetries
+        ):
+            assert new_src.name == src.name
+            assert new_dst.name == dst.name
+
+    def OpenSkeleton_ask(context: CommandContext, params: dict) -> bool:
+        """Implement `OpenSkeleton.ask` without GUI elements."""
+
+        # Original function opens FileDialog here
+        filename = params["filename_in"]
+
+        if len(filename) == 0:
+            return False
+
+        okay = True
+        if len(context.labels.skeletons) > 0:
+            # Ask user permission to merge skeletons
+            okay = False
+            skeleton: Skeleton = context.labels.skeleton  # Assumes single skeleton
+
+            # Load new skeleton and compare
+            new_skeleton = OpenSkeleton.load_skeleton(filename)
+            (delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
+                skeleton, new_skeleton
+            )
+
+            # Original function shows pop-up warning here
+            if (len(delete_nodes) > 0) or (len(add_nodes) > 0):
+                # Warn about mismatching skeletons
+                pass
+
+            params["delete_nodes"] = delete_nodes
+            params["add_nodes"] = add_nodes
+
+        params["filename"] = filename
+        return okay
+
+    labels = centered_pair_predictions
+    skeleton = labels.skeleton
+    skeleton.add_symmetry(skeleton.nodes[0].name, skeleton.nodes[1].name)
+    context = CommandContext.from_labels(labels)
+
+    # Add multiple skeletons to and ensure the unused skeleton is removed
+    labels.skeletons.append(stickman)
+
+    # Run without OpenSkeleton.ask()
+    params = {"filename": fly_legs_skeleton_json}
+    new_skeleton = OpenSkeleton.load_skeleton(fly_legs_skeleton_json)
+    new_skeleton.add_symmetry(new_skeleton.nodes[0], new_skeleton.nodes[1])
+    OpenSkeleton.do_action(context, params)
+    assert len(labels.skeletons) == 1
+
+    # State is updated
+    assert context.state["skeleton"] == skeleton
+
+    # Structure is identical
+    assert_skeletons_match(new_skeleton, skeleton)
+
+    # Run again with OpenSkeleton_ask()
+    labels.skeletons = [stickman]
+    params = {"filename_in": fly_legs_skeleton_json}
+    OpenSkeleton_ask(context, params)
+    assert params["filename"] == fly_legs_skeleton_json
+    OpenSkeleton.do_action(context, params)
+    assert_skeletons_match(new_skeleton, stickman)
+
+
+def test_SaveProjectAs(centered_pair_predictions: Labels, tmpdir):
+    """Test that project can be saved as default slp extension"""
+
+    context = CommandContext.from_labels(centered_pair_predictions)
+    # Add fake method required by SaveProjectAs.do_action
+    context.app.__setattr__("plotFrame", lambda: None)
+    params = {}
+    fn = PurePath(tmpdir, "test_save-project-as.slp")
+    params["filename"] = str(fn)
+    context.state["labels"] = centered_pair_predictions
+
+    SaveProjectAs.do_action(context=context, params=params)
+    assert Path(params["filename"]).exists()

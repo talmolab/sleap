@@ -27,3 +27,5 @@ pykalman==0.9.5
 segmentation-models==1.0.1
 rich==10.16.1
 certifi>=2017.4.17,<=2021.10.8
+pynwb
+ndx-pose
