@@ -2037,6 +2037,56 @@ class Labels(MutableSequence):
         identifier: Optional[str] = None,
         session_start_time: Optional[datetime.datetime] = None,
     ):
+        """Export all `PredictedInstance` objects in a `Labels` object to an NWB file.
+
+            Use `Labels.numpy` to create a `pynwb.NWBFile` with a separate
+            `pynwb.ProcessingModule` for each `Video` in the `Labels` object.
+
+            To access the `pynwb.ProcessingModule` for a specific `Video`, use the key
+            '{video_idx:03}_{video_fn.stem}' where
+            `isinstance(video_fn, pathlib.PurePath)`. Ex:
+                video: 'path_to_video/my_video.mp4'
+                video index: 3/5
+                key: '003_my_video'
+
+            Within each `pynwb.ProcessingModule` is a `ndx_pose.PoseEstimation` for
+            each unique track in the `Video`.
+
+            The `ndx_pose.PoseEstimation` for each unique `Track` is stored under the
+            key 'track{track_idx:03}' if tracks are set or 'untrack{track_idx:03}' if
+            untracked where `track_idx` ranges from
+            0 to (number of tracks) - 1. Ex:
+                track_idx: 1
+                key: 'track001'
+
+            Each `ndx_pose.PoseEstimation` has a `ndx_pose.PoseEstimationSeries` for
+            every `Node` in the `Skeleton`.
+
+            The `ndx_pose.PoseEstimationSeries` for a specific `Node` is stored under
+            the key '`Node.name`'. Ex:
+                node name: 'head'
+                key: 'head'
+
+        Args:
+            filename: Output path for the NWB format file.
+            labels: The `Labels` object to covert to a NWB format file.
+            overwrite: Boolean that overwrites existing NWB file if True. If False, data
+                will be appended to existing NWB file.
+            session_description: Description for entire project. Stored under
+                NWBFile "session_description" key. If appending data to a preexisting
+                file, then the session_description will not be used.
+            identifier: Unique identifier for project. If no identifier is
+                specified, then will generate a GUID. If appending data to a
+                preexisting file, then the identifier will not be used.
+            session_start_time: THe datetime associated with the project. If no
+                session_start_time is given, then the current datetime will be used. If
+                appending data to a preexisting file, then the session_start_time will
+                not be used.
+
+        Returns:
+            A `pynwb.NWBFile` with a separate `pynwb.ProcessingModule` for each
+            `Video` in the `Labels` object.
+        """
         from sleap.io.format.ndx_pose import NDXPoseAdaptor
 
         NDXPoseAdaptor.write(
