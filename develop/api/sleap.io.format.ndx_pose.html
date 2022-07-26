@@ -494,7 +494,7 @@ determine which to use for reading/writing.</p>
 <div><p>Use <code class="xref py py-obj docutils literal notranslate"><span class="pre">Labels.numpy</span></code> to create a <code class="xref py py-obj docutils literal notranslate"><span class="pre">pynwb.NWBFile</span></code> with a separate
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">pynwb.ProcessingModule</span></code> for each <code class="xref py py-obj docutils literal notranslate"><span class="pre">Video</span></code> in the <code class="xref py py-obj docutils literal notranslate"><span class="pre">Labels</span></code> object.</p>
 <p>To access the <code class="xref py py-obj docutils literal notranslate"><span class="pre">pynwb.ProcessingModule</span></code> for a specific <code class="xref py py-obj docutils literal notranslate"><span class="pre">Video</span></code>, use the key
-‘{video_idx:03}_{video_fn.stem}’ where
+‘SLEAP_VIDEO_{video_idx:03}_{video_fn.stem}’ where
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">isinstance(video_fn,</span> <span class="pre">pathlib.PurePath)</span></code>. Ex:</p>
 <blockquote>
 <div><p>video: ‘path_to_video/my_video.mp4’
