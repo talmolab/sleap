@@ -19,7 +19,6 @@ def test_velocity_suggestions(centered_pair_predictions):
 
 
 def test_frame_increment(centered_pair_predictions: Labels):
-
     # Testing videos that have less frames than desired Samples per Video (stride)
     # Expected result is there should be n suggestions where n is equal to the frames
     # in the video.
@@ -78,7 +77,6 @@ def test_frame_increment(centered_pair_predictions: Labels):
 
 
 def test_video_selection(centered_pair_predictions: Labels):
-
     # Testing the functionality of choosing a specific video in a project and
     # only generating suggestions for the video
 
@@ -146,3 +144,33 @@ def test_video_selection(centered_pair_predictions: Labels):
     for i in range(len(suggestions)):
         # Confirming every suggestion is only for the video that is chosen and no other videos
         assert suggestions[i].video == centered_pair_predictions.videos[0]
+
+
+# Create `Labels` object which contains your video
+# Use labels.videos in "video" parameter
+
+# @params: [{"method": "suggest"}, {}]
+def test_unqiue_suggestions(centered_pair_predictions: Labels):
+    # Testing the functionality of choosing a specific video in a project and
+    # only generating suggestions for the video
+
+    centered_pair_predictions.add_video(Video.from_filename(filename="test.mp4"))
+    # Testing suggestion generation from Image Features
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=centered_pair_predictions,
+        params={
+            "videos": [centered_pair_predictions.videos[0]],
+            "method": "image features",
+            "per_video": 2,
+            "sample_method": "stride",
+            "scale": 1,
+            "merge_video_features": "per_video",
+            "feature_type": "raw_images",
+            "pca_components": 1,
+            "n_clusters": 1,
+            "per_cluster": 1,
+        },
+    )
+
+    #TODO(JX): Figure out why the suggestions is returning 0 suggestions.
+    assert len(suggestions) == 0

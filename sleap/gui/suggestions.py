@@ -101,6 +101,9 @@ class VideoFrameSuggestions(object):
                 cls.idx_list_to_frame_list(vid_suggestions, video, group)
             )
 
+        print(suggestions)
+
+
         return suggestions
 
     @classmethod
@@ -142,12 +145,21 @@ class VideoFrameSuggestions(object):
 
         if merge_video_features == "across all videos":
             # Run single pipeline with all videos
-            return pipeline.get_suggestion_frames(videos=videos)
+            suggestions = pipeline.get_suggestion_frames(videos=videos)
+
         else:
             # Run pipeline separately (in parallel) for each video
             suggestions = ParallelFeaturePipeline.run(pipeline, videos)
 
-            return suggestions
+        sugg_idx = [sugg.frame_idx for sugg in suggestions]
+        vid_idx = [frame.frame_idx for frame in labels.labeled_frames]
+        # TODO(JX): Find out whether to find the unique elements from both sets or just the sugg_idx set.
+        unique_idx = set(sugg_idx) - set(vid_idx)
+
+        # Return unique suggestions based on unique idx.
+        suggestions = [sugg for sugg in suggestions if sugg.frame_idx in unique_idx]
+
+        return suggestions
 
     @classmethod
     def prediction_score(
