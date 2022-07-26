@@ -44,6 +44,8 @@ pip install pykalman==0.9.5
 pip install segmentation-models==1.0.1
 pip install rich==10.16.1
 pip install certifi==2021.10.8
+pip install pynwb
+pip install ndx-pose
 
 rem # Use and update environment.yml call to install pip dependencies. This is slick.
 rem # While environment.yml contains the non pip dependencies, the only thing left
