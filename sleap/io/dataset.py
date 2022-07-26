@@ -2043,7 +2043,7 @@ class Labels(MutableSequence):
             `pynwb.ProcessingModule` for each `Video` in the `Labels` object.
 
             To access the `pynwb.ProcessingModule` for a specific `Video`, use the key
-            '{video_idx:03}_{video_fn.stem}' where
+            'SLEAP_VIDEO_{video_idx:03}_{video_fn.stem}' where
             `isinstance(video_fn, pathlib.PurePath)`. Ex:
                 video: 'path_to_video/my_video.mp4'
                 video index: 3/5
