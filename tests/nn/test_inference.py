@@ -822,6 +822,7 @@ def test_centroid_inference():
         integral_patch_size=5,
         peak_threshold=0.2,
         return_confmaps=False,
+        return_crops=False,
     )
 
     # For Codecov to realize the wrapped CentroidCrop.call is tested/covered,
@@ -834,13 +835,9 @@ def test_centroid_inference():
     out = layer(cms)
     assert tuple(out["centroids"].shape) == (1, None, 2)
     assert tuple(out["centroid_vals"].shape) == (1, None)
-    assert tuple(out["crops"].shape) == (1, None, 3, 3, 1)
-    assert tuple(out["crop_offsets"].shape) == (1, None, 2)
 
     assert tuple(out["centroids"].bounding_shape()) == (1, 3, 2)
     assert tuple(out["centroid_vals"].bounding_shape()) == (1, 3)
-    assert tuple(out["crops"].bounding_shape()) == (1, 3, 3, 3, 1)
-    assert tuple(out["crop_offsets"].bounding_shape()) == (1, 3, 2)
 
     assert_allclose(out["centroids"][0].numpy(), points.numpy().squeeze(axis=1))
     assert_allclose(out["centroid_vals"][0].numpy(), [1, 1, 1], atol=0.1)
@@ -914,11 +911,13 @@ def test_single_instance_save(min_single_instance_robot_model_path, tmp_path):
 
 def test_centroid_save(min_centroid_model_path, tmp_path):
 
-    centroid_base_model = tf.keras.models.load_model(
+    centroid_model = tf.keras.models.load_model(
         min_centroid_model_path + "/best_model.h5", compile=False
     )
 
-    centroid = CentroidCrop(keras_model=centroid_base_model, crop_size=160)
+    centroid = CentroidCrop(
+        keras_model=centroid_model, crop_size=160, return_crops=False
+    )
 
     model = CentroidInferenceModel(centroid)
 
@@ -931,17 +930,17 @@ def test_topdown_save(
     min_centroid_model_path, min_centered_instance_model_path, min_labels_slp, tmp_path
 ):
 
-    centroid_base_model = tf.keras.models.load_model(
+    centroid_model = tf.keras.models.load_model(
         min_centroid_model_path + "/best_model.h5", compile=False
     )
 
-    td_model = tf.keras.models.load_model(
+    top_down_model = tf.keras.models.load_model(
         min_centered_instance_model_path + "/best_model.h5", compile=False
     )
 
-    centroid = CentroidCrop(keras_model=centroid_base_model, crop_size=96)
+    centroid = CentroidCrop(keras_model=centroid_model, crop_size=96)
 
-    instance_peaks = FindInstancePeaks(keras_model=td_model)
+    instance_peaks = FindInstancePeaks(keras_model=top_down_model)
 
     model = TopDownInferenceModel(centroid, instance_peaks)
 
@@ -951,21 +950,21 @@ def test_topdown_save(
     save_frozen_graph(model, preds, tmp_path)
 
 
-def test_topdown_mc_save(
+def test_topdown_id_save(
     min_centroid_model_path, min_topdown_multiclass_model_path, min_labels_slp, tmp_path
 ):
 
-    centroid_base_model = tf.keras.models.load_model(
+    centroid_model = tf.keras.models.load_model(
         min_centroid_model_path + "/best_model.h5", compile=False
     )
 
-    td_mc_model = tf.keras.models.load_model(
+    top_down_id_model = tf.keras.models.load_model(
         min_topdown_multiclass_model_path + "/best_model.h5", compile=False
     )
 
-    centroid = CentroidCrop(keras_model=centroid_base_model, crop_size=128)
+    centroid = CentroidCrop(keras_model=centroid_model, crop_size=128)
 
-    instance_peaks = TopDownMultiClassFindPeaks(keras_model=td_mc_model)
+    instance_peaks = TopDownMultiClassFindPeaks(keras_model=top_down_id_model)
 
     model = TopDownMultiClassInferenceModel(centroid, instance_peaks)
 

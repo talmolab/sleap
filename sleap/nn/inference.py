@@ -1455,6 +1455,10 @@ class CentroidCrop(InferenceLayer):
             automatically by searching for the first tensor that contains
             `"OffsetRefinementHead"` in its name. If the head is not present, the method
             specified in the `refinement` attribute will be used.
+        return_crops: If `True`, the crops and offsets will be returned together with
+            the predicted peaks. This is true by default since crops are used
+            for finding instance peaks in a top down model. If using a centroid
+            only inference model, this should be set to `False`.
     """
 
     def __init__(
@@ -1470,6 +1474,7 @@ class CentroidCrop(InferenceLayer):
         return_confmaps: bool = False,
         confmaps_ind: Optional[int] = None,
         offsets_ind: Optional[int] = None,
+        return_crops: bool = True,
         **kwargs,
     ):
         super().__init__(
@@ -1506,6 +1511,7 @@ class CentroidCrop(InferenceLayer):
         self.refinement = refinement
         self.integral_patch_size = integral_patch_size
         self.return_confmaps = return_confmaps
+        self.return_crops = return_crops
 
     @tf.function
     def call(self, inputs):
@@ -1522,11 +1528,6 @@ class CentroidCrop(InferenceLayer):
         Returns:
             A dictionary of outputs grouped by sample with keys:
 
-            `"crops"`: Cropped images of shape
-                `(samples, ?, crop_size, crop_size, channels)`.
-            `"crop_offsets"`: Coordinates of the top-left of the crops as `(x, y)`
-                offsets of shape `(samples, ?, 2)` for adjusting the predicted peak
-                coordinates.
             `"centroids"`: The predicted centroids of shape `(samples, ?, 2)`.
             `"centroid_vals": The centroid confidence values of shape `(samples, ?)`.
 
@@ -1534,6 +1535,14 @@ class CentroidCrop(InferenceLayer):
             contain a key named `"centroid_confmaps"` containing a `tf.RaggedTensor` of
             shape `(samples, ?, output_height, output_width, 1)` containing the
             confidence maps predicted by the model.
+
+            If the `return_crops` attribute is set to `True`, the output will
+            also contain keys named `crops` and `crop_offsets`. The former is a
+            `tf.RaggedTensor` of cropped images of shape `(samples, ?,
+            crop_size, crop_size, channels)`. The latter is a `tf.RaggedTensor`
+            of Coordinates of the top-left of the crops as `(x, y)` offsets of
+            shape `(samples, ?, 2)` for adjusting the predicted peak
+            coordinates.
         """
         if isinstance(inputs, dict):
             # Pull out image from example dictionary.
@@ -1623,28 +1632,30 @@ class CentroidCrop(InferenceLayer):
         centroids = tf.RaggedTensor.from_value_rowids(
             centroid_points, crop_sample_inds, nrows=samples
         )
-        crops = tf.RaggedTensor.from_value_rowids(
-            crops, crop_sample_inds, nrows=samples
-        )
-        crop_offsets = tf.RaggedTensor.from_value_rowids(
-            crop_offsets, crop_sample_inds, nrows=samples
-        )
         centroid_vals = tf.RaggedTensor.from_value_rowids(
             centroid_vals, crop_sample_inds, nrows=samples
         )
 
-        outputs = dict(
-            centroids=centroids,
-            centroid_vals=centroid_vals,
-            crops=crops,
-            crop_offsets=crop_offsets,
-        )
+        outputs = dict(centroids=centroids, centroid_vals=centroid_vals)
         if self.return_confmaps:
             # Return confidence maps with outputs.
             cms = tf.RaggedTensor.from_value_rowids(
                 cms, crop_sample_inds, nrows=samples
             )
             outputs["centroid_confmaps"] = cms
+
+        if self.return_crops:
+            # return crops and offsets
+            crops = tf.RaggedTensor.from_value_rowids(
+                crops, crop_sample_inds, nrows=samples
+            )
+            crop_offsets = tf.RaggedTensor.from_value_rowids(
+                crop_offsets, crop_sample_inds, nrows=samples
+            )
+
+            outputs["crops"] = crops
+            outputs["crop_offsets"] = crop_offsets
+
         return outputs
 
 
