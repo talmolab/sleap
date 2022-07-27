@@ -52,7 +52,7 @@ def centered_pair_vid():
 TEST_SMALL_ROBOT_SIV_FILE0 = "tests/data/videos/robot0.jpg"
 TEST_SMALL_ROBOT_SIV_FILE1 = "tests/data/videos/robot1.jpg"
 TEST_SMALL_ROBOT_SIV_FILE2 = "tests/data/videos/robot2.jpg"
-TEST_SMALL_ROBOT_VID = "sleap_fork/sleap/tests/data/videos/test.mp4"
+TEST_SMALL_ROBOT_VID = "tests/data/videos/test.mp4"
 
 @pytest.fixture
 def small_robot_single_image_vid():

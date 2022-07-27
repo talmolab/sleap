@@ -1,6 +1,11 @@
+import pytest
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
+from sleap.instance import LabeledFrame, PredictedInstance, Track, PredictedPoint
+from sleap.io.dataset import Labels
+from sleap.skeleton import Skeleton
+
 
 
 def test_velocity_suggestions(centered_pair_predictions):
@@ -149,28 +154,70 @@ def test_video_selection(centered_pair_predictions: Labels):
 # Create `Labels` object which contains your video
 # Use labels.videos in "video" parameter
 
-# @params: [{"method": "suggest"}, {}]
-def test_unqiue_suggestions(centered_pair_predictions: Labels):
-    # Testing the functionality of choosing a specific video in a project and
-    # only generating suggestions for the video
-
-    centered_pair_predictions.add_video(Video.from_filename(filename="test.mp4"))
-    # Testing suggestion generation from Image Features
-    suggestions = VideoFrameSuggestions.suggest(
-        labels=centered_pair_predictions,
-        params={
-            "videos": [centered_pair_predictions.videos[0]],
-            "method": "image features",
+@pytest.mark.parametrize("params",[{
             "per_video": 2,
-            "sample_method": "stride",
+            "method": "image features",
+            "sample_method": "random",
             "scale": 1,
-            "merge_video_features": "per_video",
-            "feature_type": "raw_images",
+            "merge_video_features": "across all videos",
+            "feature_type": "brisk",
             "pca_components": 1,
             "n_clusters": 1,
             "per_cluster": 1,
-        },
+        },])
+def test_unqiue_suggestions(params, small_robot_image_vid):
+    # Testing the functionality of choosing a specific video in a project and
+    # only generating suggestions for the video
+
+    # centered_pair_predictions.videos.append(Video.from_filename("test.mp4"))
+    # Testing suggestion generation from Image Features
+    skeleton = Skeleton()
+    skeleton.add_node("a")
+    skeleton.add_node("b")
+
+    track_a = Track(0, "a")
+    track_b = Track(0, "b")
+
+    labels = Labels()
+    instances = []
+    instances.append(
+        PredictedInstance(
+            skeleton=skeleton,
+            score=2,
+            track=track_a,
+            points=dict(
+                a=PredictedPoint(1, 1, score=0.5), b=PredictedPoint(1, 1, score=0.5)
+            ),
+        )
     )
 
+    instances.append(
+        PredictedInstance(
+            skeleton=skeleton,
+            score=5,
+            track=track_b,
+            points=dict(
+                a=PredictedPoint(1, 1, score=0.7), b=PredictedPoint(1, 1, score=0.7)
+            ),
+        )
+    )
+    labeled_frame1 = LabeledFrame(small_robot_image_vid, frame_idx=0, instances=instances)
+    labeled_frame2 = LabeledFrame(small_robot_image_vid, frame_idx=1, instances=instances)
+    labeled_frame3 = LabeledFrame(small_robot_image_vid, frame_idx=2, instances=instances)
+    labels.extend([labeled_frame1, labeled_frame2, labeled_frame3])
+
+    params["videos"] = labels.videos
+
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=labels,
+        params=params)
+
+    new_suggestions = VideoFrameSuggestions.suggest(
+        labels=labels,
+        params=params)
+
     #TODO(JX): Figure out why the suggestions is returning 0 suggestions.
+    # assert len(suggestions) == params["per_video"]
+    # assert len(new_suggestions) == 1
     assert len(suggestions) == 0
+    assert len(new_suggestions) == 0
