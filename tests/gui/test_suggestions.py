@@ -172,6 +172,10 @@ def test_video_selection(centered_pair_predictions: Labels):
             "per_video": 2,
             "method": "sample",
             "sample_method": "random",
+        }, {
+            "per_video": 2,
+            "method": "sample",
+            "sample_method": "stride",
         }])
 def test_unqiue_suggestions(params, small_robot_image_vid):
     # Testing the functionality of choosing a specific video in a project and
@@ -230,7 +234,5 @@ def test_unqiue_suggestions(params, small_robot_image_vid):
     print("new_suggestions", new_suggestions)
 
     #TODO(JX): Figure out why the suggestions is returning 0 suggestions.
-    # assert len(suggestions) == params["per_video"]
-    # assert len(new_suggestions) == 1
     assert len(suggestions) == params["per_video"]
     assert len(new_suggestions) == 1

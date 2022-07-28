@@ -54,6 +54,7 @@ class VideoFrameSuggestions(object):
             List of `SuggestionFrame` objects.
         """
 
+
         # map from method param value to corresponding class method
         method_functions = dict(
             sample=cls.basic_sample_suggestion_method,
@@ -82,46 +83,38 @@ class VideoFrameSuggestions(object):
     ):
         """Method to generate suggestions by taking strides through video."""
 
-        # def stride_sample(video, per_video):
-        #     frame_increment = video.frames // per_video
-        #     frame_increment = 1 if frame_increment == 0 else frame_increment
-        #     vid_suggestions = list(range(0, video.frames, frame_increment))[
-        #                       :per_video
-        #                       ]
-        #
-        # def random_sample(video, per_video):
-        #     frames_num = per_video
-        #     frames_num = video.frames if (frames_num > video.frames) else frames_num
-        #     vid_suggestions = random.sample(range(video.frames), frames_num)
-
         suggestions = []
+
+        sugg_idx = [sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst]
+        vid_idx = [frame.frame_idx for frame in labels.labeled_frames]
+        unique_idx = set(vid_idx) ^ set(sugg_idx)
 
         for video in videos:
             if sampling_method == "stride":
                 frame_increment = video.frames // per_video
                 frame_increment = 1 if frame_increment == 0 else frame_increment
-                vid_suggestions = list(range(0, video.frames, frame_increment))[
+                # vid_suggestions = list(range(0, video.frames, frame_increment))[
+                #     :per_video
+                # ]
+                vid_suggestions = list(unique_idx)[
                     :per_video
                 ]
             else:
-                print(video.num_frames)
-                print(video.get_frames)
-                # generate unique index
-                # sugg_idx = [sugg.frame_idx for sugg in suggestions]
-                # vid_idx = [frame.frame_idx for frame in labels.labeled_frames]
-                # unique_idx = set(sugg_idx) ^ set(vid_idx)
-
                 # random sampling
                 frames_num = per_video
                 frames_num = video.frames if (frames_num > video.frames) else frames_num
-                vid_suggestions = random.sample(range(video.frames), frames_num)
-
+                # vid_suggestions = random.sample(range(video.frames), frames_num)
+                if len(unique_idx) == 1:
+                    vid_suggestions = list(unique_idx)
+                else:
+                    vid_suggestions = random.sample(unique_idx, frames_num)
 
             group = labels.videos.index(video)
             suggestions.extend(
                 cls.idx_list_to_frame_list(vid_suggestions, video, group)
             )
 
+            labels.suggestions.append(suggestions)
 
         return suggestions
 
