@@ -154,17 +154,25 @@ def test_video_selection(centered_pair_predictions: Labels):
 # Create `Labels` object which contains your video
 # Use labels.videos in "video" parameter
 
+
+
+
+# {
+#             "per_video": 2,
+#             "method": "image features",
+#             "sample_method": "random",
+#             "scale": 1,
+#             "merge_video_features": "across all videos",
+#             "feature_type": "brisk",
+#             "pca_components": 1,
+#             "n_clusters": 1,
+#             "per_cluster": 1,
+#         }
 @pytest.mark.parametrize("params",[{
             "per_video": 2,
-            "method": "image features",
+            "method": "sample",
             "sample_method": "random",
-            "scale": 1,
-            "merge_video_features": "across all videos",
-            "feature_type": "brisk",
-            "pca_components": 1,
-            "n_clusters": 1,
-            "per_cluster": 1,
-        },])
+        }])
 def test_unqiue_suggestions(params, small_robot_image_vid):
     # Testing the functionality of choosing a specific video in a project and
     # only generating suggestions for the video
@@ -212,12 +220,17 @@ def test_unqiue_suggestions(params, small_robot_image_vid):
         labels=labels,
         params=params)
 
+    print("old_suggestions", suggestions)
+
+
     new_suggestions = VideoFrameSuggestions.suggest(
         labels=labels,
         params=params)
 
+    print("new_suggestions", new_suggestions)
+
     #TODO(JX): Figure out why the suggestions is returning 0 suggestions.
     # assert len(suggestions) == params["per_video"]
     # assert len(new_suggestions) == 1
-    assert len(suggestions) == 0
-    assert len(new_suggestions) == 0
+    assert len(suggestions) == params["per_video"]
+    assert len(new_suggestions) == 1

@@ -81,6 +81,19 @@ class VideoFrameSuggestions(object):
         **kwargs,
     ):
         """Method to generate suggestions by taking strides through video."""
+
+        # def stride_sample(video, per_video):
+        #     frame_increment = video.frames // per_video
+        #     frame_increment = 1 if frame_increment == 0 else frame_increment
+        #     vid_suggestions = list(range(0, video.frames, frame_increment))[
+        #                       :per_video
+        #                       ]
+        #
+        # def random_sample(video, per_video):
+        #     frames_num = per_video
+        #     frames_num = video.frames if (frames_num > video.frames) else frames_num
+        #     vid_suggestions = random.sample(range(video.frames), frames_num)
+
         suggestions = []
 
         for video in videos:
@@ -91,17 +104,23 @@ class VideoFrameSuggestions(object):
                     :per_video
                 ]
             else:
+                print(video.num_frames)
+                print(video.get_frames)
+                # generate unique index
+                # sugg_idx = [sugg.frame_idx for sugg in suggestions]
+                # vid_idx = [frame.frame_idx for frame in labels.labeled_frames]
+                # unique_idx = set(sugg_idx) ^ set(vid_idx)
+
                 # random sampling
                 frames_num = per_video
                 frames_num = video.frames if (frames_num > video.frames) else frames_num
                 vid_suggestions = random.sample(range(video.frames), frames_num)
 
+
             group = labels.videos.index(video)
             suggestions.extend(
                 cls.idx_list_to_frame_list(vid_suggestions, video, group)
             )
-
-        print(suggestions)
 
 
         return suggestions
@@ -143,6 +162,8 @@ class VideoFrameSuggestions(object):
             per_cluster=per_cluster,
         )
 
+        print(per_video)
+
         if merge_video_features == "across all videos":
             # Run single pipeline with all videos
             suggestions = pipeline.get_suggestion_frames(videos=videos)
@@ -151,13 +172,19 @@ class VideoFrameSuggestions(object):
             # Run pipeline separately (in parallel) for each video
             suggestions = ParallelFeaturePipeline.run(pipeline, videos)
 
+        print("ori_suggestions",suggestions)
+        print("len_ori_suggestions", len(suggestions))
         sugg_idx = [sugg.frame_idx for sugg in suggestions]
+        print("sugg_idx", sugg_idx)
         vid_idx = [frame.frame_idx for frame in labels.labeled_frames]
+        print("vid_idx", vid_idx)
         # TODO(JX): Find out whether to find the unique elements from both sets or just the sugg_idx set.
-        unique_idx = set(sugg_idx) - set(vid_idx)
+        unique_idx = set(sugg_idx) ^ set(vid_idx)
+        print("unique_idx", unique_idx)
 
         # Return unique suggestions based on unique idx.
         suggestions = [sugg for sugg in suggestions if sugg.frame_idx in unique_idx]
+        print("unqiue_suggestions", suggestions)
 
         return suggestions
 
