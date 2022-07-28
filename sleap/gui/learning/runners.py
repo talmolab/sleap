@@ -14,6 +14,7 @@ import yaml
 from pathlib import Path
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Text, Tuple
+import logging
 
 from PySide2 import QtWidgets
 
@@ -22,6 +23,7 @@ from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.nn import training
 from sleap.nn.config import TrainingJobConfig
 
+logger = logging.getLogger(__name__)
 
 def kill_process(pid: int):
     """Force kill a running process and any child processes.
@@ -314,7 +316,7 @@ class InferenceTask:
         def remove_empty_instances_and_frames(lf: LabeledFrame):
             """Removes instances without visible points and empty frames."""
             for inst in lf.instances:
-                print(f"inst.points = {inst.points}\n")
+                logger.debug(f"inst.points = {inst.points}\n")
             lf.remove_empty_instances()
             return len(lf.instances) > 0
 
