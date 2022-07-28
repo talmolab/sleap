@@ -155,19 +155,6 @@ def test_video_selection(centered_pair_predictions: Labels):
 # Use labels.videos in "video" parameter
 
 
-
-
-# {
-#             "per_video": 2,
-#             "method": "image features",
-#             "sample_method": "random",
-#             "scale": 1,
-#             "merge_video_features": "across all videos",
-#             "feature_type": "brisk",
-#             "pca_components": 1,
-#             "n_clusters": 1,
-#             "per_cluster": 1,
-#         }
 @pytest.mark.parametrize("params",[{
             "per_video": 2,
             "method": "sample",
@@ -176,7 +163,16 @@ def test_video_selection(centered_pair_predictions: Labels):
             "per_video": 2,
             "method": "sample",
             "sample_method": "stride",
-        }])
+        }, {
+            "per_video": 2,
+            "method": "image features",
+            "sample_method": "random",
+            "scale": 1,
+            "merge_video_features": "across all videos",
+            "feature_type": "raw",
+            "pca_components": 2,
+            "n_clusters": 1,
+            "per_cluster": 1,}])
 def test_unqiue_suggestions(params, small_robot_image_vid):
     # Testing the functionality of choosing a specific video in a project and
     # only generating suggestions for the video
@@ -233,6 +229,10 @@ def test_unqiue_suggestions(params, small_robot_image_vid):
 
     print("new_suggestions", new_suggestions)
 
-    #TODO(JX): Figure out why the suggestions is returning 0 suggestions.
-    assert len(suggestions) == params["per_video"]
-    assert len(new_suggestions) == 1
+    #TODO(JX): Double check whether returning one frame each time for image features is expected.
+    if params["method"] == "image features":
+        assert len(suggestions) == 1
+        assert len(new_suggestions) == 1
+    else:
+        assert len(suggestions) == params["per_video"]
+        assert len(new_suggestions) == 1
