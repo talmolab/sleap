@@ -87,6 +87,13 @@ class MatchedFrameInstances:
     instances_t: List[InstanceType]
     img_t: Optional[np.ndarray] = None
 
+@attr.s(auto_attribs=True, slots=True)
+class MatchedShiftedFrameInstances:
+    ref_t: int
+    t: int
+    instances_t: List[ShiftedInstance]
+    img_t: Optional[np.ndarray] = None
+
 
 @attr.s(auto_attribs=True)
 class FlowCandidateMaker:
@@ -97,7 +104,7 @@ class FlowCandidateMaker:
     of_window_size: int = 21
     of_max_levels: int = 3
 
-    save_shifted_instances: bool = False
+    save_shifted_instances: bool = True
     shifted_instances: Dict[
         Tuple[int, int], List[ShiftedInstance]  # keyed by (src_t, dst_t)
     ] = attr.ib(factory=dict)
@@ -121,6 +128,18 @@ class FlowCandidateMaker:
             )
 
             if len(ref_instances) > 0:
+                # Check if shifted instance was computed at earlier time
+                if self.save_shifted_instances:
+                    for ti in reversed(range(ref_t, t)):
+                        if (ref_t, ti) in self.shifted_instances:
+                            ref_shifted_instances = self.shifted_instances[
+                                (ref_t, ti)
+                            ]
+                            # Use shifted instance as a reference
+                            ref_img = ref_shifted_instances.img_t
+                            ref_instances = ref_shifted_instances.instances_t
+                            break
+
                 # Flow shift reference instances to current frame.
                 shifted_instances = self.flow_shift_instances(
                     ref_instances,
@@ -137,7 +156,14 @@ class FlowCandidateMaker:
 
                 # Save shifted instances.
                 if self.save_shifted_instances:
-                    self.shifted_instances[(ref_t, t)] = shifted_instances
+                    self.shifted_instances[(ref_t, t)] = \
+                        MatchedShiftedFrameInstances(
+                            ref_t,
+                            t,
+                            shifted_instances,
+                            img,
+                        )
+
         return candidate_instances
 
     @staticmethod
