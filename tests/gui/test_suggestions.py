@@ -151,10 +151,6 @@ def test_video_selection(centered_pair_predictions: Labels):
         assert suggestions[i].video == centered_pair_predictions.videos[0]
 
 
-# Create `Labels` object which contains your video
-# Use labels.videos in "video" parameter
-
-
 @pytest.mark.parametrize("params",[{
             "per_video": 2,
             "method": "sample",
@@ -172,48 +168,139 @@ def test_video_selection(centered_pair_predictions: Labels):
             "feature_type": "raw",
             "pca_components": 2,
             "n_clusters": 1,
-            "per_cluster": 1,}])
+            "per_cluster": 1,
+        }, {
+            "per_video": 2,
+            "method": "prediction_score",
+            "score_limit": 1.1,
+            "instance_limit": 1,
+        }, {
+            "per_video": 2,
+            "method": "velocity",
+            "node": "a",
+            "threshold": 0.1,
+        }])
 def test_unqiue_suggestions(params, small_robot_image_vid):
     # Testing the functionality of choosing a specific video in a project and
-    # only generating suggestions for the video
+    # only appending unique suggestions
 
-    # centered_pair_predictions.videos.append(Video.from_filename("test.mp4"))
-    # Testing suggestion generation from Image Features
     skeleton = Skeleton()
     skeleton.add_node("a")
     skeleton.add_node("b")
+    skeleton.add_node("c")
 
     track_a = Track(0, "a")
-    track_b = Track(0, "b")
+    # track_b = Track(0, "b")
+    # track_c = Track(0, "c")
 
-    labels = Labels()
-    instances = []
-    instances.append(
+    instances1 = []
+    instances1.append(
         PredictedInstance(
             skeleton=skeleton,
-            score=2,
+            score=1,
             track=track_a,
             points=dict(
-                a=PredictedPoint(1, 1, score=0.5), b=PredictedPoint(1, 1, score=0.5)
+                a=PredictedPoint(1, 3, score=0.5), b=PredictedPoint(7, 9, score=0.5)
             ),
         )
     )
 
-    instances.append(
+    instances1.append(
         PredictedInstance(
             skeleton=skeleton,
             score=5,
-            track=track_b,
+            track=track_a,
             points=dict(
-                a=PredictedPoint(1, 1, score=0.7), b=PredictedPoint(1, 1, score=0.7)
+                a=PredictedPoint(2, 4, score=0.7), b=PredictedPoint(6, 5, score=0.7)
             ),
         )
     )
-    labeled_frame1 = LabeledFrame(small_robot_image_vid, frame_idx=0, instances=instances)
-    labeled_frame2 = LabeledFrame(small_robot_image_vid, frame_idx=1, instances=instances)
-    labeled_frame3 = LabeledFrame(small_robot_image_vid, frame_idx=2, instances=instances)
-    labels.extend([labeled_frame1, labeled_frame2, labeled_frame3])
 
+    instances1.append(
+        PredictedInstance(
+            skeleton=skeleton,
+            score=5,
+            track=track_a,
+            points=dict(
+                a=PredictedPoint(7, 3, score=0.7), b=PredictedPoint(8, 10, score=0.7)
+            ),
+        )
+    )
+
+    instances2 = []
+    instances2.append(
+        PredictedInstance(
+            skeleton=skeleton,
+            score=1,
+            track=track_a,
+            points=dict(
+                a=PredictedPoint(2, 4, score=0.5), b=PredictedPoint(7, 9, score=0.5)
+            ),
+        )
+    )
+
+    instances2.append(
+        PredictedInstance(
+            skeleton=skeleton,
+            score=5,
+            track=track_a,
+            points=dict(
+                a=PredictedPoint(3, 7, score=0.7), b=PredictedPoint(6, 5, score=0.7)
+            ),
+        )
+    )
+
+    instances2.append(
+        PredictedInstance(
+            skeleton=skeleton,
+            score=5,
+            track=track_a,
+            points=dict(
+                a=PredictedPoint(8, 1, score=0.7), b=PredictedPoint(8, 10, score=0.7)
+            ),
+        )
+    )
+
+    instances3 = []
+    instances3.append(
+        PredictedInstance(
+            skeleton=skeleton,
+            score=1,
+            track=track_a,
+            points=dict(
+                a=PredictedPoint(8, 9, score=0.5), b=PredictedPoint(7, 9, score=0.5)
+            ),
+        )
+    )
+
+    instances3.append(
+        PredictedInstance(
+            skeleton=skeleton,
+            score=5,
+            track=track_a,
+            points=dict(
+                a=PredictedPoint(2, 3, score=0.7), b=PredictedPoint(6, 5, score=0.7)
+            ),
+        )
+    )
+
+    instances3.append(
+        PredictedInstance(
+            skeleton=skeleton,
+            score=5,
+            track=track_a,
+            points=dict(
+                a=PredictedPoint(5, 9, score=0.7), b=PredictedPoint(8, 10, score=0.7)
+            ),
+        )
+    )
+
+    labeled_frame1 = LabeledFrame(small_robot_image_vid, frame_idx=0, instances=instances1)
+    labeled_frame2 = LabeledFrame(small_robot_image_vid, frame_idx=1, instances=instances2)
+    labeled_frame3 = LabeledFrame(small_robot_image_vid, frame_idx=2, instances=instances3)
+
+    lfs = [labeled_frame1, labeled_frame2, labeled_frame3]
+    labels = Labels(lfs)
     params["videos"] = labels.videos
 
     suggestions = VideoFrameSuggestions.suggest(
@@ -230,9 +317,17 @@ def test_unqiue_suggestions(params, small_robot_image_vid):
     print("new_suggestions", new_suggestions)
 
     #TODO(JX): Double check whether returning one frame each time for image features is expected.
+    # TODO(JX): Double check whether returning no frame during new suggestions for prediction score
+    #  is expected when given 3 frames and one low score instance in each frame.
     if params["method"] == "image features":
         assert len(suggestions) == 1
         assert len(new_suggestions) == 1
+    elif params["method"] == "prediction_score":
+        assert len(suggestions) == ((params["per_video"] + 1) * params["instance_limit"])
+        assert len(new_suggestions) == 0
+    elif params["method"] == "velocity":
+        assert len(suggestions) == 1
+        assert len(new_suggestions) == 0
     else:
         assert len(suggestions) == params["per_video"]
         assert len(new_suggestions) == 1

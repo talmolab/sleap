@@ -161,13 +161,9 @@ class VideoFrameSuggestions(object):
             # Run pipeline separately (in parallel) for each video
             suggestions = ParallelFeaturePipeline.run(pipeline, videos)
 
-        # print("ori_sugg", suggestions)
         prev_idx = [sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst]
-        # print("prev_idx", prev_idx)
         vid_idx = [frame.frame_idx for frame in labels.labeled_frames]
-        # print("vid_idx", vid_idx)
         unique_idx = set(vid_idx) - set(prev_idx)
-        # print("unique_idx", unique_idx)
 
         # Return unique suggestions based on unique idx.
         suggestions = [sugg for sugg in suggestions if sugg.frame_idx in unique_idx]
@@ -203,7 +199,6 @@ class VideoFrameSuggestions(object):
             cls, video: "Video", labels: "Labels", score_limit: float, instance_limit: int
     ):
         lfs = labels.find(video)
-
         frames = len(lfs)
         idxs = np.ndarray((frames), dtype="int")
         scores = np.full((frames, instance_limit), 100.0, dtype="float")
@@ -225,7 +220,14 @@ class VideoFrameSuggestions(object):
         # Find all the frames with at least <instance_limit> low scoring instances
         result = idxs[low_instances >= instance_limit].tolist()
 
-        return cls.idx_list_to_frame_list(result, video)
+        # Generate unique suggestions
+        prev_idx = [sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst]
+        unique_idx = set(result) - set(prev_idx)
+        suggestions = cls.idx_list_to_frame_list(list(unique_idx), video)
+
+        labels.suggestions.append(suggestions)
+
+        return suggestions
 
     @classmethod
     def velocity(
@@ -262,18 +264,33 @@ class VideoFrameSuggestions(object):
         displacements = StatisticSeries(labels).get_primary_point_displacement_series(
             video=video, reduction="sum", primary_node=node_name
         )
+
         data_range = np.ptp(displacements)
         data_min = np.min(displacements)
+
+        # frame_idxs = list(
+        #     map(
+        #         int,
+        #         np.squeeze(
+        #             np.argwhere(displacements - data_min > data_range * threshold)
+        #         ),
+        #     )
+        # )
+
+        # Take away np.squeeze to resolve the case of 0-d array.
         frame_idxs = list(
             map(
                 int,
-                np.squeeze(
                     np.argwhere(displacements - data_min > data_range * threshold)
-                ),
             )
         )
 
-        return cls.idx_list_to_frame_list(frame_idxs, video)
+        prev_idx = [sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst]
+        unique_idx = set(frame_idxs) - set(prev_idx)
+        suggestions = cls.idx_list_to_frame_list(unique_idx, video)
+        labels.suggestions.append(suggestions)
+
+        return suggestions
 
     # Utility functions
 
