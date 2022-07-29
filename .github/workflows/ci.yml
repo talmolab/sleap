@@ -2,7 +2,7 @@
 name: CI
 
 on:
-  pull-request:
+  pull_request:
     types: [created, edited]
   push:
     paths:
