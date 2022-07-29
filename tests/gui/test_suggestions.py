@@ -7,7 +7,6 @@ from sleap.io.dataset import Labels
 from sleap.skeleton import Skeleton
 
 
-
 def test_velocity_suggestions(centered_pair_predictions):
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
@@ -151,15 +150,20 @@ def test_video_selection(centered_pair_predictions: Labels):
         assert suggestions[i].video == centered_pair_predictions.videos[0]
 
 
-@pytest.mark.parametrize("params",[{
+@pytest.mark.parametrize(
+    "params",
+    [
+        {
             "per_video": 2,
             "method": "sample",
             "sample_method": "random",
-        }, {
+        },
+        {
             "per_video": 2,
             "method": "sample",
             "sample_method": "stride",
-        }, {
+        },
+        {
             "per_video": 2,
             "method": "image features",
             "sample_method": "random",
@@ -169,17 +173,21 @@ def test_video_selection(centered_pair_predictions: Labels):
             "pca_components": 2,
             "n_clusters": 1,
             "per_cluster": 1,
-        }, {
+        },
+        {
             "per_video": 2,
             "method": "prediction_score",
             "score_limit": 1.1,
             "instance_limit": 1,
-        }, {
+        },
+        {
             "per_video": 2,
             "method": "velocity",
             "node": "a",
             "threshold": 0.1,
-        }])
+        },
+    ],
+)
 def test_unqiue_suggestions(params, small_robot_image_vid):
     # Testing the functionality of choosing a specific video in a project and
     # only appending unique suggestions
@@ -295,35 +303,38 @@ def test_unqiue_suggestions(params, small_robot_image_vid):
         )
     )
 
-    labeled_frame1 = LabeledFrame(small_robot_image_vid, frame_idx=0, instances=instances1)
-    labeled_frame2 = LabeledFrame(small_robot_image_vid, frame_idx=1, instances=instances2)
-    labeled_frame3 = LabeledFrame(small_robot_image_vid, frame_idx=2, instances=instances3)
+    labeled_frame1 = LabeledFrame(
+        small_robot_image_vid, frame_idx=0, instances=instances1
+    )
+    labeled_frame2 = LabeledFrame(
+        small_robot_image_vid, frame_idx=1, instances=instances2
+    )
+    labeled_frame3 = LabeledFrame(
+        small_robot_image_vid, frame_idx=2, instances=instances3
+    )
 
     lfs = [labeled_frame1, labeled_frame2, labeled_frame3]
     labels = Labels(lfs)
     params["videos"] = labels.videos
 
-    suggestions = VideoFrameSuggestions.suggest(
-        labels=labels,
-        params=params)
+    suggestions = VideoFrameSuggestions.suggest(labels=labels, params=params)
 
     print("old_suggestions", suggestions)
 
-
-    new_suggestions = VideoFrameSuggestions.suggest(
-        labels=labels,
-        params=params)
+    new_suggestions = VideoFrameSuggestions.suggest(labels=labels, params=params)
 
     print("new_suggestions", new_suggestions)
 
-    #TODO(JX): Double check whether returning one frame each time for image features is expected.
+    # TODO(JX): Double check whether returning one frame each time for image features is expected.
     # TODO(JX): Double check whether returning no frame during new suggestions for prediction score
     #  is expected when given 3 frames and one low score instance in each frame.
     if params["method"] == "image features":
         assert len(suggestions) == 1
         assert len(new_suggestions) == 1
     elif params["method"] == "prediction_score":
-        assert len(suggestions) == ((params["per_video"] + 1) * params["instance_limit"])
+        assert len(suggestions) == (
+            (params["per_video"] + 1) * params["instance_limit"]
+        )
         assert len(new_suggestions) == 0
     elif params["method"] == "velocity":
         assert len(suggestions) == 1

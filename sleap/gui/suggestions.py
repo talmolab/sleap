@@ -73,18 +73,20 @@ class VideoFrameSuggestions(object):
 
     @classmethod
     def basic_sample_suggestion_method(
-            cls,
-            labels,
-            videos: List[Video],
-            per_video: int = 20,
-            sampling_method: str = "random",
-            **kwargs,
+        cls,
+        labels,
+        videos: List[Video],
+        per_video: int = 20,
+        sampling_method: str = "random",
+        **kwargs,
     ):
         """Method to generate suggestions by taking strides through video."""
 
         suggestions = []
 
-        sugg_idx = [sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst]
+        sugg_idx = [
+            sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst
+        ]
         vid_idx = [frame.frame_idx for frame in labels.labeled_frames]
         unique_idx = set(vid_idx) ^ set(sugg_idx)
 
@@ -95,9 +97,7 @@ class VideoFrameSuggestions(object):
                 # vid_suggestions = list(range(0, video.frames, frame_increment))[
                 #     :per_video
                 # ]
-                vid_suggestions = list(unique_idx)[
-                                  :per_video
-                                  ]
+                vid_suggestions = list(unique_idx)[:per_video]
             else:
                 # random sampling
                 frames_num = per_video
@@ -119,18 +119,18 @@ class VideoFrameSuggestions(object):
 
     @classmethod
     def image_feature_based_method(
-            cls,
-            labels,
-            videos: List[Video],
-            per_video,
-            sample_method,
-            scale,
-            merge_video_features,
-            feature_type,
-            pca_components,
-            n_clusters,
-            per_cluster,
-            **kwargs,
+        cls,
+        labels,
+        videos: List[Video],
+        per_video,
+        sample_method,
+        scale,
+        merge_video_features,
+        feature_type,
+        pca_components,
+        n_clusters,
+        per_cluster,
+        **kwargs,
     ):
         """
         Method to generate suggestions based on image features.
@@ -161,7 +161,9 @@ class VideoFrameSuggestions(object):
             # Run pipeline separately (in parallel) for each video
             suggestions = ParallelFeaturePipeline.run(pipeline, videos)
 
-        prev_idx = [sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst]
+        prev_idx = [
+            sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst
+        ]
         vid_idx = [frame.frame_idx for frame in labels.labeled_frames]
         unique_idx = set(vid_idx) - set(prev_idx)
 
@@ -174,12 +176,12 @@ class VideoFrameSuggestions(object):
 
     @classmethod
     def prediction_score(
-            cls,
-            labels: "Labels",
-            videos: List[Video],
-            score_limit,
-            instance_limit,
-            **kwargs,
+        cls,
+        labels: "Labels",
+        videos: List[Video],
+        score_limit,
+        instance_limit,
+        **kwargs,
     ):
         """
         Method to generate suggestions for proofreading frames with low score.
@@ -196,7 +198,7 @@ class VideoFrameSuggestions(object):
 
     @classmethod
     def _prediction_score_video(
-            cls, video: "Video", labels: "Labels", score_limit: float, instance_limit: int
+        cls, video: "Video", labels: "Labels", score_limit: float, instance_limit: int
     ):
         lfs = labels.find(video)
         frames = len(lfs)
@@ -221,7 +223,9 @@ class VideoFrameSuggestions(object):
         result = idxs[low_instances >= instance_limit].tolist()
 
         # Generate unique suggestions
-        prev_idx = [sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst]
+        prev_idx = [
+            sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst
+        ]
         unique_idx = set(result) - set(prev_idx)
         suggestions = cls.idx_list_to_frame_list(list(unique_idx), video)
 
@@ -231,12 +235,12 @@ class VideoFrameSuggestions(object):
 
     @classmethod
     def velocity(
-            cls,
-            labels: "Labels",
-            videos: List[Video],
-            node: Union[int, str],
-            threshold: float,
-            **kwargs,
+        cls,
+        labels: "Labels",
+        videos: List[Video],
+        node: Union[int, str],
+        threshold: float,
+        **kwargs,
     ):
         """
         Finds frames for proofreading with high node velocity.
@@ -257,7 +261,7 @@ class VideoFrameSuggestions(object):
 
     @classmethod
     def _velocity_video(
-            cls, video: "Video", labels: "Labels", node_name: str, threshold: float
+        cls, video: "Video", labels: "Labels", node_name: str, threshold: float
     ):
         from sleap.info.summary import StatisticSeries
 
@@ -279,13 +283,12 @@ class VideoFrameSuggestions(object):
 
         # Take away np.squeeze to resolve the case of 0-d array.
         frame_idxs = list(
-            map(
-                int,
-                    np.argwhere(displacements - data_min > data_range * threshold)
-            )
+            map(int, np.argwhere(displacements - data_min > data_range * threshold))
         )
 
-        prev_idx = [sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst]
+        prev_idx = [
+            sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst
+        ]
         unique_idx = set(frame_idxs) - set(prev_idx)
         suggestions = cls.idx_list_to_frame_list(unique_idx, video)
         labels.suggestions.append(suggestions)
@@ -296,7 +299,7 @@ class VideoFrameSuggestions(object):
 
     @staticmethod
     def idx_list_to_frame_list(
-            idx_list, video: "Video", group: Optional[GroupType] = None
+        idx_list, video: "Video", group: Optional[GroupType] = None
     ) -> List[SuggestionFrame]:
         return [SuggestionFrame(video, frame_idx, group) for frame_idx in idx_list]
 
