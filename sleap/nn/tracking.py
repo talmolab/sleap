@@ -103,8 +103,8 @@ class FlowCandidateMaker:
     img_scale: float = 1.0
     of_window_size: int = 21
     of_max_levels: int = 3
+    save_shifted_instances: bool = False
 
-    save_shifted_instances: bool = True
     shifted_instances: Dict[
         Tuple[int, int], List[ShiftedInstance]  # keyed by (src_t, dst_t)
     ] = attr.ib(factory=dict)
@@ -561,6 +561,7 @@ class Tracker(BaseTracker):
         img_scale: float = 1.0,
         of_window_size: int = 21,
         of_max_levels: int = 3,
+        save_shifted_instances: bool = False,
         # Pre-tracking options to cull instances
         target_instance_count: int = 0,
         pre_cull_to_target: bool = False,
@@ -600,6 +601,7 @@ class Tracker(BaseTracker):
             candidate_maker.img_scale = img_scale
             candidate_maker.of_window_size = of_window_size
             candidate_maker.of_max_levels = of_max_levels
+            candidate_maker.save_shifted_instances = save_shifted_instances
 
         cleaner = None
         if clean_instance_count:
@@ -738,6 +740,11 @@ class Tracker(BaseTracker):
         option = dict(name="of_max_levels", default=3)
         option["type"] = int
         option["help"] = "For optical-flow: Number of pyramid scale levels to consider"
+        options.append(option)
+
+        option = dict(name="save_shifted_instances", default=False)
+        option["type"] = bool
+        option["help"] = "For optical-flow: Save the shifted instances between elapsed frames"
         options.append(option)
 
         def int_list_func(s):
