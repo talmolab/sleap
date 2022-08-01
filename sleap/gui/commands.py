@@ -472,8 +472,7 @@ class CommandContext:
         location: Optional[QtCore.QPoint] = None,
         mark_complete: bool = False,
     ):
-        """
-        Creates a new instance, copying node coordinates as appropriate.
+        """Creates a new instance, copying node coordinates as appropriate.
 
         Args:
             copy_instance: The :class:`Instance` (or
@@ -2304,7 +2303,7 @@ class SetSelectedInstanceTrack(EditCommand):
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        selected_instance = context.state["instance"]
+        selected_instance: Instance = context.state["instance"]
         new_track = params["new_track"]
         if selected_instance is None:
             return
@@ -2330,6 +2329,9 @@ class SetSelectedInstanceTrack(EditCommand):
             context.labels.track_set_instance(
                 context.state["labeled_frame"], selected_instance, new_track
             )
+            # Add linked predicted instance to new track
+            if selected_instance.from_predicted is not None:
+                selected_instance.from_predicted.track = new_track
 
         # When the instance does already have a track, then we want to update
         # the track for a range of frames.

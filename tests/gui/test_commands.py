@@ -15,7 +15,7 @@ from sleap.io.pathutils import fix_path_separator
 from sleap.io.video import Video
 from sleap.io.convert import default_analysis_filename
 from sleap.instance import Instance, LabeledFrame
-from sleap import Skeleton
+from sleap import Skeleton, Track
 
 from tests.info.test_h5 import extract_meta_hdf5
 from tests.io.test_video import assert_video_params
@@ -464,3 +464,34 @@ def test_SaveProjectAs(centered_pair_predictions: Labels, tmpdir):
 
     SaveProjectAs.do_action(context=context, params=params)
     assert Path(params["filename"]).exists()
+
+
+def test_SetSelectedInstanceTrack(centered_pair_predictions: Labels):
+    """Test that setting new track on instance also sets track on linked prediction."""
+    # Extract labeled frame and instance
+    labels = centered_pair_predictions
+    lf: LabeledFrame = labels[0]
+    pred_inst = lf.instances[0]
+
+    # Set-up command context
+    context: CommandContext = CommandContext.from_labels(labels)
+    context.state["labeled_frame"] = lf
+    context.state["frame_idx"] = lf.frame_idx
+    context.state["skeleton"] = labels.skeleton
+    context.state["video"] = labels.videos[0]
+
+    # Remove all tracks
+    labels.remove_all_tracks()
+
+    # Create instance from predicted instance
+    context.newInstance(copy_instance=pred_inst, mark_complete=False)
+
+    # Set track on new instance
+    new_instance = [inst for inst in lf.instances if inst.from_predicted is not None][0]
+    context.state["instance"] = new_instance
+    track = Track(name="test_track")
+    context.setInstanceTrack(new_track=track)
+
+    # Ensure that both instance and predicted instance have same track
+    assert new_instance.track == track
+    assert pred_inst.track == new_instance.track
