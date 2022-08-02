@@ -20,7 +20,8 @@ dataset file and save it at `<input path>.slp`.
 Analysis HDF5:
 
 If you want to export an "analysis" h5 file, use `--format analysis`. If no
-output path is specified, the default is `<input path>.analysis.h5`.
+output path is specified, the default is 
+`<input path>.<video index>_<video filename>.analysis.h5`.
 
 The analysis HDF5 file has these datasets:
 
@@ -54,9 +55,14 @@ def create_parser():
     parser.add_argument(
         "-o",
         "--output",
-        default="",
-        help="Path to output file (optional). Note: all analysis files will be written "
-        "to `output`.<video name>.analysis.h5",
+        dest="outputs",
+        action="append",
+        default=[],
+        help="Path to output file (optional). The analysis format expects an output "
+        "path per video in the project. Otherwise, the default naming convention "
+        "`<input path>.<video index>_<video filename>.analysis.h5` will be used for "
+        "every video without a specified output path. Multiple outputs can be "
+        "specified, each preceeded by --output.",
     )
     parser.add_argument(
         "--format",
@@ -110,18 +116,25 @@ def main(args: list = None):
     if args.format == "analysis":
         from sleap.info.write_tracking_h5 import main as write_analysis
 
-        labels_path = args.input_path
-        fn = labels_path if (len(args.output) == 0) else args.output
-        fn = re.sub("(\.json(\.zip)?|\.h5|\.slp)$", "", fn)
-        fn = PurePath(fn)
+        output_paths = [path for path in args.outputs]
 
-        for video in labels.videos:
-            output_path = default_analysis_filename(
+        # Generate filenames if user has not specified (enough) output filenames
+        labels_path = args.input_path
+        fn = re.sub("(\\.json(\\.zip)?|\\.h5|\\.slp)$", "", labels_path)
+        fn = PurePath(fn)
+        default_names = [
+            default_analysis_filename(
                 labels=labels,
                 video=video,
                 output_path=str(fn.parent),
                 output_prefix=str(fn.stem),
             )
+            for video in labels.videos[len(args.outputs) :]
+        ]
+
+        output_paths.extend(default_names)
+
+        for video, output_path in zip(labels.videos, output_paths):
             write_analysis(
                 labels,
                 output_path=output_path,
@@ -130,9 +143,9 @@ def main(args: list = None):
                 video=video,
             )
 
-    elif args.output:
-        print(f"Output SLEAP dataset: {args.output}")
-        Labels.save_file(labels, args.output)
+    elif len(args.outputs) > 0:
+        print(f"Output SLEAP dataset: {args.outputs[0]}")
+        Labels.save_file(labels, args.outputs[0])
 
     elif args.format in ("slp", "h5", "json"):
         output_path = f"{args.input_path}.{args.format}"
