@@ -5,6 +5,7 @@ from sleap.instance import Instance
 
 from pathlib import PurePath, Path
 import re
+import pytest
 
 
 def test_analysis_format(
@@ -80,3 +81,44 @@ def test_analysis_format(
 
     output_paths = [str(tmpdir.with_name("prefix"))]
     sleap_convert_assert(output_paths, slp_path)
+
+
+def test_sleap_format(
+    min_labels_slp: Labels,
+    min_labels_slp_path: Labels,
+    tmpdir,
+):
+    def sleap_convert_assert(output_path, slp_path):
+        args = f"-o {output_path} {slp_path}".split()
+        sleap_convert(args)
+        assert Path(output_path).exists()
+
+    labels = min_labels_slp
+    slp_path = PurePath(min_labels_slp_path)
+    tmpdir = PurePath(tmpdir)
+
+    output_path = Path(tmpdir, slp_path)
+    sleap_convert_assert(output_path, slp_path)
+
+
+@pytest.mark.parametrize("suffix", [".slp", ".json", ".h5"])
+def test_auto_slp_h5_json_format(
+    min_labels_slp: Labels,
+    min_labels_slp_path: Labels,
+    tmpdir,
+    suffix,
+):
+    def sleap_convert_assert(output_path: Path, slp_path):
+        args = f"--format {output_path.suffix[1:]} {slp_path}".split()
+        print(f"args = {args}")
+        sleap_convert(args)
+        assert Path(output_path).exists()
+
+    labels = min_labels_slp
+    slp_path = PurePath(min_labels_slp_path)
+    new_slp_path = PurePath(tmpdir, slp_path.name)
+    labels.save(new_slp_path)
+
+    output_path = Path(f"{new_slp_path}{suffix}")
+    print(f"output_path = {output_path}")
+    sleap_convert_assert(output_path, new_slp_path)
