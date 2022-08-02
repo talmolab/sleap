@@ -238,7 +238,12 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -o OUTPUT, --output OUTPUT
-                        Path to output file (optional). The analysis format expects an output path per video in the project. Otherwise, the default naming convention `<input path>.<video index>_<video filename>.analysis.h5` will be used for every video without a specified output path. Multiple outputs can be specified, each preceeded by --output.
+                        Path to output file (optional). The analysis format expects an
+                        output path per video in the project. Otherwise, the default
+                        naming convention
+                        <input path>.<video index>_<video filename>.analysis.h5 will be
+                        used for every video without a specified output path. Multiple
+                        outputs can be specified, each preceeded by --output.
   --format FORMAT       Output format. Default ('slp') is SLEAP dataset;
                         'analysis' results in analysis.h5 file; 'h5' or 'json'
                         results in SLEAP dataset with specified file format.
