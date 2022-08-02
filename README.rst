@@ -1,4 +1,4 @@
-|CI| |Coverage| |Documentation| |Downloads| |Stable version| |Latest version|
+|CI| |Coverage| |Documentation| |Downloads| |Conda Downloads| |Stable version| |Latest version|
 
 .. |CI| image:: 
    https://github.com/talmolab/sleap/workflows/CI/badge.svg?event=push&branch=develop
@@ -16,9 +16,13 @@
    :alt: Documentation
   
 .. |Downloads| image::
-   https://static.pepy.tech/personalized-badge/sleap?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=Downloads
+   https://static.pepy.tech/personalized-badge/sleap?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=PyPI%20Downloads
    :target: https://pepy.tech/project/sleap
    :alt: Downloads
+   
+.. |Conda Downloads| image:: https://img.shields.io/conda/dn/sleap/sleap?label=Conda%20Downloads
+   :target: https://anaconda.org/sleap/sleap
+   :alt: Conda Downloads
 
 .. |Stable version| image:: https://img.shields.io/github/v/release/talmolab/sleap?label=stable
    :target: https://github.com/talmolab/sleap/releases/
