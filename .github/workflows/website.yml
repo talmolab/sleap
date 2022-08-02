@@ -8,7 +8,7 @@ on:
       # 'main' triggers updates to 'sleap.ai', 'develop' to 'sleap.ai/develop'
       - main
       - develop
-      - liezl/convert-output-path
+      - liezl/convert_output-path
     paths:
       - "docs/**"
       - "README.rst"
