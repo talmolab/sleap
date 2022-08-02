@@ -25,6 +25,7 @@ from sleap.nn.config import TrainingJobConfig
 
 logger = logging.getLogger(__name__)
 
+
 def kill_process(pid: int):
     """Force kill a running process and any child processes.
 
@@ -315,8 +316,6 @@ class InferenceTask:
 
         def remove_empty_instances_and_frames(lf: LabeledFrame):
             """Removes instances without visible points and empty frames."""
-            for inst in lf.instances:
-                logger.debug(f"inst.points = {inst.points}\n")
             lf.remove_empty_instances()
             return len(lf.instances) > 0
 
