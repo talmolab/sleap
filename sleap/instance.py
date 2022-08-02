@@ -394,7 +394,7 @@ class Instance:
         if from_predicted is not None and type(from_predicted) != PredictedInstance:
             raise TypeError(
                 f"Instance.from_predicted type must be PredictedInstance (not "
-                "{type(from_predicted)})"
+                f"{type(from_predicted)})"
             )
 
     @_points.validator
