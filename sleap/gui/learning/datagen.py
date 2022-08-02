@@ -81,8 +81,7 @@ def show_datagen_preview(labels: Labels, config_info_list: List[ConfigFileInfo])
 
 
 def make_datagen_results(reader: LabelsReader, cfg: TrainingJobConfig) -> np.ndarray:
-    """
-    Gets (subset of) raw images used for training.
+    """Get (subset of) raw images used for training.
 
     TODO: Refactor so we can get this data without digging into details of the
       the specific pipelines (e.g., key for confmaps depends on head type).
@@ -113,11 +112,17 @@ def make_datagen_results(reader: LabelsReader, cfg: TrainingJobConfig) -> np.nda
         output_keys["confmap"] = "centroid_confidence_maps"
 
     elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
-        if cfg.data.instance_cropping.crop_size is None:
+        if (cfg.data.instance_cropping.crop_size is None) or (
+            cfg.data.instance_cropping.crop_size
+            % cfg.model.backbone.which_oneof().max_stride
+            > 0
+        ):
+            # Compute crop size that is divisible by max stride
             cfg.data.instance_cropping.crop_size = find_instance_crop_size(
                 labels=reader.labels,
                 padding=cfg.data.instance_cropping.crop_size_detection_padding,
                 maximum_stride=cfg.model.backbone.which_oneof().max_stride,
+                min_crop_size=cfg.data.instance_cropping.crop_size,
             )
 
         pipeline += pipelines.InstanceCentroidFinder.from_config(

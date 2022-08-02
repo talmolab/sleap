@@ -313,8 +313,6 @@ class InferenceTask:
 
         def remove_empty_instances_and_frames(lf: LabeledFrame):
             """Removes instances without visible points and empty frames."""
-            for inst in lf.instances:
-                print(f"inst.points = {inst.points}\n")
             lf.remove_empty_instances()
             return len(lf.instances) > 0
 
