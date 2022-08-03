@@ -60,7 +60,7 @@ def create_parser():
         default=[],
         help="Path to output file (optional). The analysis format expects an output "
         "path per video in the project. Otherwise, the default naming convention "
-        "`<input path>.<video index>_<video filename>.analysis.h5` will be used for "
+        "`<slp path>.<video index>_<video filename>.analysis.h5` will be used for "
         "every video without a specified output path. Multiple outputs can be "
         "specified, each preceeded by --output.",
     )

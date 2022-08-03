@@ -241,9 +241,25 @@ optional arguments:
                         Path to output file (optional). The analysis format expects an
                         output path per video in the project. Otherwise, the default
                         naming convention
-                        <input path>.<video index>_<video filename>.analysis.h5 will be
+                        <slp path>.<video index>_<video filename>.analysis.h5 will be
                         used for every video without a specified output path. Multiple
                         outputs can be specified, each preceeded by --output.
+
+                        Example (analysis format):
+                          Input:
+                            predictions.slp: Path to .slp file to convert which has two
+                            videos:
+                            - first-video.mp4 at video index 0 and
+                            - second-video.mp4 at video index 1.
+                          Command:
+                            sleap-convert predictions.slp --format analysis --output analysis_video_0.h5
+                          Output analysis files:
+                            analysis_video_0.h5: Analysis file for first-video.mp4
+                              (at index 0) in predictions.slp.
+                            predictions.001_second-video.analysis.h5: Analysis file for
+                              second-video.mp4 (at index 1) in predictions.slp. Since
+                              only a single --output argument was specified, the
+                              analysis file for the latter video is given a default name.,
   --format FORMAT       Output format. Default ('slp') is SLEAP dataset;
                         'analysis' results in analysis.h5 file; 'h5' or 'json'
                         results in SLEAP dataset with specified file format.
