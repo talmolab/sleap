@@ -147,7 +147,7 @@ class Shortcuts(object):
 
 
 if __name__ == "__main__":
-    from PySide6 import QtWidgets
+    from qtpy import QtWidgets
 
     from sleap.gui.dialogs.shortcuts import ShortcutDialog
 

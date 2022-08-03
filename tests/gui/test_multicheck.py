@@ -1,6 +1,6 @@
 from sleap.gui.widgets.multicheck import MultiCheckWidget
 
-from PySide6 import QtCore
+from qtpy import QtCore
 
 
 def test_gui_video(qtbot):

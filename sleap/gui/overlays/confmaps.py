@@ -142,7 +142,7 @@ def show_confmaps_from_h5(filename, input_format="channels_last", standalone=Fal
 
 def demo_confmaps(confmaps, video, scale=None, standalone=False, callback=None):
     """Demo function."""
-    from PySide6 import QtWidgets
+    from qtpy import QtWidgets
     from sleap.gui.widgets.video import QtVideoPlayer
 
     if standalone:

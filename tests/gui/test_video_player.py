@@ -7,7 +7,7 @@ from sleap.gui.widgets.video import (
     QtVideoPlayer,
 )
 
-from PySide6 import QtCore
+from qtpy import QtCore
 
 
 def test_gui_video(qtbot):

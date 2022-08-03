@@ -33,10 +33,29 @@ from qtpy.QtWidgets import (
     QWidget,
     QGraphicsView,
     QGraphicsScene,
+    QShortcut,
+    QGraphicsItem,
+    QGraphicsObject,
+    QGraphicsEllipseItem,
+    QGraphicsTextItem,
+    QGraphicsRectItem,
+    QGraphicsPolygonItem,
 )
-from qtpy.QtGui import QImage, QPixmap, QPainter, QPainterPath, QTransform
-from qtpy.QtGui import QPen, QBrush, QColor, QFont, QPolygonF
-from qtpy.QtGui import QShortcut, QKeyEvent, QMouseEvent, QKeySequence
+from qtpy.QtGui import (
+    QImage,
+    QPixmap,
+    QPainter,
+    QPainterPath,
+    QTransform,
+    QPen,
+    QBrush,
+    QColor,
+    QFont,
+    QPolygonF,
+    QKeyEvent,
+    QMouseEvent,
+    QKeySequence,
+)
 from qtpy.QtCore import Qt, QRectF, QPointF, QMarginsF, QLineF
 
 import atexit
@@ -45,15 +64,6 @@ import time
 import numpy as np
 
 from typing import Callable, List, Optional, Union
-
-from qtpy.QtWidgets import QGraphicsItem, QGraphicsObject
-
-from qtpy.QtWidgets import (
-    QGraphicsEllipseItem,
-    QGraphicsTextItem,
-    QGraphicsRectItem,
-    QGraphicsPolygonItem,
-)
 
 import sleap
 from sleap.prefs import prefs

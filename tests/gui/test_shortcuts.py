@@ -1,4 +1,4 @@
-from PySide6.QtGui import QKeySequence
+from qtpy.QtGui import QKeySequence
 
 from sleap.gui.shortcuts import Shortcuts
 
