@@ -10,7 +10,6 @@ h5py>=3.1.0,<=3.7.0
 python-rapidjson
 opencv-python>=4.2.0,<4.6.0
 # opencv-python-headless>=4.2.0.34,<=4.5.5.62
-# opencv-python @ git+https://github.com/talmolab/wrap_opencv-python-headless.git@ede49f6a23a73033216339f29515e59d594ba921
 pandas
 psutil
 PySide2>=5.13.2,<=5.14.1; platform_machine != 'arm64'
@@ -26,9 +25,7 @@ scikit-image
 scikit-learn==1.0.*
 scikit-video
 imgstore==0.2.9
-# qimage2ndarray @ git+https://github.com/hmeine/qimage2ndarray.git@238148cafbb6cfcf121febebf82eaacc8bf34b1e
-# qimage2ndarray>=1.8.2,<=1.8.3
-qimage2ndarray==1.9.0
+qimage2ndarray>=1.9.0
 jsmin
 seaborn
 pykalman==0.9.5
