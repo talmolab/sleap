@@ -259,7 +259,7 @@ optional arguments:
                             predictions.001_second-video.analysis.h5: Analysis file for
                               second-video.mp4 (at index 1) in predictions.slp. Since
                               only a single --output argument was specified, the
-                              analysis file for the latter video is given a default name.,
+                              analysis file for the latter video is given a default name.
   --format FORMAT       Output format. Default ('slp') is SLEAP dataset;
                         'analysis' results in analysis.h5 file; 'h5' or 'json'
                         results in SLEAP dataset with specified file format.
