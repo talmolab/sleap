@@ -1,5 +1,5 @@
 numpy>=1.19.5,<1.23.0
-attrs==21.2.0
+attrs>=21.2.0,<=21.4.0
 cattrs==1.1.1
 jsonpickle==1.2
 networkx
@@ -8,11 +8,12 @@ tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64
 tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64'
 h5py>=3.1.0,<=3.7.0
 python-rapidjson
-opencv-python>=4.2.0,<4.6.0
+opencv-python>=4.2.0,<=4.6.0
 # opencv-python-headless>=4.2.0.34,<=4.5.5.62
 pandas
 psutil
-PySide2>=5.13.2,<=5.15.5
+PySide2>=5.13.2,<=5.14.1; sys_platform == 'win32'
+PySide2>=5.13.2,<=5.15.5; sys_platform != 'win32'
 # PySide2>=5.13.2,<=5.14.1; platform_machine != 'arm64'
 # PySide6>=6.2.0,<6.4.0; sys_platform == 'darwin' and platform_machine == 'arm64'
 qtpy>=2.0.1
