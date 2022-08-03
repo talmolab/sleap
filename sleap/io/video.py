@@ -995,11 +995,11 @@ class Video:
     for different formats. For example: ::
 
        >>> video = Video.from_hdf5(filename="test.h5", dataset="box")
-       >>> video = Video.from_media(filename="test.mp4")
+       >>> video = Video.from_media(filename="robot_3_frames.mp4")
 
     Or we can use auto-detection based on filename: ::
 
-       >>> video = Video.from_filename(filename="test.mp4")
+       >>> video = Video.from_filename(filename="robot_3_frames.mp4")
 
     Args:
         backend: A backend is an object that implements the following basic

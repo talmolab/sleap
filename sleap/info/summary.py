@@ -188,9 +188,6 @@ class StatisticSeries:
         result = reduce_funct(displacement_distances, axis=1)
         result[np.isnan(result)] = 0
 
-        # Shift back by 1 frame so offsets line up with frame index.
-        # result[1:] = result[:-1]
-
         return result
 
     def get_min_centroid_proximity_series(self, video):

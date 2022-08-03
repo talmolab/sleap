@@ -84,7 +84,7 @@ def test_video_selection(centered_pair_predictions: Labels):
     # Testing the functionality of choosing a specific video in a project and
     # only generating suggestions for the video
 
-    centered_pair_predictions.add_video(Video.from_filename(filename="test.mp4"))
+    centered_pair_predictions.add_video(Video.from_filename(filename="robot_3_frames.mp4"))
     # Testing suggestion generation from Image Features
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
@@ -198,8 +198,6 @@ def test_unqiue_suggestions(params, small_robot_image_vid):
     skeleton.add_node("c")
 
     track_a = Track(0, "a")
-    # track_b = Track(0, "b")
-    # track_c = Track(0, "c")
 
     instances1 = []
     instances1.append(
@@ -318,6 +316,7 @@ def test_unqiue_suggestions(params, small_robot_image_vid):
     params["videos"] = labels.videos
 
     suggestions = VideoFrameSuggestions.suggest(labels=labels, params=params)
+    labels.suggestions.append(suggestions)
 
     print("old_suggestions", suggestions)
 
