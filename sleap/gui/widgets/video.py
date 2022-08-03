@@ -2047,7 +2047,8 @@ class QtTextWithBackground(QGraphicsTextItem):
         text_color = self.defaultTextColor()
         brush = painter.brush()
         background_color = "white" if text_color.lightnessF() < 0.4 else "black"
-        background_color = QColor(background_color, a=0.5)
+        background_color = QColor(background_color)
+        background_color.setAlphaF(0.5)
         painter.setBrush(QBrush(background_color))
         painter.drawRect(self.boundingRect())
         painter.setBrush(brush)
