@@ -2042,13 +2042,18 @@ class QtTextWithBackground(QGraphicsTextItem):
         """Method required by Qt."""
         return super(QtTextWithBackground, self).boundingRect()
 
-    def paint(self, painter, option, *args, **kwargs):
-        """Method required by Qt."""
+    def getBackgroundColor(self):
+        """Return background color appropriate for the text color."""
         text_color = self.defaultTextColor()
-        brush = painter.brush()
         background_color = "white" if text_color.lightnessF() < 0.4 else "black"
         background_color = QColor(background_color)
         background_color.setAlphaF(0.5)
+        return background_color
+
+    def paint(self, painter, option, *args, **kwargs):
+        """Method required by Qt."""
+        brush = painter.brush()
+        background_color = self.getBackgroundColor()
         painter.setBrush(QBrush(background_color))
         painter.drawRect(self.boundingRect())
         painter.setBrush(brush)
