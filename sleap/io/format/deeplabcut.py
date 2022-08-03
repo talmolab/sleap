@@ -111,15 +111,17 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
 
         # Check if this is in the new multi-animal format.
         is_multianimal = data.columns[0][0] == "individuals"
+        is_new_format = data.columns[1][1].startswith("Unnamed")
 
         if is_multianimal:
             # Reload with additional header rows if using new format.
             data = pd.read_csv(filename, header=[1, 2, 3])
 
             # Pull out animal and node names from the columns.
+            start_col = 3 if is_new_format else 1
             animal_names = []
             node_names = []
-            for animal_name, node_name, _ in data.columns[1:][::2]:
+            for animal_name, node_name, _ in data.columns[start_col:][::2]:
                 if animal_name not in animal_names:
                     animal_names.append(animal_name)
                 if node_name not in node_names:
@@ -129,14 +131,20 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
             # Create the skeleton from the list of nodes in the csv file.
             # Note that DeepLabCut doesn't have edges, so these will need to be
             # added by user later.
-            node_names = [n[0] for n in list(data)[1::2]]
+            start_col = 3 if is_new_format else 1
+            node_names = [n[0] for n in list(data)[start_col::2]]
 
         if skeleton is None:
             skeleton = Skeleton()
             skeleton.add_nodes(node_names)
 
         # Get list of all images filenames.
-        img_files = data.iloc[:, 0]
+        if is_new_format:
+            # New format has folder name and filename in separate columns.
+            img_files = [f"{a}/{b}" for a, b in zip(data.iloc[:, 0], data.iloc[:, 2])]
+        else:
+            # Old format has filenames in a single column.
+            img_files = data.iloc[:, 0]
 
         if full_video:
             video = full_video
@@ -189,14 +197,20 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                         )
             else:
                 # Get points for each node.
+                any_not_missing = False
                 instance_points = dict()
                 for node in node_names:
                     x, y = data[(node, "x")][i], data[(node, "y")][i]
                     instance_points[node] = Point(x, y)
+                    if ~(np.isnan(x) and np.isnan(y)):
+                        any_not_missing = True
 
-                # Create instance with points assuming there's a single instance per
-                # frame.
-                instances.append(Instance(skeleton=skeleton, points=instance_points))
+                if any_not_missing:
+                    # Create instance with points assuming there's a single instance per
+                    # frame.
+                    instances.append(
+                        Instance(skeleton=skeleton, points=instance_points)
+                    )
 
             if len(instances) > 0:
                 # Create LabeledFrame and add it to list.

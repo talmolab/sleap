@@ -25,6 +25,8 @@ from sleap.nn.inference import (
     TopDownInferenceModel,
     TopDownPredictor,
     BottomUpPredictor,
+    BottomUpMultiClassPredictor,
+    TopDownMultiClassPredictor,
     load_model,
 )
 
@@ -633,11 +635,71 @@ def test_bottomup_predictor(min_labels, min_bottomup_model_path):
     assert len(labels_pr[0]) == 0
 
 
+def test_bottomup_multiclass_predictor(
+    min_tracks_2node_labels, min_bottomup_multiclass_model_path
+):
+    labels_gt = sleap.Labels(min_tracks_2node_labels[[0]])
+    predictor = BottomUpMultiClassPredictor.from_trained_models(
+        model_path=min_bottomup_multiclass_model_path,
+        peak_threshold=0.7,
+        integral_refinement=False,
+    )
+    labels_pr = predictor.predict(labels_gt)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 2
+
+    inds1 = np.argsort([x.track.name for x in labels_gt[0]])
+    inds2 = np.argsort([x.track.name for x in labels_pr[0]])
+    assert labels_gt[0][inds1[0]].track == labels_pr[0][inds2[0]].track
+    assert labels_gt[0][inds1[1]].track == labels_pr[0][inds2[1]].track
+
+    assert_allclose(
+        labels_gt[0][inds1[0]].numpy(), labels_pr[0][inds2[0]].numpy(), rtol=0.02
+    )
+    assert_allclose(
+        labels_gt[0][inds1[1]].numpy(), labels_pr[0][inds2[1]].numpy(), rtol=0.02
+    )
+
+    labels_pr = predictor.predict(
+        sleap.nn.data.pipelines.VideoReader(labels_gt.video, example_indices=[0])
+    )
+    labels_pr[0][0].track.name == "female"
+    labels_pr[0][1].track.name == "male"
+
+
+def test_topdown_multiclass_predictor(
+    min_tracks_2node_labels, min_topdown_multiclass_model_path
+):
+    labels_gt = sleap.Labels(min_tracks_2node_labels[[0]])
+    predictor = TopDownMultiClassPredictor.from_trained_models(
+        confmap_model_path=min_topdown_multiclass_model_path,
+        peak_threshold=0.7,
+        integral_refinement=False,
+    )
+    labels_pr = predictor.predict(labels_gt)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 2
+
+    inds1 = np.argsort([x.track.name for x in labels_gt[0]])
+    inds2 = np.argsort([x.track.name for x in labels_pr[0]])
+    assert labels_gt[0][inds1[0]].track == labels_pr[0][inds2[0]].track
+    assert labels_gt[0][inds1[1]].track == labels_pr[0][inds2[1]].track
+
+    assert_allclose(
+        labels_gt[0][inds1[0]].numpy(), labels_pr[0][inds2[0]].numpy(), rtol=0.02
+    )
+    assert_allclose(
+        labels_gt[0][inds1[1]].numpy(), labels_pr[0][inds2[1]].numpy(), rtol=0.02
+    )
+
+
 def test_load_model(
     min_single_instance_robot_model_path,
     min_centroid_model_path,
     min_centered_instance_model_path,
     min_bottomup_model_path,
+    min_topdown_multiclass_model_path,
+    min_bottomup_multiclass_model_path,
 ):
     predictor = load_model(min_single_instance_robot_model_path)
     assert isinstance(predictor, SingleInstancePredictor)
@@ -647,3 +709,82 @@ def test_load_model(
 
     predictor = load_model(min_bottomup_model_path)
     assert isinstance(predictor, BottomUpPredictor)
+
+    predictor = load_model([min_centroid_model_path, min_topdown_multiclass_model_path])
+    assert isinstance(predictor, TopDownMultiClassPredictor)
+
+    predictor = load_model(min_bottomup_multiclass_model_path)
+    assert isinstance(predictor, BottomUpMultiClassPredictor)
+
+
+def test_ensure_numpy(
+    min_centroid_model_path, min_centered_instance_model_path, min_labels_slp
+):
+
+    model = load_model([min_centroid_model_path, min_centered_instance_model_path])
+
+    # each frame has same number of instances
+    same_shape = min_labels_slp.video[:4]
+
+    out = model.inference_model.predict(same_shape, numpy=False)
+
+    assert type(out["instance_peaks"]) == tf.RaggedTensor
+    assert type(out["instance_peak_vals"]) == tf.RaggedTensor
+    assert type(out["centroids"]) == tf.RaggedTensor
+    assert type(out["centroid_vals"]) == tf.RaggedTensor
+
+    out = model.inference_model.predict(same_shape, numpy=True)
+
+    assert type(out["instance_peaks"]) == np.ndarray
+    assert type(out["instance_peak_vals"]) == np.ndarray
+    assert type(out["centroids"]) == np.ndarray
+    assert type(out["centroid_vals"]) == np.ndarray
+    assert type(out["n_valid"]) == np.ndarray
+
+    out = model.inference_model.predict_on_batch(same_shape, numpy=False)
+
+    assert type(out["instance_peaks"]) == tf.RaggedTensor
+    assert type(out["instance_peak_vals"]) == tf.RaggedTensor
+    assert type(out["centroids"]) == tf.RaggedTensor
+    assert type(out["centroid_vals"]) == tf.RaggedTensor
+
+    out = model.inference_model.predict_on_batch(same_shape, numpy=True)
+
+    assert type(out["instance_peaks"]) == np.ndarray
+    assert type(out["instance_peak_vals"]) == np.ndarray
+    assert type(out["centroids"]) == np.ndarray
+    assert type(out["centroid_vals"]) == np.ndarray
+    assert type(out["n_valid"]) == np.ndarray
+
+    # variable number of instances
+    diff_shape = min_labels_slp.video[4:8]
+
+    out = model.inference_model.predict(diff_shape, numpy=False)
+
+    assert type(out["instance_peaks"]) == tf.RaggedTensor
+    assert type(out["instance_peak_vals"]) == tf.RaggedTensor
+    assert type(out["centroids"]) == tf.RaggedTensor
+    assert type(out["centroid_vals"]) == tf.RaggedTensor
+
+    out = model.inference_model.predict(diff_shape, numpy=True)
+
+    assert type(out["instance_peaks"]) == np.ndarray
+    assert type(out["instance_peak_vals"]) == np.ndarray
+    assert type(out["centroids"]) == np.ndarray
+    assert type(out["centroid_vals"]) == np.ndarray
+    assert type(out["n_valid"]) == np.ndarray
+
+    out = model.inference_model.predict_on_batch(diff_shape, numpy=False)
+
+    assert type(out["instance_peaks"]) == tf.RaggedTensor
+    assert type(out["instance_peak_vals"]) == tf.RaggedTensor
+    assert type(out["centroids"]) == tf.RaggedTensor
+    assert type(out["centroid_vals"]) == tf.RaggedTensor
+
+    out = model.inference_model.predict_on_batch(diff_shape, numpy=True)
+
+    assert type(out["instance_peaks"]) == np.ndarray
+    assert type(out["instance_peak_vals"]) == np.ndarray
+    assert type(out["centroids"]) == np.ndarray
+    assert type(out["centroid_vals"]) == np.ndarray
+    assert type(out["n_valid"]) == np.ndarray

@@ -1,17 +1,29 @@
 import pytest
 import os
 import h5py
-
 import numpy as np
+from sleap.io.dataset import Labels
 
-from sleap.io.video import Video, HDF5Video, MediaVideo, DummyVideo, load_video
+from sleap.io.video import (
+    SingleImageVideo,
+    Video,
+    HDF5Video,
+    MediaVideo,
+    DummyVideo,
+    load_video,
+)
+from tests.fixtures.datasets import TEST_SLP_SIV_ROBOT
 from tests.fixtures.videos import (
     TEST_H5_FILE,
     TEST_SMALL_ROBOT_MP4_FILE,
     TEST_H5_DSET,
     TEST_H5_INPUT_FORMAT,
     TEST_SMALL_CENTERED_PAIR_VID,
+    TEST_SMALL_ROBOT_SIV_FILE0,
+    TEST_SMALL_ROBOT_SIV_FILE1,
+    TEST_SMALL_ROBOT_SIV_FILE2,
 )
+from typing import List
 
 # FIXME:
 # Parameterizing fixtures with fixtures is annoying so this leads to a lot
@@ -405,3 +417,141 @@ def test_load_video():
     video = load_video(TEST_SMALL_CENTERED_PAIR_VID)
     assert video.shape == (1100, 384, 384, 1)
     assert video[:3].shape == (3, 384, 384, 1)
+
+
+def assert_video_params(
+    video: Video,
+    filename: str = None,
+    filenames: List[str] = None,
+    grayscale: bool = None,
+    bgr: bool = None,
+    height: int = None,
+    width: int = None,
+    channels: int = None,
+    reset: bool = False,
+):
+    if filename is not None:
+        assert video.backend.filename == filename
+
+    if grayscale is not None:
+        assert video.backend.grayscale == grayscale
+    else:
+        assert video.backend._detect_grayscale == bool(grayscale is None)
+
+    if bgr is not None:
+        assert video.backend.bgr == bgr
+
+    if reset and isinstance(video.backend, MediaVideo):
+        assert video.backend._reader_ == None
+        assert video.backend._test_frame_ == None
+    elif reset and isinstance(video.backend, SingleImageVideo):
+        assert video.backend.test_frame_ is None
+        assert video.backend.height_ == height
+        assert video.backend.width_ == width
+        assert video.backend.channels_ == channels
+
+    # Getting the channels will assert some of the above are not None
+    if grayscale is not None:
+        assert video.backend.channels == 3 ** (not grayscale)
+
+
+def test_reset_video_mp4(small_robot_mp4_vid: Video):
+
+    video = small_robot_mp4_vid
+    filename = video.backend.filename
+
+    # Get a frame to set the video parameters in the backend
+    video.get_frame(idx=0)
+    assert_video_params(
+        video=video, filename=filename, grayscale=video.backend.grayscale
+    )
+
+    # Test reset works for color to grayscale
+
+    # Reset the backend: grasyscale = True
+    video.backend.reset(filename=filename, grayscale=True)
+    assert_video_params(video=video, filename=filename, grayscale=True, reset=True)
+
+    # Get a frame to test that reset parameters persist (namely grayscale and channels)
+    frame = video.get_frame(idx=0)
+    assert frame.shape[2] == 1
+    assert_video_params(video=video, filename=filename, grayscale=True)
+
+    # Test reset works for grayscale to color
+
+    # Reset the backend: grayscale = False
+    video.backend.reset(filename=filename, grayscale=False)
+    assert_video_params(
+        video=video, filename=filename, grayscale=False, bgr=True, reset=True
+    )
+
+    # Get a frame to test that reset parameters persist (namely grayscale and channels)
+    frame = video.get_frame(idx=0)
+    assert frame.shape[2] == 3
+    assert_video_params(video=video, filename=filename, grayscale=False)
+
+    # Test reset works when grayscale is None
+
+    # Reset the backend: grayscale = None (and set bgr)
+    video.backend.reset(filename=filename, bgr=True)
+    assert_video_params(video=video, filename=filename, bgr=True, reset=True)
+
+
+def test_reset_video_siv(small_robot_single_image_vid: Video, siv_robot: Labels):
+    video = small_robot_single_image_vid
+    filename = video.backend.filename
+
+    # Get a frame to set the video parameters in the backend
+    video.get_frame(idx=0)
+    assert_video_params(
+        video=video, filename=filename, grayscale=video.backend.grayscale
+    )
+
+    # Test reset works for color to grayscale
+
+    # Reset the backend: grayscale = True
+    video.backend.reset(filename=filename, grayscale=True)
+    assert_video_params(video=video, filename=filename, grayscale=True, reset=True)
+
+    # Get a frame to test that reset parameters persist (namely grayscale and channels)
+    frame = video.get_frame(idx=0)
+    assert frame.shape[2] == 1
+    assert_video_params(video=video, filename=filename, grayscale=True)
+
+    # Test reset works for grayscale to color
+
+    # Reset the backend: grasyscale = False
+    video.backend.reset(filename=filename, grayscale=False)
+    assert_video_params(video=video, filename=filename, grayscale=False, reset=True)
+
+    # Get a frame to test that reset parameters persist (namely grayscale and channels)
+    frame = video.get_frame(idx=0)
+    assert frame.shape[2] == 3
+    assert_video_params(video=video, filename=filename, grayscale=False)
+
+    # Test reset works when grayscale is None
+
+    # Reset the backend: grayscale = None (and set bgr)
+    video.backend.reset(filename=filename)
+    assert_video_params(video=video, filename=filename, reset=True)
+
+    # Test reset works using filenames
+    filenames = [
+        TEST_SMALL_ROBOT_SIV_FILE0,
+        TEST_SMALL_ROBOT_SIV_FILE1,
+        TEST_SMALL_ROBOT_SIV_FILE2,
+    ]
+    video.backend.reset(filenames=filenames)
+    assert_video_params(video=video, filenames=filenames, reset=True)
+
+    # Test reset does nothing if specify both filenames and filename
+    with pytest.raises(ValueError):
+        video.backend.reset(filename=filename, filenames=filenames)
+    assert_video_params(video=video, filenames=filenames, reset=True)
+
+    # Test reset does not break deserialization of older slp
+    labels: Labels = Labels.load_file(TEST_SLP_SIV_ROBOT)
+    video: Video = labels.video
+    filename = labels.video.backend.filename
+    labels.video.backend.reset(filename=filename, grayscale=True)
+    assert_video_params(video=video, filenames=filenames, grayscale=True, reset=True)

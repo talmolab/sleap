@@ -33,6 +33,8 @@ HDF5 we need custom code since these files have a `.h5` extension, and this is
 also a non-default file extension for the `LabelsV1Adaptor` adaptor.
 """
 
+from sleap.io.format.alphatracker import AlphaTrackerAdaptor
+from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from .coco import LabelsCocoAdaptor
 from .deeplabcut import LabelsDeepLabCutCsvAdaptor, LabelsDeepLabCutYamlAdaptor
 from .deepposekit import LabelsDeepPoseKitAdaptor
@@ -59,6 +61,8 @@ all_labels_adaptors = {
     "leap": LabelsLeapMatlabAdaptor,
     "deeplabcut": (LabelsDeepLabCutYamlAdaptor, LabelsDeepLabCutCsvAdaptor),
     "deepposekit": LabelsDeepPoseKitAdaptor,
+    "alphatracker": AlphaTrackerAdaptor,
+    "nwb": NDXPoseAdaptor,
     "coco": LabelsCocoAdaptor,
     "analysis": SleapAnalysisAdaptor,
 }

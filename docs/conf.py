@@ -16,6 +16,7 @@ import os
 import sys
 import shutil
 import docs.utils
+from datetime import date
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -23,11 +24,11 @@ sys.path.insert(0, os.path.abspath(".."))
 # -- Project information -----------------------------------------------------
 
 project = "SLEAP"
-author = "Talmo D. Pereira, Arie Matsliah, Nat Tabris, David M. Turner"
-copyright = "2019–2021, Murthy Lab @ Princeton University"
+author = "SLEAP Developers"
+copyright = f"2019–{date.today().year}, Talmo Lab"
 
 # The short X.Y version
-version = "1.1.5"
+version = "1.2.6"
 
 # Get the sleap version
 # with open("../sleap/version.py") as f:
@@ -35,11 +36,11 @@ version = "1.1.5"
 #     version = re.search("\d.+(?=['\"])", version_file).group(0)
 
 # Release should be the full branch name
-release = "v1.1.5"
+release = "v1.2.6"
 
 html_title = f"SLEAP ({release})"
 html_short_title = "SLEAP"
-html_favicon = '_static/favicon.ico'
+html_favicon = "_static/favicon.ico"
 html_baseurl = "/develop/"
 
 # -- General configuration ---------------------------------------------------
@@ -58,6 +59,7 @@ extensions = [
     "sphinx.ext.linkcode",
     "sphinx.ext.napoleon",
     "sphinx_copybutton",
+    # https://myst-nb.readthedocs.io/en/latest/
     "myst_nb",
 ]
 
@@ -98,10 +100,11 @@ def linkcode_resolve(domain, info):
         filename = docs.utils.resolve(info["module"], info["fullname"])
         if filename is None:
             return None
-        return f"https://github.com/murthylab/sleap/blob/{release}/{filename}"
+        return f"https://github.com/talmolab/sleap/blob/{release}/{filename}"
     except:
         print(info)
         raise
+
 
 autosummary_generate = True
 
@@ -118,16 +121,52 @@ default_role = "py:obj"
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "furo"
+# html_theme = "furo"
+html_theme = "sphinx_book_theme"
 
 # Customization options.
 # https://pradyunsg.me/furo/customisation/
 html_theme_options = {
     # Set this to add a site-wide banner:
     # "announcement": "<em>Important</em> announcement!",
-    "light_logo": "logo.png",
-    "dark_logo": "logo.png",
+    # "light_logo": "logo.png",
+    # "dark_logo": "logo.png",
+    # https://sphinx-book-theme.readthedocs.io/en/stable/customize/index.html#theme-options
+    "repository_url": "https://github.com/talmolab/sleap",
+    "use_download_button": False,
+    "use_fullscreen_button": False,
+    "use_repository_button": True,
+    "use_issues_button": True,
+    "extra_navbar": "",
+    # https://sphinx-book-theme.readthedocs.io/en/stable/launch.html
+    # "launch_buttons": {
+    #     "colab_url": "https://{your-colab-url}"
+    # },
 }
+
+myst_number_code_blocks = ["python"]
+
+# https://myst-parser.readthedocs.io/en/latest/syntax/optional.html
+myst_enable_extensions = [
+    "amsmath",
+    "colon_fence",
+    "deflist",
+    "dollarmath",
+    # "fieldlist",
+    "html_admonition",
+    "html_image",
+    "linkify",
+    "replacements",
+    "smartquotes",
+    # "strikethrough",
+    "substitution",
+    "tasklist",
+]
+
+# https://myst-parser.readthedocs.io/en/latest/syntax/optional.html#auto-generated-header-anchors
+myst_heading_anchors = 3
+
+html_logo = "_static/logo.png"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -178,5 +217,5 @@ if os.path.exists(_docs_static_path):
     shutil.rmtree(_docs_static_path)
 shutil.copytree("_static", _docs_static_path)
 
-
+# https://myst-nb.readthedocs.io/en/latest/use/config-reference.html
 jupyter_execute_notebooks = "off"

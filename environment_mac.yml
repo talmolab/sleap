@@ -1,22 +1,14 @@
 name: sleap
 
-channels:
-- defaults
-- apple
-- conda-forge
-
 dependencies:
-- python=3.8
-- shapely=1.7.1
-- tensorflow-deps
-- pandas
-- scikit-image
-- scikit-learn
-- python-rapidjson
-- psutil
-- pip
+- python=3.7
+- Pillow
+- Shapely
+- anaconda-client
+- conda-verify
+- conda-forge::pip<=22.0.3
 - pip:
-    - tensorflow-macos
-    - tensorflow-metal
+    - tensorflow==2.7.0
+    - pyside2==5.14.1
     - "--editable=./"
     - "--requirement=./dev_requirements.txt"

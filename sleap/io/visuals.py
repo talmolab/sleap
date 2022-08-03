@@ -563,7 +563,7 @@ def resize_images(images: np.ndarray, scale: float) -> np.ndarray:
     return np.stack([resize_image(img, scale) for img in images])
 
 
-def main_cli():
+def main(args: list = None):
     import argparse
     from sleap.util import frame_list
 
@@ -591,8 +591,7 @@ def main_cli():
     parser.add_argument(
         "--video-index", type=int, default=0, help="Index of video in labels dataset"
     )
-    args = parser.parse_args()
-
+    args = parser.parse_args(args=args)
     labels = Labels.load_file(
         args.data_path, video_search=[os.path.dirname(args.data_path)]
     )
@@ -627,5 +626,5 @@ def main_cli():
     print(f"Video saved as: {filename}")
 
 
-if __name__ == "__main__":
-    main_cli()
+# if __name__ == "__main__":
+#    main()

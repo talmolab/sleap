@@ -29,6 +29,8 @@ from sleap.nn.config import (
     CentroidsHeadConfig,
     CenteredInstanceConfmapsHeadConfig,
     MultiInstanceConfig,
+    MultiClassBottomUpConfig,
+    MultiClassTopDownConfig,
 )
 
 # Model
@@ -43,6 +45,8 @@ from sleap.nn.data.pipelines import (
     CentroidConfmapsPipeline,
     TopdownConfmapsPipeline,
     BottomUpPipeline,
+    BottomUpMultiClassPipeline,
+    TopDownMultiClassPipeline,
     KeyMapper,
 )
 from sleap.nn.data.training import split_labels_train_val
@@ -105,6 +109,7 @@ class DataReaders:
         test: Optional[Union[Text, sleap.Labels]] = None,
         video_search_paths: Optional[List[Text]] = None,
         update_config: bool = False,
+        with_track_only: bool = False,
     ) -> "DataReaders":
         """Create data readers from a (possibly incomplete) configuration."""
         # Use config values if not provided in the arguments.
@@ -143,6 +148,7 @@ class DataReaders:
             video_search_paths=video_search_paths,
             labels_config=labels_config,
             update_config=update_config,
+            with_track_only=with_track_only,
         )
 
     @classmethod
@@ -154,6 +160,7 @@ class DataReaders:
         video_search_paths: Optional[List[Text]] = None,
         labels_config: Optional[LabelsConfig] = None,
         update_config: bool = False,
+        with_track_only: bool = False,
     ) -> "DataReaders":
         """Create data readers from sleap.Labels datasets as data providers."""
         if isinstance(training, str):
@@ -206,7 +213,12 @@ class DataReaders:
                 training_inds,
                 validation,
                 validation_inds,
-            ) = split_labels_train_val(training.with_user_labels_only(), validation)
+            ) = split_labels_train_val(
+                training.with_user_labels_only(
+                    with_track_only=with_track_only, copy=True
+                ),
+                validation,
+            )
             logger.info(
                 f"  Splits: Training = {len(training_inds)} /"
                 f" Validation = {len(validation_inds)}."
@@ -222,11 +234,17 @@ class DataReaders:
 
         test_reader = None
         if test is not None:
-            test_reader = LabelsReader.from_user_instances(test)
+            test_reader = LabelsReader.from_user_instances(
+                test, with_track_only=with_track_only
+            )
 
         return cls(
-            training_labels_reader=LabelsReader.from_user_instances(training),
-            validation_labels_reader=LabelsReader.from_user_instances(validation),
+            training_labels_reader=LabelsReader.from_user_instances(
+                training, with_track_only=with_track_only
+            ),
+            validation_labels_reader=LabelsReader.from_user_instances(
+                validation, with_track_only=with_track_only
+            ),
             test_labels_reader=test_reader,
         )
 
@@ -534,6 +552,8 @@ PipelineBuilder = TypeVar(
     CentroidConfmapsPipeline,
     TopdownConfmapsPipeline,
     BottomUpPipeline,
+    TopDownMultiClassPipeline,
+    BottomUpMultiClassPipeline,
     SingleInstanceConfmapsPipeline,
 )
 
@@ -621,6 +641,29 @@ class Trainer(ABC):
         # Store SLEAP version on the training process.
         config.sleap_version = sleap.__version__
 
+        # Determine output type to create type-specific model trainer.
+        head_config = config.model.heads.which_oneof()
+        is_id_model = False
+        if isinstance(head_config, SingleInstanceConfmapsHeadConfig):
+            trainer_cls = SingleInstanceModelTrainer
+        elif isinstance(head_config, CentroidsHeadConfig):
+            trainer_cls = CentroidConfmapsModelTrainer
+        elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
+            trainer_cls = TopdownConfmapsModelTrainer
+        elif isinstance(head_config, MultiInstanceConfig):
+            trainer_cls = BottomUpModelTrainer
+        elif isinstance(head_config, MultiClassBottomUpConfig):
+            trainer_cls = BottomUpMultiClassModelTrainer
+            is_id_model = True
+        elif isinstance(head_config, MultiClassTopDownConfig):
+            trainer_cls = TopDownMultiClassModelTrainer
+            is_id_model = True
+        else:
+            raise ValueError(
+                "Model head not specified or configured. Check the config.model.heads"
+                " setting."
+            )
+
         # Create data readers and store loaded skeleton.
         data_readers = DataReaders.from_config(
             config.data.labels,
@@ -629,29 +672,17 @@ class Trainer(ABC):
             test=test_labels,
             video_search_paths=video_search_paths,
             update_config=True,
+            with_track_only=is_id_model,
         )
         config.data.labels.skeletons = data_readers.training_labels.skeletons
 
         # Create model.
         model = Model.from_config(
-            config.model, skeleton=config.data.labels.skeletons[0], update_config=True
+            config.model,
+            skeleton=config.data.labels.skeletons[0],
+            tracks=data_readers.training_labels_reader.tracks,
+            update_config=True,
         )
-
-        # Determine output type to create type-specific model trainer.
-        head_config = config.model.heads.which_oneof()
-        if isinstance(head_config, CentroidsHeadConfig):
-            trainer_cls = CentroidConfmapsModelTrainer
-        elif isinstance(head_config, CenteredInstanceConfmapsHeadConfig):
-            trainer_cls = TopdownConfmapsModelTrainer
-        elif isinstance(head_config, MultiInstanceConfig):
-            trainer_cls = BottomUpModelTrainer
-        elif isinstance(head_config, SingleInstanceConfmapsHeadConfig):
-            trainer_cls = SingleInstanceModelTrainer
-        else:
-            raise ValueError(
-                "Model head not specified or configured. Check the config.model.heads"
-                " setting."
-            )
 
         return trainer_cls(
             config=config,
@@ -1197,12 +1228,16 @@ class TopdownConfmapsModelTrainer(Trainer):
         if self.config.data.preprocessing.pad_to_stride is None:
             self.config.data.preprocessing.pad_to_stride = 1
 
-        if self.config.data.instance_cropping.crop_size is None:
+        if (self.config.data.instance_cropping.crop_size is None) or (
+            self.config.data.instance_cropping.crop_size % self.model.maximum_stride > 0
+        ):
+            # Compute crop size that is divisible by max stride
             self.config.data.instance_cropping.crop_size = sleap.nn.data.instance_cropping.find_instance_crop_size(
                 self.data_readers.training_labels,
                 padding=self.config.data.instance_cropping.crop_size_detection_padding,
                 maximum_stride=self.model.maximum_stride,
                 input_scaling=self.config.data.preprocessing.input_scaling,
+                min_crop_size=self.config.data.instance_cropping.crop_size,
             )
 
         if self.config.optimization.batches_per_epoch is None:
@@ -1445,6 +1480,305 @@ class BottomUpModelTrainer(Trainer):
                 run_path=self.run_path,
                 viz_fn=lambda: visualize_pafs_example(next(validation_viz_ds_iter)),
                 name=f"validation_pafs_magnitude",
+            )
+        )
+
+
+@attr.s(auto_attribs=True)
+class BottomUpMultiClassModelTrainer(Trainer):
+    """Trainer for models that output multi-instance confidence maps and class maps."""
+
+    pipeline_builder: BottomUpMultiClassPipeline = attr.ib(init=False)
+
+    @property
+    def has_offsets(self) -> bool:
+        """Whether model is configured to output refinement offsets."""
+        return self.config.model.heads.multi_class_bottomup.confmaps.offset_refinement
+
+    def _update_config(self):
+        """Update the configuration with inferred values."""
+        if self.config.data.preprocessing.pad_to_stride is None:
+            self.config.data.preprocessing.pad_to_stride = self.model.maximum_stride
+
+        if self.config.optimization.batches_per_epoch is None:
+            n_training_examples = len(self.data_readers.training_labels)
+            n_training_batches = (
+                n_training_examples // self.config.optimization.batch_size
+            )
+            self.config.optimization.batches_per_epoch = max(
+                self.config.optimization.min_batches_per_epoch, n_training_batches
+            )
+
+        if self.config.optimization.val_batches_per_epoch is None:
+            n_validation_examples = len(self.data_readers.validation_labels)
+            n_validation_batches = (
+                n_validation_examples // self.config.optimization.batch_size
+            )
+            self.config.optimization.val_batches_per_epoch = max(
+                self.config.optimization.min_val_batches_per_epoch, n_validation_batches
+            )
+
+    def _setup_pipeline_builder(self):
+        """Initialize pipeline builder."""
+        self.pipeline_builder = BottomUpMultiClassPipeline(
+            data_config=self.config.data,
+            optimization_config=self.config.optimization,
+            confmaps_head=self.model.heads[0],
+            class_maps_head=self.model.heads[1],
+            offsets_head=self.model.heads[2] if self.has_offsets else None,
+        )
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return example keys to be mapped to model inputs."""
+        return ["image"]
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return example keys to be mapped to model outputs."""
+        output_keys = ["confidence_maps", "class_maps"]
+        if self.has_offsets:
+            output_keys.append("offsets")
+        return output_keys
+
+    def _setup_visualization(self):
+        """Set up visualization pipelines and callbacks."""
+        # Create visualization/inference pipelines.
+        self.training_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
+            self.data_readers.training_labels_reader, self.keras_model
+        )
+        self.validation_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
+            self.data_readers.validation_labels_reader, self.keras_model
+        )
+
+        # Create static iterators.
+        training_viz_ds_iter = iter(self.training_viz_pipeline.make_dataset())
+        validation_viz_ds_iter = iter(self.validation_viz_pipeline.make_dataset())
+
+        def visualize_confmaps_example(example):
+            img = example["image"].numpy()
+            cms = example["predicted_confidence_maps"].numpy()
+            pts_gt = example["instances"].numpy()
+            pts_pr = example["predicted_peaks"].numpy()
+
+            scale = 1.0
+            if img.shape[0] < 512:
+                scale = 2.0
+            if img.shape[0] < 256:
+                scale = 4.0
+            fig = plot_img(img, dpi=72 * scale, scale=scale)
+            plot_confmaps(cms, output_scale=cms.shape[0] / img.shape[0])
+            plt.xlim(plt.xlim())
+            plt.ylim(plt.ylim())
+            plot_peaks(pts_gt, pts_pr, paired=False)
+            return fig
+
+        def visualize_class_maps_example(example):
+            img = example["image"].numpy()
+            class_maps = example["predicted_class_maps"].numpy()
+
+            scale = 1.0
+            if img.shape[0] < 512:
+                scale = 2.0
+            if img.shape[0] < 256:
+                scale = 4.0
+            fig = plot_img(img, dpi=72 * scale, scale=scale)
+            plot_confmaps(class_maps, output_scale=class_maps.shape[0] / img.shape[0])
+            return fig
+
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_confmaps_example(next(training_viz_ds_iter)),
+                name=f"train",
+            )
+        )
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_confmaps_example(next(validation_viz_ds_iter)),
+                name=f"validation",
+            )
+        )
+
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_class_maps_example(next(training_viz_ds_iter)),
+                name=f"train_class_maps",
+            )
+        )
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_class_maps_example(
+                    next(validation_viz_ds_iter)
+                ),
+                name=f"validation_class_maps",
+            )
+        )
+
+
+@attr.s(auto_attribs=True)
+class TopDownMultiClassModelTrainer(Trainer):
+    """Trainer for models that output multi-instance confidence maps and class maps."""
+
+    pipeline_builder: TopDownMultiClassPipeline = attr.ib(init=False)
+
+    @property
+    def has_offsets(self) -> bool:
+        """Whether model is configured to output refinement offsets."""
+        return self.config.model.heads.multi_class_topdown.confmaps.offset_refinement
+
+    def _update_config(self):
+        """Update the configuration with inferred values."""
+        if self.config.data.preprocessing.pad_to_stride is None:
+            self.config.data.preprocessing.pad_to_stride = self.model.maximum_stride
+
+        if (self.config.data.instance_cropping.crop_size is None) or (
+            self.config.data.instance_cropping.crop_size % self.model.maximum_stride > 0
+        ):
+            # Compute crop size which is divisible by max stride
+            self.config.data.instance_cropping.crop_size = sleap.nn.data.instance_cropping.find_instance_crop_size(
+                self.data_readers.training_labels,
+                padding=self.config.data.instance_cropping.crop_size_detection_padding,
+                maximum_stride=self.model.maximum_stride,
+                input_scaling=self.config.data.preprocessing.input_scaling,
+                min_crop_size=self.config.data.instance_cropping.crop_size,
+            )
+
+        if self.config.optimization.batches_per_epoch is None:
+            n_training_examples = len(self.data_readers.training_labels.user_instances)
+            n_training_batches = (
+                n_training_examples // self.config.optimization.batch_size
+            )
+            self.config.optimization.batches_per_epoch = max(
+                self.config.optimization.min_batches_per_epoch, n_training_batches
+            )
+
+        if self.config.optimization.val_batches_per_epoch is None:
+            n_validation_examples = len(
+                self.data_readers.validation_labels.user_instances
+            )
+            n_validation_batches = (
+                n_validation_examples // self.config.optimization.batch_size
+            )
+            self.config.optimization.val_batches_per_epoch = max(
+                self.config.optimization.min_val_batches_per_epoch, n_validation_batches
+            )
+
+    def _setup_pipeline_builder(self):
+        """Initialize pipeline builder."""
+        self.pipeline_builder = TopDownMultiClassPipeline(
+            data_config=self.config.data,
+            optimization_config=self.config.optimization,
+            instance_confmap_head=self.model.heads[0],
+            class_vectors_head=self.model.heads[1],
+            offsets_head=self.model.heads[2] if self.has_offsets else None,
+        )
+
+    @property
+    def input_keys(self) -> List[Text]:
+        """Return example keys to be mapped to model inputs."""
+        return ["instance_image"]
+
+    @property
+    def output_keys(self) -> List[Text]:
+        """Return example keys to be mapped to model outputs."""
+        output_keys = ["instance_confidence_maps", "class_vectors"]
+        if self.has_offsets:
+            output_keys.append("offsets")
+        return output_keys
+
+    def _setup_optimization(self):
+        """Set up optimizer, loss functions and compile the model."""
+        optimizer = setup_optimizer(self.config.optimization)
+        # loss_fn = setup_losses(self.config.optimization)
+
+        # part_names = None
+        # metrics = setup_metrics(self.config.optimization, part_names=None)
+        metrics = {"ClassVectorsHead": "accuracy"}
+
+        self.optimization_callbacks = setup_optimization_callbacks(
+            self.config.optimization
+        )
+
+        self.keras_model.compile(
+            optimizer=optimizer,
+            loss={
+                output_name: head.loss_function
+                for output_name, head in zip(
+                    self.keras_model.output_names, self.model.heads
+                )
+            },
+            metrics=metrics,
+            loss_weights={
+                output_name: head.loss_weight
+                for output_name, head in zip(
+                    self.keras_model.output_names, self.model.heads
+                )
+            },
+        )
+
+    def _setup_visualization(self):
+        """Set up visualization pipelines and callbacks."""
+        # Create visualization/inference pipelines.
+        self.training_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
+            self.data_readers.training_labels_reader
+        )
+        self.validation_viz_pipeline = self.pipeline_builder.make_viz_pipeline(
+            self.data_readers.validation_labels_reader
+        )
+
+        # Create static iterators.
+        training_viz_ds_iter = iter(self.training_viz_pipeline.make_dataset())
+        validation_viz_ds_iter = iter(self.validation_viz_pipeline.make_dataset())
+
+        # Create an instance peak finding layer.
+        find_peaks = FindInstancePeaks(
+            keras_model=self.keras_model,
+            input_scale=self.config.data.preprocessing.input_scaling,
+            peak_threshold=0.2,
+            refinement="local",
+            return_confmaps=True,
+        )
+
+        def visualize_example(example):
+            # Find peaks by evaluating model.
+            preds = find_peaks(tf.expand_dims(example["instance_image"], axis=0))
+            img = example["instance_image"].numpy()
+            cms = preds["instance_confmaps"][0][0].numpy()
+            pts_gt = example["center_instance"].numpy()
+            pts_pr = preds["instance_peaks"][0][0].numpy()
+
+            scale = 1.0
+            if img.shape[0] < 512:
+                scale = 2.0
+            if img.shape[0] < 256:
+                scale = 4.0
+            fig = plot_img(img, dpi=72 * scale, scale=scale)
+            plot_confmaps(cms, output_scale=cms.shape[0] / img.shape[0])
+            plot_peaks(pts_gt, pts_pr, paired=True)
+            return fig
+
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_example(next(training_viz_ds_iter)),
+                name="train",
+            )
+        )
+        self.visualization_callbacks.extend(
+            setup_visualization(
+                self.config.outputs,
+                run_path=self.run_path,
+                viz_fn=lambda: visualize_example(next(validation_viz_ds_iter)),
+                name="validation",
             )
         )
 

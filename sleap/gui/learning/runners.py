@@ -15,7 +15,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Text, Tuple
 
-from PySide6 import QtWidgets
+from PySide2 import QtWidgets
 
 from sleap import Labels, Video, LabeledFrame
 from sleap.gui.learning.configs import ConfigFileInfo
@@ -310,9 +310,17 @@ class InferenceTask:
 
     def merge_results(self):
         """Merges result frames into labels dataset."""
-        # Remove any frames without instances.
-        new_lfs = list(filter(lambda lf: len(lf.instances), self.results))
-        new_labels = Labels(new_lfs)
+
+        def remove_empty_instances_and_frames(lf: LabeledFrame):
+            """Removes instances without visible points and empty frames."""
+            lf.remove_empty_instances()
+            return len(lf.instances) > 0
+
+        # Remove instances without graphable points and any frames without instances.
+        self.results = list(
+            filter(lambda lf: remove_empty_instances_and_frames(lf), self.results)
+        )
+        new_labels = Labels(self.results)
 
         # Remove potentially conflicting predictions from the base dataset.
         self.labels.remove_predictions(new_labels=new_labels)
@@ -556,7 +564,7 @@ def run_gui_training(
     trained_job_paths = dict()
 
     if gui:
-        from sleap.gui.widgets.training_monitor import LossViewer
+        from sleap.gui.widgets.monitor import LossViewer
         from sleap.gui.widgets.imagedir import QtImageDirectoryWidget
 
         # open training monitor window
@@ -603,7 +611,7 @@ def run_gui_training(
 
             if gui:
                 print("Resetting monitor window.")
-                win.reset(what=str(model_type))
+                win.reset(what=str(model_type), config=job)
                 win.setWindowTitle(f"Training Model - {str(model_type)}")
                 win.set_message(f"Preparing to run training...")
                 if save_viz:

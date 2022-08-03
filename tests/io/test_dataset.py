@@ -1,7 +1,7 @@
 import os
 import pytest
 import numpy as np
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import sleap
 from sleap.skeleton import Skeleton
@@ -9,7 +9,10 @@ from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Tra
 from sleap.io.video import Video, MediaVideo
 from sleap.io.dataset import Labels, load_file
 from sleap.io.legacy import load_labels_json_old
+from sleap.io.format.ndx_pose import NDXPoseAdaptor
+from sleap.io.format import filehandle
 from sleap.gui.suggestions import VideoFrameSuggestions, SuggestionFrame
+from tests.io.test_formats import assert_read_labels_match
 
 TEST_H5_DATASET = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
 
@@ -180,7 +183,7 @@ def test_load_labels_json_old(tmpdir):
     check_labels(new_labels)
 
 
-def test_label_accessors(centered_pair_labels):
+def test_label_accessors(centered_pair_labels: Labels, min_tracks_2node_labels: Labels):
     labels = centered_pair_labels
 
     video = labels.videos[0]
@@ -214,25 +217,65 @@ def test_label_accessors(centered_pair_labels):
     assert labels[np.int64(61)] == labels[61]
     assert labels[np.array([0, 61])] == labels[[0, 61]]
 
+    assert labels[slice(0, 5, 2)] == labels[[0, 2, 4]]
+
     assert len(labels.find(video, frame_idx=954)) == 1
     assert len(labels.find(video, 954)) == 1
     assert labels.find(video, 954)[0] == labels[61]
+    assert labels.get(video, 954, use_cache=True) == labels[61]
     assert labels.find_first(video) == labels[0]
     assert labels.find_first(video, 954) == labels[61]
+    assert labels.get(video, 954, use_cache=True) == labels[61]
     assert labels.find_last(video) == labels[69]
+
     assert labels[video, 954] == labels[61]
     assert labels[video, 0] == labels[0]
+    assert labels[video, np.int64(0)] == labels[0]
+    assert labels[video, np.array([0, 61])] == labels[(video, [0, 61])]
     assert labels[video] == labels.labels
 
     assert len(labels.find(video, 101)) == 0
     assert labels.find_first(video, 101) is None
+    assert labels[video, 101] is None
+    assert labels[video, video] is None
     with pytest.raises(KeyError):
-        labels[video, 101]
+        labels.get(video, 101, raise_errors=True)
+
+    assert labels["1"] is None
+    with pytest.raises(KeyError):
+        labels.get("1", raise_errors=True)
 
     dummy_video = Video(backend=MediaVideo)
     assert len(labels.find(dummy_video)) == 0
+    assert labels[dummy_video] is None
+    assert labels[dummy_video, 1] is None
     with pytest.raises(KeyError):
-        labels[dummy_video]
+        labels.get(dummy_video, raise_errors=True)
+
+    # Test suggestions look-up using LabelsDataCache through Labels.get().
+    labels = min_tracks_2node_labels
+    video = labels.video
+    num_samples = 5
+    frame_delta = video.num_frames // num_samples
+
+    labels.suggestions = VideoFrameSuggestions.suggest(
+        labels=labels,
+        params=dict(
+            videos=labels.videos,
+            method="sample",
+            per_video=num_samples,
+            sampling_method="stride",
+        ),
+    )
+    assert len(labels.suggestions) == num_samples
+
+    prev_idx = -frame_delta
+    for suggestion in labels.get_suggestions():
+        lf = labels.get((suggestion.video, suggestion.frame_idx), use_cache=True)
+        assert type(lf) == LabeledFrame
+        assert lf.video == video
+        assert lf.frame_idx == prev_idx + frame_delta
+        prev_idx = suggestion.frame_idx
 
 
 def test_scalar_properties():
@@ -746,7 +789,7 @@ def test_basic_suggestions(small_robot_mp4_vid):
     labels.append(dummy_frame)
 
     suggestions = VideoFrameSuggestions.suggest(
-        labels=labels, params=dict(method="sample", per_video=13)
+        labels=labels, params=dict(videos=labels.videos, method="sample", per_video=13)
     )
     labels.set_suggestions(suggestions)
 
@@ -763,7 +806,7 @@ def test_deserialize_suggestions(small_robot_mp4_vid, tmpdir):
     labels.append(dummy_frame)
 
     suggestions = VideoFrameSuggestions.suggest(
-        labels=labels, params=dict(method="sample", per_video=13)
+        labels=labels, params=dict(videos=labels.videos, method="sample", per_video=13)
     )
     labels.set_suggestions(suggestions)
 
@@ -1420,3 +1463,47 @@ def test_split(centered_pair_predictions):
     assert len(labels_a) == 1
     assert len(labels_b) == 1
     assert labels_a[0] == labels_b[0]
+
+
+def test_remove_untracked_instances(min_tracks_2node_labels):
+    """Test removal of untracked instances and empty frames.
+
+    Args:
+        min_tracks_2node_labels: Labels object which contains user labeled frames with
+        tracked instances.
+    """
+    labels = min_tracks_2node_labels
+
+    # Preprocessing
+    labels.labeled_frames[0].instances[0].track = None
+    labels.labeled_frames[1].instances = []
+    assert any(
+        [inst.track is None for lf in labels.labeled_frames for inst in lf.instances]
+    )
+    assert any([len(lf.instances) == 0 for lf in labels.labeled_frames])
+
+    # Test function with remove_empty_frames=False
+    labels.remove_untracked_instances(remove_empty_frames=False)
+    assert all(
+        [
+            inst.track is not None
+            for lf in labels.labeled_frames
+            for inst in lf.instances
+        ]
+    )
+    assert any([len(lf.instances) == 0 for lf in labels.labeled_frames])
+
+    # Test function with remove_empty_frames=True
+    labels.remove_untracked_instances(remove_empty_frames=True)
+    assert all([len(lf.instances) > 0 for lf in labels.labeled_frames])
+
+
+def test_export_nwb(centered_pair_predictions: Labels, tmpdir):
+    filename = str(PurePath(tmpdir, "ndx_pose_test.nwb"))
+
+    # Export to NWB file
+    centered_pair_predictions.export_nwb(filename)
+
+    # Read from NWB file
+    read_labels = NDXPoseAdaptor.read(NDXPoseAdaptor, filehandle.FileHandle(filename))
+    assert_read_labels_match(centered_pair_predictions, read_labels)

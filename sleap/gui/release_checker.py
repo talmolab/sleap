@@ -7,7 +7,7 @@ import requests
 from typing import List, Dict, Optional
 
 
-REPO_ID = "murthylab/sleap"
+REPO_ID = "talmolab/sleap"
 
 
 @attr.s(auto_attribs=True)
@@ -56,10 +56,10 @@ class ReleaseChecker:
     """Checker for new releases of SLEAP on GitHub.
 
     This uses the GitHub REST API:
-    https://docs.github.com/en/free-pro-team@latest/rest/reference/repos#releases
+    https://docs.github.com/en/rest/releases/releases#list-releases
 
     Attributes:
-        repo_id: The name of the repository (defaults to: "murthylab/sleap")
+        repo_id: The name of the repository (defaults to: "talmolab/sleap")
         releases: A list of `Release`s from querying GitHub.
         checked: Indicates whether the releases page has been checked.
     """
@@ -83,7 +83,10 @@ class ReleaseChecker:
         except (requests.ConnectionError, requests.Timeout):
             return False
 
-        self.releases = [Release.from_json(r) for r in response.json()]
+        try:
+            self.releases = [Release.from_json(r) for r in response.json()]
+        except:
+            return False
 
         return True
 

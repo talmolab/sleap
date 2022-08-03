@@ -65,7 +65,7 @@ from PySide6.QtWidgets import QMessageBox
 import sleap
 from sleap.gui.dialogs.metrics import MetricsTableDialog
 from sleap.skeleton import Skeleton
-from sleap.instance import Instance
+from sleap.instance import Instance, LabeledFrame
 from sleap.io.dataset import Labels
 from sleap.info.summary import StatisticSeries
 from sleap.gui.commands import CommandContext, UpdateTopic
@@ -127,6 +127,8 @@ class MainWindow(QMainWindow):
             state=self.state, app=self, update_callback=self.on_data_update
         )
 
+        self.shortcuts = Shortcuts()
+
         self._menu_actions = dict()
         self._buttons = dict()
         self._child_windows = dict()
@@ -140,6 +142,7 @@ class MainWindow(QMainWindow):
         self.state["last_interacted_frame"] = None
         self.state["filename"] = None
         self.state["show non-visible nodes"] = prefs["show non-visible nodes"]
+        self.state["show instances"] = True
         self.state["show labels"] = True
         self.state["show edges"] = True
         self.state["edge style"] = prefs["edge style"]
@@ -262,7 +265,7 @@ class MainWindow(QMainWindow):
             self.commands.showImportVideos(filenames=filenames)
 
     @property
-    def labels(self):
+    def labels(self) -> Labels:
         return self.state["labels"]
 
     @labels.setter
@@ -317,11 +320,11 @@ class MainWindow(QMainWindow):
 
     def _create_menus(self):
         """Creates main application menus."""
-        shortcuts = Shortcuts()
+        # shortcuts = Shortcuts()
 
         # add basic menu item
         def add_menu_item(menu, key: str, name: str, action: Callable):
-            menu_item = menu.addAction(name, action, shortcuts[key])
+            menu_item = menu.addAction(name, action, self.shortcuts[key])
             self._menu_actions[key] = menu_item
             return menu_item
 
@@ -393,6 +396,18 @@ class MainWindow(QMainWindow):
         )
         add_menu_item(
             import_types_menu,
+            "import_at",
+            "AlphaTracker dataset...",
+            self.commands.importAT,
+        )
+        add_menu_item(
+            import_types_menu,
+            "import_nwb",
+            "NWB dataset...",
+            self.commands.importNWB,
+        )
+        add_menu_item(
+            import_types_menu,
             "import_leap",
             "LEAP Matlab dataset...",
             self.commands.importLEAP,
@@ -420,12 +435,22 @@ class MainWindow(QMainWindow):
         fileMenu.addSeparator()
         add_menu_item(fileMenu, "save", "Save", self.commands.saveProject)
         add_menu_item(fileMenu, "save as", "Save As...", self.commands.saveProjectAs)
+
+        export_analysis_menu = fileMenu.addMenu("Export Analysis HDF5...")
         add_menu_item(
-            fileMenu,
-            "export analysis",
-            "Export Analysis HDF5...",
+            export_analysis_menu,
+            "export_analysis_current",
+            "Current Video...",
             self.commands.exportAnalysisFile,
         )
+        add_menu_item(
+            export_analysis_menu,
+            "export_analysis_video",
+            "All Videos...",
+            lambda: self.commands.exportAnalysisFile(all_videos=True),
+        )
+
+        add_menu_item(fileMenu, "export_nwb", "Export NWB...", self.commands.exportNWB)
 
         fileMenu.addSeparator()
         add_menu_item(
@@ -549,6 +574,7 @@ class MainWindow(QMainWindow):
 
         viewMenu.addSeparator()
 
+        add_menu_check_item(viewMenu, "show instances", "Show Instances")
         add_menu_check_item(
             viewMenu, "show non-visible nodes", "Show Non-Visible Nodes"
         )
@@ -824,7 +850,7 @@ class MainWindow(QMainWindow):
             "training on colab",
             "Train on Google Colab...",
             lambda: self.commands.openWebsite(
-                "https://colab.research.google.com/github/murthylab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
+                "https://colab.research.google.com/github/talmolab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
             ),
         )
 
@@ -837,12 +863,12 @@ class MainWindow(QMainWindow):
         )
         helpMenu.addAction(
             "GitHub",
-            lambda: self.commands.openWebsite("https://github.com/murthylab/sleap"),
+            lambda: self.commands.openWebsite("https://github.com/talmolab/sleap"),
         )
         helpMenu.addAction(
             "Releases",
             lambda: self.commands.openWebsite(
-                "https://github.com/murthylab/sleap/releases"
+                "https://github.com/talmolab/sleap/releases"
             ),
         )
 
@@ -917,6 +943,7 @@ class MainWindow(QMainWindow):
         videos_layout.addWidget(self.videosTable)
 
         hb = QHBoxLayout()
+        _add_button(hb, "Toggle Grayscale", self.commands.toggleGrayscale)
         _add_button(hb, "Show Video", self.videosTable.activateSelected)
         _add_button(hb, "Add Videos", self.commands.addVideo)
         _add_button(hb, "Remove Video", self.commands.removeVideo)
@@ -1001,28 +1028,10 @@ class MainWindow(QMainWindow):
         hbw.setLayout(hb)
         skeleton_layout.addWidget(hbw)
 
-        ####### Instances #######
-        instances_layout = _make_dock("Instances")
-        self.instancesTable = GenericTableView(
-            state=self.state,
-            row_name="instance",
-            name_prefix="",
-            model=LabeledFrameTableModel(
-                items=self.state["labeled_frame"], context=self.commands
-            ),
-        )
-        instances_layout.addWidget(self.instancesTable)
-
-        hb = QHBoxLayout()
-        _add_button(hb, "New Instance", lambda x: self.commands.newInstance())
-        _add_button(hb, "Delete Instance", self.commands.deleteSelectedInstance)
-
-        hbw = QWidget()
-        hbw.setLayout(hb)
-        instances_layout.addWidget(hbw)
-
         ####### Suggestions #######
-        suggestions_layout = _make_dock("Labeling Suggestions")
+        suggestions_layout = _make_dock(
+            "Labeling Suggestions", tab_with=videos_layout.parent().parent()
+        )
         self.suggestionsTable = GenericTableView(
             state=self.state,
             is_sortable=True,
@@ -1102,6 +1111,31 @@ class MainWindow(QMainWindow):
 
         self.state.connect("suggestion_idx", self.suggestionsTable.selectRow)
 
+        ####### Instances #######
+        instances_layout = _make_dock(
+            "Instances", tab_with=videos_layout.parent().parent()
+        )
+        self.instancesTable = GenericTableView(
+            state=self.state,
+            row_name="instance",
+            name_prefix="",
+            model=LabeledFrameTableModel(
+                items=self.state["labeled_frame"], context=self.commands
+            ),
+        )
+        instances_layout.addWidget(self.instancesTable)
+
+        hb = QHBoxLayout()
+        _add_button(hb, "New Instance", lambda x: self.commands.newInstance())
+        _add_button(hb, "Delete Instance", self.commands.deleteSelectedInstance)
+
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        instances_layout.addWidget(hbw)
+
+        # Bring videos tab forward.
+        videos_layout.parent().parent().raise_()
+
     def _load_overlays(self):
         """Load all standard video overlays."""
         self.overlays["track_labels"] = TrackListOverlay(self.labels, self.player)
@@ -1147,12 +1181,14 @@ class MainWindow(QMainWindow):
     def _update_gui_state(self):
         """Enable/disable gui items based on current state."""
         has_selected_instance = self.state["instance"] is not None
-        has_selected_video = self.state["selected_video"] is not None
         has_selected_node = self.state["selected_node"] is not None
         has_selected_edge = self.state["selected_edge"] is not None
+        has_selected_video = self.state["selected_video"] is not None
+        has_video = self.state["video"] is not None
 
         has_frame_range = bool(self.state["has_frame_range"])
         has_unsaved_changes = bool(self.state["has_changes"])
+        has_videos = self.labels is not None and len(self.labels.videos) > 0
         has_multiple_videos = self.labels is not None and len(self.labels.videos) > 1
         has_labeled_frames = self.labels is not None and any(
             (lf.video == self.state["video"] for lf in self.labels)
@@ -1199,9 +1235,11 @@ class MainWindow(QMainWindow):
         self._buttons["add edge"].setEnabled(has_nodes_selected)
         self._buttons["delete edge"].setEnabled(has_selected_edge)
         self._buttons["delete node"].setEnabled(has_selected_node)
+        self._buttons["toggle grayscale"].setEnabled(has_video)
         self._buttons["show video"].setEnabled(has_selected_video)
         self._buttons["remove video"].setEnabled(has_selected_video)
         self._buttons["delete instance"].setEnabled(has_selected_instance)
+        self.suggestions_form_widget.buttons["generate_button"].setEnabled(has_videos)
 
         # Update overlays
         self.overlays["track_labels"].visible = (
@@ -1269,7 +1307,9 @@ class MainWindow(QMainWindow):
             if suggestion_list:
                 labeled_count = 0
                 for suggestion in suggestion_list:
-                    lf = self.labels.get((suggestion.video, suggestion.frame_idx))
+                    lf = self.labels.get(
+                        (suggestion.video, suggestion.frame_idx), use_cache=True
+                    )
                     if lf is not None and lf.has_user_instances:
                         labeled_count += 1
                 prc = (labeled_count / len(suggestion_list)) * 100
@@ -1359,6 +1399,17 @@ class MainWindow(QMainWindow):
                         f" ({pred_frame_count/current_video.num_frames*100:.2f}%)"
                     )
                     message += " in video"
+
+            lf = self.state["labeled_frame"]
+            # TODO: revisit with LabeledFrame.unused_predictions() & instances_to_show()
+            n_instances = 0 if lf is None else len(lf.instances_to_show)
+            message += f"{spacer}Current frame: {n_instances} instances"
+            if (n_instances > 0) and not self.state["show instances"]:
+                hide_key = self.shortcuts["show instances"].toString()
+                message += f" [Hidden] Press '{hide_key}' to toggle."
+                self.statusBar().setStyleSheet("color: red")
+            else:
+                self.statusBar().setStyleSheet("color: black")
 
         self.statusBar().showMessage(message)
 
@@ -1526,6 +1577,9 @@ class MainWindow(QMainWindow):
 
         selection["clip"] = {current_video: encode_range(*clip_range)}
         selection["video"] = {current_video: encode_range(0, current_video.num_frames)}
+        selection["all_videos"] = {
+            video: encode_range(0, video.num_frames) for video in self.labels.videos
+        }
 
         selection["suggestions"] = {
             video: remove_user_labeled(video, self.labels.get_video_suggestions(video))

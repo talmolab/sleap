@@ -4,6 +4,7 @@ Gui for prompting the user to locate one or more missing files.
 
 import os
 
+from pathlib import Path, PurePath
 from typing import Callable, List
 
 from PySide6 import QtWidgets, QtCore, QtGui
@@ -47,6 +48,7 @@ class MissingFilesDialog(QtWidgets.QDialog):
 
         self.filenames = filenames
         self.missing = missing
+        self.replace = replace
 
         missing_count = sum(missing)
 
@@ -88,11 +90,22 @@ class MissingFilesDialog(QtWidgets.QDialog):
 
         caption = f"Please locate {old_filename}..."
         filters = [f"Missing file type (*{old_ext})", "Any File (*.*)"]
+        filters = [filters[0]] if self.replace else filters
         new_filename, _ = FileDialog.open(
             None, dir=None, caption=caption, filter=";;".join(filters)
         )
 
-        if new_filename:
+        path_new_filename = Path(new_filename)
+        paths = [str(PurePath(fn)) for fn in self.filenames]
+        if str(path_new_filename) in paths:
+            # Do not allow same video to be imported more than once.
+            QtWidgets.QMessageBox(
+                text=(
+                    f"The file <b>{path_new_filename.name}</b> cannot be added to the "
+                    "project multiple times."
+                )
+            ).exec_()
+        elif new_filename:
             # Try using this change to find other missing files
             self.setFilename(idx, new_filename)
 

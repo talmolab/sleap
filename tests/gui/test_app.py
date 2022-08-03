@@ -1,10 +1,13 @@
-from PySide6.QtWidgets import QApplication
+import pytest
+from PySide2.QtWidgets import QApplication
 
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
 
 
-def test_app_workflow(qtbot, centered_pair_vid, small_robot_mp4_vid):
+def test_app_workflow(
+    qtbot, centered_pair_vid, small_robot_mp4_vid, min_tracks_2node_labels: Labels
+):
     app = MainWindow()
 
     # Add nodes
@@ -207,6 +210,43 @@ def test_app_workflow(qtbot, centered_pair_vid, small_robot_mp4_vid):
     assert inst_31_2.track == track_a
     assert inst_31_1.track == track_b
 
+    # Set up to test labeled frames data cache
+    app.labels = min_tracks_2node_labels
+    video = app.labels.video
+    num_samples = 5
+    frame_delta = video.num_frames // num_samples
+
+    # Add suggestions
+    app.labels.suggestions = VideoFrameSuggestions.suggest(
+        labels=app.labels,
+        params=dict(
+            videos=app.labels.videos,
+            method="sample",
+            per_video=num_samples,
+            sampling_method="stride",
+        ),
+    )
+    assert len(app.labels.suggestions) == num_samples
+
+    # The on_data_update function uses labeled frames cache
+    app.on_data_update([UpdateTopic.suggestions])
+    assert len(app.suggestionsTable.model().items) == num_samples
+    assert f"{num_samples}/{num_samples}" in app.suggested_count_label.text()
+
+    # Check that frames returned by labeled frames cache are correct
+    prev_idx = -frame_delta
+    for l_suggestion, st_suggestion in list(
+        zip(app.labels.get_suggestions(), app.suggestionsTable.model().items)
+    ):
+        assert l_suggestion == st_suggestion["SuggestionFrame"]
+        lf = app.labels.get(
+            (l_suggestion.video, l_suggestion.frame_idx), use_cache=True
+        )
+        assert type(lf) == LabeledFrame
+        assert lf.video == video
+        assert lf.frame_idx == prev_idx + frame_delta
+        prev_idx = l_suggestion.frame_idx
+
 
 def test_app_new_window(qtbot):
     app = QApplication.instance()
@@ -264,3 +304,68 @@ def test_app_new_window(qtbot):
     assert wins == (start_wins + 3)
 
     app.closeAllWindows()
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("li"), reason="qtbot.waitActive times out on ubuntu"
+)
+def test_menu_actions(qtbot, centered_pair_predictions: Labels):
+    def verify_visibility(expected_visibility: bool = True):
+        """Verify the visibility status of all instances in video player.
+
+        Args:
+            expected_visibility: Expected visibility of instance. Defaults to True.
+        """
+        for inst in vp.instances:
+            assert inst.isVisible() == expected_visibility
+        for inst in vp.predicted_instances:
+            assert inst.isVisible() == expected_visibility
+
+    def toggle_and_verify_visibility(expected_visibility: bool = True):
+        """Toggle the visibility of all instances within video player, then verify
+        expected visibility of all instances.
+
+        Args:
+            expected_visibility: Expected visibility of instances. Defaults to True.
+        """
+        qtbot.keyClick(window.menuBar(), window.shortcuts["show instances"].toString())
+        verify_visibility(expected_visibility)
+
+    # Test hide instances menu action (and its effect on instance color)
+
+    # Instantiate the window and load labels
+    window: MainWindow = MainWindow()
+    window.loadLabelsObject(centered_pair_predictions)
+    # TODO: window does not seem to show as expected on ubuntu
+    with qtbot.waitActive(window, timeout=2000):
+        window.showNormal()
+    vp = window.player
+
+    # Enable distinct colors
+    window.state["color predicted"] = True
+
+    # Read colors for each instance in view
+    # TODO: revisit with LabeledFrame.unused_predictions() & instances_to_show()
+    visible_instances = window.state["labeled_frame"].instances_to_show
+    color_of_instances = {}
+    for inst in visible_instances:
+        item_color = window.color_manager.get_item_color(inst)
+        color_of_instances[inst] = item_color
+
+    # Turn predicted instance into user labeled instance
+    predicted_instance = vp.view.predicted_instances[0].instance
+    window.commands.newInstance(copy_instance=predicted_instance, mark_complete=False)
+
+    # Ensure colors of instances do not change
+    for inst in visible_instances:
+        item_color = window.color_manager.get_item_color(inst)
+        assert item_color == color_of_instances[inst]
+
+    # Ensure instances are visible - should be the visible by default
+    verify_visibility(True)
+
+    # Toggle instance visibility with shortcut, hiding instances
+    toggle_and_verify_visibility(False)
+
+    # Toggle instance visibility with shortcut, showing instances
+    toggle_and_verify_visibility(True)

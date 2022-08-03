@@ -21,13 +21,14 @@ goto prev labeled: Alt+Left
 learning: Ctrl+L
 mark frame: Ctrl+M
 new: Ctrl+N
-next video: QKeySequence.Forward
+next video: Alt+Shift+Right
 open: Ctrl+O
-prev video: QKeySequence.Back
+prev video: Alt+Shift+Left
 save as: Ctrl+Shift+S
 save: Ctrl+S
 select next: '`'
 select to frame: Ctrl+Shift+J
+show instances: H
 show edges: Ctrl+Shift+Tab
 show labels: Ctrl+Tab
 show trails: 

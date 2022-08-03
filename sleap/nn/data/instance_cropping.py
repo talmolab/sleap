@@ -13,6 +13,7 @@ def find_instance_crop_size(
     padding: int = 0,
     maximum_stride: int = 2,
     input_scaling: float = 1.0,
+    min_crop_size: Optional[int] = None,
 ) -> int:
     """Compute the size of the largest instance bounding box from labels.
 
@@ -24,19 +25,29 @@ def find_instance_crop_size(
             architecture.
         input_scaling: Float factor indicating the scale of the input images if any
             scaling will be done before cropping.
+        min_crop_size: The (optional) crop size set by the user. None if not set.
 
     Returns:
         An integer crop size denoting the length of the side of the bounding boxes that
-        will contain the instances when cropped.
+        will contain the instances when cropped. The returned crop size will be larger
+        or equal to the input `crop_size`.
 
         This accounts for stride, padding and scaling when ensuring divisibility.
     """
+    # Check if user-specified crop size is divisible by max stride
+    min_crop_size = 0 if min_crop_size is None else min_crop_size
+    if (min_crop_size > 0) and (min_crop_size % maximum_stride == 0):
+        return min_crop_size
+
+    # Calculate crop size
+    min_crop_size_no_pad = min_crop_size - padding
     max_length = 0.0
     for inst in labels.user_instances:
         pts = inst.points_array
         pts *= input_scaling
         max_length = np.maximum(max_length, np.nanmax(pts[:, 0]) - np.nanmin(pts[:, 0]))
         max_length = np.maximum(max_length, np.nanmax(pts[:, 1]) - np.nanmin(pts[:, 1]))
+        max_length = np.maximum(max_length, min_crop_size_no_pad)
 
     max_length += float(padding)
     crop_size = np.math.ceil(max_length / float(maximum_stride)) * maximum_stride
@@ -289,6 +300,7 @@ class InstanceCropper:
             "bbox",
             "center_instance",
             "center_instance_ind",
+            "track_ind",
             "all_instances",
             "centroid",
             "full_image_height",
@@ -310,6 +322,7 @@ class InstanceCropper:
                     (n_instances, n_nodes, 2).
                 "centroids": The computed centroid for each instance in a tf.float32
                     tensor of shape (n_instances, 2).
+                "track_inds": The track indices of the indices if available.
                 Any additional keys present will be replicated in each output.
 
         Returns:
@@ -331,6 +344,7 @@ class InstanceCropper:
                 "center_instance_ind": Scalar tf.int32 index of the centered instance
                     relative to all the instances in the frame. This can be used to
                     index into additional keys that may contain data from all instances.
+                "track_ind": Index of the track the instance belongs to if available.
                 "all_instances": The points of all instances in the frame in image
                     coordinates in the "instance_image". This will be a tf.float32
                     tensor of shape (n_instances, n_nodes, 2). This is useful for multi-
@@ -359,6 +373,8 @@ class InstanceCropper:
         keys_to_expand = [
             key for key in test_example.keys() if key not in self.input_keys
         ]
+        if "class_vectors" in keys_to_expand:
+            keys_to_expand.remove("class_vectors")
         img_channels = test_example[self.image_key].shape[-1]
         if self.keep_full_image:
             keys_to_expand.append(self.image_key)
@@ -408,6 +424,7 @@ class InstanceCropper:
                 "bbox": bboxes,
                 "center_instance": center_instances,
                 "center_instance_ind": tf.range(n_instances, dtype=tf.int32),
+                "track_ind": frame_data["track_inds"],
                 "all_instances": all_instances,
                 "centroid": frame_data[self.centroids_key],
                 "full_image_height": tf.repeat(
@@ -417,6 +434,8 @@ class InstanceCropper:
                     tf.shape(frame_data[self.image_key])[1], n_instances
                 ),
             }
+            if "class_vectors" in frame_data:
+                instances_data["class_vectors"] = frame_data["class_vectors"]
             if self.mock_centroid_confidence:
                 instances_data["centroid_confidence"] = tf.ones(
                     [n_instances], dtype=tf.float32

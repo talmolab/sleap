@@ -4,9 +4,13 @@ pytest-cov
 pytest-xvfb
 ipython
 sphinx
-furo
+# furo
+sphinx-book-theme
 sphinx-copybutton
-myst-nb
+nbformat==5.1.3
+myst-nb==0.13.2
+myst-parser==0.15.2
+linkify-it-py
 sphinx-autobuild
 black==21.6b0
 pre-commit
@@ -15,3 +19,4 @@ PyGithub
 jupyterlab
 jedi==0.17.2
 ipykernel
+click==8.0.4

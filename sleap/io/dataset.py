@@ -58,6 +58,7 @@ import attr
 import cattr
 import h5py as h5
 import numpy as np
+import datetime
 from sklearn.model_selection import train_test_split
 
 try:
@@ -407,6 +408,7 @@ class Labels(MutableSequence):
             which to crop as negative samples when training.
             Dictionary key is :class:`Video`, value is list of
             (frame index, x, y) tuples.
+        provenance: Dictionary that denotes the origin of the :py:class:`Labels`.
     """
 
     labeled_frames: List[LabeledFrame] = attr.ib(default=attr.Factory(list))
@@ -629,75 +631,147 @@ class Labels(MutableSequence):
                 return self.find_first(item[0], item[1].tolist()) is not None
         raise ValueError("Item is not an object type contained in labels.")
 
-    def __getitem__(self, key, *args) -> Union[LabeledFrame, List[LabeledFrame]]:
-        """Return labeled frames matching key.
+    def __getitem__(
+        self,
+        key: Union[
+            int,
+            slice,
+            np.integer,
+            np.ndarray,
+            list,
+            range,
+            Video,
+            Tuple[Video, Union[np.integer, np.ndarray, int, list, range]],
+        ],
+        *secondary_key: Union[
+            int,
+            slice,
+            np.integer,
+            np.ndarray,
+            list,
+            range,
+        ],
+    ) -> Union[LabeledFrame, List[LabeledFrame]]:
+        """Return labeled frames matching key or return `None` if not found.
+
+        This makes `labels[...]` safe and will not raise an exception if the
+        item is not found.
+
+        Do not call __getitem__ directly, use get instead (get allows kwargs for logic).
+        If you happen to call __getitem__ directly, get will be called but without any
+        keyword arguments.
 
         Args:
             key: Indexing argument to match against. If `key` is a `Video` or tuple of
                 `(Video, frame_index)`, frames that match the criteria will be searched
                 for. If a scalar, list, range or array of integers are provided, the
                 labels with those linear indices will be returned.
+            secondary_key: Numerical indexing argument(s) which supplement `key`. Only
+                used when `key` is a `Video`.
+        """
+        return self.get(key, *secondary_key)
+
+    def get(
+        self,
+        key: Union[
+            int,
+            slice,
+            np.integer,
+            np.ndarray,
+            list,
+            range,
+            Video,
+            Tuple[Video, Union[np.integer, np.ndarray, int, list, range]],
+        ],
+        *secondary_key: Union[
+            int,
+            slice,
+            np.integer,
+            np.ndarray,
+            list,
+            range,
+        ],
+        use_cache: bool = False,
+        raise_errors: bool = False,
+    ) -> Union[LabeledFrame, List[LabeledFrame]]:
+        """Return labeled frames matching key or return `None` if not found.
+
+        This is a safe version of `labels[...]` that will not raise an exception if the
+        item is not found.
+
+        Args:
+            key: Indexing argument to match against. If `key` is a `Video` or tuple of
+                `(Video, frame_index)`, frames that match the criteria will be searched
+                for. If a scalar, list, range or array of integers are provided, the
+                labels with those linear indices will be returned.
+            secondary_key: Numerical indexing argument(s) which supplement `key`. Only
+                used when `key` is of type `Video`.
+            use_cache: Boolean that determines whether Labels.find_first() should
+                instead instead call Labels.find() which uses the labels data cache. If
+                True, use the labels data cache, else loop through all labels to search.
+            raise_errors: Boolean that determines whether KeyErrors should be raised. If
+                True, raises KeyErrors, else catches KeyErrors and returns None instead
+                of raising KeyError.
 
         Raises:
             KeyError: If the specified key could not be found.
 
         Returns:
             A list with the matching `LabeledFrame`s, or a single `LabeledFrame` if a
-            scalar key was provided.
+            scalar key was provided, or `None` if not found.
         """
-        if len(args) > 0:
-            if type(key) != tuple:
-                key = (key,)
-            key = key + tuple(args)
+        try:
+            if len(secondary_key) > 0:
+                if type(key) != tuple:
+                    key = (key,)
+                key = key + tuple(secondary_key)
 
-        if isinstance(key, int):
-            return self.labels.__getitem__(key)
+            # Do any conversions first.
+            if isinstance(key, slice):
+                start, stop, step = key.indices(len(self))
+                key = range(start, stop, step)
+            elif isinstance(key, (np.integer, np.ndarray)):
+                key = key.tolist()
 
-        elif isinstance(key, Video):
-            if key not in self.videos:
-                raise KeyError("Video not found in labels.")
-            return self.find(video=key)
+            if isinstance(key, int):
+                return self.labels.__getitem__(key)
 
-        elif isinstance(key, tuple) and len(key) == 2 and isinstance(key[0], Video):
-            if key[0] not in self.videos:
-                raise KeyError("Video not found in labels.")
+            elif isinstance(key, Video):
+                if key not in self.videos:
+                    raise KeyError("Video not found in labels.")
+                return self.find(video=key)
 
-            if isinstance(key[1], int):
-                _hit = self.find_first(video=key[0], frame_idx=key[1])
-                if _hit is None:
-                    raise KeyError(
-                        f"No label found for specified video at frame {key[1]}."
+            elif isinstance(key, tuple) and len(key) == 2 and isinstance(key[0], Video):
+                if key[0] not in self.videos:
+                    raise KeyError("Video not found in labels.")
+
+                # Do any conversions first.
+                if isinstance(key[1], (np.integer, np.ndarray)):
+                    key = (key[0], key[1].tolist())
+
+                if isinstance(key[1], int):
+                    _hit = self.find_first(
+                        video=key[0], frame_idx=key[1], use_cache=use_cache
                     )
-                return _hit
-            elif isinstance(key[1], (np.integer, np.ndarray)):
-                return self.__getitem__((key[0], key[1].tolist()))
-            elif isinstance(key[1], (list, range)):
-                return self.find(video=key[0], frame_idx=key[1])
+                    if _hit is None:
+                        raise KeyError(
+                            f"No label found for specified video at frame {key[1]}."
+                        )
+                    return _hit
+                elif isinstance(key[1], (list, range)):
+                    return self.find(video=key[0], frame_idx=key[1])
+                else:
+                    raise KeyError("Invalid label indexing arguments.")
+
+            elif isinstance(key, (list, range)):
+                return [self.__getitem__(i) for i in key]
+
             else:
                 raise KeyError("Invalid label indexing arguments.")
 
-        elif isinstance(key, slice):
-            start, stop, step = key.indices(len(self))
-            return self.__getitem__(range(start, stop, step))
-
-        elif isinstance(key, (list, range)):
-            return [self.__getitem__(i) for i in key]
-
-        elif isinstance(key, (np.integer, np.ndarray)):
-            return self.__getitem__(key.tolist())
-
-        else:
-            raise KeyError("Invalid label indexing arguments.")
-
-    def get(self, *args) -> Union[LabeledFrame, List[LabeledFrame]]:
-        """Get an item from the labels or return `None` if not found.
-
-        This is a safe version of `labels[...]` that will not raise an exception if the
-        item is not found.
-        """
-        try:
-            return self.__getitem__(*args)
-        except KeyError:
+        except KeyError as e:
+            if raise_errors:
+                raise e
             return None
 
     def extract(self, inds, copy: bool = False) -> "Labels":
@@ -903,28 +977,35 @@ class Labels(MutableSequence):
             yield self._cache._frame_idx_map[video][idx]
 
     def find_first(
-        self, video: Video, frame_idx: Optional[int] = None
+        self, video: Video, frame_idx: Optional[int] = None, use_cache: bool = False
     ) -> Optional[LabeledFrame]:
         """Find the first occurrence of a matching labeled frame.
 
         Matches on frames for the given video and/or frame index.
 
         Args:
-            video: a `Video` instance that is associated with the
+            video: A `Video` instance that is associated with the
                 labeled frames
-            frame_idx: an integer specifying the frame index within
+            frame_idx: An integer specifying the frame index within
                 the video
+            use_cache: Boolean that determines whether Labels.find_first() should
+                instead instead call Labels.find() which uses the labels data cache. If
+                True, use the labels data cache, else loop through all labels to search.
 
         Returns:
             First `LabeledFrame` that match the criteria
             or None if none were found.
         """
-        if video in self.videos:
-            for label in self.labels:
-                if label.video == video and (
-                    frame_idx is None or (label.frame_idx == frame_idx)
-                ):
-                    return label
+        if use_cache:
+            label = self.find(video=video, frame_idx=frame_idx)
+            return None if len(label) == 0 else label[0]
+        else:
+            if video in self.videos:
+                for label in self.labels:
+                    if label.video == video and (
+                        frame_idx is None or (label.frame_idx == frame_idx)
+                    ):
+                        return label
 
     def find_last(
         self, video: Video, frame_idx: Optional[int] = None
@@ -960,9 +1041,36 @@ class Labels(MutableSequence):
         """Return a list of indices of frames with user labeled instances."""
         return [i for i, lf in enumerate(self.labeled_frames) if lf.has_user_instances]
 
-    def with_user_labels_only(self) -> "Labels":
-        """Return a new `Labels` object with only user labels."""
-        return self.extract(self.user_labeled_frame_inds)
+    def with_user_labels_only(
+        self,
+        user_instances_only: bool = True,
+        with_track_only: bool = False,
+        copy: bool = True,
+    ) -> "Labels":
+        """Return a new `Labels` containing only user labels.
+
+        This is useful as a preprocessing step to train on only user-labeled data.
+
+        Args:
+            user_instances_only: If `True` (the default), predicted instances will be
+                removed from frames that also have user instances.
+            with_track_only: If `True`, remove instances without a track.
+            copy: If `True` (the default), create a new copy of all of the extracted
+                labeled frames and associated labels. If `False`, a shallow copy with
+                references to the original labeled frames and other objects will be
+                returned. Warning: If returning a shallow copy, predicted and untracked
+                instances will be removed from the original labels as well!
+
+        Returns:
+            A new `Labels` with only the specified subset of frames and instances.
+        """
+        new_labels = self.extract(self.user_labeled_frame_inds, copy=copy)
+        if user_instances_only:
+            new_labels.remove_predictions()
+        if with_track_only:
+            new_labels.remove_untracked_instances()
+        new_labels.remove_empty_frames()
+        return new_labels
 
     def get_labeled_frame_count(self, video: Optional[Video] = None, filter: Text = ""):
         return self._cache.get_frame_count(video, filter)
@@ -1617,6 +1725,18 @@ class Labels(MutableSequence):
         # Keep only labeled frames with no conflicting predictions.
         self.labeled_frames = keep_lfs
 
+    def remove_untracked_instances(self, remove_empty_frames: bool = True):
+        """Remove instances that do not have a track assignment.
+
+        Args:
+            remove_empty_frames: If `True` (the default), removes frames that do not
+                contain any instances after removing untracked ones.
+        """
+        for lf in self.labeled_frames:
+            lf.remove_untracked()
+        if remove_empty_frames:
+            self.remove_empty_frames()
+
     @classmethod
     def complex_merge_between(
         cls, base_labels: "Labels", new_labels: "Labels", unify: bool = True
@@ -1909,6 +2029,76 @@ class Labels(MutableSequence):
 
         SleapAnalysisAdaptor.write(filename, self)
 
+    def export_nwb(
+        self,
+        filename: str,
+        overwrite: bool = False,
+        session_description: str = "Processed SLEAP pose data",
+        identifier: Optional[str] = None,
+        session_start_time: Optional[datetime.datetime] = None,
+    ):
+        """Export all `PredictedInstance` objects in a `Labels` object to an NWB file.
+
+            Use `Labels.numpy` to create a `pynwb.NWBFile` with a separate
+            `pynwb.ProcessingModule` for each `Video` in the `Labels` object.
+
+            To access the `pynwb.ProcessingModule` for a specific `Video`, use the key
+            'SLEAP_VIDEO_{video_idx:03}_{video_fn.stem}' where
+            `isinstance(video_fn, pathlib.PurePath)`. Ex:
+                video: 'path_to_video/my_video.mp4'
+                video index: 3/5
+                key: '003_my_video'
+
+            Within each `pynwb.ProcessingModule` is a `ndx_pose.PoseEstimation` for
+            each unique track in the `Video`.
+
+            The `ndx_pose.PoseEstimation` for each unique `Track` is stored under the
+            key 'track{track_idx:03}' if tracks are set or 'untrack{track_idx:03}' if
+            untracked where `track_idx` ranges from
+            0 to (number of tracks) - 1. Ex:
+                track_idx: 1
+                key: 'track001'
+
+            Each `ndx_pose.PoseEstimation` has a `ndx_pose.PoseEstimationSeries` for
+            every `Node` in the `Skeleton`.
+
+            The `ndx_pose.PoseEstimationSeries` for a specific `Node` is stored under
+            the key '`Node.name`'. Ex:
+                node name: 'head'
+                key: 'head'
+
+        Args:
+            filename: Output path for the NWB format file.
+            labels: The `Labels` object to covert to a NWB format file.
+            overwrite: Boolean that overwrites existing NWB file if True. If False, data
+                will be appended to existing NWB file.
+            session_description: Description for entire project. Stored under
+                NWBFile "session_description" key. If appending data to a preexisting
+                file, then the session_description will not be used.
+            identifier: Unique identifier for project. If no identifier is
+                specified, then will generate a GUID. If appending data to a
+                preexisting file, then the identifier will not be used.
+            session_start_time: THe datetime associated with the project. If no
+                session_start_time is given, then the current datetime will be used. If
+                appending data to a preexisting file, then the session_start_time will
+                not be used.
+
+        Returns:
+            A `pynwb.NWBFile` with a separate `pynwb.ProcessingModule` for each
+            `Video` in the `Labels` object.
+        """
+        from sleap.io.format.ndx_pose import NDXPoseAdaptor
+
+        NDXPoseAdaptor.write(
+            NDXPoseAdaptor,
+            filename=filename,
+            labels=self,
+            overwrite=overwrite,
+            session_description=session_description,
+            identifier=identifier,
+            session_start_time=session_start_time,
+        )
+
     @classmethod
     def load_json(cls, filename: str, *args, **kwargs) -> "Labels":
         from .format import read
@@ -1938,6 +2128,36 @@ class Labels(MutableSequence):
         from .format import read
 
         return read(filename, for_object="labels", as_format="leap", *args, **kwargs)
+
+    @classmethod
+    def load_alphatracker(
+        cls,
+        filename: str,
+        skeleton: Optional[Skeleton] = None,
+        full_video: Optional[Video] = None,
+    ) -> "Labels":
+        from .format import read
+
+        return read(
+            filename,
+            for_object="labels",
+            as_format="alphatracker",
+            skeleton=skeleton,
+            full_video=full_video,
+        )
+
+    @classmethod
+    def load_nwb(
+        cls,
+        filename: str,
+    ) -> "Labels":
+        from .format import read
+
+        return read(
+            filename,
+            for_object="labels",
+            as_format="nwb",
+        )
 
     @classmethod
     def load_deeplabcut(cls, filename: str) -> "Labels":
@@ -2146,6 +2366,7 @@ class Labels(MutableSequence):
         video: Optional[Union[Video, int]] = None,
         all_frames: bool = True,
         untracked: bool = False,
+        return_confidence: bool = False,
     ) -> np.ndarray:
         """Construct a numpy array from instance points.
 
@@ -2158,9 +2379,13 @@ class Labels(MutableSequence):
             untracked: If `False` (the default), include only instances that have a
                 track assignment. If `True`, includes all instances in each frame in
                 arbitrary order.
+            return_confidence: If `False` (the default), only return points of nodes. If
+                `True`, return the points and scores of nodes.
 
         Returns:
-            An array of tracks of shape `(n_frames, n_tracks, n_nodes, 2)`.
+            An array of tracks of shape `(n_frames, n_tracks, n_nodes, 2)` if
+            `return_confidence` is `False`. Otherwise returned shape is
+            `(n_frames, n_tracks, n_nodes, 3)` if `return_confidence` is `True`.
 
             Missing data will be replaced with `np.nan`.
 
@@ -2212,16 +2437,27 @@ class Labels(MutableSequence):
         n_frames = last_frame - first_frame + 1
         n_nodes = len(self.skeleton.nodes)
 
-        tracks = np.full((n_frames, n_tracks, n_nodes, 2), np.nan, dtype="float32")
+        if return_confidence:
+            tracks = np.full((n_frames, n_tracks, n_nodes, 3), np.nan, dtype="float32")
+        else:
+            tracks = np.full((n_frames, n_tracks, n_nodes, 2), np.nan, dtype="float32")
         for lf in lfs:
             i = lf.frame_idx - first_frame
             if untracked:
                 for j, inst in enumerate(lf.predicted_instances):
-                    tracks[i, j] = inst.numpy()
+                    tracks[i, j] = (
+                        inst.points_and_scores_array
+                        if return_confidence
+                        else inst.numpy()
+                    )
             else:
                 for inst in lf.tracked_instances:
                     j = self.tracks.index(inst.track)
-                    tracks[i, j] = inst.numpy()
+                    tracks[i, j] = (
+                        inst.points_and_scores_array
+                        if return_confidence
+                        else inst.numpy()
+                    )
 
         return tracks
 

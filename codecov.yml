@@ -1,0 +1,27 @@
+coverage:
+  status:
+    project:  # Measures overall project coverage.
+      default: false
+      gui:
+        target: auto
+        threshold: 0.5%  # Some leeway with GUI code.
+        paths:
+          - "sleap/gui/"
+      backend:
+        target: auto
+        threshold: 0.05%  # Less leeway with backend code.
+        paths:
+          - "!sleap/gui/"
+    patch:  #  Only measures lines adjusted in the pull request.
+      default: false
+      gui:
+        target: auto
+        paths:
+          - "sleap/gui/"
+        informational: true  # GUI patch coverage for stats only.
+      backend:
+        target: 100%  # All backend code should be tested...
+        threshold: 20%  # ... but some tests are infeasable.
+        paths:
+          - "!sleap/gui/"
+          

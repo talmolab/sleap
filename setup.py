@@ -37,21 +37,22 @@ setup(
     description="SLEAP (Social LEAP Estimates Animal Poses) is a deep learning framework for animal pose tracking.",
     long_description=long_description,
     long_description_content_type="text/x-rst",
-    author="Talmo Pereira, Arie Matsliah, David Turner, Nat Tabris",
-    author_email="talmo@princeton.edu",
+    author="Talmo Pereira",
+    author_email="talmo@salk.edu",
     project_urls={
-        "Documentation": "https://sleap.ai/#sleap",
-        "Bug Tracker": "https://github.com/murthylab/sleap/issues",
-        "Source Code": "https://github.com/murthylab/sleap",
+        "Documentation": "https://sleap.ai/",
+        "Bug Tracker": "https://github.com/talmolab/sleap/issues",
+        "Source Code": "https://github.com/talmolab/sleap",
     },
     url="https://sleap.ai",
     keywords="deep learning, pose estimation, tracking, neuroscience",
     license="BSD 3-Clause License",
     packages=find_packages(exclude=["tensorflow"]),
     include_package_data=True,
-    entry_points={
+    entry_points={ 
         "console_scripts": [
             "sleap-convert=sleap.io.convert:main",
+            "sleap-render=sleap.io.visuals:main",
             "sleap-label=sleap.gui.app:main",
             "sleap-train=sleap.nn.training:main",
             "sleap-track=sleap.nn.inference:main",

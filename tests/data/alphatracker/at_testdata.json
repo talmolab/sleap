@@ -1,0 +1,202 @@
+[
+    {
+        "annotations": [
+            {
+                "class": "Face",
+                "height": 3.0,
+                "width": 3.0,
+                "x": 1.0,
+                "y": 1.0
+            },
+            {
+                "class": "point",
+                "x": 1.0,
+                "y": 2.0
+            },
+            {
+                "class": "point",
+                "x": 1.0,
+                "y": 3.0
+            },
+            {
+                "class": "point",
+                "x": 1.0,
+                "y": 4.0
+            },
+            {
+                "class": "Face",
+                "height": 3.0,
+                "width": 3.0,
+                "x": 2.0,
+                "y": 1.0
+            },
+            {
+                "class": "point",
+                "x": 2.0,
+                "y": 2.0
+            },
+            {
+                "class": "point",
+                "x": 2.0,
+                "y": 3.0
+            },
+            {
+                "class": "point",
+                "x": 2.0,
+                "y": 4.0
+            }
+        ],
+        "class": "image",
+        "filename": "img000.png"
+    },
+    {
+        "annotations": [
+            {
+                "class": "Face",
+                "height": 3.0,
+                "width": 3.0,
+                "x": 2.0,
+                "y": 1.0
+            },
+            {
+                "class": "point",
+                "x": 2.0,
+                "y": 2.0
+            },
+            {
+                "class": "point",
+                "x": 2.0,
+                "y": 3.0
+            },
+            {
+                "class": "point",
+                "x": 2.0,
+                "y": 4.0
+            },
+            {
+                "class": "Face",
+                "height": 3.0,
+                "width": 3.0,
+                "x": 4.0,
+                "y": 1.0
+            },
+            {
+                "class": "point",
+                "x": 4.0,
+                "y": 2.0
+            },
+            {
+                "class": "point",
+                "x": 4.0,
+                "y": 3.0
+            },
+            {
+                "class": "point",
+                "x": 4.0,
+                "y": 4.0
+            }
+        ],
+        "class": "image",
+        "filename": "img001.png"
+    },
+    {
+        "annotations": [
+            {
+                "class": "Face",
+                "height": 3.0,
+                "width": 3.0,
+                "x": 3.0,
+                "y": 1.0
+            },
+            {
+                "class": "point",
+                "x": 3.0,
+                "y": 2.0
+            },
+            {
+                "class": "point",
+                "x": 3.0,
+                "y": 3.0
+            },
+            {
+                "class": "point",
+                "x": 3.0,
+                "y": 4.0
+            },
+            {
+                "class": "Face",
+                "height": 3.0,
+                "width": 3.0,
+                "x": 6.0,
+                "y": 1.0
+            },
+            {
+                "class": "point",
+                "x": 6.0,
+                "y": 2.0
+            },
+            {
+                "class": "point",
+                "x": 6.0,
+                "y": 3.0
+            },
+            {
+                "class": "point",
+                "x": 6.0,
+                "y": 4.0
+            }
+        ],
+        "class": "image",
+        "filename": "img002.png"
+    },
+    {
+        "annotations": [
+            {
+                "class": "Face",
+                "height": 3.0,
+                "width": 3.0,
+                "x": 4.0,
+                "y": 1.0
+            },
+            {
+                "class": "point",
+                "x": 4.0,
+                "y": 2.0
+            },
+            {
+                "class": "point",
+                "x": 4.0,
+                "y": 3.0
+            },
+            {
+                "class": "point",
+                "x": 4.0,
+                "y": 4.0
+            },
+            {
+                "class": "Face",
+                "height": 3.0,
+                "width": 3.0,
+                "x": 8.0,
+                "y": 1.0
+            },
+            {
+                "class": "point",
+                "x": 8.0,
+                "y": 2.0
+            },
+            {
+                "class": "point",
+                "x": 8.0,
+                "y": 3.0
+            },
+            {
+                "class": "point",
+                "x": 8.0,
+                "y": 4.0
+            }
+        ],
+        "class": "image",
+        "filename": "img003.png"
+    }
+]

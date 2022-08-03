@@ -73,19 +73,28 @@ class VideoFrameSuggestions(object):
 
     @classmethod
     def basic_sample_suggestion_method(
-        cls, labels, per_video: int = 20, sampling_method: str = "random", **kwargs
+        cls,
+        labels,
+        videos: List[Video],
+        per_video: int = 20,
+        sampling_method: str = "random",
+        **kwargs,
     ):
         """Method to generate suggestions by taking strides through video."""
         suggestions = []
 
-        for video in labels.videos:
+        for video in videos:
             if sampling_method == "stride":
-                vid_suggestions = list(
-                    range(0, video.frames, video.frames // per_video)
-                )[:per_video]
+                frame_increment = video.frames // per_video
+                frame_increment = 1 if frame_increment == 0 else frame_increment
+                vid_suggestions = list(range(0, video.frames, frame_increment))[
+                    :per_video
+                ]
             else:
                 # random sampling
-                vid_suggestions = random.sample(range(video.frames), per_video)
+                frames_num = per_video
+                frames_num = video.frames if (frames_num > video.frames) else frames_num
+                vid_suggestions = random.sample(range(video.frames), frames_num)
 
             group = labels.videos.index(video)
             suggestions.extend(
@@ -98,6 +107,7 @@ class VideoFrameSuggestions(object):
     def image_feature_based_method(
         cls,
         labels,
+        videos: List[Video],
         per_video,
         sample_method,
         scale,
@@ -132,15 +142,22 @@ class VideoFrameSuggestions(object):
 
         if merge_video_features == "across all videos":
             # Run single pipeline with all videos
-            return pipeline.get_suggestion_frames(videos=labels.videos)
+            return pipeline.get_suggestion_frames(videos=videos)
         else:
             # Run pipeline separately (in parallel) for each video
-            suggestions = ParallelFeaturePipeline.run(pipeline, labels.videos)
+            suggestions = ParallelFeaturePipeline.run(pipeline, videos)
 
             return suggestions
 
     @classmethod
-    def prediction_score(cls, labels: "Labels", score_limit, instance_limit, **kwargs):
+    def prediction_score(
+        cls,
+        labels: "Labels",
+        videos: List[Video],
+        score_limit,
+        instance_limit,
+        **kwargs,
+    ):
         """
         Method to generate suggestions for proofreading frames with low score.
         """
@@ -148,7 +165,7 @@ class VideoFrameSuggestions(object):
         instance_limit = int(instance_limit)
 
         suggestions = []
-        for video in labels.videos:
+        for video in videos:
             suggestions.extend(
                 cls._prediction_score_video(video, labels, score_limit, instance_limit)
             )
@@ -185,7 +202,12 @@ class VideoFrameSuggestions(object):
 
     @classmethod
     def velocity(
-        cls, labels: "Labels", node: Union[int, str], threshold: float, **kwargs
+        cls,
+        labels: "Labels",
+        videos: List[Video],
+        node: Union[int, str],
+        threshold: float,
+        **kwargs,
     ):
         """
         Finds frames for proofreading with high node velocity.
@@ -200,7 +222,7 @@ class VideoFrameSuggestions(object):
                 node_name = ""
 
         suggestions = []
-        for video in labels.videos:
+        for video in videos:
             suggestions.extend(cls._velocity_video(video, labels, node_name, threshold))
         return suggestions
 

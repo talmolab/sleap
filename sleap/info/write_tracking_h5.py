@@ -1,5 +1,4 @@
-"""
-Generate an HDF5 file with track occupancy and point location data.
+"""Generate an HDF5 file with track occupancy and point location data.
 
 Ignores tracks that are entirely empty. By default will also ignore
 empty frames from the beginning and end of video, although
@@ -8,22 +7,33 @@ of video.
 
 The HDF5 file has these datasets:
 
-* "track_occupancy"     shape: tracks * frames
-* "tracks"              shape: frames * nodes * 2 * tracks
-* "track_names"         shape: tracks
-* "node_names"         shape: nodes
+* "track_occupancy"    (shape: tracks * frames)
+* "tracks"             (shape: frames * nodes * 2 * tracks)
+* "track_names"        (shape: tracks)
+* "node_names"         (shape: nodes)
+* "edge_names"         (shape: nodes - 1)
+* "edge_inds"          (shape: nodes - 1)
+* "point_scores"       (shape: frames * nodes * tracks)
+* "instance_scores"    (shape: frames * tracks)
+* "tracking_scores"    (shape: frames * tracks)
+* "labels_path":       Path to the source .slp file (if available from GUI context)
+* "video_path":        Path to the source :py:class:`Video`.
+* "video_ind":         Scalar integer index of the video within the :py:class:`Labels`.
+* "provenance":        Dictionary that denotes the origin of the :py:class:`Labels`.
 
 Note: the datasets are stored column-major as expected by MATLAB.
 """
 
 import os
 import re
+import json
 import h5py as h5
 import numpy as np
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 from sleap.io.dataset import Labels
+from sleap.io.video import Video
 from sleap import PredictedInstance
 
 
@@ -37,18 +47,31 @@ def get_nodes_as_np_strings(labels: Labels) -> List[np.string_]:
     return [np.string_(node.name) for node in labels.skeletons[0].nodes]
 
 
+def get_edges_as_np_strings(labels: Labels) -> List[Tuple[np.string_, np.string_]]:
+    """Get list of edge names as `np.string_`."""
+    return [
+        (np.string_(src_name), np.string_(dst_name))
+        for (src_name, dst_name) in labels.skeletons[0].edge_names
+    ]
+
+
 def get_occupancy_and_points_matrices(
-    labels: Labels, all_frames: bool
+    labels: Labels, all_frames: bool, video: Video = None
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Builds numpy matrices with track occupancy and point location data.
+    """Builds numpy matrices with track occupancy and point location data.
+
+    Note: This function assumes either all instances have tracks or no instances have
+    tracks.
 
     Args:
-        labels: The :class:`Labels` from which to get data.
+        labels: The :py:class:`Labels` from which to get data.
         all_frames: If True, then includes zeros so that frame index
             will line up with columns in the output. Otherwise,
             there will only be columns for the frames between the
             first and last frames with labeling data.
+        video: The :py:class:`Video` from which to get data. If no `video` is specified,
+            then the first video in `source_object` videos list will be used. If there
+            are no labeled frames in the `video`, then None will be returned.
 
     Returns:
         tuple of arrays:
@@ -59,17 +82,31 @@ def get_occupancy_and_points_matrices(
         * instance scores array with shape (frames, tracks)
         * tracking scores array with shape (frames, tracks)
     """
+    # Assumes either all instances have tracks or no instances have tracks
     track_count = len(labels.tracks) or 1
     node_count = len(labels.skeletons[0].nodes)
 
-    frame_idxs = [lf.frame_idx for lf in labels]
+    # Retrieve frames from current video only
+    try:
+        if video is None:
+            video = labels.videos[0]
+    except IndexError:
+        print(f"There are no videos in this project. No occupancy matrix to return.")
+        return
+    labeled_frames = labels.get(video)
+
+    frame_idxs = [lf.frame_idx for lf in labeled_frames]
     frame_idxs.sort()
 
-    first_frame_idx = 0 if all_frames else frame_idxs[0]
+    try:
+        first_frame_idx = 0 if all_frames else frame_idxs[0]
 
-    frame_count = (
-        frame_idxs[-1] - first_frame_idx + 1
-    )  # count should include unlabeled frames
+        frame_count = (
+            frame_idxs[-1] - first_frame_idx + 1
+        )  # count should include unlabeled frames
+    except IndexError:
+        print(f"No labeled frames in {video.filename}. No occupancy matrix to return.")
+        return
 
     # Desired MATLAB format:
     # "track_occupancy"     tracks * frames
@@ -87,8 +124,46 @@ def get_occupancy_and_points_matrices(
     instance_scores = np.full((frame_count, track_count), np.nan, dtype=float)
     tracking_scores = np.full((frame_count, track_count), np.nan, dtype=float)
 
-    for lf, inst in [(lf, inst) for lf in labels for inst in lf.instances]:
+    # Assumes either all instances have tracks or no instances have tracks
+    # Prefer user-labeled instances over predicted instances
+    tracks = labels.tracks or [None]  # Comparator in case of project with no tracks
+    lfs_instances = list()
+    warning_flag = False
+    for lf in labeled_frames:
+        user_instances = lf.user_instances
+        predicted_instances = lf.predicted_instances
+        for track in tracks:
+            track_instances = list()
+            # If a user-instance exists for this track, then use user-instance
+            user_track_instances = [
+                inst for inst in user_instances if inst.track == track
+            ]
+            if len(user_track_instances) > 0:
+                track_instances = user_track_instances
+            else:
+                # Otherwise, if a predicted instance exists, then use the predicted
+                predicted_track_instances = [
+                    inst for inst in predicted_instances if inst.track == track
+                ]
+                if len(predicted_track_instances) > 0:
+                    track_instances = predicted_track_instances
+
+            lfs_instances.extend([(lf, inst) for inst in track_instances])
+
+            # Set warning flag if more than one instances on a track in a single frame
+            warning_flag = warning_flag or (
+                (track is not None) and (len(track_instances) > 1)
+            )
+
+    if warning_flag:
+        print(
+            "\nWarning! "
+            "There are more than one instances per track on a single frame.\n"
+        )
+
+    for lf, inst in lfs_instances:
         frame_i = lf.frame_idx - first_frame_idx
+        # Assumes either all instances have tracks or no instances have tracks
         if inst.track is None:
             # We could use lf.instances.index(inst) but then we'd need
             # to calculate the number of "tracks" based on the max number of
@@ -123,8 +198,7 @@ def remove_empty_tracks_from_matrices(
     instance_scores: np.ndarray,
     tracking_scores: np.ndarray,
 ) -> Tuple[List, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Removes matrix rows/columns for unoccupied tracks.
+    """Removes matrix rows/columns for unoccupied tracks.
 
     Args:
         track_names: List of track names
@@ -168,8 +242,7 @@ def remove_empty_tracks_from_matrices(
 def write_occupancy_file(
     output_path: str, data_dict: Dict[str, Any], transpose: bool = True
 ):
-    """
-    Write HDF5 file with data from given dictionary.
+    """Write HDF5 file with data from given dictionary.
 
     Args:
         output_path: Path of HDF5 file.
@@ -202,36 +275,63 @@ def write_occupancy_file(
                         key, data=val, compression="gzip", compression_opts=9
                     )
             else:
-                print(f"{key}: {len(val)}")
+                if isinstance(val, (str, int, type(None))):
+                    print(f"{key}: {val}")
+                else:
+                    print(f"{key}: {len(val)}")
                 f.create_dataset(key, data=val)
 
     print(f"Saved as {output_path}")
 
 
-def main(labels: Labels, output_path: str, all_frames: bool = True):
-    """
-    Writes HDF5 file with matrices of track occupancy and coordinates.
+def main(
+    labels: Labels,
+    output_path: str,
+    labels_path: str = None,
+    all_frames: bool = True,
+    video: Video = None,
+):
+    """Writes HDF5 file with matrices of track occupancy and coordinates.
 
     Args:
         labels: The :class:`Labels` from which to get data.
         output_path: Path of HDF5 file to create.
+        labels_path: Path of `labels` .slp file.
         all_frames: If True, then includes zeros so that frame index
             will line up with columns in the output. Otherwise,
             there will only be columns for the frames between the
             first and last frames with labeling data.
+        video: The :py:class:`Video` from which to get data. If no `video` is specified,
+            then the first video in `source_object` videos list will be used. If there
+            are no labeled frames in the `video`, then no output file will be written.
 
     Returns:
         None
     """
     track_names = get_tracks_as_np_strings(labels)
 
-    (
-        occupancy_matrix,
-        locations_matrix,
-        point_scores,
-        instance_scores,
-        tracking_scores,
-    ) = get_occupancy_and_points_matrices(labels, all_frames)
+    # Export analysis of current video only
+    try:
+        if video is None:
+            video = labels.videos[0]
+    except IndexError:
+        print(f"There are no videos in this project. Output file will not be written.")
+        return
+
+    try:
+        (
+            occupancy_matrix,
+            locations_matrix,
+            point_scores,
+            instance_scores,
+            tracking_scores,
+        ) = get_occupancy_and_points_matrices(labels, all_frames, video)
+    except TypeError:
+        print(
+            f"No labeled frames in {video.filename}. "
+            "Skipping the analysis for this video."
+        )
+        return
 
     (
         track_names,
@@ -252,11 +352,17 @@ def main(labels: Labels, output_path: str, all_frames: bool = True):
     data_dict = dict(
         track_names=track_names,
         node_names=get_nodes_as_np_strings(labels),
+        edge_names=get_edges_as_np_strings(labels),
+        edge_inds=labels.skeletons[0].edge_inds,
         tracks=locations_matrix,
         track_occupancy=occupancy_matrix,
         point_scores=point_scores,
         instance_scores=instance_scores,
         tracking_scores=tracking_scores,
+        labels_path=str(labels_path),  # NoneType cannot be written to hdf5.
+        video_path=video.backend.filename,
+        video_ind=labels.videos.index(video),
+        provenance=json.dumps(labels.provenance),  # dict cannot be written to hdf5.
     )
 
     write_occupancy_file(output_path, data_dict, transpose=True)

@@ -1310,13 +1310,13 @@ def toposort_edges(edge_types: List[EdgeType]) -> Tuple[int]:
 
     See also: assign_connections_to_instances
     """
-    dg = nx.DiGraph(
-        [(edge_type.src_node_ind, edge_type.dst_node_ind) for edge_type in edge_types]
-    )
-    lg = nx.line_graph(dg)
-    sorted_dg = list(nx.topological_sort(lg))
-    lg = list(lg)
-    sorted_edge_inds = tuple([lg.index(edge) for edge in sorted_dg])
+    edges = [
+        (edge_type.src_node_ind, edge_type.dst_node_ind) for edge_type in edge_types
+    ]
+    dg = nx.DiGraph(edges)
+    root_ind = next(nx.topological_sort(dg))
+    sorted_edges = nx.bfs_edges(dg, root_ind)
+    sorted_edge_inds = tuple([edges.index(edge) for edge in sorted_edges])
     return sorted_edge_inds
 
 

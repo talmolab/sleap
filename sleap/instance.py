@@ -394,7 +394,7 @@ class Instance:
         if from_predicted is not None and type(from_predicted) != PredictedInstance:
             raise TypeError(
                 f"Instance.from_predicted type must be PredictedInstance (not "
-                "{type(from_predicted)})"
+                f"{type(from_predicted)})"
             )
 
     @_points.validator
@@ -1433,6 +1433,10 @@ class LabeledFrame:
             for inst in self._instances
             if type(inst) == PredictedInstance and inst.track is not None
         ]
+
+    def remove_untracked(self):
+        """Removes any instances without a track assignment."""
+        self.instances = [inst for inst in self.instances if inst.track is not None]
 
     @property
     def has_user_instances(self) -> bool:

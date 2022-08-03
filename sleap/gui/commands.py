@@ -29,37 +29,41 @@ for now it's at least easy to see where this separation is violated.
 import attr
 import operator
 import os
+import cv2
 import re
 import sys
 import subprocess
 
-from abc import ABC
 from enum import Enum
 from glob import glob
-from pathlib import PurePath
+from pathlib import PurePath, Path
 from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
 
 import numpy as np
 
-from PySide6 import QtCore, QtWidgets, QtGui
+from PySide2 import QtCore, QtWidgets, QtGui
 
-from PySide6.QtWidgets import QMessageBox, QProgressDialog
+from PySide2.QtWidgets import QMessageBox, QProgressDialog
 
-from sleap.gui.dialogs.delete import DeleteDialog
-from sleap.skeleton import Skeleton
+from sleap.skeleton import Node, Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
 from sleap.io.video import Video
+from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
+from sleap.io.format.adaptor import Adaptor
+from sleap.io.format.ndx_pose import NDXPoseAdaptor
+from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.gui.dialogs.importvideos import ImportVideos
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.dialogs.merge import MergeDialog
 from sleap.gui.dialogs.message import MessageDialog
+from sleap.gui.dialogs.query import QueryDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
 
 
-# whether we support multiple project windows (i.e., "open" opens new window)
+# Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
 
 
@@ -257,6 +261,14 @@ class CommandContext:
         """
         self.execute(OpenProject, filename=filename, first_open=first_open)
 
+    def importAT(self):
+        """Imports AlphaTracker datasets."""
+        self.execute(ImportAlphaTracker)
+
+    def importNWB(self):
+        """Imports NWB datasets."""
+        self.execute(ImportNWB)
+
     def importDPK(self):
         """Imports DeepPoseKit datasets."""
         self.execute(ImportDeepPoseKit)
@@ -289,9 +301,13 @@ class CommandContext:
         """Show gui to save project as a new file."""
         self.execute(SaveProjectAs)
 
-    def exportAnalysisFile(self):
+    def exportAnalysisFile(self, all_videos: bool = False):
         """Shows gui for exporting analysis h5 file."""
-        self.execute(ExportAnalysisFile)
+        self.execute(ExportAnalysisFile, all_videos=all_videos)
+
+    def exportNWB(self):
+        """Show gui for exporting nwb file."""
+        self.execute(SaveProjectAs, adaptor=NDXPoseAdaptor())
 
     def exportLabeledClip(self):
         """Shows gui for exporting clip with visual annotations."""
@@ -364,6 +380,10 @@ class CommandContext:
         NavCommand.go_to(self, frame_idx, video)
 
     # Editing Commands
+
+    def toggleGrayscale(self):
+        """Toggles grayscale setting for current video."""
+        self.execute(ToggleGrayscale)
 
     def addVideo(self):
         """Shows gui for adding videos to project."""
@@ -452,8 +472,7 @@ class CommandContext:
         location: Optional[QtCore.QPoint] = None,
         mark_complete: bool = False,
     ):
-        """
-        Creates a new instance, copying node coordinates as appropriate.
+        """Creates a new instance, copying node coordinates as appropriate.
 
         Args:
             copy_instance: The :class:`Instance` (or
@@ -471,7 +490,7 @@ class CommandContext:
         )
 
     def setPointLocations(
-        self, instance: Instance, nodes_locations: Dict["Node", Tuple[int, int]]
+        self, instance: Instance, nodes_locations: Dict[Node, Tuple[int, int]]
     ):
         """Sets locations for node(s) for an instance."""
         self.execute(
@@ -480,9 +499,7 @@ class CommandContext:
             nodes_locations=nodes_locations,
         )
 
-    def setInstancePointVisibility(
-        self, instance: Instance, node: "Node", visible: bool
-    ):
+    def setInstancePointVisibility(self, instance: Instance, node: Node, visible: bool):
         """Toggles visibility set for a node for an instance."""
         self.execute(
             SetInstancePointVisibility, instance=instance, node=node, visible=visible
@@ -606,6 +623,79 @@ class OpenProject(AppCommand):
                 return False
 
             params["filename"] = filename
+        return True
+
+
+class ImportAlphaTracker(AppCommand):
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+
+        video_path = params["video_path"] if "video_path" in params else None
+
+        labels = Labels.load_alphatracker(
+            filename=params["filename"],
+            full_video=video_path,
+        )
+
+        new_window = context.app.__class__()
+        new_window.showMaximized()
+        new_window.loadLabelsObject(labels=labels)
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict) -> bool:
+        filters = ["JSON (*.json)"]
+
+        filename, selected_filter = FileDialog.open(
+            context.app,
+            dir=None,
+            caption="Import AlphaTracker dataset...",
+            filter=";;".join(filters),
+        )
+
+        if len(filename) == 0:
+            return False
+
+        file_dir = os.path.dirname(filename)
+        video_path = os.path.join(file_dir, "video.mp4")
+
+        if os.path.exists(video_path):
+            params["video_path"] = video_path
+
+        params["filename"] = filename
+
+        return True
+
+
+class ImportNWB(AppCommand):
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+
+        labels = Labels.load_nwb(filename=params["filename"])
+
+        new_window = context.app.__class__()
+        new_window.showMaximized()
+        new_window.loadLabelsObject(labels=labels)
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict) -> bool:
+        adaptor = NDXPoseAdaptor()
+        filters = [f"(*.{ext})" for ext in adaptor.all_exts]
+        filters[0] = f"{adaptor.name} {filters[0]}"
+
+        filename, selected_filter = FileDialog.open(
+            context.app,
+            dir=None,
+            caption="Import NWB dataset...",
+            filter=";;".join(filters),
+        )
+
+        if len(filename) == 0:
+            return False
+
+        file_dir = os.path.dirname(filename)
+
+        params["filename"] = filename
+
         return True
 
 
@@ -861,7 +951,9 @@ class SaveProjectAs(AppCommand):
         """Helper function which attempts save and handles errors."""
         success = False
         try:
-            Labels.save_file(labels=labels, filename=filename)
+            extension = (PurePath(filename).suffix)[1:]
+            extension = None if (extension == "slp") else extension
+            Labels.save_file(labels=labels, filename=filename, as_format=extension)
             success = True
             # Mark savepoint in change stack
             context.changestack_savepoint()
@@ -887,12 +979,17 @@ class SaveProjectAs(AppCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        default_name = context.state["filename"]
-        if default_name:
-            default_name = get_new_version_filename(default_name)
+        default_name = context.state["filename"] or "labels.v000.slp"
+        if "adaptor" in params:
+            adaptor: Adaptor = params["adaptor"]
+            default_name += f".{adaptor.default_ext}"
+            filters = [f"(*.{ext})" for ext in adaptor.all_exts]
+            filters[0] = f"{adaptor.name} {filters[0]}"
         else:
-            default_name = "labels.v000.slp"
-        filters = ["SLEAP labels dataset (*.slp)"]
+            filters = ["SLEAP labels dataset (*.slp)"]
+            if default_name:
+                default_name = get_new_version_filename(default_name)
+
         filename, selected_filter = FileDialog.save(
             context.app,
             caption="Save As...",
@@ -912,25 +1009,83 @@ class ExportAnalysisFile(AppCommand):
     def do_action(cls, context: CommandContext, params: dict):
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 
-        SleapAnalysisAdaptor.write(params["output_path"], context.labels)
+        for output_path, video in params["analysis_videos"]:
+            SleapAnalysisAdaptor.write(
+                filename=output_path,
+                source_object=context.labels,
+                source_path=context.state["filename"],
+                video=video,
+            )
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        default_name = context.state["filename"] or "labels"
-        p = PurePath(default_name)
-        default_name = str(p.with_name(f"{p.stem}.analysis.h5"))
+        def ask_for_filename(default_name: str) -> str:
+            """Allow user to specify the filename"""
+            filename, selected_filter = FileDialog.save(
+                context.app,
+                caption="Export Analysis File...",
+                dir=default_name,
+                filter="SLEAP Analysis HDF5 (*.h5)",
+            )
+            return filename
 
-        filename, selected_filter = FileDialog.save(
-            context.app,
-            caption="Export Analysis File...",
-            dir=default_name,
-            filter="SLEAP Analysis HDF5 (*.h5)",
-        )
-
-        if len(filename) == 0:
+        # Ensure labels has labeled frames
+        labels = context.labels
+        if len(labels.labeled_frames) == 0:
             return False
 
-        params["output_path"] = filename
+        # Get a subset of videos
+        if params["all_videos"]:
+            all_videos = context.labels.videos
+        else:
+            all_videos = [context.state["video"] or context.labels.videos[0]]
+
+        # Only use videos with labeled frames
+        videos = [video for video in all_videos if len(labels.get(video)) != 0]
+        if len(videos) == 0:
+            return False
+
+        # Specify (how to get) the output filename
+        default_name = context.state["filename"] or "labels"
+        fn = PurePath(default_name)
+        if len(videos) == 1:
+            # Allow user to specify the filename
+            use_default = False
+            dirname = str(fn.parent)
+        else:
+            # Allow user to specify directory, but use default filenames
+            use_default = True
+            dirname = FileDialog.openDir(
+                context.app,
+                caption="Select Folder to Export Analysis Files...",
+                dir=str(fn.parent),
+            )
+            if len(dirname) == 0:
+                return False
+
+        # Create list of video / output paths
+        output_paths = []
+        analysis_videos = []
+        for video in videos:
+            # Create the filename
+            default_name = default_analysis_filename(
+                labels=labels,
+                video=video,
+                output_path=dirname,
+                output_prefix=str(fn.stem),
+            )
+            filename = default_name if use_default else ask_for_filename(default_name)
+
+            # Check that filename is valid and create list of video / ouput paths
+            if len(filename) != 0:
+                analysis_videos.append(video)
+                output_paths.append(filename)
+
+        # Chack that output paths are valid
+        if len(output_paths) == 0:
+            return False
+
+        params["analysis_videos"] = zip(output_paths, videos)
         return True
 
 
@@ -1342,6 +1497,30 @@ class EditCommand(AppCommand):
     does_edits = True
 
 
+class ToggleGrayscale(EditCommand):
+    topics = [UpdateTopic.video, UpdateTopic.frame]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        """Reset the video backend."""
+        video: Video = context.state["video"]
+        try:
+            grayscale = video.backend.grayscale
+            video.backend.reset(grayscale=(not grayscale))
+        except:
+            print(
+                f"This video type {type(video.backend)} does not support grayscale yet."
+            )
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        """Check that video can be reset."""
+        # Check that current video is set
+        if context.state["video"] is None:
+            return False
+        return True
+
+
 class AddVideo(EditCommand):
     topics = [UpdateTopic.video]
 
@@ -1388,30 +1567,107 @@ class ShowImportVideos(EditCommand):
 
 
 class ReplaceVideo(EditCommand):
-    topics = [UpdateTopic.video]
+    topics = [UpdateTopic.video, UpdateTopic.frame]
 
     @staticmethod
-    def do_action(context: CommandContext, params: dict):
-        new_paths = params["new_video_paths"]
+    def do_action(context: CommandContext, params: dict) -> bool:
 
-        for video, new_path in zip(context.labels.videos, new_paths):
-            if new_path != video.backend.filename:
-                video.backend.filename = new_path
-                video.backend.reset()
+        import_list = params["import_list"]
+
+        for import_item, video in import_list:
+            import_params = import_item["params"]
+
+            # TODO: Will need to create a new backend if import has different extension.
+            if (
+                Path(video.backend.filename).suffix
+                != Path(import_params["filename"]).suffix
+            ):
+                raise TypeError(
+                    "Importing videos with different extensions is not supported."
+                )
+            video.backend.reset(**import_params)
+
+            # Remove frames in video past last frame index
+            last_vid_frame = video.last_frame_idx
+            lfs: List[LabeledFrame] = list(context.labels.get(video))
+            if lfs is not None:
+                lfs = [lf for lf in lfs if lf.frame_idx > last_vid_frame]
+                context.labels.remove_frames(lfs)
+
+            # Update seekbar and video length through callbacks
+            context.state.emit("video")
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         """Shows gui for replacing videos in project."""
-        paths = [video.backend.filename for video in context.labels.videos]
 
+        def _get_truncation_message(truncation_messages, path, video):
+            reader = cv2.VideoCapture(path)
+            last_vid_frame = int(reader.get(cv2.CAP_PROP_FRAME_COUNT))
+            lfs: List[LabeledFrame] = list(context.labels.get(video))
+            if lfs is not None:
+                lfs.sort(key=lambda lf: lf.frame_idx)
+                last_lf_frame = lfs[-1].frame_idx
+                lfs = [lf for lf in lfs if lf.frame_idx > last_vid_frame]
+
+                # Message to warn users that labels will be removed if proceed
+                if last_lf_frame > last_vid_frame:
+                    message = (
+                        "<p><strong>Warning:</strong> Replacing this video will "
+                        f"remove {len(lfs)} labeled frames.</p>"
+                        f"<p><em>Current video</em>: <b>{Path(video.filename).name}</b>"
+                        f" (last label at frame {last_lf_frame})<br>"
+                        f"<em>Replacement video</em>: <b>{Path(path).name}"
+                        f"</b> ({last_vid_frame} frames)</p>"
+                    )
+                    # Assumes that a project won't import the same video multiple times
+                    truncation_messages[path] = message
+
+            return truncation_messages
+
+        # Warn user: newly added labels will be discarded if project is not saved
+        if not context.state["filename"] or context.state["has_changes"]:
+            QMessageBox(
+                text=("You have unsaved changes. Please save before replacing videos.")
+            ).exec_()
+            return False
+
+        # Select the videos we want to swap
+        old_paths = [video.backend.filename for video in context.labels.videos]
+        paths = list(old_paths)
         okay = MissingFilesDialog(filenames=paths, replace=True).exec_()
-
         if not okay:
             return False
 
-        params["new_video_paths"] = paths
+        # Only return an import list for videos we swap
+        new_paths = [
+            (path, video_idx)
+            for video_idx, (path, old_path) in enumerate(zip(paths, old_paths))
+            if path != old_path
+        ]
 
-        return True
+        new_paths = []
+        old_videos = dict()
+        all_videos = context.labels.videos
+        truncation_messages = dict()
+        for video_idx, (path, old_path) in enumerate(zip(paths, old_paths)):
+            if path != old_path:
+                new_paths.append(path)
+                old_videos[path] = all_videos[video_idx]
+                truncation_messages = _get_truncation_message(
+                    truncation_messages, path, video=all_videos[video_idx]
+                )
+
+        import_list = ImportVideos().ask(
+            filenames=new_paths, messages=truncation_messages
+        )
+        # Remove videos that no longer correlate to filenames.
+        old_videos_to_replace = [
+            old_videos[imp["params"]["filename"]] for imp in import_list
+        ]
+        params["import_list"] = zip(import_list, old_videos_to_replace)
+
+        return len(import_list) > 0
 
 
 class RemoveVideo(EditCommand):
@@ -1460,7 +1716,52 @@ class OpenSkeleton(EditCommand):
     topics = [UpdateTopic.skeleton]
 
     @staticmethod
+    def load_skeleton(filename: str):
+        if filename.endswith(".json"):
+            new_skeleton = Skeleton.load_json(filename)
+        elif filename.endswith((".h5", ".hdf5")):
+            sk_list = Skeleton.load_all_hdf5(filename)
+            new_skeleton = sk_list[0]
+        return new_skeleton
+
+    @staticmethod
+    def compare_skeletons(
+        skeleton: Skeleton, new_skeleton: Skeleton
+    ) -> Tuple[List[str], List[str]]:
+
+        delete_nodes = []
+        add_nodes = []
+        if skeleton.node_names != new_skeleton.node_names:
+            # Compare skeletons
+            base_nodes = skeleton.node_names
+            new_nodes = new_skeleton.node_names
+            delete_nodes = [node for node in base_nodes if node not in new_nodes]
+            add_nodes = [node for node in new_nodes if node not in base_nodes]
+
+        return delete_nodes, add_nodes
+
+    @staticmethod
+    def delete_extra_skeletons(labels: Labels):
+        if len(labels.skeletons) > 1:
+            skeletons_used = list(
+                set(
+                    [
+                        inst.skeleton
+                        for lf in labels.labeled_frames
+                        for inst in lf.instances
+                    ]
+                )
+            )
+            try:
+                assert len(skeletons_used) == 1
+            except AssertionError:
+                raise ValueError("Too many skeletons used in project.")
+
+            labels.skeletons = skeletons_used
+
+    @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
+
         filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
         filename, selected_filter = FileDialog.open(
             context.app, dir=None, caption="Open skeleton...", filter=";;".join(filters)
@@ -1469,21 +1770,94 @@ class OpenSkeleton(EditCommand):
         if len(filename) == 0:
             return False
 
+        okay = True
+        if len(context.labels.skeletons) > 0:
+            # Ask user permission to merge skeletons
+            okay = False
+            skeleton: Skeleton = context.labels.skeleton  # Assumes single skeleton
+
+            # Load new skeleton and compare
+            new_skeleton = OpenSkeleton.load_skeleton(filename)
+            (delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
+                skeleton, new_skeleton
+            )
+
+            if (len(delete_nodes) > 0) or (len(add_nodes) > 0):
+                # Warn about mismatching skeletons
+                title = "Replace Skeleton"
+                message = (
+                    "<p><b>Warning:</b> Pre-existing skeleton found."
+                    "<p>The following nodes will be <b>deleted</b> from all instances:"
+                    f"<br><em>From base labels</em>: {','.join(delete_nodes)}<br></p>"
+                    "<p>The following nodes will be <b>added</b> to all instances:<br>"
+                    f"<em>From new labels</em>: {','.join(add_nodes)}</p>"
+                    "<p>Nodes can be deleted or merged from the skeleton editor after "
+                    "merging labels.</p>"
+                )
+                query = QueryDialog(title=title, message=message)
+                query.exec_()
+
+                # Give the okay to add/delete nodes
+                okay = bool(query.result())
+
+            params["delete_nodes"] = delete_nodes
+            params["add_nodes"] = add_nodes
+
         params["filename"] = filename
-        return True
+        return okay
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        filename = params["filename"]
-        if filename.endswith(".json"):
-            context.state["skeleton"] = Skeleton.load_json(filename)
-        elif filename.endswith((".h5", ".hdf5")):
-            sk_list = Skeleton.load_all_hdf5(filename)
-            if len(sk_list):
-                context.state["skeleton"] = sk_list[0]
 
-        if context.state["skeleton"] not in context.labels:
+        # Load new skeleton
+        filename = params["filename"]
+        new_skeleton = OpenSkeleton.load_skeleton(filename)
+
+        # Case 1: No skeleton exists in project
+        if len(context.labels.skeletons) == 0:
+            context.state["skeleton"] = new_skeleton
             context.labels.skeletons.append(context.state["skeleton"])
+            return
+
+        # Case 2: Skeleton(s) already exist(s) in project
+
+        # Delete extra skeletons in project
+        OpenSkeleton.delete_extra_skeletons(context.labels)
+        skeleton = context.labels.skeleton  # Assume single skeleton
+
+        if "delete_nodes" in params.keys():
+            # We already compared skeletons in ask() method
+            delete_nodes: List[str] = params["delete_nodes"]
+            add_nodes: List[str] = params["add_nodes"]
+        else:
+            # Otherwise, load new skeleton and compare
+            (delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
+                skeleton, new_skeleton
+            )
+
+        # Delete pre-existing symmetry
+        for src, dst in skeleton.symmetries:
+            skeleton.delete_symmetry(src, dst)
+
+        # Delete nodes from skeleton that are not in new skeleton
+        for node in delete_nodes:
+            skeleton.delete_node(node)
+
+        # Add nodes that only exist in the new skeleton
+        for node in add_nodes:
+            skeleton.add_node(node)
+
+        # Add edges
+        skeleton.clear_edges()
+        for src, dest in new_skeleton.edges:
+            skeleton.add_edge(src.name, dest.name)
+
+        # Add new symmetry
+        for src, dst in new_skeleton.symmetries:
+            skeleton.add_symmetry(src.name, dst.name)
+
+        # Set state of context
+        context.state["skeleton"] = skeleton
 
 
 class SaveSkeleton(AppCommand):
@@ -1929,7 +2303,7 @@ class SetSelectedInstanceTrack(EditCommand):
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        selected_instance = context.state["instance"]
+        selected_instance: Instance = context.state["instance"]
         new_track = params["new_track"]
         if selected_instance is None:
             return
@@ -1955,6 +2329,9 @@ class SetSelectedInstanceTrack(EditCommand):
             context.labels.track_set_instance(
                 context.state["labeled_frame"], selected_instance, new_track
             )
+            # Add linked predicted instance to new track
+            if selected_instance.from_predicted is not None:
+                selected_instance.from_predicted.track = new_track
 
         # When the instance does already have a track, then we want to update
         # the track for a range of frames.
@@ -2014,11 +2391,27 @@ class GenerateSuggestions(EditCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
 
+        if len(context.labels.videos) == 0:
+            print("Error: no videos to generate suggestions for")
+            return
+
         # TODO: Progress bar
         win = MessageDialog(
             "Generating list of suggested frames... " "This may take a few minutes.",
             context.app,
         )
+
+        if (
+            params["target"]
+            == "current video"  # Checks if current video is selected in gui
+        ):
+            params["videos"] = (
+                [context.labels.videos[0]]
+                if context.state["video"] is None
+                else [context.state["video"]]
+            )
+        else:
+            params["videos"] = context.labels.videos
 
         new_suggestions = VideoFrameSuggestions.suggest(
             labels=context.labels, params=params
