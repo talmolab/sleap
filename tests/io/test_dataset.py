@@ -79,7 +79,7 @@ def _check_labels_match(expected_labels, other_labels, format="png"):
 
         # Compare the first frames of the videos, do it on a small sub-region to
         # make the test reasonable in time.
-        if format is "png":
+        if format == "png":
             assert np.allclose(frame_data, expected_frame_data)
 
         # Compare the instances
