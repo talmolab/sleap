@@ -12,6 +12,7 @@ dependencies:
     - conda-forge::numpy=1.22.3
     - scipy=1.7.3
     - apple::tensorflow-deps=2.9.0
+    - conda-forge::pyside2=5.15.5
     - qtpy=2.0.1
     - pip
     - pip:
