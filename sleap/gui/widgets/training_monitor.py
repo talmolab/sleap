@@ -7,14 +7,8 @@ import zmq
 import jsonpickle
 import logging
 from typing import Optional
-from PySide2 import QtCore, QtWidgets, QtGui
-from PySide2.QtCharts import QtCharts
+from qtpy import QtCore, QtWidgets, QtGui, QtCharts
 import attr
-
-<<<<<<< HEAD:sleap/gui/widgets/training_monitor.py
-from PySide6 import QtCore, QtWidgets, QtGui, QtCharts
-=======
->>>>>>> develop:sleap/gui/widgets/monitor.py
 
 logger = logging.getLogger(__name__)
 
@@ -73,9 +67,6 @@ class LossViewer(QtWidgets.QMainWindow):
             self.ctx.term()
             self.ctx = None
 
-<<<<<<< HEAD:sleap/gui/widgets/training_monitor.py
-    def reset(self, what=""):
-=======
     def reset(
         self,
         what: str = "",
@@ -87,20 +78,13 @@ class LossViewer(QtWidgets.QMainWindow):
             what: String identifier indicating which job type the current run
                 corresponds to.
         """
->>>>>>> develop:sleap/gui/widgets/monitor.py
         self.chart = QtCharts.QChart()
 
         self.series = dict()
 
-<<<<<<< HEAD:sleap/gui/widgets/training_monitor.py
-        self.series["batch"] = QtCharts.QScatterSeries()
-        self.series["epoch_loss"] = QtCharts.QLineSeries()
-        self.series["val_loss"] = QtCharts.QLineSeries()
-=======
         COLOR_TRAIN = (18, 158, 220)
         COLOR_VAL = (248, 167, 52)
         COLOR_BEST_VAL = (151, 204, 89)
->>>>>>> develop:sleap/gui/widgets/monitor.py
 
         self.series["batch"] = QtCharts.QScatterSeries()
         self.series["batch"].setName("Batch Training Loss")
@@ -133,8 +117,6 @@ class LossViewer(QtWidgets.QMainWindow):
         self.series["val_loss"].setPen(pen)
         self.chart.addSeries(self.series["val_loss"])
 
-<<<<<<< HEAD:sleap/gui/widgets/training_monitor.py
-=======
         self.series["val_loss_scatter"] = QtCharts.QScatterSeries()
         self.series["val_loss_scatter"].setColor(QtGui.QColor(*COLOR_VAL, 255))
         self.series["val_loss_scatter"].setMarkerSize(12.0)
@@ -148,7 +130,6 @@ class LossViewer(QtWidgets.QMainWindow):
         self.series["val_loss_best"].setBorderColor(QtGui.QColor(32, 32, 32, 25))
         self.chart.addSeries(self.series["val_loss_best"])
 
->>>>>>> develop:sleap/gui/widgets/monitor.py
         axisX = QtCharts.QValueAxis()
         axisX.setLabelFormat("%d")
         axisX.setTitleText("Batches")
@@ -183,13 +164,10 @@ class LossViewer(QtWidgets.QMainWindow):
         self.chart.legend().setAlignment(QtCore.Qt.AlignTop)
         self.chart.legend().setMarkerShape(QtCharts.QLegend.MarkerShapeCircle)
 
-<<<<<<< HEAD:sleap/gui/widgets/training_monitor.py
-=======
         # Hide scatters for epoch and val loss from legend.
         for s in ("epoch_loss_scatter", "val_loss_scatter"):
             self.chart.legend().markers(self.series[s])[0].setVisible(False)
 
->>>>>>> develop:sleap/gui/widgets/monitor.py
         self.chartView = QtCharts.QChartView(self.chart)
         self.chartView.setRenderHint(QtGui.QPainter.Antialiasing)
         layout = QtWidgets.QVBoxLayout()

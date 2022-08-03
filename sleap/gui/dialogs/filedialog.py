@@ -8,7 +8,7 @@ on (some?) Ubuntu systems.
 
 import os, re, sys
 
-from PySide6 import QtWidgets
+from qtpy import QtWidgets
 
 
 class FileDialog:

@@ -31,7 +31,7 @@ import yaml
 
 from typing import Any, Dict, List, Optional, Text
 
-from PySide6 import QtWidgets, QtCore
+from qtpy import QtWidgets, QtCore
 
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.util import get_package_file
@@ -738,7 +738,7 @@ class OptionalSpinWidget(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         self.spin_widget = (
-            QtWidgets.QDoubleSpinBox() if type is "double" else QtWidgets.QSpinBox()
+            QtWidgets.QDoubleSpinBox() if type == "double" else QtWidgets.QSpinBox()
         )
         none_label = none_label if none_label is not None else self.none_string.title()
         self.check_widget = QtWidgets.QCheckBox(none_label)

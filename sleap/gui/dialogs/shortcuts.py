@@ -4,7 +4,7 @@ GUI for viewing/modifying keyboard shortcuts.
 
 from typing import List
 
-from PySide6 import QtWidgets
+from qtpy import QtWidgets
 
 from sleap.gui.shortcuts import Shortcuts
 

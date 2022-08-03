@@ -3,7 +3,7 @@ Class for accessing/setting keyboard shortcuts.
 """
 
 from typing import Dict, Union
-from PySide6.QtGui import QKeySequence
+from qtpy.QtGui import QKeySequence
 from sleap import util
 
 

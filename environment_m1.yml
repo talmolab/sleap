@@ -1,16 +1,18 @@
 name: sleap_m1
 
-channels:
-    - defaults
-    - conda-forge
-    - apple
+# channels:
+#     - defaults
+#     - conda-forge
+#     - apple
 
 dependencies:
-    - python=3.8
+    - python=3.9
     - shapely=1.7.1
-    - h5py=3.1.0
+    - conda-forge::h5py=3.6.0
+    - conda-forge::numpy=1.22.3
     - scipy=1.7.3
-    - tensorflow-deps=2.7.0
+    - apple::tensorflow-deps=2.9.0
+    - qtpy=2.0.1
     - pip
     - pip:
         - "--editable=./"

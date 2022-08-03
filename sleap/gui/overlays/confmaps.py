@@ -12,7 +12,7 @@ Example: ::
 
 """
 
-from PySide6 import QtWidgets, QtCore, QtGui
+from qtpy import QtWidgets, QtCore, QtGui
 
 import numpy as np
 import qimage2ndarray

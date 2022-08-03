@@ -78,6 +78,17 @@ def imports_section():
         label("sleap import", False)
 
     try:
+        import PySide2
+
+        label("pyside2 import", True)
+        label("pyside path", PySide2.__file__)
+
+        call_self(["--gui-check"])
+
+    except:
+        label("pyside2 import", False)
+
+    try:
         import PySide6
 
         label("pyside6 import", True)
@@ -86,7 +97,7 @@ def imports_section():
         call_self(["--gui-check"])
 
     except:
-        label("pyside2 import", False)
+        label("pyside6 import", False)
 
     try:
         import cv2

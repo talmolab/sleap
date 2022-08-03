@@ -2,8 +2,8 @@
 Drop-in replacement for QSlider with additional features.
 """
 
-from PySide6 import QtCore, QtWidgets, QtGui
-from PySide6.QtGui import QPen, QBrush, QColor, QKeyEvent, QPolygonF, QPainterPath
+from qtpy import QtCore, QtWidgets, QtGui
+from qtpy.QtGui import QPen, QBrush, QColor, QKeyEvent, QPolygonF, QPainterPath
 
 from sleap.gui.color import ColorManager
 

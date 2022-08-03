@@ -25,19 +25,19 @@ from collections import deque
 FORCE_REQUESTS = True
 
 
-from PySide6 import QtWidgets, QtCore
+from qtpy import QtWidgets, QtCore
 
-from PySide6.QtWidgets import (
+from qtpy.QtWidgets import (
     QApplication,
     QVBoxLayout,
     QWidget,
     QGraphicsView,
     QGraphicsScene,
 )
-from PySide6.QtGui import QImage, QPixmap, QPainter, QPainterPath, QTransform
-from PySide6.QtGui import QPen, QBrush, QColor, QFont, QPolygonF
-from PySide6.QtGui import QShortcut, QKeyEvent, QMouseEvent, QKeySequence
-from PySide6.QtCore import Qt, QRectF, QPointF, QMarginsF, QLineF
+from qtpy.QtGui import QImage, QPixmap, QPainter, QPainterPath, QTransform
+from qtpy.QtGui import QPen, QBrush, QColor, QFont, QPolygonF
+from qtpy.QtGui import QShortcut, QKeyEvent, QMouseEvent, QKeySequence
+from qtpy.QtCore import Qt, QRectF, QPointF, QMarginsF, QLineF
 
 import atexit
 import math
@@ -46,9 +46,9 @@ import numpy as np
 
 from typing import Callable, List, Optional, Union
 
-from PySide6.QtWidgets import QGraphicsItem, QGraphicsObject
+from qtpy.QtWidgets import QGraphicsItem, QGraphicsObject
 
-from PySide6.QtWidgets import (
+from qtpy.QtWidgets import (
     QGraphicsEllipseItem,
     QGraphicsTextItem,
     QGraphicsRectItem,

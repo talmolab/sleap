@@ -7,7 +7,7 @@ import os
 from pathlib import Path, PurePath
 from typing import Callable, List
 
-from PySide6 import QtWidgets, QtCore, QtGui
+from qtpy import QtWidgets, QtCore, QtGui
 
 from sleap.io import pathutils
 from sleap.gui.dialogs.filedialog import FileDialog

@@ -6,7 +6,7 @@ current frame) and then uses a `MultiQuiverPlot` object to show the resulting
 part affinity fields.
 """
 
-from PySide6 import QtWidgets, QtGui, QtCore
+from qtpy import QtWidgets, QtGui, QtCore
 
 import numpy as np
 import itertools

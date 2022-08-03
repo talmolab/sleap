@@ -7,8 +7,8 @@ import zmq
 import jsonpickle
 import logging
 from typing import Optional
-from PySide2 import QtCore, QtWidgets, QtGui
-from PySide2.QtCharts import QtCharts
+from qtpy import QtCore, QtWidgets, QtGui
+from qtpy.QtCharts import QtCharts
 import attr
 
 

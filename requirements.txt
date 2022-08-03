@@ -1,25 +1,27 @@
-numpy>=1.19.5,<=1.21.5
+numpy>=1.19.5,<1.23.0
 attrs==21.2.0
 cattrs==1.1.1
 jsonpickle==1.2
 networkx
-tensorflow>=2.6.3,<=2.7.1; platform_machine != 'arm64'
-tensorflow-macos==2.7.0; sys_platform == 'darwin' and platform_machine == 'arm64'
-tensorflow-metal==0.3.0; sys_platform == 'darwin' and platform_machine == 'arm64'
-h5py>=3.1.0,<=3.6.0
+tensorflow>=2.6.3,<=2.9.2; platform_machine != 'arm64'
+tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
+tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64'
+h5py>=3.1.0,<=3.7.0
 python-rapidjson
-opencv-python-headless>=4.2.0.34,<=4.5.5.62
+opencv-python>=4.2.0,<4.6.0
+# opencv-python-headless>=4.2.0.34,<=4.5.5.62
 # opencv-python @ git+https://github.com/talmolab/wrap_opencv-python-headless.git@ede49f6a23a73033216339f29515e59d594ba921
 pandas
 psutil
-# PySide2>=5.13.2,<=5.14.1
-PySide6==6.2.2.1
+PySide2>=5.13.2,<=5.14.1; platform_machine != 'arm64'
+PySide6>=6.2.0,<6.4.0; sys_platform == 'darwin' and platform_machine == 'arm64'
+qtpy>=2.0.1
 pyzmq
 pyyaml
 pillow>=8.3.1,<=8.4.0
 imageio<=2.15.0
 imgaug==0.4.0
-scipy>=1.4.1,<=1.7.3
+scipy>=1.4.1,<=1.9.0
 scikit-image
 scikit-learn==1.0.*
 scikit-video
@@ -33,3 +35,5 @@ pykalman==0.9.5
 segmentation-models==1.0.1
 rich==10.16.1
 certifi>=2017.4.17,<=2021.10.8
+pynwb
+ndx-pose
