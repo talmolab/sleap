@@ -33,11 +33,6 @@ from sleap.io.video import Video
 
 import attr
 
-try:
-    from typing import ForwardRef
-except:
-    from typing import _ForwardRef as ForwardRef
-
 
 class Point(np.record):
     """
@@ -1247,7 +1242,7 @@ def make_instance_cattr() -> cattr.Converter:
     )
 
     converter.register_structure_hook(
-        ForwardRef("PredictedInstance"),
+        PredictedInstance,
         lambda x, type: converter.structure(x, PredictedInstance),
     )
 
