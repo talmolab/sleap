@@ -788,10 +788,14 @@ def test_basic_suggestions(small_robot_mp4_vid):
     labels = Labels()
     labels.append(dummy_frame)
 
+    print(labels.labeled_frames)
+    print(labels.videos)
+
     suggestions = VideoFrameSuggestions.suggest(
         labels=labels, params=dict(videos=labels.videos, method="sample", per_video=13)
     )
     labels.set_suggestions(suggestions)
+    print(suggestions)
 
     assert len(labels.get_video_suggestions(dummy_video)) == 13
 

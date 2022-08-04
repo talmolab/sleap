@@ -1,4 +1,4 @@
-name: sleap
+name: swe
 
 dependencies:
   - python=3.7

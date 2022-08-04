@@ -83,18 +83,25 @@ class VideoFrameSuggestions(object):
         """Method to generate suggestions by taking strides through video."""
 
         suggestions = []
+        sugg_idx_dict = {video: [] for video in videos}
 
         sugg_idx = [
-            sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst
+            (sugg.video, sugg.frame_idx) for sugg in labels.suggestions
         ]
-        vid_idx = [frame.frame_idx for frame in labels.labeled_frames]
-        unique_idx = set(vid_idx) ^ set(sugg_idx)
+        # Turn list of tuples into dict where first argument in tuple is dict key
+        for vid, frame in sugg_idx:
+            sugg_idx_dict[vid].append(frame)
 
         for video in videos:
+            vid_idx = list(range(video.frames))
+            vid_sugg_idx = sugg_idx_dict[video]
+            unique_idx = set(vid_idx) ^ set(vid_sugg_idx)
+
             if sampling_method == "stride":
                 frame_increment = video.frames // per_video
                 frame_increment = 1 if frame_increment == 0 else frame_increment
-                vid_suggestions = list(unique_idx)[:per_video]
+                vid_suggestions = list(range(0, len(unique_idx), frame_increment))[
+                                  :per_video]
             else:
                 # random sampling
                 frames_num = per_video
@@ -155,16 +162,18 @@ class VideoFrameSuggestions(object):
             # Run pipeline separately (in parallel) for each video
             suggestions = ParallelFeaturePipeline.run(pipeline, videos)
 
+        print("suggestions", suggestions)
+        print("label.suggestions", labels.suggestions)
+
         prev_idx = [
             sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst
         ]
         vid_idx = [frame.frame_idx for frame in labels.labeled_frames]
         unique_idx = set(vid_idx) - set(prev_idx)
 
-        # Return unique suggestions based on unique idx.
-        suggestions = [sugg for sugg in suggestions if sugg.frame_idx in unique_idx]
+        unique_suggestions = [sugg for sugg in suggestions if sugg.frame_idx in unique_idx]
 
-        return suggestions
+        return unique_suggestions
 
     @classmethod
     def prediction_score(
