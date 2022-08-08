@@ -4248,7 +4248,7 @@ def _make_tracker_from_cli(args: argparse.Namespace) -> Optional[Tracker]:
 
 def main(args: list = None):
     """Entrypoint for `sleap-track` CLI for running inference.
-    
+
     Args:
         args: A list of arguments to be passed into sleap-track.
     """
