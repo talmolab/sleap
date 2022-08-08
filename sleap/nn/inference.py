@@ -4293,7 +4293,7 @@ def main(args: list = None):
     # Setup tracker.
     tracker = _make_tracker_from_cli(args)
 
-    # Either run inference (and tracking) or just run tra
+    # Either run inference (and tracking) or just run tracking
     if args.models is not None:
 
         # Setup models.

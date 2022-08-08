@@ -833,3 +833,25 @@ def test_retracking(
     new_inst = load_instance(new_labels)
     old_inst = load_instance(centered_pair_predictions)
     assert new_inst.track != old_inst.track
+
+
+def test_sleap_track(
+    centered_pair_predictions: Labels, min_centered_instance_model_path: str, tmpdir
+):
+    slp_path = str(Path(tmpdir, "old_slp.slp"))
+    labels: Labels = Labels.save(centered_pair_predictions, slp_path)
+
+    # Create sleap-track command
+    args = f"{slp_path} --model {min_centered_instance_model_path}".split()
+
+    # Run inference
+    sleap_track(args=args)
+
+    # Assert predictions file exists
+    output_path = f"{slp_path}.predictions.slp"
+    assert Path(output_path).exists()
+
+    # Create invalid sleap-track command
+    args = [slp_path]
+    with pytest.raises(ValueError):
+        sleap_track(args=args)
