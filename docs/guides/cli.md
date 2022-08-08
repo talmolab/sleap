@@ -142,7 +142,9 @@ optional arguments:
   -o OUTPUT, --output OUTPUT
                         The output filename to use for the predicted data. If
                         not provided, defaults to
-                        '[data_path].predictions.slp'.
+                        '[data_path].predictions.slp' if generating predictions or
+                        '[data_path].[tracker].[similarity method].[matching method].slp'
+                        if retracking predictions.
   --no-empty-frames     Clear any empty frames that did not have any detected
                         instances before saving to output.
   --verbosity {none,rich,json}

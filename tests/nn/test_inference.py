@@ -1,8 +1,10 @@
 import pytest
 import numpy as np
+from sleap.io.dataset import Labels
 import tensorflow as tf
 import sleap
 from numpy.testing import assert_array_equal, assert_allclose
+from pathlib import Path
 
 from sleap.nn.data.confidence_maps import (
     make_confmaps,
@@ -28,6 +30,9 @@ from sleap.nn.inference import (
     BottomUpMultiClassPredictor,
     TopDownMultiClassPredictor,
     load_model,
+    _make_cli_parser,
+    _make_tracker_from_cli,
+    main as sleap_track,
 )
 
 sleap.nn.system.use_cpu_only()
@@ -788,3 +793,43 @@ def test_ensure_numpy(
     assert type(out["centroids"]) == np.ndarray
     assert type(out["centroid_vals"]) == np.ndarray
     assert type(out["n_valid"]) == np.ndarray
+
+
+@pytest.mark.parametrize(
+    "output_path,tracker_method", [("not_default", "flow"), (None, "simple")]
+)
+def test_retracking(
+    centered_pair_predictions: Labels, tmpdir, output_path, tracker_method
+):
+    slp_path = Path(tmpdir, "old_slp.slp")
+    labels: Labels = Labels.save(centered_pair_predictions, slp_path)
+
+    # Create sleap-track command
+    cmd = f"{slp_path} --tracking.tracker {tracker_method}"
+    if output_path == "not_default":
+        output_path = Path(tmpdir, "tracked_slp.slp")
+        cmd += f" --output {output_path}"
+    args = f"{cmd}".split()
+
+    # Track predictions
+    sleap_track(args=args)
+
+    # Get expected output name
+    if output_path is None:
+        parser = _make_cli_parser()
+        args, _ = parser.parse_known_args(args=args)
+        tracker = _make_tracker_from_cli(args)
+        output_path = f"{slp_path}.{tracker.get_name()}.slp"
+
+    # Assert tracked predictions file exists
+    assert Path(output_path).exists()
+
+    # Assert tracking has changed
+    def load_instance(labels_in: Labels):
+        lf = labels_in.get(0)
+        return lf.instances[0]
+
+    new_labels = Labels.load_file(str(output_path))
+    new_inst = load_instance(new_labels)
+    old_inst = load_instance(centered_pair_predictions)
+    assert new_inst.track != old_inst.track
