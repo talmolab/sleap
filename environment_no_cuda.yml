@@ -4,7 +4,7 @@ dependencies:
   - python=3.7
   - conda-forge::numpy>=1.19.5,<=1.21.5
   # - conda-forge::tensorflow>=2.6.3,<=2.7.1
-  - conda-forge::pyside2=5.14.1
+  - conda-forge::pyside2=5.13.2
   - conda-forge::h5py=3.1.0
   - conda-forge::scipy>=1.4.1,<=1.7.3
   - pillow=8.4.0
