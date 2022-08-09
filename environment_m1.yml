@@ -1,6 +1,8 @@
 name: sleap_m1
 
-# channels:
+channels:
+    - conda-forge
+    - defaults
 #     - defaults
 #     - conda-forge
 #     - apple
@@ -13,6 +15,7 @@ dependencies:
     - scipy=1.7.3
     - apple::tensorflow-deps=2.9.0
     - conda-forge::pyside2=5.15.5
+    - conda-forge::opencv=4.6.0
     - qtpy=2.0.1
     - pip
     - pip:
