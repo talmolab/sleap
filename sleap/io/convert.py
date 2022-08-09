@@ -93,6 +93,11 @@ def default_analysis_filename(
 
 
 def main(args: list = None):
+    """Entrypoint for `sleap-convert` CLI for converting .slp to different formats.
+
+    Args:
+        args: A list of arguments to be passed into sleap-convert.
+    """
     parser = create_parser()
     args = parser.parse_args(args=args)
 
