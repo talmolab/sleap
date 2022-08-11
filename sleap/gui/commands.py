@@ -1289,7 +1289,7 @@ class ExportDatasetWithImages(AppCommand):
             context.app,
             caption="Save Labeled Frames As...",
             dir=new_filename,
-            filters=";;".join(filters),
+            filter=";;".join(filters),
         )
         if len(filename) == 0:
             return False
