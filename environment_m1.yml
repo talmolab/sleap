@@ -1,11 +1,8 @@
-name: sleap_m1
+name: sleap
 
 channels:
     - conda-forge
     - defaults
-#     - defaults
-#     - conda-forge
-#     - apple
 
 dependencies:
     - python=3.9
