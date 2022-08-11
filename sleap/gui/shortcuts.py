@@ -144,14 +144,3 @@ class Shortcuts(object):
     def __len__(self):
         """Returns number of shortcuts."""
         return len(self._names)
-
-
-if __name__ == "__main__":
-    from qtpy import QtWidgets
-
-    from sleap.gui.dialogs.shortcuts import ShortcutDialog
-
-    app = QtWidgets.QApplication()
-    win = ShortcutDialog()
-    win.show()
-    app.exec_()
