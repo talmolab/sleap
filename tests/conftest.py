@@ -3,7 +3,7 @@ import logging
 try:
     import pytestqt
 except:
-    logging.warning("Could not import PySide2 or pytestqt, skipping GUI tests.")
+    logging.warning("Could not import pytestqt, skipping GUI tests.")
     collect_ignore_glob = ["gui/*"]
 
 from tests.fixtures.skeletons import *

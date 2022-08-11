@@ -25,19 +25,38 @@ from collections import deque
 FORCE_REQUESTS = True
 
 
-from PySide2 import QtWidgets, QtCore
+from qtpy import QtWidgets, QtCore
 
-from PySide2.QtWidgets import (
+from qtpy.QtWidgets import (
     QApplication,
     QVBoxLayout,
     QWidget,
     QGraphicsView,
     QGraphicsScene,
+    QShortcut,
+    QGraphicsItem,
+    QGraphicsObject,
+    QGraphicsEllipseItem,
+    QGraphicsTextItem,
+    QGraphicsRectItem,
+    QGraphicsPolygonItem,
 )
-from PySide2.QtGui import QImage, QPixmap, QPainter, QPainterPath, QTransform
-from PySide2.QtGui import QPen, QBrush, QColor, QFont, QPolygonF
-from PySide2.QtGui import QKeyEvent, QMouseEvent, QKeySequence
-from PySide2.QtCore import Qt, QRectF, QPointF, QMarginsF, QLineF
+from qtpy.QtGui import (
+    QImage,
+    QPixmap,
+    QPainter,
+    QPainterPath,
+    QTransform,
+    QPen,
+    QBrush,
+    QColor,
+    QFont,
+    QPolygonF,
+    QKeyEvent,
+    QMouseEvent,
+    QKeySequence,
+)
+from qtpy.QtCore import Qt, QRectF, QPointF, QMarginsF, QLineF
 
 import atexit
 import math
@@ -45,15 +64,6 @@ import time
 import numpy as np
 
 from typing import Callable, List, Optional, Union
-
-from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
-
-from PySide2.QtWidgets import (
-    QGraphicsEllipseItem,
-    QGraphicsTextItem,
-    QGraphicsRectItem,
-    QGraphicsPolygonItem,
-)
 
 import sleap
 from sleap.prefs import prefs
@@ -317,7 +327,7 @@ class QtVideoPlayer(QWidget):
 
         def add_shortcut(key, step):
             # Register shortcut and have it trigger frame_step action
-            shortcut = QtWidgets.QShortcut(self.shortcuts[key], self)
+            shortcut = QShortcut(self.shortcuts[key], self)
             shortcut.activated.connect(lambda x=step: frame_step(x, False))
             self._shortcut_triggers[key] = shortcut
 
@@ -335,7 +345,7 @@ class QtVideoPlayer(QWidget):
                 )
 
                 # Register this new shortcut, enabling shift selection
-                shortcut = QtWidgets.QShortcut(shortcut_seq_with_shift, self)
+                shortcut = QShortcut(shortcut_seq_with_shift, self)
                 shortcut.activated.connect(lambda x=step: frame_step(x, True))
                 self._shortcut_triggers[key + "_shift_selection"] = shortcut
 
@@ -1578,7 +1588,7 @@ class QtEdge(QGraphicsPolygonItem):
         self.show_non_visible = show_non_visible
 
         super(QtEdge, self).__init__(
-            polygon=QPolygonF(),
+            # polygon=QPolygonF(),
             parent=parent,
             *args,
             **kwargs,
@@ -2032,12 +2042,18 @@ class QtTextWithBackground(QGraphicsTextItem):
         """Method required by Qt."""
         return super(QtTextWithBackground, self).boundingRect()
 
+    def getBackgroundColor(self):
+        """Return background color appropriate for the text color."""
+        text_color = self.defaultTextColor()
+        background_color = "white" if text_color.lightnessF() < 0.4 else "black"
+        background_color = QColor(background_color)
+        background_color.setAlphaF(0.5)
+        return background_color
+
     def paint(self, painter, option, *args, **kwargs):
         """Method required by Qt."""
-        text_color = self.defaultTextColor()
         brush = painter.brush()
-        background_color = "white" if text_color.lightnessF() < 0.4 else "black"
-        background_color = QColor(background_color, a=0.5)
+        background_color = self.getBackgroundColor()
         painter.setBrush(QBrush(background_color))
         painter.drawRect(self.boundingRect())
         painter.setBrush(brush)

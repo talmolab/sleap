@@ -519,7 +519,7 @@ def save_labeled_video(
 
     progress_win = None
     if gui_progress:
-        from PySide2 import QtWidgets, QtCore
+        from qtpy import QtWidgets, QtCore
 
         progress_win = QtWidgets.QProgressDialog(
             f"Generating video with {len(frames)} frames...", "Cancel", 0, len(frames)
