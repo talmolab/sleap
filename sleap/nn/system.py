@@ -6,6 +6,7 @@ environment by wrapping `tf.config` module functions.
 
 import tensorflow as tf
 from typing import List, Optional, Text
+import subprocess
 
 
 def get_all_gpus() -> List[tf.config.PhysicalDevice]:
@@ -183,3 +184,53 @@ def best_logical_device_name() -> Text:
         cpus = tf.config.list_logical_devices("CPU")
         device_name = cpus[0].name
     return device_name
+
+
+def get_gpu_memory() -> dict:
+    """Return dictionary of GPU(s) and current vRAM usage on a machine.
+
+    Returns:
+        Dictionary of GPU indexes (key) and percent of memory available (values)
+    
+    Notes:
+        A value of 1.0 means all memory is available, or 100%.
+    """
+
+    command = ["nvidia-smi", "--query-gpu=index,memory.free,memory.total", "--format=csv"]
+
+    memory_poll = subprocess.run(
+        command,
+        capture_output=True
+        )
+
+    # Capture subprocess standard output
+    subprocess_result = memory_poll.stdout
+
+    # nvidia-smi returns an ascii encoded byte string separated by newlines (\n)
+    # Splitting gives a list where the final entry is an empty string. Slice it off
+    # and finally slice off the csv header in the 0th element.
+    memory_string = subprocess_result.decode("ascii").split("\n")[:-1][1:]
+
+    memory_dict = {}
+
+    for row in memory_string:
+
+        # Get the gpu ID, the first element of the split
+        gpu_id = row.split(",")[0]
+        # Get available (unused) memory
+        available = row.split(",")[1]
+        # Get total memory
+        total = row.split(",")[2]
+
+        # Create translators for removing megabyte text returned by nvidia-smi
+        available_translator = available.maketrans("MiB", "   ")
+        total_translator = total.maketrans("MiB", "   ")
+
+        # Perform translation and strip the spaces from the resulting strings
+        available_memory = available.translate(available_translator).strip()
+        total_memory = total.translate(total_translator).strip()
+
+        # Append percent of GPU available to GPU ID
+        memory_dict[gpu_id] = round(int(available_memory) / int(total_memory), 4)
+
+    return memory_dict
