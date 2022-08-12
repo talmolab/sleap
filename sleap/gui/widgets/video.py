@@ -1544,6 +1544,7 @@ class QtNode(QGraphicsEllipseItem):
             super(QtNode, self).mouseReleaseEvent(event)
             self.updatePoint(user_change=True)
         self.dragParent = False
+        self.player.plot()  # Redraw trails after node is moved
 
     def wheelEvent(self, event):
         """Custom event handler for mouse scroll wheel."""
