@@ -1446,13 +1446,13 @@ class QtNode(QGraphicsEllipseItem):
         h = self.player.video.height
         if (x > w) or (x < 0) or (y > h) or (y < 0):
             in_bounds = False
-            if (x > w):
+            if x > w:
                 x = w
-            elif (x < 0):
+            elif x < 0:
                 x = 0
-            if (y > h):
+            if y > h:
                 y = h
-            elif (y < 0):
+            elif y < 0:
                 y = 0
             self.setPos(x, y)
 
