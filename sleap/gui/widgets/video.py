@@ -1440,6 +1440,22 @@ class QtNode(QGraphicsEllipseItem):
         x = self.scenePos().x()
         y = self.scenePos().y()
 
+        # Ensure node is placed within video boundaries
+        in_bounds = True
+        w = self.player.video.width
+        h = self.player.video.height
+        if (x > w) or (x < 0) or (y > h) or (y < 0):
+            in_bounds = False
+            if (x > w):
+                x = w
+            elif (x < 0):
+                x = 0
+            if (y > h):
+                y = h
+            elif (y < 0):
+                y = 0
+            self.setPos(x, y)
+
         context = self._parent_instance.player.context
         if user_change and context:
             context.setPointLocations(
@@ -1858,8 +1874,7 @@ class QtInstance(QGraphicsObject):
         self.updateBox()
 
     def updatePoints(self, complete: bool = False, user_change: bool = False):
-        """
-        Updates data and display for all points in skeleton.
+        """Update data and display for all points in skeleton.
 
         This is called any time the skeleton is manipulated as a whole.
 
