@@ -85,11 +85,7 @@ class VideoFrameSuggestions(object):
         suggestions = []
         sugg_idx_dict = {video: [] for video in videos}
 
-        sugg_idx = [
-            (sugg.video, sugg.frame_idx)
-            for suggestions in labels.suggestions
-            for sugg in suggestions
-        ]
+        sugg_idx = [(sugg.video, sugg.frame_idx) for sugg in labels.suggestions]
 
         # Turn list of tuples into dict where first argument in tuple is dict key
         for vid, frame in sugg_idx:
@@ -98,7 +94,6 @@ class VideoFrameSuggestions(object):
         for video in videos:
             vid_idx = list(range(video.frames))
             vid_sugg_idx = sugg_idx_dict[video]
-            print("vid_sugg_idx", vid_sugg_idx)
             unique_idx = set(vid_idx) ^ set(vid_sugg_idx)
 
             if sampling_method == "stride":
@@ -168,10 +163,12 @@ class VideoFrameSuggestions(object):
             suggestions = ParallelFeaturePipeline.run(pipeline, videos)
 
         prev_idx = [
-            sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst
+            sugg.frame_idx for sugg in labels.suggestions  # for sugg in sugg_lst
         ]
+
         vid_idx = [frame.frame_idx for frame in labels.labeled_frames]
-        unique_idx = set(vid_idx) - set(prev_idx)
+
+        unique_idx = set(vid_idx) ^ set(prev_idx)
 
         unique_suggestions = [
             sugg for sugg in suggestions if sugg.frame_idx in unique_idx
@@ -229,10 +226,7 @@ class VideoFrameSuggestions(object):
 
         # Generate unique suggestions
         prev_idx = [
-            sugg.frame_idx
-            for suggestions in labels.suggestions
-            for sugg in suggestions
-            if sugg.video == video
+            sugg.frame_idx for sugg in labels.suggestions if sugg.video == video
         ]
 
         unique_idx = set(result) ^ set(prev_idx)
@@ -283,9 +277,7 @@ class VideoFrameSuggestions(object):
             map(int, np.argwhere(displacements - data_min > data_range * threshold))
         )
 
-        prev_idx = [
-            sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst
-        ]
+        prev_idx = [sugg_lst.frame_idx for sugg_lst in labels.suggestions]
         unique_idx = set(frame_idxs) - set(prev_idx)
         suggestions = cls.idx_list_to_frame_list(unique_idx, video)
 

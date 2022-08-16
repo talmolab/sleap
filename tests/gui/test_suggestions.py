@@ -318,7 +318,7 @@ def test_unqiue_suggestions(params, small_robot_image_vid):
     params["videos"] = labels.videos
 
     suggestions = VideoFrameSuggestions.suggest(labels=labels, params=params)
-    labels.suggestions.append(suggestions)
+    labels.suggestions.extend(suggestions)
 
     print("old_suggestions", suggestions)
 
