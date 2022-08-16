@@ -191,17 +191,17 @@ def get_gpu_memory() -> dict:
 
     Returns:
         Dictionary of GPU indexes (key) and percent of memory available (values)
-    
+
     Notes:
         A value of 1.0 means all memory is available, or 100%.
     """
+    command = [
+        "nvidia-smi",
+        "--query-gpu=index,memory.free,memory.total",
+        "--format=csv",
+    ]
 
-    command = ["nvidia-smi", "--query-gpu=index,memory.free,memory.total", "--format=csv"]
-
-    memory_poll = subprocess.run(
-        command,
-        capture_output=True
-        )
+    memory_poll = subprocess.run(command, capture_output=True)
 
     # Capture subprocess standard output
     subprocess_result = memory_poll.stdout
@@ -214,7 +214,6 @@ def get_gpu_memory() -> dict:
     memory_dict = {}
 
     for row in memory_string:
-
         # Get the gpu ID, the first element of the split
         gpu_id = row.split(",")[0]
         # Get available (unused) memory
