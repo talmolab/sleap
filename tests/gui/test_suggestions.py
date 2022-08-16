@@ -84,7 +84,9 @@ def test_video_selection(centered_pair_predictions: Labels):
     # Testing the functionality of choosing a specific video in a project and
     # only generating suggestions for the video
 
-    centered_pair_predictions.add_video(Video.from_filename(filename="robot_3_frames.mp4"))
+    centered_pair_predictions.add_video(
+        Video.from_filename(filename="robot_3_frames.mp4")
+    )
     # Testing suggestion generation from Image Features
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,

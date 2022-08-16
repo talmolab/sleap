@@ -86,7 +86,9 @@ class VideoFrameSuggestions(object):
         sugg_idx_dict = {video: [] for video in videos}
 
         sugg_idx = [
-            (sugg.video, sugg.frame_idx) for suggestions in labels.suggestions for sugg in suggestions
+            (sugg.video, sugg.frame_idx)
+            for suggestions in labels.suggestions
+            for sugg in suggestions
         ]
 
         # Turn list of tuples into dict where first argument in tuple is dict key
@@ -103,7 +105,8 @@ class VideoFrameSuggestions(object):
                 frame_increment = video.frames // per_video
                 frame_increment = 1 if frame_increment == 0 else frame_increment
                 vid_suggestions = list(range(0, len(unique_idx), frame_increment))[
-                                  :per_video]
+                    :per_video
+                ]
             else:
                 # random sampling
                 frames_num = per_video
@@ -170,7 +173,9 @@ class VideoFrameSuggestions(object):
         vid_idx = [frame.frame_idx for frame in labels.labeled_frames]
         unique_idx = set(vid_idx) - set(prev_idx)
 
-        unique_suggestions = [sugg for sugg in suggestions if sugg.frame_idx in unique_idx]
+        unique_suggestions = [
+            sugg for sugg in suggestions if sugg.frame_idx in unique_idx
+        ]
 
         return unique_suggestions
 
@@ -224,7 +229,10 @@ class VideoFrameSuggestions(object):
 
         # Generate unique suggestions
         prev_idx = [
-            sugg.frame_idx for suggestions in labels.suggestions for sugg in suggestions if sugg.video == video
+            sugg.frame_idx
+            for suggestions in labels.suggestions
+            for sugg in suggestions
+            if sugg.video == video
         ]
 
         unique_idx = set(result) ^ set(prev_idx)
@@ -274,7 +282,6 @@ class VideoFrameSuggestions(object):
         frame_idxs = list(
             map(int, np.argwhere(displacements - data_min > data_range * threshold))
         )
-
 
         prev_idx = [
             sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst
