@@ -18,8 +18,8 @@ def test_velocity_suggestions(centered_pair_predictions):
         ),
     )
     assert len(suggestions) == 45
-    assert suggestions[0].frame_idx == 21
-    assert suggestions[1].frame_idx == 45
+    assert suggestions[0].frame_idx == 131
+    assert suggestions[1].frame_idx == 765
 
 
 def test_frame_increment(centered_pair_predictions: Labels):

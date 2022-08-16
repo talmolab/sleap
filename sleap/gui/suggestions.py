@@ -86,8 +86,9 @@ class VideoFrameSuggestions(object):
         sugg_idx_dict = {video: [] for video in videos}
 
         sugg_idx = [
-            (sugg.video, sugg.frame_idx) for sugg in labels.suggestions
+            (sugg.video, sugg.frame_idx) for suggestions in labels.suggestions for sugg in suggestions
         ]
+
         # Turn list of tuples into dict where first argument in tuple is dict key
         for vid, frame in sugg_idx:
             sugg_idx_dict[vid].append(frame)
@@ -95,6 +96,7 @@ class VideoFrameSuggestions(object):
         for video in videos:
             vid_idx = list(range(video.frames))
             vid_sugg_idx = sugg_idx_dict[video]
+            print("vid_sugg_idx", vid_sugg_idx)
             unique_idx = set(vid_idx) ^ set(vid_sugg_idx)
 
             if sampling_method == "stride":
@@ -162,9 +164,6 @@ class VideoFrameSuggestions(object):
             # Run pipeline separately (in parallel) for each video
             suggestions = ParallelFeaturePipeline.run(pipeline, videos)
 
-        print("suggestions", suggestions)
-        print("label.suggestions", labels.suggestions)
-
         prev_idx = [
             sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst
         ]
@@ -225,9 +224,10 @@ class VideoFrameSuggestions(object):
 
         # Generate unique suggestions
         prev_idx = [
-            sugg.frame_idx for sugg_lst in labels.suggestions for sugg in sugg_lst
+            sugg.frame_idx for suggestions in labels.suggestions for sugg in suggestions if sugg.video == video
         ]
-        unique_idx = set(result) - set(prev_idx)
+
+        unique_idx = set(result) ^ set(prev_idx)
         suggestions = cls.idx_list_to_frame_list(list(unique_idx), video)
 
         return suggestions
