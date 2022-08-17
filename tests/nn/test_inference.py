@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+from sleap.gui.learning.dialog import LearningDialog
 from sleap.io.dataset import Labels
 import tensorflow as tf
 import sleap
@@ -34,6 +35,8 @@ from sleap.nn.inference import (
     _make_tracker_from_cli,
     main as sleap_track,
 )
+
+from sleap.gui.learning import runners
 
 sleap.nn.system.use_cpu_only()
 
@@ -842,7 +845,10 @@ def test_sleap_track(
     labels: Labels = Labels.save(centered_pair_predictions, slp_path)
 
     # Create sleap-track command
-    args = f"{slp_path} --model {min_centered_instance_model_path} --frames 1-3".split()
+    args = (
+        f"{slp_path} --model {min_centered_instance_model_path} "
+        f"--video-index 0 --frames 1-3"
+    ).split()
 
     # Run inference
     sleap_track(args=args)
@@ -855,3 +861,29 @@ def test_sleap_track(
     args = [slp_path]
     with pytest.raises(ValueError):
         sleap_track(args=args)
+
+
+def test_siv_inference(siv_robot: Labels, tmpdir):
+    slp_path = str(Path(tmpdir, "old_slp.slp"))
+    labels: Labels = Labels.save(siv_robot, slp_path)
+
+    ld = LearningDialog(
+        "inference",
+        labels_filename=slp_path,
+        labels=labels,
+    )
+
+    # TODO(LM): Create spoof pipeline_form_data
+    pipeline_form_data = ...  # self.pipeline_form_widget.get_form_data()
+    items_for_inference = ld.get_items_for_inference(pipeline_form_data)
+
+    config_info_list = ld.get_every_head_config_data(pipeline_form_data)
+
+    # Run training/learning pipeline using the TrainingJobs
+    new_counts = runners.run_learning_pipeline(
+        labels_filename=slp_path,
+        labels=labels,
+        config_info_list=config_info_list,
+        inference_params=pipeline_form_data,
+        items_for_inference=items_for_inference,
+    )
