@@ -741,7 +741,7 @@ These will make sure that Anaconda is easily accessible from most places on your
 <span id="m1mac"></span><h3><a class="toc-backref" href="#id6">M1 Macs</a><a class="headerlink" href="#m1-macs" title="Permalink to this headline">#</a></h3>
 <p>SLEAP can be installed on newer M1 Macs by following these instructions:</p>
 <ol>
-<li><p>In addition to being on an M1 Mac, make sure you’re on <strong>macOS Monterey</strong>, i.e., version 12+. We’ve tested this on a MacBook Pro (14-inch, 2021) running macOS version 12.0.1.</p></li>
+<li><p>In addition to being on an M1 Mac, make sure you’re on <strong>macOS Monterey</strong>, i.e., version 12+. I tested this on a MacBook Pro (14-inch, 2021) running macOS version 12.0.1.</p></li>
 <li><p>If you don’t have it yet, install <strong>homebrew</strong>, a convenient package manager for Macs (skip this if you can run <code class="docutils literal notranslate"><span class="pre">brew</span></code> from the terminal):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/bin/bash -c <span class="s2">&quot;</span><span class="k">$(</span>curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh<span class="k">)</span><span class="s2">&quot;</span>
 </pre></div>
@@ -762,27 +762,25 @@ These will make sure that Anaconda is easily accessible from most places on your
 </div>
 <p>Then close and re-open the terminal again.</p>
 </li>
-<li><p><strong>Download the SLEAP</strong>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> ~ <span class="o">&amp;&amp;</span> git clone https://github.com/talmolab/sleap.git sleap <span class="o">&amp;&amp;</span> <span class="nb">cd</span> sleap
+<li><p><strong>Download the SLEAP M1 branch</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> ~ <span class="o">&amp;&amp;</span> git clone -b talmo/m1 --single-branch https://github.com/talmolab/sleap.git sleap_m1 <span class="o">&amp;&amp;</span> <span class="nb">cd</span> sleap_m1
 </pre></div>
 </div>
+<p><em>Note:</em> This installs SLEAP in development mode, so changes to the source code are immediately applied in case you wanted to mess around with it. You can also just do a <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">pull</span></code> to update it (no need to re-do any of the previous steps).</p>
 </li>
 <li><p><strong>Install SLEAP in a conda environment</strong>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda env create -f environment_m1.yml
 </pre></div>
 </div>
-<p>Your Mac will then automatically sign a devil’s pact with Apple to install the correct versions of everything on your system. Once the blood sacrifice/installation process completes, SLEAP will be available in an environment called <code class="docutils literal notranslate"><span class="pre">sleap</span></code>.</p>
-<p><em>Note:</em> This installs SLEAP in development mode, so changes to the source code are immediately applied in case you wanted to mess around with it. You can also just do a <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">pull</span></code> to update it (no need to re-do any of the previous steps).</p>
+<p>Your Mac will then automatically sign a devil’s pact with Apple to install the correct versions of everything on your system. Once the blood sacrifice/installation process completes, SLEAP will be available in an environment called <code class="docutils literal notranslate"><span class="pre">sleap_m1</span></code>.</p>
 </li>
 <li><p><strong>Test it out</strong> by activating the environment and opening the GUI!</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda activate sleap
-</pre></div>
-</div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sleap-label
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda activate sleap_m1 <span class="o">&amp;&amp;</span> sleap-label
 </pre></div>
 </div>
 </li>
 </ol>
+<p>See <a class="reference external" href="https://github.com/talmolab/sleap/issues/579#issuecomment-1028602327">this Issue</a> for more information on M1 support.</p>
 </section>
 </section>
 <section id="testing-that-things-are-working">
