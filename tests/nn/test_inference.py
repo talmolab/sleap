@@ -33,6 +33,7 @@ from sleap.nn.inference import (
     BottomUpMultiClassPredictor,
     TopDownMultiClassPredictor,
     load_model,
+    export_model,
 )
 
 sleap.nn.system.use_cpu_only()
@@ -850,7 +851,7 @@ def test_centroid_inference():
     assert preds["centroid_vals"].shape == (1, 3)
 
 
-def save_frozen_graph(model, preds, output_path):
+def export_frozen_graph(model, preds, output_path):
 
     tensors = {}
 
@@ -864,7 +865,7 @@ def save_frozen_graph(model, preds, output_path):
         }
 
     with output_path as d:
-        model.save_model(d.as_posix(), tensors=tensors)
+        model.export_model(d.as_posix(), tensors=tensors)
 
         tf.compat.v1.reset_default_graph()
         with tf.compat.v2.io.gfile.GFile(f"{d}/frozen_graph.pb", "rb") as f:
@@ -906,7 +907,7 @@ def test_single_instance_save(min_single_instance_robot_model_path, tmp_path):
 
     preds = model.predict(np.zeros((4, 160, 280, 3), dtype="uint8"))
 
-    save_frozen_graph(model, preds, tmp_path)
+    export_frozen_graph(model, preds, tmp_path)
 
 
 def test_centroid_save(min_centroid_model_path, tmp_path):
@@ -923,7 +924,7 @@ def test_centroid_save(min_centroid_model_path, tmp_path):
 
     preds = model.predict(np.zeros((4, 384, 384, 1), dtype="uint8"))
 
-    save_frozen_graph(model, preds, tmp_path)
+    export_frozen_graph(model, preds, tmp_path)
 
 
 def test_topdown_save(
@@ -947,7 +948,7 @@ def test_topdown_save(
     imgs = min_labels_slp.video[:4]
     preds = model.predict(imgs)
 
-    save_frozen_graph(model, preds, tmp_path)
+    export_frozen_graph(model, preds, tmp_path)
 
 
 def test_topdown_id_save(
@@ -971,4 +972,71 @@ def test_topdown_id_save(
     imgs = min_labels_slp.video[:4]
     preds = model.predict(imgs)
 
-    save_frozen_graph(model, preds, tmp_path)
+    export_frozen_graph(model, preds, tmp_path)
+
+
+def test_single_instance_predictor_save(min_single_instance_robot_model_path, tmp_path):
+
+    # directly initialize predictor
+    predictor = SingleInstancePredictor.from_trained_models(
+        min_single_instance_robot_model_path
+    )
+
+    predictor.export_model(save_path=tmp_path.as_posix())
+
+    # high level load to predictor
+    predictor = load_model(min_single_instance_robot_model_path)
+
+    predictor.export_model(save_path=tmp_path.as_posix())
+
+    # high level export
+
+    export_model(min_single_instance_robot_model_path, save_path=tmp_path.as_posix())
+
+
+def test_topdown_predictor_save(
+    min_centroid_model_path, min_centered_instance_model_path, tmp_path
+):
+
+    # directly initialize predictor
+    predictor = TopDownPredictor.from_trained_models(
+        centroid_model_path=min_centroid_model_path,
+        confmap_model_path=min_centered_instance_model_path,
+    )
+
+    predictor.export_model(save_path=tmp_path.as_posix())
+
+    # high level load to predictor
+    predictor = load_model([min_centroid_model_path, min_centered_instance_model_path])
+
+    predictor.export_model(save_path=tmp_path.as_posix())
+
+    # high level export
+    export_model(
+        [min_centroid_model_path, min_centered_instance_model_path],
+        save_path=tmp_path.as_posix(),
+    )
+
+
+def test_topdown_id_predictor_save(
+    min_centroid_model_path, min_topdown_multiclass_model_path, tmp_path
+):
+
+    # directly initialize predictor
+    predictor = TopDownMultiClassPredictor.from_trained_models(
+        centroid_model_path=min_centroid_model_path,
+        confmap_model_path=min_topdown_multiclass_model_path,
+    )
+
+    predictor.export_model(save_path=tmp_path.as_posix())
+
+    # high level load to predictor
+    predictor = load_model([min_centroid_model_path, min_topdown_multiclass_model_path])
+
+    predictor.export_model(save_path=tmp_path.as_posix())
+
+    # high level export
+    export_model(
+        [min_centroid_model_path, min_topdown_multiclass_model_path],
+        save_path=tmp_path.as_posix(),
+    )
