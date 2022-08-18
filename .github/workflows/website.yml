@@ -8,7 +8,7 @@ on:
       # 'main' triggers updates to 'sleap.ai', 'develop' to 'sleap.ai/develop'
       - main
       - develop
-      - liezl/docs-nwb
+      - liezl/retracking
     paths:
       - "docs/**"
       - "README.rst"

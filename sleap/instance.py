@@ -33,11 +33,6 @@ from sleap.io.video import Video
 
 import attr
 
-try:
-    from typing import ForwardRef
-except:
-    from typing import _ForwardRef as ForwardRef
-
 
 class Point(np.record):
     """
@@ -1246,10 +1241,10 @@ def make_instance_cattr() -> cattr.Converter:
         Union[List[Instance], List[PredictedInstance]], structure_instances_list
     )
 
-    converter.register_structure_hook(
-        ForwardRef("PredictedInstance"),
-        lambda x, type: converter.structure(x, PredictedInstance),
-    )
+    # converter.register_structure_hook(
+    #     PredictedInstance,
+    #     lambda x, type: converter.structure(x, PredictedInstance),
+    # )
 
     # We can register structure hooks for point arrays that do nothing
     # because Instance can have a dict of points passed to it in place of

@@ -2,7 +2,7 @@
 Generic module to ask user permission to complete an action.
 """
 
-from PySide2.QtWidgets import (
+from qtpy.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QVBoxLayout,

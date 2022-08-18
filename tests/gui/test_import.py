@@ -1,6 +1,6 @@
 from sleap.gui.dialogs.importvideos import ImportParamDialog
 
-import PySide2.QtCore as QtCore
+from qtpy import QtCore
 
 
 def test_gui_import(qtbot):

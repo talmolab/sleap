@@ -50,7 +50,7 @@ import sleap
 from sleap.nn.config import TrainingJobConfig, DataConfig
 from sleap.nn.data.resizing import SizeMatcher
 from sleap.nn.model import Model
-from sleap.nn.tracking import Tracker
+from sleap.nn.tracking import Tracker, run_tracker
 from sleap.nn.paf_grouping import PAFScorer
 from sleap.nn.data.pipelines import (
     Provider,
@@ -63,6 +63,7 @@ from sleap.nn.data.pipelines import (
     InstanceCentroidFinder,
     KerasModelPredictor,
 )
+from sleap.io.dataset import Labels
 from sleap.util import frame_list
 
 from tensorflow.python.framework.convert_to_constants import (
@@ -4449,20 +4450,26 @@ def _make_predictor_from_cli(args: argparse.Namespace) -> Predictor:
     if batch_size is None:
         batch_size = args.batch_size
 
-    predictor = load_model(
-        args.models,
-        peak_threshold=peak_threshold,
-        batch_size=batch_size,
-        refinement="integral",
-        progress_reporting=args.verbosity,
-    )
-    if type(predictor) == BottomUpPredictor:
-        predictor.inference_model.bottomup_layer.paf_scorer.max_edge_length_ratio = (
-            args.max_edge_length_ratio
+    if args.models is not None:
+        predictor: Predictor = load_model(
+            args.models,
+            peak_threshold=peak_threshold,
+            batch_size=batch_size,
+            refinement="integral",
+            progress_reporting=args.verbosity,
         )
-        predictor.inference_model.bottomup_layer.paf_scorer.dist_penalty_weight = (
-            args.dist_penalty_weight
-        )
+
+        if type(predictor) == BottomUpPredictor:
+            predictor.inference_model.bottomup_layer.paf_scorer.max_edge_length_ratio = (
+                args.max_edge_length_ratio
+            )
+            predictor.inference_model.bottomup_layer.paf_scorer.dist_penalty_weight = (
+                args.dist_penalty_weight
+            )
+    else:
+        # TODO(LM): create predictor that only uses tracker - based off load_model
+        pass
+
     return predictor
 
 
@@ -4482,8 +4489,12 @@ def _make_tracker_from_cli(args: argparse.Namespace) -> Optional[Tracker]:
     return None
 
 
-def main():
-    """Entrypoint for `sleap-track` CLI for running inference."""
+def main(args: list = None):
+    """Entrypoint for `sleap-track` CLI for running inference.
+
+    Args:
+        args: A list of arguments to be passed into sleap-track.
+    """
     t0 = time()
     start_timestamp = str(datetime.now())
     print("Started inference at:", start_timestamp)
@@ -4492,17 +4503,12 @@ def main():
     parser = _make_cli_parser()
 
     # Parse inputs.
-    args, _ = parser.parse_known_args()
+    args, _ = parser.parse_known_args(args=args)
     print("Args:")
     pprint(vars(args))
     print()
 
-    # Check for some common errors.
-    if args.models is None:
-        raise ValueError(
-            "Path to trained models not specified. "
-            "Use \"sleap-track -m path/to/model ...' to specify models to use."
-        )
+    output_path = args.output
 
     # Setup devices.
     if args.cpu or not sleap.nn.system.is_gpu_system():
@@ -4527,15 +4533,47 @@ def main():
     # Setup data loader.
     provider, data_path = _make_provider_from_cli(args)
 
-    # Setup models.
-    predictor = _make_predictor_from_cli(args)
-
     # Setup tracker.
     tracker = _make_tracker_from_cli(args)
-    predictor.tracker = tracker
 
-    # Run inference!
-    labels_pr = predictor.predict(provider)
+    # Either run inference (and tracking) or just run tracking
+    if args.models is not None:
+
+        # Setup models.
+        predictor = _make_predictor_from_cli(args)
+        predictor.tracker = tracker
+
+        # Run inference!
+        labels_pr = predictor.predict(provider)
+
+        if output_path is None:
+            output_path = data_path + ".predictions.slp"
+
+        labels_pr.provenance["model_paths"] = predictor.model_paths
+        labels_pr.provenance["predictor"] = type(predictor).__name__
+
+    elif getattr(args, "tracking.tracker") is not None:
+        # Load predictions
+        print("Loading predictions...")
+        labels_pr = sleap.load_file(args.data_path)
+        frames = sorted(labels_pr.labeled_frames, key=lambda lf: lf.frame_idx)
+
+        print("Starting tracker...")
+        frames = run_tracker(frames=frames, tracker=tracker)
+        tracker.final_pass(frames)
+
+        labels_pr = Labels(labeled_frames=frames)
+
+        if output_path is None:
+            output_path = f"{data_path}.{tracker.get_name()}.slp"
+
+    else:
+        raise ValueError(
+            "Neither tracker type nor path to trained models specified. "
+            "Use \"sleap-track -m path/to/model ...' to specify models to use. "
+            "To retrack on predictions, must specify tracker. "
+            "Use \"sleap-track --tracking.tracker ...' to specify tracker to use."
+        )
 
     if args.no_empty_frames:
         # Clear empty frames if specified.
@@ -4547,18 +4585,12 @@ def main():
     print(f"Total runtime: {total_elapsed} secs")
     print(f"Predicted frames: {len(labels_pr)}/{len(provider)}")
 
-    output_path = args.output
-    if output_path is None:
-        output_path = data_path + ".predictions.slp"
-
     # Add provenance metadata to predictions.
     labels_pr.provenance["sleap_version"] = sleap.__version__
     labels_pr.provenance["platform"] = platform.platform()
     labels_pr.provenance["command"] = " ".join(sys.argv)
     labels_pr.provenance["data_path"] = data_path
-    labels_pr.provenance["model_paths"] = predictor.model_paths
     labels_pr.provenance["output_path"] = output_path
-    labels_pr.provenance["predictor"] = type(predictor).__name__
     labels_pr.provenance["total_elapsed"] = total_elapsed
     labels_pr.provenance["start_timestamp"] = start_timestamp
     labels_pr.provenance["finish_timestamp"] = finish_timestamp

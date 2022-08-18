@@ -54,13 +54,13 @@ from pathlib import Path
 
 from typing import Callable, List, Optional, Tuple
 
-from PySide2 import QtCore, QtGui
-from PySide2.QtCore import Qt, QEvent
+from qtpy import QtCore, QtGui
+from qtpy.QtCore import Qt, QEvent
 
-from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
-from PySide2.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox
-from PySide2.QtWidgets import QLabel, QPushButton, QComboBox
-from PySide2.QtWidgets import QMessageBox
+from qtpy.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
+from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox
+from qtpy.QtWidgets import QLabel, QPushButton, QComboBox
+from qtpy.QtWidgets import QMessageBox
 
 import sleap
 from sleap.gui.dialogs.metrics import MetricsTableDialog
@@ -1802,7 +1802,7 @@ def main():
         os.environ["USE_NON_NATIVE_FILE"] = "1"
 
     if platform.system() == "Darwin":
-        # TODO: Remove this workaround when we update to PySide2 >= 5.15.
+        # TODO: Remove this workaround when we update to qtpy >= 5.15.
         # https://bugreports.qt.io/browse/QTBUG-87014
         # https://stackoverflow.com/q/64818879
         os.environ["QT_MAC_WANTS_LAYER"] = "1"

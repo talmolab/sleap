@@ -5,9 +5,11 @@ from sleap.gui.widgets.video import (
     GraphicsView,
     QtInstance,
     QtVideoPlayer,
+    QtTextWithBackground,
 )
 
-import PySide2.QtCore as QtCore
+from qtpy import QtCore, QtWidgets
+from qtpy.QtGui import QColor
 
 
 def test_gui_video(qtbot):
@@ -89,3 +91,22 @@ def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
 def test_getInstancesBoundingRect():
     rect = GraphicsView.getInstancesBoundingRect([])
     assert rect.isNull()
+
+
+def test_QtTextWithBackground(qtbot):
+    scene = QtWidgets.QGraphicsScene()
+    view = QtWidgets.QGraphicsView()
+    view.setScene(scene)
+
+    txt = QtTextWithBackground()
+
+    txt.setDefaultTextColor(QColor("yellow"))
+    bg_color = txt.getBackgroundColor()
+    assert bg_color.lightness() == 0
+
+    txt.setDefaultTextColor(QColor("black"))
+    bg_color = txt.getBackgroundColor()
+    assert bg_color.lightness() == 255
+
+    scene.addItem(txt)
+    qtbot.addWidget(view)
