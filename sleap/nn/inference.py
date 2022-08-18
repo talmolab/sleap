@@ -442,6 +442,47 @@ class Predictor(ABC):
             # Just return the raw results.
             return list(generator)
 
+    def export_model(self, save_path: str = "exported_model", **kwargs):
+
+        """Export a trained SLEAP model as a frozen graph. Initializes model,
+        creates a dummy tracing batch and passes it through the model. The
+        frozen graph is saved along with training meta info.
+
+        Args:
+            save_path: Path to save frozen graph to
+            **kwargs: Extra keyword arguments used by
+            InferenceModel.export_model()
+
+        Returns:
+            None
+        """
+
+        self._initialize_inference_model()
+
+        first_inference_layer = self.inference_model.layers[0]
+        keras_model_shape = first_inference_layer.keras_model.input.shape
+
+        sample_shape = tuple(
+            (
+                np.array(keras_model_shape[1:3]) / first_inference_layer.input_scale
+            ).astype(int)
+        ) + (keras_model_shape[3],)
+
+        tracing_batch = np.zeros((1,) + sample_shape, dtype="uint8")
+        outputs = self.inference_model.predict(tracing_batch)
+
+        self.inference_model.export_model(save_path, **kwargs)
+
+        try:
+            self.confmap_config.save_json(
+                os.path.join(save_path, "confmap_config.json")
+            )
+            self.centroid_config.save_json(
+                os.path.join(save_path, "centroid_config.json")
+            )
+        except:
+            pass
+
 
 # TODO: Rewrite this class.
 @attr.s(auto_attribs=True)
@@ -927,7 +968,7 @@ class InferenceModel(tf.keras.Model):
 
         return outs
 
-    def save_model(
+    def export_model(
         self,
         output_path: str,
         save_format: str = "tf",
@@ -935,7 +976,6 @@ class InferenceModel(tf.keras.Model):
         save_traces: bool = True,
         model_name: Optional[str] = None,
         tensors: Optional[dict] = None,
-        **kwargs,
     ):
         """Save the frozen graph of a model.
 
@@ -4074,6 +4114,53 @@ def load_model(
         tmp_dir.cleanup()
 
     return predictor
+
+
+def export_model(
+    model_path: Union[str, List[str]], save_path: str = "exported_model", **kwargs
+):
+
+    """High level export of a trained SLEAP model as a frozen graph.
+
+    Args:
+        model_path: Path to model or list of path to models that were trained by SLEAP.
+            These should be the directories that contain `training_job.json` and
+            `best_model.h5`.
+
+        save_path: Path to save frozen graph to
+        **kwargs: Extra keyword arguments used by Predictor.export_model()
+
+    Returns:
+        None
+    """
+
+    predictor = load_model(model_path)
+    predictor.export_model(save_path, **kwargs)
+
+
+def export_cli():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-m",
+        "--model",
+        dest="models",
+        action="append",
+        help=(
+            "Path to trained model directory (with training_config.json). "
+            "Multiple models can be specified, each preceded by --model."
+        ),
+    )
+    parser.add_argument(
+        "-e",
+        "export_path",
+        type=str,
+        nargs="?",
+        default="exported_model",
+        help=("Path to data export model to."),
+    )
+
+    args, _ = parser.parse_known_args()
+    export_model(args["models"], args["export_path"])
 
 
 def _make_cli_parser() -> argparse.ArgumentParser:
