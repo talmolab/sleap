@@ -39,14 +39,20 @@ def test_pad_to_stride():
         ),
     )
     assert (
-        resizing.pad_to_stride.__wrapped__(tf.ones([3, 5, 1], dtype=tf.uint8), max_stride=2).dtype
+        resizing.pad_to_stride.__wrapped__(
+            tf.ones([3, 5, 1], dtype=tf.uint8), max_stride=2
+        ).dtype
         == tf.uint8
     )
     assert (
-        resizing.pad_to_stride.__wrapped__(tf.ones([3, 5, 1], dtype=tf.float32), max_stride=2).dtype
+        resizing.pad_to_stride.__wrapped__(
+            tf.ones([3, 5, 1], dtype=tf.float32), max_stride=2
+        ).dtype
         == tf.float32
     )
-    assert resizing.pad_to_stride.__wrapped__(tf.ones([4, 4, 1]), max_stride=2).shape == (4, 4, 1)
+    assert resizing.pad_to_stride.__wrapped__(
+        tf.ones([4, 4, 1]), max_stride=2
+    ).shape == (4, 4, 1)
 
 
 def test_resize_image():
