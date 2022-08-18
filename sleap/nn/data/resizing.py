@@ -30,6 +30,7 @@ def find_padding_for_stride(
     return pad_bottom, pad_right
 
 
+@tf.function
 def pad_to_stride(image: tf.Tensor, max_stride: int) -> tf.Tensor:
     """Pad an image to meet a max stride constraint.
 
