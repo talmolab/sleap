@@ -1,6 +1,5 @@
 import pytest
 import numpy as np
-from sleap.gui.learning.dialog import LearningDialog
 from sleap.io.dataset import Labels
 import tensorflow as tf
 import sleap

@@ -83,7 +83,7 @@ class VideoItemForInference(ItemForInference):
     def path(self):
         if self.labels_path is not None:
             return self.labels_path
-        elif self.use_absolute_path:
+        if self.use_absolute_path:
             return os.path.abspath(self.video.backend.filename)
         return self.video.backend.filename
 
