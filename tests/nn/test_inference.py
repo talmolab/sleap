@@ -804,8 +804,6 @@ def test_ensure_numpy(
 def test_retracking(
     centered_pair_predictions: Labels, tmpdir, output_path, tracker_method
 ):
-    # TODO(LM): Use smaller dataset ...
-    # TODO(LM):... --frames argument only works if data_path is a video
     slp_path = Path(tmpdir, "old_slp.slp")
     labels: Labels = Labels.save(centered_pair_predictions, slp_path)
 
