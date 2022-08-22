@@ -70,7 +70,7 @@ class VideoItemForInference(ItemForInference):
         frames: List of frames for inference; if None, then all frames are used
         labels_path: Path to .slp project; if None, then use video path instead.
         video_idx: Video index for inference; if None, then first video is used. Only
-            used if use_labels_path is specified.
+            used if labels_path is specified.
     """
 
     video: Video
