@@ -863,30 +863,3 @@ def test_sleap_track(
     args = [slp_path, "--cpu"]
     with pytest.raises(ValueError):
         sleap_track(args=args)
-
-
-def test_siv_inference(siv_robot: Labels, tmpdir):
-    pass
-    slp_path = str(Path(tmpdir, "old_slp.slp"))
-    labels: Labels = Labels.save(siv_robot, slp_path)
-
-    ld = LearningDialog(
-        "inference",
-        labels_filename=slp_path,
-        labels=labels,
-    )
-
-    # TODO(LM): Create spoof pipeline_form_data
-    pipeline_form_data = ...  # self.pipeline_form_widget.get_form_data()
-    items_for_inference = ld.get_items_for_inference(pipeline_form_data)
-
-    config_info_list = ld.get_every_head_config_data(pipeline_form_data)
-
-    # Run training/learning pipeline using the TrainingJobs
-    new_counts = runners.run_learning_pipeline(
-        labels_filename=slp_path,
-        labels=labels,
-        config_info_list=config_info_list,
-        inference_params=pipeline_form_data,
-        items_for_inference=items_for_inference,
-    )
