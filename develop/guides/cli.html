@@ -738,6 +738,7 @@ optional arguments:
                    [--verbosity {none,rich,json}]
                    [--video.dataset VIDEO.DATASET]
                    [--video.input_format VIDEO.INPUT_FORMAT]
+                   [--video.index VIDEO.INDEX]
                    [--cpu | --first-gpu | --last-gpu | --gpu GPU]
                    [--peak_threshold PEAK_THRESHOLD] [--batch_size BATCH_SIZE]
                    [--open-in-gui] [--tracking.tracker TRACKING.TRACKER]
@@ -786,7 +787,9 @@ optional arguments:
   -o OUTPUT, --output OUTPUT
                         The output filename to use for the predicted data. If
                         not provided, defaults to
-                        &#39;[data_path].predictions.slp&#39;.
+                        &#39;[data_path].predictions.slp&#39; if generating predictions or
+                        &#39;[data_path].[tracker].[similarity method].[matching method].slp&#39;
+                        if retracking predictions.
   --no-empty-frames     Clear any empty frames that did not have any detected
                         instances before saving to output.
   --verbosity {none,rich,json}
@@ -798,6 +801,9 @@ optional arguments:
                         The dataset for HDF5 videos.
   --video.input_format VIDEO.INPUT_FORMAT
                         The input_format for HDF5 videos.
+  --video.index VIDEO.INDEX
+                        The video index for inference; if None, then first video is
+                        used. Only used if data_path points to a labels file.
   --cpu                 Run inference only on CPU. If not specified, will use
                         available GPU.
   --first-gpu           Run inference on the first GPU, if available.
