@@ -3,7 +3,7 @@
 name: Build website
 
 on:
-  pull-request:
+  pull_request:
     types: [opened, reopened, synchronize]
     paths:
       - "docs/**"
