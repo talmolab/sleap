@@ -158,8 +158,8 @@ optional arguments:
   --video.input_format VIDEO.INPUT_FORMAT
                         The input_format for HDF5 videos.
   --video.index VIDEO.INDEX
-                        The video index for inference; if None, then first video is
-                        used. Only used if data_path points to a labels file.
+                        The video index for inference. Only used if data_path points to
+                        a labels file.
   --cpu                 Run inference only on CPU. If not specified, will use
                         available GPU.
   --first-gpu           Run inference on the first GPU, if available.

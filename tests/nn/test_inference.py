@@ -807,7 +807,10 @@ def test_retracking(
     labels: Labels = Labels.save(centered_pair_predictions, slp_path)
 
     # Create sleap-track command
-    cmd = f"{slp_path} --tracking.tracker {tracker_method} --frames 1-3 --cpu"
+    cmd = (
+        f"{slp_path} --tracking.tracker {tracker_method} --video.index 0 --frames 1-3 "
+        "--cpu"
+    )
     if output_path == "not_default":
         output_path = Path(tmpdir, "tracked_slp.slp")
         cmd += f" --output {output_path}"
@@ -846,7 +849,7 @@ def test_sleap_track(
     # Create sleap-track command
     args = (
         f"{slp_path} --model {min_centered_instance_model_path} "
-        f"--video-index 0 --frames 1-3  --cpu"
+        f"--video.index 0 --frames 1-3  --cpu"
     ).split()
 
     # Run inference
