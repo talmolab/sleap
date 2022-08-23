@@ -4,7 +4,7 @@ Widget which wraps Matplotlib canvas.
 Currently this is used for plotting metrics graphs in GUI.
 """
 
-from PySide2 import QtWidgets
+from qtpy import QtWidgets
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as Canvas
 import matplotlib

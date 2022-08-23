@@ -25,19 +25,38 @@ from collections import deque
 FORCE_REQUESTS = True
 
 
-from PySide2 import QtWidgets, QtCore
+from qtpy import QtWidgets, QtCore
 
-from PySide2.QtWidgets import (
+from qtpy.QtWidgets import (
     QApplication,
     QVBoxLayout,
     QWidget,
     QGraphicsView,
     QGraphicsScene,
+    QShortcut,
+    QGraphicsItem,
+    QGraphicsObject,
+    QGraphicsEllipseItem,
+    QGraphicsTextItem,
+    QGraphicsRectItem,
+    QGraphicsPolygonItem,
 )
-from PySide2.QtGui import QImage, QPixmap, QPainter, QPainterPath, QTransform
-from PySide2.QtGui import QPen, QBrush, QColor, QFont, QPolygonF
-from PySide2.QtGui import QKeyEvent, QMouseEvent, QKeySequence
-from PySide2.QtCore import Qt, QRectF, QPointF, QMarginsF, QLineF
+from qtpy.QtGui import (
+    QImage,
+    QPixmap,
+    QPainter,
+    QPainterPath,
+    QTransform,
+    QPen,
+    QBrush,
+    QColor,
+    QFont,
+    QPolygonF,
+    QKeyEvent,
+    QMouseEvent,
+    QKeySequence,
+)
+from qtpy.QtCore import Qt, QRectF, QPointF, QMarginsF, QLineF
 
 import atexit
 import math
@@ -45,15 +64,6 @@ import time
 import numpy as np
 
 from typing import Callable, List, Optional, Union
-
-from PySide2.QtWidgets import QGraphicsItem, QGraphicsObject
-
-from PySide2.QtWidgets import (
-    QGraphicsEllipseItem,
-    QGraphicsTextItem,
-    QGraphicsRectItem,
-    QGraphicsPolygonItem,
-)
 
 import sleap
 from sleap.prefs import prefs
@@ -317,7 +327,7 @@ class QtVideoPlayer(QWidget):
 
         def add_shortcut(key, step):
             # Register shortcut and have it trigger frame_step action
-            shortcut = QtWidgets.QShortcut(self.shortcuts[key], self)
+            shortcut = QShortcut(self.shortcuts[key], self)
             shortcut.activated.connect(lambda x=step: frame_step(x, False))
             self._shortcut_triggers[key] = shortcut
 
@@ -335,7 +345,7 @@ class QtVideoPlayer(QWidget):
                 )
 
                 # Register this new shortcut, enabling shift selection
-                shortcut = QtWidgets.QShortcut(shortcut_seq_with_shift, self)
+                shortcut = QShortcut(shortcut_seq_with_shift, self)
                 shortcut.activated.connect(lambda x=step: frame_step(x, True))
                 self._shortcut_triggers[key + "_shift_selection"] = shortcut
 
@@ -1430,6 +1440,22 @@ class QtNode(QGraphicsEllipseItem):
         x = self.scenePos().x()
         y = self.scenePos().y()
 
+        # Ensure node is placed within video boundaries
+        in_bounds = True
+        w = self.player.video.width
+        h = self.player.video.height
+        if (x > w) or (x < 0) or (y > h) or (y < 0):
+            in_bounds = False
+            if x > w:
+                x = w
+            elif x < 0:
+                x = 0
+            if y > h:
+                y = h
+            elif y < 0:
+                y = 0
+            self.setPos(x, y)
+
         context = self._parent_instance.player.context
         if user_change and context:
             context.setPointLocations(
@@ -1534,6 +1560,7 @@ class QtNode(QGraphicsEllipseItem):
             super(QtNode, self).mouseReleaseEvent(event)
             self.updatePoint(user_change=True)
         self.dragParent = False
+        self.player.plot()  # Redraw trails after node is moved
 
     def wheelEvent(self, event):
         """Custom event handler for mouse scroll wheel."""
@@ -1578,7 +1605,7 @@ class QtEdge(QGraphicsPolygonItem):
         self.show_non_visible = show_non_visible
 
         super(QtEdge, self).__init__(
-            polygon=QPolygonF(),
+            # polygon=QPolygonF(),
             parent=parent,
             *args,
             **kwargs,
@@ -1847,8 +1874,7 @@ class QtInstance(QGraphicsObject):
         self.updateBox()
 
     def updatePoints(self, complete: bool = False, user_change: bool = False):
-        """
-        Updates data and display for all points in skeleton.
+        """Update data and display for all points in skeleton.
 
         This is called any time the skeleton is manipulated as a whole.
 
@@ -2032,12 +2058,18 @@ class QtTextWithBackground(QGraphicsTextItem):
         """Method required by Qt."""
         return super(QtTextWithBackground, self).boundingRect()
 
+    def getBackgroundColor(self):
+        """Return background color appropriate for the text color."""
+        text_color = self.defaultTextColor()
+        background_color = "white" if text_color.lightnessF() < 0.4 else "black"
+        background_color = QColor(background_color)
+        background_color.setAlphaF(0.5)
+        return background_color
+
     def paint(self, painter, option, *args, **kwargs):
         """Method required by Qt."""
-        text_color = self.defaultTextColor()
         brush = painter.brush()
-        background_color = "white" if text_color.lightnessF() < 0.4 else "black"
-        background_color = QColor(background_color, a=0.5)
+        background_color = self.getBackgroundColor()
         painter.setBrush(QBrush(background_color))
         painter.drawRect(self.boundingRect())
         painter.setBrush(brush)

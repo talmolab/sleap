@@ -89,6 +89,17 @@ def imports_section():
         label("pyside2 import", False)
 
     try:
+        import PySide6
+
+        label("pyside6 import", True)
+        label("pyside path", PySide6.__file__)
+
+        call_self(["--gui-check"])
+
+    except:
+        label("pyside6 import", False)
+
+    try:
         import cv2
 
         label("cv2 import", True)

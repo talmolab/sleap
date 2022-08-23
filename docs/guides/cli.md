@@ -94,6 +94,7 @@ usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames]
                    [--verbosity {none,rich,json}]
                    [--video.dataset VIDEO.DATASET]
                    [--video.input_format VIDEO.INPUT_FORMAT]
+                   [--video.index VIDEO.INDEX]
                    [--cpu | --first-gpu | --last-gpu | --gpu GPU]
                    [--peak_threshold PEAK_THRESHOLD] [--batch_size BATCH_SIZE]
                    [--open-in-gui] [--tracking.tracker TRACKING.TRACKER]
@@ -142,7 +143,9 @@ optional arguments:
   -o OUTPUT, --output OUTPUT
                         The output filename to use for the predicted data. If
                         not provided, defaults to
-                        '[data_path].predictions.slp'.
+                        '[data_path].predictions.slp' if generating predictions or
+                        '[data_path].[tracker].[similarity method].[matching method].slp'
+                        if retracking predictions.
   --no-empty-frames     Clear any empty frames that did not have any detected
                         instances before saving to output.
   --verbosity {none,rich,json}
@@ -154,6 +157,9 @@ optional arguments:
                         The dataset for HDF5 videos.
   --video.input_format VIDEO.INPUT_FORMAT
                         The input_format for HDF5 videos.
+  --video.index VIDEO.INDEX
+                        The index of the video to run inference on. Only used if
+                        data_path points to a labels file.
   --cpu                 Run inference only on CPU. If not specified, will use
                         available GPU.
   --first-gpu           Run inference on the first GPU, if available.
@@ -238,7 +244,28 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -o OUTPUT, --output OUTPUT
-                        Path to output file (optional).
+                        Path to output file (optional). The analysis format expects an
+                        output path per video in the project. Otherwise, the default
+                        naming convention
+                        <slp path>.<video index>_<video filename>.analysis.h5 will be
+                        used for every video without a specified output path. Multiple
+                        outputs can be specified, each preceeded by --output.
+
+                        Example (analysis format):
+                          Input:
+                            predictions.slp: Path to .slp file to convert which has two
+                            videos:
+                            - first-video.mp4 at video index 0 and
+                            - second-video.mp4 at video index 1.
+                          Command:
+                            sleap-convert predictions.slp --format analysis --output analysis_video_0.h5
+                          Output analysis files:
+                            analysis_video_0.h5: Analysis file for first-video.mp4
+                              (at index 0) in predictions.slp.
+                            predictions.001_second-video.analysis.h5: Analysis file for
+                              second-video.mp4 (at index 1) in predictions.slp. Since
+                              only a single --output argument was specified, the
+                              analysis file for the latter video is given a default name.
   --format FORMAT       Output format. Default ('slp') is SLEAP dataset;
                         'analysis' results in analysis.h5 file; 'h5' or 'json'
                         results in SLEAP dataset with specified file format.
@@ -292,7 +319,7 @@ optional arguments:
   -f FPS, --fps FPS     Frames per second for output video (default: 25)
   --scale SCALE         Output image scale (default: 1.0)
   --crop CROP           Crop size as <width>,<height> (default: None)
-  --frames FRAMES       List of frames to predict. Either comma separated list (e.g. 1,2,3) 
+  --frames FRAMES       List of frames to predict. Either comma separated list (e.g. 1,2,3)
                         or a range separated by hyphen (e.g. 1-3). (default is entire video)
   -video-index VIDEO_INDEX
                         Index of video in labels dataset (default: 0)

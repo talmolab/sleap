@@ -403,7 +403,6 @@ class SizeMatcher:
                     target_width = tf.cast(
                         tf.cast(current_shape[-2], tf.float32) * hratio, tf.int32
                     )
-                    example[self.scale_key] = example[self.scale_key] * hratio
                 # Resize the image to fill one of the dimensions by preserving aspect
                 # ratio
                 image = tf.image.resize_with_pad(

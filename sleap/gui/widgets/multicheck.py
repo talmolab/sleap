@@ -11,8 +11,8 @@ Example: ::
 
 from typing import List, Optional
 
-from PySide2.QtCore import QRectF, Signal
-from PySide2.QtWidgets import QGridLayout, QGroupBox, QButtonGroup, QCheckBox
+from qtpy.QtCore import QRectF, Signal
+from qtpy.QtWidgets import QGridLayout, QGroupBox, QButtonGroup, QCheckBox
 
 
 class MultiCheckWidget(QGroupBox):

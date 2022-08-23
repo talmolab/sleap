@@ -4,49 +4,59 @@ name: CI
 on:
   pull_request:
     types: [opened, reopened, synchronize]
-  push:
     paths:
-      - 'sleap/**'
-      - 'tests/**'
-      - '.github/workflows/ci.yml'
-      - 'environment_no_cuda.yml'
-      - 'requirements.txt'
-      - 'dev_requirements.txt'
+      - "sleap/**"
+      - "tests/**"
+      - ".github/workflows/ci.yml"
+      - "environment_no_cuda.yml"
+      - "requirements.txt"
+      - "dev_requirements.txt"
+  push:
+    branches:
+      - master
+      - develop
+    paths:
+      - "sleap/**"
+      - "tests/**"
+      - ".github/workflows/ci.yml"
+      - "environment_no_cuda.yml"
+      - "requirements.txt"
+      - "dev_requirements.txt"
 
 jobs:
   type_check:
     name: Type Check
     runs-on: "ubuntu-18.04"
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up Python 3.7
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.7
-    - name: Install Dependencies
-      run: |
-        pip install mypy
-    - name: Run MyPy
-      # TODO: remove this once all MyPy errors get fixed
-      continue-on-error: true
-      run: |
-        mypy --follow-imports=skip --ignore-missing-imports sleap tests
+      - uses: actions/checkout@v1
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Install Dependencies
+        run: |
+          pip install mypy
+      - name: Run MyPy
+        # TODO: remove this once all MyPy errors get fixed
+        continue-on-error: true
+        run: |
+          mypy --follow-imports=skip --ignore-missing-imports sleap tests
   lint:
     name: Lint
     runs-on: "ubuntu-18.04"
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up Python 3.7
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.7
-    - name: Install Dependencies
-      run: |
-        pip install click==8.0.4
-        pip install black==21.6b0
-    - name: Run Black
-      run: |
-        black --check sleap tests
+      - uses: actions/checkout@v1
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Install Dependencies
+        run: |
+          pip install click==8.0.4
+          pip install black==21.6b0
+      - name: Run Black
+        run: |
+          black --check sleap tests
   tests:
     name: Tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -89,7 +99,8 @@ jobs:
           pytest
       - name: Test with pytest (Ubuntu)
         if: matrix.os == 'ubuntu-18.04'
-        shell: bash -l {0}
+        shell:
+          bash -l {0}
           # https://pytest-qt.readthedocs.io/en/latest/troubleshooting.html#github-actions
           # sudo apt-get install xvfb libxkbcommon-x11-0
           # sudo apt install libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0

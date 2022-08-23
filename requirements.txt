@@ -1,26 +1,31 @@
-numpy>=1.19.5,<=1.21.5
-attrs==21.2.0
+numpy>=1.19.5,<1.23.0
+attrs>=21.2.0,<=21.4.0
 cattrs==1.1.1
 jsonpickle==1.2
 networkx
-tensorflow>=2.6.3,<2.9.0
-h5py>=3.1.0,<=3.6.0
+tensorflow>=2.6.3,<2.9.0; platform_machine != 'arm64'
+tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
+tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64'
+h5py>=3.1.0,<=3.7.0
 python-rapidjson
-opencv-python-headless>=4.2.0.34,<=4.5.5.62
-# opencv-python @ git+https://github.com/talmolab/wrap_opencv-python-headless.git@ede49f6a23a73033216339f29515e59d594ba921
+opencv-python>=4.2.0,<=4.6.0
+# opencv-python-headless>=4.2.0.34,<=4.5.5.62
 pandas
 psutil
-PySide2>=5.13.2,<=5.14.1
+PySide2>=5.13.2,<=5.14.1; platform_machine != 'arm64'
+PySide2>=5.13.2,<=5.15.5; sys_platform == 'darwin' and platform_machine == 'arm64'
+qtpy>=2.0.1
 pyzmq
 pyyaml
+pillow>=8.3.1,<=8.4.0
 imageio<=2.15.0
 imgaug==0.4.0
-scipy>=1.4.1,<=1.7.3
+scipy>=1.4.1,<=1.9.0
 scikit-image
 scikit-learn==1.0.*
 scikit-video
 imgstore==0.2.9
-qimage2ndarray>=1.8.2,<=1.8.3
+qimage2ndarray>=1.9.0
 jsmin
 seaborn
 pykalman==0.9.5

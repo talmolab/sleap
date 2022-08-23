@@ -260,7 +260,7 @@ class VideoFrameSuggestions(object):
 def demo_gui():
     from sleap.gui.dialogs.formbuilder import YamlFormWidget
     from sleap import Labels
-    from PySide2.QtWidgets import QApplication
+    from qtpy.QtWidgets import QApplication
 
     labels = Labels.load_file(
         "tests/data/json_format_v2/centered_pair_predictions.json"
