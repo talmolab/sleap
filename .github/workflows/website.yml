@@ -3,6 +3,13 @@
 name: Build website
 
 on:
+  pull-request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - "docs/**"
+      - "README.rst"
+      - ".github/workflows/website.yml"
+
   push:
     branches:
       # 'main' triggers updates to 'sleap.ai', 'develop' to 'sleap.ai/develop'
@@ -15,6 +22,7 @@ on:
       - ".github/workflows/website.yml"
 
 jobs:
+  if: ${{ contains(github.event.head_commit.message, 'docs:') || (github.ref == 'refs/heads/**)}}
   build:
     runs-on: ubuntu-latest
     steps:
