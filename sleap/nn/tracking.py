@@ -87,6 +87,7 @@ class MatchedFrameInstances:
     instances_t: List[InstanceType]
     img_t: Optional[np.ndarray] = None
 
+
 @attr.s(auto_attribs=True, slots=True)
 class MatchedShiftedFrameInstances:
     ref_t: int
@@ -132,9 +133,7 @@ class FlowCandidateMaker:
                 if self.save_shifted_instances:
                     for ti in reversed(range(ref_t, t)):
                         if (ref_t, ti) in self.shifted_instances:
-                            ref_shifted_instances = self.shifted_instances[
-                                (ref_t, ti)
-                            ]
+                            ref_shifted_instances = self.shifted_instances[(ref_t, ti)]
                             # Use shifted instance as a reference
                             ref_img = ref_shifted_instances.img_t
                             ref_instances = ref_shifted_instances.instances_t
@@ -156,13 +155,12 @@ class FlowCandidateMaker:
 
                 # Save shifted instances.
                 if self.save_shifted_instances:
-                    self.shifted_instances[(ref_t, t)] = \
-                        MatchedShiftedFrameInstances(
-                            ref_t,
-                            t,
-                            shifted_instances,
-                            img,
-                        )
+                    self.shifted_instances[(ref_t, t)] = MatchedShiftedFrameInstances(
+                        ref_t,
+                        t,
+                        shifted_instances,
+                        img,
+                    )
 
         return candidate_instances
 
@@ -744,7 +742,9 @@ class Tracker(BaseTracker):
 
         option = dict(name="save_shifted_instances", default=False)
         option["type"] = bool
-        option["help"] = "For optical-flow: Save the shifted instances between elapsed frames"
+        option[
+            "help"
+        ] = "For optical-flow: Save the shifted instances between elapsed frames"
         options.append(option)
 
         def int_list_func(s):

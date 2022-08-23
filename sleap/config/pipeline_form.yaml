@@ -273,10 +273,8 @@ inference:
       default: 5
     - name: tracking.save_shifted_instance
       label: Save shifted instances
-      help: Create the optical flow frame by frame by saving shifted instances. 
-      It can improve the optical flow but uses more memory.
       type: bool
-      default: False
+      default: false
     - type: text
       text: '<b>Kalman filter-based tracking</b>:<br />
       Uses the above tracking options to track instances for an initial
