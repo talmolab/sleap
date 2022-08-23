@@ -94,6 +94,7 @@ usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames]
                    [--verbosity {none,rich,json}]
                    [--video.dataset VIDEO.DATASET]
                    [--video.input_format VIDEO.INPUT_FORMAT]
+                   [--video.index VIDEO.INDEX]
                    [--cpu | --first-gpu | --last-gpu | --gpu GPU]
                    [--peak_threshold PEAK_THRESHOLD] [--batch_size BATCH_SIZE]
                    [--open-in-gui] [--tracking.tracker TRACKING.TRACKER]
@@ -156,6 +157,9 @@ optional arguments:
                         The dataset for HDF5 videos.
   --video.input_format VIDEO.INPUT_FORMAT
                         The input_format for HDF5 videos.
+  --video.index VIDEO.INDEX
+                        The index of the video to run inference on. Only used if
+                        data_path points to a labels file.
   --cpu                 Run inference only on CPU. If not specified, will use
                         available GPU.
   --first-gpu           Run inference on the first GPU, if available.
