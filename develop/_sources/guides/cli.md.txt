@@ -107,6 +107,7 @@ usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames]
                    [--tracking.similarity TRACKING.SIMILARITY]
                    [--tracking.match TRACKING.MATCH]
                    [--tracking.track_window TRACKING.TRACK_WINDOW]
+                   [--tracking.save_shifted_instances TRACKING.SAVE_SHIFTED_INSTANCES]
                    [--tracking.min_new_track_points TRACKING.MIN_NEW_TRACK_POINTS]
                    [--tracking.min_match_points TRACKING.MIN_MATCH_POINTS]
                    [--tracking.img_scale TRACKING.IMG_SCALE]
@@ -204,6 +205,9 @@ optional arguments:
                         Options: hungarian, greedy (default: greedy)
   --tracking.track_window TRACKING.TRACK_WINDOW
                         How many frames back to look for matches (default: 5)
+  --tracking.save_shifted_instances TRACKING.SAVE_SHIFTED_INSTANCES
+                        For optical-flow: Save the shifted instances between
+                        elapsed frames for optimal comparison (default: 0)
   --tracking.min_new_track_points TRACKING.MIN_NEW_TRACK_POINTS
                         Minimum number of instance points for spawning new
                         track (default: 0)
