@@ -443,19 +443,31 @@ class Predictor(ABC):
             # Just return the raw results.
             return list(generator)
 
-    def export_model(self, save_path: str = "exported_model", **kwargs):
+    def export_model(
+        self,
+        save_path: str,
+        signatures: str = "serving_default",
+        save_traces: bool = True,
+        model_name: Optional[str] = None,
+        tensors: Optional[Dict[str, str]] = None,
+    ):
 
         """Export a trained SLEAP model as a frozen graph. Initializes model,
         creates a dummy tracing batch and passes it through the model. The
         frozen graph is saved along with training meta info.
 
         Args:
-            save_path: Path to save frozen graph to
-            **kwargs: Extra keyword arguments used by
-            InferenceModel.export_model()
+            save_path: Path to output directory to store the frozen graph
+            signatures: String defining the input and output types for
+                computation.
+            save_traces: If `True` (default) the SavedModel will store the
+                function traces for each layer
+            model_name: (Optional) Name to give the model. If given, will be
+                added to the output json file containing meta information about the
+                model
+            tensors: (Optional) Dictionary describing the predicted tensors (see
+                sleap.nn.data.utils.describe_tensors as an example)
 
-        Returns:
-            None
         """
 
         self._initialize_inference_model()
@@ -472,17 +484,9 @@ class Predictor(ABC):
         tracing_batch = np.zeros((1,) + sample_shape, dtype="uint8")
         outputs = self.inference_model.predict(tracing_batch)
 
-        self.inference_model.export_model(save_path, **kwargs)
-
-        try:
-            self.confmap_config.save_json(
-                os.path.join(save_path, "confmap_config.json")
-            )
-            self.centroid_config.save_json(
-                os.path.join(save_path, "centroid_config.json")
-            )
-        except:
-            pass
+        self.inference_model.export_model(
+            save_path, signatures, save_traces, model_name, tensors
+        )
 
 
 # TODO: Rewrite this class.
@@ -971,18 +975,16 @@ class InferenceModel(tf.keras.Model):
 
     def export_model(
         self,
-        output_path: str,
-        save_format: str = "tf",
+        save_path: str,
         signatures: str = "serving_default",
         save_traces: bool = True,
         model_name: Optional[str] = None,
-        tensors: Optional[dict] = None,
+        tensors: Optional[Dict[str, str]] = None,
     ):
         """Save the frozen graph of a model.
 
         Args:
-            output_path: Path to output directory to store the frozen graph
-            save_format: Whether to save the initial model to tensorflow or HDF5
+            save_path: Path to output directory to store the frozen graph
             signatures: String defining the input and output types for
                 computation.
             save_traces: If `True` (default) the SavedModel will store the
@@ -991,24 +993,19 @@ class InferenceModel(tf.keras.Model):
                 added to the output json file containing meta information about the
                 model
             tensors: (Optional) Dictionary describing the predicted tensors (see
-                sleap/nn/data/utils.py function `describe_tensors` as an example)
+                sleap.nn.data.utils.describe_tensors as an example)
 
-        Returns:
-            None
 
         Notes:
             This function call writes relevant meta data to an `info.json` file
-            in the given output_path in addition to the frozen_graph.pb file
+            in the given save_path in addition to the frozen_graph.pb file
 
         """
-        os.makedirs(output_path, exist_ok=True)
-
-        if isinstance(self, TopDownMultiClassInferenceModel):
-            self.instance_peaks.optimal_grouping = False
+        os.makedirs(save_path, exist_ok=True)
 
         with tempfile.TemporaryDirectory() as tmp_dir:
 
-            self.save(tmp_dir, save_format=save_format, save_traces=save_traces)
+            self.save(tmp_dir, save_format="tf", save_traces=save_traces)
 
             imported = tf.saved_model.load(tmp_dir)
 
@@ -1036,14 +1033,14 @@ class InferenceModel(tf.keras.Model):
         info["frozen_model_inputs"] = frozen_func.inputs
         info["frozen_model_outputs"] = frozen_func.outputs
 
-        with open(os.path.join(output_path, "info.json"), "w") as fp:
+        with (Path(save_path) / "info.json").open("w") as fp:
             json.dump(
                 info, fp, indent=4, sort_keys=True, separators=(",", ": "), default=str
             )
 
         tf.io.write_graph(
             graph_or_graph_def=frozen_func.graph,
-            logdir=output_path,
+            logdir=save_path,
             name="frozen_graph.pb",
             as_text=False,
         )
@@ -1453,6 +1450,19 @@ class SingleInstancePredictor(Predictor):
                 )
 
         return predicted_frames
+
+    def export_model(
+        self,
+        save_path: str,
+        signatures: str = "serving_default",
+        save_traces: bool = True,
+        model_name: Optional[str] = None,
+        tensors: Optional[Dict[str, str]] = None,
+    ):
+
+        super().export_model(save_path, signatures, save_traces, model_name, tensors)
+
+        self.confmap_config.save_json(os.path.join(save_path, "confmap_config.json"))
 
 
 class CentroidCrop(InferenceLayer):
@@ -2358,6 +2368,26 @@ class TopDownPredictor(Predictor):
             self.tracker.final_pass(predicted_frames)
 
         return predicted_frames
+
+    def export_model(
+        self,
+        save_path: str,
+        signatures: str = "serving_default",
+        save_traces: bool = True,
+        model_name: Optional[str] = None,
+        tensors: Optional[Dict[str, str]] = None,
+    ):
+
+        super().export_model(save_path, signatures, save_traces, model_name, tensors)
+
+        if self.confmap_config is not None:
+            self.confmap_config.save_json(
+                os.path.join(save_path, "confmap_config.json")
+            )
+        if self.centroid_config is not None:
+            self.centroid_config.save_json(
+                os.path.join(save_path, "centroid_config.json")
+            )
 
 
 class BottomUpInferenceLayer(InferenceLayer):
@@ -3418,7 +3448,7 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
             classification vectors. If `None` (the default), this will be detected
             automatically by searching for the first tensor that contains
             `"ClassVectorsHead"` in its name.
-        optimal_grouping: If `True`, group peaks from classification
+        optimal_grouping: If `True` (the default), group peaks from classification
             probabilities. If saving a frozen graph of the model, this will be
             overridden to `False`.
     """
@@ -3523,9 +3553,14 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
             shape `(samples, ?, output_height, output_width, nodes)` containing the
             confidence maps predicted by the model.
 
-            If the `return_class_vectors` attribe is set to `True`, the output will also
+            If the `return_class_vectors` attribute is set to `True`, the output will also
             contain a key named `"class_vectors"` containing the full classification
             probabilities for all crops.
+
+            If the `optimal_grouping` attribute is set to `True`, peaks are
+            grouped from classification properties. This is overridden to False
+            if exporting a frozen graph to allow for tracing. Note: If set to False
+            this will change the output dict keys and shapes.
         """
         if isinstance(inputs, dict):
             crops = inputs["crops"]
@@ -3692,6 +3727,19 @@ class TopDownMultiClassInferenceModel(InferenceModel):
         crop_output = self.centroid_crop(example)
         peaks_output = self.instance_peaks(crop_output)
         return peaks_output
+
+    def export_model(
+        self,
+        save_path: str,
+        signatures: str = "serving_default",
+        save_traces: bool = True,
+        model_name: Optional[str] = None,
+        tensors: Optional[Dict[str, str]] = None,
+    ):
+
+        self.instance_peaks.optimal_grouping = False
+
+        super().export_model(save_path, signatures, save_traces, model_name, tensors)
 
 
 @attr.s(auto_attribs=True)
@@ -4011,6 +4059,26 @@ class TopDownMultiClassPredictor(Predictor):
 
         return predicted_frames
 
+    def export_model(
+        self,
+        save_path: str,
+        signatures: str = "serving_default",
+        save_traces: bool = True,
+        model_name: Optional[str] = None,
+        tensors: Optional[Dict[str, str]] = None,
+    ):
+
+        super().export_model(save_path, signatures, save_traces, model_name, tensors)
+
+        if self.confmap_config is not None:
+            self.confmap_config.save_json(
+                os.path.join(save_path, "confmap_config.json")
+            )
+        if self.centroid_config is not None:
+            self.centroid_config.save_json(
+                os.path.join(save_path, "centroid_config.json")
+            )
+
 
 def load_model(
     model_path: Union[str, List[str]],
@@ -4118,7 +4186,12 @@ def load_model(
 
 
 def export_model(
-    model_path: Union[str, List[str]], save_path: str = "exported_model", **kwargs
+    model_path: Union[str, List[str]],
+    save_path: str = "exported_model",
+    signatures: str = "serving_default",
+    save_traces: bool = True,
+    model_name: Optional[str] = None,
+    tensors: Optional[Dict[str, str]] = None,
 ):
 
     """High level export of a trained SLEAP model as a frozen graph.
@@ -4127,16 +4200,21 @@ def export_model(
         model_path: Path to model or list of path to models that were trained by SLEAP.
             These should be the directories that contain `training_job.json` and
             `best_model.h5`.
+        save_path: Path to output directory to store the frozen graph
+        signatures: String defining the input and output types for
+            computation.
+        save_traces: If `True` (default) the SavedModel will store the
+            function traces for each layer
+        model_name: (Optional) Name to give the model. If given, will be
+            added to the output json file containing meta information about the
+            model
+        tensors: (Optional) Dictionary describing the predicted tensors (see
+            sleap.nn.data.utils.describe_tensors as an example)
 
-        save_path: Path to save frozen graph to
-        **kwargs: Extra keyword arguments used by Predictor.export_model()
-
-    Returns:
-        None
     """
 
     predictor = load_model(model_path)
-    predictor.export_model(save_path, **kwargs)
+    predictor.export_model(save_path, signatures, save_traces, model_name, tensors)
 
 
 def export_cli():
@@ -4261,6 +4339,15 @@ def _make_cli_parser() -> argparse.ArgumentParser:
         type=str,
         default="channels_last",
         help="The input_format for HDF5 videos.",
+    )
+    parser.add_argument(
+        "--video.index",
+        type=str,
+        default="",
+        help=(
+            "Integer index of video in .slp file to predict on. To be used with an .slp"
+            " path as an alternative to specifying the video path."
+        ),
     )
     device_group = parser.add_mutually_exclusive_group(required=False)
     device_group.add_argument(
@@ -4400,6 +4487,11 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
             provider = LabelsReader.from_user_labeled_frames(labels)
         elif args.only_suggested_frames:
             provider = LabelsReader.from_unlabeled_suggestions(labels)
+        elif getattr(args, "video.index") != "":
+            provider = VideoReader(
+                video=labels.videos[int(getattr(args, "video.index"))],
+                example_indices=frame_list(args.frames),
+            )
         else:
             provider = LabelsReader(labels)
 

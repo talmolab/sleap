@@ -497,7 +497,10 @@ class LearningDialog(QtWidgets.QDialog):
             )
         else:
             items_for_inference = runners.ItemsForInference.from_video_frames_dict(
-                frame_selection, total_frame_count=frame_count
+                video_frames_dict=frame_selection,
+                total_frame_count=frame_count,
+                labels_path=self.labels_filename,
+                labels=self.labels,
             )
         return items_for_inference
 
