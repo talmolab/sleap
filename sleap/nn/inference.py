@@ -4019,6 +4019,15 @@ def _make_cli_parser() -> argparse.ArgumentParser:
         default="channels_last",
         help="The input_format for HDF5 videos.",
     )
+    parser.add_argument(
+        "--video.index",
+        type=str,
+        default="",
+        help=(
+            "Integer index of video in .slp file to predict on. To be used with an .slp"
+            " path as an alternative to specifying the video path."
+        ),
+    )
     device_group = parser.add_mutually_exclusive_group(required=False)
     device_group.add_argument(
         "--cpu",
@@ -4157,6 +4166,11 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
             provider = LabelsReader.from_user_labeled_frames(labels)
         elif args.only_suggested_frames:
             provider = LabelsReader.from_unlabeled_suggestions(labels)
+        elif getattr(args, "video.index") != "":
+            provider = VideoReader(
+                video=labels.videos[int(getattr(args, "video.index"))],
+                example_indices=frame_list(args.frames),
+            )
         else:
             provider = LabelsReader(labels)
 

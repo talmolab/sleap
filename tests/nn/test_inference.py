@@ -35,6 +35,8 @@ from sleap.nn.inference import (
     main as sleap_track,
 )
 
+from sleap.gui.learning import runners
+
 sleap.nn.system.use_cpu_only()
 
 
@@ -805,7 +807,10 @@ def test_retracking(
     labels: Labels = Labels.save(centered_pair_predictions, slp_path)
 
     # Create sleap-track command
-    cmd = f"{slp_path} --tracking.tracker {tracker_method} --frames 1-3"
+    cmd = (
+        f"{slp_path} --tracking.tracker {tracker_method} --video.index 0 --frames 1-3 "
+        "--cpu"
+    )
     if output_path == "not_default":
         output_path = Path(tmpdir, "tracked_slp.slp")
         cmd += f" --output {output_path}"
@@ -836,13 +841,19 @@ def test_retracking(
 
 
 def test_sleap_track(
-    centered_pair_predictions: Labels, min_centered_instance_model_path: str, tmpdir
+    centered_pair_predictions: Labels,
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    tmpdir,
 ):
     slp_path = str(Path(tmpdir, "old_slp.slp"))
     labels: Labels = Labels.save(centered_pair_predictions, slp_path)
 
     # Create sleap-track command
-    args = f"{slp_path} --model {min_centered_instance_model_path} --frames 1-3".split()
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
 
     # Run inference
     sleap_track(args=args)
@@ -852,6 +863,6 @@ def test_sleap_track(
     assert Path(output_path).exists()
 
     # Create invalid sleap-track command
-    args = [slp_path]
+    args = [slp_path, "--cpu"]
     with pytest.raises(ValueError):
         sleap_track(args=args)
