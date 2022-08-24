@@ -280,7 +280,9 @@ class VideoFrameSuggestions(object):
             map(int, np.argwhere(displacements - data_min > data_range * threshold))
         )
 
-        prev_idx = [sugg.frame_idx for sugg in labels.suggestions]
+        prev_idx = [
+            sugg.frame_idx for sugg in labels.suggestions if sugg.video == video
+        ]
         unique_idx = set(frame_idxs) - set(prev_idx)
 
         return cls.idx_list_to_frame_list(unique_idx, video)
