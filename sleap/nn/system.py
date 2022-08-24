@@ -214,20 +214,14 @@ def get_gpu_memory() -> dict:
     memory_dict = {}
 
     for row in memory_string:
-        # Get the gpu ID, the first element of the split
+        # Get the gpu ID and the available/total memory
         gpu_id = row.split(",")[0]
-        # Get available (unused) memory
-        available = row.split(",")[1]
-        # Get total memory
-        total = row.split(",")[2]
+        available_memory = row.split(",")[1]
+        total_memory = row.split(",")[2]
 
-        # Create translators for removing megabyte text returned by nvidia-smi
-        available_translator = available.maketrans("MiB", "   ")
-        total_translator = total.maketrans("MiB", "   ")
-
-        # Perform translation and strip the spaces from the resulting strings
-        available_memory = available.translate(available_translator).strip()
-        total_memory = total.translate(total_translator).strip()
+        # Removing megabyte text returned by nvidia-smi
+        available_memory = available_memory.split()[0]
+        total_memory = total_memory.split()[0]
 
         # Append percent of GPU available to GPU ID
         memory_dict[gpu_id] = round(int(available_memory) / int(total_memory), 4)

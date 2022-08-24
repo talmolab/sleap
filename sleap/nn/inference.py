@@ -700,7 +700,7 @@ class FindInstancePeaksGroundTruth(tf.keras.layers.Layer):
             tf.int64
         )  # (batch_size, n_centroids, 1, 1, 2)
         dists = a - b  # (batch_size, n_centroids, n_insts, n_nodes, 2)
-        dists = tf.sqrt(tf.reduce_sum(dists ** 2, axis=-1))  # reduce over xy
+        dists = tf.sqrt(tf.reduce_sum(dists**2, axis=-1))  # reduce over xy
         dists = tf.reduce_min(dists, axis=-1)  # reduce over nodes
         dists = dists.to_tensor(
             tf.cast(np.NaN, tf.float32)
@@ -4045,7 +4045,13 @@ def _make_cli_parser() -> argparse.ArgumentParser:
         help="Run inference on the last GPU, if available.",
     )
     device_group.add_argument(
-        "--gpu", type=int, default=0, help="Run inference on the i-th GPU specified."
+        "--gpu",
+        type=str,
+        default="auto",
+        help=(
+            "Run training on the i-th GPU on the system or, if 'auto', on the GPU with "
+            "the highest percentage of available memory."
+        ),
     )
     parser.add_argument(
         "--max_edge_length_ratio",
@@ -4290,7 +4296,12 @@ def main(args: list = None):
         elif args.last_gpu:
             sleap.nn.system.use_last_gpu()
         else:
-            sleap.nn.system.use_gpu(args.gpu)
+            if args.gpu == "auto":
+                available_memory = sleap.nn.system.get_gpu_memory()
+                gpu_ind = max(available_memory, key=available_memory.get)
+            else:
+                gpu_ind = args.gpu
+            sleap.nn.system.use_gpu(int(gpu_ind))
     sleap.disable_preallocation()
 
     print("Versions:")
