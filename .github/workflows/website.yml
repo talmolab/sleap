@@ -3,13 +3,6 @@
 name: Build website
 
 on:
-  pull_request:
-    types: [opened, reopened, synchronize]
-    paths:
-      - "docs/**"
-      - "README.rst"
-      - ".github/workflows/website.yml"
-
   push:
     branches:
       # 'main' triggers updates to 'sleap.ai', 'develop' to 'sleap.ai/develop'
@@ -23,8 +16,6 @@ on:
 
 jobs:
   build:
-    # To run on forked PRs, must specify PR number equal as github.event.number
-    if: (github.event.number == 870 ) || startsWith(github.ref, 'refs/heads/')
     runs-on: ubuntu-latest
     steps:
       # Setup
