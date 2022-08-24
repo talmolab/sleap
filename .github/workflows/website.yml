@@ -22,6 +22,21 @@ on:
       - ".github/workflows/website.yml"
 
 jobs:
+  print-api-info:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Dump Github context
+      env:
+        GIHTUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
+    - name: Print API info
+      shell: bash -l {0}
+      run: |
+        echo "github.event.commit"
+        echo "github.event.head_commit.message = ${{ github.event.head_commit.messag }}"
+        echo "contains(github.event.head_commit.message, 'docs:') = ${{ contains(github.event.head_commit.message, 'docs:') }}"
+        echo "github.ref = ${{ github.ref }}"
+        echo "startsWith(github.ref, 'refs/heads/**') = ${{ startsWith(github.ref, 'refs/heads/**') }}"
   build:
     if: contains(github.event.head_commit.message, 'docs:') || startsWith(github.ref, 'refs/heads/**')
     runs-on: ubuntu-latest
