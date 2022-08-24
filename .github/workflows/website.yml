@@ -22,21 +22,8 @@ on:
       - ".github/workflows/website.yml"
 
 jobs:
-  print-api-info:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Dump Github context
-      env:
-        GIHTUB_CONTEXT: ${{ toJson(github) }}
-      run: echo "$GITHUB_CONTEXT"
-    - name: Print API info
-      shell: bash -l {0}
-      run: |
-        echo "github.event.number = ${{ github.event.number }}"
-        echo "github.ref = ${{ github.ref }}"
-        echo "startsWith(github.ref, 'refs/heads/') = ${{ startsWith(github.ref, 'refs/heads/') }}"
-        echo "(github.event.number == 870 ) || startsWith(github.ref, 'refs/heads/') = ${{ (github.event.number == 870 ) || startsWith(github.ref, 'refs/heads/') }}"
   build:
+    # To run on forked PRs, must specify PR number equal as github.event.number
     if: (github.event.number == 870 ) || startsWith(github.ref, 'refs/heads/')
     runs-on: ubuntu-latest
     steps:

@@ -58,7 +58,6 @@ jobs:
         run: |
           black --check sleap tests
   tests:
-    if: (github.event.number != 870 )
     name: Tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
