@@ -188,6 +188,11 @@ class StatisticSeries:
         result = reduce_funct(displacement_distances, axis=1)
         result[np.isnan(result)] = 0
 
+        # TODO(LM): Flagging this because I want to ensure it was not
+        #  implemented for a particular reason. Will need to check where
+        #  this piece of code is called.
+        # result[1:] = result[:-1]
+
         return result
 
     def get_min_centroid_proximity_series(self, video):

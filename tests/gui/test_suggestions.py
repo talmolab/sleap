@@ -18,6 +18,8 @@ def test_velocity_suggestions(centered_pair_predictions):
         ),
     )
     assert len(suggestions) == 45
+    assert suggestions[0].frame_idx == 21
+    assert suggestions[1].frame_idx == 45
     assert suggestions[0].frame_idx == 131
     assert suggestions[1].frame_idx == 765
 
@@ -84,9 +86,7 @@ def test_video_selection(centered_pair_predictions: Labels):
     # Testing the functionality of choosing a specific video in a project and
     # only generating suggestions for the video
 
-    centered_pair_predictions.add_video(
-        Video.from_filename(filename="robot_3_frames.mp4")
-    )
+    centered_pair_predictions.add_video(Video.from_filename(filename="test.mp4"))
     # Testing suggestion generation from Image Features
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
@@ -202,105 +202,96 @@ def test_unqiue_suggestions(params, small_robot_image_vid):
     track_a = Track(0, "a")
 
     instances1 = []
-    instances1.append(
-        PredictedInstance(
-            skeleton=skeleton,
-            score=1,
-            track=track_a,
-            points=dict(
-                a=PredictedPoint(1, 3, score=0.5), b=PredictedPoint(7, 9, score=0.5)
+    instances1.extend(
+        [
+            PredictedInstance(
+                skeleton=skeleton,
+                score=1,
+                track=track_a,
+                points=dict(
+                    a=PredictedPoint(1, 3, score=0.5), b=PredictedPoint(7, 9, score=0.5)
+                ),
             ),
-        )
-    )
-
-    instances1.append(
-        PredictedInstance(
-            skeleton=skeleton,
-            score=5,
-            track=track_a,
-            points=dict(
-                a=PredictedPoint(2, 4, score=0.7), b=PredictedPoint(6, 5, score=0.7)
+            PredictedInstance(
+                skeleton=skeleton,
+                score=5,
+                track=track_a,
+                points=dict(
+                    a=PredictedPoint(2, 4, score=0.7), b=PredictedPoint(6, 5, score=0.7)
+                ),
             ),
-        )
-    )
-
-    instances1.append(
-        PredictedInstance(
-            skeleton=skeleton,
-            score=5,
-            track=track_a,
-            points=dict(
-                a=PredictedPoint(7, 3, score=0.7), b=PredictedPoint(8, 10, score=0.7)
+            PredictedInstance(
+                skeleton=skeleton,
+                score=5,
+                track=track_a,
+                points=dict(
+                    a=PredictedPoint(7, 3, score=0.7),
+                    b=PredictedPoint(8, 10, score=0.7),
+                ),
             ),
-        )
+        ]
     )
 
     instances2 = []
-    instances2.append(
-        PredictedInstance(
-            skeleton=skeleton,
-            score=1,
-            track=track_a,
-            points=dict(
-                a=PredictedPoint(2, 4, score=0.5), b=PredictedPoint(7, 9, score=0.5)
+    instances2.extend(
+        [
+            PredictedInstance(
+                skeleton=skeleton,
+                score=1,
+                track=track_a,
+                points=dict(
+                    a=PredictedPoint(2, 4, score=0.5), b=PredictedPoint(7, 9, score=0.5)
+                ),
             ),
-        )
-    )
-
-    instances2.append(
-        PredictedInstance(
-            skeleton=skeleton,
-            score=5,
-            track=track_a,
-            points=dict(
-                a=PredictedPoint(3, 7, score=0.7), b=PredictedPoint(6, 5, score=0.7)
+            PredictedInstance(
+                skeleton=skeleton,
+                score=5,
+                track=track_a,
+                points=dict(
+                    a=PredictedPoint(3, 7, score=0.7), b=PredictedPoint(6, 5, score=0.7)
+                ),
             ),
-        )
-    )
-
-    instances2.append(
-        PredictedInstance(
-            skeleton=skeleton,
-            score=5,
-            track=track_a,
-            points=dict(
-                a=PredictedPoint(8, 1, score=0.7), b=PredictedPoint(8, 10, score=0.7)
+            PredictedInstance(
+                skeleton=skeleton,
+                score=5,
+                track=track_a,
+                points=dict(
+                    a=PredictedPoint(8, 1, score=0.7),
+                    b=PredictedPoint(8, 10, score=0.7),
+                ),
             ),
-        )
+        ]
     )
 
     instances3 = []
-    instances3.append(
-        PredictedInstance(
-            skeleton=skeleton,
-            score=1,
-            track=track_a,
-            points=dict(
-                a=PredictedPoint(8, 9, score=0.5), b=PredictedPoint(7, 9, score=0.5)
+    instances3.extend(
+        [
+            PredictedInstance(
+                skeleton=skeleton,
+                score=1,
+                track=track_a,
+                points=dict(
+                    a=PredictedPoint(8, 9, score=0.5), b=PredictedPoint(7, 9, score=0.5)
+                ),
             ),
-        )
-    )
-
-    instances3.append(
-        PredictedInstance(
-            skeleton=skeleton,
-            score=5,
-            track=track_a,
-            points=dict(
-                a=PredictedPoint(2, 3, score=0.7), b=PredictedPoint(6, 5, score=0.7)
+            PredictedInstance(
+                skeleton=skeleton,
+                score=5,
+                track=track_a,
+                points=dict(
+                    a=PredictedPoint(2, 3, score=0.7), b=PredictedPoint(6, 5, score=0.7)
+                ),
             ),
-        )
-    )
-
-    instances3.append(
-        PredictedInstance(
-            skeleton=skeleton,
-            score=5,
-            track=track_a,
-            points=dict(
-                a=PredictedPoint(5, 9, score=0.7), b=PredictedPoint(8, 10, score=0.7)
+            PredictedInstance(
+                skeleton=skeleton,
+                score=5,
+                track=track_a,
+                points=dict(
+                    a=PredictedPoint(5, 9, score=0.7),
+                    b=PredictedPoint(8, 10, score=0.7),
+                ),
             ),
-        )
+        ]
     )
 
     labeled_frame1 = LabeledFrame(
@@ -326,9 +317,6 @@ def test_unqiue_suggestions(params, small_robot_image_vid):
 
     print("new_suggestions", new_suggestions)
 
-    # TODO(JX): Double check whether returning one frame each time for image features is expected.
-    # TODO(JX): Double check whether returning no frame during new suggestions for prediction score
-    #  is expected when given 3 frames and one low score instance in each frame.
     if params["method"] == "image features":
         assert len(suggestions) == 1
         assert len(new_suggestions) == 1

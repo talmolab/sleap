@@ -85,19 +85,16 @@ class VideoFrameSuggestions(object):
         suggestions = []
         sugg_idx_dict = {video: [] for video in videos}
 
-        sugg_idx = [(sugg.video, sugg.frame_idx) for sugg in labels.suggestions]
-
-        # Turn list of tuples into dict where first argument in tuple is dict key
-        for vid, frame in sugg_idx:
-            sugg_idx_dict[vid].append(frame)
+        for sugg in labels.suggestions:
+            sugg_idx_dict[sugg.video].append(sugg.frame_idx)
 
         for video in videos:
             vid_idx = list(range(video.frames))
             vid_sugg_idx = sugg_idx_dict[video]
-            unique_idx = set(vid_idx) ^ set(vid_sugg_idx)
+            unique_idx = set(vid_idx) - set(vid_sugg_idx)
 
             if sampling_method == "stride":
-                frame_increment = video.frames // per_video
+                frame_increment = len(unique_idx) // per_video
                 frame_increment = 1 if frame_increment == 0 else frame_increment
                 vid_suggestions = list(range(0, len(unique_idx), frame_increment))[
                     :per_video
@@ -105,7 +102,9 @@ class VideoFrameSuggestions(object):
             else:
                 # random sampling
                 frames_num = per_video
-                frames_num = video.frames if (frames_num > video.frames) else frames_num
+                frames_num = (
+                    len(unique_idx) if (frames_num > len(unique_idx)) else frames_num
+                )
                 if len(unique_idx) == 1:
                     vid_suggestions = list(unique_idx)
                 else:
@@ -143,6 +142,12 @@ class VideoFrameSuggestions(object):
         brisk_threshold = kwargs.get("brisk_threshold", 80)
         vocab_size = kwargs.get("vocab_size", 20)
 
+        unique_suggestions = []
+        sugg_idx_dict = {video: [] for video in videos}
+
+        for sugg in labels.suggestions:
+            sugg_idx_dict[sugg.video].append(sugg.frame_idx)
+
         pipeline = FeatureSuggestionPipeline(
             per_video=per_video,
             scale=scale,
@@ -162,17 +167,13 @@ class VideoFrameSuggestions(object):
             # Run pipeline separately (in parallel) for each video
             suggestions = ParallelFeaturePipeline.run(pipeline, videos)
 
-        prev_idx = [
-            sugg.frame_idx for sugg in labels.suggestions  # for sugg in sugg_lst
-        ]
-
-        vid_idx = [frame.frame_idx for frame in labels.labeled_frames]
-
-        unique_idx = set(vid_idx) ^ set(prev_idx)
-
-        unique_suggestions = [
-            sugg for sugg in suggestions if sugg.frame_idx in unique_idx
-        ]
+        for sugg in suggestions:
+            video = sugg.video
+            vid_idx = list(range(video.frames))
+            vid_sugg_idx = sugg_idx_dict[video]
+            unique_idx = set(vid_idx) - set(vid_sugg_idx)
+            if sugg.frame_idx in unique_idx:
+                unique_suggestions.append(sugg)
 
         return unique_suggestions
 
@@ -229,10 +230,9 @@ class VideoFrameSuggestions(object):
             sugg.frame_idx for sugg in labels.suggestions if sugg.video == video
         ]
 
-        unique_idx = set(result) ^ set(prev_idx)
-        suggestions = cls.idx_list_to_frame_list(list(unique_idx), video)
+        unique_idx = set(result) - set(prev_idx)
 
-        return suggestions
+        return cls.idx_list_to_frame_list(list(unique_idx), video)
 
     @classmethod
     def velocity(
@@ -273,15 +273,17 @@ class VideoFrameSuggestions(object):
         data_range = np.ptp(displacements)
         data_min = np.min(displacements)
 
+        # TODO(LM): Flagging this because I'm hesitant that it might
+        #  break cases where multiple tracks exist. We will need to
+        #  teston projects with multiple tracks.
         frame_idxs = list(
             map(int, np.argwhere(displacements - data_min > data_range * threshold))
         )
 
-        prev_idx = [sugg_lst.frame_idx for sugg_lst in labels.suggestions]
+        prev_idx = [sugg.frame_idx for sugg in labels.suggestions]
         unique_idx = set(frame_idxs) - set(prev_idx)
-        suggestions = cls.idx_list_to_frame_list(unique_idx, video)
 
-        return suggestions
+        return cls.idx_list_to_frame_list(unique_idx, video)
 
     # Utility functions
 
