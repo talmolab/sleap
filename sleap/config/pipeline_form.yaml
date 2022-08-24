@@ -271,6 +271,10 @@ inference:
       label: Elapsed Frame Window
       type: int
       default: 5
+    - name: tracking.save_shifted_instance
+      label: Save shifted instances
+      type: bool
+      default: false
     - type: text
       text: '<b>Kalman filter-based tracking</b>:<br />
       Uses the above tracking options to track instances for an initial

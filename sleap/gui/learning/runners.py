@@ -14,6 +14,7 @@ import yaml
 from pathlib import Path
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Text, Tuple
+import logging
 
 from qtpy import QtWidgets
 
@@ -22,6 +23,8 @@ from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.io.video import SingleImageVideo
 from sleap.nn import training
 from sleap.nn.config import TrainingJobConfig
+
+logger = logging.getLogger(__name__)
 
 
 def kill_process(pid: int):
