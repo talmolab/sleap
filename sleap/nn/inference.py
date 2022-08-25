@@ -4297,11 +4297,10 @@ def main(args: list = None):
             sleap.nn.system.use_last_gpu()
         else:
             if args.gpu == "auto":
-                available_memory = sleap.nn.system.get_gpu_memory()
-                gpu_ind = max(available_memory, key=available_memory.get)
+                gpu_ind = np.argmax(sleap.nn.system.get_gpu_memory())
             else:
-                gpu_ind = args.gpu
-            sleap.nn.system.use_gpu(int(gpu_ind))
+                gpu_ind = int(args.gpu)
+            sleap.nn.system.use_gpu(gpu_ind)
     sleap.disable_preallocation()
 
     print("Versions:")

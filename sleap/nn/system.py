@@ -186,18 +186,15 @@ def best_logical_device_name() -> Text:
     return device_name
 
 
-def get_gpu_memory() -> dict:
-    """Return dictionary of GPU(s) and current vRAM usage on a machine.
+def get_gpu_memory() -> List[int]:
+    """Return list of available GPU memory.
 
     Returns:
-        Dictionary of GPU indexes (key) and percent of memory available (values)
-
-    Notes:
-        A value of 1.0 means all memory is available, or 100%.
+        List of available GPU memory with indices corresponding to GPU indices.
     """
     command = [
         "nvidia-smi",
-        "--query-gpu=index,memory.free,memory.total",
+        "--query-gpu=memory.free",
         "--format=csv",
     ]
 
@@ -211,19 +208,12 @@ def get_gpu_memory() -> dict:
     # and finally slice off the csv header in the 0th element.
     memory_string = subprocess_result.decode("ascii").split("\n")[:-1][1:]
 
-    memory_dict = {}
-
+    memory_list = []
     for row in memory_string:
-        # Get the gpu ID and the available/total memory
-        gpu_id = row.split(",")[0]
-        available_memory = row.split(",")[1]
-        total_memory = row.split(",")[2]
-
         # Removing megabyte text returned by nvidia-smi
-        available_memory = available_memory.split()[0]
-        total_memory = total_memory.split()[0]
+        available_memory = row.split()[0]
 
-        # Append percent of GPU available to GPU ID
-        memory_dict[gpu_id] = round(int(available_memory) / int(total_memory), 4)
+        # Append percent of GPU available to GPU ID, assume GPUs returned in index order
+        memory_list.append(int(available_memory))
 
-    return memory_dict
+    return memory_list
