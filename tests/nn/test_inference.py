@@ -1064,6 +1064,8 @@ def test_retracking(
         f"{slp_path} --tracking.tracker {tracker_method} --video.index 0 --frames 1-3 "
         "--cpu"
     )
+    if tracker_method == "flow":
+        cmd += " --tracking.save_shifted_instances 1"
     if output_path == "not_default":
         output_path = Path(tmpdir, "tracked_slp.slp")
         cmd += f" --output {output_path}"
