@@ -58,6 +58,7 @@ setup(
             "sleap-track=sleap.nn.inference:main",
             "sleap-inspect=sleap.info.labels:main",
             "sleap-diagnostic=sleap.diagnostic:main",
+            "sleap-export=sleap.nn.inference:export_cli",
         ],
     },
     python_requires=">=3.6",
