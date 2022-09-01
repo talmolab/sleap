@@ -4,7 +4,17 @@ name: CI
 on:
   pull_request:
     types: [opened, reopened, synchronize]
+    paths:
+      - "sleap/**"
+      - "tests/**"
+      - ".github/workflows/ci.yml"
+      - "environment_no_cuda.yml"
+      - "requirements.txt"
+      - "dev_requirements.txt"
   push:
+    branches:
+      - master
+      - develop
     paths:
       - "sleap/**"
       - "tests/**"

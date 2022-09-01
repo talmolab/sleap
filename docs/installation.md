@@ -135,7 +135,7 @@ We strongly recommend that you **only use this method if you know what you're do
 
 SLEAP can be installed on newer M1 Macs by following these instructions:
 
-1. In addition to being on an M1 Mac, make sure you're on **macOS Monterey**, i.e., version 12+. I tested this on a MacBook Pro (14-inch, 2021) running macOS version 12.0.1.
+1. In addition to being on an M1 Mac, make sure you're on **macOS Monterey**, i.e., version 12+. We've tested this on a MacBook Pro (14-inch, 2021) running macOS version 12.0.1.
 
 2. If you don't have it yet, install **homebrew**, a convenient package manager for Macs (skip this if you can run `brew` from the terminal):
 
@@ -163,13 +163,11 @@ SLEAP can be installed on newer M1 Macs by following these instructions:
 
    Then close and re-open the terminal again.
 
-5. **Download the SLEAP M1 branch**:
+5. **Download the SLEAP**:
 
    ```bash
-   cd ~ && git clone -b talmo/m1 --single-branch https://github.com/talmolab/sleap.git sleap_m1 && cd sleap_m1
+   cd ~ && git clone https://github.com/talmolab/sleap.git sleap && cd sleap
    ```
-
-   _Note:_ This installs SLEAP in development mode, so changes to the source code are immediately applied in case you wanted to mess around with it. You can also just do a `git pull` to update it (no need to re-do any of the previous steps).
 
 6. **Install SLEAP in a conda environment**:
 
@@ -177,14 +175,17 @@ SLEAP can be installed on newer M1 Macs by following these instructions:
    conda env create -f environment_m1.yml
    ```
 
-   Your Mac will then automatically sign a devil's pact with Apple to install the correct versions of everything on your system. Once the blood sacrifice/installation process completes, SLEAP will be available in an environment called `sleap_m1`.
+   Your Mac will then automatically sign a devil's pact with Apple to install the correct versions of everything on your system. Once the blood sacrifice/installation process completes, SLEAP will be available in an environment called `sleap`.
+
+   _Note:_ This installs SLEAP in development mode, so changes to the source code are immediately applied in case you wanted to mess around with it. You can also just do a `git pull` to update it (no need to re-do any of the previous steps).
 
 7. **Test it out** by activating the environment and opening the GUI!
    ```bash
-   conda activate sleap_m1 && sleap-label
+   conda activate sleap
    ```
-
-See [this Issue](https://github.com/talmolab/sleap/issues/579#issuecomment-1028602327) for more information on M1 support.
+   ```bash
+   sleap-label
+   ```
 
 ## Testing that things are working
 

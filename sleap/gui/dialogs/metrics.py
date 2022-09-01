@@ -2,7 +2,7 @@
 Dialog/widgets for showing metrics on trained models.
 """
 
-from PySide2 import QtWidgets, QtCore
+from qtpy import QtWidgets, QtCore
 
 import numpy as np
 import pandas as pd
@@ -352,13 +352,3 @@ class DetailedMetricsDialog(QtWidgets.QWidget):
             )
         ax.set_xlabel("Recall")
         ax.set_ylabel("Precision")
-
-
-# if __name__ == "__main__":
-#     from PySide2.QtWidgets import QApplication
-#
-#     app = QApplication([])
-#     window = MetricsTableDialog("")
-#     window.show()
-#
-#     app.exec_()

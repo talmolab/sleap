@@ -41,9 +41,9 @@ from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
 
 import numpy as np
 
-from PySide2 import QtCore, QtWidgets, QtGui
+from qtpy import QtCore, QtWidgets, QtGui
 
-from PySide2.QtWidgets import QMessageBox, QProgressDialog
+from qtpy.QtWidgets import QMessageBox, QProgressDialog
 
 from sleap.skeleton import Node, Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
@@ -1289,7 +1289,7 @@ class ExportDatasetWithImages(AppCommand):
             context.app,
             caption="Save Labeled Frames As...",
             dir=new_filename,
-            filters=";;".join(filters),
+            filter=";;".join(filters),
         )
         if len(filename) == 0:
             return False

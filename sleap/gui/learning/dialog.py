@@ -16,7 +16,7 @@ from sleap.gui.learning import runners, scopedkeydict, configs, datagen, recepti
 
 from typing import Dict, List, Optional, Text, Optional
 
-from PySide2 import QtWidgets, QtCore
+from qtpy import QtWidgets, QtCore
 
 
 # List of fields which should show list of skeleton nodes
@@ -497,7 +497,10 @@ class LearningDialog(QtWidgets.QDialog):
             )
         else:
             items_for_inference = runners.ItemsForInference.from_video_frames_dict(
-                frame_selection, total_frame_count=frame_count
+                video_frames_dict=frame_selection,
+                total_frame_count=frame_count,
+                labels_path=self.labels_filename,
+                labels=self.labels,
             )
         return items_for_inference
 

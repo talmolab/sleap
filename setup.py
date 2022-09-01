@@ -23,7 +23,7 @@ with open(path.join(here, "sleap/version.py")) as f:
 def get_requirements(require_name=None):
     prefix = require_name + "_" if require_name is not None else ""
     with open(path.join(here, prefix + "requirements.txt"), encoding="utf-8") as f:
-        return f.read().strip().replace("-gpu", "").split("\n")
+        return f.read().strip().split("\n")
 
 
 setup(
@@ -58,6 +58,7 @@ setup(
             "sleap-track=sleap.nn.inference:main",
             "sleap-inspect=sleap.info.labels:main",
             "sleap-diagnostic=sleap.diagnostic:main",
+            "sleap-export=sleap.nn.inference:export_cli",
         ],
     },
     python_requires=">=3.6",
