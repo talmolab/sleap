@@ -66,6 +66,9 @@ from sleap.nn.data.pipelines import (
 from sleap.io.dataset import Labels
 from sleap.util import frame_list
 
+from tensorflow.python.framework.convert_to_constants import (
+    convert_variables_to_constants_v2,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -439,6 +442,51 @@ class Predictor(ABC):
         else:
             # Just return the raw results.
             return list(generator)
+
+    def export_model(
+        self,
+        save_path: str,
+        signatures: str = "serving_default",
+        save_traces: bool = True,
+        model_name: Optional[str] = None,
+        tensors: Optional[Dict[str, str]] = None,
+    ):
+
+        """Export a trained SLEAP model as a frozen graph. Initializes model,
+        creates a dummy tracing batch and passes it through the model. The
+        frozen graph is saved along with training meta info.
+
+        Args:
+            save_path: Path to output directory to store the frozen graph
+            signatures: String defining the input and output types for
+                computation.
+            save_traces: If `True` (default) the SavedModel will store the
+                function traces for each layer
+            model_name: (Optional) Name to give the model. If given, will be
+                added to the output json file containing meta information about the
+                model
+            tensors: (Optional) Dictionary describing the predicted tensors (see
+                sleap.nn.data.utils.describe_tensors as an example)
+
+        """
+
+        self._initialize_inference_model()
+
+        first_inference_layer = self.inference_model.layers[0]
+        keras_model_shape = first_inference_layer.keras_model.input.shape
+
+        sample_shape = tuple(
+            (
+                np.array(keras_model_shape[1:3]) / first_inference_layer.input_scale
+            ).astype(int)
+        ) + (keras_model_shape[3],)
+
+        tracing_batch = np.zeros((1,) + sample_shape, dtype="uint8")
+        outputs = self.inference_model.predict(tracing_batch)
+
+        self.inference_model.export_model(
+            save_path, signatures, save_traces, model_name, tensors
+        )
 
 
 # TODO: Rewrite this class.
@@ -925,6 +973,78 @@ class InferenceModel(tf.keras.Model):
 
         return outs
 
+    def export_model(
+        self,
+        save_path: str,
+        signatures: str = "serving_default",
+        save_traces: bool = True,
+        model_name: Optional[str] = None,
+        tensors: Optional[Dict[str, str]] = None,
+    ):
+        """Save the frozen graph of a model.
+
+        Args:
+            save_path: Path to output directory to store the frozen graph
+            signatures: String defining the input and output types for
+                computation.
+            save_traces: If `True` (default) the SavedModel will store the
+                function traces for each layer
+            model_name: (Optional) Name to give the model. If given, will be
+                added to the output json file containing meta information about the
+                model
+            tensors: (Optional) Dictionary describing the predicted tensors (see
+                sleap.nn.data.utils.describe_tensors as an example)
+
+
+        Notes:
+            This function call writes relevant meta data to an `info.json` file
+            in the given save_path in addition to the frozen_graph.pb file
+
+        """
+        os.makedirs(save_path, exist_ok=True)
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+
+            self.save(tmp_dir, save_format="tf", save_traces=save_traces)
+
+            imported = tf.saved_model.load(tmp_dir)
+
+        model = imported.signatures[signatures]
+
+        info = {
+            "model_structured_input_signature": model.structured_input_signature,
+            "model_structured_outputs_signature": model.structured_outputs,
+        }
+
+        if model_name:
+            info["model_name"] = model_name
+        if tensors:
+            info["predicted_tensors"] = tensors
+
+        full_model = tf.function(lambda x: model(x))
+
+        full_model = full_model.get_concrete_function(
+            tf.TensorSpec(model.inputs[0].shape, model.inputs[0].dtype)
+        )
+
+        frozen_func = convert_variables_to_constants_v2(full_model)
+        frozen_func.graph.as_graph_def()
+
+        info["frozen_model_inputs"] = frozen_func.inputs
+        info["frozen_model_outputs"] = frozen_func.outputs
+
+        with (Path(save_path) / "info.json").open("w") as fp:
+            json.dump(
+                info, fp, indent=4, sort_keys=True, separators=(",", ": "), default=str
+            )
+
+        tf.io.write_graph(
+            graph_or_graph_def=frozen_func.graph,
+            logdir=save_path,
+            name="frozen_graph.pb",
+            as_text=False,
+        )
+
 
 def get_model_output_stride(
     model: tf.keras.Model, input_ind: int = 0, output_ind: int = -1
@@ -1331,6 +1451,19 @@ class SingleInstancePredictor(Predictor):
 
         return predicted_frames
 
+    def export_model(
+        self,
+        save_path: str,
+        signatures: str = "serving_default",
+        save_traces: bool = True,
+        model_name: Optional[str] = None,
+        tensors: Optional[Dict[str, str]] = None,
+    ):
+
+        super().export_model(save_path, signatures, save_traces, model_name, tensors)
+
+        self.confmap_config.save_json(os.path.join(save_path, "confmap_config.json"))
+
 
 class CentroidCrop(InferenceLayer):
     """Inference layer for applying centroid crop-based models.
@@ -1373,6 +1506,10 @@ class CentroidCrop(InferenceLayer):
             automatically by searching for the first tensor that contains
             `"OffsetRefinementHead"` in its name. If the head is not present, the method
             specified in the `refinement` attribute will be used.
+        return_crops: If `True`, the crops and offsets will be returned together with
+            the predicted peaks. This is true by default since crops are used
+            for finding instance peaks in a top down model. If using a centroid
+            only inference model, this should be set to `False`.
     """
 
     def __init__(
@@ -1388,6 +1525,7 @@ class CentroidCrop(InferenceLayer):
         return_confmaps: bool = False,
         confmaps_ind: Optional[int] = None,
         offsets_ind: Optional[int] = None,
+        return_crops: bool = True,
         **kwargs,
     ):
         super().__init__(
@@ -1424,7 +1562,9 @@ class CentroidCrop(InferenceLayer):
         self.refinement = refinement
         self.integral_patch_size = integral_patch_size
         self.return_confmaps = return_confmaps
+        self.return_crops = return_crops
 
+    @tf.function
     def call(self, inputs):
         """Predict centroid confidence maps and crop around peaks.
 
@@ -1439,11 +1579,6 @@ class CentroidCrop(InferenceLayer):
         Returns:
             A dictionary of outputs grouped by sample with keys:
 
-            `"crops"`: Cropped images of shape
-                `(samples, ?, crop_size, crop_size, channels)`.
-            `"crop_offsets"`: Coordinates of the top-left of the crops as `(x, y)`
-                offsets of shape `(samples, ?, 2)` for adjusting the predicted peak
-                coordinates.
             `"centroids"`: The predicted centroids of shape `(samples, ?, 2)`.
             `"centroid_vals": The centroid confidence values of shape `(samples, ?)`.
 
@@ -1451,6 +1586,14 @@ class CentroidCrop(InferenceLayer):
             contain a key named `"centroid_confmaps"` containing a `tf.RaggedTensor` of
             shape `(samples, ?, output_height, output_width, 1)` containing the
             confidence maps predicted by the model.
+
+            If the `return_crops` attribute is set to `True`, the output will
+            also contain keys named `crops` and `crop_offsets`. The former is a
+            `tf.RaggedTensor` of cropped images of shape `(samples, ?,
+            crop_size, crop_size, channels)`. The latter is a `tf.RaggedTensor`
+            of Coordinates of the top-left of the crops as `(x, y)` offsets of
+            shape `(samples, ?, 2)` for adjusting the predicted peak
+            coordinates.
         """
         if isinstance(inputs, dict):
             # Pull out image from example dictionary.
@@ -1540,28 +1683,30 @@ class CentroidCrop(InferenceLayer):
         centroids = tf.RaggedTensor.from_value_rowids(
             centroid_points, crop_sample_inds, nrows=samples
         )
-        crops = tf.RaggedTensor.from_value_rowids(
-            crops, crop_sample_inds, nrows=samples
-        )
-        crop_offsets = tf.RaggedTensor.from_value_rowids(
-            crop_offsets, crop_sample_inds, nrows=samples
-        )
         centroid_vals = tf.RaggedTensor.from_value_rowids(
             centroid_vals, crop_sample_inds, nrows=samples
         )
 
-        outputs = dict(
-            centroids=centroids,
-            centroid_vals=centroid_vals,
-            crops=crops,
-            crop_offsets=crop_offsets,
-        )
+        outputs = dict(centroids=centroids, centroid_vals=centroid_vals)
         if self.return_confmaps:
             # Return confidence maps with outputs.
             cms = tf.RaggedTensor.from_value_rowids(
                 cms, crop_sample_inds, nrows=samples
             )
             outputs["centroid_confmaps"] = cms
+
+        if self.return_crops:
+            # return crops and offsets
+            crops = tf.RaggedTensor.from_value_rowids(
+                crops, crop_sample_inds, nrows=samples
+            )
+            crop_offsets = tf.RaggedTensor.from_value_rowids(
+                crop_offsets, crop_sample_inds, nrows=samples
+            )
+
+            outputs["crops"] = crops
+            outputs["crop_offsets"] = crop_offsets
+
         return outputs
 
 
@@ -1788,6 +1933,49 @@ class FindInstancePeaks(InferenceLayer):
             )
             outputs["instance_confmaps"] = cms
         return outputs
+
+
+class CentroidInferenceModel(InferenceModel):
+    """Centroid only instance prediction model.
+
+    This model encapsulates the first step in a top-down approach where instances are detected by
+    local peak detection of an anchor point and then cropped.
+
+    Attributes:
+        centroid_crop: A centroid cropping layer. This can be either `CentroidCrop` or
+            `CentroidCropGroundTruth`. This layer takes the full image as input and
+            outputs a set of centroids and cropped boxes.
+    """
+
+    def __init__(self, centroid_crop: Union[CentroidCrop, CentroidCropGroundTruth]):
+        super().__init__()
+        self.centroid_crop = centroid_crop
+
+    def call(
+        self, example: Union[Dict[str, tf.Tensor], tf.Tensor]
+    ) -> Dict[str, tf.Tensor]:
+        """Predict instances for one batch of images.
+
+        Args:
+            example: This may be either a single batch of images as a 4-D tensor of
+                shape `(batch_size, height, width, channels)`, or a dictionary
+                containing the image batch in the `"images"` key. If using a ground
+                truth model for either centroid cropping or instance peaks, the full
+                example from a `Pipeline` is required for providing the metadata.
+
+        Returns:
+            The predicted instances as a dictionary of tensors with keys:
+
+            `"centroids": (batch_size, n_instances, 2)`: Instance centroids.
+            `"centroid_vals": (batch_size, n_instances)`: Instance centroid confidence
+                values.
+        """
+        if isinstance(example, tf.Tensor):
+            example = dict(image=example)
+
+        crop_output = self.centroid_crop(example)
+
+        return crop_output
 
 
 class TopDownInferenceModel(InferenceModel):
@@ -2180,6 +2368,26 @@ class TopDownPredictor(Predictor):
             self.tracker.final_pass(predicted_frames)
 
         return predicted_frames
+
+    def export_model(
+        self,
+        save_path: str,
+        signatures: str = "serving_default",
+        save_traces: bool = True,
+        model_name: Optional[str] = None,
+        tensors: Optional[Dict[str, str]] = None,
+    ):
+
+        super().export_model(save_path, signatures, save_traces, model_name, tensors)
+
+        if self.confmap_config is not None:
+            self.confmap_config.save_json(
+                os.path.join(save_path, "confmap_config.json")
+            )
+        if self.centroid_config is not None:
+            self.centroid_config.save_json(
+                os.path.join(save_path, "centroid_config.json")
+            )
 
 
 class BottomUpInferenceLayer(InferenceLayer):
@@ -3240,6 +3448,9 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
             classification vectors. If `None` (the default), this will be detected
             automatically by searching for the first tensor that contains
             `"ClassVectorsHead"` in its name.
+        optimal_grouping: If `True` (the default), group peaks from classification
+            probabilities. If saving a frozen graph of the model, this will be
+            overridden to `False`.
     """
 
     def __init__(
@@ -3255,6 +3466,7 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
         confmaps_ind: Optional[int] = None,
         offsets_ind: Optional[int] = None,
         class_vectors_ind: Optional[int] = None,
+        optimal_grouping: bool = True,
         **kwargs,
     ):
         super().__init__(
@@ -3268,6 +3480,7 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
         self.confmaps_ind = confmaps_ind
         self.class_vectors_ind = class_vectors_ind
         self.offsets_ind = offsets_ind
+        self.optimal_grouping = optimal_grouping
 
         if self.confmaps_ind is None:
             self.confmaps_ind = find_head(
@@ -3340,9 +3553,14 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
             shape `(samples, ?, output_height, output_width, nodes)` containing the
             confidence maps predicted by the model.
 
-            If the `return_class_vectors` attribe is set to `True`, the output will also
+            If the `return_class_vectors` attribute is set to `True`, the output will also
             contain a key named `"class_vectors"` containing the full classification
             probabilities for all crops.
+
+            If the `optimal_grouping` attribute is set to `True`, peaks are
+            grouped from classification properties. This is overridden to False
+            if exporting a frozen graph to allow for tracing. Note: If set to False
+            this will change the output dict keys and shapes.
         """
         if isinstance(inputs, dict):
             crops = inputs["crops"]
@@ -3415,17 +3633,30 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
             crop_offsets = inputs["crop_offsets"].merge_dims(0, 1)
             peak_points = peak_points + tf.expand_dims(crop_offsets, axis=1)
 
-        # Group peaks from classification probabilities.
-        points, point_vals, class_probs = sleap.nn.identity.classify_peaks_from_vectors(
-            peak_points, peak_vals, peak_class_probs, crop_sample_inds, samples
-        )
+        if self.optimal_grouping:
+            # Group peaks from classification probabilities.
+            (
+                points,
+                point_vals,
+                class_probs,
+            ) = sleap.nn.identity.classify_peaks_from_vectors(
+                peak_points, peak_vals, peak_class_probs, crop_sample_inds, samples
+            )
 
-        # Build outputs.
-        outputs = {
-            "instance_peaks": points,
-            "instance_peak_vals": point_vals,
-            "instance_scores": class_probs,
-        }
+            # Build outputs.
+            outputs = {
+                "instance_peaks": points,
+                "instance_peak_vals": point_vals,
+                "instance_scores": class_probs,
+            }
+
+        else:
+            outputs = {
+                "instance_peaks": peak_points,
+                "instance_peak_vals": peak_vals,
+                "instance_scores": peak_class_probs,
+            }
+
         if "centroids" in inputs:
             outputs["centroids"] = inputs["centroids"]
         if "centroids" in inputs:
@@ -3435,7 +3666,7 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
                 cms, crop_sample_inds, nrows=samples
             )
             outputs["instance_confmaps"] = cms
-        if self.return_class_vectors:
+        if self.return_class_vectors and self.optimal_grouping:
             outputs["class_vectors"] = peak_class_probs
         return outputs
 
@@ -3496,6 +3727,19 @@ class TopDownMultiClassInferenceModel(InferenceModel):
         crop_output = self.centroid_crop(example)
         peaks_output = self.instance_peaks(crop_output)
         return peaks_output
+
+    def export_model(
+        self,
+        save_path: str,
+        signatures: str = "serving_default",
+        save_traces: bool = True,
+        model_name: Optional[str] = None,
+        tensors: Optional[Dict[str, str]] = None,
+    ):
+
+        self.instance_peaks.optimal_grouping = False
+
+        super().export_model(save_path, signatures, save_traces, model_name, tensors)
 
 
 @attr.s(auto_attribs=True)
@@ -3815,6 +4059,26 @@ class TopDownMultiClassPredictor(Predictor):
 
         return predicted_frames
 
+    def export_model(
+        self,
+        save_path: str,
+        signatures: str = "serving_default",
+        save_traces: bool = True,
+        model_name: Optional[str] = None,
+        tensors: Optional[Dict[str, str]] = None,
+    ):
+
+        super().export_model(save_path, signatures, save_traces, model_name, tensors)
+
+        if self.confmap_config is not None:
+            self.confmap_config.save_json(
+                os.path.join(save_path, "confmap_config.json")
+            )
+        if self.centroid_config is not None:
+            self.centroid_config.save_json(
+                os.path.join(save_path, "centroid_config.json")
+            )
+
 
 def load_model(
     model_path: Union[str, List[str]],
@@ -3919,6 +4183,63 @@ def load_model(
         tmp_dir.cleanup()
 
     return predictor
+
+
+def export_model(
+    model_path: Union[str, List[str]],
+    save_path: str = "exported_model",
+    signatures: str = "serving_default",
+    save_traces: bool = True,
+    model_name: Optional[str] = None,
+    tensors: Optional[Dict[str, str]] = None,
+):
+
+    """High level export of a trained SLEAP model as a frozen graph.
+
+    Args:
+        model_path: Path to model or list of path to models that were trained by SLEAP.
+            These should be the directories that contain `training_job.json` and
+            `best_model.h5`.
+        save_path: Path to output directory to store the frozen graph
+        signatures: String defining the input and output types for
+            computation.
+        save_traces: If `True` (default) the SavedModel will store the
+            function traces for each layer
+        model_name: (Optional) Name to give the model. If given, will be
+            added to the output json file containing meta information about the
+            model
+        tensors: (Optional) Dictionary describing the predicted tensors (see
+            sleap.nn.data.utils.describe_tensors as an example)
+
+    """
+
+    predictor = load_model(model_path)
+    predictor.export_model(save_path, signatures, save_traces, model_name, tensors)
+
+
+def export_cli():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-m",
+        "--model",
+        dest="models",
+        action="append",
+        help=(
+            "Path to trained model directory (with training_config.json). "
+            "Multiple models can be specified, each preceded by --model."
+        ),
+    )
+    parser.add_argument(
+        "-e",
+        "export_path",
+        type=str,
+        nargs="?",
+        default="exported_model",
+        help=("Path to data export model to."),
+    )
+
+    args, _ = parser.parse_known_args()
+    export_model(args["models"], args["export_path"])
 
 
 def _make_cli_parser() -> argparse.ArgumentParser:
