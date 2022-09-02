@@ -114,6 +114,26 @@ class VideoFrameSuggestions(object):
 
         return suggestions
 
+    @staticmethod
+    def filter_unique_suggestions(
+        labels: "Labels",
+        videos: List[Video],
+        proposed_suggestions: List[SuggestionFrame],
+    ):
+        # Create log of suggestions that already exist
+        sugg_idx_dict: Dict[Video, list] = {video: [] for video in videos}
+        for sugg in labels.suggestions:
+            sugg_idx_dict[sugg.video].append(sugg.frame_idx)
+
+        # Filter for suggestions that already exist
+        unique_suggestions = [
+            sugg
+            for sugg in proposed_suggestions
+            if sugg.frame_idx not in sugg_idx_dict[sugg.video]
+        ]
+
+        return unique_suggestions
+
     @classmethod
     def image_feature_based_method(
         cls,
@@ -139,11 +159,6 @@ class VideoFrameSuggestions(object):
         brisk_threshold = kwargs.get("brisk_threshold", 80)
         vocab_size = kwargs.get("vocab_size", 20)
 
-        # Create log of suggestions that already exist
-        sugg_idx_dict: Dict[Video, list] = {video: [] for video in videos}
-        for sugg in labels.suggestions:
-            sugg_idx_dict[sugg.video].append(sugg.frame_idx)
-
         # Propose new suggestions
         pipeline = FeatureSuggestionPipeline(
             per_video=per_video,
@@ -164,14 +179,11 @@ class VideoFrameSuggestions(object):
             # Run pipeline separately (in parallel) for each video
             proposed_suggestions = ParallelFeaturePipeline.run(pipeline, videos)
 
-        # Filter for suggestions that already exist
-        unique_suggestions = [
-            sugg
-            for sugg in proposed_suggestions
-            if sugg.frame_idx not in sugg_idx_dict[sugg.video]
-        ]
+        suggestions = VideoFrameSuggestions.filter_unique_suggestions(
+            labels, videos, proposed_suggestions
+        )
 
-        return unique_suggestions
+        return suggestions
 
     @classmethod
     def prediction_score(
@@ -182,17 +194,20 @@ class VideoFrameSuggestions(object):
         instance_limit,
         **kwargs,
     ):
-        """
-        Method to generate suggestions for proofreading frames with low score.
-        """
+        """Method to generate suggestions for proofreading frames with low score."""
         score_limit = float(score_limit)
         instance_limit = int(instance_limit)
 
-        suggestions = []
+        proposed_suggestions = []
         for video in videos:
-            suggestions.extend(
+            proposed_suggestions.extend(
                 cls._prediction_score_video(video, labels, score_limit, instance_limit)
             )
+
+        suggestions = VideoFrameSuggestions.filter_unique_suggestions(
+            labels, videos, proposed_suggestions
+        )
+
         return suggestions
 
     @classmethod
@@ -221,14 +236,7 @@ class VideoFrameSuggestions(object):
         # Find all the frames with at least <instance_limit> low scoring instances
         result = idxs[low_instances >= instance_limit].tolist()
 
-        # Generate unique suggestions
-        prev_idx = [
-            sugg.frame_idx for sugg in labels.suggestions if sugg.video == video
-        ]
-
-        unique_idx = set(result) - set(prev_idx)
-
-        return cls.idx_list_to_frame_list(list(unique_idx), video)
+        return cls.idx_list_to_frame_list(result, video)
 
     @classmethod
     def velocity(

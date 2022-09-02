@@ -339,10 +339,53 @@ def assert_suggestions_unique(labels: Labels, new_suggestions: List[SuggestionFr
             assert sugg.frame_idx != new_sugg.frame_idx
 
 
-def test_append_suggestions(small_robot_image_vid):
+def test_append_suggestions(small_robot_image_vid: Video, stickman: Skeleton):
     """Ensure only unique suggestions are returned and that suggestions are appended."""
-
-    labels = Labels(videos=[small_robot_image_vid])
+    lfs = [
+        LabeledFrame(
+            small_robot_image_vid,
+            frame_idx=0,
+            instances=[
+                PredictedInstance(
+                    skeleton=stickman,
+                    score=0.1,
+                    points=dict(
+                        head=PredictedPoint(1, 2, score=0.5),
+                        neck=PredictedPoint(2, 3, score=0.5),
+                    ),
+                )
+            ],
+        ),
+        LabeledFrame(
+            small_robot_image_vid,
+            frame_idx=1,
+            instances=[
+                PredictedInstance(
+                    skeleton=stickman,
+                    score=0.1,
+                    points=dict(
+                        head=PredictedPoint(2, 1, score=0.5),
+                        neck=PredictedPoint(3, 2, score=0.5),
+                    ),
+                )
+            ],
+        ),
+        LabeledFrame(
+            small_robot_image_vid,
+            frame_idx=2,
+            instances=[
+                PredictedInstance(
+                    skeleton=stickman,
+                    score=0.5,
+                    points=dict(
+                        head=PredictedPoint(11, 12, score=0.5),
+                        neck=PredictedPoint(12, 13, score=0.5),
+                    ),
+                )
+            ],
+        ),
+    ]
+    labels = Labels(lfs)
 
     # Generate some suggestions
     suggestions = VideoFrameSuggestions.suggest(
@@ -433,4 +476,16 @@ def test_append_suggestions(small_robot_image_vid):
     )
 
     # Test that image features returns only unique suggestions
+    assert_suggestions_unique(labels, suggestions)
+
+    # Generate suggestions using prediction score
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=labels,
+        params={
+            "method": "prediction_score",
+            "score_limit": 1,
+            "instance_limit": 1,
+            "videos": labels.videos,
+        },
+    )
     assert_suggestions_unique(labels, suggestions)
