@@ -333,15 +333,14 @@ def test_unqiue_suggestions(params, small_robot_image_vid):
         assert len(new_suggestions) == 1
 
 
-def test_basic_append_suggestions(small_robot_image_vid):
-    """Ensure only unique suggestions are returned and that suggestions are appended."""
+def assert_suggestions_unique(labels: Labels, new_suggestions: List[SuggestionFrame]):
+    for sugg in labels.suggestions:
+        for new_sugg in new_suggestions:
+            assert sugg.frame_idx != new_sugg.frame_idx
 
-    def assert_suggestions_unique(
-        labels: Labels, new_suggestions: List[SuggestionFrame]
-    ):
-        for sugg in labels.suggestions:
-            for new_sugg in new_suggestions:
-                assert sugg.frame_idx != new_sugg.frame_idx
+
+def test_append_suggestions(small_robot_image_vid):
+    """Ensure only unique suggestions are returned and that suggestions are appended."""
 
     labels = Labels(videos=[small_robot_image_vid])
 
@@ -413,4 +412,25 @@ def test_basic_append_suggestions(small_robot_image_vid):
         },
     )
     assert len(suggestions) == 0
+    assert_suggestions_unique(labels, suggestions)
+
+    # Generate some suggestions using image features
+    labels.suggestions.pop()
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=labels,
+        params={
+            "per_video": 2,
+            "method": "image features",
+            "sample_method": "random",
+            "scale": 1,
+            "merge_video_features": "across all videos",
+            "feature_type": "raw",
+            "pca_components": 2,
+            "n_clusters": 1,
+            "per_cluster": 1,
+            "videos": labels.videos,
+        },
+    )
+
+    # Test that image features returns only unique suggestions
     assert_suggestions_unique(labels, suggestions)

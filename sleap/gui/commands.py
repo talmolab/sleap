@@ -2417,7 +2417,7 @@ class GenerateSuggestions(EditCommand):
             labels=context.labels, params=params
         )
 
-        context.labels.set_suggestions(new_suggestions)
+        context.labels.append_suggestions(new_suggestions)
 
         win.hide()
 

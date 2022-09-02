@@ -83,7 +83,6 @@ class VideoFrameSuggestions(object):
         """Method to generate suggestions randomly or by taking strides through video."""
         suggestions = []
         sugg_idx_dict: Dict[Video, list] = {video: [] for video in videos}
-
         for sugg in labels.suggestions:
             sugg_idx_dict[sugg.video].append(sugg.frame_idx)
 
@@ -140,12 +139,12 @@ class VideoFrameSuggestions(object):
         brisk_threshold = kwargs.get("brisk_threshold", 80)
         vocab_size = kwargs.get("vocab_size", 20)
 
-        unique_suggestions = []
-        sugg_idx_dict = {video: [] for video in videos}
-
+        # Create log of suggestions that already exist
+        sugg_idx_dict: Dict[Video, list] = {video: [] for video in videos}
         for sugg in labels.suggestions:
             sugg_idx_dict[sugg.video].append(sugg.frame_idx)
 
+        # Propose new suggestions
         pipeline = FeatureSuggestionPipeline(
             per_video=per_video,
             scale=scale,
@@ -160,18 +159,17 @@ class VideoFrameSuggestions(object):
 
         if merge_video_features == "across all videos":
             # Run single pipeline with all videos
-            suggestions = pipeline.get_suggestion_frames(videos=videos)
+            proposed_suggestions = pipeline.get_suggestion_frames(videos=videos)
         else:
             # Run pipeline separately (in parallel) for each video
-            suggestions = ParallelFeaturePipeline.run(pipeline, videos)
+            proposed_suggestions = ParallelFeaturePipeline.run(pipeline, videos)
 
-        for sugg in suggestions:
-            video = sugg.video
-            vid_idx = list(range(video.frames))
-            vid_sugg_idx = sugg_idx_dict[video]
-            unique_idx = set(vid_idx) - set(vid_sugg_idx)
-            if sugg.frame_idx in unique_idx:
-                unique_suggestions.append(sugg)
+        # Filter for suggestions that already exist
+        unique_suggestions = [
+            sugg
+            for sugg in proposed_suggestions
+            if sugg.frame_idx not in sugg_idx_dict[sugg.video]
+        ]
 
         return unique_suggestions
 
