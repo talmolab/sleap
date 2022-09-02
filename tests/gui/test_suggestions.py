@@ -157,14 +157,14 @@ def assert_suggestions_unique(labels: Labels, new_suggestions: List[SuggestionFr
             assert sugg.frame_idx != new_sugg.frame_idx
 
 
-def test_append_suggestions(small_robot_image_vid: Video, stickman: Skeleton):
+def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
     """Ensure only unique suggestions are returned and that suggestions are appended."""
     track_a = Track(0, "a")
     track_b = Track(0, "b")
 
     lfs = [
         LabeledFrame(
-            small_robot_image_vid,
+            small_robot_3_frame_vid,
             frame_idx=0,
             instances=[
                 PredictedInstance(
@@ -188,7 +188,7 @@ def test_append_suggestions(small_robot_image_vid: Video, stickman: Skeleton):
             ],
         ),
         LabeledFrame(
-            small_robot_image_vid,
+            small_robot_3_frame_vid,
             frame_idx=1,
             instances=[
                 PredictedInstance(
@@ -212,7 +212,7 @@ def test_append_suggestions(small_robot_image_vid: Video, stickman: Skeleton):
             ],
         ),
         LabeledFrame(
-            small_robot_image_vid,
+            small_robot_3_frame_vid,
             frame_idx=2,
             instances=[
                 PredictedInstance(
