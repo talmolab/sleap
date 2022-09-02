@@ -1,5 +1,6 @@
+from typing import List
 import pytest
-from sleap.gui.suggestions import VideoFrameSuggestions
+from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
 from sleap.instance import LabeledFrame, PredictedInstance, Track, PredictedPoint
@@ -191,8 +192,7 @@ def test_video_selection(centered_pair_predictions: Labels):
     ],
 )
 def test_unqiue_suggestions(params, small_robot_image_vid):
-    # Testing the functionality of choosing a specific video in a project and
-    # only appending unique suggestions
+    """Ensure only unique suggestions are returned and that suggestions are appended."""
 
     skeleton = Skeleton()
     skeleton.add_node("a")
@@ -331,3 +331,86 @@ def test_unqiue_suggestions(params, small_robot_image_vid):
     else:
         assert len(suggestions) == params["per_video"]
         assert len(new_suggestions) == 1
+
+
+def test_basic_append_suggestions(small_robot_image_vid):
+    """Ensure only unique suggestions are returned and that suggestions are appended."""
+
+    def assert_suggestions_unique(
+        labels: Labels, new_suggestions: List[SuggestionFrame]
+    ):
+        for sugg in labels.suggestions:
+            for new_sugg in new_suggestions:
+                assert sugg.frame_idx != new_sugg.frame_idx
+
+    labels = Labels(videos=[small_robot_image_vid])
+
+    # Generate some suggestions
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=labels,
+        params={
+            "per_video": 3,
+            "method": "sample",
+            "sample_method": "stride",
+            "videos": labels.videos,
+        },
+    )
+    assert len(suggestions) == 3
+    labels.suggestions.extend(suggestions[0:2])
+
+    # Sample with stride method
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=labels,
+        params={
+            "per_video": 3,
+            "method": "sample",
+            "sample_method": "stride",
+            "videos": labels.videos,
+        },
+    )
+
+    # Check that stride method returns only unique suggestions
+    assert len(suggestions) == 1
+    assert_suggestions_unique(labels, suggestions)
+    labels.suggestions.extend(suggestions)
+
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=labels,
+        params={
+            "per_video": 3,
+            "method": "sample",
+            "sample_method": "stride",
+            "videos": labels.videos,
+        },
+    )
+    assert len(suggestions) == 0
+    assert_suggestions_unique(labels, suggestions)
+
+    # Sample with random method
+    labels.suggestions.pop()
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=labels,
+        params={
+            "per_video": 3,
+            "method": "sample",
+            "sample_method": "random",
+            "videos": labels.videos,
+        },
+    )
+
+    # Check that random method only returns unique suggestions
+    assert len(suggestions) == 1
+    assert_suggestions_unique(labels, suggestions)
+    labels.suggestions.extend(suggestions)
+
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=labels,
+        params={
+            "per_video": 3,
+            "method": "sample",
+            "sample_method": "random",
+            "videos": labels.videos,
+        },
+    )
+    assert len(suggestions) == 0
+    assert_suggestions_unique(labels, suggestions)

@@ -6,7 +6,7 @@ import attr
 import numpy as np
 import random
 
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from sleap.io.video import Video
 from sleap.info.feature_suggestions import (
@@ -80,32 +80,30 @@ class VideoFrameSuggestions(object):
         sampling_method: str = "random",
         **kwargs,
     ):
-        """Method to generate suggestions by taking strides through video."""
-
+        """Method to generate suggestions randomly or by taking strides through video."""
         suggestions = []
-        sugg_idx_dict = {video: [] for video in videos}
+        sugg_idx_dict: Dict[Video, list] = {video: [] for video in videos}
 
         for sugg in labels.suggestions:
             sugg_idx_dict[sugg.video].append(sugg.frame_idx)
 
         for video in videos:
+            # Get unique sample space
             vid_idx = list(range(video.frames))
             vid_sugg_idx = sugg_idx_dict[video]
-            unique_idx = set(vid_idx) - set(vid_sugg_idx)
+            unique_idx = list(set(vid_idx) - set(vid_sugg_idx))
+            n_frames = len(unique_idx)
 
             if sampling_method == "stride":
-                frame_increment = len(unique_idx) // per_video
+                frame_increment = n_frames // per_video
                 frame_increment = 1 if frame_increment == 0 else frame_increment
-                vid_suggestions = list(range(0, len(unique_idx), frame_increment))[
-                    :per_video
-                ]
+                stride_idx = list(range(0, n_frames, frame_increment))[:per_video]
+                vid_suggestions = [unique_idx[idx] for idx in stride_idx]
             else:
                 # random sampling
                 frames_num = per_video
-                frames_num = (
-                    len(unique_idx) if (frames_num > len(unique_idx)) else frames_num
-                )
-                if len(unique_idx) == 1:
+                frames_num = n_frames if (frames_num > n_frames) else frames_num
+                if n_frames == 1:
                     vid_suggestions = list(unique_idx)
                 else:
                     vid_suggestions = random.sample(unique_idx, frames_num)

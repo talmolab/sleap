@@ -1474,7 +1474,7 @@ class Labels(MutableSequence):
 
     def set_suggestions(self, suggestions: List[SuggestionFrame]):
         """Set the suggested frames."""
-        self.suggestions = suggestions
+        self.suggestions.extend(suggestions)
 
     def delete_suggestions(self, video):
         """Delete suggestions for specified video."""
