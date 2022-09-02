@@ -249,7 +249,7 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
         },
     )
     assert len(suggestions) == 3
-    labels.suggestions.extend(suggestions[0:2])
+    labels.append_suggestions(suggestions[0:2])
 
     # Sample with stride method
     suggestions = VideoFrameSuggestions.suggest(
@@ -265,7 +265,7 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
     # Check that stride method returns only unique suggestions
     assert len(suggestions) == 1
     assert_suggestions_unique(labels, suggestions)
-    labels.suggestions.extend(suggestions)
+    labels.append_suggestions(suggestions)
 
     suggestions = VideoFrameSuggestions.suggest(
         labels=labels,
@@ -294,7 +294,7 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
     # Check that random method only returns unique suggestions
     assert len(suggestions) == 1
     assert_suggestions_unique(labels, suggestions)
-    labels.suggestions.extend(suggestions)
+    labels.append_suggestions(suggestions)
 
     suggestions = VideoFrameSuggestions.suggest(
         labels=labels,
