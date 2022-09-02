@@ -114,26 +114,6 @@ class VideoFrameSuggestions(object):
 
         return suggestions
 
-    @staticmethod
-    def filter_unique_suggestions(
-        labels: "Labels",
-        videos: List[Video],
-        proposed_suggestions: List[SuggestionFrame],
-    ):
-        # Create log of suggestions that already exist
-        sugg_idx_dict: Dict[Video, list] = {video: [] for video in videos}
-        for sugg in labels.suggestions:
-            sugg_idx_dict[sugg.video].append(sugg.frame_idx)
-
-        # Filter for suggestions that already exist
-        unique_suggestions = [
-            sugg
-            for sugg in proposed_suggestions
-            if sugg.frame_idx not in sugg_idx_dict[sugg.video]
-        ]
-
-        return unique_suggestions
-
     @classmethod
     def image_feature_based_method(
         cls,
@@ -212,7 +192,7 @@ class VideoFrameSuggestions(object):
 
     @classmethod
     def _prediction_score_video(
-        cls, video: "Video", labels: "Labels", score_limit: float, instance_limit: int
+        cls, video: Video, labels: "Labels", score_limit: float, instance_limit: int
     ):
         lfs = labels.find(video)
         frames = len(lfs)
@@ -247,9 +227,7 @@ class VideoFrameSuggestions(object):
         threshold: float,
         **kwargs,
     ):
-        """
-        Finds frames for proofreading with high node velocity.
-        """
+        """Finds frames for proofreading with high node velocity."""
 
         if isinstance(node, str):
             node_name = node
@@ -259,37 +237,40 @@ class VideoFrameSuggestions(object):
             except IndexError:
                 node_name = ""
 
-        suggestions = []
+        proposed_suggestions = []
         for video in videos:
-            suggestions.extend(cls._velocity_video(video, labels, node_name, threshold))
+            proposed_suggestions.extend(
+                cls._velocity_video(video, labels, node_name, threshold)
+            )
+
+        suggestions = VideoFrameSuggestions.filter_unique_suggestions(
+            labels, videos, proposed_suggestions
+        )
+
         return suggestions
 
     @classmethod
     def _velocity_video(
-        cls, video: "Video", labels: "Labels", node_name: str, threshold: float
+        cls, video: Video, labels: "Labels", node_name: str, threshold: float
     ):
         from sleap.info.summary import StatisticSeries
 
         displacements = StatisticSeries(labels).get_primary_point_displacement_series(
             video=video, reduction="sum", primary_node=node_name
         )
-
         data_range = np.ptp(displacements)
         data_min = np.min(displacements)
 
-        # TODO(LM): Flagging this because I'm hesitant that it might
-        #  break cases where multiple tracks exist. We will need to
-        #  teston projects with multiple tracks.
         frame_idxs = list(
-            map(int, np.argwhere(displacements - data_min > data_range * threshold))
+            map(
+                int,
+                np.squeeze(
+                    np.argwhere(displacements - data_min > data_range * threshold)
+                ),
+            )
         )
 
-        prev_idx = [
-            sugg.frame_idx for sugg in labels.suggestions if sugg.video == video
-        ]
-        unique_idx = set(frame_idxs) - set(prev_idx)
-
-        return cls.idx_list_to_frame_list(unique_idx, video)
+        return cls.idx_list_to_frame_list(frame_idxs, video)
 
     # Utility functions
 
@@ -298,6 +279,26 @@ class VideoFrameSuggestions(object):
         idx_list, video: "Video", group: Optional[GroupType] = None
     ) -> List[SuggestionFrame]:
         return [SuggestionFrame(video, frame_idx, group) for frame_idx in idx_list]
+
+    @staticmethod
+    def filter_unique_suggestions(
+        labels: "Labels",
+        videos: List[Video],
+        proposed_suggestions: List[SuggestionFrame],
+    ) -> List[SuggestionFrame]:
+        # Create log of suggestions that already exist
+        sugg_idx_dict: Dict[Video, list] = {video: [] for video in videos}
+        for sugg in labels.suggestions:
+            sugg_idx_dict[sugg.video].append(sugg.frame_idx)
+
+        # Filter for suggestions that already exist
+        unique_suggestions = [
+            sugg
+            for sugg in proposed_suggestions
+            if sugg.frame_idx not in sugg_idx_dict[sugg.video]
+        ]
+
+        return unique_suggestions
 
 
 def demo_gui():

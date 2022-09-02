@@ -184,14 +184,14 @@ class StatisticSeries:
         # Calculate the displacements. Note these will be offset by 1 frame
         # since we're starting from frame 1 rather than 0.
         displacement = location_matrix[1:, ...] - location_matrix[:-1, ...]
+
         displacement_distances = np.linalg.norm(displacement, axis=2)
+
         result = reduce_funct(displacement_distances, axis=1)
         result[np.isnan(result)] = 0
 
-        # TODO(LM): Flagging this because I want to ensure it was not
-        #  implemented for a particular reason. Will need to check where
-        #  this piece of code is called.
-        # result[1:] = result[:-1]
+        # Shift back by 1 frame so offsets line up with frame index.
+        result[1:] = result[:-1]
 
         return result
 
