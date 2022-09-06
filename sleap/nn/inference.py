@@ -4368,10 +4368,10 @@ def _make_cli_parser() -> argparse.ArgumentParser:
     device_group.add_argument(
         "--gpu",
         type=str,
-        default="auto",
+        default="0",
         help=(
-            "Run training on the i-th GPU on the system or, if 'auto', on the GPU with "
-            "the highest percentage of available memory."
+            "Run training on the i-th GPU on the system. If 'auto', run on the GPU with"
+            " the highest percentage of available memory."
         ),
     )
     parser.add_argument(

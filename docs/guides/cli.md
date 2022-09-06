@@ -77,7 +77,7 @@ optional arguments:
   --last-gpu            Run training on the last GPU, if available.
   --gpu GPU             Run training on the i-th GPU on the system. If 'auto', run on
                         the GPU with the highest percentage of available memory.
-                        (default: 'auto')
+                        (default: '0')
 ```
 
 ## Inference and Tracking
@@ -169,7 +169,7 @@ optional arguments:
   --last-gpu            Run inference on the last GPU, if available.
   --gpu GPU             Run training on the i-th GPU on the system. If 'auto', run on
                         the GPU with the highest percentage of available memory.
-                        (default: 'auto')
+                        (default: '0')
   --peak_threshold PEAK_THRESHOLD
                         Minimum confidence map value to consider a peak as
                         valid.
