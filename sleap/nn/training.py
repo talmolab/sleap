@@ -1874,7 +1874,13 @@ def main():
         help="Run training on the last GPU, if available.",
     )
     device_group.add_argument(
-        "--gpu", type=int, default=0, help="Run training on the i-th GPU on the system."
+        "--gpu",
+        type=str,
+        default="auto",
+        help=(
+            "Run training on the i-th GPU on the system or, if 'auto', on the GPU with "
+            "the highest percentage of available memory."
+        ),
     )
 
     args, _ = parser.parse_known_args()
@@ -1937,8 +1943,12 @@ def main():
             sleap.nn.system.use_last_gpu()
             logger.info("Using the last GPU for acceleration.")
         else:
-            sleap.nn.system.use_gpu(args.gpu)
-            logger.info(f"Using GPU {args.gpu} for acceleration.")
+            if args.gpu == "auto":
+                gpu_ind = np.argmax(sleap.nn.system.get_gpu_memory())
+            else:
+                gpu_ind = int(args.gpu)
+            sleap.nn.system.use_gpu(gpu_ind)
+            logger.info(f"Using GPU {gpu_ind} for acceleration.")
 
         # Disable preallocation to handle Linux/low GPU memory issue.
         sleap.disable_preallocation()

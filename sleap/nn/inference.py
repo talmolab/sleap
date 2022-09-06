@@ -4366,7 +4366,13 @@ def _make_cli_parser() -> argparse.ArgumentParser:
         help="Run inference on the last GPU, if available.",
     )
     device_group.add_argument(
-        "--gpu", type=int, default=0, help="Run inference on the i-th GPU specified."
+        "--gpu",
+        type=str,
+        default="0",
+        help=(
+            "Run training on the i-th GPU on the system. If 'auto', run on the GPU with"
+            " the highest percentage of available memory."
+        ),
     )
     parser.add_argument(
         "--max_edge_length_ratio",
@@ -4611,7 +4617,11 @@ def main(args: list = None):
         elif args.last_gpu:
             sleap.nn.system.use_last_gpu()
         else:
-            sleap.nn.system.use_gpu(args.gpu)
+            if args.gpu == "auto":
+                gpu_ind = np.argmax(sleap.nn.system.get_gpu_memory())
+            else:
+                gpu_ind = int(args.gpu)
+            sleap.nn.system.use_gpu(gpu_ind)
     sleap.disable_preallocation()
 
     print("Versions:")
