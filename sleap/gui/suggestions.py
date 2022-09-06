@@ -6,7 +6,7 @@ import attr
 import numpy as np
 import random
 
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from sleap.io.video import Video
 from sleap.info.feature_suggestions import (
@@ -80,21 +80,32 @@ class VideoFrameSuggestions(object):
         sampling_method: str = "random",
         **kwargs,
     ):
-        """Method to generate suggestions by taking strides through video."""
+        """Method to generate suggestions randomly or by taking strides through video."""
         suggestions = []
+        sugg_idx_dict: Dict[Video, list] = {video: [] for video in videos}
+        for sugg in labels.suggestions:
+            sugg_idx_dict[sugg.video].append(sugg.frame_idx)
 
         for video in videos:
+            # Get unique sample space
+            vid_idx = list(range(video.frames))
+            vid_sugg_idx = sugg_idx_dict[video]
+            unique_idx = list(set(vid_idx) - set(vid_sugg_idx))
+            n_frames = len(unique_idx)
+
             if sampling_method == "stride":
-                frame_increment = video.frames // per_video
+                frame_increment = n_frames // per_video
                 frame_increment = 1 if frame_increment == 0 else frame_increment
-                vid_suggestions = list(range(0, video.frames, frame_increment))[
-                    :per_video
-                ]
+                stride_idx = list(range(0, n_frames, frame_increment))[:per_video]
+                vid_suggestions = [unique_idx[idx] for idx in stride_idx]
             else:
                 # random sampling
                 frames_num = per_video
-                frames_num = video.frames if (frames_num > video.frames) else frames_num
-                vid_suggestions = random.sample(range(video.frames), frames_num)
+                frames_num = n_frames if (frames_num > n_frames) else frames_num
+                if n_frames == 1:
+                    vid_suggestions = list(unique_idx)
+                else:
+                    vid_suggestions = random.sample(unique_idx, frames_num)
 
             group = labels.videos.index(video)
             suggestions.extend(
@@ -128,6 +139,7 @@ class VideoFrameSuggestions(object):
         brisk_threshold = kwargs.get("brisk_threshold", 80)
         vocab_size = kwargs.get("vocab_size", 20)
 
+        # Propose new suggestions
         pipeline = FeatureSuggestionPipeline(
             per_video=per_video,
             scale=scale,
@@ -142,12 +154,16 @@ class VideoFrameSuggestions(object):
 
         if merge_video_features == "across all videos":
             # Run single pipeline with all videos
-            return pipeline.get_suggestion_frames(videos=videos)
+            proposed_suggestions = pipeline.get_suggestion_frames(videos=videos)
         else:
             # Run pipeline separately (in parallel) for each video
-            suggestions = ParallelFeaturePipeline.run(pipeline, videos)
+            proposed_suggestions = ParallelFeaturePipeline.run(pipeline, videos)
 
-            return suggestions
+        suggestions = VideoFrameSuggestions.filter_unique_suggestions(
+            labels, videos, proposed_suggestions
+        )
+
+        return suggestions
 
     @classmethod
     def prediction_score(
@@ -158,25 +174,27 @@ class VideoFrameSuggestions(object):
         instance_limit,
         **kwargs,
     ):
-        """
-        Method to generate suggestions for proofreading frames with low score.
-        """
+        """Method to generate suggestions for proofreading frames with low score."""
         score_limit = float(score_limit)
         instance_limit = int(instance_limit)
 
-        suggestions = []
+        proposed_suggestions = []
         for video in videos:
-            suggestions.extend(
+            proposed_suggestions.extend(
                 cls._prediction_score_video(video, labels, score_limit, instance_limit)
             )
+
+        suggestions = VideoFrameSuggestions.filter_unique_suggestions(
+            labels, videos, proposed_suggestions
+        )
+
         return suggestions
 
     @classmethod
     def _prediction_score_video(
-        cls, video: "Video", labels: "Labels", score_limit: float, instance_limit: int
+        cls, video: Video, labels: "Labels", score_limit: float, instance_limit: int
     ):
         lfs = labels.find(video)
-
         frames = len(lfs)
         idxs = np.ndarray((frames), dtype="int")
         scores = np.full((frames, instance_limit), 100.0, dtype="float")
@@ -209,9 +227,7 @@ class VideoFrameSuggestions(object):
         threshold: float,
         **kwargs,
     ):
-        """
-        Finds frames for proofreading with high node velocity.
-        """
+        """Finds frames for proofreading with high node velocity."""
 
         if isinstance(node, str):
             node_name = node
@@ -221,14 +237,21 @@ class VideoFrameSuggestions(object):
             except IndexError:
                 node_name = ""
 
-        suggestions = []
+        proposed_suggestions = []
         for video in videos:
-            suggestions.extend(cls._velocity_video(video, labels, node_name, threshold))
+            proposed_suggestions.extend(
+                cls._velocity_video(video, labels, node_name, threshold)
+            )
+
+        suggestions = VideoFrameSuggestions.filter_unique_suggestions(
+            labels, videos, proposed_suggestions
+        )
+
         return suggestions
 
     @classmethod
     def _velocity_video(
-        cls, video: "Video", labels: "Labels", node_name: str, threshold: float
+        cls, video: Video, labels: "Labels", node_name: str, threshold: float
     ):
         from sleap.info.summary import StatisticSeries
 
@@ -237,6 +260,7 @@ class VideoFrameSuggestions(object):
         )
         data_range = np.ptp(displacements)
         data_min = np.min(displacements)
+
         frame_idxs = list(
             map(
                 int,
@@ -255,6 +279,26 @@ class VideoFrameSuggestions(object):
         idx_list, video: "Video", group: Optional[GroupType] = None
     ) -> List[SuggestionFrame]:
         return [SuggestionFrame(video, frame_idx, group) for frame_idx in idx_list]
+
+    @staticmethod
+    def filter_unique_suggestions(
+        labels: "Labels",
+        videos: List[Video],
+        proposed_suggestions: List[SuggestionFrame],
+    ) -> List[SuggestionFrame]:
+        # Create log of suggestions that already exist
+        sugg_idx_dict: Dict[Video, list] = {video: [] for video in videos}
+        for sugg in labels.suggestions:
+            sugg_idx_dict[sugg.video].append(sugg.frame_idx)
+
+        # Filter for suggestions that already exist
+        unique_suggestions = [
+            sugg
+            for sugg in proposed_suggestions
+            if sugg.frame_idx not in sugg_idx_dict[sugg.video]
+        ]
+
+        return unique_suggestions
 
 
 def demo_gui():
