@@ -6,7 +6,7 @@ dependencies:
 - Shapely
 - anaconda-client
 - conda-verify
-- conda-forge::pip<=22.0.3
+- conda-forge::pip!=22.0.4
 - pip:
     - tensorflow==2.7.0
     - pyside2==5.14.1

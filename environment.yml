@@ -17,7 +17,7 @@ dependencies:
   # - sleap::tensorflow=2.7.0
   # - sleap::pyside2=5.14.1
   - qtpy>=2.0.1
-  - conda-forge::pip
+  - conda-forge::pip!=22.0.4
   - pip:
       - "--editable=."
       - "--requirement=./dev_requirements.txt"
