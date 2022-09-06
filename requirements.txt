@@ -14,7 +14,6 @@ pandas
 psutil
 PySide2>=5.13.2,<=5.14.1; platform_machine != 'arm64'
 PySide2>=5.13.2,<=5.15.5; sys_platform == 'darwin' and platform_machine == 'arm64'
-qtpy>=2.0.1
 pyzmq
 pyyaml
 pillow>=8.3.1,<=8.4.0

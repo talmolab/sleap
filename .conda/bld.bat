@@ -31,6 +31,7 @@ pip install psutil
 @REM pip install PySide2>=5.13.2,<=5.14.1
 pip install pyzmq
 pip install pyyaml
+pip install pillow>=8.3.1,<=8.4.0
 pip install imgaug==0.4.0
 @REM pip install scipy>=1.4.1,<=1.7.3
 pip install scikit-image
