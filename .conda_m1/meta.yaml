@@ -1,0 +1,56 @@
+# Ref: https://docs.conda.io/projects/conda-build/en/latest/resources/define-metadata.html
+
+# Jinja template: Process setup.py to obtain version and metadata
+{% set data = load_setup_py_data() %}
+
+
+package:
+  # Repeating name because of the following issue:
+  # https://github.com/conda/conda-build/issues/2475
+  name: sleap
+  version: {{ data.get('version') }}
+
+about:
+  home: {{ data.get('url') }}
+  license: {{ data.get('license') }}
+  summary: {{ data.get('description') }}
+
+build:
+  number: 1
+
+source:
+  path: ../
+
+requirements:
+  host:
+    - python=3.9
+    - shapely=1.7.1
+    - conda-forge::h5py=3.6.0
+    - conda-forge::numpy=1.22.3
+    - scipy=1.7.3
+    - pillow=8.4.0
+    - apple::tensorflow-deps=2.9.0
+    - conda-forge::pyside2=5.15.5
+    - conda-forge::opencv=4.6.0
+    - qtpy=2.0.1
+    - conda-forge::pip!=22.0.4
+
+  run:
+    - python=3.9
+    - shapely=1.7.1
+    - conda-forge::h5py=3.6.0
+    - conda-forge::numpy=1.22.3
+    - scipy=1.7.3
+    - pillow=8.4.0
+    - apple::tensorflow-deps=2.9.0
+    - conda-forge::pyside2=5.15.5
+    - conda-forge::opencv=4.6.0
+    - qtpy=2.0.1
+    - conda-forge::pip!=22.0.4
+
+  run_constrained:
+    - pyqt==9999999999
+
+test:
+  imports:
+    - sleap
