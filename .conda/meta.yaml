@@ -35,6 +35,7 @@ requirements:
     - shapely=1.7.1
     - conda-forge::pandas
     - ffmpeg
+    - qtpy>=2.0.1
     - conda-forge::pip!=22.0.4
 
   run:
@@ -49,10 +50,10 @@ requirements:
     - shapely=1.7.1
     - conda-forge::pandas
     - ffmpeg
+    - qtpy>=2.0.1
     - cudatoolkit=11.3.1
     - cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
-    - qtpy>=2.0.1
     - conda-forge::pip!=22.0.4
 
   run_constrained:
