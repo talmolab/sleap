@@ -509,3 +509,23 @@ def test_labeledframe_remove_untracked(
 
     lf.remove_untracked()
     assert all([inst.track is not None for inst in lf.instances])
+
+
+def test_instance_structuring_from_predicted(centered_pair_predictions):
+    labels = centered_pair_predictions.copy()
+    pred_inst = labels[0][0]
+    assert type(pred_inst) == PredictedInstance
+
+    inst = Instance.from_numpy(pred_inst.numpy(), pred_inst.skeleton)
+    labels[0].instances.append(inst)
+
+    # Force a unstructuring -> structuring and check that we can copy without setting
+    # the Instance.from_predicted field
+    labels_copy = labels.copy()
+
+    # Set from_predicted
+    inst.from_predicted = pred_inst
+    assert inst.from_predicted == pred_inst
+
+    # Unstructure -> structure
+    labels_copy = labels.copy()

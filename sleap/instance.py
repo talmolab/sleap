@@ -23,7 +23,7 @@ import numpy as np
 import cattr
 
 from copy import copy
-from typing import Dict, List, Optional, Union, Tuple
+from typing import Dict, List, Optional, Union, Tuple, ForwardRef
 
 from numpy.lib.recfunctions import structured_to_unstructured
 
@@ -1239,6 +1239,13 @@ def make_instance_cattr() -> cattr.Converter:
 
     converter.register_structure_hook(
         Union[List[Instance], List[PredictedInstance]], structure_instances_list
+    )
+
+    # Structure forward reference for PredictedInstance for the Instance.from_predicted
+    # attribute.
+    converter.register_structure_hook(
+        ForwardRef("PredictedInstance"),
+        lambda x, _: converter.structure(x, PredictedInstance),
     )
 
     # converter.register_structure_hook(
