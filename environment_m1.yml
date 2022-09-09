@@ -13,7 +13,7 @@ dependencies:
     - apple::tensorflow-deps=2.9.0
     - conda-forge::pyside2=5.15.5
     - conda-forge::opencv=4.6.0
-    - qtpy=2.0.1
+    - qtpy>=2.0.1
     - pip
     - pip:
         - "--editable=./"

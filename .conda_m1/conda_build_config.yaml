@@ -1,0 +1,9 @@
+# We specify the numpy version here for build compatibility.
+# 
+# Ref: https://docs.conda.io/projects/conda-build/en/latest/resources/variants.html#conda-build-variant-config-files
+
+python:
+  - 3.9
+
+numpy:
+  - 1.22.3

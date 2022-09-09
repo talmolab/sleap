@@ -37,7 +37,7 @@ pip install scikit-image
 pip install scikit-learn==1.0.*
 pip install scikit-video
 pip install imgstore==0.2.9
-pip install qimage2ndarray==1.8.3
+pip install qimage2ndarray==1.9.0
 pip install jsmin
 pip install seaborn
 pip install pykalman==0.9.5
