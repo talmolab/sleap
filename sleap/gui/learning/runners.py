@@ -14,13 +14,17 @@ import yaml
 from pathlib import Path
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Text, Tuple
+import logging
 
-from PySide2 import QtWidgets
+from qtpy import QtWidgets
 
 from sleap import Labels, Video, LabeledFrame
 from sleap.gui.learning.configs import ConfigFileInfo
+from sleap.io.video import SingleImageVideo
 from sleap.nn import training
 from sleap.nn.config import TrainingJobConfig
+
+logger = logging.getLogger(__name__)
 
 
 def kill_process(pid: int):
@@ -65,22 +69,33 @@ class VideoItemForInference(ItemForInference):
         video: the :py:class:`Video` object (which already stores its own path)
         frames: list of frames for inference; if None, then all frames are used
         use_absolute_path: whether to use absolute path for inference cli call
+        video: The :py:class:`Video` object (which already stores its own path)
+        frames: List of frames for inference; if None, then all frames are used
+        labels_path: Path to .slp project; if None, then use video path instead.
+        video_idx: Video index for inference; if None, then first video is used. Only
+            used if labels_path is specified.
     """
 
     video: Video
     frames: Optional[List[int]] = None
     use_absolute_path: bool = False
+    labels_path: Optional[str] = None
+    video_idx: int = 0
 
     @property
     def path(self):
+        if self.labels_path is not None:
+            return self.labels_path
         if self.use_absolute_path:
-            return os.path.abspath(self.video.filename)
-        return self.video.filename
+            return os.path.abspath(self.video.backend.filename)
+        return self.video.backend.filename
 
     @property
     def cli_args(self):
         arg_list = list()
         arg_list.append(self.path)
+        if self.labels_path is not None:
+            arg_list.extend(["--video.index", str(self.video_idx)])
 
         # TODO: better support for video params
         if hasattr(self.video.backend, "dataset") and self.video.backend.dataset:
@@ -146,12 +161,23 @@ class ItemsForInference:
 
     @classmethod
     def from_video_frames_dict(
-        cls, video_frames_dict: Dict[Video, List[int]], total_frame_count: int
+        cls,
+        video_frames_dict: Dict[Video, List[int]],
+        total_frame_count: int,
+        labels: Labels,
+        labels_path: Optional[str] = None,
     ):
         items = []
         for video, frames in video_frames_dict.items():
             if frames:
-                items.append(VideoItemForInference(video=video, frames=frames))
+                items.append(
+                    VideoItemForInference(
+                        video=video,
+                        frames=frames,
+                        labels_path=labels_path,
+                        video_idx=labels.videos.index(video),
+                    )
+                )
         return cls(items=items, total_frame_count=total_frame_count)
 
 
@@ -313,8 +339,6 @@ class InferenceTask:
 
         def remove_empty_instances_and_frames(lf: LabeledFrame):
             """Removes instances without visible points and empty frames."""
-            for inst in lf.instances:
-                print(f"inst.points = {inst.points}\n")
             lf.remove_empty_instances()
             return len(lf.instances) > 0
 

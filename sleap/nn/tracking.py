@@ -88,6 +88,14 @@ class MatchedFrameInstances:
     img_t: Optional[np.ndarray] = None
 
 
+@attr.s(auto_attribs=True, slots=True)
+class MatchedShiftedFrameInstances:
+    ref_t: int
+    t: int
+    instances_t: List[ShiftedInstance]
+    img_t: Optional[np.ndarray] = None
+
+
 @attr.s(auto_attribs=True)
 class FlowCandidateMaker:
     """Class for producing optical flow shift matching candidates."""
@@ -96,8 +104,8 @@ class FlowCandidateMaker:
     img_scale: float = 1.0
     of_window_size: int = 21
     of_max_levels: int = 3
-
     save_shifted_instances: bool = False
+
     shifted_instances: Dict[
         Tuple[int, int], List[ShiftedInstance]  # keyed by (src_t, dst_t)
     ] = attr.ib(factory=dict)
@@ -121,6 +129,16 @@ class FlowCandidateMaker:
             )
 
             if len(ref_instances) > 0:
+                # Check if shifted instance was computed at earlier time
+                if self.save_shifted_instances:
+                    for ti in reversed(range(ref_t, t)):
+                        if (ref_t, ti) in self.shifted_instances:
+                            ref_shifted_instances = self.shifted_instances[(ref_t, ti)]
+                            # Use shifted instance as a reference
+                            ref_img = ref_shifted_instances.img_t
+                            ref_instances = ref_shifted_instances.instances_t
+                            break
+
                 # Flow shift reference instances to current frame.
                 shifted_instances = self.flow_shift_instances(
                     ref_instances,
@@ -137,7 +155,13 @@ class FlowCandidateMaker:
 
                 # Save shifted instances.
                 if self.save_shifted_instances:
-                    self.shifted_instances[(ref_t, t)] = shifted_instances
+                    self.shifted_instances[(ref_t, t)] = MatchedShiftedFrameInstances(
+                        ref_t,
+                        t,
+                        shifted_instances,
+                        img,
+                    )
+
         return candidate_instances
 
     @staticmethod
@@ -535,6 +559,7 @@ class Tracker(BaseTracker):
         img_scale: float = 1.0,
         of_window_size: int = 21,
         of_max_levels: int = 3,
+        save_shifted_instances: bool = False,
         # Pre-tracking options to cull instances
         target_instance_count: int = 0,
         pre_cull_to_target: bool = False,
@@ -574,6 +599,7 @@ class Tracker(BaseTracker):
             candidate_maker.img_scale = img_scale
             candidate_maker.of_window_size = of_window_size
             candidate_maker.of_max_levels = of_max_levels
+            candidate_maker.save_shifted_instances = save_shifted_instances
 
         cleaner = None
         if clean_instance_count:
@@ -712,6 +738,13 @@ class Tracker(BaseTracker):
         option = dict(name="of_max_levels", default=3)
         option["type"] = int
         option["help"] = "For optical-flow: Number of pyramid scale levels to consider"
+        options.append(option)
+
+        option = dict(name="save_shifted_instances", default=False)
+        option["type"] = bool
+        option[
+            "help"
+        ] = "For optical-flow: Save the shifted instances between elapsed frames"
         options.append(option)
 
         def int_list_func(s):

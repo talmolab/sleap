@@ -1,0 +1,20 @@
+name: sleap
+
+channels:
+    - conda-forge
+    - defaults
+
+dependencies:
+    - python=3.9
+    - shapely=1.7.1
+    - conda-forge::h5py=3.6.0
+    - conda-forge::numpy=1.22.3
+    - scipy=1.7.3
+    - apple::tensorflow-deps=2.9.0
+    - conda-forge::pyside2=5.15.5
+    - conda-forge::opencv=4.6.0
+    - qtpy>=2.0.1
+    - pip
+    - pip:
+        - "--editable=./"
+        - "--requirement=./dev_requirements.txt"

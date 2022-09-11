@@ -23,7 +23,7 @@ import numpy as np
 import cattr
 
 from copy import copy
-from typing import Dict, List, Optional, Union, Tuple
+from typing import Dict, List, Optional, Union, Tuple, ForwardRef
 
 from numpy.lib.recfunctions import structured_to_unstructured
 
@@ -32,11 +32,6 @@ from sleap.skeleton import Skeleton, Node
 from sleap.io.video import Video
 
 import attr
-
-try:
-    from typing import ForwardRef
-except:
-    from typing import _ForwardRef as ForwardRef
 
 
 class Point(np.record):
@@ -394,7 +389,7 @@ class Instance:
         if from_predicted is not None and type(from_predicted) != PredictedInstance:
             raise TypeError(
                 f"Instance.from_predicted type must be PredictedInstance (not "
-                "{type(from_predicted)})"
+                f"{type(from_predicted)})"
             )
 
     @_points.validator
@@ -1246,10 +1241,17 @@ def make_instance_cattr() -> cattr.Converter:
         Union[List[Instance], List[PredictedInstance]], structure_instances_list
     )
 
+    # Structure forward reference for PredictedInstance for the Instance.from_predicted
+    # attribute.
     converter.register_structure_hook(
         ForwardRef("PredictedInstance"),
-        lambda x, type: converter.structure(x, PredictedInstance),
+        lambda x, _: converter.structure(x, PredictedInstance),
     )
+
+    # converter.register_structure_hook(
+    #     PredictedInstance,
+    #     lambda x, type: converter.structure(x, PredictedInstance),
+    # )
 
     # We can register structure hooks for point arrays that do nothing
     # because Instance can have a dict of points passed to it in place of

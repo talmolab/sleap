@@ -23,37 +23,29 @@ source:
 
 requirements:
   host:
-    - python=3.7
-    # - sleap::pyside2=5.14.1
-    - conda-forge::numpy=1.19.5
-    - sleap::tensorflow=2.6.3
-    - conda-forge::pyside2=5.13.2
-    - conda-forge::h5py=3.1.0
-    - conda-forge::scipy=1.7.3
-    - conda-forge::six=1.15.0
-    - pillow=8.4.0
+    - python=3.9
     - shapely=1.7.1
-    - conda-forge::pandas
-    - ffmpeg
-    - qtpy>=2.0.1
+    - conda-forge::h5py=3.6.0
+    - conda-forge::numpy=1.22.3
+    - scipy=1.7.3
+    - pillow=8.4.0
+    - apple::tensorflow-deps=2.9.0
+    - conda-forge::pyside2=5.15.5
+    - conda-forge::opencv=4.6.0
+    - qtpy=2.0.1
     - conda-forge::pip!=22.0.4
 
   run:
-    - python=3.7
-    - conda-forge::numpy~=1.19.5
-    - sleap::tensorflow=2.6.3
-    - conda-forge::pyside2>=5.13.2,<=5.14.1
-    - conda-forge::h5py~=3.1.0
-    - conda-forge::scipy>=1.4.1,<=1.7.3
-    - conda-forge::six~=1.15.0
-    - pillow=8.4.0
+    - python=3.9
     - shapely=1.7.1
-    - conda-forge::pandas
-    - ffmpeg
-    - qtpy>=2.0.1
-    - cudatoolkit=11.3.1
-    - cudnn=8.2.1
-    - nvidia::cuda-nvcc=11.3
+    - conda-forge::h5py=3.6.0
+    - conda-forge::numpy=1.22.3
+    - scipy=1.7.3
+    - pillow=8.4.0
+    - apple::tensorflow-deps=2.9.0
+    - conda-forge::pyside2=5.15.5
+    - conda-forge::opencv=4.6.0
+    - qtpy=2.0.1
     - conda-forge::pip!=22.0.4
 
   run_constrained:

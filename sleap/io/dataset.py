@@ -1472,6 +1472,10 @@ class Labels(MutableSequence):
             )
         return self.find_suggestion(video, frame_suggestion)
 
+    def append_suggestions(self, suggestions: List[SuggestionFrame]):
+        """Append the suggested frames."""
+        self.suggestions.extend(suggestions)
+
     def set_suggestions(self, suggestions: List[SuggestionFrame]):
         """Set the suggested frames."""
         self.suggestions = suggestions

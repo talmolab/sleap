@@ -6,6 +6,7 @@ from sleap import Labels, LabeledFrame, Instance, PredictedInstance, Skeleton
 from sleap.io.video import Video, MediaVideo
 
 import numpy as np
+import pytest
 
 
 def test_config_list_load():
@@ -39,7 +40,10 @@ def test_scoped_key_dict():
     assert x["bar.elephant"] == 3
 
 
-def test_inference_cli_builder():
+@pytest.mark.parametrize(
+    "labels_path, video_path", [("labels.slp", "video.mp4"), (None, "video.mp4")]
+)
+def test_inference_cli_builder(labels_path, video_path):
 
     inference_task = runners.InferenceTask(
         trained_job_paths=["model1", "model2"],
@@ -47,20 +51,20 @@ def test_inference_cli_builder():
     )
 
     item_for_inference = runners.VideoItemForInference(
-        video=Video.from_filename("video.mp4"),
-        frames=[1, 2, 3],
+        video=Video.from_filename(video_path), frames=[1, 2, 3], labels_path=labels_path
     )
 
     cli_args, output_path = inference_task.make_predict_cli_call(item_for_inference)
+    data_path = video_path if labels_path is None else labels_path
 
     assert cli_args[0] == "sleap-track"
-    assert cli_args[1] == "video.mp4"
+    assert cli_args[1] == data_path
     assert "model1" in cli_args
     assert "model2" in cli_args
     assert "--frames" in cli_args
     assert "--tracking.tracker" in cli_args
 
-    assert output_path.startswith("video.mp4")
+    assert output_path.startswith(data_path)
     assert output_path.endswith("predictions.slp")
 
 

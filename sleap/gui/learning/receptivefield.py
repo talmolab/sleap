@@ -12,7 +12,7 @@ from sleap.nn.model import Model
 
 from typing import Optional, Text
 
-from PySide2 import QtWidgets, QtGui, QtCore
+from qtpy import QtWidgets, QtGui, QtCore
 
 
 def compute_rf(down_blocks: int, convs_per_block: int = 2, kernel_size: int = 3) -> int:

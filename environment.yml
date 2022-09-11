@@ -16,7 +16,8 @@ dependencies:
   - nvidia::cuda-nvcc=11.3
   # - sleap::tensorflow=2.7.0
   # - sleap::pyside2=5.14.1
-  - conda-forge::pip<=22.0.3
+  - qtpy>=2.0.1
+  - conda-forge::pip!=22.0.4
   - pip:
       - "--editable=."
       - "--requirement=./dev_requirements.txt"

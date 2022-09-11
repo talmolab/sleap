@@ -6,6 +6,7 @@ environment by wrapping `tf.config` module functions.
 
 import tensorflow as tf
 from typing import List, Optional, Text
+import subprocess
 
 
 def get_all_gpus() -> List[tf.config.PhysicalDevice]:
@@ -183,3 +184,36 @@ def best_logical_device_name() -> Text:
         cpus = tf.config.list_logical_devices("CPU")
         device_name = cpus[0].name
     return device_name
+
+
+def get_gpu_memory() -> List[int]:
+    """Return list of available GPU memory.
+
+    Returns:
+        List of available GPU memory with indices corresponding to GPU indices.
+    """
+    command = [
+        "nvidia-smi",
+        "--query-gpu=memory.free",
+        "--format=csv",
+    ]
+
+    memory_poll = subprocess.run(command, capture_output=True)
+
+    # Capture subprocess standard output
+    subprocess_result = memory_poll.stdout
+
+    # nvidia-smi returns an ascii encoded byte string separated by newlines (\n)
+    # Splitting gives a list where the final entry is an empty string. Slice it off
+    # and finally slice off the csv header in the 0th element.
+    memory_string = subprocess_result.decode("ascii").split("\n")[:-1][1:]
+
+    memory_list = []
+    for row in memory_string:
+        # Removing megabyte text returned by nvidia-smi
+        available_memory = row.split()[0]
+
+        # Append percent of GPU available to GPU ID, assume GPUs returned in index order
+        memory_list.append(int(available_memory))
+
+    return memory_list

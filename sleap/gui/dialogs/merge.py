@@ -9,7 +9,7 @@ from typing import Dict, List
 from sleap.instance import LabeledFrame
 from sleap.io.dataset import Labels
 
-from PySide2 import QtWidgets, QtCore
+from qtpy import QtWidgets, QtCore
 
 USE_BASE_STRING = "Use base, discard conflicting new instances"
 USE_NEW_STRING = "Use new, discard conflicting base instances"

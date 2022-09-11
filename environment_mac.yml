@@ -2,11 +2,13 @@ name: sleap
 
 dependencies:
 - python=3.7
-- Pillow
-- Shapely
+- pillow=8.4.0
+- shapely=1.7.1
+- ffmpeg
+- qtpy>=2.0.1
 - anaconda-client
 - conda-verify
-- conda-forge::pip<=22.0.3
+- conda-forge::pip!=22.0.4
 - pip:
     - tensorflow==2.7.0
     - pyside2==5.14.1
