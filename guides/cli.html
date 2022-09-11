@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Command line interfaces &#8212; SLEAP (v1.2.6)</title>
+    <title>Command line interfaces &#8212; SLEAP (v1.2.7)</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -90,7 +90,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.6)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.7)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -722,7 +722,9 @@ optional arguments:
                         available GPU.
   --first-gpu           Run training on the first GPU, if available.
   --last-gpu            Run training on the last GPU, if available.
-  --gpu GPU             Run training on the i-th GPU on the system.
+  --gpu GPU             Run training on the i-th GPU on the system. If &#39;auto&#39;, run on
+                        the GPU with the highest percentage of available memory.
+                        (default: &#39;0&#39;)
 </pre></div>
 </div>
 </section>
@@ -738,6 +740,7 @@ optional arguments:
                    [--verbosity {none,rich,json}]
                    [--video.dataset VIDEO.DATASET]
                    [--video.input_format VIDEO.INPUT_FORMAT]
+                   [--video.index VIDEO.INDEX]
                    [--cpu | --first-gpu | --last-gpu | --gpu GPU]
                    [--peak_threshold PEAK_THRESHOLD] [--batch_size BATCH_SIZE]
                    [--open-in-gui] [--tracking.tracker TRACKING.TRACKER]
@@ -750,6 +753,7 @@ optional arguments:
                    [--tracking.similarity TRACKING.SIMILARITY]
                    [--tracking.match TRACKING.MATCH]
                    [--tracking.track_window TRACKING.TRACK_WINDOW]
+                   [--tracking.save_shifted_instances TRACKING.SAVE_SHIFTED_INSTANCES]
                    [--tracking.min_new_track_points TRACKING.MIN_NEW_TRACK_POINTS]
                    [--tracking.min_match_points TRACKING.MIN_MATCH_POINTS]
                    [--tracking.img_scale TRACKING.IMG_SCALE]
@@ -786,7 +790,9 @@ optional arguments:
   -o OUTPUT, --output OUTPUT
                         The output filename to use for the predicted data. If
                         not provided, defaults to
-                        &#39;[data_path].predictions.slp&#39;.
+                        &#39;[data_path].predictions.slp&#39; if generating predictions or
+                        &#39;[data_path].[tracker].[similarity method].[matching method].slp&#39;
+                        if retracking predictions.
   --no-empty-frames     Clear any empty frames that did not have any detected
                         instances before saving to output.
   --verbosity {none,rich,json}
@@ -798,11 +804,16 @@ optional arguments:
                         The dataset for HDF5 videos.
   --video.input_format VIDEO.INPUT_FORMAT
                         The input_format for HDF5 videos.
+  --video.index VIDEO.INDEX
+                        The index of the video to run inference on. Only used if
+                        data_path points to a labels file.
   --cpu                 Run inference only on CPU. If not specified, will use
                         available GPU.
   --first-gpu           Run inference on the first GPU, if available.
   --last-gpu            Run inference on the last GPU, if available.
-  --gpu GPU             Run inference on the i-th GPU specified.
+  --gpu GPU             Run training on the i-th GPU on the system. If &#39;auto&#39;, run on
+                        the GPU with the highest percentage of available memory.
+                        (default: &#39;0&#39;)
   --peak_threshold PEAK_THRESHOLD
                         Minimum confidence map value to consider a peak as
                         valid.
@@ -842,6 +853,9 @@ optional arguments:
                         Options: hungarian, greedy (default: greedy)
   --tracking.track_window TRACKING.TRACK_WINDOW
                         How many frames back to look for matches (default: 5)
+  --tracking.save_shifted_instances TRACKING.SAVE_SHIFTED_INSTANCES
+                        For optical-flow: Save the shifted instances between
+                        elapsed frames for optimal comparison (default: 0)
   --tracking.min_new_track_points TRACKING.MIN_NEW_TRACK_POINTS
                         Minimum number of instance points for spawning new
                         track (default: 0)
@@ -880,7 +894,28 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -o OUTPUT, --output OUTPUT
-                        Path to output file (optional).
+                        Path to output file (optional). The analysis format expects an
+                        output path per video in the project. Otherwise, the default
+                        naming convention
+                        &lt;slp path&gt;.&lt;video index&gt;_&lt;video filename&gt;.analysis.h5 will be
+                        used for every video without a specified output path. Multiple
+                        outputs can be specified, each preceeded by --output.
+
+                        Example (analysis format):
+                          Input:
+                            predictions.slp: Path to .slp file to convert which has two
+                            videos:
+                            - first-video.mp4 at video index 0 and
+                            - second-video.mp4 at video index 1.
+                          Command:
+                            sleap-convert predictions.slp --format analysis --output analysis_video_0.h5
+                          Output analysis files:
+                            analysis_video_0.h5: Analysis file for first-video.mp4
+                              (at index 0) in predictions.slp.
+                            predictions.001_second-video.analysis.h5: Analysis file for
+                              second-video.mp4 (at index 1) in predictions.slp. Since
+                              only a single --output argument was specified, the
+                              analysis file for the latter video is given a default name.
   --format FORMAT       Output format. Default (&#39;slp&#39;) is SLEAP dataset;
                         &#39;analysis&#39; results in analysis.h5 file; &#39;h5&#39; or &#39;json&#39;
                         results in SLEAP dataset with specified file format.
@@ -925,7 +960,7 @@ optional arguments:
   -f FPS, --fps FPS     Frames per second for output video (default: 25)
   --scale SCALE         Output image scale (default: 1.0)
   --crop CROP           Crop size as &lt;width&gt;,&lt;height&gt; (default: None)
-  --frames FRAMES       List of frames to predict. Either comma separated list (e.g. 1,2,3) 
+  --frames FRAMES       List of frames to predict. Either comma separated list (e.g. 1,2,3)
                         or a range separated by hyphen (e.g. 1-3). (default is entire video)
   -video-index VIDEO_INDEX
                         Index of video in labels dataset (default: 0)
