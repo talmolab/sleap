@@ -42,7 +42,7 @@ Social LEAP Estimates Animal Poses (SLEAP)
 .. image:: https://sleap.ai/docs/_static/sleap_movie.gif
     :width: 600px
 
-**SLEAP** is an open source deep-learning based framework for multi-animal pose tracking. It can be used to track any type or number of animals and includes an advanced labeling/training GUI for active learning and proofreading.
+**SLEAP** is an open source deep-learning based framework for multi-animal pose tracking `(Pereira et al., Nature Methods, 2022) <https://www.nature.com/articles/s41592-022-01426-1>`__. It can be used to track any type or number of animals and includes an advanced labeling/training GUI for active learning and proofreading.
 
 
 Features
