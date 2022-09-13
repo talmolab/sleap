@@ -116,7 +116,7 @@ conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap=1.2.8
 pip install sleap==1.2.8
 ```
 
-This works on **any OS** and on **Google Colab**.
+This works on **any OS except M1** and on **Google Colab**.
 
 ```{note}
 - Requires Python 3.7 or 3.8.
