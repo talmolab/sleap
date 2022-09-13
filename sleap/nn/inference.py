@@ -4193,31 +4193,27 @@ def export_model(
     model_name: Optional[str] = None,
     tensors: Optional[Dict[str, str]] = None,
 ):
-
     """High level export of a trained SLEAP model as a frozen graph.
 
     Args:
         model_path: Path to model or list of path to models that were trained by SLEAP.
             These should be the directories that contain `training_job.json` and
             `best_model.h5`.
-        save_path: Path to output directory to store the frozen graph
-        signatures: String defining the input and output types for
-            computation.
-        save_traces: If `True` (default) the SavedModel will store the
-            function traces for each layer
-        model_name: (Optional) Name to give the model. If given, will be
-            added to the output json file containing meta information about the
-            model
+        save_path: Path to output directory to store the frozen graph.
+        signatures: String defining the input and output types for computation.
+        save_traces: If `True` (default) the SavedModel will store the function traces
+            for each layer.
+        model_name: (Optional) Name to give the model. If given, will be added to the
+            output json file containing meta information about the model.
         tensors: (Optional) Dictionary describing the predicted tensors (see
-            sleap.nn.data.utils.describe_tensors as an example)
-
+            sleap.nn.data.utils.describe_tensors as an example).
     """
-
     predictor = load_model(model_path)
     predictor.export_model(save_path, signatures, save_traces, model_name, tensors)
 
 
 def export_cli():
+    """CLI for sleap-export."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-m",
@@ -4231,11 +4227,14 @@ def export_cli():
     )
     parser.add_argument(
         "-e",
-        "export_path",
+        "--export_path",
         type=str,
         nargs="?",
         default="exported_model",
-        help=("Path to data export model to."),
+        help=(
+            "Path to output directory where the frozen model will be exported to. "
+            "Defaults to a folder named 'exported_model'."
+        ),
     )
 
     args, _ = parser.parse_known_args()

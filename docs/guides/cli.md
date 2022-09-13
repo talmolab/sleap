@@ -78,6 +78,23 @@ optional arguments:
   --gpu GPU             Run training on the i-th GPU on the system or, if 'auto', on the GPU with the highest percentage of available memory.
 ```
 
+(sleap-export)=
+
+### `sleap-export`
+
+{code}`sleap-export` is a command-line interface for exporting trained models as a TensorFlow graph for use in other applications. See [this guide](https://www.tensorflow.org/guide/saved_model) for details on how TensorFlow saves models and the [`sleap.nn.inference.InferenceModel.export_model`](sleap.nn.inference.InferenceModel.export_model) documentation.
+
+```none
+usage: sleap-export [-h] [-m MODELS] [-e [EXPORT_PATH]]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -m MODELS, --model MODELS
+                        Path to trained model directory (with training_config.json). Multiple models can be specified, each preceded by --model.
+  -e [EXPORT_PATH], --export_path [EXPORT_PATH]
+                        Path to output directory where the frozen model will be exported to. Defaults to a folder named 'exported_model'.
+```
+
 ## Inference and Tracking
 
 (sleap-track)=
