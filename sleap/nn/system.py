@@ -204,7 +204,7 @@ def get_gpu_memory() -> List[int]:
 
     try:
         memory_poll = subprocess.run(command, capture_output=True)
-    except subprocess.SubprocessError:
+    except (subprocess.SubprocessError, FileNotFoundError):
         return []
 
     # Capture subprocess standard output
