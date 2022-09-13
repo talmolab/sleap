@@ -190,7 +190,11 @@ def get_gpu_memory() -> List[int]:
     """Return list of available GPU memory.
 
     Returns:
-        List of available GPU memory with indices corresponding to GPU indices.
+        List of available GPU memory (in MiB) with indices corresponding to GPU indices.
+
+    Notes:
+        This function depends on the `nvidia-smi` system utility. If it cannot be found
+        in the `PATH`, this function returns an empty list.
     """
     command = [
         "nvidia-smi",
@@ -198,7 +202,10 @@ def get_gpu_memory() -> List[int]:
         "--format=csv",
     ]
 
-    memory_poll = subprocess.run(command, capture_output=True)
+    try:
+        memory_poll = subprocess.run(command, capture_output=True)
+    except subprocess.SubprocessError:
+        return []
 
     # Capture subprocess standard output
     subprocess_result = memory_poll.stdout
@@ -206,12 +213,12 @@ def get_gpu_memory() -> List[int]:
     # nvidia-smi returns an ascii encoded byte string separated by newlines (\n)
     # Splitting gives a list where the final entry is an empty string. Slice it off
     # and finally slice off the csv header in the 0th element.
-    memory_string = subprocess_result.decode("ascii").split("\n")[:-1][1:]
+    memory_string = subprocess_result.decode("ascii").split("\n")[1:-1]
 
     memory_list = []
     for row in memory_string:
         # Removing megabyte text returned by nvidia-smi
-        available_memory = row.split()[0]
+        available_memory = row.split(" MiB")[0]
 
         # Append percent of GPU available to GPU ID, assume GPUs returned in index order
         memory_list.append(int(available_memory))
