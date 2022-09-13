@@ -1944,7 +1944,19 @@ def main():
             logger.info("Using the last GPU for acceleration.")
         else:
             if args.gpu == "auto":
-                gpu_ind = np.argmax(sleap.nn.system.get_gpu_memory())
+                free_gpu_memory = sleap.nn.system.get_gpu_memory()
+                if len(free_gpu_memory) > 0:
+                    gpu_ind = np.argmax(free_gpu_memory)
+                    logger.info(
+                        f"Auto-selected GPU {gpu_ind} with {free_gpu_memory} MiB of "
+                        "free memory."
+                    )
+                else:
+                    logger.info(
+                        "Failed to query GPU memory from nvidia-smi. Defaulting to "
+                        "first GPU."
+                    )
+                    gpu_ind = 0
             else:
                 gpu_ind = int(args.gpu)
             sleap.nn.system.use_gpu(gpu_ind)
