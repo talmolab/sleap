@@ -4368,7 +4368,7 @@ def _make_cli_parser() -> argparse.ArgumentParser:
     device_group.add_argument(
         "--gpu",
         type=str,
-        default="0",
+        default="auto",
         help=(
             "Run training on the i-th GPU on the system. If 'auto', run on the GPU with"
             " the highest percentage of available memory."
@@ -4618,7 +4618,8 @@ def main(args: list = None):
             sleap.nn.system.use_last_gpu()
         else:
             if args.gpu == "auto":
-                gpu_ind = np.argmax(sleap.nn.system.get_gpu_memory())
+                gpu_memory = sleap.nn.system.get_gpu_memory()
+                gpu_ind = np.argmax(gpu_memory) if len(gpu_memory) > 0 else 0
             else:
                 gpu_ind = int(args.gpu)
             sleap.nn.system.use_gpu(gpu_ind)

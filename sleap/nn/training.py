@@ -1944,7 +1944,8 @@ def main():
             logger.info("Using the last GPU for acceleration.")
         else:
             if args.gpu == "auto":
-                gpu_ind = np.argmax(sleap.nn.system.get_gpu_memory())
+                gpu_memory = sleap.nn.system.get_gpu_memory()
+                gpu_ind = np.argmax(gpu_memory) if len(gpu_memory) > 0 else 0
             else:
                 gpu_ind = int(args.gpu)
             sleap.nn.system.use_gpu(gpu_ind)
