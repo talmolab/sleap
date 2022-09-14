@@ -1949,8 +1949,7 @@ def main():
                     gpu_ind = np.argmax(free_gpu_memory)
                     mem = free_gpu_memory[gpu_ind]
                     logger.info(
-                        f"Auto-selected GPU {gpu_ind} with {mem} MiB of free "
-                        "memory."
+                        f"Auto-selected GPU {gpu_ind} with {mem} MiB of free memory."
                     )
                 else:
                     logger.info(
