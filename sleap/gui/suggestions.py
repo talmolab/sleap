@@ -82,7 +82,8 @@ class VideoFrameSuggestions(object):
     ):
         """Method to generate suggestions randomly or by taking strides through video."""
         suggestions = []
-        sugg_idx_dict: Dict[Video, list] = {video: [] for video in videos}
+        sugg_idx_dict: Dict[Video, list] = {video: [] for video in labels.videos}
+
         for sugg in labels.suggestions:
             sugg_idx_dict[sugg.video].append(sugg.frame_idx)
 
@@ -287,7 +288,7 @@ class VideoFrameSuggestions(object):
         proposed_suggestions: List[SuggestionFrame],
     ) -> List[SuggestionFrame]:
         # Create log of suggestions that already exist
-        sugg_idx_dict: Dict[Video, list] = {video: [] for video in videos}
+        sugg_idx_dict: Dict[Video, list] = {video: [] for video in labels.videos}
         for sugg in labels.suggestions:
             sugg_idx_dict[sugg.video].append(sugg.frame_idx)
 

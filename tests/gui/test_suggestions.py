@@ -81,11 +81,13 @@ def test_frame_increment(centered_pair_predictions: Labels):
     print(centered_pair_predictions.videos)
 
 
-def test_video_selection(centered_pair_predictions: Labels):
+def test_video_selection(
+    centered_pair_predictions: Labels, small_robot_3_frame_vid: Video
+):
     # Testing the functionality of choosing a specific video in a project and
     # only generating suggestions for the video
 
-    centered_pair_predictions.add_video(Video.from_filename(filename="test.mp4"))
+    centered_pair_predictions.add_video(small_robot_3_frame_vid)
     # Testing suggestion generation from Image Features
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
@@ -149,6 +151,18 @@ def test_video_selection(centered_pair_predictions: Labels):
     for i in range(len(suggestions)):
         # Confirming every suggestion is only for the video that is chosen and no other videos
         assert suggestions[i].video == centered_pair_predictions.videos[0]
+
+    # Ensure video target works given suggestions from another video already exist
+    centered_pair_predictions.set_suggestions(suggestions)
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=centered_pair_predictions,
+        params={
+            "videos": [centered_pair_predictions.videos[1]],
+            "method": "sample",
+            "per_video": 3,
+            "sampling_method": "random",
+        },
+    )
 
 
 def assert_suggestions_unique(labels: Labels, new_suggestions: List[SuggestionFrame]):
