@@ -66,8 +66,10 @@ class VideoFrameSuggestions(object):
         if method_functions.get(method, None) is not None:
             return method_functions[method](labels=labels, **params)
         else:
-            print(f"No {method} method found for generating suggestions.")
-            return []
+            raise ValueError(
+                f"No{'' if method == '_' else method + ' '} method found for "
+                "generating suggestions."
+            )
 
     # Functions corresponding to "method" param
 
