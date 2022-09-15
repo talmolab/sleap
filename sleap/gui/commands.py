@@ -2413,11 +2413,20 @@ class GenerateSuggestions(EditCommand):
         else:
             params["videos"] = context.labels.videos
 
-        new_suggestions = VideoFrameSuggestions.suggest(
-            labels=context.labels, params=params
-        )
+        try:
+            new_suggestions = VideoFrameSuggestions.suggest(
+                labels=context.labels, params=params
+            )
 
-        context.labels.append_suggestions(new_suggestions)
+            context.labels.append_suggestions(new_suggestions)
+        except Exception as e:
+            win.hide()
+            QtWidgets.QMessageBox(
+                text=f"An error occurred while generating suggestions. "
+                "Your command line terminal may have more information about "
+                "the error."
+            ).exec_()
+            raise e
 
         win.hide()
 
