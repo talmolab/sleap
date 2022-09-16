@@ -4238,7 +4238,7 @@ def export_cli():
     )
 
     args, _ = parser.parse_known_args()
-    export_model(args["models"], args["export_path"])
+    export_model(args.models, args.export_path)
 
 
 def _make_cli_parser() -> argparse.ArgumentParser:
