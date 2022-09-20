@@ -1232,6 +1232,13 @@ def make_instance_cattr() -> cattr.Converter:
             if "score" in inst_data.keys():
                 inst = converter.structure(inst_data, PredictedInstance)
             else:
+                if (
+                    "from_predicted" in inst_data
+                    and inst_data["from_predicted"] is not None
+                ):
+                    inst_data["from_predicted"] = converter.structure(
+                        inst_data["from_predicted"], PredictedInstance
+                    )
                 inst = converter.structure(inst_data, Instance)
             inst_list.append(inst)
 
@@ -1243,14 +1250,13 @@ def make_instance_cattr() -> cattr.Converter:
 
     # Structure forward reference for PredictedInstance for the Instance.from_predicted
     # attribute.
-    converter.register_structure_hook(
-        ForwardRef("PredictedInstance"),
-        lambda x, _: converter.structure(x, PredictedInstance),
+    converter.register_structure_hook_func(
+        lambda t: t.__class__ is ForwardRef,
+        lambda v, t: converter.structure(v, t.__forward_value__),
     )
-
     # converter.register_structure_hook(
-    #     PredictedInstance,
-    #     lambda x, type: converter.structure(x, PredictedInstance),
+    #     ForwardRef("PredictedInstance"),
+    #     lambda x, _: converter.structure(x, PredictedInstance),
     # )
 
     # We can register structure hooks for point arrays that do nothing
