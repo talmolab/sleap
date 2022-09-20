@@ -1232,7 +1232,10 @@ def make_instance_cattr() -> cattr.Converter:
             if "score" in inst_data.keys():
                 inst = converter.structure(inst_data, PredictedInstance)
             else:
-                if inst_data["from_predicted"] is not None:
+                if (
+                    "from_predicted" in inst_data
+                    and inst_data["from_predicted"] is not None
+                ):
                     inst_data["from_predicted"] = converter.structure(
                         inst_data["from_predicted"], PredictedInstance
                     )
