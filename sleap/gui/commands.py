@@ -955,7 +955,7 @@ class SaveProjectAs(AppCommand):
             extension = None if (extension == "slp") else extension
             Labels.save_file(labels=labels, filename=filename, as_format=extension)
             success = True
-            # Mark savepoint in  change stack
+            # Mark savepoint in change stack
             context.changestack_savepoint()
 
         except Exception as e:
