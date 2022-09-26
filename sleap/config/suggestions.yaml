@@ -82,25 +82,25 @@ main:
     default: 10
     range: 1,1000
 
-  # pca:
-
-  # - name: clusters
-  #   label: Number of clusters
-  #   type: int
-  #   default: 5
-  # - name: per_cluster
-  #   label: Samples per cluster
-  #   type: int
-  #   default: 5
-  # - name: initial_samples
-  #   label: Samples before clustering
-  #   type: int
-  #   default: 200
-  #   range: 10,1000
-  # - name: pca_components
-  #   label: Number of PCA components
-  #   type: int
-  #   default: 5
+# pca:
+#
+# - name: clusters
+#   label: Number of clusters
+#   type: int
+#   default: 5
+# - name: per_cluster
+#   label: Samples per cluster
+#   type: int
+#   default: 5
+# - name: initial_samples
+#   label: Samples before clustering
+#   type: int
+#   default: 200
+#   range: 10,1000
+# - name: pca_components
+#   label: Number of PCA components
+#   type: int
+#   default: 5
 #
 #  hog:
 #
