@@ -1,4 +1,4 @@
-name: sleap-dev
+name: sleap
 
 dependencies:
   - python=3.7
