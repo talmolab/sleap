@@ -138,6 +138,13 @@ class GenericTableModel(QtCore.QAbstractTableModel):
 
             if hasattr(item, key):
                 return getattr(item, key)
+        if role == QtCore.Qt.EditRole:
+            if isinstance(item, dict) and key in item:
+                return item[key]
+
+            if hasattr(item, key):
+                return getattr(item, key)
+
 
         elif role == QtCore.Qt.ForegroundRole:
             return self.get_item_color(self.original_items[idx], key)

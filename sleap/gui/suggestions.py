@@ -174,17 +174,19 @@ class VideoFrameSuggestions(object):
         labels: "Labels",
         videos: List[Video],
         score_limit,
-        instance_limit,
+        instance_limit_upper,
+        instance_limit_lower,
         **kwargs,
     ):
         """Method to generate suggestions for proofreading frames with low score."""
         score_limit = float(score_limit)
-        instance_limit = int(instance_limit)
+        instance_limit_upper = int(instance_limit_upper)
+        instance_limit_lower = int(instance_limit_lower)
 
         proposed_suggestions = []
         for video in videos:
             proposed_suggestions.extend(
-                cls._prediction_score_video(video, labels, score_limit, instance_limit)
+                cls._prediction_score_video(video, labels, score_limit, instance_limit_upper, instance_limit_lower)
             )
 
         suggestions = VideoFrameSuggestions.filter_unique_suggestions(
@@ -195,30 +197,24 @@ class VideoFrameSuggestions(object):
 
     @classmethod
     def _prediction_score_video(
-        cls, video: Video, labels: "Labels", score_limit: float, instance_limit: int
+        cls, video: Video, labels: "Labels", score_limit: float, instance_limit_upper: int, instance_limit_lower: int
     ):
         lfs = labels.find(video)
         frames = len(lfs)
-        idxs = np.ndarray((frames), dtype="int")
-        scores = np.full((frames, instance_limit), 100.0, dtype="float")
+        idxs = np.zeros((frames), dtype="int")
 
         # Build matrix with scores for instances in frames
         for i, lf in enumerate(lfs):
             # Scores from instances in frame
-            frame_scores = [inst.score for inst in lf if hasattr(inst, "score")]
-            # Just get the lowest scores
-            if len(frame_scores) > instance_limit:
-                frame_scores = sorted(frame_scores)[:instance_limit]
-            # Add to matrix
-            scores[i, : len(frame_scores)] = frame_scores
-            idxs[i] = lf.frame_idx
+            pred_fs = lf.instances_to_show
+            frame_scores = np.array([inst.score for inst in pred_fs if hasattr(inst, "score")])
+            n_qualified_instance = np.nansum(frame_scores <= score_limit)
+
+            if n_qualified_instance >= instance_limit_lower and n_qualified_instance <= instance_limit_upper:
+                idxs[i] = lf.frame_idx
 
         # Find instances below score of <score_limit>
-        low_instances = np.nansum(scores < score_limit, axis=1)
-
-        # Find all the frames with at least <instance_limit> low scoring instances
-        result = idxs[low_instances >= instance_limit].tolist()
-
+        result = sorted(idxs[idxs > 0].tolist())
         return cls.idx_list_to_frame_list(result, video)
 
     @classmethod
