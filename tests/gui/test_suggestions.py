@@ -130,7 +130,8 @@ def test_video_selection(
             "videos": [centered_pair_predictions.videos[0]],
             "method": "prediction_score",
             "score_limit": 2,
-            "instance_limit": 1,
+            "instance_limit_upper": 2,
+            "instance_limit_lower": 1,
         },
     )
 
@@ -349,7 +350,8 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
         params={
             "method": "prediction_score",
             "score_limit": 1,
-            "instance_limit": 1,
+            "instance_limit_upper": 2,
+            "instance_limit_lower": 1,
             "videos": labels.videos,
         },
     )

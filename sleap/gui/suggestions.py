@@ -186,7 +186,13 @@ class VideoFrameSuggestions(object):
         proposed_suggestions = []
         for video in videos:
             proposed_suggestions.extend(
-                cls._prediction_score_video(video, labels, score_limit, instance_limit_upper, instance_limit_lower)
+                cls._prediction_score_video(
+                    video,
+                    labels,
+                    score_limit,
+                    instance_limit_upper,
+                    instance_limit_lower,
+                )
             )
 
         suggestions = VideoFrameSuggestions.filter_unique_suggestions(
@@ -197,7 +203,12 @@ class VideoFrameSuggestions(object):
 
     @classmethod
     def _prediction_score_video(
-        cls, video: Video, labels: "Labels", score_limit: float, instance_limit_upper: int, instance_limit_lower: int
+        cls,
+        video: Video,
+        labels: "Labels",
+        score_limit: float,
+        instance_limit_upper: int,
+        instance_limit_lower: int,
     ):
         lfs = labels.find(video)
         frames = len(lfs)
@@ -207,10 +218,15 @@ class VideoFrameSuggestions(object):
         for i, lf in enumerate(lfs):
             # Scores from instances in frame
             pred_fs = lf.instances_to_show
-            frame_scores = np.array([inst.score for inst in pred_fs if hasattr(inst, "score")])
+            frame_scores = np.array(
+                [inst.score for inst in pred_fs if hasattr(inst, "score")]
+            )
             n_qualified_instance = np.nansum(frame_scores <= score_limit)
 
-            if n_qualified_instance >= instance_limit_lower and n_qualified_instance <= instance_limit_upper:
+            if (
+                n_qualified_instance >= instance_limit_lower
+                and n_qualified_instance <= instance_limit_upper
+            ):
                 idxs[i] = lf.frame_idx
 
         # Find instances below score of <score_limit>
