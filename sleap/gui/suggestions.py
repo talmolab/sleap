@@ -214,23 +214,25 @@ class VideoFrameSuggestions(object):
         frames = len(lfs)
         idxs = np.zeros((frames), dtype="int")
 
-        # Build matrix with scores for instances in frames
         for i, lf in enumerate(lfs):
-            # Scores from instances in frame
+            # Scores from visible instances in frame
             pred_fs = lf.instances_to_show
             frame_scores = np.array(
                 [inst.score for inst in pred_fs if hasattr(inst, "score")]
             )
+            # Gets the number of instances with scores lower than <score_limit>
             n_qualified_instance = np.nansum(frame_scores <= score_limit)
 
             if (
                 n_qualified_instance >= instance_limit_lower
                 and n_qualified_instance <= instance_limit_upper
             ):
+                # idxs saves qualified frame index at corresponding entry, otherwise the entry is 0
                 idxs[i] = lf.frame_idx
 
-        # Find instances below score of <score_limit>
+        # Finds non-zero entries in idxs
         result = sorted(idxs[idxs > 0].tolist())
+
         return cls.idx_list_to_frame_list(result, video)
 
     @classmethod
