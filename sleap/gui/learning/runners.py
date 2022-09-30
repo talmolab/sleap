@@ -203,12 +203,17 @@ class InferenceTask:
         cli_args.extend(item_for_inference.cli_args)
 
         # TODO: encapsulate in inference item class
+        only_tracking = False
         if (
             not self.trained_job_paths
             and "tracking.tracker" in self.inference_params
             and self.labels_filename
         ):
             # No models so we must want to re-track previous predictions
+            only_tracking = True
+            _labels = self.inference_params.get("_predicted_labels", None)
+            if not _labels:
+                self.labels_filename = _labels
             cli_args.extend(("--labels", self.labels_filename))
 
         # Make path where we'll save predictions (if not specified)
@@ -216,8 +221,9 @@ class InferenceTask:
 
             if self.labels_filename:
                 # Make a predictions directory next to the labels dataset file
+                subfolder = "predictions" if not only_tracking else ""
                 predictions_dir = os.path.join(
-                    os.path.dirname(self.labels_filename), "predictions"
+                    os.path.dirname(self.labels_filename), subfolder
                 )
                 os.makedirs(predictions_dir, exist_ok=True)
             else:
@@ -227,10 +233,10 @@ class InferenceTask:
 
             # Build filename with video name and timestamp
             timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+            mode = "predictions" if not only_tracking else "tracking"
             output_path = os.path.join(
                 predictions_dir,
-                f"{os.path.basename(item_for_inference.path)}.{timestamp}."
-                "predictions.slp",
+                f"{os.path.basename(item_for_inference.path)}.{timestamp}.{mode}.slp",
             )
 
         for job_path in self.trained_job_paths:

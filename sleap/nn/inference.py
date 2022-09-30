@@ -4474,7 +4474,8 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
     """
     # Figure out which input path to use.
     labels_path = getattr(args, "labels", None)
-    if labels_path is not None:
+    has_models = getattr(args, "models", None)
+    if labels_path is not None and has_models:
         data_path = labels_path
     else:
         data_path = args.data_path
@@ -4645,6 +4646,7 @@ def main(args: list = None):
 
     # Setup data loader.
     provider, data_path = _make_provider_from_cli(args)
+    n_infer = len(provider)
 
     # Setup tracker.
     tracker = _make_tracker_from_cli(args)
@@ -4668,9 +4670,29 @@ def main(args: list = None):
     elif getattr(args, "tracking.tracker") is not None:
         # Load predictions
         print("Loading predictions...")
-        labels_pr = sleap.load_file(args.data_path)
-        frames = sorted(labels_pr.labeled_frames, key=lambda lf: lf.frame_idx)
+        labels_path = getattr(args, "labels", None)
+        if labels_path:
+            labels_pr = sleap.load_file(labels_path)
+        else:
+            labels_pr = sleap.load_file(args.data_path)
+ 
+            if isinstance(provider, VideoReader):
+                fr_list = frame_list(args.frames)
+                labels_pr = [lf for lf in labels_pr 
+                    if lf.video.filename == provider.video.filename and 
+                    lf.frame_idx in fr_list
+                ]
+            elif isinstance(provider, LabelsReader):
+                labels_pr = provider.labels.labeled_frames
+            else:
+                mess = f"Labels should be user defined or coming from a video: {type(provider)}"
+                raise ValueError(mess)
 
+        # Sort
+        frames = sorted(labels_pr, key=lambda lf: lf.frame_idx)
+        n_infer = len(frames)
+        print(f"... found {n_infer} frames to track")
+        
         print("Starting tracker...")
         frames = run_tracker(frames=frames, tracker=tracker)
         tracker.final_pass(frames)
@@ -4696,7 +4718,7 @@ def main(args: list = None):
     total_elapsed = time() - t0
     print("Finished inference at:", finish_timestamp)
     print(f"Total runtime: {total_elapsed} secs")
-    print(f"Predicted frames: {len(labels_pr)}/{len(provider)}")
+    print(f"Predicted frames: {len(labels_pr)}/{n_infer}")
 
     # Add provenance metadata to predictions.
     labels_pr.provenance["sleap_version"] = sleap.__version__

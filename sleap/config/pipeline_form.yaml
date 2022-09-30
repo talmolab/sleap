@@ -197,7 +197,7 @@ inference:
   label: Training/Inference Pipeline Type
   type: stacked
   default: "multi-animal bottom-up "
-  options: "multi-animal bottom-up,multi-animal top-down,single animal,none"
+  options: "multi-animal bottom-up,multi-animal top-down,single animal,load predictions,none"
 
   multi-animal bottom-up:
   - type: text
@@ -223,6 +223,12 @@ inference:
       these nodes into a single animal instance.<br /><br />
       For predicting on videos with more than one animal per frame, use a
       multi-animal pipeline (even if your training data has one instance per frame).'
+
+  load predictions:
+  - type: file_open
+    label: Predictions file
+    name: _predicted_labels
+    filter: '*.slp'
 
   none:
 
