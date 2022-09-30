@@ -225,6 +225,10 @@ inference:
       multi-animal pipeline (even if your training data has one instance per frame).'
 
   load predictions:
+  - type: bool
+    label: Use predictions from other file
+    name: use_prediction_file
+    default: false
   - type: file_open
     label: Predictions file
     name: _predicted_labels

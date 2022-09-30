@@ -204,6 +204,13 @@ class InferenceTask:
 
         # TODO: encapsulate in inference item class
         only_tracking = False
+        _labels = self.inference_params.get("_predicted_labels", None)
+        # Make the 'use_prediction_file' arg value-less.
+        use_prediction_file = False
+        if "use_prediction_file" in self.inference_params:
+            use_prediction_file = self.inference_params["use_prediction_file"]
+            del self.inference_params["use_prediction_file"]
+
         if (
             not self.trained_job_paths
             and "tracking.tracker" in self.inference_params
@@ -211,19 +218,20 @@ class InferenceTask:
         ):
             # No models so we must want to re-track previous predictions
             only_tracking = True
-            _labels = self.inference_params.get("_predicted_labels", None)
-            if not _labels:
-                self.labels_filename = _labels
-            cli_args.extend(("--labels", self.labels_filename))
+            if use_prediction_file and _labels:
+                cli_args.extend(("--use_prediction_file",))
+            else:
+                # Use the project filename for labels
+                _labels = self.labels_filename
+            cli_args.extend(("--labels", _labels))
 
         # Make path where we'll save predictions (if not specified)
         if output_path is None:
 
             if self.labels_filename:
                 # Make a predictions directory next to the labels dataset file
-                subfolder = "predictions" if not only_tracking else ""
                 predictions_dir = os.path.join(
-                    os.path.dirname(self.labels_filename), subfolder
+                    os.path.dirname(self.labels_filename), "predictions"
                 )
                 os.makedirs(predictions_dir, exist_ok=True)
             else:

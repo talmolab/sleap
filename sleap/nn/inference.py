@@ -4319,6 +4319,17 @@ def _make_cli_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--use_prediction_file",
+        action="store_true",
+        default=False,
+        help=(
+            "For tracking-only, use the --labels argument to define the file "
+            "containing the predicted instances to be tracked. "
+            "If this option is not defined, use all the frames from the project "
+            "or the specified frames in the specified video."
+        ),
+    )
+    parser.add_argument(
         "--verbosity",
         type=str,
         choices=["none", "rich", "json"],
@@ -4670,8 +4681,9 @@ def main(args: list = None):
     elif getattr(args, "tracking.tracker") is not None:
         # Load predictions
         print("Loading predictions...")
+        use_labels_predictions = getattr(args, "use_prediction_file", False)
         labels_path = getattr(args, "labels", None)
-        if labels_path:
+        if use_labels_predictions and labels_path:
             labels_pr = sleap.load_file(labels_path)
         else:
             labels_pr = sleap.load_file(args.data_path)
