@@ -254,7 +254,7 @@ class InferenceTask:
         bool_items_as_ints = (
             "tracking.pre_cull_to_target",
             "tracking.post_connect_single_breaks",
-            "tracking.save_shifted_instance",
+            "tracking.save_shifted_instances",
         )
 
         for key in bool_items_as_ints:
