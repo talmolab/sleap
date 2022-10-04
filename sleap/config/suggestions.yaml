@@ -1,4 +1,10 @@
 main:
+  - name: method
+    label: Method
+    type: stacked
+    default: " "
+    options: " ,image features,sample,prediction score,velocity,frame chunk"
+    " ":
 
 - name: method
   label: Method
@@ -76,11 +82,23 @@ main:
 
   random:
 
-  - name: per_video
-    label: Suggestions per video
-    type: int
-    default: 10
-    range: 1,1000
+    "frame chunk":
+      - name: frame_from
+        label: From
+        type: int
+        default: 1
+        range: 1, 1000
+      - name: frame_to
+        label: To
+        type: int
+        default: 1000
+        range: 1, 1000
+
+  - name: target
+    label: Target
+    type: stacked
+    options: "all videos,current video"
+    default: "all videos"
 
 #  pca:
 #
