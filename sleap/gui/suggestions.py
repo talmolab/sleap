@@ -60,6 +60,7 @@ class VideoFrameSuggestions(object):
             image_features=cls.image_feature_based_method,
             prediction_score=cls.prediction_score,
             velocity=cls.velocity,
+            frame_chunk=cls.frame_chunk,
         )
 
         method = str.replace(params["method"], " ", "_")
@@ -289,6 +290,25 @@ class VideoFrameSuggestions(object):
         )
 
         return cls.idx_list_to_frame_list(frame_idxs, video)
+
+    @classmethod
+    def frame_chunk(
+        cls,
+        labels: "Labels",
+        videos: List[Video],
+        frame_from: int,
+        frame_to: int,
+        **kwargs,
+    ):
+        """Add consequtive frame chunk to label suggestion"""
+        proposed_suggestions = []
+        for video in videos:
+            idx = list(range(frame_from - 1, frame_to))
+            proposed_suggestions.extend(cls.idx_list_to_frame_list(idx, video))
+        suggestions = VideoFrameSuggestions.filter_unique_suggestions(
+            labels, videos, proposed_suggestions
+        )
+        return suggestions
 
     # Utility functions
 

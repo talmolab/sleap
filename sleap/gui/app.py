@@ -1321,6 +1321,17 @@ class MainWindow(QMainWindow):
         if _has_topic([UpdateTopic.frame, UpdateTopic.project_instances]):
             self.state["last_interacted_frame"] = self.state["labeled_frame"]
 
+        if _has_topic([UpdateTopic.video, UpdateTopic.suggestions_ui]):
+            # update the max of <frame_to> spinbox to current video frame
+            method_layout = self.suggestions_form_widget.form_layout.fields["method"]
+            frame_chunk_layout = method_layout.page_layouts["frame chunk"]
+            frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
+            frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
+            cur_video = self.state["video"]
+            cur_video_framenum = cur_video.num_frames
+            frame_to_spinbox.setMaximum(cur_video_framenum)
+            frame_from_spinbox.setMaximum(cur_video_framenum)
+
     def plotFrame(self, *args, **kwargs):
         """Plots (or replots) current frame."""
         if self.state["video"] is None:
@@ -1349,7 +1360,7 @@ class MainWindow(QMainWindow):
 
         # Update related displays
         self.updateStatusMessage()
-        self.on_data_update([UpdateTopic.on_frame])
+        self.on_data_update([UpdateTopic.on_frame, UpdateTopic.suggestions_ui])
 
         # Trigger event after the overlays have been added
         player.view.updatedViewer.emit()
