@@ -303,6 +303,10 @@ class VideoFrameSuggestions(object):
         """Add consequtive frame chunk to label suggestion"""
         proposed_suggestions = []
         for video in videos:
+            # Make sure
+            frame_from = min(frame_from, video.num_frames)
+            frame_to = min(frame_to, video.num_frames)
+
             idx = list(range(frame_from - 1, frame_to))
             proposed_suggestions.extend(cls.idx_list_to_frame_list(idx, video))
         suggestions = VideoFrameSuggestions.filter_unique_suggestions(
