@@ -144,12 +144,12 @@ main:
         default: 3.0
         range: 0,100
       - name: instance_limit_lower
-        label: Instance count at least (gte)
+        label: Instance count at least
         type: int
         default: 1
         range: 0,10
       - name: instance_limit_upper
-        label: Instance count no more than (gte)
+        label: Instance count no more than
         type: int
         default: 2
         range: 0,10
