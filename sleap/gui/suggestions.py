@@ -307,12 +307,20 @@ class VideoFrameSuggestions(object):
         """Add consecutive frame chunk to label suggestion"""
         proposed_suggestions = []
         for video in videos:
+<<<<<<< HEAD
             # make sure when targeting all videos the from and to do not exceed frame number
             if frame_from > video.num_frames:
                 continue
             this_video_frame_to = min(frame_to, video.num_frames)
             # generate list of frame numbers
             idx = list(range(frame_from - 1, this_video_frame_to))
+=======
+            # Make sure
+            frame_from = min(frame_from, video.num_frames)
+            frame_to = min(frame_to, video.num_frames)
+
+            idx = list(range(frame_from - 1, frame_to))
+>>>>>>> e0fa5126 (temporary)
             proposed_suggestions.extend(cls.idx_list_to_frame_list(idx, video))
 
         suggestions = VideoFrameSuggestions.filter_unique_suggestions(
