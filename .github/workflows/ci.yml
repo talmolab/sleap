@@ -26,7 +26,7 @@ on:
 jobs:
   type_check:
     name: Type Check
-    runs-on: "ubuntu-18.04"
+    runs-on: "ubuntu-20.04"
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python 3.7
@@ -43,7 +43,7 @@ jobs:
           mypy --follow-imports=skip --ignore-missing-imports sleap tests
   lint:
     name: Lint
-    runs-on: "ubuntu-18.04"
+    runs-on: "ubuntu-20.04"
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python 3.7
@@ -63,7 +63,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-18.04", "windows-2019"]
+        os: ["ubuntu-20.04", "windows-2019"]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -98,7 +98,7 @@ jobs:
         run: |
           pytest
       - name: Test with pytest (Ubuntu)
-        if: matrix.os == 'ubuntu-18.04'
+        if: matrix.os == 'ubuntu-20.04'
         shell:
           bash -l {0}
           # https://pytest-qt.readthedocs.io/en/latest/troubleshooting.html#github-actions
@@ -114,7 +114,7 @@ jobs:
           xvfb-run pytest --cov=sleap --cov-report=xml tests/
       - name: Upload coverage
         uses: codecov/codecov-action@v1
-        if: matrix.os == 'ubuntu-18.04'
+        if: matrix.os == 'ubuntu-20.04'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
