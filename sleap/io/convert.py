@@ -69,6 +69,7 @@ def create_parser():
         default="slp",
         help="Output format. Default ('slp') is SLEAP dataset; "
         "'analysis' results in analysis.h5 file; "
+        "'analysis.nix' results in an analysis nix file;"
         "'h5' or 'json' results in SLEAP dataset "
         "with specified file format.",
     )
@@ -147,6 +148,29 @@ def main(args: list = None):
                 all_frames=True,
                 video=video,
             )
+    elif args.format == "analysis.nix":
+        from sleap.io.format.nix import NixAdaptor
+        
+        labels_path = args.input_path
+        fn = labels_path if (len(args.output) == 0) else args.output
+        fn = re.sub("(\.json(\.zip)?|\.h5|\.slp|\.nix)$", "", fn)
+        fn = PurePath(fn)
+        
+        vids = []
+        if len(args.video) > 0:
+            for v in labels.videos:
+                if args.video in v.backend.filename:
+                    vids.append(v)
+        else:
+            vids = labels.videos
+
+        for video in vids:
+            filename = default_analysis_filename(labels=labels, video=video,
+                                                 output_path=str(fn.parent),
+                                                 output_prefix=str(fn.stem),
+                                                 format_suffix="nix")
+            print(f"Writing {filename}!")
+            NixAdaptor.write(filename, labels, args.input_path, video)
 
     elif len(args.outputs) > 0:
         print(f"Output SLEAP dataset: {args.outputs[0]}")
