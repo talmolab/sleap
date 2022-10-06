@@ -79,14 +79,14 @@ def create_parser():
 
 
 def default_analysis_filename(
-    labels: Labels, video: Video, output_path: str, output_prefix: PurePath
+    labels: Labels, video: Video, output_path: str, output_prefix: PurePath, format_suffix:str ="h5"
 ) -> str:
     video_idx = labels.videos.index(video)
     vn = PurePath(video.backend.filename)
     filename = str(
         PurePath(
             output_path,
-            f"{output_prefix}.{video_idx:03}_{vn.stem}.analysis.h5",
+            f"{output_prefix}.{video_idx:03}_{vn.stem}.analysis.{format_suffix}",
         )
     )
     return filename

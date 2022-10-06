@@ -43,7 +43,7 @@ import numpy as np
 
 from qtpy import QtCore, QtWidgets, QtGui
 
-from qtpy.QtWidgets import QMessageBox, QProgressDialog
+from PySide2.QtWidgets import QMessageBox, QProgressDialog, QInputDialog
 
 from sleap.skeleton import Node, Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
@@ -61,6 +61,7 @@ from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.dialogs.query import QueryDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
+from sleap.io.format.nix import nix_available
 
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
@@ -1100,6 +1101,11 @@ class SaveProjectAs(AppCommand):
 
 
 class ExportAnalysisFile(AppCommand):
+    export_formats = {"SLEAP Analysis HDF5 (*.h5)": "h5"}
+    if nix_available:
+        export_formats["NIX for Tracking data (*.nix)"] = "nix"
+    export_filter = ";;".join(export_formats.keys())
+
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
@@ -1121,15 +1127,11 @@ class ExportAnalysisFile(AppCommand):
     def ask(context: CommandContext, params: dict) -> bool:
         def ask_for_filename(default_name: str) -> str:
             """Allow user to specify the filename"""
-            from ..io.format.nix import nix_available
-            export_filter = "SLEAP Analysis HDF5 (*.h5)"
-            if nix_available:
-                export_filter += ";; NIX for Tracking data (*.nix)"
             filename, selected_filter = FileDialog.save(
                 context.app,
                 caption="Export Analysis File...",
                 dir=default_name,
-                filter=export_filter,
+                filter=ExportAnalysisFile.export_filter,
             )
             return filename
 
@@ -1152,6 +1154,7 @@ class ExportAnalysisFile(AppCommand):
         # Specify (how to get) the output filename
         default_name = context.state["filename"] or "labels"
         fn = PurePath(default_name)
+        file_extension = ".h5"
         if len(videos) == 1:
             # Allow user to specify the filename
             use_default = False
@@ -1164,6 +1167,14 @@ class ExportAnalysisFile(AppCommand):
                 caption="Select Folder to Export Analysis Files...",
                 dir=str(fn.parent),
             )
+            if len(ExportAnalysisFile.export_formats) > 1:
+                item, ok = QInputDialog.getItem(context.app, "Select export format",
+                                                "Available export formats",
+                                                list(ExportAnalysisFile.export_formats.keys()),
+                                                0, False)
+                if not ok:
+                    return False
+                file_extension = ExportAnalysisFile.export_formats[item]
             if len(dirname) == 0:
                 return False
 
@@ -1177,6 +1188,7 @@ class ExportAnalysisFile(AppCommand):
                 video=video,
                 output_path=dirname,
                 output_prefix=str(fn.stem),
+                format_suffix=file_extension
             )
             filename = default_name if use_default else ask_for_filename(default_name)
 
