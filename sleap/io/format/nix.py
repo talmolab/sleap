@@ -159,7 +159,7 @@ class NixAdaptor(Adaptor):
                 for i in range(start, end):
                     inst = instances[i]
                     index = i - start
-                    indices [index] = inst.frame_idx
+                    indices[index] = inst.frame_idx
                     if inst.track is not None:
                         track[index] = track_map[inst.track.name]
                     else:
@@ -173,7 +173,7 @@ class NixAdaptor(Adaptor):
                     for n, p in zip(inst.nodes, inst.points):
                         positions[index, :, node_map[n.name]] = np.array([p.x, p.y])
                     for m in missing:
-                        positions[index, :, node_map[m]] = np.array([np.nan, np.nan])
+                         positions[index, :, node_map[m]] = np.array([np.nan, np.nan])
 
                     centroids[index,:] = inst.centroid
                     if hasattr(inst, "score"):
@@ -261,6 +261,10 @@ class NixAdaptor(Adaptor):
 
         print(f"Exporting analyses to nix file {filename} ...", end="")
         nix_file = create_file(filename, source_path, video)
-        write_data(nix_file.blocks[0], source_object, video)
-        nix_file.close()
-        print(" done")
+        try:
+            write_data(nix_file.blocks[0], source_object, video)
+            print(" done")
+        except Exception as e:
+            print(e)
+            nix_file.close()
+            print(" failed!")
