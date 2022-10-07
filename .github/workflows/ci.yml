@@ -116,7 +116,6 @@ jobs:
         uses: codecov/codecov-action@v1
         if: matrix.os == 'ubuntu-20.04'
         with:
-          version: v0.3.1
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           verbose: false
