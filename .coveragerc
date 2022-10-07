@@ -1,6 +1,0 @@
-# Run with pytest-cov, needed for multiprocessing test coverage
-# https://pytest-cov.readthedocs.io/en/latest/changelog.html#id1
-[run]
-concurrency = thread, multiprocessing
-parallel = true
-sigterm = true
