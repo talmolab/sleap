@@ -1,4 +1,6 @@
 coverage:
+  ignore: 
+    - "tests"
   status:
     project:  # Measures overall project coverage.
       default: false
