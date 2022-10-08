@@ -212,7 +212,8 @@ class VideoFrameSuggestions(object):
     ):
         lfs = labels.find(video)
         frames = len(lfs)
-        idxs = np.zeros((frames), dtype="int")
+        # initiate an array filled with -1 to store frame index (starting from 0).
+        idxs = np.full((frames), -1, dtype="int")
 
         for i, lf in enumerate(lfs):
             # Scores from visible instances in frame
@@ -231,7 +232,7 @@ class VideoFrameSuggestions(object):
                 idxs[i] = lf.frame_idx
 
         # Finds non-zero entries in idxs
-        result = sorted(idxs[idxs > 0].tolist())
+        result = sorted(idxs[idxs >= 0].tolist())
 
         return cls.idx_list_to_frame_list(result, video)
 
