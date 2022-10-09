@@ -403,7 +403,6 @@ def test_limits_prediction_score(centered_pair_predictions: Labels):
         assert n_instance_below_score <= instance_upper_limit
 
     # Confirming all frames meeting the criteria are captured
-
     def check_all_predicted_instances(sugg, labels):
         for video in labels.videos:
             lfs = labels.find(video)
@@ -422,7 +421,6 @@ def test_limits_prediction_score(centered_pair_predictions: Labels):
                 ):
                     for pred_instance in pred_instances:
                         temp_suggest = SuggestionFrame(video, pred_instance.frame_idx)
-                        breakpoint()
                         if not (temp_suggest in suggestions):
                             return False
 
