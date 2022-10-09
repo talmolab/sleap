@@ -228,10 +228,10 @@ class VideoFrameSuggestions(object):
                 n_qualified_instance >= instance_limit_lower
                 and n_qualified_instance <= instance_limit_upper
             ):
-                # idxs saves qualified frame index at corresponding entry, otherwise the entry is 0
+                # idxs saves qualified frame index at corresponding entry, otherwise the entry is -1
                 idxs[i] = lf.frame_idx
 
-        # Finds non-zero entries in idxs
+        # Finds non-negative entries in idxs
         result = sorted(idxs[idxs >= 0].tolist())
 
         return cls.idx_list_to_frame_list(result, video)

@@ -6,6 +6,7 @@ from sleap.io.video import Video
 from sleap.instance import LabeledFrame, PredictedInstance, Track, PredictedPoint
 from sleap.io.dataset import Labels
 from sleap.skeleton import Skeleton
+import numpy as np
 
 
 def test_velocity_suggestions(centered_pair_predictions):
@@ -368,3 +369,64 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
         },
     )
     assert_suggestions_unique(labels, suggestions)
+
+
+def test_limits_prediction_score(centered_pair_predictions: Labels):
+    """Testing suggestion generation using instance limits and prediction score."""
+    labels = centered_pair_predictions
+    score_limit = 20
+    instance_lower_limit = 3
+    instance_upper_limit = 3
+
+    # Generate suggestions
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=labels,
+        params={
+            "videos": labels.videos,
+            "method": "prediction_score",
+            "score_limit": score_limit,
+            "instance_limit_upper": instance_upper_limit,
+            "instance_limit_lower": instance_lower_limit,
+        },
+    )
+
+    # Confirming every suggested frame meets criteria
+    for sugg in suggestions:
+        lf = labels.get((sugg.video, sugg.frame_idx))
+        pred_instances = [
+            inst for inst in lf.instances_to_show if isinstance(inst, PredictedInstance)
+        ]
+        n_instance_below_score = np.nansum(
+            [True for inst in pred_instances if inst.score <= score_limit]
+        )
+        assert n_instance_below_score >= instance_lower_limit
+        assert n_instance_below_score <= instance_upper_limit
+
+    # Confirming all frames meeting the criteria are captured
+
+    def check_all_predicted_instances(sugg, labels):
+        for video in labels.videos:
+            lfs = labels.find(video)
+            for lf in lfs:
+                pred_instances = [
+                    inst
+                    for inst in lf.instances_to_show
+                    if isinstance(inst, PredictedInstance)
+                ]
+                n_instance_below_score = np.nansum(
+                    [True for inst in pred_instances if inst.score <= score_limit]
+                )
+                if (
+                    n_instance_below_score <= instance_upper_limit
+                    and n_instance_below_score >= instance_lower_limit
+                ):
+                    for pred_instance in pred_instances:
+                        temp_suggest = SuggestionFrame(video, pred_instance.frame_idx)
+                        breakpoint()
+                        if not (temp_suggest in suggestions):
+                            return False
+
+        return True
+
+    suggestions_correct = check_all_predicted_instances(suggestions, labels)
+    assert suggestions_correct
