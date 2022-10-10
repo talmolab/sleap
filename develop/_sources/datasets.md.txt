@@ -83,7 +83,7 @@ widths: 10 40
 * - Identity
   - ✔
 * - Labels
-  - 2000 frames, 2000 instances
+  - 2000 frames, 4000 instances
 * - Download
   - [Train (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/train.pkg.slp) / [Validation (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/val.pkg.slp) / [Test (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/test.pkg.slp)
 * - Example
