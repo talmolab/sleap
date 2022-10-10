@@ -11,6 +11,10 @@ For the full set of labeled datasets and trained models reported in the SLEAP pa
 ([Pereira et al., Nature Methods, 2022](https://www.nature.com/articles/s41592-022-01426-1)),
 please see the [OSF repository](https://osf.io/36har/).
 
+````{hint}
+Need a quick testing clip? [Here's a video of a pair of mice in a standard home cage setting.](
+https://storage.googleapis.com/sleap-data/sandbox/sleap-mice-demo/mice.mp4)
+````
 
 ## `fly32`
 ![fly32](_static/example.fly32.jpg)
