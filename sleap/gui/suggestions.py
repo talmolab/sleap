@@ -66,8 +66,10 @@ class VideoFrameSuggestions(object):
         if method_functions.get(method, None) is not None:
             return method_functions[method](labels=labels, **params)
         else:
-            print(f"No {method} method found for generating suggestions.")
-            return []
+            raise ValueError(
+                f"No {'' if method == '_' else method + ' '}method found for "
+                "generating suggestions."
+            )
 
     # Functions corresponding to "method" param
 
@@ -82,7 +84,8 @@ class VideoFrameSuggestions(object):
     ):
         """Method to generate suggestions randomly or by taking strides through video."""
         suggestions = []
-        sugg_idx_dict: Dict[Video, list] = {video: [] for video in videos}
+        sugg_idx_dict: Dict[Video, list] = {video: [] for video in labels.videos}
+
         for sugg in labels.suggestions:
             sugg_idx_dict[sugg.video].append(sugg.frame_idx)
 
@@ -287,7 +290,7 @@ class VideoFrameSuggestions(object):
         proposed_suggestions: List[SuggestionFrame],
     ) -> List[SuggestionFrame]:
         # Create log of suggestions that already exist
-        sugg_idx_dict: Dict[Video, list] = {video: [] for video in videos}
+        sugg_idx_dict: Dict[Video, list] = {video: [] for video in labels.videos}
         for sugg in labels.suggestions:
             sugg_idx_dict[sugg.video].append(sugg.frame_idx)
 

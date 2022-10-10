@@ -4238,7 +4238,7 @@ def export_cli():
     )
 
     args, _ = parser.parse_known_args()
-    export_model(args["models"], args["export_path"])
+    export_model(args.models, args.export_path)
 
 
 def _make_cli_parser() -> argparse.ArgumentParser:
@@ -4620,9 +4620,9 @@ def main(args: list = None):
                 free_gpu_memory = sleap.nn.system.get_gpu_memory()
                 if len(free_gpu_memory) > 0:
                     gpu_ind = np.argmax(free_gpu_memory)
+                    mem = free_gpu_memory[gpu_ind]
                     logger.info(
-                        f"Auto-selected GPU {gpu_ind} with {free_gpu_memory} MiB of "
-                        "free memory."
+                        f"Auto-selected GPU {gpu_ind} with {mem} MiB of free memory."
                     )
                 else:
                     logger.info(
