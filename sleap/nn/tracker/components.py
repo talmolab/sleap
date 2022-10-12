@@ -39,6 +39,75 @@ def instance_similarity(
 
     return similarity
 
+def factory_object_keypoint_similarity(
+    keypoint_errors: Optional[list] = None,
+    score_weighting: bool = False,
+    normalization_keypoints: str = "all",
+) -> Callable:
+    """Factory for similarity function based on object keypoints.
+
+    Args:
+        keypoint_errors: Optional[list] = None,
+            the standard error of the distance between the predicted keypoint and
+            the true value, in pixels.
+            If None or empty list, defaults to 1.
+            If a scalar or singleton list, every keypoint has the same error.
+            If a list, defines the error for each keypoint, the length should be
+            equal to the number of keypoints in the skeleton.
+
+        score_weighting: bool = False,
+        normalization_keypoints: str = "all"
+            one of ["all", "ref", "union"]
+            Default to "all"
+
+    """
+    if not keypoint_errors:
+        # Default to 1 pixel error
+        kp_precision = np.array(0.5)
+    else:
+        kp_precision = 1 / (2*np.array(keypoint_errors)**2)
+
+    def object_keypoint_similarity(
+        ref_instance: InstanceType, query_instance: InstanceType
+    ) -> float:
+        # Keypoints
+        ref_points = ref_instance.points_array
+        query_points = query_instance.points_array
+        # Keypoint scores
+        if score_weighting:
+            ref_scores = getattr(ref_instance, "scores", np.ones(len(ref_points)))
+            query_scores = getattr(query_instance, "scores", np.ones(len(query_points)))
+        else:
+            ref_scores = 1
+            query_scores = 1
+        # Number of keypoint for normalization
+        if normalization_keypoints in ("ref", "union"):
+            ref_visible = ~(np.isnan(ref_points).any(axis=1))
+            if normalization_keypoints == "ref":
+                max_n_keypoints = np.sum(ref_visible)
+            elif normalization_keypoints == "union":
+                query_visible = ~(np.isnan(query_points).any(axis=1))
+                max_n_keypoints = np.sum(np.logical_and(ref_visible, query_visible))
+        else: # if normalization_keypoints == "all":
+            max_n_keypoints = len(ref_points)
+        if max_n_keypoints == 0:
+            return 0
+
+        # Compute distances
+        if kp_precision.size > 1 and 2*kp_precision.size != ref_points.size:
+            mess = (
+                "keypoint_errors array should have the same size as the number of "
+                f"keypoints in the instance: {kp_precision.size} != {ref_points.size // 2}"
+            )
+            raise ValueError(mess)
+        dists = np.sum((query_points - ref_points) ** 2, axis=1) * kp_precision
+
+        similarity = np.nansum(ref_scores * query_scores * np.exp(-dists)) / max_n_keypoints
+
+        return similarity
+
+    return object_keypoint_similarity
+
 
 def centroid_distance(
     ref_instance: InstanceType, query_instance: InstanceType, cache: dict = dict()

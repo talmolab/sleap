@@ -10,6 +10,7 @@ from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple
 from sleap import Track, LabeledFrame, Skeleton
 
 from sleap.nn.tracker.components import (
+    factory_object_keypoint_similarity,
     instance_similarity,
     centroid_distance,
     instance_iou,
@@ -301,6 +302,7 @@ similarity_policies = dict(
     instance=instance_similarity,
     centroid=centroid_distance,
     iou=instance_iou,
+    object_keypoint=instance_similarity,
 )
 
 match_policies = dict(
@@ -572,6 +574,9 @@ class Tracker(BaseTracker):
         # Kalman filter options
         kf_init_frame_count: int = 0,
         kf_node_indices: Optional[list] = None,
+        # Object keypoint similarity options
+        oks_errors: Optional[list] = None,
+        oks_score_weighting: bool = False,
         **kwargs,
     ) -> BaseTracker:
 
@@ -592,7 +597,14 @@ class Tracker(BaseTracker):
                 raise ValueError(f"{match} is not a valid tracker matching function.")
 
             candidate_maker = tracker_policies[tracker](min_points=min_match_points)
-            similarity_function = similarity_policies[similarity]
+            if similarity == "object_keypoint":
+                similarity_function = factory_object_keypoint_similarity(
+                    keypoint_errors=oks_errors,
+                    score_weighting=oks_score_weighting,
+                    normalization_keypoints="all",
+                )
+            else:
+                similarity_function = similarity_policies[similarity]
             matching_function = match_policies[match]
 
         if tracker == "flow":
@@ -761,6 +773,30 @@ class Tracker(BaseTracker):
         option[
             "help"
         ] = "For Kalman filter: Number of frames to track with other tracker. 0 means no Kalman filters will be used."
+        options.append(option)
+
+        def float_list_func(s):
+            return [float(x.strip()) for x in s.split(",")] if s else None
+
+        option = dict(name="oks_errors", default="")
+        option["type"] = float_list_func
+        option["help"] = (
+            "For Object Keypoint similarity: the standard error of the distance "
+            "between the predicted keypoint and the true value, in pixels.\n"
+            "If None or empty list, defaults to 1. If a scalar or singleton list, "
+            "every keypoint has the same error. If a list, defines the error for each "
+            "keypoint, the length should be equal to the number of keypoints in the "
+            "skeleton."
+        )
+        options.append(option)
+
+        option = dict(name="oks_score_weighting", default="0")
+        option["type"] = int
+        option["help"] = (
+            "For Object Keypoint similarity: if 0 (default), only the distance between the reference "
+            "and query keypoint is used to compute the similarity. If 1, each distance is weighted "
+            "by the prediction scores of the reference and query keypoint."
+        )
         options.append(option)
 
         return options

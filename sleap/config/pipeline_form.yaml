@@ -261,7 +261,7 @@ inference:
       label: Similarity Method
       type: list
       default: instance
-      options: instance,centroid,iou
+      options: instance,centroid,iou,object_keypoint
     - name: tracking.match
       label: Matching Method
       type: list
@@ -290,6 +290,22 @@ inference:
       label: Nodes to use for Tracking
       type: string
       default: 0,1,2
+    - type: text
+      text: '<b>Object keypoint similarity options</b>:<br />
+      Only used if this similarity method is selected.'
+    - name: tracking.oks_errors
+      label: Keypoints errors in pixels
+      help: 'Standard error in pixels of the distance for each keypoint.
+      If the list is empty, defaults to 1. If singleton list, each keypoint has
+      the same error. Otherwise, the length should be the same as the number of
+      keypoints in the skeleton.'
+      type: string
+      default:
+    - name: tracking.oks_score_weighting
+      label: Use prediction score for weighting
+      help: 'Use prediction scores to weight the similarity of each keypoint'
+      type: bool
+      default: false
     - type: text
       text: '<b>Post-tracker data cleaning</b>:'
     - name: tracking.post_connect_single_breaks
@@ -323,7 +339,7 @@ inference:
       label: Similarity Method
       type: list
       default: iou
-      options: instance,centroid,iou
+      options: instance,centroid,iou,object_keypoint
     - name: tracking.match
       label: Matching Method
       type: list
@@ -348,6 +364,22 @@ inference:
       label: Nodes to use for Tracking
       type: string
       default: 0,1,2
+    - type: text
+      text: '<b>Object keypoint similarity options</b>:<br />
+      Only used if this similarity method is selected.'
+    - name: tracking.oks_errors
+      label: Keypoints errors in pixels
+      help: 'Standard error in pixels of the distance for each keypoint.
+      If the list is empty, defaults to 1. If singleton list, each keypoint has
+      the same error. Otherwise, the length should be the same as the number of
+      keypoints in the skeleton.'
+      type: string
+      default:
+    - name: tracking.oks_score_weighting
+      label: Use prediction score for weighting
+      help: 'Use prediction scores to weight the similarity of each keypoint'
+      type: bool
+      default: false
     - type: text
       text: '<b>Post-tracker data cleaning</b>:'
     - name: tracking.post_connect_single_breaks
