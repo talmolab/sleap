@@ -271,6 +271,16 @@ inference:
       label: Elapsed Frame Window
       type: int
       default: 5
+    - name: tracking.robust
+      label: 'Robust quantile of similarity scores'
+      help: 'For a value between 0 and 1 (excluded), use a robust quantile
+      of the similarity scores to assign a track to an instance.<br />If equal to 1,
+      use the max similarity score (non-robust).'
+      type: optional_double
+      default_disabled: true
+      none_label: Use max (non-robust)
+      range: 0,1
+      default: 0.95
     - name: tracking.save_shifted_instances
       label: Save shifted instances
       type: bool
@@ -333,6 +343,16 @@ inference:
       label: Elapsed Frame Window
       type: int
       default: 5
+    - name: tracking.robust
+      label: 'Robust quantile of similarity scores'
+      help: 'For a value between 0 and 1 (excluded), use a robust quantile
+      of the similarity scores to assign a track to an instance.<br />If equal to 1,
+      use the max similarity score (non-robust).'
+      type: optional_double
+      default_disabled: true
+      none_label: Use max (non-robust)
+      range: 0,1
+      default: 0.95
     - type: text
       text: '<b>Kalman filter-based tracking</b>:<br />
         Uses the above tracking options to track instances for an initial
