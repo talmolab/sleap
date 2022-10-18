@@ -31,6 +31,7 @@ import h5py as h5
 import numpy as np
 
 from typing import Any, Dict, List, Tuple, Union
+from sleap.instance import LabeledFrame
 
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
@@ -82,18 +83,29 @@ def get_occupancy_and_points_matrices(
         * instance scores array with shape (frames, tracks)
         * tracking scores array with shape (frames, tracks)
     """
-    # Assumes either all instances have tracks or no instances have tracks
-    track_count = len(labels.tracks) or 1
-    node_count = len(labels.skeletons[0].nodes)
 
     # Retrieve frames from current video only
     try:
         if video is None:
             video = labels.videos[0]
     except IndexError:
-        print(f"There are no videos in this project. No occupancy matrix to return.")
-        return
-    labeled_frames = labels.get(video)
+        raise IndexError(
+            f"There are no videos in this project. No occupancy matrix to return."
+        )
+    labeled_frames: List[LabeledFrame] = labels.get(video)
+
+    # Check if project is single instance project; if so, use single track.
+    n_insts = max(
+        [
+            lf.n_user_instances
+            if lf.n_user_instances > 0  # take user instances over predicted
+            else lf.n_predicted_instances
+            for lf in labeled_frames
+        ]
+    )
+    # Assumes either all instances have tracks or no instances have tracks
+    track_count = 1 if n_insts == 1 else len(labels.tracks)
+    node_count = len(labels.skeletons[0].nodes)
 
     frame_idxs = [lf.frame_idx for lf in labeled_frames]
     frame_idxs.sort()
@@ -105,8 +117,9 @@ def get_occupancy_and_points_matrices(
             frame_idxs[-1] - first_frame_idx + 1
         )  # count should include unlabeled frames
     except IndexError:
-        print(f"No labeled frames in {video.filename}. No occupancy matrix to return.")
-        return
+        raise IndexError(
+            f"No labeled frames in {video.filename}. No occupancy matrix to return."
+        )
 
     # Desired MATLAB format:
     # "track_occupancy"     tracks * frames
