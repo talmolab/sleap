@@ -176,6 +176,7 @@ class VideoMarkerThread(Thread):
         video_idx: int,
         scale: float,
         show_edges: bool = True,
+        edge_is_wedge: bool = False,
         crop_size_xy: Optional[Tuple[int, int]] = None,
         color_manager: Optional[ColorManager] = None,
     ):
@@ -186,6 +187,7 @@ class VideoMarkerThread(Thread):
         self.video_idx = video_idx
         self.scale = scale
         self.show_edges = show_edges
+        self.edge_is_wedge = edge_is_wedge
 
         if color_manager is None:
             color_manager = ColorManager(labels=labels)
@@ -448,15 +450,42 @@ class VideoMarkerThread(Thread):
                     src_x, src_y = int(src_x), int(src_y)
                     dst_x, dst_y = int(dst_x), int(dst_y)
 
-                    # Draw line to mark edge between nodes
-                    cv2.line(
-                        img=img,
-                        pt1=(src_x, src_y),
-                        pt2=(dst_x, dst_y),
-                        color=edge_color_bgr,
-                        thickness=int(self.edge_line_width),
-                        lineType=cv2.LINE_AA,
-                    )
+                    if self.edge_is_wedge:
+                        r = self.marker_radius / 2
+
+                        # Get vector from source to destination
+                        vec_x = dst_x - src_x
+                        vec_y = dst_y - src_y
+                        mag = (vec_x**2 + vec_y**2) ** 0.5
+                        vec_x = int(r * vec_x / mag)
+                        vec_y = int(r * vec_y / mag)
+
+                        # Define the wedge
+                        src_1 = [src_x - vec_y, src_y + vec_x]
+                        dst = [dst_x, dst_y]
+                        src_2 = [src_x + vec_y, src_y - vec_x]
+                        pts = np.array([src_1, dst, src_2])
+
+                        # Draw the wedge
+                        cv2.polylines(
+                            img=img,
+                            pts=[pts],
+                            isClosed=True,
+                            color=edge_color_bgr,
+                            thickness=int(self.edge_line_width),
+                            lineType=cv2.LINE_AA,
+                        )
+
+                    else:
+                        # Draw line to mark edge between nodes
+                        cv2.line(
+                            img=img,
+                            pt1=(src_x, src_y),
+                            pt2=(dst_x, dst_y),
+                            color=edge_color_bgr,
+                            thickness=int(self.edge_line_width),
+                            lineType=cv2.LINE_AA,
+                        )
 
 
 def save_labeled_video(
@@ -468,6 +497,7 @@ def save_labeled_video(
     scale: float = 1.0,
     crop_size_xy: Optional[Tuple[int, int]] = None,
     show_edges: bool = True,
+    edge_is_wedge: bool = False,
     color_manager: Optional[ColorManager] = None,
     gui_progress: bool = False,
 ):
@@ -505,6 +535,7 @@ def save_labeled_video(
         video_idx=labels.videos.index(video),
         scale=scale,
         show_edges=show_edges,
+        edge_is_wedge=edge_is_wedge,
         crop_size_xy=crop_size_xy,
         color_manager=color_manager,
     )
