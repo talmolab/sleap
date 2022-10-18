@@ -456,7 +456,7 @@ class VideoMarkerThread(Thread):
                         # Get vector from source to destination
                         vec_x = dst_x - src_x
                         vec_y = dst_y - src_y
-                        mag = (vec_x**2 + vec_y**2) ** 0.5
+                        mag = (pow(vec_x, 2) + pow(vec_y, 2)) ** 0.5
                         vec_x = int(r * vec_x / mag)
                         vec_y = int(r * vec_y / mag)
 
