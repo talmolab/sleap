@@ -4687,11 +4687,11 @@ def main(args: list = None):
             labels_pr = sleap.load_file(labels_path)
         else:
             labels_pr = sleap.load_file(args.data_path)
- 
+
             if isinstance(provider, VideoReader):
                 fr_list = frame_list(args.frames)
-                labels_pr = [lf for lf in labels_pr 
-                    if lf.video.filename == provider.video.filename and 
+                labels_pr = [lf for lf in labels_pr
+                    if lf.video.filename == provider.video.filename and
                     lf.frame_idx in fr_list
                 ]
             elif isinstance(provider, LabelsReader):
@@ -4704,9 +4704,9 @@ def main(args: list = None):
         frames = sorted(labels_pr, key=lambda lf: lf.frame_idx)
         n_infer = len(frames)
         print(f"... found {n_infer} frames to track")
-        
+
         print("Starting tracker...")
-        frames = run_tracker(frames=frames, tracker=tracker)
+        frames = run_tracker(frames=frames, tracker=tracker, verbosity=args.verbosity)
         tracker.final_pass(frames)
 
         labels_pr = Labels(labeled_frames=frames)

@@ -1,6 +1,8 @@
 """Tracking tools for linking grouped instances over time."""
 
 from collections import deque, defaultdict
+import json
+from time import time
 import abc
 import attr
 import numpy as np
@@ -1107,7 +1109,7 @@ class TrackCleaner:
         connect_single_track_breaks(frames, self.instance_count)
 
 
-def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker) -> List[LabeledFrame]:
+def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker, verbosity: str = "") -> List[LabeledFrame]:
     """Run a tracker on a set of labeled frames.
 
     Args:
@@ -1123,6 +1125,17 @@ def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker) -> List[Labele
         return frames
 
     new_lfs = []
+
+    # Progress
+    if verbosity == "json":
+        report_period = 1.0  # time in seconds between reports
+        n_processed = 0
+        n_total = len(frames)
+        n_recent = 100
+        elapsed_recent = deque(maxlen=n_recent)
+        last_report = time()
+        t0_all = time()
+        t0_batch = time()
 
     # Run tracking on every frame
     for lf in frames:
@@ -1143,5 +1156,34 @@ def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker) -> List[Labele
             instances=tracker.track(**track_args),
         )
         new_lfs.append(new_lf)
+
+        # Progress
+        if verbosity == "json":
+            elapsed_batch = time() - t0_batch
+            t0_batch = time()
+            n_processed += 1
+            elapsed_all = time() - t0_all
+
+            # Compute recent rate.
+            elapsed_recent.append(elapsed_batch)
+            rate = n_recent / sum(elapsed_recent)
+            eta = (n_total - n_processed) / rate
+
+            # Report.
+            elapsed_since_last_report = time() - last_report
+            if elapsed_since_last_report > report_period:
+                print(
+                    json.dumps(
+                        {
+                            "n_processed": n_processed,
+                            "n_total": n_total,
+                            "elapsed": elapsed_all,
+                            "rate": rate,
+                            "eta": eta,
+                        }
+                    ),
+                    flush=True,
+                )
+                last_report = time()
 
     return new_lfs
