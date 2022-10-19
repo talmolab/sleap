@@ -1130,6 +1130,7 @@ class ExportLabeledClip(AppCommand):
             color_manager=params["color_manager"],
             show_edges=params["show edges"],
             edge_is_wedge=params["edge_is_wedge"],
+            marker_size=params["marker size"],
             scale=params["scale"],
             crop_size_xy=params["crop"],
             gui_progress=True,
@@ -1207,6 +1208,8 @@ class ExportLabeledClip(AppCommand):
         params["edge_is_wedge"] = (
             context.state.get("edge style", default="").lower() == "wedge"
         )
+
+        params["marker size"] = context.state.get("marker size", default=4)
 
         # If user selected a clip, use that; otherwise include all frames.
         if context.state["has_frame_range"]:

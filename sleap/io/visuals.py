@@ -177,8 +177,10 @@ class VideoMarkerThread(Thread):
         scale: float,
         show_edges: bool = True,
         edge_is_wedge: bool = False,
+        marker_size: int = 4,
         crop_size_xy: Optional[Tuple[int, int]] = None,
         color_manager: Optional[ColorManager] = None,
+        palette: str = "standard",
     ):
         super(VideoMarkerThread, self).__init__()
         self.in_q = in_q
@@ -190,7 +192,7 @@ class VideoMarkerThread(Thread):
         self.edge_is_wedge = edge_is_wedge
 
         if color_manager is None:
-            color_manager = ColorManager(labels=labels)
+            color_manager = ColorManager(labels=labels, palette=palette)
             color_manager.color_predicted = True
 
         self.color_manager = color_manager
@@ -203,8 +205,7 @@ class VideoMarkerThread(Thread):
         self.node_line_width = max(1, self.node_line_width // 2)
         self.edge_line_width = max(1, self.node_line_width // 2)
 
-        unscaled_marker_radius = 3
-        self.marker_radius = max(1, int(unscaled_marker_radius // (1 / scale)))
+        self.marker_radius = max(1, int(marker_size // (1 / scale)))
 
         self.edge_line_width *= 2
         self.marker_radius *= 2
@@ -467,12 +468,10 @@ class VideoMarkerThread(Thread):
                         pts = np.array([src_1, dst, src_2])
 
                         # Draw the wedge
-                        cv2.polylines(
+                        cv2.fillPoly(
                             img=img,
                             pts=[pts],
-                            isClosed=True,
                             color=edge_color_bgr,
-                            thickness=int(self.edge_line_width),
                             lineType=cv2.LINE_AA,
                         )
 
@@ -498,7 +497,9 @@ def save_labeled_video(
     crop_size_xy: Optional[Tuple[int, int]] = None,
     show_edges: bool = True,
     edge_is_wedge: bool = False,
+    marker_size: int = 4,
     color_manager: Optional[ColorManager] = None,
+    palette: str = "standard",
     gui_progress: bool = False,
 ):
     """Function to generate and save video with annotations.
@@ -513,8 +514,11 @@ def save_labeled_video(
         crop_size_xy: size of crop around instances, or None for full images
         show_edges: whether to draw lines between nodes
         edge_is_wedge: whether to draw edges as wedges (draw as line if False)
+        marker_size: Size of marker in pixels before scaling by `scale`
         color_manager: ColorManager object which determine what colors to use
             for what instance/node/edge
+        palette: SLEAP color palette to use. Options include: "alphabet", "five+",
+            "solarized", or "standard". Only used if `color_manager` is None.
         gui_progress: Whether to show Qt GUI progress dialog.
 
     Returns:
@@ -537,8 +541,10 @@ def save_labeled_video(
         scale=scale,
         show_edges=show_edges,
         edge_is_wedge=edge_is_wedge,
+        marker_size=marker_size,
         crop_size_xy=crop_size_xy,
         color_manager=color_manager,
+        palette=palette,
     )
     thread_write = Thread(
         target=writer,
@@ -644,6 +650,30 @@ def main(args: list = None):
     parser.add_argument(
         "--video-index", type=int, default=0, help="Index of video in labels dataset"
     )
+    parser.add_argument(
+        "--show_edges",
+        type=int,
+        default=1,
+        help="Whether to draw lines between nodes",
+    )
+    parser.add_argument(
+        "--edge_is_wedge",
+        type=int,
+        default=0,
+        help="Whether to draw edges as wedges",
+    )
+    parser.add_argument(
+        "--marker_size",
+        type=int,
+        default=4,
+        help="Size of marker in pixels before scaling by SCALE",
+    )
+    parser.add_argument(
+        "--palette",
+        type=str,
+        default="standard",
+        help="SLEAP color palette to use",
+    )
     args = parser.parse_args(args=args)
     labels = Labels.load_file(
         args.data_path, video_search=[os.path.dirname(args.data_path)]
@@ -674,6 +704,11 @@ def main(args: list = None):
         fps=args.fps,
         scale=args.scale,
         crop_size_xy=crop_size_xy,
+        show_edges=args.show_edges > 0,
+        edge_is_wedge=args.edge_is_wedge > 0,
+        marker_size=args.marker_size,
+        palette=args.palette,
+        # color_manager=color_manager,  # TODO(LM): Add color manager
     )
 
     print(f"Video saved as: {filename}")
