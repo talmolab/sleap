@@ -4690,9 +4690,11 @@ def main(args: list = None):
 
             if isinstance(provider, VideoReader):
                 fr_list = frame_list(args.frames)
-                labels_pr = [lf for lf in labels_pr
-                    if lf.video.filename == provider.video.filename and
-                    lf.frame_idx in fr_list
+                labels_pr = [
+                    lf
+                    for lf in labels_pr
+                    if lf.video.filename == provider.video.filename
+                    and lf.frame_idx in fr_list
                 ]
             elif isinstance(provider, LabelsReader):
                 labels_pr = provider.labels.labeled_frames

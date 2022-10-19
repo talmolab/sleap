@@ -31,6 +31,7 @@ from sleap.nn.data.normalization import ensure_int
 
 logger = logging.getLogger(__name__)
 
+
 @attr.s(eq=False, slots=True, auto_attribs=True)
 class ShiftedInstance:
     points_array: np.ndarray = attr.ib()
@@ -1109,7 +1110,9 @@ class TrackCleaner:
         connect_single_track_breaks(frames, self.instance_count)
 
 
-def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker, verbosity: str = "") -> List[LabeledFrame]:
+def run_tracker(
+    frames: List[LabeledFrame], tracker: BaseTracker, verbosity: str = ""
+) -> List[LabeledFrame]:
     """Run a tracker on a set of labeled frames.
 
     Args:
