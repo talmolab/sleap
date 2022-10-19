@@ -512,6 +512,7 @@ def save_labeled_video(
         scale: scale of image (so we can scale point locations to match)
         crop_size_xy: size of crop around instances, or None for full images
         show_edges: whether to draw lines between nodes
+        edge_is_wedge: whether to draw edges as wedges (draw as line if False)
         color_manager: ColorManager object which determine what colors to use
             for what instance/node/edge
         gui_progress: Whether to show Qt GUI progress dialog.
