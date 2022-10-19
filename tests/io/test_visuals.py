@@ -64,7 +64,10 @@ def test_serial_pipeline(centered_pair_predictions, tmpdir):
 
 
 def test_sleap_render(centered_pair_predictions):
-    args = f"-o testvis.avi -f 2 --scale 1.2 --frames 1,2 --video-index 0 tests/data/json_format_v2/centered_pair_predictions.json".split()
+    args = (
+        "-o testvis.avi -f 2 --scale 1.2 --frames 1,2 --video-index 0 "
+        "tests/data/json_format_v2/centered_pair_predictions.json".split()
+    )
     sleap_render(args)
     assert os.path.exists("testvis.avi")
 

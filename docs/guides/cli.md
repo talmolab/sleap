@@ -363,6 +363,9 @@ optional arguments:
                         Size of marker in pixels before scaling by SCALE (default: 4)
   --palette PALETTE     SLEAP color palette to use. Options include: "alphabet", "five+",
                         "solarized", or "standard" (default: "standard")
+  --distinctly_color DISTINCTLY_COLOR
+                        Specify how to color instances. Options include: "instances",
+                        "edges", and "nodes" (default: "instances")
 ```
 
 ## Debugging

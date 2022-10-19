@@ -181,6 +181,7 @@ class VideoMarkerThread(Thread):
         crop_size_xy: Optional[Tuple[int, int]] = None,
         color_manager: Optional[ColorManager] = None,
         palette: str = "standard",
+        distinctly_color: str = "instances",
     ):
         super(VideoMarkerThread, self).__init__()
         self.in_q = in_q
@@ -194,6 +195,7 @@ class VideoMarkerThread(Thread):
         if color_manager is None:
             color_manager = ColorManager(labels=labels, palette=palette)
             color_manager.color_predicted = True
+            color_manager.distinctly_color = distinctly_color
 
         self.color_manager = color_manager
 
@@ -500,6 +502,7 @@ def save_labeled_video(
     marker_size: int = 4,
     color_manager: Optional[ColorManager] = None,
     palette: str = "standard",
+    distinctly_color: str = "instances",
     gui_progress: bool = False,
 ):
     """Function to generate and save video with annotations.
@@ -519,6 +522,8 @@ def save_labeled_video(
             for what instance/node/edge
         palette: SLEAP color palette to use. Options include: "alphabet", "five+",
             "solarized", or "standard". Only used if `color_manager` is None.
+        distinctly_color: Specify how to color instances. Options include: "instances",
+            "edges", and "nodes". Only used if `color_manager` is None.
         gui_progress: Whether to show Qt GUI progress dialog.
 
     Returns:
@@ -545,6 +550,7 @@ def save_labeled_video(
         crop_size_xy=crop_size_xy,
         color_manager=color_manager,
         palette=palette,
+        distinctly_color=distinctly_color,
     )
     thread_write = Thread(
         target=writer,
@@ -648,31 +654,46 @@ def main(args: list = None):
         "a range separated by hyphen (e.g. 1-3). (default is entire video)",
     )
     parser.add_argument(
-        "--video-index", type=int, default=0, help="Index of video in labels dataset"
+        "--video-index",
+        type=int,
+        default=0,
+        help="Index of video in labels dataset (default: 0)",
     )
     parser.add_argument(
         "--show_edges",
         type=int,
         default=1,
-        help="Whether to draw lines between nodes",
+        help="Whether to draw lines between nodes (default: 1)",
     )
     parser.add_argument(
         "--edge_is_wedge",
         type=int,
         default=0,
-        help="Whether to draw edges as wedges",
+        help="Whether to draw edges as wedges (default: 0)",
     )
     parser.add_argument(
         "--marker_size",
         type=int,
         default=4,
-        help="Size of marker in pixels before scaling by SCALE",
+        help="Size of marker in pixels before scaling by `scale` (default: 4)",
     )
     parser.add_argument(
         "--palette",
         type=str,
         default="standard",
-        help="SLEAP color palette to use",
+        help=(
+            "SLEAP color palette to use Options include: 'alphabet', 'five+', "
+            "'solarized', or 'standard' (default: 'standard')"
+        ),
+    )
+    parser.add_argument(
+        "--distinctly_color",
+        type=str,
+        default="instances",
+        help=(
+            "Specify how to color instances. Options include: 'instances', 'edges', "
+            "and 'nodes' (default: 'nodes')"
+        ),
     )
     args = parser.parse_args(args=args)
     labels = Labels.load_file(
@@ -708,7 +729,7 @@ def main(args: list = None):
         edge_is_wedge=args.edge_is_wedge > 0,
         marker_size=args.marker_size,
         palette=args.palette,
-        # color_manager=color_manager,  # TODO(LM): Add color manager
+        distinctly_color=args.distinctly_color,
     )
 
     print(f"Video saved as: {filename}")
