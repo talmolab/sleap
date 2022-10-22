@@ -1,5 +1,6 @@
 from typing import List
 import pytest
+from sqlalchemy import true
 from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
@@ -439,6 +440,7 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
     )
     assert_suggestions_unique(labels, suggestions)
 
+<<<<<<< HEAD
 
 def test_limits_prediction_score(centered_pair_predictions: Labels):
     """Testing suggestion generation using instance limits and prediction score."""
@@ -498,6 +500,8 @@ def test_limits_prediction_score(centered_pair_predictions: Labels):
     suggestions_correct = check_all_predicted_instances(suggestions, labels)
     assert suggestions_correct
 
+=======
+>>>>>>> eb66e220 (Added tests for frame_chunk. Added suggestion_ui to replacevideo update topic)
     # Generate suggestions using frame chunk
     suggestions = VideoFrameSuggestions.suggest(
         labels=labels,
