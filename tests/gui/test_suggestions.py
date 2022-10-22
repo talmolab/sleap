@@ -1,5 +1,6 @@
 from typing import List
 import pytest
+from sqlalchemy import true
 from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
@@ -163,6 +164,75 @@ def test_video_selection(
             "sampling_method": "random",
         },
     )
+
+    # Testing suggestion generation from frame chunk targeting selected video or all videos
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=centered_pair_predictions,
+        params={
+            "videos": [centered_pair_predictions.videos[1]],
+            "method": "frame_chunk",
+            "frame_from": 1,
+            "frame_to": 3,
+        },
+    )
+    # Verify that frame 1-3 of video 1 are selected
+    for i in range(len(suggestions)):
+        assert suggestions[i].video == centered_pair_predictions.videos[1]
+
+    # Testing suggestion generation from frame chunk targeting all videos and frame to exceeding one video
+    centered_pair_predictions_copy = centered_pair_predictions
+    # Clear existing suggestions so that generated suggestions will be kept intact at the uniqueness check step
+    centered_pair_predictions_copy.suggestions.clear()
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=centered_pair_predictions_copy,
+        params={
+            "videos": centered_pair_predictions_copy.videos,
+            "method": "frame_chunk",
+            "frame_from": 1,
+            "frame_to": 1000,
+        },
+    )
+    # Verify that frame 1-1000 of video 0 and 1-3 of video 1 are selected
+    assert len(suggestions) == 1003
+
+    correct_sugg = True
+    for i in range(len(suggestions)):
+        if (
+            suggestions[i].video == centered_pair_predictions.videos[1]
+            and suggestions[i].frame_idx > 2
+        ):
+            correct_sugg = False
+            break
+        elif (
+            suggestions[i].video == centered_pair_predictions.videos[0]
+            and suggestions[i].frame_idx > 999
+        ):
+            correct_sugg = False
+            break
+
+    assert correct_sugg
+
+    # Testing when range exceeds video 1, only frames from video 0 are selected
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=centered_pair_predictions,
+        params={
+            "videos": centered_pair_predictions.videos,
+            "method": "frame_chunk",
+            "frame_from": 501,
+            "frame_to": 600,
+        },
+    )
+    # Verify that frame 501-600 of video 0 are selected
+    assert len(suggestions) == 100
+    correct_sugg = True
+    for i in range(len(suggestions)):
+        if suggestions[i].video == centered_pair_predictions.videos[1]:
+            correct_sugg = False
+            break
+        elif suggestions[i].frame_idx < 500 or suggestions[i].frame_idx > 599:
+            correct_sugg = False
+            break
+    assert correct_sugg
 
 
 def assert_suggestions_unique(labels: Labels, new_suggestions: List[SuggestionFrame]):
@@ -362,6 +432,18 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
             "method": "velocity",
             "node": "head",
             "threshold": 0.1,
+            "videos": labels.videos,
+        },
+    )
+    assert_suggestions_unique(labels, suggestions)
+
+    # Generate suggestions using frame chunk
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=labels,
+        params={
+            "method": "frame_chunk",
+            "frame_from": 1,
+            "frame_to": 15,
             "videos": labels.videos,
         },
     )

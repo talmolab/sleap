@@ -1568,7 +1568,7 @@ class ShowImportVideos(EditCommand):
 
 
 class ReplaceVideo(EditCommand):
-    topics = [UpdateTopic.video, UpdateTopic.frame, UpdateTopic.suggestions]
+    topics = [UpdateTopic.video, UpdateTopic.frame, UpdateTopic.suggestions, UpdateTopic.suggestions_ui]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict) -> bool:
