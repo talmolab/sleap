@@ -74,21 +74,65 @@ def test_app_workflow(
 
     app.state["video"] = centered_pair_vid
 
+    # Verify the max of frame_chunk spinboxes is updated
+    method_layout = app.suggestions_form_widget.form_layout.fields["method"]
+    frame_chunk_layout = method_layout.page_layouts["frame chunk"]
+    frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
+    frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
+    cur_video = app.state["video"]
+    cur_video_framenum = cur_video.num_frames
+
+    assert frame_to_spinbox.maximum() == cur_video_framenum
+    assert frame_from_spinbox.maximum() == cur_video_framenum
+
     # Activate video using table
     app.videosTable.selectRowItem(small_robot_mp4_vid)
     app.videosTable.activateSelected()
 
     assert app.state["video"] == small_robot_mp4_vid
 
+    # Verify the max of frame_to in frame_chunk is updated
+    method_layout = app.suggestions_form_widget.form_layout.fields["method"]
+    frame_chunk_layout = method_layout.page_layouts["frame chunk"]
+    frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
+    frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
+    cur_video = app.state["video"]
+    cur_video_framenum = cur_video.num_frames
+
+    assert frame_to_spinbox.maximum() == cur_video_framenum
+    assert frame_from_spinbox.maximum() == cur_video_framenum
+
     # Select remaining video
     app.videosTable.selectRowItem(small_robot_mp4_vid)
     assert app.state["selected_video"] == small_robot_mp4_vid
+
+    # Verify the max of frame_to in frame_chunk is updated
+    method_layout = app.suggestions_form_widget.form_layout.fields["method"]
+    frame_chunk_layout = method_layout.page_layouts["frame chunk"]
+    frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
+    frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
+    cur_video = app.state["video"]
+    cur_video_framenum = cur_video.num_frames
+
+    assert frame_to_spinbox.maximum() == cur_video_framenum
+    assert frame_from_spinbox.maximum() == cur_video_framenum
 
     # Delete selected video
     app.commands.removeVideo()
 
     assert len(app.labels.videos) == 1
     assert app.state["video"] == centered_pair_vid
+
+    # Verify the max of frame_to in frame_chunk is updated
+    method_layout = app.suggestions_form_widget.form_layout.fields["method"]
+    frame_chunk_layout = method_layout.page_layouts["frame chunk"]
+    frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
+    frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
+    cur_video = app.state["video"]
+    cur_video_framenum = cur_video.num_frames
+
+    assert frame_to_spinbox.maximum() == cur_video_framenum
+    assert frame_from_spinbox.maximum() == cur_video_framenum
 
     # Add instances
     app.state["frame_idx"] = 27
