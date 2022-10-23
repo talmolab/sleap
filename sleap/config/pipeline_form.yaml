@@ -271,7 +271,7 @@ inference:
       label: Elapsed Frame Window
       type: int
       default: 5
-    - name: tracking.save_shifted_instance
+    - name: tracking.save_shifted_instances
       label: Save shifted instances
       type: bool
       default: false
