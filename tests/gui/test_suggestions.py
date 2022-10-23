@@ -404,25 +404,25 @@ def test_limits_prediction_score(centered_pair_predictions: Labels):
 
     # Confirming all frames meeting the criteria are captured
     def check_all_predicted_instances(sugg, labels):
-        for video in labels.videos:
-            lfs = labels.find(video)
-            for lf in lfs:
-                pred_instances = [
-                    inst
-                    for inst in lf.instances_to_show
-                    if isinstance(inst, PredictedInstance)
-                ]
-                n_instance_below_score = np.nansum(
-                    [True for inst in pred_instances if inst.score <= score_limit]
+        lfs = labels.labeled_frames
+        for lf in lfs:
+            pred_instances = [
+                inst
+                for inst in lf.instances_to_show
+                if isinstance(inst, PredictedInstance)
+            ]
+            n_instance_below_score = np.nansum(
+                [True for inst in pred_instances if inst.score <= score_limit]
+            )
+            if (
+                n_instance_below_score <= instance_upper_limit
+                and n_instance_below_score >= instance_lower_limit
+            ):
+                temp_suggest = SuggestionFrame(
+                    labels.video, pred_instances[0].frame_idx
                 )
-                if (
-                    n_instance_below_score <= instance_upper_limit
-                    and n_instance_below_score >= instance_lower_limit
-                ):
-                    for pred_instance in pred_instances:
-                        temp_suggest = SuggestionFrame(video, pred_instance.frame_idx)
-                        if not (temp_suggest in suggestions):
-                            return False
+                if not (temp_suggest in sugg):
+                    return False
 
         return True
 
