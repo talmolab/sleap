@@ -740,11 +740,12 @@ class Tracker(BaseTracker):
         option["help"] = "For optical-flow: Number of pyramid scale levels to consider"
         options.append(option)
 
-        option = dict(name="save_shifted_instances", default=False)
-        option["type"] = bool
-        option[
-            "help"
-        ] = "For optical-flow: Save the shifted instances between elapsed frames"
+        option = dict(name="save_shifted_instances", default=0)
+        option["type"] = int
+        option["help"] = (
+            "If non-zero and tracking.tracker is set to flow, save the shifted "
+            "instances between elapsed frames"
+        )
         options.append(option)
 
         def int_list_func(s):

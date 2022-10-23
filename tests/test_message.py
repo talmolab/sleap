@@ -1,10 +1,9 @@
 from sleap.message import PairedSender, PairedReceiver
 import time
+from multiprocessing import Process
 
 
 def run_send():
-    from time import sleep
-
     sender = PairedSender.from_defaults()
 
     sender.setup()
@@ -46,8 +45,6 @@ def run_receive():
 
 
 def test_send_receive_pair():
-    from multiprocessing import Process
-
     # run "sender" in a separate process
     Process(target=run_send).start()
 

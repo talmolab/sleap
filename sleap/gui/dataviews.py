@@ -132,7 +132,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
             return None
 
         item = self.items[idx]
-        if role == QtCore.Qt.DisplayRole:
+        if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
             if isinstance(item, dict) and key in item:
                 return item[key]
 
