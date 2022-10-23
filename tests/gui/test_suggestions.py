@@ -1,6 +1,5 @@
 from typing import List
 import pytest
-from sqlalchemy import true
 from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
