@@ -11,6 +11,10 @@ For the full set of labeled datasets and trained models reported in the SLEAP pa
 ([Pereira et al., Nature Methods, 2022](https://www.nature.com/articles/s41592-022-01426-1)),
 please see the [OSF repository](https://osf.io/36har/).
 
+````{hint}
+Need a quick testing clip? [Here's a video of a pair of mice in a standard home cage setting.](
+https://storage.googleapis.com/sleap-data/sandbox/sleap-mice-demo/mice.mp4)
+````
 
 ## `fly32`
 ![fly32](_static/example.fly32.jpg)
@@ -43,7 +47,9 @@ widths: 10 40
 * - Labels
   - 1500
 * - Download
-  - [Train](https://storage.googleapis.com/sleap-data/datasets/BermanFlies/random_split1/train.pkg.slp) / [Validation](https://storage.googleapis.com/sleap-data/datasets/BermanFlies/random_split1/val.pkg.slp) / [Test](https://storage.googleapis.com/sleap-data/datasets/BermanFlies/random_split1/test.pkg.slp)
+  - [Train (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/BermanFlies/random_split1/train.pkg.slp) / [Validation (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/BermanFlies/random_split1/val.pkg.slp) / [Test (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/BermanFlies/random_split1/test.pkg.slp)
+* - Example
+  - [Clip (`.mp4`)](https://storage.googleapis.com/sleap-data/datasets/BermanFlies/clips/072212_173836%400-3200.mp4) / [Tracking (`.slp`)](https://storage.googleapis.com/sleap-data/datasets/BermanFlies/clips/072212_173836%400-3200.slp)
 * - Credit
   - [Berman et al. (2014)](https://royalsocietypublishing.org/doi/10.1098/rsif.2014.0672), [Pereira et al. (2019)](https://www.nature.com/articles/s41592-018-0234-5), [Pereira et al. (2022)](https://www.nature.com/articles/s41592-022-01426-1), Talmo Pereira, Gordon Berman, Joshua Shaevitz
 ```
@@ -77,9 +83,11 @@ widths: 10 40
 * - Identity
   - ✔
 * - Labels
-  - 2000 frames, 2000 instances
+  - 2000 frames, 4000 instances
 * - Download
-  - [Train](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/train.pkg.slp) / [Validation](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/val.pkg.slp) / [Test](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/test.pkg.slp)
+  - [Train (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/train.pkg.slp) / [Validation (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/val.pkg.slp) / [Test (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/test.pkg.slp)
+* - Example
+  - [Clip (`.mp4`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/clips/talk_title_slide%4013150-14500.mp4) / [Tracking (`.slp`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/clips/talk_title_slide%4013150-14500.slp)
 * - Credit
   - [Pereira et al. (2022)](https://www.nature.com/articles/s41592-022-01426-1), Junyu Li, Shruthi Ravindranath, Talmo Pereira, Mala Murthy
 ```
@@ -115,7 +123,9 @@ widths: 10 40
 * - Labels
   - 1000 frames, 2950 instances
 * - Download
-  - [Train](https://storage.googleapis.com/sleap-data/datasets/wang_4mice_john/labels.full/random_split1/train.pkg.slp) / [Validation](https://storage.googleapis.com/sleap-data/datasets/wang_4mice_john/labels.full/random_split1/val.pkg.slp) / [Test](https://storage.googleapis.com/sleap-data/datasets/wang_4mice_john/labels.full/random_split1/test.pkg.slp)
+  - [Train (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/wang_4mice_john/labels.full/random_split1/train.pkg.slp) / [Validation (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/wang_4mice_john/labels.full/random_split1/val.pkg.slp) / [Test (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/wang_4mice_john/labels.full/random_split1/test.pkg.slp)
+* - Example
+  - [Clip (`.mp4`)](https://storage.googleapis.com/sleap-data/datasets/wang_4mice_john/clips/OFTsocial5mice-0000-00%4015488-18736.mp4) / [Tracking (`.slp`)](https://storage.googleapis.com/sleap-data/datasets/wang_4mice_john/clips/OFTsocial5mice-0000-00%4015488-18736.slp)
 * - Credit
   - [Pereira et al. (2022)](https://www.nature.com/articles/s41592-022-01426-1), John D'Uva, Mikhail Kislin, Samuel S.-H. Wang
 ```
@@ -151,7 +161,9 @@ widths: 10 40
 * - Labels
   - 1474 frames, 2948 instances
 * - Download
-  - [Train](https://storage.googleapis.com/sleap-data/datasets/eleni_mice/random_split1/train.pkg.slp) / [Validation](https://storage.googleapis.com/sleap-data/datasets/eleni_mice/random_split1/val.pkg.slp) / [Test](https://storage.googleapis.com/sleap-data/datasets/eleni_mice/random_split1/test.pkg.slp)
+  - [Train (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/eleni_mice/random_split1/train.pkg.slp) / [Validation (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/eleni_mice/random_split1/val.pkg.slp) / [Test (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/eleni_mice/random_split1/test.pkg.slp)
+* - Example
+  - [Clip (`.mp4`)](https://storage.googleapis.com/sleap-data/datasets/eleni_mice/clips/20200111_USVpairs_court1_M1_F1_top-01112020145828-0000%400-2560.mp4) / [Tracking (`.slp`)](https://storage.googleapis.com/sleap-data/datasets/eleni_mice/clips/20200111_USVpairs_court1_M1_F1_top-01112020145828-0000%400-2560.slp)
 * - Credit
   - [Pereira et al. (2022)](https://www.nature.com/articles/s41592-022-01426-1), Eleni Papadoyannis, Mala Murthy, Annegret Falkner
 ```
@@ -187,7 +199,9 @@ widths: 10 40
 * - Labels
   - 804 frames, 1604 instances
 * - Download
-  - [Train](https://storage.googleapis.com/sleap-data/datasets/yan_bees/random_split1/train.pkg.slp) / [Validation](https://storage.googleapis.com/sleap-data/datasets/yan_bees/random_split1/val.pkg.slp) / [Test](https://storage.googleapis.com/sleap-data/datasets/yan_bees/random_split1/test.pkg.slp)
+  - [Train (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/yan_bees/random_split1/train.pkg.slp) / [Validation (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/yan_bees/random_split1/val.pkg.slp) / [Test (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/yan_bees/random_split1/test.pkg.slp)
+* - Example
+  - [Clip (`.mp4`)](https://storage.googleapis.com/sleap-data/datasets/yan_bees/clips/bees_demo%4021000-23000.mp4) / [Tracking (`.slp`)](https://storage.googleapis.com/sleap-data/datasets/yan_bees/clips/bees_demo%4021000-23000.slp)
 * - Credit
   - [Pereira et al. (2022)](https://www.nature.com/articles/s41592-022-01426-1), Grace McKenzie-Smith, Z. Yan Wang, Joshua Shaevitz, Sarah Kocher
 ```
@@ -223,7 +237,9 @@ widths: 10 40
 * - Labels
   - 425 frames, 1588 instances
 * - Download
-  - [Train](https://storage.googleapis.com/sleap-data/datasets/nyu-gerbils/cohort1_compressedTalmo_23vids_march_7_to_march_17/random_split1.day001/train.pkg.slp) / [Validation](https://storage.googleapis.com/sleap-data/datasets/nyu-gerbils/cohort1_compressedTalmo_23vids_march_7_to_march_17/random_split1.day001/val.pkg.slp) / [Test](https://storage.googleapis.com/sleap-data/datasets/nyu-gerbils/cohort1_compressedTalmo_23vids_march_7_to_march_17/random_split1.day001/test.pkg.slp)
+  - [Train (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/nyu-gerbils/cohort1_compressedTalmo_23vids_march_7_to_march_17/random_split1.day001/train.pkg.slp) / [Validation (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/nyu-gerbils/cohort1_compressedTalmo_23vids_march_7_to_march_17/random_split1.day001/val.pkg.slp) / [Test (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/nyu-gerbils/cohort1_compressedTalmo_23vids_march_7_to_march_17/random_split1.day001/test.pkg.slp)
+* - Example
+  - [Clip (`.mp4`)](https://storage.googleapis.com/sleap-data/datasets/nyu-gerbils/clips/2020-3-10_daytime_5mins_compressedTalmo%403200-5760.mp4) / [Tracking (`.slp`)](https://storage.googleapis.com/sleap-data/datasets/nyu-gerbils/clips/2020-3-10_daytime_5mins_compressedTalmo%403200-5760.slp)
 * - Credit
   - [Pereira et al. (2022)](https://www.nature.com/articles/s41592-022-01426-1), Catalin Mitelut, Marielisa Diez Castro, Dan H. Sanes
 ```

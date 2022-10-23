@@ -176,8 +176,12 @@ class VideoMarkerThread(Thread):
         video_idx: int,
         scale: float,
         show_edges: bool = True,
+        edge_is_wedge: bool = False,
+        marker_size: int = 4,
         crop_size_xy: Optional[Tuple[int, int]] = None,
         color_manager: Optional[ColorManager] = None,
+        palette: str = "standard",
+        distinctly_color: str = "instances",
     ):
         super(VideoMarkerThread, self).__init__()
         self.in_q = in_q
@@ -186,10 +190,12 @@ class VideoMarkerThread(Thread):
         self.video_idx = video_idx
         self.scale = scale
         self.show_edges = show_edges
+        self.edge_is_wedge = edge_is_wedge
 
         if color_manager is None:
-            color_manager = ColorManager(labels=labels)
+            color_manager = ColorManager(labels=labels, palette=palette)
             color_manager.color_predicted = True
+            color_manager.distinctly_color = distinctly_color
 
         self.color_manager = color_manager
 
@@ -201,8 +207,7 @@ class VideoMarkerThread(Thread):
         self.node_line_width = max(1, self.node_line_width // 2)
         self.edge_line_width = max(1, self.node_line_width // 2)
 
-        unscaled_marker_radius = 3
-        self.marker_radius = max(1, int(unscaled_marker_radius // (1 / scale)))
+        self.marker_radius = max(1, int(marker_size // (1 / scale)))
 
         self.edge_line_width *= 2
         self.marker_radius *= 2
@@ -448,15 +453,40 @@ class VideoMarkerThread(Thread):
                     src_x, src_y = int(src_x), int(src_y)
                     dst_x, dst_y = int(dst_x), int(dst_y)
 
-                    # Draw line to mark edge between nodes
-                    cv2.line(
-                        img=img,
-                        pt1=(src_x, src_y),
-                        pt2=(dst_x, dst_y),
-                        color=edge_color_bgr,
-                        thickness=int(self.edge_line_width),
-                        lineType=cv2.LINE_AA,
-                    )
+                    if self.edge_is_wedge:
+                        r = self.marker_radius / 2
+
+                        # Get vector from source to destination
+                        vec_x = dst_x - src_x
+                        vec_y = dst_y - src_y
+                        mag = (pow(vec_x, 2) + pow(vec_y, 2)) ** 0.5
+                        vec_x = int(r * vec_x / mag)
+                        vec_y = int(r * vec_y / mag)
+
+                        # Define the wedge
+                        src_1 = [src_x - vec_y, src_y + vec_x]
+                        dst = [dst_x, dst_y]
+                        src_2 = [src_x + vec_y, src_y - vec_x]
+                        pts = np.array([src_1, dst, src_2])
+
+                        # Draw the wedge
+                        cv2.fillPoly(
+                            img=img,
+                            pts=[pts],
+                            color=edge_color_bgr,
+                            lineType=cv2.LINE_AA,
+                        )
+
+                    else:
+                        # Draw line to mark edge between nodes
+                        cv2.line(
+                            img=img,
+                            pt1=(src_x, src_y),
+                            pt2=(dst_x, dst_y),
+                            color=edge_color_bgr,
+                            thickness=int(self.edge_line_width),
+                            lineType=cv2.LINE_AA,
+                        )
 
 
 def save_labeled_video(
@@ -468,7 +498,11 @@ def save_labeled_video(
     scale: float = 1.0,
     crop_size_xy: Optional[Tuple[int, int]] = None,
     show_edges: bool = True,
+    edge_is_wedge: bool = False,
+    marker_size: int = 4,
     color_manager: Optional[ColorManager] = None,
+    palette: str = "standard",
+    distinctly_color: str = "instances",
     gui_progress: bool = False,
 ):
     """Function to generate and save video with annotations.
@@ -482,8 +516,14 @@ def save_labeled_video(
         scale: scale of image (so we can scale point locations to match)
         crop_size_xy: size of crop around instances, or None for full images
         show_edges: whether to draw lines between nodes
+        edge_is_wedge: whether to draw edges as wedges (draw as line if False)
+        marker_size: Size of marker in pixels before scaling by `scale`
         color_manager: ColorManager object which determine what colors to use
             for what instance/node/edge
+        palette: SLEAP color palette to use. Options include: "alphabet", "five+",
+            "solarized", or "standard". Only used if `color_manager` is None.
+        distinctly_color: Specify how to color instances. Options include: "instances",
+            "edges", and "nodes". Only used if `color_manager` is None.
         gui_progress: Whether to show Qt GUI progress dialog.
 
     Returns:
@@ -505,8 +545,12 @@ def save_labeled_video(
         video_idx=labels.videos.index(video),
         scale=scale,
         show_edges=show_edges,
+        edge_is_wedge=edge_is_wedge,
+        marker_size=marker_size,
         crop_size_xy=crop_size_xy,
         color_manager=color_manager,
+        palette=palette,
+        distinctly_color=distinctly_color,
     )
     thread_write = Thread(
         target=writer,
@@ -610,7 +654,46 @@ def main(args: list = None):
         "a range separated by hyphen (e.g. 1-3). (default is entire video)",
     )
     parser.add_argument(
-        "--video-index", type=int, default=0, help="Index of video in labels dataset"
+        "--video-index",
+        type=int,
+        default=0,
+        help="Index of video in labels dataset (default: 0)",
+    )
+    parser.add_argument(
+        "--show_edges",
+        type=int,
+        default=1,
+        help="Whether to draw lines between nodes (default: 1)",
+    )
+    parser.add_argument(
+        "--edge_is_wedge",
+        type=int,
+        default=0,
+        help="Whether to draw edges as wedges (default: 0)",
+    )
+    parser.add_argument(
+        "--marker_size",
+        type=int,
+        default=4,
+        help="Size of marker in pixels before scaling by `scale` (default: 4)",
+    )
+    parser.add_argument(
+        "--palette",
+        type=str,
+        default="standard",
+        help=(
+            "SLEAP color palette to use Options include: 'alphabet', 'five+', "
+            "'solarized', or 'standard' (default: 'standard')"
+        ),
+    )
+    parser.add_argument(
+        "--distinctly_color",
+        type=str,
+        default="instances",
+        help=(
+            "Specify how to color instances. Options include: 'instances', 'edges', "
+            "and 'nodes' (default: 'nodes')"
+        ),
     )
     args = parser.parse_args(args=args)
     labels = Labels.load_file(
@@ -642,6 +725,11 @@ def main(args: list = None):
         fps=args.fps,
         scale=args.scale,
         crop_size_xy=crop_size_xy,
+        show_edges=args.show_edges > 0,
+        edge_is_wedge=args.edge_is_wedge > 0,
+        marker_size=args.marker_size,
+        palette=args.palette,
+        distinctly_color=args.distinctly_color,
     )
 
     print(f"Video saved as: {filename}")
