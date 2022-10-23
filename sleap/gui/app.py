@@ -310,8 +310,17 @@ class MainWindow(QMainWindow):
             else:
                 self.state["frame_idx"] = 0
 
+        def update_suggestionui(video):
+            # Update suggestion ui after switching video
+            self.on_data_update([UpdateTopic.suggestions_ui])
+
         self.state.connect(
-            "video", callbacks=[switch_frame, lambda x: self._update_seekbar_marks()]
+            "video",
+            callbacks=[
+                switch_frame,
+                lambda x: self._update_seekbar_marks(),
+                update_suggestionui,
+            ],
         )
 
     def _create_color_manager(self):
@@ -1321,8 +1330,8 @@ class MainWindow(QMainWindow):
         if _has_topic([UpdateTopic.frame, UpdateTopic.project_instances]):
             self.state["last_interacted_frame"] = self.state["labeled_frame"]
 
-        if _has_topic([UpdateTopic.video, UpdateTopic.suggestions_ui]):
-            # update the max of <frame_to> spinbox to current video frame
+        if _has_topic([UpdateTopic.suggestions_ui]):
+            # update the max of <frame_chunk> spinbox to num_frames of current video
             method_layout = self.suggestions_form_widget.form_layout.fields["method"]
             frame_chunk_layout = method_layout.page_layouts["frame chunk"]
             frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
@@ -1360,7 +1369,7 @@ class MainWindow(QMainWindow):
 
         # Update related displays
         self.updateStatusMessage()
-        self.on_data_update([UpdateTopic.on_frame, UpdateTopic.suggestions_ui])
+        self.on_data_update([UpdateTopic.on_frame])
 
         # Trigger event after the overlays have been added
         player.view.updatedViewer.emit()
