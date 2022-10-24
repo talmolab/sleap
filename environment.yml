@@ -18,7 +18,6 @@ dependencies:
   # - sleap::pyside2=5.14.1
   - qtpy>=2.0.1
   - conda-forge::pip!=22.0.4
-  - pip
   - pip:
       - "--editable=."
       - "--requirement=./dev_requirements.txt"
