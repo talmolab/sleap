@@ -352,6 +352,8 @@ match_policies = dict(
 
 @attr.s(auto_attribs=True)
 class BaseTracker(abc.ABC):
+    """Abstract base class for tracker."""
+
     @property
     def is_valid(self):
         return False
@@ -381,8 +383,7 @@ class BaseTracker(abc.ABC):
 
 @attr.s(auto_attribs=True)
 class Tracker(BaseTracker):
-    """
-    Instance pose tracker.
+    """Instance pose tracker.
 
     Use by instantiated with the desired parameters and then calling the
     `track` method for each frame.
