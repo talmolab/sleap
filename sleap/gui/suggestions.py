@@ -308,12 +308,16 @@ class VideoFrameSuggestions(object):
         proposed_suggestions = []
         for video in videos:
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> d8f052fe16e3a7dd1948d99c8ae9a92f93035859
             # make sure when targeting all videos the from and to do not exceed frame number
             if frame_from > video.num_frames:
                 continue
             this_video_frame_to = min(frame_to, video.num_frames)
             # generate list of frame numbers
             idx = list(range(frame_from - 1, this_video_frame_to))
+<<<<<<< HEAD
 =======
             # Make sure
             frame_from = min(frame_from, video.num_frames)
@@ -321,6 +325,8 @@ class VideoFrameSuggestions(object):
 
             idx = list(range(frame_from - 1, frame_to))
 >>>>>>> e0fa5126 (temporary)
+=======
+>>>>>>> d8f052fe16e3a7dd1948d99c8ae9a92f93035859
             proposed_suggestions.extend(cls.idx_list_to_frame_list(idx, video))
 
         suggestions = VideoFrameSuggestions.filter_unique_suggestions(
