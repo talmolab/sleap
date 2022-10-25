@@ -459,7 +459,9 @@ class QtVideoPlayer(QWidget):
             instance = QtInstance(instance=instance, player=self, **kwargs)
         if type(instance) != QtInstance:
             return
-        if instance.instance.n_visible_points > 0 or not isinstance(instance.instance, PredictedInstance):
+        if instance.instance.n_visible_points > 0 or not isinstance(
+            instance.instance, PredictedInstance
+        ):
             self.view.scene.addItem(instance)
 
             # connect signal so we can adjust QtNodeLabel positions after zoom
