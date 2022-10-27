@@ -62,7 +62,7 @@ class FileDialog:
         # Make sure filename has appropriate file extension.
         if is_non_native and filter:
             # Get ext from selected filter (i.e., file type).
-            match = re.search("\\(\\*(\\.[a-z]+)", filter)
+            match = re.search("\\(\\*(\\.[a-zA-Z0-9]+)\\)", filter)
             if match:
                 filter_ext = match[1]
 
