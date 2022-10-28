@@ -105,15 +105,10 @@ class LabelsDataCache:
         """Build (or rebuilds) various caches."""
         # Data structures for caching
         if new_frame is None:
-            self._lf_by_video = dict()
+            self._lf_by_video = {video: [] for video in self.labels.videos}
             self._frame_idx_map = dict()
             self._track_occupancy = dict()
             self._frame_count_cache = dict()
-
-            # Initialize dictionaries with lists
-            for video in self.labels.videos:
-                self._lf_by_video[video] = []
-                self._frame_idx_map[video] = []
 
             # Loop through labeled frames only once
             for lf in self.labels:
