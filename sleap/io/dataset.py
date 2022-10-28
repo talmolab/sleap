@@ -110,10 +110,17 @@ class LabelsDataCache:
             self._track_occupancy = dict()
             self._frame_count_cache = dict()
 
+            # Initialize dictionaries with lists
             for video in self.labels.videos:
-                self._lf_by_video[video] = [
-                    lf for lf in self.labels if lf.video == video
-                ]
+                self._lf_by_video[video] = []
+                self._frame_idx_map[video] = []
+
+            # Loop through labeled frames only once
+            for lf in self.labels:
+                self._lf_by_video[lf.video].append(lf)
+
+            # Loop through videos a second time after _lf_by_video is created
+            for video in self.labels.videos:
                 self._frame_idx_map[video] = {
                     lf.frame_idx: lf for lf in self._lf_by_video[video]
                 }
