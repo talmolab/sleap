@@ -111,9 +111,13 @@ class LabelsDataCache:
             self._frame_count_cache = dict()
 
             for video in self.labels.videos:
-                self._lf_by_video[video] = [
-                    lf for lf in self.labels if lf.video == video
-                ]
+                self._lf_by_video[video] = []
+
+            for lf in self.labels:
+                if lf.video in self._lf_by_video:
+                    self._lf_by_video[lf.video].append(lf)
+
+            for video in self.labels.videos:
                 self._frame_idx_map[video] = {
                     lf.frame_idx: lf for lf in self._lf_by_video[video]
                 }
