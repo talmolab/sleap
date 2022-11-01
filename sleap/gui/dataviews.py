@@ -151,11 +151,11 @@ class GenericTableModel(QtCore.QAbstractTableModel):
 
             # If nothing changed of the item, return true. (Issue #1013)
             if isinstance(item, dict) and key in item:
-                item_name = item[key]
+                item_value = item[key]
             if hasattr(item, key):
-                item_name = getattr(item, key)
+                item_value = getattr(item, key)
 
-            if item_name == value:
+            if item_value == value:
                 return True
 
             # Otherwise set the item
