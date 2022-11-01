@@ -247,6 +247,45 @@ def test_app_workflow(
         assert lf.frame_idx == prev_idx + frame_delta
         prev_idx = l_suggestion.frame_idx
 
+    # Add video, add frame suggestions, remove the video, verify the frame suggestions are also removed
+    app.labels.add_video(small_robot_mp4_vid)
+    app.on_data_update([UpdateTopic.video])
+
+    assert len(app.labels.videos) == 2
+
+    app.state["video"] = centered_pair_vid
+
+    # Generate suggested frames in both videos
+    app.labels.clear_suggestions()
+    num_samples = 3
+    app.labels.suggestions = VideoFrameSuggestions.suggest(
+        labels=app.labels,
+        params=dict(
+            videos=app.labels.videos,
+            method="sample",
+            per_video=num_samples,
+            sampling_method="random",
+        ),
+    )
+
+    # Verify that suggestions contain frames from both videos
+    video_source = []
+    for sugg in app.labels.suggestions:
+        if not (sugg.video in video_source):
+            video_source.append(sugg.video)
+    assert len(video_source) == 2
+
+    # Remove video 1, keep video 0
+    app.videosTable.selectRowItem(small_robot_mp4_vid)
+    assert app.state["selected_video"] == small_robot_mp4_vid
+    app.commands.removeVideo()
+    assert len(app.labels.videos) == 1
+    assert app.state["video"] == centered_pair_vid
+
+    # Verify frame suggestions from video 1 are removed
+    for sugg in app.labels.suggestions:
+        assert sugg.video == app.labels.videos[0]
+
 
 def test_app_new_window(qtbot):
     app = QApplication.instance()
