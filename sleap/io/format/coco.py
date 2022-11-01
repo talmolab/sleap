@@ -59,6 +59,7 @@ class LabelsCocoAdaptor(Adaptor):
         file: FileHandle,
         img_dir: str,
         use_missing_gui: bool = False,
+        fix_all_hidden: bool = True,
         *args,
         **kwargs,
     ) -> Labels:
@@ -189,9 +190,10 @@ class LabelsCocoAdaptor(Adaptor):
             if points:
                 # If none of the points had 2 has the "visible" flag, we'll
                 # assume this incorrect and just mark all as visible.
-                if not any_visible:
-                    for point in points.values():
-                        point.visible = True
+                if fix_all_hidden:
+                    if not any_visible:
+                        for point in points.values():
+                            point.visible = True
 
                 inst = Instance(skeleton=skeleton, points=points, track=track)
 
