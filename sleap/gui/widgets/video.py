@@ -1212,6 +1212,9 @@ class QtNodeLabel(QGraphicsTextItem):
 
         self.adjustStyle()
 
+    def __repr__(self) -> str:
+        return f"QtNodeLabel(pos()={self.pos()}, node={self.node})"
+
     def adjustPos(self, *args, **kwargs):
         """Update the position of the label based on the position of the node.
 
@@ -1634,6 +1637,9 @@ class QtEdge(QGraphicsPolygonItem):
         self.setPen(pen)
         self.setBrush(brush)
         self.full_opacity = 1
+
+    def __repr__(self) -> str:
+        return f"QtEdge(src={self.src}, dst={self.dst})"
 
     def line(self):
         return self._line
