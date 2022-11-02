@@ -43,6 +43,12 @@ class GuiState(object):
         self._state_vars = dict()
         self._callbacks = dict()
 
+    def __repr__(self) -> str:
+        message = f"GuiState("
+        for key in self._state_vars:
+            message += f"'{key}'={self.get(key)}, "
+        return f"{message[:-2]})"
+
     def __getitem__(self, key: GSVarType) -> Any:
         """Gets value for key, or None if no value."""
         return self.get(key, default=None)
