@@ -39,6 +39,7 @@ def instance_similarity(
 
     return similarity
 
+
 def factory_object_keypoint_similarity(
     keypoint_errors: Optional[list] = None,
     score_weighting: bool = False,
@@ -65,7 +66,7 @@ def factory_object_keypoint_similarity(
         # Default to 1 pixel error
         kp_precision = np.array(0.5)
     else:
-        kp_precision = 1 / (2*np.array(keypoint_errors)**2)
+        kp_precision = 1 / (2 * np.array(keypoint_errors) ** 2)
 
     def object_keypoint_similarity(
         ref_instance: InstanceType, query_instance: InstanceType
@@ -88,13 +89,13 @@ def factory_object_keypoint_similarity(
             elif normalization_keypoints == "union":
                 query_visible = ~(np.isnan(query_points).any(axis=1))
                 max_n_keypoints = np.sum(np.logical_and(ref_visible, query_visible))
-        else: # if normalization_keypoints == "all":
+        else:  # if normalization_keypoints == "all":
             max_n_keypoints = len(ref_points)
         if max_n_keypoints == 0:
             return 0
 
         # Compute distances
-        if kp_precision.size > 1 and 2*kp_precision.size != ref_points.size:
+        if kp_precision.size > 1 and 2 * kp_precision.size != ref_points.size:
             mess = (
                 "keypoint_errors array should have the same size as the number of "
                 f"keypoints in the instance: {kp_precision.size} != {ref_points.size // 2}"
@@ -102,7 +103,9 @@ def factory_object_keypoint_similarity(
             raise ValueError(mess)
         dists = np.sum((query_points - ref_points) ** 2, axis=1) * kp_precision
 
-        similarity = np.nansum(ref_scores * query_scores * np.exp(-dists)) / max_n_keypoints
+        similarity = (
+            np.nansum(ref_scores * query_scores * np.exp(-dists)) / max_n_keypoints
+        )
 
         return similarity
 
