@@ -7,6 +7,7 @@ on (some?) Ubuntu systems.
 """
 
 import os, re, sys
+from pathlib import Path
 
 from qtpy import QtWidgets
 
@@ -61,13 +62,16 @@ class FileDialog:
 
         # Make sure filename has appropriate file extension.
         if is_non_native and filter:
-            # Get ext from selected filter (i.e., file type).
-            match = re.search("\\(\\*(\\.[a-zA-Z0-9]+)\\)", filter)
-            if match:
-                filter_ext = match[1]
-
-                # If ext isn't already at end of filename, add it.
-                if filter_ext and not filename.endswith(filter_ext):
+            fn = Path(filename)
+            # Get extension from filter as list of "*.ext"
+            match = re.findall("\*(\.[a-zA-Z0-9]+)", filter)
+            if len(match) > 0:
+                # Add first filter extension if none of the filter extensions match
+                add_extension = True
+                for filter_ext in reversed(match):
+                    if fn.suffix == filter_ext:
+                        add_extension = False
+                if add_extension:
                     filename = f"{filename}{filter_ext}"
 
         return filename, filter
