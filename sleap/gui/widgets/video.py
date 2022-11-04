@@ -68,7 +68,7 @@ from typing import Callable, List, Optional, Union
 import sleap
 from sleap.prefs import prefs
 from sleap.skeleton import Node
-from sleap.instance import Instance, Point
+from sleap.instance import Instance, PredictedInstance, Point
 from sleap.io.video import Video
 from sleap.gui.widgets.slider import VideoSlider
 from sleap.gui.state import GuiState
