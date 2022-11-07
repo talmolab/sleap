@@ -149,6 +149,16 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         if role == QtCore.Qt.EditRole:
             item, key = self.get_from_idx(index)
 
+            # If nothing changed of the item, return true. (Issue #1013)
+            if isinstance(item, dict) and key in item:
+                item_value = item[key]
+            if hasattr(item, key):
+                item_value = getattr(item, key)
+
+            if item_value == value:
+                return True
+
+            # Otherwise set the item
             if self.can_set(item, key):
                 self.set_item(item, key, value)
                 self.dataChanged.emit(index, index)
