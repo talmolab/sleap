@@ -1212,6 +1212,9 @@ class QtNodeLabel(QGraphicsTextItem):
 
         self.adjustStyle()
 
+    def __repr__(self) -> str:
+        return f"QtNodeLabel(pos()={self.pos()}, node={self.node})"
+
     def adjustPos(self, *args, **kwargs):
         """Update the position of the label based on the position of the node.
 
@@ -1416,6 +1419,9 @@ class QtNode(QGraphicsEllipseItem):
 
         self.setPos(self.point.x, self.point.y)
         self.updatePoint(user_change=False)
+
+    def __repr__(self):
+        return f"QtNode(pos()={self.pos()},point=Point{self.point},node={self.node})"
 
     def calls(self):
         """Method to call all callbacks."""
@@ -1631,6 +1637,9 @@ class QtEdge(QGraphicsPolygonItem):
         self.setPen(pen)
         self.setBrush(brush)
         self.full_opacity = 1
+
+    def __repr__(self) -> str:
+        return f"QtEdge(src={self.src}, dst={self.dst})"
 
     def line(self):
         return self._line
@@ -1872,6 +1881,9 @@ class QtInstance(QGraphicsObject):
 
         # Update size of box so it includes all the nodes/edges
         self.updateBox()
+
+    def __repr__(self) -> str:
+        return f"QtInstance(pos()={self.pos()},instance={self.instance})"
 
     def updatePoints(self, complete: bool = False, user_change: bool = False):
         """Update data and display for all points in skeleton.
