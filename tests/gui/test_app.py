@@ -1,6 +1,5 @@
 import pytest
 from qtpy.QtWidgets import QApplication
-from qtpy.QtGui import QMouseEvent
 
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
