@@ -213,62 +213,6 @@ def test_app_workflow(
     assert inst_31_2.track == track_a
     assert inst_31_1.track == track_b
 
-    # Test that setting all nodes to invisible doesn't result in error ---------------->
-    # TODO(LM): Remove this, pretty sure it is unnecessary.
-    # with qtbot.waitActive(app, timeout=2000):
-    #     app.showNormal()
-    # app.move(0, 0)
-
-    # Static parts of a mouse event (based off actual mouse event)
-    press_type = QtCore.QEvent.Type.MouseButtonPress
-    release_type = QtCore.QEvent.Type.MouseButtonRelease
-    button = QtCore.Qt.MouseButton.RightButton
-    buttons = QtCore.Qt.MouseButtons()
-    modifiers = QtCore.Qt.KeyboardModifiers()
-
-    # Right click on all nodes in an instance
-    inst = app.player.view.instances[0]
-    node_names = list(inst.nodes.keys())
-    for name in node_names:
-        inst = app.player.view.instances[0]
-        node = inst.nodes[name]
-        if node.point.visible:
-            local_pos = app.player.view.mapFromScene(node.pos())
-            screen_pos = app.player.view.mapToGlobal(local_pos)
-
-            # Create mouse events
-            mouse_press_event = QMouseEvent(
-                press_type,
-                local_pos,
-                screen_pos,
-                button,
-                buttons,
-                modifiers,
-            )
-            mouse_release_event = QMouseEvent(
-                release_type,
-                local_pos,
-                screen_pos,
-                button,
-                buttons,
-                modifiers,
-            )
-
-            # Call mouse events to simulate right click
-            app.player.view.mousePressEvent(mouse_press_event)
-            app.player.view.mouseReleaseEvent(mouse_release_event)
-
-        # XXX(LM): The GUI displaying changes thinks the node is updated, but this
-        # reference to the node/labels does not get updated. Thought it might have to do
-        # with not calling the mouseRelease, but problem still occurs
-        assert node.point.visible == False
-
-    for inst in app.player.view.instances:
-        print(f"\ninstance:")
-        for node in inst.nodes.values():
-            print(node.point.visible)
-    # Run subsequent commands to ensure no fault --------------------------------------<
-
     # Set up to test labeled frames data cache
     app.labels = min_tracks_2node_labels
     video = app.labels.video
@@ -467,7 +411,3 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
 
     # Toggle instance visibility with shortcut, showing instances
     toggle_and_verify_visibility(True)
-
-
-if __name__ == "__main__":
-    pytest.main(["tests\gui\\test_app.py::test_app_workflow", "-rP"])

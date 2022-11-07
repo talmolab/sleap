@@ -1830,10 +1830,3 @@ def main(args: Optional[list] = None):
         cProfile.runctx("app.exec_()", globals=globals(), locals=locals())
     else:
         app.exec_()
-
-
-if __name__ == "__main__":
-    import os
-
-    ds = os.environ["ds-dmc"]
-    main([ds])
