@@ -301,9 +301,9 @@ class VideoFrameSuggestions(object):
         **kwargs,
     ):
         """Add consecutive frame chunk to label suggestion"""
-        
+
         proposed_suggestions = []
-        
+
         # Check the validity of inputs, frame_from <= frame_to
         if frame_from > frame_to:
             return proposed_suggestions
