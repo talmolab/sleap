@@ -1,13 +1,16 @@
 """Tracking tools for linking grouped instances over time."""
 
 from collections import deque, defaultdict
+import json
+from time import time
 import abc
 import attr
 import numpy as np
 import cv2
 from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple
+import logging
 
-from sleap import Track, LabeledFrame, Skeleton
+from sleap import Track, LabeledFrame, Skeleton, PredictedInstance
 
 from sleap.nn.tracker.components import (
     instance_similarity,
@@ -25,6 +28,8 @@ from sleap.nn.tracker.components import (
 from sleap.nn.tracker.kalman import BareKalmanTracker
 
 from sleap.nn.data.normalization import ensure_int
+
+logger = logging.getLogger(__name__)
 
 
 @attr.s(eq=False, slots=True, auto_attribs=True)
@@ -157,9 +162,10 @@ class FlowCandidateMaker:
                         if (ref_t, ti) in self.shifted_instances:
                             ref_shifted_instances = self.shifted_instances[(ref_t, ti)]
                             # Use shifted instance as a reference
-                            ref_img = ref_shifted_instances.img_t
-                            ref_instances = ref_shifted_instances.instances_t
-                            break
+                            if len(ref_shifted_instances.instances_t) > 0:
+                                ref_img = ref_shifted_instances.img_t
+                                ref_instances = ref_shifted_instances.instances_t
+                                break
 
                 # Flow shift reference instances to current frame.
                 shifted_instances = self.flow_shift_instances(
@@ -1148,7 +1154,9 @@ class TrackCleaner:
         connect_single_track_breaks(frames, self.instance_count)
 
 
-def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker) -> List[LabeledFrame]:
+def run_tracker(
+    frames: List[LabeledFrame], tracker: BaseTracker, verbosity: str = ""
+) -> List[LabeledFrame]:
     """Run a tracker on a set of labeled frames.
 
     Args:
@@ -1165,14 +1173,25 @@ def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker) -> List[Labele
 
     new_lfs = []
 
+    # Progress
+    if verbosity == "json":
+        report_period = 1.0  # time in seconds between reports
+        n_processed = 0
+        n_total = len(frames)
+        n_recent = 100
+        elapsed_recent = deque(maxlen=n_recent)
+        last_report = time()
+        t0_all = time()
+        t0_batch = time()
+
     # Run tracking on every frame
     for lf in frames:
-
+        insts = [inst for inst in lf.instances if isinstance(inst, PredictedInstance)]
         # Clear the tracks
-        for inst in lf.instances:
+        for inst in insts:
             inst.track = None
 
-        track_args = dict(untracked_instances=lf.instances)
+        track_args = dict(untracked_instances=insts)
         if tracker.uses_image:
             track_args["img"] = lf.video[lf.frame_idx]
         else:
@@ -1185,61 +1204,33 @@ def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker) -> List[Labele
         )
         new_lfs.append(new_lf)
 
+        # Progress
+        if verbosity == "json":
+            elapsed_batch = time() - t0_batch
+            t0_batch = time()
+            n_processed += 1
+            elapsed_all = time() - t0_all
+
+            # Compute recent rate.
+            elapsed_recent.append(elapsed_batch)
+            rate = n_recent / sum(elapsed_recent)
+            eta = (n_total - n_processed) / rate
+
+            # Report.
+            elapsed_since_last_report = time() - last_report
+            if elapsed_since_last_report > report_period:
+                print(
+                    json.dumps(
+                        {
+                            "n_processed": n_processed,
+                            "n_total": n_total,
+                            "elapsed": elapsed_all,
+                            "rate": rate,
+                            "eta": eta,
+                        }
+                    ),
+                    flush=True,
+                )
+                last_report = time()
+
     return new_lfs
-
-
-def retrack():
-    import argparse
-    import operator
-    import os
-    import time
-
-    from sleap import Labels
-
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument("data_path", help="Path to SLEAP project file")
-    parser.add_argument(
-        "-o",
-        "--output",
-        type=str,
-        default=None,
-        help="The output filename to use for the predicted data.",
-    )
-
-    Tracker.add_cli_parser_args(parser)
-
-    args = parser.parse_args()
-
-    tracker_args = {key: val for key, val in vars(args).items() if val is not None}
-
-    tracker = Tracker.make_tracker_by_name(**tracker_args)
-
-    print(tracker)
-
-    print("Loading predictions...")
-    t0 = time.time()
-    labels = Labels.load_file(args.data_path, args.data_path)
-    frames = sorted(labels.labeled_frames, key=operator.attrgetter("frame_idx"))
-    frames = frames  # [:1000]
-    print(f"Done loading predictions in {time.time() - t0} seconds.")
-
-    print("Starting tracker...")
-    frames = run_tracker(frames=frames, tracker=tracker)
-    tracker.final_pass(frames)
-
-    new_labels = Labels(labeled_frames=frames)
-
-    if args.output:
-        output_path = args.output
-    else:
-        out_dir = os.path.dirname(args.data_path)
-        out_name = os.path.basename(args.data_path) + f".{tracker.get_name()}.slp"
-        output_path = os.path.join(out_dir, out_name)
-
-    print(f"Saving: {output_path}")
-    Labels.save_file(new_labels, output_path)
-
-
-if __name__ == "__main__":
-    retrack()
