@@ -80,7 +80,6 @@ class UpdateTopic(Enum):
     frame = 8
     project = 9
     project_instances = 10
-    suggestions_ui = 11
 
 
 class AppCommand:
@@ -1530,7 +1529,7 @@ class ToggleGrayscale(EditCommand):
 
 
 class AddVideo(EditCommand):
-    topics = [UpdateTopic.video, UpdateTopic.suggestions_ui]
+    topics = [UpdateTopic.video]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
@@ -1575,7 +1574,7 @@ class ShowImportVideos(EditCommand):
 
 
 class ReplaceVideo(EditCommand):
-    topics = [UpdateTopic.video, UpdateTopic.frame, UpdateTopic.suggestions_ui]
+    topics = [UpdateTopic.video, UpdateTopic.frame]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict) -> bool:
@@ -1679,7 +1678,7 @@ class ReplaceVideo(EditCommand):
 
 
 class RemoveVideo(EditCommand):
-    topics = [UpdateTopic.video, UpdateTopic.suggestions, UpdateTopic.suggestions_ui]
+    topics = [UpdateTopic.video, UpdateTopic.suggestions]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):

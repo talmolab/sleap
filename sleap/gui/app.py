@@ -310,16 +310,16 @@ class MainWindow(QMainWindow):
             else:
                 self.state["frame_idx"] = 0
 
-        def update_suggestionui(video):
-            # Update suggestion ui after switching video
-            self.on_data_update([UpdateTopic.suggestions_ui])
+        def update_video(video):
+            # Update video after switching video
+            self.on_data_update([UpdateTopic.video])
 
         self.state.connect(
             "video",
             callbacks=[
                 switch_frame,
                 lambda x: self._update_seekbar_marks(),
-                update_suggestionui,
+                update_video,
             ],
         )
 
@@ -1292,6 +1292,17 @@ class MainWindow(QMainWindow):
         if _has_topic([UpdateTopic.video]):
             self.videosTable.model().items = self.labels.videos
 
+            # Update the max of <frame_chunk> spinbox to match the num_frames of current video
+            method_layout = self.suggestions_form_widget.form_layout.fields["method"]
+            frame_chunk_layout = method_layout.page_layouts["frame chunk"]
+            frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
+            frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
+            cur_video = self.state["video"]
+            if cur_video is not None:
+                cur_video_framenum = cur_video.num_frames
+                frame_to_spinbox.setMaximum(cur_video_framenum)
+                frame_from_spinbox.setMaximum(cur_video_framenum)
+
         if _has_topic([UpdateTopic.skeleton]):
             self.skeletonNodesTable.model().items = self.state["skeleton"]
             self.skeletonEdgesTable.model().items = self.state["skeleton"]
@@ -1329,17 +1340,6 @@ class MainWindow(QMainWindow):
 
         if _has_topic([UpdateTopic.frame, UpdateTopic.project_instances]):
             self.state["last_interacted_frame"] = self.state["labeled_frame"]
-
-        if _has_topic([UpdateTopic.suggestions_ui]):
-            # update the max of <frame_chunk> spinbox to num_frames of current video
-            method_layout = self.suggestions_form_widget.form_layout.fields["method"]
-            frame_chunk_layout = method_layout.page_layouts["frame chunk"]
-            frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
-            frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
-            cur_video = self.state["video"]
-            cur_video_framenum = cur_video.num_frames
-            frame_to_spinbox.setMaximum(cur_video_framenum)
-            frame_from_spinbox.setMaximum(cur_video_framenum)
 
     def plotFrame(self, *args, **kwargs):
         """Plots (or replots) current frame."""
