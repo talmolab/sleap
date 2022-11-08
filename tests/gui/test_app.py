@@ -125,7 +125,9 @@ def test_app_workflow(
     inst_27_1 = app.state["labeled_frame"].instances[1]
 
     # Move instance nodes
-    app.commands.setPointLocations(inst_27_0, {"a": (15, 20)})
+    app.commands.setPointLocations(
+        inst_27_0, {"a": (15, 20), "b": (15, 40), "c": (40, 40)}
+    )
 
     assert inst_27_0["a"].x == 15
     assert inst_27_0["a"].y == 20

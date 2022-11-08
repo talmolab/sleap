@@ -603,8 +603,7 @@ class NumpyVideo:
 
 @attr.s(auto_attribs=True, eq=False, order=False)
 class ImgStoreVideo:
-    """
-    Video data stored as an ImgStore dataset.
+    """Video data stored as an ImgStore dataset.
 
     See: https://github.com/loopbio/imgstore
     This class is just a lightweight wrapper for reading such datasets as
