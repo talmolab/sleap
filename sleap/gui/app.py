@@ -1762,7 +1762,7 @@ class MainWindow(QMainWindow):
         ShortcutDialog().exec_()
 
 
-def main():
+def main(args: Optional[list] = None):
     """Starts new instance of app."""
 
     import argparse
@@ -1796,7 +1796,7 @@ def main():
         default=False,
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     if args.nonnative:
         os.environ["USE_NON_NATIVE_FILE"] = "1"
@@ -1830,7 +1830,3 @@ def main():
         cProfile.runctx("app.exec_()", globals=globals(), locals=locals())
     else:
         app.exec_()
-
-
-if __name__ == "__main__":
-    main()
