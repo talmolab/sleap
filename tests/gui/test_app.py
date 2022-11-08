@@ -87,7 +87,6 @@ def test_app_workflow(
     frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
 
     # Verify the max of frame_chunk spinboxes is updated
-
     assert_frame_chunk_suggestion_ui_updated(app, frame_to_spinbox, frame_from_spinbox)
 
     # Activate video using table
