@@ -150,17 +150,18 @@ class FlowCandidateMaker:
                 matched_item.instances_t,
             )
 
-            if len(ref_instances) > 0:
-                # Check if shifted instance was computed at earlier time
-                if self.save_shifted_instances:
-                    for ti in reversed(range(ref_t, t)):
-                        if (ref_t, ti) in self.shifted_instances:
-                            ref_shifted_instances = self.shifted_instances[(ref_t, ti)]
-                            # Use shifted instance as a reference
+            # Check if shifted instance was computed at earlier time
+            if self.save_shifted_instances:
+                for ti in reversed(range(ref_t, t)):
+                    if (ref_t, ti) in self.shifted_instances:
+                        ref_shifted_instances = self.shifted_instances[(ref_t, ti)]
+                        # Use shifted instance as a reference
+                        if len(ref_shifted_instances.instances_t) > 0:
                             ref_img = ref_shifted_instances.img_t
                             ref_instances = ref_shifted_instances.instances_t
                             break
 
+            if len(ref_instances) > 0:
                 # Flow shift reference instances to current frame.
                 shifted_instances = self.flow_shift_instances(
                     ref_instances,
