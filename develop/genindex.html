@@ -2192,6 +2192,8 @@ title="Open an issue"
       </ul></li>
       <li><a href="api/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.imagenet_preproc_v1">imagenet_preproc_v1() (in module sleap.nn.architectures.resnet)</a>
 </li>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowCandidateMaker.img_scale">img_scale (sleap.nn.tracking.FlowCandidateMaker attribute)</a>
+</li>
       <li><a href="api/sleap.io.visuals.html#sleap.io.visuals.img_to_cv">img_to_cv() (in module sleap.io.visuals)</a>
 </li>
       <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter">ImgaugAugmenter (class in sleap.nn.data.augmentation)</a>
@@ -2964,10 +2966,10 @@ title="Open an issue"
 </li>
       <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.merge_frames">merge_frames() (sleap.instance.LabeledFrame static method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.merge_matching_frames">merge_matching_frames() (sleap.io.dataset.Labels method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.merge_nodes">merge_nodes() (sleap.io.dataset.Labels method)</a>
 </li>
       <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.meta">meta (sleap.info.feature_suggestions.ItemStack attribute)</a>
@@ -3005,6 +3007,8 @@ title="Open an issue"
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.min_new_track_points">min_new_track_points (sleap.nn.tracking.Tracker attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowCandidateMaker.min_points">min_points (sleap.nn.tracking.FlowCandidateMaker attribute)</a>
 </li>
       <li><a href="api/sleap.nn.config.optimization.html#sleap.nn.config.optimization.OptimizationConfig.min_val_batches_per_epoch">min_val_batches_per_epoch (sleap.nn.config.optimization.OptimizationConfig attribute)</a>
 </li>
@@ -3337,6 +3341,10 @@ title="Open an issue"
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowCandidateMaker.of_max_levels">of_max_levels (sleap.nn.tracking.FlowCandidateMaker attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowCandidateMaker.of_window_size">of_window_size (sleap.nn.tracking.FlowCandidateMaker attribute)</a>
+</li>
       <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.offset_refinement">offset_refinement (sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig attribute)</a>
 
       <ul>
@@ -3761,10 +3769,10 @@ title="Open an issue"
       </ul></li>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.plot_img">plot_img() (in module sleap.nn.viz)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.plot_instance">plot_instance() (in module sleap.nn.viz)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.plot_instances">plot_instances() (in module sleap.nn.viz)</a>
 </li>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.plot_pafs">plot_pafs() (in module sleap.nn.viz)</a>
@@ -3894,6 +3902,8 @@ title="Open an issue"
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.provenance">provenance (sleap.io.dataset.Labels attribute)</a>
 </li>
       <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline.providers">providers (sleap.nn.data.pipelines.Pipeline attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowCandidateMaker.prune_shifted_instances">prune_shifted_instances() (sleap.nn.tracking.FlowCandidateMaker method)</a>
 </li>
       <li><a href="api/sleap.nn.config.outputs.html#sleap.nn.config.outputs.ZMQConfig.publish_address">publish_address (sleap.nn.config.outputs.ZMQConfig attribute)</a>
 </li>
@@ -4202,6 +4212,8 @@ title="Open an issue"
       <li><a href="api/sleap.io.visuals.html#sleap.io.visuals.save_labeled_video">save_labeled_video() (in module sleap.io.visuals)</a>
 </li>
       <li><a href="api/sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig.save_outputs">save_outputs (sleap.nn.config.outputs.OutputsConfig attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowCandidateMaker.save_shifted_instances">save_shifted_instances (sleap.nn.tracking.FlowCandidateMaker attribute)</a>
 </li>
       <li><a href="api/sleap.nn.config.outputs.html#sleap.nn.config.outputs.OutputsConfig.save_visualizations">save_visualizations (sleap.nn.config.outputs.OutputsConfig attribute)</a>
 </li>
@@ -5167,8 +5179,12 @@ title="Open an issue"
         <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.track_swap">(sleap.io.dataset.LabelsDataCache method)</a>
 </li>
       </ul></li>
-      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.track_window">track_window (sleap.nn.tracking.Tracker attribute)</a>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowCandidateMaker.track_window">track_window (sleap.nn.tracking.FlowCandidateMaker attribute)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.track_window">(sleap.nn.tracking.Tracker attribute)</a>
 </li>
+      </ul></li>
       <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.TrackCleaner">TrackCleaner (class in sleap.nn.tracking)</a>
 </li>
       <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.tracked_instances">tracked_instances (sleap.instance.LabeledFrame property)</a>
