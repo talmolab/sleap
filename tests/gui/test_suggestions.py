@@ -219,17 +219,17 @@ def test_video_selection(
             "videos": centered_pair_predictions.videos,
             "method": "frame_chunk",
             "frame_from": 501,
-            "frame_to": 600,
+            "frame_to": 510,
         },
     )
     # Verify that frame 501-600 of video 0 are selected
-    assert len(suggestions) == 100
+    assert len(suggestions) == 10
     correct_sugg = True
     for i in range(len(suggestions)):
         if suggestions[i].video == centered_pair_predictions.videos[1]:
             correct_sugg = False
             break
-        elif suggestions[i].frame_idx < 500 or suggestions[i].frame_idx > 599:
+        elif suggestions[i].frame_idx < 500 or suggestions[i].frame_idx > 509:
             correct_sugg = False
             break
     assert correct_sugg
