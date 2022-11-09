@@ -310,16 +310,12 @@ class MainWindow(QMainWindow):
             else:
                 self.state["frame_idx"] = 0
 
-        def update_video(video):
-            # Update video after switching video
-            self.on_data_update([UpdateTopic.video])
-
         self.state.connect(
             "video",
             callbacks=[
                 switch_frame,
                 lambda x: self._update_seekbar_marks(),
-                update_video,
+                lambda x: self.on_data_update([UpdateTopic.video]),
             ],
         )
 

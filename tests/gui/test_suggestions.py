@@ -180,21 +180,20 @@ def test_video_selection(
     for i in range(len(suggestions)):
         assert suggestions[i].video == centered_pair_predictions.videos[1]
 
-    # Testing suggestion generation from frame chunk targeting all videos and frame to exceeding one video
-    centered_pair_predictions_copy = centered_pair_predictions
+    # Testing suggestion generation from frame chunk targeting all videos
     # Clear existing suggestions so that generated suggestions will be kept intact at the uniqueness check step
-    centered_pair_predictions_copy.suggestions.clear()
+    centered_pair_predictions.clear_suggestions()
     suggestions = VideoFrameSuggestions.suggest(
-        labels=centered_pair_predictions_copy,
+        labels=centered_pair_predictions,
         params={
-            "videos": centered_pair_predictions_copy.videos,
+            "videos": centered_pair_predictions.videos,
             "method": "frame_chunk",
             "frame_from": 1,
-            "frame_to": 1000,
+            "frame_to": 20,
         },
     )
-    # Verify that frame 1-1000 of video 0 and 1-3 of video 1 are selected
-    assert len(suggestions) == 1003
+    # Verify that frame 1-20 of video 0 and 1-3 of video 1 are selected
+    assert len(suggestions) == 23
 
     correct_sugg = True
     for i in range(len(suggestions)):
@@ -206,7 +205,7 @@ def test_video_selection(
             break
         elif (
             suggestions[i].video == centered_pair_predictions.videos[0]
-            and suggestions[i].frame_idx > 999
+            and suggestions[i].frame_idx > 19
         ):
             correct_sugg = False
             break
