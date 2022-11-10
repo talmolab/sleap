@@ -1,5 +1,5 @@
 import pandas as pd
-from sleap.gui.web import ReleaseChecker, Release
+from sleap.gui.web import ReleaseChecker, Release, get_analytics_data, ping_analytics
 import pytest
 
 
@@ -70,3 +70,8 @@ def test_release_checker():
     assert len(checker.releases) == 2
     assert checker.releases[0] != rls_test
     assert checker.releases[1] != rls_test
+
+
+def test_get_analytics_data():
+    analytics_data = get_analytics_data()
+    assert "platform" in analytics_data

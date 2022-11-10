@@ -4,7 +4,7 @@ from sleap.gui.commands import *
 
 
 def test_grid_system_midpoint_gui(qtbot, midpoint_grid_labels):
-    app = MainWindow()
+    app = MainWindow(no_usage_data=True)
     app.loadLabelsObject(midpoint_grid_labels)
 
     assert len(app.state["labeled_frame"]) == 1
@@ -40,7 +40,7 @@ def test_grid_system_midpoint_gui(qtbot, midpoint_grid_labels):
 
 
 def test_grid_system_legacy_gui(qtbot, legacy_grid_labels):
-    app = MainWindow()
+    app = MainWindow(no_usage_data=True)
     app.loadLabelsObject(legacy_grid_labels)
 
     assert len(app.state["labeled_frame"]) == 1
