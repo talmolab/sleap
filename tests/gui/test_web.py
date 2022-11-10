@@ -1,5 +1,5 @@
 import pandas as pd
-from sleap.gui.release_checker import ReleaseChecker, Release
+from sleap.gui.web import ReleaseChecker, Release
 import pytest
 
 

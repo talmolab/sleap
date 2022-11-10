@@ -91,7 +91,7 @@ from sleap.gui.state import GuiState
 from sleap.gui.overlays.tracks import TrackTrailOverlay, TrackListOverlay
 from sleap.gui.color import ColorManager
 from sleap.gui.overlays.instance import InstanceOverlay
-from sleap.gui.release_checker import ReleaseChecker
+from sleap.gui.web import ReleaseChecker, ping_analytics
 
 from sleap.prefs import prefs
 
