@@ -50,6 +50,7 @@ import re
 import os
 import random
 import platform
+import requests
 from pathlib import Path
 
 from typing import Callable, List, Optional, Tuple
@@ -90,7 +91,7 @@ from sleap.gui.state import GuiState
 from sleap.gui.overlays.tracks import TrackTrailOverlay, TrackListOverlay
 from sleap.gui.color import ColorManager
 from sleap.gui.overlays.instance import InstanceOverlay
-from sleap.gui.release_checker import ReleaseChecker
+from sleap.gui.web import ReleaseChecker, ping_analytics
 
 from sleap.prefs import prefs
 
@@ -109,13 +110,20 @@ class MainWindow(QMainWindow):
     """
 
     def __init__(
-        self, labels_path: Optional[str] = None, reset: bool = False, *args, **kwargs
+        self,
+        labels_path: Optional[str] = None,
+        reset: bool = False,
+        no_usage_data: bool = False,
+        *args,
+        **kwargs,
     ):
         """Initialize the app.
 
         Args:
             labels_path: Path to saved :class:`Labels` dataset.
             reset: If `True`, reset preferences to default (including window state).
+            no_usage_data: If `True`, launch GUI without sharing usage data regardless
+                of stored preferences.
         """
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setAcceptDrops(True)
@@ -151,11 +159,17 @@ class MainWindow(QMainWindow):
         self.state["marker size"] = prefs["marker size"]
         self.state["propagate track labels"] = prefs["propagate track labels"]
         self.state["node label size"] = prefs["node label size"]
+        self.state["share usage data"] = prefs["share usage data"]
+        if no_usage_data:
+            self.state["share usage data"] = False
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
         self.state.connect("show non-visible nodes", self.plotFrame)
 
         self.release_checker = ReleaseChecker()
+
+        if self.state["share usage data"]:
+            ping_analytics()
 
         self._initialize_gui()
 
@@ -204,6 +218,7 @@ class MainWindow(QMainWindow):
         prefs["edge style"] = self.state["edge style"]
         prefs["propagate track labels"] = self.state["propagate track labels"]
         prefs["color predicted"] = self.state["color predicted"]
+        prefs["share usage data"] = self.state["share usage data"]
 
         # Save preferences.
         prefs.save()
@@ -884,6 +899,14 @@ class MainWindow(QMainWindow):
         )
         self.state["prerelease_version_menu"].setEnabled(False)
         self.commands.checkForUpdates()
+
+        helpMenu.addSeparator()
+        usageMenu = helpMenu.addMenu("Improve SLEAP")
+        add_menu_check_item(usageMenu, "share usage data", "Share usage data")
+        usageMenu.addAction(
+            "What is usage data?",
+            lambda: self.commands.openWebsite("https://sleap.ai/help.html#usage-data"),
+        )
 
         helpMenu.addSeparator()
         helpMenu.addAction("Keyboard Shortcuts", self._show_keyboard_shortcuts_window)
@@ -1795,6 +1818,13 @@ def main(args: Optional[list] = None):
         const=True,
         default=False,
     )
+    parser.add_argument(
+        "--no-usage-data",
+        help=("Launch the GUI without sharing usage data regardless of preferences."),
+        action="store_const",
+        const=True,
+        default=False,
+    )
 
     args = parser.parse_args(args)
 
@@ -1811,7 +1841,9 @@ def main(args: Optional[list] = None):
     app.setApplicationName(f"SLEAP v{sleap.version.__version__}")
     app.setWindowIcon(QtGui.QIcon(sleap.util.get_package_file("sleap/gui/icon.png")))
 
-    window = MainWindow(labels_path=args.labels_path, reset=args.reset)
+    window = MainWindow(
+        labels_path=args.labels_path, reset=args.reset, no_usage_data=args.no_usage_data
+    )
     window.showMaximized()
 
     # Disable GPU in GUI process. This does not affect subprocesses.
@@ -1830,3 +1862,5 @@ def main(args: Optional[list] = None):
         cProfile.runctx("app.exec_()", globals=globals(), locals=locals())
     else:
         app.exec_()
+
+    pass
