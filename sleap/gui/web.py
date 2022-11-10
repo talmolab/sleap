@@ -7,8 +7,7 @@ from typing import List, Dict, Any
 
 
 REPO_ID = "talmolab/sleap"
-ANALYTICS_ENDPOINT = "https://sleap-analytics-service-qy4sufk6na-uw.a.run.app/ping"
-# ANALYTICS_ENDPOINT = "https://analytics.sleap.ai/ping"
+ANALYTICS_ENDPOINT = "https://analytics.sleap.ai/ping"
 
 
 @attr.s(auto_attribs=True)
