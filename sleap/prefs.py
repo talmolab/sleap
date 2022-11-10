@@ -26,7 +26,7 @@ class Preferences(object):
         "window state": b"",
         "node label size": 12,
         "show non-visible nodes": True,
-        "share system info": True,
+        "share usage data": True,
     }
     _filename = "preferences.yaml"
 
