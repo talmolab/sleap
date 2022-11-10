@@ -50,6 +50,7 @@ import re
 import os
 import random
 import platform
+import requests
 from pathlib import Path
 
 from typing import Callable, List, Optional, Tuple
@@ -151,6 +152,7 @@ class MainWindow(QMainWindow):
         self.state["marker size"] = prefs["marker size"]
         self.state["propagate track labels"] = prefs["propagate track labels"]
         self.state["node label size"] = prefs["node label size"]
+        self.state["share system info"] = prefs["share system info"]
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
         self.state.connect("show non-visible nodes", self.plotFrame)
@@ -453,6 +455,7 @@ class MainWindow(QMainWindow):
         add_menu_item(fileMenu, "export_nwb", "Export NWB...", self.commands.exportNWB)
 
         fileMenu.addSeparator()
+        add_menu_check_item(fileMenu, "share system info", "Share system info...")
         add_menu_item(
             fileMenu, "reset prefs", "Reset preferences to defaults...", self.resetPrefs
         )
@@ -1824,9 +1827,26 @@ def main(args: Optional[list] = None):
     print()
     print("Happy SLEAPing! :)")
 
+    # Ping website for non-tracking user statistics.
+    try:
+        # TODO(LM): Change to correct address
+        response = requests.get(f"https://talmolab.org/")
+    except (requests.ConnectionError, requests.Timeout):
+        pass
+
     if args.profiling:
         import cProfile
 
         cProfile.runctx("app.exec_()", globals=globals(), locals=locals())
     else:
         app.exec_()
+
+    pass
+
+
+if __name__ == "__main__":
+    import os
+
+    ds = os.environ["ds-dmc"]
+    main([ds])
+    pass
