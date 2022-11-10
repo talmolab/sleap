@@ -8,7 +8,7 @@ from sleap.gui.commands import *
 def test_app_workflow(
     qtbot, centered_pair_vid, small_robot_mp4_vid, min_tracks_2node_labels: Labels
 ):
-    app = MainWindow()
+    app = MainWindow(no_usage_data=True)
 
     # Add nodes
     app.commands.newNode()
@@ -316,7 +316,7 @@ def test_app_workflow(
 def test_app_new_window(qtbot):
     app = QApplication.instance()
     app.closeAllWindows()
-    win = MainWindow()
+    win = MainWindow(no_usage_data=True)
 
     assert win.commands.has_any_changes == False
     assert win.state["project_loaded"] == False
@@ -348,7 +348,7 @@ def test_app_new_window(qtbot):
     )
     assert wins == (start_wins + 1)
 
-    new_win = MainWindow()
+    new_win = MainWindow(no_usage_data=True)
 
     wins = sum(
         (1 for widget in app.topLevelWidgets() if isinstance(widget, MainWindow))
@@ -399,7 +399,7 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
     # Test hide instances menu action (and its effect on instance color)
 
     # Instantiate the window and load labels
-    window: MainWindow = MainWindow()
+    window: MainWindow = MainWindow(no_usage_data=True)
     window.loadLabelsObject(centered_pair_predictions)
     # TODO: window does not seem to show as expected on ubuntu
     with qtbot.waitActive(window, timeout=2000):
