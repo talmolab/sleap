@@ -318,15 +318,30 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.player)
 
         def switch_frame(video):
-            # Jump to last labeled frame
+            """Jump to last labeled frame"""
             last_label = self.labels.find_last(video)
             if last_label is not None:
                 self.state["frame_idx"] = last_label.frame_idx
             else:
                 self.state["frame_idx"] = 0
 
+        def update_frame_chunk_suggestions(video):
+            """Set upper limit of frame_chunk spinbox to number frames in video."""
+            method_layout = self.suggestions_form_widget.form_layout.fields["method"]
+            frame_chunk_layout = method_layout.page_layouts["frame chunk"]
+            frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
+            frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
+            if video is not None:
+                frame_to_spinbox.setMaximum(video.num_frames)
+                frame_from_spinbox.setMaximum(video.num_frames)
+
         self.state.connect(
-            "video", callbacks=[switch_frame, lambda x: self._update_seekbar_marks()]
+            "video",
+            callbacks=[
+                switch_frame,
+                lambda x: self._update_seekbar_marks(),
+                update_frame_chunk_suggestions,
+            ],
         )
 
     def _create_color_manager(self):

@@ -74,21 +74,45 @@ def test_app_workflow(
 
     app.state["video"] = centered_pair_vid
 
+    # Prepare to check suggestion ui update upon video state change
+    def assert_frame_chunk_suggestion_ui_updated(
+        app, frame_to_spinbox, frame_from_spinbox
+    ):
+        assert frame_to_spinbox.maximum() == app.state["video"].num_frames
+        assert frame_from_spinbox.maximum() == app.state["video"].num_frames
+
+    method_layout = app.suggestions_form_widget.form_layout.fields["method"]
+    frame_chunk_layout = method_layout.page_layouts["frame chunk"]
+    frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
+    frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
+
+    # Verify the max of frame_chunk spinboxes is updated
+    assert_frame_chunk_suggestion_ui_updated(app, frame_to_spinbox, frame_from_spinbox)
+
     # Activate video using table
     app.videosTable.selectRowItem(small_robot_mp4_vid)
     app.videosTable.activateSelected()
 
     assert app.state["video"] == small_robot_mp4_vid
 
+    # Verify the max of frame_to in frame_chunk is updated
+    assert_frame_chunk_suggestion_ui_updated(app, frame_to_spinbox, frame_from_spinbox)
+
     # Select remaining video
     app.videosTable.selectRowItem(small_robot_mp4_vid)
     assert app.state["selected_video"] == small_robot_mp4_vid
+
+    # Verify the max of frame_to in frame_chunk is updated
+    assert_frame_chunk_suggestion_ui_updated(app, frame_to_spinbox, frame_from_spinbox)
 
     # Delete selected video
     app.commands.removeVideo()
 
     assert len(app.labels.videos) == 1
     assert app.state["video"] == centered_pair_vid
+
+    # Verify the max of frame_to in frame_chunk is updated
+    assert_frame_chunk_suggestion_ui_updated(app, frame_to_spinbox, frame_from_spinbox)
 
     # Add instances
     app.state["frame_idx"] = 27
