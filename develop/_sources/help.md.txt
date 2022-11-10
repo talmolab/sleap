@@ -85,7 +85,10 @@ Feel free to reach out to us at `talmo@salk.edu` if you have a question that isn
 ### How can I help improve SLEAP?
 
 - Tell your friends about SLEAP! We also love to hear stories about what worked or didn't work, or your experience if you came from other software tools (`talmo@salk.edu`).
+
 - [Cite our paper](https://www.nature.com/articles/s41592-022-01426-1)! Here's a BibTeX citation for your reference manager:
+
+   ```
     @ARTICLE{Pereira2022sleap,
         title={SLEAP: A deep learning system for multi-animal pose tracking},
         author={Pereira, Talmo D and
@@ -116,7 +119,10 @@ Feel free to reach out to us at `talmo@salk.edu` if you have a question that isn
         publisher={Nature Publishing Group}
         }
     }
+   ```
+
 - Share new ideas for new features or improvements in the [Discussion forum](https://github.com/talmolab/sleap/discussions/categories/ideas).
+
 - Contribute some code! See our [contribution guidelines](https://sleap.ai/CONTRIBUTING.html) for more info.
 
 
