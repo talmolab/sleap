@@ -45,7 +45,6 @@ class Preferences(object):
             if not hasattr(self._prefs, "get"):
                 self._prefs = self._defaults
         except FileNotFoundError:
-            # TODO (LM): Add warning/message to ask permission for system info
             self._prefs = self._defaults
 
     def save(self):
