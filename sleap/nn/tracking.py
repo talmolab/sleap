@@ -98,13 +98,31 @@ class MatchedShiftedFrameInstances:
 
 @attr.s(auto_attribs=True)
 class FlowCandidateMaker:
-    """Class for producing optical flow shift matching candidates."""
+    """Class for producing optical flow shift matching candidates.
+
+    Attributes:
+        min_points: Minimum number of points that must be detected in the new frame in
+            order to generate a new shifted instance.
+        img_scale: Factor to scale the images by when computing optical flow. Decrease
+            this to increase performance at the cost of finer accuracy. Sometimes
+            decreasing the image scale can improve performance with fast movements.
+        of_window_size: Optical flow window size to consider at each pyramid scale
+            level.
+        of_max_levels: Number of pyramid scale levels to consider. This is different
+            from the scale parameter, which determines the initial image scaling.
+        save_shifted_instances: If True, save the shifted instances between elapsed
+            frames.
+        track_window: How many frames back to look for candidate instances to match
+            instances in the current frame against.
+
+    """
 
     min_points: int = 0
     img_scale: float = 1.0
     of_window_size: int = 21
     of_max_levels: int = 3
     save_shifted_instances: bool = False
+    track_window: int = 5
 
     shifted_instances: Dict[
         Tuple[int, int], List[ShiftedInstance]  # keyed by (src_t, dst_t)
@@ -121,6 +139,10 @@ class FlowCandidateMaker:
         img: np.ndarray,
     ) -> List[ShiftedInstance]:
         candidate_instances = []
+
+        # Prune old shifted instances to save time and memory
+        self.prune_shifted_instances(t)
+
         for matched_item in track_matching_queue:
             ref_t, ref_img, ref_instances = (
                 matched_item.t,
@@ -128,17 +150,18 @@ class FlowCandidateMaker:
                 matched_item.instances_t,
             )
 
-            if len(ref_instances) > 0:
-                # Check if shifted instance was computed at earlier time
-                if self.save_shifted_instances:
-                    for ti in reversed(range(ref_t, t)):
-                        if (ref_t, ti) in self.shifted_instances:
-                            ref_shifted_instances = self.shifted_instances[(ref_t, ti)]
-                            # Use shifted instance as a reference
+            # Check if shifted instance was computed at earlier time
+            if self.save_shifted_instances:
+                for ti in reversed(range(ref_t, t)):
+                    if (ref_t, ti) in self.shifted_instances:
+                        ref_shifted_instances = self.shifted_instances[(ref_t, ti)]
+                        # Use shifted instance as a reference
+                        if len(ref_shifted_instances.instances_t) > 0:
                             ref_img = ref_shifted_instances.img_t
                             ref_instances = ref_shifted_instances.instances_t
                             break
 
+            if len(ref_instances) > 0:
                 # Flow shift reference instances to current frame.
                 shifted_instances = self.flow_shift_instances(
                     ref_instances,
@@ -163,6 +186,25 @@ class FlowCandidateMaker:
                     )
 
         return candidate_instances
+
+    def prune_shifted_instances(self, t: int):
+        """Prune the shifted instances older than `self.track_window`.
+
+        If `self.save_shifted_instances` is False, do nothing.
+
+        Args
+            t: reference instances from a frame number more than `self.track_window` before
+                the current frame `t` will be pruned from the `self.shifted_instances` dict.
+
+        """
+        if not self.save_shifted_instances:
+            return
+        # Find ref_t older than track_window
+        shifted_instances_keys = list(self.shifted_instances.keys())
+        for k in shifted_instances_keys:
+            if t - k[0] > self.track_window:
+                # Delete old items
+                del self.shifted_instances[k]
 
     @staticmethod
     def flow_shift_instances(
@@ -311,6 +353,8 @@ match_policies = dict(
 
 @attr.s(auto_attribs=True)
 class BaseTracker(abc.ABC):
+    """Abstract base class for tracker."""
+
     @property
     def is_valid(self):
         return False
@@ -340,8 +384,7 @@ class BaseTracker(abc.ABC):
 
 @attr.s(auto_attribs=True)
 class Tracker(BaseTracker):
-    """
-    Instance pose tracker.
+    """Instance pose tracker.
 
     Use by instantiated with the desired parameters and then calling the
     `track` method for each frame.
@@ -600,6 +643,7 @@ class Tracker(BaseTracker):
             candidate_maker.of_window_size = of_window_size
             candidate_maker.of_max_levels = of_max_levels
             candidate_maker.save_shifted_instances = save_shifted_instances
+            candidate_maker.track_window = track_window
 
         cleaner = None
         if clean_instance_count:
