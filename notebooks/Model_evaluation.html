@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Model evaluation &#8212; SLEAP (v1.2.8)</title>
+    <title>Model evaluation &#8212; SLEAP (v1.2.9)</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -90,7 +90,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.8)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.9)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -474,7 +474,7 @@ title="Open an issue"
 <li><p><code class="docutils literal notranslate"><span class="pre">best_model.h5</span></code>: The actual saved model and weights. This can be loaded with <code class="docutils literal notranslate"><span class="pre">tf.keras.model.load_model()</span></code> but it is recommended to use <code class="docutils literal notranslate"><span class="pre">sleap.load_model()</span></code> instead as it takes care of adding some additional inference-only procedures.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">training_config.json</span></code>: The configuration for the model training job, including metadata inferred during the training procedure. It can be loaded with <code class="docutils literal notranslate"><span class="pre">sleap.load_config()</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">labels_gt.train.slp</span></code> and <code class="docutils literal notranslate"><span class="pre">labels_pr.train.slp</span></code>: These are SLEAP labels files containing the ground truth and predicted points for the training split. They do not contain the images, but can be used to retrieve the poses used.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">labels_gt.train.slp</span></code> and <code class="docutils literal notranslate"><span class="pre">labels_pr.train.slp</span></code>: These are SLEAP labels files containing the ground truth and predicted points for the validation split. They do not contain the images, but can be used to retrieve the poses used.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">labels_gt.val.slp</span></code> and <code class="docutils literal notranslate"><span class="pre">labels_pr.val.slp</span></code>: These are SLEAP labels files containing the ground truth and predicted points for the validation split. They do not contain the images, but can be used to retrieve the poses used.</p></li>
 </ul>
 <div class="cell docutils container">
 <div class="cell_input docutils container">

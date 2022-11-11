@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>sleap.nn.system &#8212; SLEAP (v1.2.8)</title>
+    <title>sleap.nn.system &#8212; SLEAP (v1.2.9)</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -88,7 +88,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.8)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.2.9)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -422,7 +422,7 @@ title="Open an issue"
 environment by wrapping <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.config</span></code> module functions.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.system.best_logical_device_name">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">best_logical_device_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.8/sleap/nn/system.py#L169-L186"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.best_logical_device_name" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">best_logical_device_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/system.py#L169-L186"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.best_logical_device_name" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the name of the best logical device for performance.</p>
 <p>This is particularly useful to use with <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.device()</span></code> for explicit tensor placement.</p>
 <dl class="field-list simple">
@@ -438,7 +438,7 @@ environment by wrapping <code class="xref py py-obj docutils literal notranslate
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.system.disable_preallocation">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">disable_preallocation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.8/sleap/nn/system.py#L113-L125"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.disable_preallocation" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">disable_preallocation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/system.py#L113-L125"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.disable_preallocation" title="Permalink to this definition">#</a></dt>
 <dd><p>Disable preallocation of full GPU memory on all available GPUs.</p>
 <p>This enables memory growth policy so that TensorFlow will not pre-allocate all
 available GPU memory.</p>
@@ -449,7 +449,7 @@ memory is not available (e.g., shared, multi-session and some <a href="#id1"><sp
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.system.enable_preallocation">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">enable_preallocation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.8/sleap/nn/system.py#L128-L140"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.enable_preallocation" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">enable_preallocation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/system.py#L128-L140"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.enable_preallocation" title="Permalink to this definition">#</a></dt>
 <dd><p>Enable preallocation of full GPU memory on all available GPUs.</p>
 <p>This disables memory growth policy so that TensorFlow will pre-allocate all
 available GPU memory.</p>
@@ -460,19 +460,19 @@ memory is not available (e.g., shared, multi-session and some <a href="#id3"><sp
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.system.get_all_gpus">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">get_all_gpus</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.eager.context.PhysicalDevice</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.8/sleap/nn/system.py#L12-L14"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.get_all_gpus" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">get_all_gpus</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.eager.context.PhysicalDevice</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/system.py#L12-L14"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.get_all_gpus" title="Permalink to this definition">#</a></dt>
 <dd><p>Return a list of GPUs including unavailable devices.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.system.get_available_gpus">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">get_available_gpus</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.eager.context.PhysicalDevice</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.8/sleap/nn/system.py#L22-L24"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.get_available_gpus" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">get_available_gpus</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.eager.context.PhysicalDevice</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/system.py#L22-L24"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.get_available_gpus" title="Permalink to this definition">#</a></dt>
 <dd><p>Return a list of available GPUs.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.system.get_current_gpu">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">get_current_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.eager.context.PhysicalDevice</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.8/sleap/nn/system.py#L27-L44"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.get_current_gpu" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">get_current_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.eager.context.PhysicalDevice</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/system.py#L27-L44"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.get_current_gpu" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the current (single) GPU device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -488,7 +488,7 @@ memory is not available (e.g., shared, multi-session and some <a href="#id3"><sp
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.system.get_gpu_memory">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">get_gpu_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.8/sleap/nn/system.py#L189-L226"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.get_gpu_memory" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">get_gpu_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/system.py#L189-L226"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.get_gpu_memory" title="Permalink to this definition">#</a></dt>
 <dd><p>Return list of available GPU memory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -504,20 +504,20 @@ in the <code class="xref py py-obj docutils literal notranslate"><span class="pr
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.system.initialize_devices">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">initialize_devices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.8/sleap/nn/system.py#L143-L148"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.initialize_devices" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">initialize_devices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/system.py#L143-L148"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.initialize_devices" title="Permalink to this definition">#</a></dt>
 <dd><p>Initialize available physical devices as logical devices.</p>
 <p>If preallocation was enabled on the GPUs, this will trigger memory allocation.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.system.is_gpu_system">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">is_gpu_system</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.8/sleap/nn/system.py#L17-L19"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.is_gpu_system" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">is_gpu_system</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/system.py#L17-L19"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.is_gpu_system" title="Permalink to this definition">#</a></dt>
 <dd><p>Return True if the system has discoverable GPUs.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.system.is_initialized">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">is_initialized</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gpu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.eager.context.PhysicalDevice</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.8/sleap/nn/system.py#L72-L110"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.is_initialized" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">is_initialized</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gpu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.eager.context.PhysicalDevice</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/system.py#L72-L110"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.is_initialized" title="Permalink to this definition">#</a></dt>
 <dd><p>Check if a physical GPU has been initialized without triggering initialization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -540,25 +540,25 @@ modifying the system state.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.system.summary">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.8/sleap/nn/system.py#L151-L166"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.summary" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/system.py#L151-L166"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.summary" title="Permalink to this definition">#</a></dt>
 <dd><p>Print a summary of the state of the system.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.system.use_cpu_only">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">use_cpu_only</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.8/sleap/nn/system.py#L47-L49"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.use_cpu_only" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">use_cpu_only</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/system.py#L47-L49"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.use_cpu_only" title="Permalink to this definition">#</a></dt>
 <dd><p>Hide GPUs from TensorFlow to ensure only the CPU is available.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.system.use_first_gpu">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">use_first_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.8/sleap/nn/system.py#L62-L64"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.use_first_gpu" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">use_first_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/system.py#L62-L64"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.use_first_gpu" title="Permalink to this definition">#</a></dt>
 <dd><p>Make only the first GPU available to TensorFlow.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.system.use_gpu">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">use_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device_ind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.8/sleap/nn/system.py#L52-L59"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.use_gpu" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">use_gpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device_ind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/system.py#L52-L59"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.use_gpu" title="Permalink to this definition">#</a></dt>
 <dd><p>Make a single GPU available to TensorFlow.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -569,7 +569,7 @@ modifying the system state.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.system.use_last_gpu">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">use_last_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.8/sleap/nn/system.py#L67-L69"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.use_last_gpu" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.system.</span></span><span class="sig-name descname"><span class="pre">use_last_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/system.py#L67-L69"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.system.use_last_gpu" title="Permalink to this definition">#</a></dt>
 <dd><p>Make only the last GPU available to TensorFlow.</p>
 </dd></dl>
 
