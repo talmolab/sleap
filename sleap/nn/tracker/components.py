@@ -14,7 +14,7 @@ Main types of functions:
 """
 import operator
 from collections import defaultdict
-from typing import List, Tuple, Optional, TypeVar, Callable
+from typing import List, Tuple, Union, Optional, TypeVar, Callable
 
 import attr
 import numpy as np
@@ -41,32 +41,34 @@ def instance_similarity(
 
 
 def factory_object_keypoint_similarity(
-    keypoint_errors: Optional[list] = None,
+    keypoint_errors: Optional[Union[List, int, float]] = None,
     score_weighting: bool = False,
     normalization_keypoints: str = "all",
 ) -> Callable:
     """Factory for similarity function based on object keypoints.
 
     Args:
-        keypoint_errors: Optional[list] = None,
-            the standard error of the distance between the predicted keypoint and
-            the true value, in pixels.
+        keypoint_errors: The standard error of the distance between the predicted
+            keypoint and the true value, in pixels.
             If None or empty list, defaults to 1.
             If a scalar or singleton list, every keypoint has the same error.
-            If a list, defines the error for each keypoint, the length should be
-            equal to the number of keypoints in the skeleton.
+            If a list, defines the error for each keypoint, the length should be equal
+            to the number of keypoints in the skeleton.
+        score_weighting: If True, use `score` of `PredictedPoint` to weigh
+            `keypoint_errors`. If False, do not add a weight to `keypoint_errors`.
+        normalization_keypoints: Determine how to normalize similarity score. One of
+            ["all", "ref", "union"]. If "all", similarity score is normalized by number
+            of reference points. If "ref", similarity score is normalized by number of
+            visible reference points. If "union", similarity score is normalized by
+            number of points both visible in query and reference instance.
+            Default is "all".
 
-        score_weighting: bool = False,
-        normalization_keypoints: str = "all"
-            one of ["all", "ref", "union"]
-            Default to "all"
+    Returns:
+        Callable that returns object keypoint similarity between two `Instance`s.
 
     """
-    if not keypoint_errors:
-        # Default to 1 pixel error
-        kp_precision = np.array(0.5)
-    else:
-        kp_precision = 1 / (2 * np.array(keypoint_errors) ** 2)
+    keypoint_errors = 1 if keypoint_errors is None else keypoint_errors
+    kp_precision = 1 / (2 * np.array(keypoint_errors) ** 2)
 
     def object_keypoint_similarity(
         ref_instance: InstanceType, query_instance: InstanceType

@@ -261,7 +261,7 @@ inference:
       label: Similarity Method
       type: list
       default: instance
-      options: instance,centroid,iou,object_keypoint
+      options: "instance,centroid,iou,object keypoint"
     - name: tracking.match
       label: Matching Method
       type: list
@@ -300,7 +300,7 @@ inference:
       the same error. Otherwise, the length should be the same as the number of
       keypoints in the skeleton.'
       type: string
-      default:
+      default: 1
     - name: tracking.oks_score_weighting
       label: Use prediction score for weighting
       help: 'Use prediction scores to weight the similarity of each keypoint'
@@ -339,7 +339,7 @@ inference:
       label: Similarity Method
       type: list
       default: iou
-      options: instance,centroid,iou,object_keypoint
+      options: "instance,centroid,iou,object keypoint"
     - name: tracking.match
       label: Matching Method
       type: list
@@ -374,7 +374,7 @@ inference:
       the same error. Otherwise, the length should be the same as the number of
       keypoints in the skeleton.'
       type: string
-      default:
+      default: 1
     - name: tracking.oks_score_weighting
       label: Use prediction score for weighting
       help: 'Use prediction scores to weight the similarity of each keypoint'

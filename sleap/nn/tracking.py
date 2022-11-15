@@ -778,7 +778,7 @@ class Tracker(BaseTracker):
         def float_list_func(s):
             return [float(x.strip()) for x in s.split(",")] if s else None
 
-        option = dict(name="oks_errors", default="")
+        option = dict(name="oks_errors", default="1")
         option["type"] = float_list_func
         option["help"] = (
             "For Object Keypoint similarity: the standard error of the distance "
