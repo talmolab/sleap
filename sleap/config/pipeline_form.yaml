@@ -261,7 +261,7 @@ inference:
       label: Similarity Method
       type: list
       default: instance
-      options: "instance,centroid,iou,object keypoint"
+      options: instance,centroid,iou,object_keypoint
     - name: tracking.match
       label: Matching Method
       type: list
@@ -339,7 +339,7 @@ inference:
       label: Similarity Method
       type: list
       default: iou
-      options: "instance,centroid,iou,object keypoint"
+      options: instance,centroid,iou,object_keypoint
     - name: tracking.match
       label: Matching Method
       type: list
