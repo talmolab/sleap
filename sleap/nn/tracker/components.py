@@ -14,6 +14,7 @@ Main types of functions:
 """
 import operator
 from collections import defaultdict
+import logging
 from typing import List, Tuple, Union, Optional, TypeVar, Callable
 
 import attr
@@ -22,6 +23,8 @@ from scipy.optimize import linear_sum_assignment
 
 from sleap import PredictedInstance, Instance, Track
 from sleap.nn import utils
+
+logger = logging.getLogger(__name__)
 
 InstanceType = TypeVar("InstanceType", Instance, PredictedInstance)
 
@@ -73,6 +76,7 @@ def factory_object_keypoint_similarity(
     def object_keypoint_similarity(
         ref_instance: InstanceType, query_instance: InstanceType
     ) -> float:
+        nonlocal kp_precision
         # Keypoints
         ref_points = ref_instance.points_array
         query_points = query_instance.points_array
@@ -96,13 +100,26 @@ def factory_object_keypoint_similarity(
         if max_n_keypoints == 0:
             return 0
 
-        # Compute distances
+        # Make sure the sizes of kp_precision and n_points match
         if kp_precision.size > 1 and 2 * kp_precision.size != ref_points.size:
+            # Correct kp_precision size to fit number of points
+            n_points = ref_points.size // 2
             mess = (
                 "keypoint_errors array should have the same size as the number of "
-                f"keypoints in the instance: {kp_precision.size} != {ref_points.size // 2}"
+                f"keypoints in the instance: {kp_precision.size} != {n_points}"
             )
-            raise ValueError(mess)
+
+            if kp_precision.size > n_points:
+                kp_precision = kp_precision[:n_points]
+                mess += "\nTruncating keypoint_errors array."
+
+            else:  # elif kp_precision.size < n_points:
+                pad = n_points - kp_precision.size
+                kp_precision = np.pad(kp_precision, (0, pad), "edge")
+                mess += "\nPadding keypoint_errors array by repeating the last value."
+            logger.warning(mess)
+
+        # Compute distances
         dists = np.sum((query_points - ref_points) ** 2, axis=1) * kp_precision
 
         similarity = (
