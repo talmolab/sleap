@@ -577,6 +577,7 @@ class Tracker(BaseTracker):
         # Object keypoint similarity options
         oks_errors: Optional[list] = None,
         oks_score_weighting: bool = False,
+        oks_normalization: str = "all",
         **kwargs,
     ) -> BaseTracker:
 
@@ -601,7 +602,7 @@ class Tracker(BaseTracker):
                 similarity_function = factory_object_keypoint_similarity(
                     keypoint_errors=oks_errors,
                     score_weighting=oks_score_weighting,
-                    normalization_keypoints="all",
+                    normalization_keypoints=oks_normalization,
                 )
             else:
                 similarity_function = similarity_policies[similarity]
@@ -796,6 +797,18 @@ class Tracker(BaseTracker):
             "For Object Keypoint similarity: if 0 (default), only the distance between the reference "
             "and query keypoint is used to compute the similarity. If 1, each distance is weighted "
             "by the prediction scores of the reference and query keypoint."
+        )
+        options.append(option)
+
+        option = dict(name="oks_normalization", default="all")
+        option["type"] = str
+        option["options"] = ["all", "ref", "union"]
+        option["help"] = (
+            "For Object Keypoint similarity: Determine how to normalize similarity score. "
+            "If 'all', similarity score is normalized by number of reference points. "
+            "If 'ref', similarity score is normalized by number of visible reference points. "
+            "If 'union', similarity score is normalized by number of points both visible "
+            "in query and reference instance."
         )
         options.append(option)
 
