@@ -422,43 +422,37 @@ class LearningDialog(QtWidgets.QDialog):
 
         for tab_name in self.shown_tab_names:
             trained_cfg_info = self.tabs[tab_name].trained_config_info_to_use
-            if trained_cfg_info:
-                trained_cfg_info.dont_retrain = trained_cfg_info
+            if self.tabs[tab_name].use_trained and (trained_cfg_info is not None):
                 cfg_info_list.append(trained_cfg_info)
 
             else:
+                # Get config data from GUI
                 tab_cfg_key_val_dict = self.tabs[tab_name].get_all_form_data()
-                scopedkeydict.apply_cfg_transforms_to_key_val_dict(tab_cfg_key_val_dict)
-
-                # TODO(LM): Check no config selected in drop-sown does not result in error
-                # Load training config info and use parameters from config that aren't shown in GUI
-                loaded_cfg_info: configs.ConfigFileInfo = self.tabs[
-                    tab_name
-                ]._cfg_list_widget.getSelectedConfigInfo()
-                loaded_cfg: configs.TrainingJobConfig = loaded_cfg_info.config
-
-                # Set outputs run names s.t. previous model is not overwritten
-                loaded_cfg.outputs.run_name = None
-                loaded_cfg.outputs.run_name_prefix = ""
-                loaded_cfg.outputs.run_name_suffix = None
-
-                # Serialize and flatten training config
-                loaded_cfg_heirarchical: dict = cattr.unstructure(loaded_cfg)
-                loaded_cfg_scoped: scopedkeydict.ScopedKeyDict = (
-                    scopedkeydict.ScopedKeyDict.from_hierarchical_dict(
-                        loaded_cfg_heirarchical
-                    )
-                )
-
-                # Replace params exposed in GUI with values from GUI
-                for param, value in tab_cfg_key_val_dict.items():
-                    loaded_cfg_scoped.key_val_dict[param] = value
-
                 self.merge_pipeline_and_head_config_data(
                     head_name=tab_name,
                     head_data=tab_cfg_key_val_dict,
                     pipeline_data=pipeline_form_data,
                 )
+                scopedkeydict.apply_cfg_transforms_to_key_val_dict(tab_cfg_key_val_dict)
+
+                if trained_cfg_info is None:
+                    # Config could not be loaded
+                    loaded_cfg_scoped: dict = tab_cfg_key_val_dict
+                else:
+                    # Config loaded
+                    loaded_cfg: configs.TrainingJobConfig = trained_cfg_info.config
+
+                    # Serialize and flatten training config
+                    loaded_cfg_heirarchical: dict = cattr.unstructure(loaded_cfg)
+                    loaded_cfg_scoped: scopedkeydict.ScopedKeyDict = (
+                        scopedkeydict.ScopedKeyDict.from_hierarchical_dict(
+                            loaded_cfg_heirarchical
+                        )
+                    )
+
+                    # Replace params exposed in GUI with values from GUI
+                    for param, value in tab_cfg_key_val_dict.items():
+                        loaded_cfg_scoped.key_val_dict[param] = value
 
                 # Deserialize merged dict to object
                 cfg = scopedkeydict.make_training_config_from_key_val_dict(
@@ -1078,16 +1072,31 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                 break
 
     @property
-    def trained_config_info_to_use(self) -> Optional[configs.ConfigFileInfo]:
+    def use_trained(self) -> bool:
         use_trained = False
         if self._require_trained:
             use_trained = True
         elif self._use_trained_model and self._use_trained_model.isChecked():
             use_trained = True
+        return use_trained
 
-        if use_trained:
-            return self._cfg_list_widget.getSelectedConfigInfo()
-        return None
+    @property
+    def trained_config_info_to_use(self) -> Optional[configs.ConfigFileInfo]:
+        trained_config_info = self._cfg_list_widget.getSelectedConfigInfo()
+        if trained_config_info is None:
+            return None
+
+        if self.use_trained:
+            trained_config_info.dont_retrain = True
+        else:
+            # Set certain parameters to defaults
+            trained_config = trained_config_info.config
+            trained_config.data.labels.skeletons = []
+            trained_config.outputs.run_name = None
+            trained_config.outputs.run_name_prefix = ""
+            trained_config.outputs.run_name_suffix = None
+
+        return trained_config_info
 
     @property
     def has_trained_config_selected(self) -> bool:
