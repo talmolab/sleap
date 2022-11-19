@@ -427,8 +427,32 @@ class LearningDialog(QtWidgets.QDialog):
                 cfg_info_list.append(trained_cfg_info)
 
             else:
-
                 tab_cfg_key_val_dict = self.tabs[tab_name].get_all_form_data()
+                scopedkeydict.apply_cfg_transforms_to_key_val_dict(tab_cfg_key_val_dict)
+
+                # TODO(LM): Check no config selected in drop-sown does not result in error
+                # Load training config info and use parameters from config that aren't shown in GUI
+                loaded_cfg_info: configs.ConfigFileInfo = self.tabs[
+                    tab_name
+                ]._cfg_list_widget.getSelectedConfigInfo()
+                loaded_cfg: configs.TrainingJobConfig = loaded_cfg_info.config
+
+                # Set outputs run names s.t. previous model is not overwritten
+                loaded_cfg.outputs.run_name = None
+                loaded_cfg.outputs.run_name_prefix = ""
+                loaded_cfg.outputs.run_name_suffix = None
+
+                # Serialize and flatten training config
+                loaded_cfg_heirarchical: dict = cattr.unstructure(loaded_cfg)
+                loaded_cfg_scoped: scopedkeydict.ScopedKeyDict = (
+                    scopedkeydict.ScopedKeyDict.from_hierarchical_dict(
+                        loaded_cfg_heirarchical
+                    )
+                )
+
+                # Replace params exposed in GUI with values from GUI
+                for param, value in tab_cfg_key_val_dict.items():
+                    loaded_cfg_scoped.key_val_dict[param] = value
 
                 self.merge_pipeline_and_head_config_data(
                     head_name=tab_name,
@@ -436,8 +460,9 @@ class LearningDialog(QtWidgets.QDialog):
                     pipeline_data=pipeline_form_data,
                 )
 
+                # Deserialize merged dict to object
                 cfg = scopedkeydict.make_training_config_from_key_val_dict(
-                    tab_cfg_key_val_dict
+                    loaded_cfg_scoped
                 )
                 cfg_info = configs.ConfigFileInfo(config=cfg, head_name=tab_name)
 
