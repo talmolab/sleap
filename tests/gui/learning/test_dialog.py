@@ -6,6 +6,7 @@ from sleap.gui.learning.scopedkeydict import (
     ScopedKeyDict,
     apply_cfg_transforms_to_key_val_dict,
 )
+from sleap.gui.app import MainWindow
 
 import pytest
 import cattr
@@ -13,12 +14,14 @@ from pathlib import Path
 from qtpy import QtWidgets
 
 
-def test_use_hidden_params_from_loaded_config(min_labels_slp, min_bottomup_model_path):
+def test_use_hidden_params_from_loaded_config(
+    qtbot, min_labels_slp, min_bottomup_model_path
+):
 
     model_path = Path(min_bottomup_model_path)
 
     # Create a learning dialog
-    app = QtWidgets.QApplication([])
+    app = MainWindow(no_usage_data=True)
     ld = LearningDialog(
         mode="training",
         labels_filename=Path(
