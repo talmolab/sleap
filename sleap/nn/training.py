@@ -166,7 +166,9 @@ class DataReaders:
         """Create data readers from `Labels` datasets as data providers."""
         if isinstance(training, str):
             logger.info(f"Loading training labels from: {training}")
-            training = sleap.load_file(training, search_paths=video_search_paths)
+            training: Labels = sleap.load_file(
+                training, search_paths=video_search_paths
+            )
 
         if labels_config is not None and labels_config.split_by_inds:
             # First try to split by indices if specified in config.
@@ -178,13 +180,13 @@ class DataReaders:
                     "Creating validation split from explicit indices "
                     f"(n = {len(labels_config.validation_inds)})."
                 )
-                validation = Labels(training[labels_config.validation_inds])
+                validation = training.extract(labels_config.validation_inds, copy=False)
             if labels_config.test_inds is not None and len(labels_config.test_inds) > 0:
                 logger.info(
                     "Creating test split from explicit indices "
                     f"(n = {len(labels_config.test_inds)})."
                 )
-                test = Labels(training[labels_config.test_inds])
+                test = training.extract(labels_config.test_inds, copy=False)
 
             if (
                 labels_config.training_inds is not None
@@ -194,7 +196,7 @@ class DataReaders:
                     "Creating training split from explicit indices "
                     f"(n = {len(labels_config.training_inds)})."
                 )
-                training = Labels(training[labels_config.training_inds])
+                training = training.extract(labels_config.training_inds, copy=False)
 
         if isinstance(validation, str):
             # If validation is still a path, load it.
