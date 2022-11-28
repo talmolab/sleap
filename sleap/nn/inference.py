@@ -88,17 +88,6 @@ def get_keras_model_path(path: Text) -> str:
     return os.path.join(path, "best_model.h5")
 
 
-class RateColumn(rich.progress.ProgressColumn):
-    """Renders the progress rate."""
-
-    def render(self, task: "Task") -> rich.progress.Text:
-        """Show progress rate."""
-        speed = task.speed
-        if speed is None:
-            return rich.progress.Text("?", style="progress.data.speed")
-        return rich.progress.Text(f"{speed:.1f} FPS", style="progress.data.speed")
-
-
 @attr.s(auto_attribs=True)
 class Predictor(ABC):
     """Base interface class for predictors."""
@@ -4707,7 +4696,6 @@ def main(args: list = None):
         n_infer = len(frames)
         print(f"... found {n_infer} frames to track")
 
-        print("Starting tracker...")
         frames = run_tracker(frames=frames, tracker=tracker, verbosity=args.verbosity)
         tracker.final_pass(frames)
 

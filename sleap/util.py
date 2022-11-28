@@ -21,10 +21,22 @@ import psutil
 import json
 import rapidjson
 import yaml
+import rich.progress
 
 from typing import Any, Dict, Hashable, Iterable, List, Optional
 
 import sleap.version as sleap_version
+
+
+class RateColumn(rich.progress.ProgressColumn):
+    """Renders the progress rate."""
+
+    def render(self, task: "Task") -> rich.progress.Text:
+        """Show progress rate."""
+        speed = task.speed
+        if speed is None:
+            return rich.progress.Text("?", style="progress.data.speed")
+        return rich.progress.Text(f"{speed:.1f} FPS", style="progress.data.speed")
 
 
 def json_loads(json_str: str) -> Dict:

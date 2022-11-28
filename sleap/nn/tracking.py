@@ -5,10 +5,12 @@ import json
 from time import time
 import abc
 import attr
-import numpy as np
-import cv2
 from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple
 import logging
+
+import numpy as np
+import cv2
+import rich.progress
 
 from sleap import Track, LabeledFrame, Skeleton, PredictedInstance
 
@@ -28,6 +30,7 @@ from sleap.nn.tracker.components import (
 from sleap.nn.tracker.kalman import BareKalmanTracker
 
 from sleap.nn.data.normalization import ensure_int
+from sleap.util import RateColumn
 
 logger = logging.getLogger(__name__)
 
@@ -1111,13 +1114,18 @@ class TrackCleaner:
 
 
 def run_tracker(
-    frames: List[LabeledFrame], tracker: BaseTracker, verbosity: str = ""
+    frames: List[LabeledFrame],
+    tracker: BaseTracker,
+    verbosity: str = "",
+    report_period: float = 1.0,
 ) -> List[LabeledFrame]:
     """Run a tracker on a set of labeled frames.
 
     Args:
         frames: A list of labeled frames with instances.
         tracker: An initialized Tracker.
+        verbosity: Verbosity, one of ["none", "rich", "json"]
+        report_period: Time in seconds between two reports (if verbosity is not "none")
 
     Returns:
         The input frames with the new tracks assigned. If the frames already had tracks,
@@ -1129,9 +1137,57 @@ def run_tracker(
 
     new_lfs = []
 
-    # Progress
-    if verbosity == "json":
-        report_period = 1.0  # time in seconds between reports
+    def process_frame(lf):
+        insts = [inst for inst in lf.instances if isinstance(inst, PredictedInstance)]
+        # Clear the tracks
+        for inst in insts:
+            inst.track = None
+
+        track_args = dict(untracked_instances=insts, t=lf.frame_idx)
+        if tracker.uses_image:
+            track_args["img"] = lf.video[lf.frame_idx]
+
+        # Set tracks for predicted instances in this frame.
+        insts = tracker.track(**track_args)
+
+        # Create labeled frame.
+        new_lf = LabeledFrame(
+            frame_idx=lf.frame_idx,
+            video=lf.video,
+            instances=insts,
+        )
+        return new_lf
+
+
+    if verbosity == "rich":
+        report_rate = 1 / report_period
+        with rich.progress.Progress(
+            "{task.description}",
+            rich.progress.BarColumn(),
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            "ETA:",
+            rich.progress.TimeRemainingColumn(),
+            RateColumn(),
+            auto_refresh=False,
+            refresh_per_second=report_rate,
+            speed_estimate_period=5,
+        ) as progress:
+            task = progress.add_task("Tracking...", total=len(frames))
+            last_report = time()
+            for lf in frames:
+                new_lf = process_frame(lf)
+                new_lfs.append(new_lf)
+
+                progress.update(task, advance=1)
+
+                # Handle refreshing manually to support notebooks.
+                elapsed_since_last_report = time() - last_report
+                if elapsed_since_last_report > report_period:
+                    progress.refresh()
+
+
+    elif verbosity == "json":
+        # Progress
         n_processed = 0
         n_total = len(frames)
         n_recent = 100
@@ -1140,28 +1196,13 @@ def run_tracker(
         t0_all = time()
         t0_batch = time()
 
-    # Run tracking on every frame
-    for lf in frames:
-        insts = [inst for inst in lf.instances if isinstance(inst, PredictedInstance)]
-        # Clear the tracks
-        for inst in insts:
-            inst.track = None
+        # Run tracking on every frame
+        print("Starting tracker...")
+        for lf in frames:
+            new_lf = process_frame(lf)
+            new_lfs.append(new_lf)
 
-        track_args = dict(untracked_instances=insts)
-        if tracker.uses_image:
-            track_args["img"] = lf.video[lf.frame_idx]
-        else:
-            track_args["img"] = None
-
-        new_lf = LabeledFrame(
-            frame_idx=lf.frame_idx,
-            video=lf.video,
-            instances=tracker.track(**track_args),
-        )
-        new_lfs.append(new_lf)
-
-        # Progress
-        if verbosity == "json":
+            # Progress
             elapsed_batch = time() - t0_batch
             t0_batch = time()
             n_processed += 1
@@ -1188,5 +1229,12 @@ def run_tracker(
                     flush=True,
                 )
                 last_report = time()
+
+    else:
+        # Run tracking on every frame
+        for lf in frames:
+            new_lf = process_frame(lf)
+            new_lfs.append(new_lf)
+
 
     return new_lfs
