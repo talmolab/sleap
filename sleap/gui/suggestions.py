@@ -60,6 +60,7 @@ class VideoFrameSuggestions(object):
             image_features=cls.image_feature_based_method,
             prediction_score=cls.prediction_score,
             velocity=cls.velocity,
+            frame_chunk=cls.frame_chunk,
         )
 
         method = str.replace(params["method"], " ", "_")
@@ -174,17 +175,25 @@ class VideoFrameSuggestions(object):
         labels: "Labels",
         videos: List[Video],
         score_limit,
-        instance_limit,
+        instance_limit_upper,
+        instance_limit_lower,
         **kwargs,
     ):
         """Method to generate suggestions for proofreading frames with low score."""
         score_limit = float(score_limit)
-        instance_limit = int(instance_limit)
+        instance_limit_upper = int(instance_limit_upper)
+        instance_limit_lower = int(instance_limit_lower)
 
         proposed_suggestions = []
         for video in videos:
             proposed_suggestions.extend(
-                cls._prediction_score_video(video, labels, score_limit, instance_limit)
+                cls._prediction_score_video(
+                    video,
+                    labels,
+                    score_limit,
+                    instance_limit_upper,
+                    instance_limit_lower,
+                )
             )
 
         suggestions = VideoFrameSuggestions.filter_unique_suggestions(
@@ -195,29 +204,36 @@ class VideoFrameSuggestions(object):
 
     @classmethod
     def _prediction_score_video(
-        cls, video: Video, labels: "Labels", score_limit: float, instance_limit: int
+        cls,
+        video: Video,
+        labels: "Labels",
+        score_limit: float,
+        instance_limit_upper: int,
+        instance_limit_lower: int,
     ):
         lfs = labels.find(video)
         frames = len(lfs)
-        idxs = np.ndarray((frames), dtype="int")
-        scores = np.full((frames, instance_limit), 100.0, dtype="float")
+        # initiate an array filled with -1 to store frame index (starting from 0).
+        idxs = np.full((frames), -1, dtype="int")
 
-        # Build matrix with scores for instances in frames
         for i, lf in enumerate(lfs):
-            # Scores from instances in frame
-            frame_scores = [inst.score for inst in lf if hasattr(inst, "score")]
-            # Just get the lowest scores
-            if len(frame_scores) > instance_limit:
-                frame_scores = sorted(frame_scores)[:instance_limit]
-            # Add to matrix
-            scores[i, : len(frame_scores)] = frame_scores
-            idxs[i] = lf.frame_idx
+            # Scores from visible instances in frame
+            pred_fs = lf.instances_to_show
+            frame_scores = np.array(
+                [inst.score for inst in pred_fs if hasattr(inst, "score")]
+            )
+            # Gets the number of instances with scores lower than <score_limit>
+            n_qualified_instance = np.nansum(frame_scores <= score_limit)
 
-        # Find instances below score of <score_limit>
-        low_instances = np.nansum(scores < score_limit, axis=1)
+            if (
+                n_qualified_instance >= instance_limit_lower
+                and n_qualified_instance <= instance_limit_upper
+            ):
+                # idxs saves qualified frame index at corresponding entry, otherwise the entry is -1
+                idxs[i] = lf.frame_idx
 
-        # Find all the frames with at least <instance_limit> low scoring instances
-        result = idxs[low_instances >= instance_limit].tolist()
+        # Finds non-negative entries in idxs
+        result = sorted(idxs[idxs >= 0].tolist())
 
         return cls.idx_list_to_frame_list(result, video)
 
@@ -274,6 +290,37 @@ class VideoFrameSuggestions(object):
         )
 
         return cls.idx_list_to_frame_list(frame_idxs, video)
+
+    @classmethod
+    def frame_chunk(
+        cls,
+        labels: "Labels",
+        videos: List[Video],
+        frame_from: int,
+        frame_to: int,
+        **kwargs,
+    ):
+        """Add consecutive frame chunk to label suggestion"""
+
+        proposed_suggestions = []
+
+        # Check the validity of inputs, frame_from <= frame_to
+        if frame_from > frame_to:
+            return proposed_suggestions
+
+        for video in videos:
+            # Make sure when targeting all videos the from and to do not exceed frame number
+            if frame_from > video.num_frames:
+                continue
+            this_video_frame_to = min(frame_to, video.num_frames)
+            # Generate list of frame numbers
+            idx = list(range(frame_from - 1, this_video_frame_to))
+            proposed_suggestions.extend(cls.idx_list_to_frame_list(idx, video))
+
+        suggestions = VideoFrameSuggestions.filter_unique_suggestions(
+            labels, videos, proposed_suggestions
+        )
+        return suggestions
 
     # Utility functions
 

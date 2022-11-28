@@ -1,8 +1,10 @@
 import ast
+from typing import cast
 import pytest
 import numpy as np
 import json
 from sleap.io.dataset import Labels
+from sleap.nn.tracking import FlowCandidateMaker, Tracker
 import tensorflow as tf
 import sleap
 from numpy.testing import assert_array_equal, assert_allclose
@@ -996,9 +998,15 @@ def test_single_instance_predictor_save(min_single_instance_robot_model_path, tm
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
-    # high level export
-
+    # high level export (with unragging)
     export_model(min_single_instance_robot_model_path, save_path=tmp_path.as_posix())
+
+    # high level export (without unragging)
+    export_model(
+        min_single_instance_robot_model_path,
+        save_path=tmp_path.as_posix(),
+        unrag_outputs=False,
+    )
 
 
 def test_topdown_predictor_save(
@@ -1018,10 +1026,17 @@ def test_topdown_predictor_save(
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
-    # high level export
+    # high level export (with unragging)
     export_model(
         [min_centroid_model_path, min_centered_instance_model_path],
         save_path=tmp_path.as_posix(),
+    )
+
+    # high level export (without unragging)
+    export_model(
+        [min_centroid_model_path, min_centered_instance_model_path],
+        save_path=tmp_path.as_posix(),
+        unrag_outputs=False,
     )
 
 
@@ -1042,10 +1057,17 @@ def test_topdown_id_predictor_save(
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
-    # high level export
+    # high level export (with unragging)
     export_model(
         [min_centroid_model_path, min_topdown_multiclass_model_path],
         save_path=tmp_path.as_posix(),
+    )
+
+    # high level export (without unragging)
+    export_model(
+        [min_centroid_model_path, min_topdown_multiclass_model_path],
+        save_path=tmp_path.as_posix(),
+        unrag_outputs=False,
     )
 
 
@@ -1059,7 +1081,6 @@ def test_retracking(
     labels: Labels = Labels.save(centered_pair_predictions, slp_path)
 
     # Create sleap-track command
-    cmd = f"{slp_path} --tracking.tracker {tracker_method} --frames 1-3 --cpu"
     cmd = (
         f"{slp_path} --tracking.tracker {tracker_method} --video.index 0 --frames 1-3 "
         "--cpu"
@@ -1122,3 +1143,34 @@ def test_sleap_track(
     args = [slp_path, "--cpu"]
     with pytest.raises(ValueError):
         sleap_track(args=args)
+
+
+def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
+    """Test flow tracker instances are pruned."""
+    labels: Labels = centered_pair_predictions
+    track_window = 5
+
+    # Setup tracker
+    tracker: Tracker = Tracker.make_tracker_by_name(
+        tracker="flow", track_window=track_window, save_shifted_instances=True
+    )
+    tracker.candidate_maker = cast(FlowCandidateMaker, tracker.candidate_maker)
+
+    # Run tracking
+    frames = sorted(labels.labeled_frames, key=lambda lf: lf.frame_idx)
+
+    # Run tracking on subset of frames using psuedo-implementation of
+    # sleap.nn.tracking.run_tracker
+    for lf in frames[:20]:
+
+        # Clear the tracks
+        for inst in lf.instances:
+            inst.track = None
+
+        track_args = dict(untracked_instances=lf.instances, img=lf.video[lf.frame_idx])
+        tracker.track(**track_args)
+
+        # Check that saved instances are pruned to track window
+        for key in tracker.candidate_maker.shifted_instances.keys():
+            assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
+            assert abs(key[0] - key[1]) <= track_window  # References within window
