@@ -460,8 +460,8 @@ class FrameMatches:
                     if 0 < robust_best_instance < 1:
                         # Robust, use the similarity score in the q-quantile for matching.
                         best_similarity = np.quantile(
-                                track_matching_similarities,
-                                robust_best_instance,
+                            track_matching_similarities,
+                            robust_best_instance,
                         )
                     else:
                         # Non-robust, use the max similarity score for matching.
@@ -474,7 +474,10 @@ class FrameMatches:
             cost[np.isnan(cost)] = np.inf
 
         return cls.from_cost_matrix(
-            cost, untracked_instances, candidate_tracks, matching_function,
+            cost,
+            untracked_instances,
+            candidate_tracks,
+            matching_function,
         )
 
     @classmethod
