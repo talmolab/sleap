@@ -998,9 +998,15 @@ def test_single_instance_predictor_save(min_single_instance_robot_model_path, tm
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
-    # high level export
-
+    # high level export (with unragging)
     export_model(min_single_instance_robot_model_path, save_path=tmp_path.as_posix())
+
+    # high level export (without unragging)
+    export_model(
+        min_single_instance_robot_model_path,
+        save_path=tmp_path.as_posix(),
+        unrag_outputs=False,
+    )
 
 
 def test_topdown_predictor_save(
@@ -1020,10 +1026,17 @@ def test_topdown_predictor_save(
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
-    # high level export
+    # high level export (with unragging)
     export_model(
         [min_centroid_model_path, min_centered_instance_model_path],
         save_path=tmp_path.as_posix(),
+    )
+
+    # high level export (without unragging)
+    export_model(
+        [min_centroid_model_path, min_centered_instance_model_path],
+        save_path=tmp_path.as_posix(),
+        unrag_outputs=False,
     )
 
 
@@ -1044,10 +1057,17 @@ def test_topdown_id_predictor_save(
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
-    # high level export
+    # high level export (with unragging)
     export_model(
         [min_centroid_model_path, min_topdown_multiclass_model_path],
         save_path=tmp_path.as_posix(),
+    )
+
+    # high level export (without unragging)
+    export_model(
+        [min_centroid_model_path, min_topdown_multiclass_model_path],
+        save_path=tmp_path.as_posix(),
+        unrag_outputs=False,
     )
 
 
