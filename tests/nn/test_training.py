@@ -63,6 +63,18 @@ def test_data_reader(min_labels_slp_path):
     ex = next(iter(data_readers.validation_labels_reader.make_dataset()))
     assert ex["image"].shape == (384, 384, 1)
 
+    # Test DataReaders using split_by_inds
+    data_readers = DataReaders.from_config(
+        labels_config=LabelsConfig(
+            split_by_inds=True, validation_inds=[0], test_inds=[0], training_inds=[0]
+        ),
+        training=min_labels_slp_path,
+        validation=None,
+    )
+    assert data_readers.training_labels_reader.example_indices == [0]
+    assert data_readers.validation_labels_reader.example_indices == [0]
+    assert data_readers.test_labels_reader.example_indices == [0]
+
 
 def test_train_single_instance(min_labels_robot, cfg):
     cfg.model.heads.single_instance = SingleInstanceConfmapsHeadConfig(
