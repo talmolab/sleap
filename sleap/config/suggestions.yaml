@@ -1,182 +1,193 @@
 main:
+  - name: method
+    label: Method
+    type: stacked
+    default: " "
+    options: " ,image features,sample,prediction score,velocity,frame chunk"
+    " ":
 
-- name: method
-  label: Method
-  type: stacked
-  default: " "
-  options: " ,image features,sample,prediction score,velocity"
-  " ":
+    sample:
+      - name: per_video
+        label: Samples Per Video
+        type: int
+        default: 20
+        range: 1,3000
+      - name: sampling_method
+        label: Sampling method
+        type: list
+        options: random,stride
+        default: stride
 
-  sample:
-    - name: per_video
-      label: Samples Per Video
-      type: int
-      default: 20
-      range: 1,3000
-    - name: sampling_method
-      label: Sampling method
-      type: list
-      options: random,stride
-      default: stride
+    "image features":
+      - name: per_video
+        label: Initial Samples Per Video
+        type: int
+        default: 200
+        range: 1,3000
+      - name: sample_method
+        label: Sampling method
+        type: list
+        options: random,stride
+        default: stride
+      - name: scale
+        label: Image Scale
+        type: double
+        default: 1.0
+      - name: merge_video_features
+        label: Compute Features
+        type: list
+        options: per video,across all videos
+        default: per video
+      - name: feature_type
+        label: Image Feature Type
+        type: list
+        options: raw images,brisk,hog
+        default: raw images
+      - name: brisk_threshold
+        label: Brisk Keypoint Threshold
+        type: int
+        default: 40
+      - name: vocab_size
+        label: Bag of Features Vocab Size
+        type: int
+        default: 20
+      - name: pca_components
+        label: PCA Components
+        type: int
+        default: 5
+      - name: n_clusters
+        label: K-Means Clusters
+        type: int
+        default: 5
+      - name: per_cluster
+        label: Samples Per Cluster
+        type: int
+        default: 5
 
-  "image features":
-    - name: per_video
-      label: Initial Samples Per Video
-      type: int
-      default: 200
-      range: 1,3000
-    - name: sample_method
-      label: Sampling method
-      type: list
-      options: random,stride
-      default: stride
-    - name: scale
-      label: Image Scale
-      type: double
-      default: 1.0
-    - name: merge_video_features
-      label: Compute Features
-      type: list
-      options: per video,across all videos
-      default: per video
-    - name: feature_type
-      label: Image Feature Type
-      type: list
-      options: raw images,brisk,hog
-      default: raw images
-    - name: brisk_threshold
-      label: Brisk Keypoint Threshold
-      type: int
-      default: 40
-    - name: vocab_size
-      label: Bag of Features Vocab Size
-      type: int
-      default: 20
-    - name: pca_components
-      label: PCA Components
-      type: int
-      default: 5
-    - name: n_clusters
-      label: K-Means Clusters
-      type: int
-      default: 5
-    - name: per_cluster
-      label: Samples Per Cluster
-      type: int
-      default: 5
+    strides:
+      - name: per_video
+        label: Suggestions per video
+        type: int
+        default: 10
+        range: 1,1000
 
+    random:
+      - name: per_video
+        label: Suggestions per video
+        type: int
+        default: 10
+        range: 1,1000
 
-  strides:
+    "frame chunk":
+      - name: frame_from
+        label: From
+        type: int
+        default: 1
+        range: 1, 1000
+      - name: frame_to
+        label: To
+        type: int
+        default: 1000
+        range: 1, 1000
 
-  - name: per_video
-    label: Suggestions per video
-    type: int
-    default: 10
-    range: 1,1000
+    #  pca:
+    #
+    #  - name: clusters
+    #    label: Number of clusters
+    #    type: int
+    #    default: 5
+    #  - name: per_cluster
+    #    label: Samples per cluster
+    #    type: int
+    #    default: 5
+    #  - name: initial_samples
+    #    label: Samples before clustering
+    #    type: int
+    #    default: 200
+    #    range: 10,1000
+    #  - name: pca_components
+    #    label: Number of PCA components
+    #    type: int
+    #    default: 5
+    #
+    #  hog:
+    #
+    #  - name: clusters
+    #    label: Number of clusters
+    #    type: int
+    #    default: 5
+    #  - name: per_cluster
+    #    label: Samples per cluster
+    #    type: int
+    #    default: 5
+    #  - name: sample_step
+    #    label: Frame sampling step size
+    #    type: int
+    #    default: 5
+    #  - name: pca_components
+    #    label: Number of PCA components
+    #    type: int
+    #    default: 5
+    #
+    #  brisk:
+    #
+    #  - name: clusters
+    #    label: Number of clusters
+    #    type: int
+    #    default: 5
+    #  - name: per_cluster
+    #    label: Samples per cluster
+    #    type: int
+    #    default: 5
+    #  - name: initial_samples
+    #    label: Samples before clustering
+    #    type: int
+    #    default: 200
+    #    range: 10,1000
+    #  - name: pca_components
+    #    label: Number of PCA components
+    #    type: int
+    #    default: 5
 
-  random:
+    "prediction score":
+      - name: score_limit
+        label: Low score (lt)
+        type: double
+        default: 3.0
+        range: 0,100
+      - name: instance_limit_lower
+        label: Instance count at least
+        type: int
+        default: 1
+        range: 0,10
+      - name: instance_limit_upper
+        label: Instance count no more than
+        type: int
+        default: 2
+        range: 0,10
 
-  - name: per_video
-    label: Suggestions per video
-    type: int
-    default: 10
-    range: 1,1000
+    velocity:
+      - name: node
+        label: Node
+        type: list
+      - name: threshold
+        label: Velocity Threshold
+        type: double
+        default: 0.1
+        range: 0.1,1.0
 
-#  pca:
-#
-#  - name: clusters
-#    label: Number of clusters
-#    type: int
-#    default: 5
-#  - name: per_cluster
-#    label: Samples per cluster
-#    type: int
-#    default: 5
-#  - name: initial_samples
-#    label: Samples before clustering
-#    type: int
-#    default: 200
-#    range: 10,1000
-#  - name: pca_components
-#    label: Number of PCA components
-#    type: int
-#    default: 5
-#
-#  hog:
-#
-#  - name: clusters
-#    label: Number of clusters
-#    type: int
-#    default: 5
-#  - name: per_cluster
-#    label: Samples per cluster
-#    type: int
-#    default: 5
-#  - name: sample_step
-#    label: Frame sampling step size
-#    type: int
-#    default: 5
-#  - name: pca_components
-#    label: Number of PCA components
-#    type: int
-#    default: 5
-#
-#  brisk:
-#
-#  - name: clusters
-#    label: Number of clusters
-#    type: int
-#    default: 5
-#  - name: per_cluster
-#    label: Samples per cluster
-#    type: int
-#    default: 5
-#  - name: initial_samples
-#    label: Samples before clustering
-#    type: int
-#    default: 200
-#    range: 10,1000
-#  - name: pca_components
-#    label: Number of PCA components
-#    type: int
-#    default: 5
+  - name: target
+    label: Target
+    type: stacked
+    options: "all videos,current video"
+    default: "all videos"
 
-  "prediction score":
+    # Type is stacked because this makes the boxes aligned.
 
-  - name: score_limit
-    label: Low score (lt)
-    type: double
-    default: 3.0
-    range: 0,100
-  - name: instance_limit
-    label: Instance count (gte)
-    type: int
-    default: 2
-    range: 1,10
+    "all videos":
+    "current video":
 
-  velocity:
-  - name: node
-    label: Node
-    type: list
-  - name: threshold
-    label: Velocity Threshold
-    type: double
-    default: 0.1
-    range: 0.1,1.0
-
-
-- name: target
-  label: Target
-  type: stacked
-  options: "all videos,current video"
-  default: "all videos"
-
-  # Type is stacked because this makes the boxes aligned.
-
-  "all videos":
-  "current video":
-
-- name: generate_button
-  label: Generate Suggestions
-  type: button
-  default: main action 
+  - name: generate_button
+    label: Generate Suggestions
+    type: button
+    default: main action

@@ -8,7 +8,7 @@ from sleap.gui.commands import *
 def test_app_workflow(
     qtbot, centered_pair_vid, small_robot_mp4_vid, min_tracks_2node_labels: Labels
 ):
-    app = MainWindow()
+    app = MainWindow(no_usage_data=True)
 
     # Add nodes
     app.commands.newNode()
@@ -74,21 +74,45 @@ def test_app_workflow(
 
     app.state["video"] = centered_pair_vid
 
+    # Prepare to check suggestion ui update upon video state change
+    def assert_frame_chunk_suggestion_ui_updated(
+        app, frame_to_spinbox, frame_from_spinbox
+    ):
+        assert frame_to_spinbox.maximum() == app.state["video"].num_frames
+        assert frame_from_spinbox.maximum() == app.state["video"].num_frames
+
+    method_layout = app.suggestions_form_widget.form_layout.fields["method"]
+    frame_chunk_layout = method_layout.page_layouts["frame chunk"]
+    frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
+    frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
+
+    # Verify the max of frame_chunk spinboxes is updated
+    assert_frame_chunk_suggestion_ui_updated(app, frame_to_spinbox, frame_from_spinbox)
+
     # Activate video using table
     app.videosTable.selectRowItem(small_robot_mp4_vid)
     app.videosTable.activateSelected()
 
     assert app.state["video"] == small_robot_mp4_vid
 
+    # Verify the max of frame_to in frame_chunk is updated
+    assert_frame_chunk_suggestion_ui_updated(app, frame_to_spinbox, frame_from_spinbox)
+
     # Select remaining video
     app.videosTable.selectRowItem(small_robot_mp4_vid)
     assert app.state["selected_video"] == small_robot_mp4_vid
+
+    # Verify the max of frame_to in frame_chunk is updated
+    assert_frame_chunk_suggestion_ui_updated(app, frame_to_spinbox, frame_from_spinbox)
 
     # Delete selected video
     app.commands.removeVideo()
 
     assert len(app.labels.videos) == 1
     assert app.state["video"] == centered_pair_vid
+
+    # Verify the max of frame_to in frame_chunk is updated
+    assert_frame_chunk_suggestion_ui_updated(app, frame_to_spinbox, frame_from_spinbox)
 
     # Add instances
     app.state["frame_idx"] = 27
@@ -101,7 +125,9 @@ def test_app_workflow(
     inst_27_1 = app.state["labeled_frame"].instances[1]
 
     # Move instance nodes
-    app.commands.setPointLocations(inst_27_0, {"a": (15, 20)})
+    app.commands.setPointLocations(
+        inst_27_0, {"a": (15, 20), "b": (15, 40), "c": (40, 40)}
+    )
 
     assert inst_27_0["a"].x == 15
     assert inst_27_0["a"].y == 20
@@ -247,11 +273,50 @@ def test_app_workflow(
         assert lf.frame_idx == prev_idx + frame_delta
         prev_idx = l_suggestion.frame_idx
 
+    # Add video, add frame suggestions, remove the video, verify the frame suggestions are also removed
+    app.labels.add_video(small_robot_mp4_vid)
+    app.on_data_update([UpdateTopic.video])
+
+    assert len(app.labels.videos) == 2
+
+    app.state["video"] = centered_pair_vid
+
+    # Generate suggested frames in both videos
+    app.labels.clear_suggestions()
+    num_samples = 3
+    app.labels.suggestions = VideoFrameSuggestions.suggest(
+        labels=app.labels,
+        params=dict(
+            videos=app.labels.videos,
+            method="sample",
+            per_video=num_samples,
+            sampling_method="random",
+        ),
+    )
+
+    # Verify that suggestions contain frames from both videos
+    video_source = []
+    for sugg in app.labels.suggestions:
+        if not (sugg.video in video_source):
+            video_source.append(sugg.video)
+    assert len(video_source) == 2
+
+    # Remove video 1, keep video 0
+    app.videosTable.selectRowItem(small_robot_mp4_vid)
+    assert app.state["selected_video"] == small_robot_mp4_vid
+    app.commands.removeVideo()
+    assert len(app.labels.videos) == 1
+    assert app.state["video"] == centered_pair_vid
+
+    # Verify frame suggestions from video 1 are removed
+    for sugg in app.labels.suggestions:
+        assert sugg.video == app.labels.videos[0]
+
 
 def test_app_new_window(qtbot):
     app = QApplication.instance()
     app.closeAllWindows()
-    win = MainWindow()
+    win = MainWindow(no_usage_data=True)
 
     assert win.commands.has_any_changes == False
     assert win.state["project_loaded"] == False
@@ -283,7 +348,7 @@ def test_app_new_window(qtbot):
     )
     assert wins == (start_wins + 1)
 
-    new_win = MainWindow()
+    new_win = MainWindow(no_usage_data=True)
 
     wins = sum(
         (1 for widget in app.topLevelWidgets() if isinstance(widget, MainWindow))
@@ -334,7 +399,7 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
     # Test hide instances menu action (and its effect on instance color)
 
     # Instantiate the window and load labels
-    window: MainWindow = MainWindow()
+    window: MainWindow = MainWindow(no_usage_data=True)
     window.loadLabelsObject(centered_pair_predictions)
     # TODO: window does not seem to show as expected on ubuntu
     with qtbot.waitActive(window, timeout=2000):

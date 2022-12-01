@@ -50,6 +50,7 @@ import re
 import os
 import random
 import platform
+import requests
 from pathlib import Path
 
 from typing import Callable, List, Optional, Tuple
@@ -90,7 +91,7 @@ from sleap.gui.state import GuiState
 from sleap.gui.overlays.tracks import TrackTrailOverlay, TrackListOverlay
 from sleap.gui.color import ColorManager
 from sleap.gui.overlays.instance import InstanceOverlay
-from sleap.gui.release_checker import ReleaseChecker
+from sleap.gui.web import ReleaseChecker, ping_analytics
 
 from sleap.prefs import prefs
 
@@ -109,13 +110,20 @@ class MainWindow(QMainWindow):
     """
 
     def __init__(
-        self, labels_path: Optional[str] = None, reset: bool = False, *args, **kwargs
+        self,
+        labels_path: Optional[str] = None,
+        reset: bool = False,
+        no_usage_data: bool = False,
+        *args,
+        **kwargs,
     ):
         """Initialize the app.
 
         Args:
             labels_path: Path to saved :class:`Labels` dataset.
             reset: If `True`, reset preferences to default (including window state).
+            no_usage_data: If `True`, launch GUI without sharing usage data regardless
+                of stored preferences.
         """
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setAcceptDrops(True)
@@ -151,11 +159,17 @@ class MainWindow(QMainWindow):
         self.state["marker size"] = prefs["marker size"]
         self.state["propagate track labels"] = prefs["propagate track labels"]
         self.state["node label size"] = prefs["node label size"]
+        self.state["share usage data"] = prefs["share usage data"]
+        if no_usage_data:
+            self.state["share usage data"] = False
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
         self.state.connect("show non-visible nodes", self.plotFrame)
 
         self.release_checker = ReleaseChecker()
+
+        if self.state["share usage data"]:
+            ping_analytics()
 
         self._initialize_gui()
 
@@ -204,6 +218,7 @@ class MainWindow(QMainWindow):
         prefs["edge style"] = self.state["edge style"]
         prefs["propagate track labels"] = self.state["propagate track labels"]
         prefs["color predicted"] = self.state["color predicted"]
+        prefs["share usage data"] = self.state["share usage data"]
 
         # Save preferences.
         prefs.save()
@@ -303,15 +318,30 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.player)
 
         def switch_frame(video):
-            # Jump to last labeled frame
+            """Jump to last labeled frame"""
             last_label = self.labels.find_last(video)
             if last_label is not None:
                 self.state["frame_idx"] = last_label.frame_idx
             else:
                 self.state["frame_idx"] = 0
 
+        def update_frame_chunk_suggestions(video):
+            """Set upper limit of frame_chunk spinbox to number frames in video."""
+            method_layout = self.suggestions_form_widget.form_layout.fields["method"]
+            frame_chunk_layout = method_layout.page_layouts["frame chunk"]
+            frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
+            frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
+            if video is not None:
+                frame_to_spinbox.setMaximum(video.num_frames)
+                frame_from_spinbox.setMaximum(video.num_frames)
+
         self.state.connect(
-            "video", callbacks=[switch_frame, lambda x: self._update_seekbar_marks()]
+            "video",
+            callbacks=[
+                switch_frame,
+                lambda x: self._update_seekbar_marks(),
+                update_frame_chunk_suggestions,
+            ],
         )
 
     def _create_color_manager(self):
@@ -884,6 +914,14 @@ class MainWindow(QMainWindow):
         )
         self.state["prerelease_version_menu"].setEnabled(False)
         self.commands.checkForUpdates()
+
+        helpMenu.addSeparator()
+        usageMenu = helpMenu.addMenu("Improve SLEAP")
+        add_menu_check_item(usageMenu, "share usage data", "Share usage data")
+        usageMenu.addAction(
+            "What is usage data?",
+            lambda: self.commands.openWebsite("https://sleap.ai/help.html#usage-data"),
+        )
 
         helpMenu.addSeparator()
         helpMenu.addAction("Keyboard Shortcuts", self._show_keyboard_shortcuts_window)
@@ -1762,7 +1800,7 @@ class MainWindow(QMainWindow):
         ShortcutDialog().exec_()
 
 
-def main():
+def main(args: Optional[list] = None):
     """Starts new instance of app."""
 
     import argparse
@@ -1795,8 +1833,15 @@ def main():
         const=True,
         default=False,
     )
+    parser.add_argument(
+        "--no-usage-data",
+        help=("Launch the GUI without sharing usage data regardless of preferences."),
+        action="store_const",
+        const=True,
+        default=False,
+    )
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     if args.nonnative:
         os.environ["USE_NON_NATIVE_FILE"] = "1"
@@ -1811,7 +1856,9 @@ def main():
     app.setApplicationName(f"SLEAP v{sleap.version.__version__}")
     app.setWindowIcon(QtGui.QIcon(sleap.util.get_package_file("sleap/gui/icon.png")))
 
-    window = MainWindow(labels_path=args.labels_path, reset=args.reset)
+    window = MainWindow(
+        labels_path=args.labels_path, reset=args.reset, no_usage_data=args.no_usage_data
+    )
     window.showMaximized()
 
     # Disable GPU in GUI process. This does not affect subprocesses.
@@ -1831,6 +1878,4 @@ def main():
     else:
         app.exec_()
 
-
-if __name__ == "__main__":
-    main()
+    pass

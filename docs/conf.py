@@ -28,7 +28,7 @@ author = "SLEAP Developers"
 copyright = f"2019–{date.today().year}, Talmo Lab"
 
 # The short X.Y version
-version = "1.2.8"
+version = "1.2.9"
 
 # Get the sleap version
 # with open("../sleap/version.py") as f:
@@ -36,7 +36,7 @@ version = "1.2.8"
 #     version = re.search("\d.+(?=['\"])", version_file).group(0)
 
 # Release should be the full branch name
-release = "v1.2.8"
+release = "v1.2.9"
 
 html_title = f"SLEAP ({release})"
 html_short_title = "SLEAP"

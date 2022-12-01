@@ -348,13 +348,24 @@ optional arguments:
   -h, --help            show this help message and exit
   -o OUTPUT, --output OUTPUT
                         Path for saving output (default: None)
+  --video-index VIDEO_INDEX
+                        Index of video in labels dataset (default: 0)
+  --frames FRAMES       List of frames to predict. Either comma separated list (e.g. 1,2,3)
+                        or a range separated by hyphen (e.g. 1-3). (default is entire video)
   -f FPS, --fps FPS     Frames per second for output video (default: 25)
   --scale SCALE         Output image scale (default: 1.0)
   --crop CROP           Crop size as <width>,<height> (default: None)
-  --frames FRAMES       List of frames to predict. Either comma separated list (e.g. 1,2,3)
-                        or a range separated by hyphen (e.g. 1-3). (default is entire video)
-  -video-index VIDEO_INDEX
-                        Index of video in labels dataset (default: 0)
+  --show_edges SHOW_EDGES
+                        Whether to draw lines between nodes (default: 1)
+  --edge_is_wedge EDGE_IS_WEDGE
+                        Whether to draw edges as wedges (default: 0)
+  --marker_size MARKER_SIZE
+                        Size of marker in pixels before scaling by SCALE (default: 4)
+  --palette PALETTE     SLEAP color palette to use. Options include: "alphabet", "five+",
+                        "solarized", or "standard" (default: "standard")
+  --distinctly_color DISTINCTLY_COLOR
+                        Specify how to color instances. Options include: "instances",
+                        "edges", and "nodes" (default: "instances")
 ```
 
 ## Debugging

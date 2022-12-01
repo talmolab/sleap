@@ -3,20 +3,21 @@
 import numpy as np
 import tensorflow as tf
 import sleap
+from sleap import Labels
 from sleap.nn.data.providers import LabelsReader
-from sleap.nn.data.utils import expand_to_rank, ensure_list
+from sleap.nn.data.utils import ensure_list
 import attr
-from typing import List, Text, Optional, Any, Union, Dict, Tuple, Sequence
+from typing import List, Text, Dict, Tuple, Sequence
 from sklearn.model_selection import train_test_split
 
 
 def split_labels_train_val(
-    labels: sleap.Labels, validation_fraction: float
-) -> Tuple[sleap.Labels, List[int], sleap.Labels, List[int]]:
+    labels: Labels, validation_fraction: float
+) -> Tuple[Labels, List[int], Labels, List[int]]:
     """Make a train/validation split from a labels dataset.
 
     Args:
-        labels: A `sleap.Labels` dataset with labeled frames.
+        labels: A `Labels` dataset with labeled frames.
         validation_fraction: Fraction of frames to use for validation.
 
     Returns:
@@ -48,12 +49,12 @@ def split_labels_train_val(
     idx_train, idx_val = train_test_split(list(range(len(labels))), test_size=n_val)
 
     # Create labels and keep original metadata.
-    labels_train = sleap.Labels(labels[idx_train])
+    labels_train = labels.extract(idx_train, copy=False)
     labels_train.videos = labels.videos
     labels_train.tracks = labels.tracks
     labels_train.provenance = labels.provenance
 
-    labels_val = sleap.Labels(labels[idx_val])
+    labels_val = labels.extract(idx_val, copy=False)
     labels_val.videos = labels.videos
     labels_val.tracks = labels.tracks
     labels_val.provenance = labels.provenance
@@ -61,13 +62,11 @@ def split_labels_train_val(
     return labels_train, idx_train, labels_val, idx_val
 
 
-def split_labels(
-    labels: sleap.Labels, split_fractions: Sequence[float]
-) -> Tuple[sleap.Labels]:
-    """Split a `sleap.Labels` into multiple new ones with random subsets of the data.
+def split_labels(labels: Labels, split_fractions: Sequence[float]) -> Tuple[Labels]:
+    """Split a `Labels` into multiple new ones with random subsets of the data.
 
     Args:
-        labels: An instance of `sleap.Labels`.
+        labels: An instance of `Labels`.
         split_fractions: One or more floats between 0 and 1 that specify the fraction of
             examples that should be in each dataset. These should add up to <= 1.0.
             Fractions of less than 1 element will be rounded up to ensure that is at
@@ -75,7 +74,7 @@ def split_labels(
             that it should contain all elements left over from the other splits.
 
     Returns:
-        A tuple of new `sleap.Labels` instances of the same length as `split_fractions`.
+        A tuple of new `Labels` instances of the same length as `split_fractions`.
 
     Raises:
         ValueError: If more than one split fraction is specified as -1.
@@ -110,7 +109,9 @@ def split_labels(
         )
 
         # Create new instance.
-        split_labels.append(sleap.Labels([labels[int(ind)] for ind in sampled_indices]))
+        split_labels.append(
+            labels.extract([labels[int(ind)] for ind in sampled_indices])
+        )
 
         # Exclude the sampled indices from the available indices.
         labels_indices = np.setdiff1d(labels_indices, sampled_indices)
@@ -126,7 +127,7 @@ def split_labels_reader(
     Args:
         labels_reader: An instance of `sleap.nn.data.providers.LabelsReader`. This is a
             provider that generates datasets that contain elements read from a
-            `sleap.Labels` instance.
+            `Labels` instance.
         split_fractions: One or more floats between 0 and 1 that specify the fraction of
             examples that should be in each dataset. These should add up to <= 1.0.
             Fractions of less than 1 element will be rounded up to ensure that is at
@@ -137,7 +138,7 @@ def split_labels_reader(
         A tuple of `LabelsReader` instances of the same length as `split_fractions`. The
         indices will be stored in the `example_indices` in each `LabelsReader` instance.
 
-        The actual `sleap.Labels` instance will be the same for each instance, only the
+        The actual `Labels` instance will be the same for each instance, only the
         `example_indices` that are iterated over will change across splits.
 
         If the input `labels_reader` already has `example_indices`, a subset of these

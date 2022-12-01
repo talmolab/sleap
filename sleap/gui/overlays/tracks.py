@@ -60,8 +60,8 @@ class TrackTrailOverlay(BaseOverlay):
             nodes = nodes[:max_node_count]
 
         for frame in frame_selection:
-
-            for inst in frame:
+            # Prefer user instances over predicted instances
+            for inst in frame.instances_to_show:
                 if inst.track is not None:
                     if inst.track not in all_track_trails:
                         all_track_trails[inst.track] = [[] for _ in range(len(nodes))]

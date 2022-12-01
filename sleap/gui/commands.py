@@ -1076,7 +1076,7 @@ class ExportAnalysisFile(AppCommand):
             )
             filename = default_name if use_default else ask_for_filename(default_name)
 
-            # Check that filename is valid and create list of video / ouput paths
+            # Check that filename is valid and create list of video / output paths
             if len(filename) != 0:
                 analysis_videos.append(video)
                 output_paths.append(filename)
@@ -1129,6 +1129,8 @@ class ExportLabeledClip(AppCommand):
             fps=params["fps"],
             color_manager=params["color_manager"],
             show_edges=params["show edges"],
+            edge_is_wedge=params["edge_is_wedge"],
+            marker_size=params["marker size"],
             scale=params["scale"],
             crop_size_xy=params["crop"],
             gui_progress=True,
@@ -1203,6 +1205,11 @@ class ExportLabeledClip(AppCommand):
             params["color_manager"] = None
 
         params["show edges"] = context.state.get("show edges", default=True)
+        params["edge_is_wedge"] = (
+            context.state.get("edge style", default="").lower() == "wedge"
+        )
+
+        params["marker size"] = context.state.get("marker size", default=4)
 
         # If user selected a clip, use that; otherwise include all frames.
         if context.state["has_frame_range"]:
@@ -1671,7 +1678,7 @@ class ReplaceVideo(EditCommand):
 
 
 class RemoveVideo(EditCommand):
-    topics = [UpdateTopic.video]
+    topics = [UpdateTopic.video, UpdateTopic.suggestions]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):

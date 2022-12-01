@@ -1332,7 +1332,7 @@ def test_remove_predictions_with_new_labels(removal_test_labels):
     assert labels[1].has_predicted_instances
 
 
-def test_labels_numpy(centered_pair_predictions):
+def test_labels_numpy(centered_pair_predictions: Labels):
     trx = centered_pair_predictions.numpy(video=None, all_frames=False, untracked=False)
     assert trx.shape == (1100, 27, 24, 2)
 
@@ -1365,6 +1365,16 @@ def test_labels_numpy(centered_pair_predictions):
             inst.track = None
     centered_pair_predictions.tracks = []
     assert centered_pair_predictions.numpy(untracked=False).shape == (1100, 0, 24, 2)
+
+    # Test labels.numpy prefers user instances
+    skeleton = centered_pair_predictions.skeleton
+    lf = centered_pair_predictions.labeled_frames[0]
+    user_inst = Instance(
+        skeleton=skeleton, points={node: Point(1, 1) for node in skeleton.nodes}
+    )
+    lf.instances.append(user_inst)
+    labels_np = centered_pair_predictions.numpy(untracked=True, return_confidence=True)
+    np.testing.assert_array_equal(labels_np[lf.frame_idx, 0, :, :-1], user_inst.numpy())
 
 
 def test_remove_track(centered_pair_predictions):

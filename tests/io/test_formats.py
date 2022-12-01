@@ -288,7 +288,7 @@ def test_alphatracker(qtbot):
 
     # Run through GUI display
 
-    app = MainWindow()
+    app = MainWindow(no_usage_data=True)
     app.state = GuiState()
     app.state["filename"] = filename
 

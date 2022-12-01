@@ -2,7 +2,7 @@
 Conversion between flat (form data) and hierarchical (config object) dicts.
 """
 
-from typing import Any, Dict, Optional, Text, Tuple
+from typing import Any, Dict, Optional, Text, Tuple, Union
 
 import attr
 import cattr
@@ -174,7 +174,9 @@ def resolve_strides_from_key_val_dict(
     return max_stride, output_stride
 
 
-def make_training_config_from_key_val_dict(key_val_dict: dict) -> TrainingJobConfig:
+def make_training_config_from_key_val_dict(
+    key_val_dict: Union[dict, ScopedKeyDict]
+) -> TrainingJobConfig:
     """
     Make :py:class:`TrainingJobConfig` object from flat dictionary.
 
@@ -183,9 +185,11 @@ def make_training_config_from_key_val_dict(key_val_dict: dict) -> TrainingJobCon
     Returns:
         The :py:class:`TrainingJobConfig` object.
     """
-    apply_cfg_transforms_to_key_val_dict(key_val_dict)
-    cfg_dict = ScopedKeyDict(key_val_dict).to_hierarchical_dict()
+    if not isinstance(key_val_dict, ScopedKeyDict):
+        apply_cfg_transforms_to_key_val_dict(key_val_dict)
+        key_val_dict = ScopedKeyDict(key_val_dict)
 
+    cfg_dict = key_val_dict.to_hierarchical_dict()
     cfg = cattr.structure(cfg_dict, TrainingJobConfig)
 
     return cfg

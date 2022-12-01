@@ -450,6 +450,7 @@ class Predictor(ABC):
         save_traces: bool = True,
         model_name: Optional[str] = None,
         tensors: Optional[Dict[str, str]] = None,
+        unrag_outputs: bool = True,
     ):
 
         """Export a trained SLEAP model as a frozen graph. Initializes model,
@@ -467,6 +468,8 @@ class Predictor(ABC):
                 model
             tensors: (Optional) Dictionary describing the predicted tensors (see
                 sleap.nn.data.utils.describe_tensors as an example)
+            unrag_outputs: If `True` (default), any ragged tensors will be
+                converted to normal tensors and padded with NaNs
 
         """
 
@@ -485,7 +488,7 @@ class Predictor(ABC):
         outputs = self.inference_model.predict(tracing_batch)
 
         self.inference_model.export_model(
-            save_path, signatures, save_traces, model_name, tensors
+            save_path, signatures, save_traces, model_name, tensors, unrag_outputs
         )
 
 
@@ -980,6 +983,7 @@ class InferenceModel(tf.keras.Model):
         save_traces: bool = True,
         model_name: Optional[str] = None,
         tensors: Optional[Dict[str, str]] = None,
+        unrag_outputs: bool = True,
     ):
         """Save the frozen graph of a model.
 
@@ -994,6 +998,8 @@ class InferenceModel(tf.keras.Model):
                 model
             tensors: (Optional) Dictionary describing the predicted tensors (see
                 sleap.nn.data.utils.describe_tensors as an example)
+            unrag_outputs: If `True` (default), any ragged tensors will be
+                converted to normal tensors and padded with NaNs
 
 
         Notes:
@@ -1021,7 +1027,11 @@ class InferenceModel(tf.keras.Model):
         if tensors:
             info["predicted_tensors"] = tensors
 
-        full_model = tf.function(lambda x: model(x))
+        full_model = tf.function(
+            lambda x: sleap.nn.data.utils.unrag_example(model(x), numpy=False)
+            if unrag_outputs
+            else model(x)
+        )
 
         full_model = full_model.get_concrete_function(
             tf.TensorSpec(model.inputs[0].shape, model.inputs[0].dtype)
@@ -1458,9 +1468,12 @@ class SingleInstancePredictor(Predictor):
         save_traces: bool = True,
         model_name: Optional[str] = None,
         tensors: Optional[Dict[str, str]] = None,
+        unrag_outputs: bool = True,
     ):
 
-        super().export_model(save_path, signatures, save_traces, model_name, tensors)
+        super().export_model(
+            save_path, signatures, save_traces, model_name, tensors, unrag_outputs
+        )
 
         self.confmap_config.save_json(os.path.join(save_path, "confmap_config.json"))
 
@@ -2376,9 +2389,12 @@ class TopDownPredictor(Predictor):
         save_traces: bool = True,
         model_name: Optional[str] = None,
         tensors: Optional[Dict[str, str]] = None,
+        unrag_outputs: bool = True,
     ):
 
-        super().export_model(save_path, signatures, save_traces, model_name, tensors)
+        super().export_model(
+            save_path, signatures, save_traces, model_name, tensors, unrag_outputs
+        )
 
         if self.confmap_config is not None:
             self.confmap_config.save_json(
@@ -3735,11 +3751,14 @@ class TopDownMultiClassInferenceModel(InferenceModel):
         save_traces: bool = True,
         model_name: Optional[str] = None,
         tensors: Optional[Dict[str, str]] = None,
+        unrag_outputs: bool = True,
     ):
 
         self.instance_peaks.optimal_grouping = False
 
-        super().export_model(save_path, signatures, save_traces, model_name, tensors)
+        super().export_model(
+            save_path, signatures, save_traces, model_name, tensors, unrag_outputs
+        )
 
 
 @attr.s(auto_attribs=True)
@@ -4066,9 +4085,12 @@ class TopDownMultiClassPredictor(Predictor):
         save_traces: bool = True,
         model_name: Optional[str] = None,
         tensors: Optional[Dict[str, str]] = None,
+        unrag_outputs: bool = True,
     ):
 
-        super().export_model(save_path, signatures, save_traces, model_name, tensors)
+        super().export_model(
+            save_path, signatures, save_traces, model_name, tensors, unrag_outputs
+        )
 
         if self.confmap_config is not None:
             self.confmap_config.save_json(
@@ -4192,6 +4214,7 @@ def export_model(
     save_traces: bool = True,
     model_name: Optional[str] = None,
     tensors: Optional[Dict[str, str]] = None,
+    unrag_outputs: bool = True,
 ):
     """High level export of a trained SLEAP model as a frozen graph.
 
@@ -4207,9 +4230,13 @@ def export_model(
             output json file containing meta information about the model.
         tensors: (Optional) Dictionary describing the predicted tensors (see
             sleap.nn.data.utils.describe_tensors as an example).
+        unrag_outputs: If `True` (default), any ragged tensors will be
+            converted to normal tensors and padded with NaNs
     """
     predictor = load_model(model_path)
-    predictor.export_model(save_path, signatures, save_traces, model_name, tensors)
+    predictor.export_model(
+        save_path, signatures, save_traces, model_name, tensors, unrag_outputs
+    )
 
 
 def export_cli():
@@ -4236,9 +4263,19 @@ def export_cli():
             "Defaults to a folder named 'exported_model'."
         ),
     )
+    parser.add_argument(
+        "-u",
+        "--unrag",
+        action="store_true",
+        default=True,
+        help=(
+            "Convert ragged tensors into regular tensors with NaN padding. "
+            "Defaults to True."
+        ),
+    )
 
     args, _ = parser.parse_known_args()
-    export_model(args.models, args.export_path)
+    export_model(args.models, args.export_path, unrag_outputs=args.unrag)
 
 
 def _make_cli_parser() -> argparse.ArgumentParser:

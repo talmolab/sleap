@@ -1,13 +1,13 @@
 """Module for checking for new releases on GitHub."""
 
-
 import attr
 import pandas as pd
 import requests
-from typing import List, Dict, Optional
+from typing import List, Dict, Any
 
 
 REPO_ID = "talmolab/sleap"
+ANALYTICS_ENDPOINT = "https://analytics.sleap.ai/ping"
 
 
 @attr.s(auto_attribs=True)
@@ -144,3 +144,46 @@ class ReleaseChecker:
             "Check the page online for a full listing: "
             f"https://github.com/{self.repo_id}"
         )
+
+
+def get_analytics_data() -> Dict[str, Any]:
+    """Gather data to be transmitted to analytics backend."""
+    import os
+    import sleap
+    import tensorflow as tf
+    from pathlib import Path
+    import platform
+
+    return {
+        "sleap_version": sleap.__version__,
+        "python_version": platform.python_version(),
+        "tf_version": tf.__version__,
+        "conda_env": Path(os.environ.get("CONDA_PREFIX", "")).stem,
+        "platform": platform.platform(),
+    }
+
+
+def ping_analytics():
+    """Ping analytics service with anonymous usage data.
+
+    Notes:
+        This only gets called when the GUI starts and obeys user preferences for data
+        collection.
+
+        See https://sleap.ai/help.html#usage-data for more information.
+    """
+    import threading
+
+    analytics_data = get_analytics_data()
+
+    def _ping_analytics():
+        try:
+            response = requests.post(
+                ANALYTICS_ENDPOINT,
+                json=analytics_data,
+            )
+        except (requests.ConnectionError, requests.Timeout):
+            pass
+
+    # Fire and forget.
+    threading.Thread(target=_ping_analytics).start()
