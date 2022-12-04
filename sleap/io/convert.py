@@ -118,59 +118,42 @@ def main(args: list = None):
             video_search=video_callback,
             video=video_path,
         )
-
-    if args.format == "analysis":
-        from sleap.info.write_tracking_h5 import main as write_analysis
-
-        output_paths = [path for path in args.outputs]
-
-        # Generate filenames if user has not specified (enough) output filenames
-        labels_path = args.input_path
-        fn = re.sub("(\\.json(\\.zip)?|\\.h5|\\.slp)$", "", labels_path)
-        fn = PurePath(fn)
-        default_names = [
-            default_analysis_filename(
-                labels=labels,
-                video=video,
-                output_path=str(fn.parent),
-                output_prefix=str(fn.stem),
-            )
-            for video in labels.videos[len(args.outputs) :]
-        ]
-
-        output_paths.extend(default_names)
-
-        for video, output_path in zip(labels.videos, output_paths):
-            write_analysis(
-                labels,
-                output_path=output_path,
-                labels_path=labels_path,
-                all_frames=True,
-                video=video,
-            )
-    elif args.format == "analysis.nix":
-        from sleap.io.format.nix import NixAdaptor
-        
-        labels_path = args.input_path
-        fn = labels_path if (len(args.output) == 0) else args.output
-        fn = re.sub("(\.json(\.zip)?|\.h5|\.slp|\.nix)$", "", fn)
-        fn = PurePath(fn)
-        
+    if "analysis" in args.format:
         vids = []
-        if len(args.video) > 0:
-            for v in labels.videos:
+        if len(args.video) > 0:  # if a video is specified
+            for v in labels.videos:  # check if it is among the videos in the project
                 if args.video in v.backend.filename:
                     vids.append(v)
         else:
-            vids = labels.videos
+            vids = labels.videos  # otherwise all videos are converted
 
-        for video in vids:
-            filename = default_analysis_filename(labels=labels, video=video,
-                                                 output_path=str(fn.parent),
-                                                 output_prefix=str(fn.stem),
-                                                 format_suffix="nix")
-            print(f"Writing {filename}!")
-            NixAdaptor.write(filename, labels, args.input_path, video)
+        outnames = [path for path in args.outputs]
+        if len(outnames) < len(vids):  # if there are less outnames provided than videos to convert...
+            outsuffix = "nix" if "nix" in args.format else "h5"
+            fn = args.input_path
+            fn = re.sub("(\.json(\.zip)?|\.h5|\.slp)$", "", fn)
+            fn = PurePath(fn)
+
+            for video in vids[len(outnames):]:
+                dflt_name = default_analysis_filename(labels=labels, video=video,
+                                                      output_path=str(fn.parent),
+                                                      output_prefix=str(fn.stem),
+                                                      format_suffix=outsuffix)
+                outnames.append(dflt_name)
+
+        if "nix" in args.format:
+            from sleap.io.format.nix import NixAdaptor
+            for video, outname in zip(vids, outnames):
+                NixAdaptor.write(outname, labels, args.input_path, video)
+        else:
+            from sleap.info.write_tracking_h5 import main as write_analysis
+            for video, output_path in zip(vids, outnames):
+                write_analysis(
+                labels,
+                output_path=output_path,
+                labels_path=args.input_path,
+                all_frames=True,
+                video=video,)
 
     elif len(args.outputs) > 0:
         print(f"Output SLEAP dataset: {args.outputs[0]}")
