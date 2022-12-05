@@ -42,8 +42,7 @@ from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
 import numpy as np
 
 from qtpy import QtCore, QtWidgets, QtGui
-
-from PySide2.QtWidgets import QMessageBox, QProgressDialog, QInputDialog
+from qtpy import QMessageBox, QProgressDialog
 
 from sleap.skeleton import Node, Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
@@ -1109,7 +1108,7 @@ class ExportAnalysisFile(AppCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
-        from ..io.format.nix import NixAdaptor
+        from sleap.io.format.nix import NixAdaptor
 
         for output_path, video in params["analysis_videos"]:
             if output_path.split(".")[-1] == "nix":
@@ -1168,10 +1167,14 @@ class ExportAnalysisFile(AppCommand):
                 dir=str(fn.parent),
             )
             if len(ExportAnalysisFile.export_formats) > 1:
-                item, ok = QInputDialog.getItem(context.app, "Select export format",
-                                                "Available export formats",
-                                                list(ExportAnalysisFile.export_formats.keys()),
-                                                0, False)
+                item, ok = QtWidgets.QInputDialog.getItem(
+                    context.app,
+                    "Select export format",
+                    "Available export formats",
+                    list(ExportAnalysisFile.export_formats.keys()),
+                    0,
+                    False,
+                )
                 if not ok:
                     return False
                 file_extension = ExportAnalysisFile.export_formats[item]
@@ -1188,9 +1191,9 @@ class ExportAnalysisFile(AppCommand):
                 video=video,
                 output_path=dirname,
                 output_prefix=str(fn.stem),
-                format_suffix=file_extension
+                format_suffix=file_extension,
             )
-            
+
             filename = default_name if use_default else ask_for_filename(default_name)
             # Check that filename is valid and create list of video / output paths
             if len(filename) != 0:
