@@ -80,7 +80,11 @@ def create_parser():
 
 
 def default_analysis_filename(
-    labels: Labels, video: Video, output_path: str, output_prefix: PurePath, format_suffix:str ="h5"
+    labels: Labels,
+    video: Video,
+    output_path: str,
+    output_prefix: PurePath,
+    format_suffix: str = "h5",
 ) -> str:
     video_idx = labels.videos.index(video)
     vn = PurePath(video.backend.filename)
@@ -128,32 +132,39 @@ def main(args: list = None):
             vids = labels.videos  # otherwise all videos are converted
 
         outnames = [path for path in args.outputs]
-        if len(outnames) < len(vids):  # if there are less outnames provided than videos to convert...
+        if len(outnames) < len(vids):
+            # if there are less outnames provided than videos to convert...
             outsuffix = "nix" if "nix" in args.format else "h5"
             fn = args.input_path
             fn = re.sub("(\.json(\.zip)?|\.h5|\.slp)$", "", fn)
             fn = PurePath(fn)
 
-            for video in vids[len(outnames):]:
-                dflt_name = default_analysis_filename(labels=labels, video=video,
-                                                      output_path=str(fn.parent),
-                                                      output_prefix=str(fn.stem),
-                                                      format_suffix=outsuffix)
+            for video in vids[len(outnames) :]:
+                dflt_name = default_analysis_filename(
+                    labels=labels,
+                    video=video,
+                    output_path=str(fn.parent),
+                    output_prefix=str(fn.stem),
+                    format_suffix=outsuffix,
+                )
                 outnames.append(dflt_name)
 
         if "nix" in args.format:
             from sleap.io.format.nix import NixAdaptor
+
             for video, outname in zip(vids, outnames):
                 NixAdaptor.write(outname, labels, args.input_path, video)
         else:
             from sleap.info.write_tracking_h5 import main as write_analysis
+
             for video, output_path in zip(vids, outnames):
                 write_analysis(
-                labels,
-                output_path=output_path,
-                labels_path=args.input_path,
-                all_frames=True,
-                video=video,)
+                    labels,
+                    output_path=output_path,
+                    labels_path=args.input_path,
+                    all_frames=True,
+                    video=video,
+                )
 
     elif len(args.outputs) > 0:
         print(f"Output SLEAP dataset: {args.outputs[0]}")
