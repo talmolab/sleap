@@ -3,10 +3,10 @@ import numpy as np
 from pathlib import Path
 from typing import List
 
-from .adaptor import Adaptor, SleapObjectType
-from .filehandle import FileHandle
-from ..dataset import Labels
-from ..video import Video
+from sleap.io.adaptor import Adaptor, SleapObjectType
+from sleap.io.filehandle import FileHandle
+from sleap.dataset import Labels
+from sleap.video import Video
 
 try:
     import nixio as nix
