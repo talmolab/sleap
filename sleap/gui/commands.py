@@ -1076,7 +1076,7 @@ class ExportAnalysisFile(AppCommand):
             )
             filename = default_name if use_default else ask_for_filename(default_name)
 
-            # Check that filename is valid and create list of video / ouput paths
+            # Check that filename is valid and create list of video / output paths
             if len(filename) != 0:
                 analysis_videos.append(video)
                 output_paths.append(filename)
