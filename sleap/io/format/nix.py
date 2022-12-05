@@ -196,7 +196,7 @@ class NixAdaptor(Adaptor):
                 data_written += (end-start)
 
         def write_data(block, source: Labels, video:Video):
-            instances = list(source.instances(video=video))
+            instances = [instance for instance in source.instances(video=video) if instances.frame_idx is not None]
             instances = sorted(instances, key=lambda i: i.frame_idx)
             nodes = node_map(source)
             tracks = track_map(source)
