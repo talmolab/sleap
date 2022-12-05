@@ -70,6 +70,11 @@ class NixAdaptor(Adaptor):
     @classmethod
     def write(cls, filename: str, source_object: object, source_path: str = None, video: Video = None):
         """Writes the object to a file."""
+        if not nix_available:
+            raise ImportError("NIX library not installed, export to NIX not possible (run pip install nixio).")
+        if not check(source_object, video):
+            raise ValueError(f"There are no videos in this project. NO output file will be be written.")
+
         def check(labels, video):
             if video is None and len(labels.videos) == 0:
                 return False
@@ -97,7 +102,6 @@ class NixAdaptor(Adaptor):
                 sec["height"] = video.backend.height
                 sec["width"] = video.backend.width
                 src.metadata = sec
-
             return nf
 
         def track_map(source: Labels):
@@ -253,11 +257,6 @@ class NixAdaptor(Adaptor):
             tm.append_rows(table_data)
             chunked_write(instances, frameid_array, positions_array, track_array, skeleton_array,
                           point_score, instance_score, tracking_score, centroid_array, tracks, nodes, skeletons)
-
-        if not nix_available:
-            raise ImportError("NIX library not installed, export to nix not possible. (run pip install nixio)")
-        if not check(source_object, video):
-            raise ValueError(f"There are no videos in this project. Output file will not be written.")
 
         print(f"Exporting analyses to nix file {filename} ...", end="")
         nix_file = create_file(filename, source_path, video)
