@@ -1,6 +1,6 @@
-import os
 import numpy as np
 
+from pathlib import Path
 from typing import List
 
 from .adaptor import Adaptor, SleapObjectType
@@ -85,7 +85,7 @@ class NixAdaptor(Adaptor):
             if project is not None:
                 s["project"] = project
             if video is not None:
-                name = os.path.split(video.backend.filename)[-1]
+                name = Path(video.backend.filename).name
                 b = nf.create_block(name, "nix.tracking_results")
                 src = b.create_source(name, "nix.tracking.source.video")
                 sec = src.file.create_section(name, "nix.tracking.source.video.metadata")
