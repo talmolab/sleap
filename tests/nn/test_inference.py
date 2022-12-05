@@ -1106,7 +1106,7 @@ def test_topdown_id_predictor_save(
 
     # test max instances
     export_model(
-        [min_centroid_model_path, min_centered_instance_model_path],
+        [min_centroid_model_path, min_topdown_multiclass_model_path],
         save_path=tmp_path.as_posix(),
         unrag_outputs=False,
         max_instances=4,
