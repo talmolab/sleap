@@ -10,6 +10,7 @@ from sleap.video import Video
 
 try:
     import nixio as nix
+
     nix_available = True
 except ImportError:
     nix_available = False
@@ -25,6 +26,7 @@ class NixAdaptor(Adaptor):
 
     author: Jan Grewe (jan.grewe@g-node.org)
     """
+
     @property
     def default_ext(self):
         return "nix"
@@ -40,7 +42,9 @@ class NixAdaptor(Adaptor):
     @property
     def name(self) -> str:
         """Human-reading name of the file format"""
-        return "NIX file flavoured for animal tracking data https://github.com/g-node/nix"
+        return (
+            "NIX file flavoured for animal tracking data https://github.com/g-node/nix"
+        )
 
     @classmethod
     def can_read_file(file: FileHandle) -> bool:
@@ -68,12 +72,22 @@ class NixAdaptor(Adaptor):
         raise NotImplementedError("NixAdaptor does not support reading.")
 
     @classmethod
-    def write(cls, filename: str, source_object: object, source_path: str = None, video: Video = None):
+    def write(
+        cls,
+        filename: str,
+        source_object: object,
+        source_path: str = None,
+        video: Video = None,
+    ):
         """Writes the object to a file."""
         if not nix_available:
-            raise ImportError("NIX library not installed, export to NIX not possible (run pip install nixio).")
+            raise ImportError(
+                "NIX library not installed, export to NIX not possible (run pip install nixio)."
+            )
         if not check(source_object, video):
-            raise ValueError(f"There are no videos in this project. NO output file will be be written.")
+            raise ValueError(
+                f"There are no videos in this project. NO output file will be be written."
+            )
 
         def check(labels, video):
             if video is None and len(labels.videos) == 0:
@@ -93,7 +107,9 @@ class NixAdaptor(Adaptor):
                 name = Path(video.backend.filename).name
                 b = nf.create_block(name, "nix.tracking_results")
                 src = b.create_source(name, "nix.tracking.source.video")
-                sec = src.file.create_section(name, "nix.tracking.source.video.metadata")
+                sec = src.file.create_section(
+                    name, "nix.tracking.source.video.metadata"
+                )
                 sec["filename"] = video.backend.filename
                 sec["fps"] = video.backend.fps
                 sec.props["fps"].unit = "Hz"
@@ -135,16 +151,33 @@ class NixAdaptor(Adaptor):
             rd.link_data_array(frame_index_array, [-1])
             return array
 
-        def create_positions_array(name, type, block, frame_index_array, node_names, shape, dtype):
-            array = block.create_data_array(name, type, dtype=dtype, shape=shape, label="pixel")
+        def create_positions_array(
+            name, type, block, frame_index_array, node_names, shape, dtype
+        ):
+            array = block.create_data_array(
+                name, type, dtype=dtype, shape=shape, label="pixel"
+            )
             rd = array.append_range_dimension()
             rd.link_data_array(frame_index_array, [-1])
             array.append_set_dimension(["x", "y"])
             array.append_set_dimension(node_names)
             return array
 
-        def chunked_write(instances, frameid_array, positions_array, track_array, skeleton_array, pointscore_array,
-                          instancescore_array, trackingscore_array, centroid_array, track_map, node_map, skeleton_map, chunksize=10000):
+        def chunked_write(
+            instances,
+            frameid_array,
+            positions_array,
+            track_array,
+            skeleton_array,
+            pointscore_array,
+            instancescore_array,
+            trackingscore_array,
+            centroid_array,
+            track_map,
+            node_map,
+            skeleton_map,
+            chunksize=10000,
+        ):
             data_written = 0
             indices = np.zeros(chunksize, dtype=int)
             positions = np.zeros((chunksize, 2, len(node_map.keys())), dtype=float)
@@ -159,7 +192,11 @@ class NixAdaptor(Adaptor):
             while data_written < len(instances):
                 print(".", end="")
                 start = data_written
-                end = len(instances) if start + chunksize >= len(instances) else start + chunksize
+                end = (
+                    len(instances)
+                    if start + chunksize >= len(instances)
+                    else start + chunksize
+                )
                 for i in range(start, end):
                     inst = instances[i]
                     index = i - start
@@ -177,61 +214,114 @@ class NixAdaptor(Adaptor):
                     for n, p in zip(inst.nodes, inst.points):
                         positions[index, :, node_map[n.name]] = np.array([p.x, p.y])
                     for m in missing:
-                         positions[index, :, node_map[m]] = np.array([np.nan, np.nan])
+                        positions[index, :, node_map[m]] = np.array([np.nan, np.nan])
 
-                    centroids[index,:] = inst.centroid
+                    centroids[index, :] = inst.centroid
                     if hasattr(inst, "score"):
                         instscore[index] = inst.score
                         trackscore[index] = inst.tracking_score
-                        pointscore[index,:] = inst.scores
+                        pointscore[index, :] = inst.scores
                     else:
                         instscore[index] = 0.0
                         trackscore[index] = 0.0
-                        pointscore[index,:] = dflt_pointscore
+                        pointscore[index, :] = dflt_pointscore
 
-                frameid_array[start:end] = indices[:end-start]
-                track_array[start:end] = track[:end-start]
-                positions_array[start:end,:,:] = positions[:end-start,:,:]
-                centroid_array[start:end, :] = centroids[:end-start,:]
-                skeleton_array[start:end] = skeleton[:end-start]
-                pointscore_array[start:end] = pointscore[:end-start]
-                instancescore_array[start:end] = instscore[:end-start]
-                trackingscore_array[start:end] = trackscore[:end-start]
-                data_written += (end-start)
+                frameid_array[start:end] = indices[: end - start]
+                track_array[start:end] = track[: end - start]
+                positions_array[start:end, :, :] = positions[: end - start, :, :]
+                centroid_array[start:end, :] = centroids[: end - start, :]
+                skeleton_array[start:end] = skeleton[: end - start]
+                pointscore_array[start:end] = pointscore[: end - start]
+                instancescore_array[start:end] = instscore[: end - start]
+                trackingscore_array[start:end] = trackscore[: end - start]
+                data_written += end - start
 
-        def write_data(block, source: Labels, video:Video):
-            instances = [instance for instance in source.instances(video=video) if instances.frame_idx is not None]
+        def write_data(block, source: Labels, video: Video):
+            instances = [
+                instance
+                for instance in source.instances(video=video)
+                if instances.frame_idx is not None
+            ]
             instances = sorted(instances, key=lambda i: i.frame_idx)
             nodes = node_map(source)
             tracks = track_map(source)
             skeletons = skeleton_map(source)
             positions_shape = (len(instances), 2, len(nodes))
 
-            frameid_array = block.create_data_array("frame", "nix.tracking.instance_frameidx", label="frame index",
-                                                    shape=(len(instances),), dtype=nix.DataType.Int64)
+            frameid_array = block.create_data_array(
+                "frame",
+                "nix.tracking.instance_frameidx",
+                label="frame index",
+                shape=(len(instances),),
+                dtype=nix.DataType.Int64,
+            )
             frameid_array.append_range_dimension_using_self()
 
-            positions_array = create_positions_array("position", "nix.tracking.instance_position",
-                                                     block, frameid_array, list(nodes.keys()), 
-                                                     positions_shape,  nix.DataType.Float)
+            positions_array = create_positions_array(
+                "position",
+                "nix.tracking.instance_position",
+                block,
+                frameid_array,
+                list(nodes.keys()),
+                positions_shape,
+                nix.DataType.Float,
+            )
 
-            track_array = create_feature_array("track", "nix.tracking.instance_track", block, frameid_array,
-                                                shape=(len(instances),), dtype=nix.DataType.Int64)
-            skeleton_array = create_feature_array("skeleton", "nix.tracking.instance_skeleton", block, 
-                                                  frameid_array, (len(instances),), nix.DataType.Int64)
-            point_score = create_feature_array("node score", "nix.tracking.score", block, 
-                                                frameid_array, (len(instances), len(nodes)), nix.DataType.Float)
+            track_array = create_feature_array(
+                "track",
+                "nix.tracking.instance_track",
+                block,
+                frameid_array,
+                shape=(len(instances),),
+                dtype=nix.DataType.Int64,
+            )
+            skeleton_array = create_feature_array(
+                "skeleton",
+                "nix.tracking.instance_skeleton",
+                block,
+                frameid_array,
+                (len(instances),),
+                nix.DataType.Int64,
+            )
+            point_score = create_feature_array(
+                "node score",
+                "nix.tracking.score",
+                block,
+                frameid_array,
+                (len(instances), len(nodes)),
+                nix.DataType.Float,
+            )
             point_score.append_set_dimension(nodes.keys())
-            centroid_array = create_feature_array("centroid", "nix.tracking.centroid_position", block, 
-                                                  frameid_array, (len(instances), 2), nix.DataType.Float)
+            centroid_array = create_feature_array(
+                "centroid",
+                "nix.tracking.centroid_position",
+                block,
+                frameid_array,
+                (len(instances), 2),
+                nix.DataType.Float,
+            )
             centroid_array.append_set_dimension(["x", "y"])
-            instance_score = create_feature_array("instance score", "nix.tracking.score", block, 
-                                                  frameid_array, (len(instances),), nix.DataType.Float)
-            tracking_score = create_feature_array("tracking score", "nix.tracking.score", block, 
-                                                   frameid_array, (len(instances),), nix.DataType.Float)
+            instance_score = create_feature_array(
+                "instance score",
+                "nix.tracking.score",
+                block,
+                frameid_array,
+                (len(instances),),
+                nix.DataType.Float,
+            )
+            tracking_score = create_feature_array(
+                "tracking score",
+                "nix.tracking.score",
+                block,
+                frameid_array,
+                (len(instances),),
+                nix.DataType.Float,
+            )
 
             # bind all together using a nix.MultiTag
-            mtag = block.create_multi_tag("tracking results", "nix.tracking.results", positions=frameid_array)
+            mtag = block.create_multi_tag(
+                "tracking results", "nix.tracking.results", positions=frameid_array
+            )
             mtag.references.append(positions_array)
             mtag.create_feature(track_array, nix.LinkType.Indexed)
             mtag.create_feature(skeleton_array, nix.LinkType.Indexed)
@@ -240,25 +330,43 @@ class NixAdaptor(Adaptor):
             mtag.create_feature(tracking_score, nix.LinkType.Indexed)
             mtag.create_feature(centroid_array, nix.LinkType.Indexed)
 
-            sm = block.create_data_frame("skeleton map", "nix.tracking.skeleton_map", 
-                                         col_names=["name", "index"],
-                                         col_dtypes=[nix.DataType.String, nix.DataType.Int8])
+            sm = block.create_data_frame(
+                "skeleton map",
+                "nix.tracking.skeleton_map",
+                col_names=["name", "index"],
+                col_dtypes=[nix.DataType.String, nix.DataType.Int8],
+            )
             table_data = []
             for k in skeletons.keys():
                 table_data.append((k, skeletons[k]))
             sm.append_rows(table_data)
 
-            tm = block.create_data_frame("track map", "nix.tracking.track_map", 
-                                         col_names=["name", "index"],
-                                         col_dtypes=[nix.DataType.String, nix.DataType.Int8])
-            table_data = [("none", -1)] # default for user-labeled instances
+            tm = block.create_data_frame(
+                "track map",
+                "nix.tracking.track_map",
+                col_names=["name", "index"],
+                col_dtypes=[nix.DataType.String, nix.DataType.Int8],
+            )
+            table_data = [("none", -1)]  # default for user-labeled instances
             for k in tracks.keys():
                 table_data.append((k, tracks[k]))
             tm.append_rows(table_data)
-            chunked_write(instances, frameid_array, positions_array, track_array, skeleton_array,
-                          point_score, instance_score, tracking_score, centroid_array, tracks, nodes, skeletons)
+            chunked_write(
+                instances,
+                frameid_array,
+                positions_array,
+                track_array,
+                skeleton_array,
+                point_score,
+                instance_score,
+                tracking_score,
+                centroid_array,
+                tracks,
+                nodes,
+                skeletons,
+            )
 
-        print(f"Exporting analyses to nix file {filename} ...", end="")
+        print(f"Exporting analysis to NIX file {filename} ...", end="")
         nix_file = create_file(filename, source_path, video)
         try:
             write_data(nix_file.blocks[0], source_object, video)
