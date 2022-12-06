@@ -42,7 +42,6 @@ from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
 import numpy as np
 
 from qtpy import QtCore, QtWidgets, QtGui
-from qtpy import QMessageBox, QProgressDialog
 
 from sleap.skeleton import Node, Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
@@ -1351,7 +1350,9 @@ def export_dataset_gui(
             instances.
         suggested: If `True`, include image data for suggested frames.
     """
-    win = QProgressDialog("Exporting dataset with frame images...", "Cancel", 0, 1)
+    win = QtWidgets.QProgressDialog(
+        "Exporting dataset with frame images...", "Cancel", 0, 1
+    )
 
     def update_progress(n, n_total):
         if win.wasCanceled():
@@ -1753,7 +1754,7 @@ class ReplaceVideo(EditCommand):
 
         # Warn user: newly added labels will be discarded if project is not saved
         if not context.state["filename"] or context.state["has_changes"]:
-            QMessageBox(
+            QtWidgets.QMessageBox(
                 text=("You have unsaved changes. Please save before replacing videos.")
             ).exec_()
             return False
@@ -1823,15 +1824,15 @@ class RemoveVideo(EditCommand):
 
         # Warn if there are labels that will be deleted
         if n > 0:
-            response = QMessageBox.critical(
+            response = QtWidgets.QMessageBox.critical(
                 context.app,
                 "Removing video with labels",
                 f"{n} labeled frames in this video will be deleted, "
                 "are you sure you want to remove this video?",
-                QMessageBox.Yes,
-                QMessageBox.No,
+                QtWidgets.QMessageBox.Yes,
+                QtWidgets.QMessageBox.No,
             )
-            if response == QMessageBox.No:
+            if response == QtWidgets.QMessageBox.No:
                 return False
 
         params["video"] = video
@@ -2128,11 +2129,15 @@ class InstanceDeleteCommand(EditCommand):
         )
 
         # Confirm that we want to delete
-        resp = QMessageBox.critical(
-            context.app, title, message, QMessageBox.Yes, QMessageBox.No
+        resp = QtWidgets.QMessageBox.critical(
+            context.app,
+            title,
+            message,
+            QtWidgets.QMessageBox.Yes,
+            QtWidgets.QMessageBox.No,
         )
 
-        if resp == QMessageBox.No:
+        if resp == QtWidgets.QMessageBox.No:
             return False
 
         return True
@@ -2589,14 +2594,14 @@ class ClearSuggestions(EditCommand):
 
         # Warn that suggestions will be cleared
 
-        response = QMessageBox.warning(
+        response = QtWidgets.QMessageBox.warning(
             context.app,
             "Clearing all suggestions",
             "Are you sure you want to remove all suggestions from the project?",
-            QMessageBox.Yes,
-            QMessageBox.No,
+            QtWidgets.QMessageBox.Yes,
+            QtWidgets.QMessageBox.No,
         )
-        if response == QMessageBox.No:
+        if response == QtWidgets.QMessageBox.No:
             return False
 
         return True
