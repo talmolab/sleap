@@ -602,7 +602,7 @@ class Tracker(BaseTracker):
         similarity: str = "instance",
         match: str = "greedy",
         track_window: int = 5,
-        robust: float = 1,
+        robust: float = 1.0,
         min_new_track_points: int = 0,
         min_match_points: int = 0,
         # Optical flow options
