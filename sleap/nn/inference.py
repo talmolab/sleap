@@ -2354,14 +2354,15 @@ class TopDownPredictor(Predictor):
                 # Loop over instances.
                 predicted_instances = []
                 for pts, confs, score in zip(points, confidences, scores):
-                    predicted_instances.append(
-                        sleap.instance.PredictedInstance.from_arrays(
-                            points=pts,
-                            point_confidences=confs,
-                            instance_score=score,
-                            skeleton=skeleton,
+                    if (~np.isnan(pts)).any():
+                        predicted_instances.append(
+                            sleap.instance.PredictedInstance.from_arrays(
+                                points=pts,
+                                point_confidences=confs,
+                                instance_score=score,
+                                skeleton=skeleton,
+                            )
                         )
-                    )
 
                 if self.tracker:
                     # Set tracks for predicted instances in this frame.
@@ -2912,14 +2913,15 @@ class BottomUpPredictor(Predictor):
                 # Loop over instances.
                 predicted_instances = []
                 for pts, confs, score in zip(points, confidences, scores):
-                    predicted_instances.append(
-                        sleap.instance.PredictedInstance.from_arrays(
-                            points=pts,
-                            point_confidences=confs,
-                            instance_score=score,
-                            skeleton=skeleton,
+                    if (~np.isnan(pts)).any():
+                        predicted_instances.append(
+                            sleap.instance.PredictedInstance.from_arrays(
+                                points=pts,
+                                point_confidences=confs,
+                                instance_score=score,
+                                skeleton=skeleton,
+                            )
                         )
-                    )
 
                 if self.tracker:
                     # Set tracks for predicted instances in this frame.
