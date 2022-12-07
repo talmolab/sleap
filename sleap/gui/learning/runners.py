@@ -239,6 +239,7 @@ class InferenceTask:
         optional_items_as_nones = (
             "tracking.target_instance_count",
             "tracking.kf_init_frame_count",
+            "tracking.robust",
         )
 
         for key in optional_items_as_nones:
