@@ -410,8 +410,23 @@ class FrameMatches:
         candidate_instances: List[InstanceType],
         similarity_function: Callable,
         matching_function: Callable,
+        robust_best_instance: float = 1.0,
     ):
+        """Calculates (and stores) matches for a frame from candidate instance.
 
+        Args:
+            untracked_instances: list of untracked instances in the frame.
+            candidate_instances: list of instances use as match.
+            similarity_function: a function that returns the similarity between
+                two instances (untracked and candidate).
+            matching_function: function used to find the best match from the
+                cost matrix. See the classmethod `from_cost_matrix`.
+            robust_best_instance (float): if the value is between 0 and 1
+                (excluded), use a robust quantile similarity score for the
+                track. If the value is 1, use the max similarity (non-robust).
+                For selecting a robust score, 0.95 is a good value.
+
+        """
         cost = np.ndarray((0,))
         candidate_tracks = []
 
@@ -425,9 +440,8 @@ class FrameMatches:
             # Compute similarity matrix between untracked instances and best
             # candidate for each track.
             candidate_tracks = list(candidate_instances_by_track.keys())
-            matching_similarities = np.full(
-                (len(untracked_instances), len(candidate_tracks)), np.nan
-            )
+            dims = (len(untracked_instances), len(candidate_tracks))
+            matching_similarities = np.full(dims, np.nan)
 
             for i, untracked_instance in enumerate(untracked_instances):
 
@@ -443,11 +457,16 @@ class FrameMatches:
                         for candidate_instance in track_instances
                     ]
 
-                    # Keep the best scoring instance for this track.
-                    best_ind = np.argmax(track_matching_similarities)
-
-                    # Use the best similarity score for matching.
-                    best_similarity = track_matching_similarities[best_ind]
+                    if 0 < robust_best_instance < 1:
+                        # Robust, use the similarity score in the q-quantile for matching.
+                        best_similarity = np.quantile(
+                            track_matching_similarities,
+                            robust_best_instance,
+                        )
+                    else:
+                        # Non-robust, use the max similarity score for matching.
+                        best_similarity = np.max(track_matching_similarities)
+                    # Keep the best similarity score for this track.
                     matching_similarities[i, j] = best_similarity
 
             # Perform matching between untracked instances and candidates.
@@ -455,7 +474,10 @@ class FrameMatches:
             cost[np.isnan(cost)] = np.inf
 
         return cls.from_cost_matrix(
-            cost, untracked_instances, candidate_tracks, matching_function
+            cost,
+            untracked_instances,
+            candidate_tracks,
+            matching_function,
         )
 
     @classmethod
