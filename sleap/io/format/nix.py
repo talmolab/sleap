@@ -285,7 +285,7 @@ class NixAdaptor(Adaptor):
             )
             point_score = create_feature_array(
                 "node score",
-                "nix.tracking.score",
+                "nix.tracking.nodes_score",
                 block,
                 frameid_array,
                 (len(instances), len(nodes)),
@@ -303,7 +303,7 @@ class NixAdaptor(Adaptor):
             centroid_array.append_set_dimension(["x", "y"])
             instance_score = create_feature_array(
                 "instance score",
-                "nix.tracking.score",
+                "nix.tracking.instance_score",
                 block,
                 frameid_array,
                 (len(instances),),
@@ -311,7 +311,7 @@ class NixAdaptor(Adaptor):
             )
             tracking_score = create_feature_array(
                 "tracking score",
-                "nix.tracking.score",
+                "nix.tracking.tack_score",
                 block,
                 frameid_array,
                 (len(instances),),
