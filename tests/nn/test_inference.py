@@ -42,7 +42,6 @@ from sleap.nn.inference import (
     _make_tracker_from_cli,
     main as sleap_track,
 )
-
 from sleap.gui.learning import runners
 
 sleap.nn.system.use_cpu_only()
@@ -1083,7 +1082,7 @@ def test_retracking(
     # Create sleap-track command
     cmd = (
         f"{slp_path} --tracking.tracker {tracker_method} --video.index 0 --frames 1-3 "
-        "--cpu"
+        "--tracking.similarity object_keypoint --cpu"
     )
     if tracker_method == "flow":
         cmd += " --tracking.save_shifted_instances 1"
@@ -1100,6 +1099,8 @@ def test_retracking(
         parser = _make_cli_parser()
         args, _ = parser.parse_known_args(args=args)
         tracker = _make_tracker_from_cli(args)
+        # Additional check for similarity method
+        assert tracker.similarity_function.__name__ == "object_keypoint_similarity"
         output_path = f"{slp_path}.{tracker.get_name()}.slp"
 
     # Assert tracked predictions file exists
@@ -1126,7 +1127,6 @@ def test_sleap_track(
     labels: Labels = Labels.save(centered_pair_predictions, slp_path)
 
     # Create sleap-track command
-    args = f"{slp_path} --model {min_centered_instance_model_path} --frames 1-3 --cpu".split()
     args = (
         f"{slp_path} --model {min_centroid_model_path} "
         f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
