@@ -397,3 +397,44 @@ def test_nwb(
     labels.instances = []
     with pytest.raises(TypeError):
         NDXPoseAdaptor.write(NDXPoseAdaptor, filename, labels)
+
+
+def test_nix(
+    centered_pair_predictions: Labels,
+    tmpdir,
+):
+    print("writing test predictions to nix file...")
+    filename = str(PurePath(tmpdir, "ndx_pose_test.nix"))
+    from sleap.io.format.nix import NixAdaptor
+
+    NixAdaptor.write(
+        filename, centered_pair_predictions, video=centered_pair_predictions.videos[0]
+    )
+
+    # basic read tests using the generic nix library
+    import nixio
+
+    file = nixio.File.open(filename, nixio.FileMode.ReadOnly)
+    file_meta = file.sections[0]
+    assert file_meta["format"] == "nix.tracking"
+    assert "sleap" in file_meta["writer"].lower()
+
+    assert len([b for b in file.blocks if b.type == "nix.tracking_results"]) > 0
+    b = file.blocks[0]
+    assert (
+        len([da for da in b.data_arrays if da.type == "nix.tracking.instance_position"])
+        == 1
+    )
+    assert (
+        len([da for da in b.data_arrays if da.type == "nix.tracking.instance_frameidx"])
+        == 1
+    )
+
+    inst_positions = b.data_arrays["position"]
+    assert len(inst_positions.shape) == 3
+    assert len(inst_positions.shape) == len(inst_positions.dimensions)
+    assert inst_positions.shape[2] == len(centered_pair_predictions.nodes)
+
+    frame_indices = b.data_arrays["frame"]
+    assert len(frame_indices.shape) == 1
+    assert frame_indices.shape[0] == inst_positions.shape[0]

@@ -72,11 +72,17 @@ class NixAdaptor(Adaptor):
         raise NotImplementedError("NixAdaptor does not support reading.")
 
     @classmethod
+    def __check(cls, labels, video):
+        if video is None and len(labels.videos) == 0:
+            return False
+        return True
+
+    @classmethod
     def write(
         cls,
         filename: str,
         source_object: object,
-        source_path: str = None,
+        source_path: str = "None",
         video: Video = None,
     ):
         """Writes the object to a file."""
@@ -84,28 +90,29 @@ class NixAdaptor(Adaptor):
             raise ImportError(
                 "NIX library not installed, export to NIX not possible (run pip install nixio)."
             )
-        if not check(source_object, video):
+        if not cls.__check(source_object, video):
             raise ValueError(
                 f"There are no videos in this project. NO output file will be be written."
             )
 
-        def check(labels, video):
-            if video is None and len(labels.videos) == 0:
-                return False
-            return True
-
         def create_file(filename, project, video):
+            print(f"...creating nix file {filename} for {project}", end="\t")
             nf = nix.File.open(filename, nix.FileMode.Overwrite)
             s = nf.create_section("TrackingAnalysis", "nix.tracking.metadata")
             s["version"] = "0.1.0"
             s["format"] = "nix.tracking"
-            s["definitions"] = "github.com/bendalab/nix_tracking"
+            s["definitions"] = "https://github.com/bendalab/nixtrack"
             s["writer"] = str(cls)[8:-2]
             if project is not None:
                 s["project"] = project
+
+            name = "unknown video"
             if video is not None:
                 name = Path(video.backend.filename).name
-                b = nf.create_block(name, "nix.tracking_results")
+            b = nf.create_block(name, "nix.tracking_results")
+
+            # add video metadata, if exists
+            if video is not None:
                 src = b.create_source(name, "nix.tracking.source.video")
                 sec = src.file.create_section(
                     name, "nix.tracking.source.video.metadata"
@@ -118,6 +125,8 @@ class NixAdaptor(Adaptor):
                 sec["height"] = video.backend.height
                 sec["width"] = video.backend.width
                 src.metadata = sec
+
+            print("done")
             return nf
 
         def track_map(source: Labels):
@@ -240,7 +249,7 @@ class NixAdaptor(Adaptor):
             instances = [
                 instance
                 for instance in source.instances(video=video)
-                if instances.frame_idx is not None
+                if instance.frame_idx is not None
             ]
             instances = sorted(instances, key=lambda i: i.frame_idx)
             nodes = node_map(source)
@@ -366,7 +375,11 @@ class NixAdaptor(Adaptor):
                 skeletons,
             )
 
-        print(f"Exporting analysis to NIX file {filename} ...", end="")
+        print(f"Exporting analysis to NIX file {filename} ...", end="\n")
+        if video is None:
+            print(f"No video specified, exporting the first one {video}...")
+            video = source_object.videos[0]
+
         nix_file = create_file(filename, source_path, video)
         try:
             write_data(nix_file.blocks[0], source_object, video)
