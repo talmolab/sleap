@@ -9,15 +9,27 @@ from sleap.nn.tracker.components import (
     FrameMatches,
     greedy_matching,
 )
+from sleap.io.dataset import Labels
 
 from sleap.instance import PredictedInstance
 from sleap.skeleton import Skeleton
 
 
-def tracker_by_name(**kwargs):
+def tracker_by_name(frames=None, **kwargs):
     t = Tracker.make_tracker_by_name(**kwargs)
-    t.track([])
-    t.final_pass([])
+    if frames is None:
+        t.track([])
+        t.final_pass([])
+        return
+
+    for lf in frames:
+        # Clear the tracks
+        for inst in lf.instances:
+            inst.track = None
+
+        track_args = dict(untracked_instances=lf.instances, img=lf.video[lf.frame_idx])
+        t.track(**track_args)
+    t.final_pass(frames)
 
 
 @pytest.mark.parametrize("tracker", ["simple", "flow"])
@@ -33,8 +45,15 @@ def test_tracker_by_name(tracker, similarity, match, count):
 @pytest.mark.parametrize("tracker", ["simple", "flow"])
 @pytest.mark.parametrize("oks_score_weighting", ["True", "False"])
 @pytest.mark.parametrize("oks_normalization", ["all", "ref", "union"])
-def test_oks_tracker_by_name(tracker, oks_score_weighting, oks_normalization):
+def test_oks_tracker_by_name(
+    centered_pair_predictions_sorted: Labels,
+    tracker,
+    oks_score_weighting,
+    oks_normalization,
+):
+
     tracker_by_name(
+        frames=centered_pair_predictions_sorted[:5],
         tracker=tracker,
         similarity="object_keypoint",
         matching="greedy",
