@@ -770,6 +770,7 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         self, mode: Text, skeleton: Optional["Skeleton"] = None, *args, **kwargs
     ):
         super(TrainingPipelineWidget, self).__init__(*args, **kwargs)
+        self.setMinimumHeight(681)  # Hard-code minimum size due to layout problems
 
         self.form_widget = YamlFormWidget.from_name(
             "pipeline_form", which_form=mode, title="Training Pipeline"
