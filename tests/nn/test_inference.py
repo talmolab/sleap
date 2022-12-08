@@ -574,13 +574,24 @@ def test_single_instance_predictor_high_peak_thresh(
     min_labels_robot, min_single_instance_robot_model_path
 ):
     predictor = SingleInstancePredictor.from_trained_models(
+        min_single_instance_robot_model_path, peak_threshold=0
+    )
+    predictor.verbosity = "none"
+    labels_pr = predictor.predict(min_labels_robot)
+    assert len(labels_pr) == 2
+    assert len(labels_pr[0]) == 1
+    assert labels_pr[0][0].n_visible_points == 2
+    assert len(labels_pr[1]) == 1
+    assert labels_pr[1][0].n_visible_points == 2
+
+    predictor = SingleInstancePredictor.from_trained_models(
         min_single_instance_robot_model_path, peak_threshold=1.5
     )
     predictor.verbosity = "none"
     labels_pr = predictor.predict(min_labels_robot)
     assert len(labels_pr) == 2
-    assert labels_pr[0][0].n_visible_points == 0
-    assert labels_pr[1][0].n_visible_points == 0
+    assert len(labels_pr[0]) == 0
+    assert len(labels_pr[1]) == 0
 
 
 def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):

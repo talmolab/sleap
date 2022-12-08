@@ -1443,16 +1443,16 @@ class SingleInstancePredictor(Predictor):
             ):
                 # Loop over instances.
                 if np.isnan(points[0]).all():
-                    continue
-
-                predicted_instances = [
-                    sleap.instance.PredictedInstance.from_arrays(
-                        points=points[0],
-                        point_confidences=confidences[0],
-                        instance_score=np.nansum(confidences[0]),
-                        skeleton=skeleton,
-                    )
-                ]
+                    predicted_instances = []
+                else:
+                    predicted_instances = [
+                        sleap.instance.PredictedInstance.from_arrays(
+                            points=points[0],
+                            point_confidences=confidences[0],
+                            instance_score=np.nansum(confidences[0]),
+                            skeleton=skeleton,
+                        )
+                    ]
 
                 predicted_frames.append(
                     sleap.LabeledFrame(
