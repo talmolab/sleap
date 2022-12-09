@@ -71,7 +71,8 @@ def factory_object_keypoint_similarity(
 
     """
     keypoint_errors = 1 if keypoint_errors is None else keypoint_errors
-    kp_precision = 1 / (2 * np.array(keypoint_errors) ** 2)
+    with np.errstate(divide="ignore"):
+        kp_precision = 1 / (2 * np.array(keypoint_errors) ** 2)
 
     def object_keypoint_similarity(
         ref_instance: InstanceType, query_instance: InstanceType
