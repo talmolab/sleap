@@ -4,6 +4,7 @@ from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, fi
 from sleap.io.format.adaptor import SleapObjectType
 from sleap.io.format.alphatracker import AlphaTrackerAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
+from sleap.io.format.nix import NixAdaptor
 from sleap.gui.commands import ImportAlphaTracker
 from sleap.gui.app import MainWindow
 from sleap.gui.state import GuiState
@@ -399,14 +400,26 @@ def test_nwb(
         NDXPoseAdaptor.write(NDXPoseAdaptor, filename, labels)
 
 
-def test_nix(
+def test_nix_adaptor(
     centered_pair_predictions: Labels,
+    small_robot_mp4_vid: Video,
     tmpdir,
 ):
+    # general tests
+    na = NixAdaptor()
+    assert na.default_ext == "nix"
+    assert "nix" in na.all_exts
+    assert len(na.name) > 0
+    assert NixAdaptor.does_read() == False
+    assert NixAdaptor.does_write() == True
+    with pytest.raises(NotImplementedError):
+        NixAdaptor.read("some file")
+
     print("writing test predictions to nix file...")
     filename = str(PurePath(tmpdir, "ndx_pose_test.nix"))
-    from sleap.io.format.nix import NixAdaptor
-
+    with pytest.raises(ValueError):
+        NixAdaptor.write(filename, centered_pair_predictions, video=small_robot_mp4_vid)
+    NixAdaptor.write(filename, centered_pair_predictions)
     NixAdaptor.write(
         filename, centered_pair_predictions, video=centered_pair_predictions.videos[0]
     )

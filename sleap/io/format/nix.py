@@ -47,35 +47,40 @@ class NixAdaptor(Adaptor):
         )
 
     @classmethod
-    def can_read_file(file: FileHandle) -> bool:
+    def can_read_file(cls, file: FileHandle) -> bool:
         """Returns whether this adaptor can read this file."""
         return False
 
     @classmethod
-    def can_write_filename(filename: str) -> bool:
+    def can_write_filename(cls, filename: str) -> bool:
         """Returns whether this adaptor can write format of this filename."""
         raise NotImplementedError
 
     @classmethod
-    def does_read() -> bool:
+    def does_read(cls) -> bool:
         """Returns whether this adaptor supports reading."""
         return False
 
     @classmethod
-    def does_write() -> bool:
+    def does_write(cls) -> bool:
         """Returns whether this adaptor supports writing."""
         return nix_available
 
     @classmethod
-    def read(file: FileHandle) -> object:
+    def read(cls, file: FileHandle) -> object:
         """Reads the file and returns the appropriate deserialized object."""
         raise NotImplementedError("NixAdaptor does not support reading.")
 
     @classmethod
-    def __check(cls, labels, video):
+    def __check_video(cls, labels, video):
         if video is None and len(labels.videos) == 0:
-            return False
-        return True
+            raise ValueError(
+                f"There are no videos in this project. NO output file will be be written."
+            )
+        if video is not None and video not in labels.videos:
+            raise ValueError(
+                f"Specified video {video} is not part of this project. NO output file will be be written."
+            )
 
     @classmethod
     def write(
@@ -90,10 +95,7 @@ class NixAdaptor(Adaptor):
             raise ImportError(
                 "NIX library not installed, export to NIX not possible (run pip install nixio)."
             )
-        if not cls.__check(source_object, video):
-            raise ValueError(
-                f"There are no videos in this project. NO output file will be be written."
-            )
+        cls.__check_video(source_object, video)
 
         def create_file(filename, project, video):
             print(f"...creating nix file {filename} for {project}", end="\t")
@@ -106,25 +108,20 @@ class NixAdaptor(Adaptor):
             if project is not None:
                 s["project"] = project
 
-            name = "unknown video"
-            if video is not None:
-                name = Path(video.backend.filename).name
+            name = Path(video.backend.filename).name
             b = nf.create_block(name, "nix.tracking_results")
 
             # add video metadata, if exists
-            if video is not None:
-                src = b.create_source(name, "nix.tracking.source.video")
-                sec = src.file.create_section(
-                    name, "nix.tracking.source.video.metadata"
-                )
-                sec["filename"] = video.backend.filename
-                sec["fps"] = video.backend.fps
-                sec.props["fps"].unit = "Hz"
-                sec["frames"] = video.num_frames
-                sec["grayscale"] = video.backend.grayscale
-                sec["height"] = video.backend.height
-                sec["width"] = video.backend.width
-                src.metadata = sec
+            src = b.create_source(name, "nix.tracking.source.video")
+            sec = src.file.create_section(name, "nix.tracking.source.video.metadata")
+            sec["filename"] = video.backend.filename
+            sec["fps"] = video.backend.fps
+            sec.props["fps"].unit = "Hz"
+            sec["frames"] = video.num_frames
+            sec["grayscale"] = video.backend.grayscale
+            sec["height"] = video.backend.height
+            sec["width"] = video.backend.width
+            src.metadata = sec
 
             print("done")
             return nf
@@ -385,6 +382,6 @@ class NixAdaptor(Adaptor):
             write_data(nix_file.blocks[0], source_object, video)
             print(" done")
         except Exception as e:
-            print(e)
+            print(f"\n\t Writing failed withe error message {e}!")
+        finally:
             nix_file.close()
-            print(" failed!")
