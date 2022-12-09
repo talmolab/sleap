@@ -451,6 +451,7 @@ class Predictor(ABC):
         model_name: Optional[str] = None,
         tensors: Optional[Dict[str, str]] = None,
         unrag_outputs: bool = True,
+        max_instances: Optional[int] = None,
     ):
 
         """Export a trained SLEAP model as a frozen graph. Initializes model,
@@ -470,10 +471,20 @@ class Predictor(ABC):
                 sleap.nn.data.utils.describe_tensors as an example)
             unrag_outputs: If `True` (default), any ragged tensors will be
                 converted to normal tensors and padded with NaNs
-
+            max_instances: If set, determines the max number of instances that a
+                multi-instance model returns. This is enforced during centroid
+                cropping and therefore only compatible with TopDown models.
         """
 
         self._initialize_inference_model()
+        predictor_name = type(self).__name__
+
+        if max_instances is not None:
+            if "TopDown" in predictor_name:
+                print(f"\n max instances set, limiting instances to {max_instances} \n")
+                self.inference_model.centroid_crop.max_instances = max_instances
+            else:
+                raise Exception(f"{predictor_name} does not support max instance limit")
 
         first_inference_layer = self.inference_model.layers[0]
         keras_model_shape = first_inference_layer.keras_model.input.shape
@@ -1472,10 +1483,17 @@ class SingleInstancePredictor(Predictor):
         model_name: Optional[str] = None,
         tensors: Optional[Dict[str, str]] = None,
         unrag_outputs: bool = True,
+        max_instances: Optional[int] = None,
     ):
 
         super().export_model(
-            save_path, signatures, save_traces, model_name, tensors, unrag_outputs
+            save_path,
+            signatures,
+            save_traces,
+            model_name,
+            tensors,
+            unrag_outputs,
+            max_instances,
         )
 
         self.confmap_config.save_json(os.path.join(save_path, "confmap_config.json"))
@@ -1526,6 +1544,8 @@ class CentroidCrop(InferenceLayer):
             the predicted peaks. This is true by default since crops are used
             for finding instance peaks in a top down model. If using a centroid
             only inference model, this should be set to `False`.
+        max_instances: If set, determines the max number of instances that a
+            multi-instance model returns.
     """
 
     def __init__(
@@ -1542,6 +1562,7 @@ class CentroidCrop(InferenceLayer):
         confmaps_ind: Optional[int] = None,
         offsets_ind: Optional[int] = None,
         return_crops: bool = True,
+        max_instances: Optional[int] = None,
         **kwargs,
     ):
         super().__init__(
@@ -1579,6 +1600,7 @@ class CentroidCrop(InferenceLayer):
         self.integral_patch_size = integral_patch_size
         self.return_confmaps = return_confmaps
         self.return_crops = return_crops
+        self.max_instances = max_instances
 
     @tf.function
     def call(self, inputs):
@@ -1672,8 +1694,66 @@ class CentroidCrop(InferenceLayer):
         # Store crop offsets.
         crop_offsets = centroid_points - (self.crop_size / 2)
 
+        samples = tf.shape(imgs)[0]
+
         n_peaks = tf.shape(centroid_points)[0]
+
         if n_peaks > 0:
+
+            if self.max_instances is not None:
+
+                centroid_points = tf.RaggedTensor.from_value_rowids(
+                    centroid_points, crop_sample_inds, nrows=samples
+                )
+                centroid_vals = tf.RaggedTensor.from_value_rowids(
+                    centroid_vals, crop_sample_inds, nrows=samples
+                )
+
+                _centroid_vals = tf.TensorArray(
+                    size=samples,
+                    dtype=tf.float32,
+                    infer_shape=False,
+                    element_shape=[None],
+                )
+
+                _centroid_points = tf.TensorArray(
+                    size=samples,
+                    dtype=tf.float32,
+                    infer_shape=False,
+                    element_shape=[None, 2],
+                )
+
+                _row_ids = tf.TensorArray(
+                    size=samples,
+                    dtype=tf.int32,
+                    infer_shape=False,
+                    element_shape=[None],
+                )
+
+                for sample in range(samples):
+
+                    top_points = tf.math.top_k(
+                        centroid_vals[sample], k=self.max_instances
+                    )
+                    top_inds = top_points.indices
+
+                    _centroid_vals = _centroid_vals.write(
+                        sample, tf.gather(centroid_vals[sample], top_inds)
+                    )
+
+                    _centroid_points = _centroid_points.write(
+                        sample, tf.gather(centroid_points[sample], top_inds)
+                    )
+
+                    _row_ids = _row_ids.write(sample, tf.fill([len(top_inds)], sample))
+
+                centroid_vals = _centroid_vals.concat()
+                centroid_points = _centroid_points.concat()
+                crop_sample_inds = _row_ids.concat()
+
+                n_peaks = tf.shape(crop_sample_inds)[0]
+
+                crop_offsets = centroid_points - (self.crop_size / 2)
 
             # Crop instances around centroids.
             bboxes = sleap.nn.data.instance_cropping.make_centered_bboxes(
@@ -1687,6 +1767,7 @@ class CentroidCrop(InferenceLayer):
             crops = tf.reshape(
                 crops, [n_peaks, self.crop_size, self.crop_size, full_imgs.shape[3]]
             )
+
         else:
             # No peaks found, so just create a placeholder stack.
             crops = tf.zeros(
@@ -1695,7 +1776,6 @@ class CentroidCrop(InferenceLayer):
             )
 
         # Group crops by sample (samples, ?, ...).
-        samples = tf.shape(imgs)[0]
         centroids = tf.RaggedTensor.from_value_rowids(
             centroid_points, crop_sample_inds, nrows=samples
         )
@@ -2396,10 +2476,17 @@ class TopDownPredictor(Predictor):
         model_name: Optional[str] = None,
         tensors: Optional[Dict[str, str]] = None,
         unrag_outputs: bool = True,
+        max_instances: Optional[int] = None,
     ):
 
         super().export_model(
-            save_path, signatures, save_traces, model_name, tensors, unrag_outputs
+            save_path,
+            signatures,
+            save_traces,
+            model_name,
+            tensors,
+            unrag_outputs,
+            max_instances,
         )
 
         if self.confmap_config is not None:
@@ -4095,10 +4182,17 @@ class TopDownMultiClassPredictor(Predictor):
         model_name: Optional[str] = None,
         tensors: Optional[Dict[str, str]] = None,
         unrag_outputs: bool = True,
+        max_instances: Optional[int] = None,
     ):
 
         super().export_model(
-            save_path, signatures, save_traces, model_name, tensors, unrag_outputs
+            save_path,
+            signatures,
+            save_traces,
+            model_name,
+            tensors,
+            unrag_outputs,
+            max_instances,
         )
 
         if self.confmap_config is not None:
@@ -4224,6 +4318,7 @@ def export_model(
     model_name: Optional[str] = None,
     tensors: Optional[Dict[str, str]] = None,
     unrag_outputs: bool = True,
+    max_instances: Optional[int] = None,
 ):
     """High level export of a trained SLEAP model as a frozen graph.
 
@@ -4241,10 +4336,20 @@ def export_model(
             sleap.nn.data.utils.describe_tensors as an example).
         unrag_outputs: If `True` (default), any ragged tensors will be
             converted to normal tensors and padded with NaNs
+        max_instances: If set, determines the max number of instances that a
+            multi-instance model returns. This is enforced during centroid
+            cropping and therefore only compatible with TopDown models.
     """
     predictor = load_model(model_path)
+
     predictor.export_model(
-        save_path, signatures, save_traces, model_name, tensors, unrag_outputs
+        save_path,
+        signatures,
+        save_traces,
+        model_name,
+        tensors,
+        unrag_outputs,
+        max_instances,
     )
 
 
@@ -4280,6 +4385,15 @@ def export_cli():
         help=(
             "Convert ragged tensors into regular tensors with NaN padding. "
             "Defaults to True."
+        ),
+    )
+    parser.add_argument(
+        "-m",
+        "--max_instances",
+        type=int,
+        help=(
+            "Limit maximum number of instances in multi-instance models"
+            "Defaults to None"
         ),
     )
 

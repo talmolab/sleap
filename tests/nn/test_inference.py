@@ -598,6 +598,7 @@ def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
     predictor = TopDownPredictor.from_trained_models(
         centroid_model_path=min_centroid_model_path
     )
+
     predictor.verbosity = "none"
     labels_pr = predictor.predict(min_labels)
     assert len(labels_pr) == 1
@@ -613,6 +614,13 @@ def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
     )
     inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
+
+    # test max_instances (>2 will fail)
+    predictor.inference_model.centroid_crop.max_instances = 2
+    labels_pr = predictor.predict(min_labels)
+
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 2
 
 
 def test_topdown_predictor_centroid_high_threshold(min_labels, min_centroid_model_path):
@@ -631,6 +639,7 @@ def test_topdown_predictor_centered_instance(
     predictor = TopDownPredictor.from_trained_models(
         confmap_model_path=min_centered_instance_model_path
     )
+
     predictor.verbosity = "none"
     labels_pr = predictor.predict(min_labels)
     assert len(labels_pr) == 1
@@ -930,6 +939,14 @@ def test_centroid_inference():
     assert preds["centroids"].shape == (1, 3, 2)
     assert preds["centroid_vals"].shape == (1, 3)
 
+    # test max instances (>3 will fail)
+    layer.max_instances = 3
+    out = layer(cms)
+
+    model = CentroidInferenceModel(layer)
+
+    preds = model.predict(cms)
+
 
 def export_frozen_graph(model, preds, output_path):
 
@@ -1079,6 +1096,15 @@ def test_single_instance_predictor_save(min_single_instance_robot_model_path, tm
         unrag_outputs=False,
     )
 
+    # max_instances should raise an exception for single instance
+    with pytest.raises(Exception):
+        export_model(
+            min_single_instance_robot_model_path,
+            save_path=tmp_path.as_posix(),
+            unrag_outputs=False,
+            max_instances=1,
+        )
+
 
 def test_topdown_predictor_save(
     min_centroid_model_path, min_centered_instance_model_path, tmp_path
@@ -1110,6 +1136,14 @@ def test_topdown_predictor_save(
         unrag_outputs=False,
     )
 
+    # test max instances
+    export_model(
+        [min_centroid_model_path, min_centered_instance_model_path],
+        save_path=tmp_path.as_posix(),
+        unrag_outputs=False,
+        max_instances=4,
+    )
+
 
 def test_topdown_id_predictor_save(
     min_centroid_model_path, min_topdown_multiclass_model_path, tmp_path
@@ -1139,6 +1173,14 @@ def test_topdown_id_predictor_save(
         [min_centroid_model_path, min_topdown_multiclass_model_path],
         save_path=tmp_path.as_posix(),
         unrag_outputs=False,
+    )
+
+    # test max instances
+    export_model(
+        [min_centroid_model_path, min_topdown_multiclass_model_path],
+        save_path=tmp_path.as_posix(),
+        unrag_outputs=False,
+        max_instances=4,
     )
 
 
