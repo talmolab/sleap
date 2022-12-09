@@ -762,7 +762,7 @@ class FindInstancePeaksGroundTruth(tf.keras.layers.Layer):
             tf.int64
         )  # (batch_size, n_centroids, 1, 1, 2)
         dists = a - b  # (batch_size, n_centroids, n_insts, n_nodes, 2)
-        dists = tf.sqrt(tf.reduce_sum(dists ** 2, axis=-1))  # reduce over xy
+        dists = tf.sqrt(tf.reduce_sum(tf.math.square(dists), axis=-1))  # reduce over xy
         dists = tf.reduce_min(dists, axis=-1)  # reduce over nodes
         dists = dists.to_tensor(
             tf.cast(np.NaN, tf.float32)
@@ -1453,14 +1453,17 @@ class SingleInstancePredictor(Predictor):
                 ex["instance_peak_vals"],
             ):
                 # Loop over instances.
-                predicted_instances = [
-                    sleap.instance.PredictedInstance.from_arrays(
-                        points=points[0],
-                        point_confidences=confidences[0],
-                        instance_score=np.nansum(confidences[0]),
-                        skeleton=skeleton,
-                    )
-                ]
+                if np.isnan(points[0]).all():
+                    predicted_instances = []
+                else:
+                    predicted_instances = [
+                        sleap.instance.PredictedInstance.from_arrays(
+                            points=points[0],
+                            point_confidences=confidences[0],
+                            instance_score=np.nansum(confidences[0]),
+                            skeleton=skeleton,
+                        )
+                    ]
 
                 predicted_frames.append(
                     sleap.LabeledFrame(
@@ -2434,6 +2437,9 @@ class TopDownPredictor(Predictor):
                 # Loop over instances.
                 predicted_instances = []
                 for pts, confs, score in zip(points, confidences, scores):
+                    if np.isnan(pts).all():
+                        continue
+
                     predicted_instances.append(
                         sleap.instance.PredictedInstance.from_arrays(
                             points=pts,
@@ -2999,6 +3005,9 @@ class BottomUpPredictor(Predictor):
                 # Loop over instances.
                 predicted_instances = []
                 for pts, confs, score in zip(points, confidences, scores):
+                    if np.isnan(pts).all():
+                        continue
+
                     predicted_instances.append(
                         sleap.instance.PredictedInstance.from_arrays(
                             points=pts,

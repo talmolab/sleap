@@ -574,13 +574,24 @@ def test_single_instance_predictor_high_peak_thresh(
     min_labels_robot, min_single_instance_robot_model_path
 ):
     predictor = SingleInstancePredictor.from_trained_models(
+        min_single_instance_robot_model_path, peak_threshold=0
+    )
+    predictor.verbosity = "none"
+    labels_pr = predictor.predict(min_labels_robot)
+    assert len(labels_pr) == 2
+    assert len(labels_pr[0]) == 1
+    assert labels_pr[0][0].n_visible_points == 2
+    assert len(labels_pr[1]) == 1
+    assert labels_pr[1][0].n_visible_points == 2
+
+    predictor = SingleInstancePredictor.from_trained_models(
         min_single_instance_robot_model_path, peak_threshold=1.5
     )
     predictor.verbosity = "none"
     labels_pr = predictor.predict(min_labels_robot)
     assert len(labels_pr) == 2
-    assert labels_pr[0][0].n_visible_points == 0
-    assert labels_pr[1][0].n_visible_points == 0
+    assert len(labels_pr[0]) == 0
+    assert len(labels_pr[1]) == 0
 
 
 def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
@@ -612,6 +623,16 @@ def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
     assert len(labels_pr[0].instances) == 2
 
 
+def test_topdown_predictor_centroid_high_threshold(min_labels, min_centroid_model_path):
+    predictor = TopDownPredictor.from_trained_models(
+        centroid_model_path=min_centroid_model_path, peak_threshold=1.5
+    )
+    predictor.verbosity = "none"
+    labels_pr = predictor.predict(min_labels)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 0
+
+
 def test_topdown_predictor_centered_instance(
     min_labels, min_centered_instance_model_path
 ):
@@ -634,6 +655,18 @@ def test_topdown_predictor_centered_instance(
     )
     inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
+
+
+def test_topdown_predictor_centered_instance_high_threshold(
+    min_labels, min_centered_instance_model_path
+):
+    predictor = TopDownPredictor.from_trained_models(
+        confmap_model_path=min_centered_instance_model_path, peak_threshold=1.5
+    )
+    predictor.verbosity = "none"
+    labels_pr = predictor.predict(min_labels)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 0
 
 
 def test_bottomup_predictor(min_labels, min_bottomup_model_path):
@@ -664,6 +697,16 @@ def test_bottomup_predictor(min_labels, min_bottomup_model_path):
     predictor.verbosity = "none"
     labels_pr = predictor.predict(min_labels)
     assert len(labels_pr[0]) == 0
+
+
+def test_bottomup_predictor_high_peak_thresh(min_labels, min_bottomup_model_path):
+    predictor = BottomUpPredictor.from_trained_models(
+        model_path=min_bottomup_model_path, peak_threshold=1.5
+    )
+    predictor.verbosity = "none"
+    labels_pr = predictor.predict(min_labels)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 0
 
 
 def test_bottomup_multiclass_predictor(
@@ -698,6 +741,20 @@ def test_bottomup_multiclass_predictor(
     labels_pr[0][1].track.name == "male"
 
 
+def test_bottomup_multiclass_predictor_high_threshold(
+    min_tracks_2node_labels, min_bottomup_multiclass_model_path
+):
+    labels_gt = sleap.Labels(min_tracks_2node_labels[[0]])
+    predictor = BottomUpMultiClassPredictor.from_trained_models(
+        model_path=min_bottomup_multiclass_model_path,
+        peak_threshold=1.5,
+        integral_refinement=False,
+    )
+    labels_pr = predictor.predict(labels_gt)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 0
+
+
 def test_topdown_multiclass_predictor(
     min_tracks_2node_labels, min_topdown_multiclass_model_path
 ):
@@ -722,6 +779,20 @@ def test_topdown_multiclass_predictor(
     assert_allclose(
         labels_gt[0][inds1[1]].numpy(), labels_pr[0][inds2[1]].numpy(), rtol=0.02
     )
+
+
+def test_topdown_multiclass_predictor_high_threshold(
+    min_tracks_2node_labels, min_topdown_multiclass_model_path
+):
+    labels_gt = sleap.Labels(min_tracks_2node_labels[[0]])
+    predictor = TopDownMultiClassPredictor.from_trained_models(
+        confmap_model_path=min_topdown_multiclass_model_path,
+        peak_threshold=1.5,
+        integral_refinement=False,
+    )
+    labels_pr = predictor.predict(labels_gt)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 0
 
 
 def test_load_model(
