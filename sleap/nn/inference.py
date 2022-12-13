@@ -1095,10 +1095,12 @@ def get_model_output_stride(
             `model.input.shape[1] // model.output.shape[1]`
 
         Raises a warning if the shapes do not divide evenly.
+        If either the size_in or size_out is None, returns None.
     """
     size_in = model.inputs[input_ind].shape[1]
     size_out = model.outputs[output_ind].shape[1]
-    # TODO(LM): Add check for None size
+    # if size_in is None or size_out is None:
+    #     return None
     if size_in % size_out != 0:
         warnings.warn(
             f"Model input of shape {model.inputs[input_ind].shape} does not divide "
@@ -3425,6 +3427,7 @@ class BottomUpMultiClassPredictor(Predictor):
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
+        resize_input_layer: bool = True,
     ) -> "BottomUpMultiClassPredictor":
         """Create predictor from a saved model.
 
