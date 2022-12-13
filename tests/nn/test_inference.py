@@ -19,6 +19,7 @@ from sleap.nn.data.confidence_maps import (
 from sleap.nn.inference import (
     InferenceLayer,
     InferenceModel,
+    Predictor,
     get_model_output_stride,
     find_head,
     SingleInstanceInferenceLayer,
@@ -795,28 +796,48 @@ def test_topdown_multiclass_predictor_high_threshold(
     assert len(labels_pr[0].instances) == 0
 
 
-def test_load_model(
-    min_single_instance_robot_model_path,
-    min_centroid_model_path,
-    min_centered_instance_model_path,
-    min_bottomup_model_path,
-    min_topdown_multiclass_model_path,
-    min_bottomup_multiclass_model_path,
-):
-    predictor = load_model(min_single_instance_robot_model_path)
-    assert isinstance(predictor, SingleInstancePredictor)
+@pytest.mark.parametrize("resize_input_shape", ["True, False"])
+@pytest.mark.parametrize(
+    "model_fixture_name",
+    [
+        # "min_centroid_model_path",
+        # "min_centered_instance_model_path",
+        "min_bottomup_model_path",
+        "min_single_instance_robot_model_path",
+        "min_bottomup_multiclass_model_path",
+        # "min_topdown_multiclass_model_path",
+    ],
+)
+def test_load_model(resize_input_shape, model_fixture_name, request):
+    model_path = request.getfixturevalue(model_fixture_name)
+    name_mname_ptype = [
+        ("centroid", "centroid_model", TopDownPredictor),
+        ("centered_instance", "confmap_model", TopDownPredictor),
+        ("bottomup_model", "bottomup_model", BottomUpPredictor),
+        ("single_instance", "confmap_model", SingleInstancePredictor),
+        ("bottomup_multiclass", "model", BottomUpMultiClassPredictor),
+        ("topdown_multiclass", "confmap_model", TopDownMultiClassPredictor),
+    ]
+    expected_model_name = None
+    expected_predictor_type = None
 
-    predictor = load_model([min_centroid_model_path, min_centered_instance_model_path])
-    assert isinstance(predictor, TopDownPredictor)
+    # Create predictor
+    predictor = load_model(model_path)
 
-    predictor = load_model(min_bottomup_model_path)
-    assert isinstance(predictor, BottomUpPredictor)
+    # Determine predictor type
+    for fname, mname, ptype in name_mname_ptype:
+        if fname in model_fixture_name:
+            expected_model_name = mname
+            expected_predictor_type = ptype
+            break
 
-    predictor = load_model([min_centroid_model_path, min_topdown_multiclass_model_path])
-    assert isinstance(predictor, TopDownMultiClassPredictor)
-
-    predictor = load_model(min_bottomup_multiclass_model_path)
-    assert isinstance(predictor, BottomUpMultiClassPredictor)
+    # Assert predictor type and model input shape are correct
+    assert isinstance(predictor, expected_predictor_type)
+    keras_model = getattr(predictor, expected_model_name).keras_model
+    if resize_input_shape:
+        assert keras_model.input_shape == (None, None, None, 1)
+    else:
+        assert keras_model.input_shape == (None, 300, 300, 1)
 
 
 def test_ensure_numpy(
@@ -1287,3 +1308,7 @@ def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
         for key in tracker.candidate_maker.shifted_instances.keys():
             assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
             assert abs(key[0] - key[1]) <= track_window  # References within window
+
+
+if __name__ == "__main__":
+    pytest.main([r"tests\nn\test_inference.py::test_load_model", "-rP"])
