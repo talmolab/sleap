@@ -823,7 +823,7 @@ class InferenceLayer(tf.keras.layers.Layer):
     Attributes:
         keras_model: A `tf.keras.Model` that will be called on the input to this layer.
         input_scale: If not 1.0, input image will be resized by this factor.
-        pad_to_stride: If not 1, input image will be paded to ensure that it is
+        pad_to_stride: If not 1, input image will be padded to ensure that it is
             divisible by this value (after scaling).
         ensure_grayscale: If `True`, converts inputs to grayscale if not already. If
             `False`, converts inputs to RGB if not already. If `None` (default), infer
@@ -1371,6 +1371,7 @@ class SingleInstancePredictor(Predictor):
                 peak_threshold=self.peak_threshold,
                 refinement="integral" if self.integral_refinement else "local",
                 integral_patch_size=self.integral_patch_size,
+                output_stride=self.confmap_config.model.heads.single_instance.output_stride,
             )
         )
 
@@ -1611,7 +1612,7 @@ class CentroidCrop(InferenceLayer):
         if output_stride is None:
             # Attempt to automatically infer the output stride.
             output_stride = get_model_output_stride(
-                self.keras_model, 0, self.confmaps_ind
+                self.keras_model, output_ind=self.confmaps_ind
             )
         self.output_stride = output_stride
         self.peak_threshold = peak_threshold
@@ -1904,7 +1905,7 @@ class FindInstancePeaks(InferenceLayer):
         if output_stride is None:
             # Attempt to automatically infer the output stride.
             output_stride = get_model_output_stride(
-                self.keras_model, 0, self.confmaps_ind
+                self.keras_model, output_ind=self.confmaps_ind
             )
         self.output_stride = output_stride
 
@@ -2906,6 +2907,8 @@ class BottomUpPredictor(Predictor):
                 peak_threshold=self.peak_threshold,
                 refinement="integral" if self.integral_refinement else "local",
                 integral_patch_size=self.integral_patch_size,
+                cm_output_stride=self.bottomup_config.model.heads.multi_instance.confmaps.output_stride,
+                paf_output_stride=self.bottomup_config.model.heads.multi_instance.pafs.output_stride,
             )
         )
 
@@ -3416,6 +3419,8 @@ class BottomUpMultiClassPredictor(Predictor):
                 peak_threshold=self.peak_threshold,
                 refinement="integral" if self.integral_refinement else "local",
                 integral_patch_size=self.integral_patch_size,
+                cm_output_stride=self.config.model.heads.multi_class_bottomup.confmaps.output_stride,
+                class_maps_output_stride=self.config.model.heads.multi_class_bottomup.class_maps.output_stride,
             )
         )
 
@@ -3664,7 +3669,7 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
         if output_stride is None:
             # Attempt to automatically infer the output stride.
             output_stride = get_model_output_stride(
-                self.keras_model, 0, self.confmaps_ind
+                self.keras_model, output_ind=self.confmaps_ind
             )
         self.output_stride = output_stride
 
@@ -4939,13 +4944,3 @@ def main(args: Optional[list] = None):
 
     if args.open_in_gui:
         subprocess.call(["sleap-label", output_path])
-
-
-if __name__ == "__main__":
-    import os
-
-    ds_video = os.environ["ds-input-scaling-video"]
-    ds_model1 = os.environ["ds-input-scaling-td1"]
-    ds_model2 = os.environ["ds-input-scaling-td2"]
-    cmd = f"{ds_video} -m {ds_model1} -m {ds_model2} --frames 0-10"
-    main(cmd.split())
