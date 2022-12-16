@@ -1114,13 +1114,15 @@ def test_single_instance_predictor_save(min_single_instance_robot_model_path, tm
 
     # directly initialize predictor
     predictor = SingleInstancePredictor.from_trained_models(
-        min_single_instance_robot_model_path
+        min_single_instance_robot_model_path, resize_input_layer=False
     )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
     # high level load to predictor
-    predictor = load_model(min_single_instance_robot_model_path)
+    predictor = load_model(
+        min_single_instance_robot_model_path, resize_input_layer=False
+    )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
@@ -1152,12 +1154,16 @@ def test_topdown_predictor_save(
     predictor = TopDownPredictor.from_trained_models(
         centroid_model_path=min_centroid_model_path,
         confmap_model_path=min_centered_instance_model_path,
+        resize_input_layer=False,
     )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
     # high level load to predictor
-    predictor = load_model([min_centroid_model_path, min_centered_instance_model_path])
+    predictor = load_model(
+        [min_centroid_model_path, min_centered_instance_model_path],
+        resize_input_layer=False,
+    )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
@@ -1191,12 +1197,16 @@ def test_topdown_id_predictor_save(
     predictor = TopDownMultiClassPredictor.from_trained_models(
         centroid_model_path=min_centroid_model_path,
         confmap_model_path=min_topdown_multiclass_model_path,
+        resize_input_layer=False,
     )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
     # high level load to predictor
-    predictor = load_model([min_centroid_model_path, min_topdown_multiclass_model_path])
+    predictor = load_model(
+        [min_centroid_model_path, min_topdown_multiclass_model_path],
+        resize_input_layer=False,
+    )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
@@ -1328,4 +1338,4 @@ def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
 
 
 if __name__ == "__main__":
-    pytest.main([r"tests\nn\test_inference.py::test_load_model", "-rP"])
+    pytest.main([r"tests\nn\test_inference.py::test_topdown_id_predictor_save", "-rP"])

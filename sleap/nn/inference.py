@@ -4061,9 +4061,10 @@ class TopDownMultiClassPredictor(Predictor):
             centroid_model.keras_model = tf.keras.models.load_model(
                 centroid_keras_model_path, compile=False
             )
-            centroid_model.keras_model = reset_input_layer(
-                keras_model=centroid_model.keras_model, new_shape=None
-            )
+            if resize_input_layer:
+                centroid_model.keras_model = reset_input_layer(
+                    keras_model=centroid_model.keras_model, new_shape=None
+                )
         else:
             centroid_config = None
             centroid_model = None
@@ -4076,9 +4077,10 @@ class TopDownMultiClassPredictor(Predictor):
             confmap_model.keras_model = tf.keras.models.load_model(
                 confmap_keras_model_path, compile=False
             )
-            confmap_model.keras_model = reset_input_layer(
-                keras_model=confmap_model.keras_model, new_shape=None
-            )
+            if resize_input_layer:
+                confmap_model.keras_model = reset_input_layer(
+                    keras_model=confmap_model.keras_model, new_shape=None
+                )
         else:
             confmap_config = None
             confmap_model = None
@@ -4404,7 +4406,7 @@ def export_model(
             multi-instance model returns. This is enforced during centroid
             cropping and therefore only compatible with TopDown models.
     """
-    predictor = load_model(model_path)  # XXX: turn off arbitrary shape here if needed?
+    predictor = load_model(model_path, resize_input_layer=False)
 
     predictor.export_model(
         save_path,
