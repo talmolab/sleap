@@ -96,6 +96,7 @@ class VideoWriterSkvideo(VideoWriter):
             outputdict={
                 "-c:v": "libx264",
                 "-preset": preset,
+                "-vf": "scale=trunc(iw/2)*2:trunc(ih/2)*2",  # Need even dims for libx264
                 "-framerate": fps,
                 "-crf": str(crf),
                 "-pix_fmt": "yuv420p",
