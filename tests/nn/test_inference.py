@@ -824,13 +824,13 @@ def test_load_model(resize_input_shape, model_fixture_name, request):
             "bottomup_multiclass",
             "model",
             BottomUpMultiClassPredictor,
-            (None, None, None, 1),
+            (None, 512, 512, 1),
         ),
         (
             "topdown_multiclass",
             "confmap_model",
             TopDownMultiClassPredictor,
-            (None, None, None, 1),
+            (None, 128, 128, 1),
         ),
     ]
     expected_model_name = None
@@ -1335,7 +1335,3 @@ def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
         for key in tracker.candidate_maker.shifted_instances.keys():
             assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
             assert abs(key[0] - key[1]) <= track_window  # References within window
-
-
-if __name__ == "__main__":
-    pytest.main([r"tests\nn\test_inference.py::test_topdown_id_predictor_save", "-rP"])

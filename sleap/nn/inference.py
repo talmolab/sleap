@@ -3462,7 +3462,7 @@ class BottomUpMultiClassPredictor(Predictor):
         keras_model_path = get_keras_model_path(model_path)
         model = Model.from_config(config.model)
         model.keras_model = tf.keras.models.load_model(keras_model_path, compile=False)
-        if reset_input_layer:
+        if resize_input_layer:
             model.keras_model = reset_input_layer(
                 keras_model=model.keras_model, new_shape=None
             )
