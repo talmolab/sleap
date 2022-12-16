@@ -159,12 +159,14 @@ class MainWindow(QMainWindow):
         self.state["marker size"] = prefs["marker size"]
         self.state["propagate track labels"] = prefs["propagate track labels"]
         self.state["node label size"] = prefs["node label size"]
+        self.state["visualize models"] = False
         self.state["share usage data"] = prefs["share usage data"]
         if no_usage_data:
             self.state["share usage data"] = False
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
         self.state.connect("show non-visible nodes", self.plotFrame)
+        self.state.connect("visualize models", self._handle_model_overlay_command)
 
         self.release_checker = ReleaseChecker()
 
@@ -832,11 +834,8 @@ class MainWindow(QMainWindow):
             self._show_metrics_dialog,
         )
 
-        add_menu_item(
-            predictionMenu,
-            "visualize models",
-            "Visualize Model Outputs...",
-            self._handle_model_overlay_command,
+        add_menu_check_item(
+            predictionMenu, "visualize models", "Visualize Model Outputs..."
         )
 
         predictionMenu.addSeparator()
@@ -1664,9 +1663,8 @@ class MainWindow(QMainWindow):
 
         if "inference" in self.overlays:
             QMessageBox(
-                text="In order to use this function you must first quit and "
-                "re-open SLEAP to release resources used by visualizing "
-                "model outputs."
+                text="In order to use this function you must uncheck "
+                "'Visualize Model Outputs' to release resources used."
             ).exec_()
             return
 
@@ -1719,51 +1717,62 @@ class MainWindow(QMainWindow):
 
     def _handle_model_overlay_command(self):
         """Gui for adding overlay with live visualization of predictions."""
-        filters = ["Model (*.json)"]
 
-        # Default to opening from models directory from project
-        models_dir = None
-        if self.state["filename"] is not None:
-            models_dir = os.path.join(
-                os.path.dirname(self.state["filename"]), "models/"
+        if not self.state["visualize models"]:
+            # Remove inference from overlays
+
+            self.overlays.pop("inference", None)
+
+        else:
+            # Select model to use and add inference to overlays
+
+            filters = ["Model (*.json)"]
+
+            # Default to opening from models directory from project
+            models_dir = None
+            if self.state["filename"] is not None:
+                models_dir = os.path.join(
+                    os.path.dirname(self.state["filename"]), "models/"
+                )
+
+            # Show dialog
+            filename, selected_filter = FileDialog.open(
+                self,
+                dir=models_dir,
+                caption="Import model outputs...",
+                filter=";;".join(filters),
             )
 
-        # Show dialog
-        filename, selected_filter = FileDialog.open(
-            self,
-            dir=models_dir,
-            caption="Import model outputs...",
-            filter=";;".join(filters),
-        )
+            if len(filename) == 0:
+                return
 
-        if len(filename) == 0:
-            return
+            # Model as overlay datasource
+            # This will show live inference results
 
-        # Model as overlay datasource
-        # This will show live inference results
+            from sleap.gui.overlays.base import DataOverlay
 
-        from sleap.gui.overlays.base import DataOverlay
+            predictor = DataOverlay.make_predictor(filename)
+            show_pafs = False
 
-        predictor = DataOverlay.make_predictor(filename)
-        show_pafs = False
+            # If multi-head model with both confmaps and pafs,
+            # ask user which to show.
+            if (
+                predictor.confidence_maps_key_name
+                and predictor.part_affinity_fields_key_name
+            ):
+                results = FormBuilderModalDialog(
+                    form_name="head_type_form"
+                ).get_results()
+                show_pafs = "Part Affinity" in results["head_type"]
 
-        # If multi-head model with both confmaps and pafs,
-        # ask user which to show.
-        if (
-            predictor.confidence_maps_key_name
-            and predictor.part_affinity_fields_key_name
-        ):
-            results = FormBuilderModalDialog(form_name="head_type_form").get_results()
-            show_pafs = "Part Affinity" in results["head_type"]
+            overlay = DataOverlay.from_predictor(
+                predictor=predictor,
+                video=self.state["video"],
+                player=self.player,
+                show_pafs=show_pafs,
+            )
 
-        overlay = DataOverlay.from_predictor(
-            predictor=predictor,
-            video=self.state["video"],
-            player=self.player,
-            show_pafs=show_pafs,
-        )
-
-        self.overlays["inference"] = overlay
+            self.overlays["inference"] = overlay
 
         self.plotFrame()
 

@@ -503,137 +503,6 @@ class Predictor(ABC):
         )
 
 
-# TODO: Rewrite this class.
-@attr.s(auto_attribs=True)
-class VisualPredictor(Predictor):
-    """Predictor class for generating the visual output of model."""
-
-    config: TrainingJobConfig
-    model: Model
-    pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
-
-    @property
-    def data_config(self) -> DataConfig:
-        return self.config.data
-
-    @classmethod
-    def from_trained_models(cls, model_path: Text) -> "VisualPredictor":
-        cfg = TrainingJobConfig.load_json(model_path)
-        keras_model_path = get_keras_model_path(model_path)
-        model = Model.from_config(cfg.model)
-        model.keras_model = tf.keras.models.load_model(keras_model_path, compile=False)
-
-        return cls(config=cfg, model=model)
-
-    def head_specific_output_keys(self) -> List[Text]:
-        keys = []
-
-        key = self.confidence_maps_key_name
-        if key:
-            keys.append(key)
-
-        key = self.part_affinity_fields_key_name
-        if key:
-            keys.append(key)
-
-        return keys
-
-    @property
-    def confidence_maps_key_name(self) -> Optional[Text]:
-        head_key = self.config.model.heads.which_oneof_attrib_name()
-
-        if head_key in ("multi_instance", "single_instance"):
-            return "predicted_confidence_maps"
-
-        if head_key == "centroid":
-            return "predicted_centroid_confidence_maps"
-
-        # todo: centered_instance
-
-        return None
-
-    @property
-    def part_affinity_fields_key_name(self) -> Optional[Text]:
-        head_key = self.config.model.heads.which_oneof_attrib_name()
-
-        if head_key == "multi_instance":
-            return "predicted_part_affinity_fields"
-
-        return None
-
-    def make_pipeline(self):
-        pipeline = Pipeline()
-        if self.data_config.preprocessing.resize_and_pad_to_target:
-            pipeline += SizeMatcher.from_config(
-                config=self.data_config.preprocessing,
-                points_key=None,
-            )
-        pipeline += Normalizer.from_config(self.config.data.preprocessing)
-        pipeline += Resizer.from_config(
-            self.config.data.preprocessing, keep_full_image=False, points_key=None
-        )
-
-        pipeline += KerasModelPredictor(
-            keras_model=self.model.keras_model,
-            model_input_keys="image",
-            model_output_keys=self.head_specific_output_keys(),
-        )
-
-        self.pipeline = pipeline
-
-    def safely_generate(self, ds: tf.data.Dataset, progress: bool = True):
-        """Yields examples from dataset, catching and logging exceptions."""
-        # Unsafe generating:
-        # for example in ds:
-        #     yield example
-
-        ds_iter = iter(ds)
-
-        i = 0
-        wall_t0 = time()
-        done = False
-        while not done:
-            try:
-                next_val = next(ds_iter)
-                yield next_val
-            except StopIteration:
-                done = True
-            except Exception as e:
-                logger.info(f"ERROR in sample index {i}")
-                logger.info(e)
-                logger.info("")
-            finally:
-                if not done:
-                    i += 1
-
-                # Show the current progress (frames, time, fps)
-                if progress:
-                    if (i and i % 1000 == 0) or done:
-                        elapsed_time = time() - wall_t0
-                        logger.info(
-                            f"Finished {i} examples in {elapsed_time:.2f} seconds "
-                            "(inference + postprocessing)"
-                        )
-                        if elapsed_time:
-                            logger.info(f"examples/s = {i/elapsed_time}")
-
-    def predict_generator(self, data_provider: Provider):
-        if self.pipeline is None:
-            # Pass in data provider when mocking one of the models.
-            self.make_pipeline()
-
-        self.pipeline.providers = [data_provider]
-
-        # Yield each example from dataset, catching and logging exceptions
-        return self.safely_generate(self.pipeline.make_dataset())
-
-    def predict(self, data_provider: Provider):
-        generator = self.predict_generator(data_provider)
-        examples = list(generator)
-
-        return examples
-
-
 class CentroidCropGroundTruth(tf.keras.layers.Layer):
     """Keras layer that simulates a centroid cropping model using ground truth.
 
@@ -4203,6 +4072,147 @@ class TopDownMultiClassPredictor(Predictor):
             self.centroid_config.save_json(
                 os.path.join(save_path, "centroid_config.json")
             )
+
+
+# TODO: Rewrite this class.
+@attr.s(auto_attribs=True)
+class VisualPredictor(Predictor):
+    """Predictor class for generating the visual output of model."""
+
+    config: TrainingJobConfig
+    model: Model
+    inference_model: Optional[InferenceModel] = attr.ib(default=None)
+    pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
+
+    def _initialize_inference_model(self):
+        """Initialize the inference model from the trained model and configuration."""
+        pass
+
+    @property
+    def data_config(self) -> DataConfig:
+        return self.config.data
+
+    @property
+    def is_grayscale(self) -> bool:
+        """Return whether the model expects grayscale inputs."""
+        return self.model.keras_model.input.shape[-1] == 1
+
+    @classmethod
+    def from_trained_models(cls, model_path: Text) -> "VisualPredictor":
+        cfg = TrainingJobConfig.load_json(model_path)
+        keras_model_path = get_keras_model_path(model_path)
+        model = Model.from_config(cfg.model)
+        model.keras_model = tf.keras.models.load_model(keras_model_path, compile=False)
+
+        return cls(config=cfg, model=model)
+
+    def head_specific_output_keys(self) -> List[Text]:
+        keys = []
+
+        key = self.confidence_maps_key_name
+        if key:
+            keys.append(key)
+
+        key = self.part_affinity_fields_key_name
+        if key:
+            keys.append(key)
+
+        return keys
+
+    @property
+    def confidence_maps_key_name(self) -> Optional[Text]:
+        head_key = self.config.model.heads.which_oneof_attrib_name()
+
+        if head_key in ("multi_instance", "single_instance"):
+            return "predicted_confidence_maps"
+
+        if head_key == "centroid":
+            return "predicted_centroid_confidence_maps"
+
+        # todo: centered_instance
+
+        return None
+
+    @property
+    def part_affinity_fields_key_name(self) -> Optional[Text]:
+        head_key = self.config.model.heads.which_oneof_attrib_name()
+
+        if head_key == "multi_instance":
+            return "predicted_part_affinity_fields"
+
+        return None
+
+    def make_pipeline(self):
+        pipeline = Pipeline()
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                points_key=None,
+            )
+        pipeline += Normalizer.from_config(self.config.data.preprocessing)
+        pipeline += Resizer.from_config(
+            self.config.data.preprocessing, keep_full_image=False, points_key=None
+        )
+
+        pipeline += KerasModelPredictor(
+            keras_model=self.model.keras_model,
+            model_input_keys="image",
+            model_output_keys=self.head_specific_output_keys(),
+        )
+
+        self.pipeline = pipeline
+
+    def safely_generate(self, ds: tf.data.Dataset, progress: bool = True):
+        """Yields examples from dataset, catching and logging exceptions."""
+        # Unsafe generating:
+        # for example in ds:
+        #     yield example
+
+        ds_iter = iter(ds)
+
+        i = 0
+        wall_t0 = time()
+        done = False
+        while not done:
+            try:
+                next_val = next(ds_iter)
+                yield next_val
+            except StopIteration:
+                done = True
+            except Exception as e:
+                logger.info(f"ERROR in sample index {i}")
+                logger.info(e)
+                logger.info("")
+            finally:
+                if not done:
+                    i += 1
+
+                # Show the current progress (frames, time, fps)
+                if progress:
+                    if (i and i % 1000 == 0) or done:
+                        elapsed_time = time() - wall_t0
+                        logger.info(
+                            f"Finished {i} examples in {elapsed_time:.2f} seconds "
+                            "(inference + postprocessing)"
+                        )
+                        if elapsed_time:
+                            logger.info(f"examples/s = {i/elapsed_time}")
+
+    def predict_generator(self, data_provider: Provider):
+        if self.pipeline is None:
+            # Pass in data provider when mocking one of the models.
+            self.make_pipeline()
+
+        self.pipeline.providers = [data_provider]
+
+        # Yield each example from dataset, catching and logging exceptions
+        return self.safely_generate(self.pipeline.make_dataset())
+
+    def predict(self, data_provider: Provider):
+        generator = self.predict_generator(data_provider)
+        examples = list(generator)
+
+        return examples
 
 
 def load_model(
