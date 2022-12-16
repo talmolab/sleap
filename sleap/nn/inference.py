@@ -506,7 +506,7 @@ class Predictor(ABC):
 # TODO: Rewrite this class.
 @attr.s(auto_attribs=True)
 class VisualPredictor(Predictor):
-    """Predictor class for generating the visual output of model."""
+"""Predictor class for generating the visual output of model."""
 
     config: TrainingJobConfig
     model: Model
