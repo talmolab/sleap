@@ -753,9 +753,17 @@ optional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -m MODELS, --model MODELS
-                        Path to trained model directory (with training_config.json). Multiple models can be specified, each preceded by --model.
+                        Path to trained model directory (with training_config.json). Multiple
+                        models can be specified, each preceded by --model.
   -e [EXPORT_PATH], --export_path [EXPORT_PATH]
-                        Path to output directory where the frozen model will be exported to. Defaults to a folder named &#39;exported_model&#39;.
+                        Path to output directory where the frozen model will be exported to.
+                        Defaults to a folder named &#39;exported_model&#39;.
+  -u, --unrag UNRAG
+                        Convert ragged tensors into regular tensors with NaN padding.
+                        Defaults to True.
+  -i, --max_instances MAX_INSTANCES
+                        Limit maximum number of instances in multi-instance models.
+                        Defaults to None.
 </pre></div>
 </div>
 </section>
