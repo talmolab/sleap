@@ -41,6 +41,7 @@ from sleap.nn.inference import (
     _make_cli_parser,
     _make_tracker_from_cli,
     main as sleap_track,
+    export_cli as sleap_export,
 )
 
 from sleap.gui.learning import runners
@@ -1088,6 +1089,8 @@ def test_single_instance_predictor_save(min_single_instance_robot_model_path, tm
 
     # high level export (with unragging)
     export_model(min_single_instance_robot_model_path, save_path=tmp_path.as_posix())
+    cmd = f"-m {min_single_instance_robot_model_path} -e {tmp_path.as_posix()}"
+    sleap_export(cmd.split())
 
     # high level export (without unragging)
     export_model(

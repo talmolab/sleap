@@ -91,9 +91,17 @@ usage: sleap-export [-h] [-m MODELS] [-e [EXPORT_PATH]]
 optional arguments:
   -h, --help            show this help message and exit
   -m MODELS, --model MODELS
-                        Path to trained model directory (with training_config.json). Multiple models can be specified, each preceded by --model.
+                        Path to trained model directory (with training_config.json). Multiple
+                        models can be specified, each preceded by --model.
   -e [EXPORT_PATH], --export_path [EXPORT_PATH]
-                        Path to output directory where the frozen model will be exported to. Defaults to a folder named 'exported_model'.
+                        Path to output directory where the frozen model will be exported to.
+                        Defaults to a folder named 'exported_model'.
+  -u, --unrag UNRAG
+                        Convert ragged tensors into regular tensors with NaN padding.
+                        Defaults to True.
+  -i, --max_instances MAX_INSTANCES
+                        Limit maximum number of instances in multi-instance models.
+                        Defaults to None.
 ```
 
 ## Inference and Tracking
