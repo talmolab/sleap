@@ -4416,9 +4416,29 @@ def export_model(
     )
 
 
-def export_cli():
+def export_cli(args: Optional[list] = None):
     """CLI for sleap-export."""
+
+    parser = _make_export_cli_parser()
+
+    args, _ = parser.parse_known_args(args=args)
+    print("Args:")
+    pprint(vars(args))
+    print()
+
+    export_model(
+        args.models,
+        args.export_path,
+        unrag_outputs=args.unrag,
+        max_instances=args.max_instances,
+    )
+
+
+def _make_export_cli_parser() -> argparse.ArgumentParser:
+    """Create argument parser for sleap-export CLI."""
+
     parser = argparse.ArgumentParser()
+
     parser.add_argument(
         "-m",
         "--model",
@@ -4451,7 +4471,7 @@ def export_cli():
         ),
     )
     parser.add_argument(
-        "-m",
+        "-i",
         "--max_instances",
         type=int,
         help=(
@@ -4460,8 +4480,7 @@ def export_cli():
         ),
     )
 
-    args, _ = parser.parse_known_args()
-    export_model(args.models, args.export_path, unrag_outputs=args.unrag)
+    return parser
 
 
 def _make_cli_parser() -> argparse.ArgumentParser:
