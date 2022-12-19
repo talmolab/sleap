@@ -149,22 +149,21 @@ def reset_input_layer(
 
     model_config = keras_model.get_config()
 
-    input_layer_name = model_config["layers"][0]["name"]  # XXX(LM): Remove or...
+    input_layer_name = model_config["layers"][0]["name"]
     model_config["layers"][0] = {
-        "name": "new_input",  # XXX(LM): ...change to input_layer_name
+        "name": f"{input_layer_name}",
         "class_name": "InputLayer",
         "config": {
             "batch_input_shape": new_shape,
             "dtype": "float32",
             "sparse": False,
-            "name": "new_input",  # XXX(LM): ...change to input_layer_name
+            "name": f"{input_layer_name}",
         },
         "inbound_nodes": [],
     }
 
-    # XXX(LM): ...change to input_layer_name
-    model_config["layers"][1]["inbound_nodes"] = [[["new_input", 0, 0, {}]]]
-    model_config["input_layers"] = [["new_input", 0, 0]]
+    model_config["layers"][1]["inbound_nodes"] = [[[f"{input_layer_name}", 0, 0, {}]]]
+    model_config["input_layers"] = [[f"{input_layer_name}", 0, 0]]
 
     new_model: tf.keras.Model = keras_model.__class__.from_config(
         model_config, custom_objects={}
