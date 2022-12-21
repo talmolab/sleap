@@ -858,6 +858,28 @@ def test_load_model(resize_input_shape, model_fixture_name, request):
         assert keras_model.input_shape == input_shape
 
 
+def test_topdown_multi_size_inference(
+    min_centroid_model_path,
+    min_centered_instance_model_path,
+    centered_pair_labels,
+    min_tracks_2node_labels,
+):
+    imgs = centered_pair_labels.video[:2]
+    assert imgs.shape == (2, 384, 384, 1)
+
+    predictor = load_model(
+        [min_centroid_model_path, min_centered_instance_model_path],
+        resize_input_layer=True,
+    )
+    preds = predictor.predict(imgs)
+    assert len(preds) == 2
+
+    imgs = min_tracks_2node_labels.video[:2]
+    assert imgs.shape == (2, 1024, 1024, 1)
+    preds = predictor.predict(imgs)
+    assert len(preds) == 2
+
+
 def test_ensure_numpy(
     min_centroid_model_path, min_centered_instance_model_path, min_labels_slp
 ):
