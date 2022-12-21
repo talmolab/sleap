@@ -114,12 +114,12 @@ class DataOverlay(BaseOverlay):
         what.setPos(*where)
 
     @classmethod
-    def make_predictor(cls, filename: str) -> VisualPredictor:
-        return VisualPredictor.from_trained_models(filename)
+    def make_viz_predictor(cls, filename: str) -> VisualPredictor:
+        return VisualPredictor.from_model_path(filename)
 
     @classmethod
     def from_model(cls, filename: str, *args, **kwargs):
-        return cls.from_predictor(cls.make_predictor(filename), *args, **kwargs)
+        return cls.from_predictor(cls.make_viz_predictor(filename), *args, **kwargs)
 
     @classmethod
     def from_predictor(

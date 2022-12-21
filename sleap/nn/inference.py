@@ -4074,37 +4074,133 @@ class TopDownMultiClassPredictor(Predictor):
             )
 
 
-# TODO: Rewrite this class.
+# TODO(LM): Does not support centered instance which needs to run centroid beforehand.
 @attr.s(auto_attribs=True)
-class VisualPredictor(Predictor):
-    """Predictor class for generating the visual output of model."""
+class VisualPredictor:
+    """Wrapper class for generating the visual output of model.
 
+    Initialize this class by using `VisualPredictor.from_model_paths` classmethod.
+
+    Attributes:
+        predictor: The subclass of `Predictor` used to generate predictions.
+        config: The `TrainingJobConfig` containing the metadata for the trained model.
+        model: A `Model` instance created from the trained model.
+        pipeline: A `Pipeline` that loads the data and batches input data.
+
+    Note: The `VisualPredictor` class does not inherit from `Predictor` and is instead
+        designed to wrap subclasses of the `Predictor` class, using the __getattr__
+        method to grab attributes.
+
+    """
+
+    predictor: Union[
+        SingleInstancePredictor,
+        TopDownPredictor,
+        BottomUpPredictor,
+        TopDownMultiClassPredictor,
+        BottomUpMultiClassPredictor,
+    ]
     config: TrainingJobConfig
     model: Model
-    inference_model: Optional[InferenceModel] = attr.ib(default=None)
     pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
 
-    def _initialize_inference_model(self):
-        """Initialize the inference model from the trained model and configuration."""
-        pass
-
-    @property
-    def data_config(self) -> DataConfig:
-        return self.config.data
-
-    @property
-    def is_grayscale(self) -> bool:
-        """Return whether the model expects grayscale inputs."""
-        return self.model.keras_model.input.shape[-1] == 1
+    def __getattr__(self, attr):
+        """Retrieve attributes and methods from `predictor` if not in `self`."""
+        return getattr(self.predictor, attr)
 
     @classmethod
-    def from_trained_models(cls, model_path: Text) -> "VisualPredictor":
-        cfg = TrainingJobConfig.load_json(model_path)
-        keras_model_path = get_keras_model_path(model_path)
-        model = Model.from_config(cfg.model)
-        model.keras_model = tf.keras.models.load_model(keras_model_path, compile=False)
+    def get_supported_predictors(
+        cls,
+    ) -> Dict[
+        Union[
+            SingleInstancePredictor,
+            TopDownPredictor,
+            BottomUpPredictor,
+            TopDownMultiClassPredictor,
+            BottomUpMultiClassPredictor,
+        ],
+        List[Tuple[str, str]],
+    ]:
+        """Retrieve supported `Predictor` subclasses and abstract attribute names."""
+        return {
+            SingleInstancePredictor: {("confmap_model", "confmap_config")},
+            TopDownPredictor: [
+                ("centroid_model", "centroid_config"),
+                ("confmap_model", "confmap_config"),  # Centered instance not supported
+            ],
+            BottomUpPredictor: [("bottomup_model", "bottomup_config")],
+            TopDownMultiClassPredictor: [
+                ("centroid_model", "centroid_config"),
+                ("confmap_model", "confmap_config"),  # Centered instance not supported
+            ],
+            BottomUpMultiClassPredictor: [("model", "config")],
+        }
 
-        return cls(config=cfg, model=model)
+    @classmethod
+    def from_model_path(
+        cls,
+        model_path: str,
+        peak_threshold: float = 0.2,
+        integral_refinement: bool = True,
+        integral_patch_size: int = 5,
+        batch_size: int = 4,
+    ) -> Predictor:
+        """Create the appropriate `Predictor` subclass from a list of model paths.
+
+        Args:
+            model_path: A single trained model path.
+            peak_threshold: Minimum confidence map value to consider a peak as valid.
+            integral_refinement: If `True`, peaks will be refined with integral
+                regression. If `False`, `"local"`, peaks will be refined with quarter
+                pixel local gradient offset. This has no effect if the model has an
+                offset regression head.
+            integral_patch_size: Size of patches to crop around each rough peak for
+                integral refinement as an integer scalar.
+            batch_size: The default batch size to use when loading data for inference.
+                Higher values increase inference speed at the cost of higher memory
+                usage.
+
+        Returns:
+            A subclass of `Predictor`.
+
+        See also: `SingleInstancePredictor`, `TopDownPredictor`, `BottomUpPredictor`,
+            `TopDownMultiClassPredictor`, and `BottomUpMultiClassPredictor`
+        """
+        predictor = Predictor.from_model_paths(
+            model_paths=[model_path],
+            peak_threshold=peak_threshold,
+            integral_refinement=integral_refinement,
+            integral_patch_size=integral_patch_size,
+            batch_size=batch_size,
+        )
+
+        # Link `model` and `config` of `VisualPredictor` to appropriate attributes
+        config = None
+        for pred_type, pred_attrs in VisualPredictor.get_supported_predictors().items():
+            if isinstance(predictor, pred_type):
+                for model_attr, cfg_attr in pred_attrs:
+                    model = getattr(predictor, model_attr)
+                    if model is not None:
+                        config = getattr(predictor, cfg_attr)
+                        break
+
+        # Raise error if either model or config is not initialized
+        if model is None or config is None:
+            raise ValueError(
+                "Predictor must have both model and config initialized, "
+                f"but found {type(None)}:"
+                f"\ntype({predictor.__class__.__name__}.{model_attr}) = {type(model)}"
+                f"\ntype({predictor.__class__.__name__}.{cfg_attr}) = {type(config)}"
+            )
+        # TODO(LM): Remove when implement support for centered instance
+        elif model_attr == "confmap_model":
+            raise TypeError(
+                "Centered instance models are not currently suppported.\n"
+                f"Recieved model = {model_attr}.\n"
+                "Please select a different type of model."
+            )
+
+        return cls(predictor=predictor, config=config, model=model)
 
     def head_specific_output_keys(self) -> List[Text]:
         keys = []
@@ -4129,7 +4225,7 @@ class VisualPredictor(Predictor):
         if head_key == "centroid":
             return "predicted_centroid_confidence_maps"
 
-        # todo: centered_instance
+        # TODO: centered_instance
 
         return None
 
@@ -4142,11 +4238,13 @@ class VisualPredictor(Predictor):
 
         return None
 
+    # XXX(LM): Can we replace this with model's Pipeline.make_viz_predictor method?
+    # Maybe, but best just to leave as is.
     def make_pipeline(self):
         pipeline = Pipeline()
-        if self.data_config.preprocessing.resize_and_pad_to_target:
+        if self.predictor.data_config.preprocessing.resize_and_pad_to_target:
             pipeline += SizeMatcher.from_config(
-                config=self.data_config.preprocessing,
+                config=self.predictor.data_config.preprocessing,
                 points_key=None,
             )
         pipeline += Normalizer.from_config(self.config.data.preprocessing)
@@ -4162,54 +4260,54 @@ class VisualPredictor(Predictor):
 
         self.pipeline = pipeline
 
-    def safely_generate(self, ds: tf.data.Dataset, progress: bool = True):
-        """Yields examples from dataset, catching and logging exceptions."""
-        # Unsafe generating:
-        # for example in ds:
-        #     yield example
-
-        ds_iter = iter(ds)
-
-        i = 0
-        wall_t0 = time()
-        done = False
-        while not done:
-            try:
-                next_val = next(ds_iter)
-                yield next_val
-            except StopIteration:
-                done = True
-            except Exception as e:
-                logger.info(f"ERROR in sample index {i}")
-                logger.info(e)
-                logger.info("")
-            finally:
-                if not done:
-                    i += 1
-
-                # Show the current progress (frames, time, fps)
-                if progress:
-                    if (i and i % 1000 == 0) or done:
-                        elapsed_time = time() - wall_t0
-                        logger.info(
-                            f"Finished {i} examples in {elapsed_time:.2f} seconds "
-                            "(inference + postprocessing)"
-                        )
-                        if elapsed_time:
-                            logger.info(f"examples/s = {i/elapsed_time}")
-
-    def predict_generator(self, data_provider: Provider):
+    def _predict_generator(self, data_provider: Provider):
         if self.pipeline is None:
             # Pass in data provider when mocking one of the models.
             self.make_pipeline()
 
         self.pipeline.providers = [data_provider]
 
+        def process_batch(ds: tf.data.Dataset, progress: bool = True):
+            """Yields examples from dataset, catching and logging exceptions."""
+            # Unsafe generating:
+            # for example in ds:
+            #     yield example
+
+            ds_iter = iter(ds)
+
+            i = 0
+            wall_t0 = time()
+            done = False
+            while not done:
+                try:
+                    next_val = next(ds_iter)
+                    yield next_val
+                except StopIteration:
+                    done = True
+                except Exception as e:
+                    logger.info(f"ERROR in sample index {i}")
+                    logger.info(e)
+                    logger.info("")
+                finally:
+                    if not done:
+                        i += 1
+
+                    # Show the current progress (frames, time, fps)
+                    if progress:
+                        if (i and i % 1000 == 0) or done:
+                            elapsed_time = time() - wall_t0
+                            logger.info(
+                                f"Finished {i} examples in {elapsed_time:.2f} seconds "
+                                "(inference + postprocessing)"
+                            )
+                            if elapsed_time:
+                                logger.info(f"examples/s = {i/elapsed_time}")
+
         # Yield each example from dataset, catching and logging exceptions
-        return self.safely_generate(self.pipeline.make_dataset())
+        return process_batch(self.pipeline.make_dataset())
 
     def predict(self, data_provider: Provider):
-        generator = self.predict_generator(data_provider)
+        generator = self._predict_generator(data_provider)
         examples = list(generator)
 
         return examples
