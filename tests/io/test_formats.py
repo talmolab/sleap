@@ -410,8 +410,11 @@ def test_nix_adaptor(
     assert na.default_ext == "nix"
     assert "nix" in na.all_exts
     assert len(na.name) > 0
+    assert na.can_write_filename("somefile.nix")
+    assert not na.can_write_filename("somefile.slp")
     assert NixAdaptor.does_read() == False
     assert NixAdaptor.does_write() == True
+
     with pytest.raises(NotImplementedError):
         NixAdaptor.read("some file")
 

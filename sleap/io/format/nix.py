@@ -1,4 +1,5 @@
 import numpy as np
+import nixio as nix
 
 from pathlib import Path
 from typing import List
@@ -7,13 +8,6 @@ from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.format.filehandle import FileHandle
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
-
-try:
-    import nixio as nix
-
-    nix_available = True
-except ImportError:
-    nix_available = False
 
 
 class NixAdaptor(Adaptor):
@@ -51,10 +45,9 @@ class NixAdaptor(Adaptor):
         """Returns whether this adaptor can read this file."""
         return False
 
-    @classmethod
-    def can_write_filename(cls, filename: str) -> bool:
+    def can_write_filename(self, filename: str) -> bool:
         """Returns whether this adaptor can write format of this filename."""
-        raise NotImplementedError
+        return filename.endswith(tuple(self.all_exts))
 
     @classmethod
     def does_read(cls) -> bool:
@@ -64,7 +57,7 @@ class NixAdaptor(Adaptor):
     @classmethod
     def does_write(cls) -> bool:
         """Returns whether this adaptor supports writing."""
-        return nix_available
+        return True
 
     @classmethod
     def read(cls, file: FileHandle) -> object:
@@ -91,10 +84,6 @@ class NixAdaptor(Adaptor):
         video: Video = None,
     ):
         """Writes the object to a file."""
-        if not nix_available:
-            raise ImportError(
-                "NIX library not installed, export to NIX not possible (run pip install nixio)."
-            )
         cls.__check_video(source_object, video)
 
         def create_file(filename, project, video):
@@ -115,7 +104,7 @@ class NixAdaptor(Adaptor):
             src = b.create_source(name, "nix.tracking.source.video")
             sec = src.file.create_section(name, "nix.tracking.source.video.metadata")
             sec["filename"] = video.backend.filename
-            sec["fps"] = video.backend.fps
+            sec["fps"] = getattr(video.backend, "fps", 0.0)
             sec.props["fps"].unit = "Hz"
             sec["frames"] = video.num_frames
             sec["grayscale"] = video.backend.grayscale
@@ -128,27 +117,26 @@ class NixAdaptor(Adaptor):
 
         def track_map(source: Labels):
             track_map = {}
-            for t in source.tracks:
-                if t.name in track_map:
+            for track in source.tracks:
+                if track in track_map:
                     continue
-                track_map[t.name] = len(track_map)
+                track_map[track] = len(track_map)
             return track_map
 
         def skeleton_map(source: Labels):
             skel_map = {}
-            for s in source.skeletons:
-                if s.name in skel_map:
+            for skeleton in source.skeletons:
+                if skeleton in skel_map:
                     continue
-                skel_map[s.name] = len(skel_map)
+                skel_map[skeleton] = len(skel_map)
             return skel_map
 
         def node_map(source: Labels):
             n_map = {}
-            for skeleton in source.skeletons:
-                for n in skeleton.nodes:
-                    if n.name in n_map:
-                        continue
-                    n_map[n.name] = len(n_map)
+            for node in source.nodes:
+                if node in n_map:
+                    continue
+                n_map[node] = len(n_map)
             return n_map
 
         def create_feature_array(name, type, block, frame_index_array, shape, dtype):
@@ -186,13 +174,13 @@ class NixAdaptor(Adaptor):
         ):
             data_written = 0
             indices = np.zeros(chunksize, dtype=int)
-            positions = np.zeros((chunksize, 2, len(node_map.keys())), dtype=float)
-            centroids = np.zeros((chunksize, 2), dtype=float)
             track = np.zeros_like(indices)
             skeleton = np.zeros_like(indices)
-            pointscore = np.zeros((chunksize, len(node_map.keys())), dtype=float)
-            instscore = np.zeros_like(track, dtype=float)
+            instscore = np.zeros_like(indices, dtype=float)
+            positions = np.zeros((chunksize, 2, len(node_map.keys())), dtype=float)
+            centroids = np.zeros((chunksize, 2), dtype=float)
             trackscore = np.zeros_like(instscore)
+            pointscore = np.zeros((chunksize, len(node_map.keys())), dtype=float)
             dflt_pointscore = [0.0 for n in range(len(node_map.keys()))]
 
             while data_written < len(instances):
@@ -208,18 +196,18 @@ class NixAdaptor(Adaptor):
                     index = i - start
                     indices[index] = inst.frame_idx
                     if inst.track is not None:
-                        track[index] = track_map[inst.track.name]
+                        track[index] = track_map[inst.track]
                     else:
                         track[index] = -1
-                    skeleton[index] = skeleton_map[inst.skeleton.name]
 
-                    fnames = set([n.name for n in inst.nodes])
-                    nnames = set(list(node_map.keys()))
-                    missing = nnames.difference(fnames)
+                    skeleton[index] = skeleton_map[inst.skeleton]
 
+                    all_nodes = set([n.name for n in inst.nodes])
+                    used_nodes = set([n.name for n in node_map.keys()])
+                    missing_nodes = all_nodes.difference(used_nodes)
                     for n, p in zip(inst.nodes, inst.points):
-                        positions[index, :, node_map[n.name]] = np.array([p.x, p.y])
-                    for m in missing:
+                        positions[index, :, node_map[n]] = np.array([p.x, p.y])
+                    for m in missing_nodes:
                         positions[index, :, node_map[m]] = np.array([np.nan, np.nan])
 
                     centroids[index, :] = inst.centroid
@@ -268,7 +256,7 @@ class NixAdaptor(Adaptor):
                 "nix.tracking.instance_position",
                 block,
                 frameid_array,
-                list(nodes.keys()),
+                [node.name for node in nodes.keys()],
                 positions_shape,
                 nix.DataType.Float,
             )
@@ -281,6 +269,7 @@ class NixAdaptor(Adaptor):
                 shape=(len(instances),),
                 dtype=nix.DataType.Int64,
             )
+
             skeleton_array = create_feature_array(
                 "skeleton",
                 "nix.tracking.instance_skeleton",
@@ -289,6 +278,7 @@ class NixAdaptor(Adaptor):
                 (len(instances),),
                 nix.DataType.Int64,
             )
+
             point_score = create_feature_array(
                 "node score",
                 "nix.tracking.nodes_score",
@@ -297,7 +287,8 @@ class NixAdaptor(Adaptor):
                 (len(instances), len(nodes)),
                 nix.DataType.Float,
             )
-            point_score.append_set_dimension(nodes.keys())
+            point_score.append_set_dimension([node.name for node in nodes.keys()])
+
             centroid_array = create_feature_array(
                 "centroid",
                 "nix.tracking.centroid_position",
@@ -306,6 +297,7 @@ class NixAdaptor(Adaptor):
                 (len(instances), 2),
                 nix.DataType.Float,
             )
+
             centroid_array.append_set_dimension(["x", "y"])
             instance_score = create_feature_array(
                 "instance score",
@@ -315,6 +307,7 @@ class NixAdaptor(Adaptor):
                 (len(instances),),
                 nix.DataType.Float,
             )
+
             tracking_score = create_feature_array(
                 "tracking score",
                 "nix.tracking.tack_score",
@@ -343,20 +336,37 @@ class NixAdaptor(Adaptor):
                 col_dtypes=[nix.DataType.String, nix.DataType.Int8],
             )
             table_data = []
-            for k in skeletons.keys():
-                table_data.append((k, skeletons[k]))
+            for track in skeletons.keys():
+                table_data.append((track.name, skeletons[track]))
             sm.append_rows(table_data)
+
+            nm = block.create_data_frame(
+                "node map",
+                "nix.tracking.node_map",
+                col_names=["name", "weight", "index", "skeleton"],
+                col_dtypes=[nix.DataType.String, nix.DataType.Float, nix.DataType.Int8, nix.DataType.Int8],
+            )
+            table_data = []
+            for node in nodes.keys():
+                skel_index = -1  # if node is not assigned to a skeleton
+                for track in skeletons:
+                    if node in track.nodes:
+                        skel_index = skeletons[track]
+                        break
+                table_data.append((node.name, node.weight, nodes[node], skel_index))
+            nm.append_rows(table_data)
 
             tm = block.create_data_frame(
                 "track map",
                 "nix.tracking.track_map",
-                col_names=["name", "index"],
-                col_dtypes=[nix.DataType.String, nix.DataType.Int8],
+                col_names=["name", "spawned_on", "index"],
+                col_dtypes=[nix.DataType.String, nix.DataType.Int64, nix.DataType.Int8],
             )
-            table_data = [("none", -1)]  # default for user-labeled instances
-            for k in tracks.keys():
-                table_data.append((k, tracks[k]))
+            table_data = [("none", -1, -1)]  # default for user-labeled instances
+            for track in tracks.keys():
+                table_data.append((track.name, track.spawned_on, tracks[track]))
             tm.append_rows(table_data)
+
             chunked_write(
                 instances,
                 frameid_array,
@@ -378,10 +388,10 @@ class NixAdaptor(Adaptor):
             video = source_object.videos[0]
 
         nix_file = create_file(filename, source_path, video)
+        write_data(nix_file.blocks[0], source_object, video)
         try:
-            write_data(nix_file.blocks[0], source_object, video)
             print(" done")
         except Exception as e:
-            print(f"\n\t Writing failed withe error message {e}!")
+            print(f"\n\t Writing failed with error message {e}!")
         finally:
             nix_file.close()

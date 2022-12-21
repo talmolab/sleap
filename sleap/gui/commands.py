@@ -59,7 +59,6 @@ from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.dialogs.query import QueryDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.gui.state import GuiState
-from sleap.io.format.nix import nix_available
 
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
@@ -1099,9 +1098,8 @@ class SaveProjectAs(AppCommand):
 
 
 class ExportAnalysisFile(AppCommand):
-    export_formats = {"SLEAP Analysis HDF5 (*.h5)": "h5"}
-    if nix_available:
-        export_formats["NIX for Tracking data (*.nix)"] = "nix"
+    export_formats = {"SLEAP Analysis HDF5 (*.h5)": "h5", 
+                      "NIX for Tracking data (*.nix)": "nix"}
     export_filter = ";;".join(export_formats.keys())
 
     @classmethod
