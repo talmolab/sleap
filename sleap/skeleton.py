@@ -56,8 +56,8 @@ class Node:
         weight: Weight of the node (not currently used).
     """
 
-    name: str
-    weight: float = 1.0
+    name: str = attr.ib(default="", validator=attr.validators.instance_of(str))
+    weight: float = attr.ib(default=1.0)
 
     @staticmethod
     def from_names(name_list: str) -> List["Node"]:
@@ -1224,6 +1224,11 @@ class Skeleton:
             )
 
         return skeleton
+
+    def __eq__(self, other):
+        if not isinstance(other, Skeleton):
+            return False
+        return self.name == other.name
 
     def __hash__(self):
         """
