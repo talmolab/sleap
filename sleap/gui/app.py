@@ -65,6 +65,7 @@ from qtpy.QtWidgets import QMessageBox
 
 import sleap
 from sleap.gui.dialogs.metrics import MetricsTableDialog
+from sleap.nn.inference import VisualPredictor
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, LabeledFrame
 from sleap.io.dataset import Labels
@@ -166,7 +167,9 @@ class MainWindow(QMainWindow):
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
         self.state.connect("show non-visible nodes", self.plotFrame)
-        self.state.connect("visualize models", self._handle_model_overlay_command)
+        self.state.connect(
+            "visualize models", self._handle_model_overlay_command
+        )  # XXX(LM): commands.addInferenceToOverlays)
 
         self.release_checker = ReleaseChecker()
 
@@ -364,7 +367,9 @@ class MainWindow(QMainWindow):
         def connect_check(key):
             self._menu_actions[key].setCheckable(True)
             self._menu_actions[key].setChecked(self.state[key])
-            self.state.connect(key, self._menu_actions[key].setChecked)
+            self.state.connect(
+                key, lambda: self._menu_actions[key].setChecked(self.state[key])
+            )
 
         # add checkable menu item connected to state variable
         def add_menu_check_item(menu, key: str, name: str):
@@ -835,7 +840,9 @@ class MainWindow(QMainWindow):
         )
 
         add_menu_check_item(
-            predictionMenu, "visualize models", "Visualize Model Outputs..."
+            predictionMenu,
+            "visualize models",
+            "Visualize Model Outputs...",
         )
 
         predictionMenu.addSeparator()
@@ -1716,15 +1723,22 @@ class MainWindow(QMainWindow):
         self._child_windows["metrics"].show()
 
     def _handle_model_overlay_command(self):
-        """Gui for adding overlay with live visualization of predictions."""
+        """GUI for adding/removing overlay with live visualization of predictions."""
+        params = {}
 
-        if not self.state["visualize models"]:
-            # Remove inference from overlays
+        def should_visualize():
+            """Return whether to visualize models and handles removal of visuals."""
+            if not self.state["visualize models"]:
+                # Remove inference from overlays
+                self.overlays.pop("inference", None)
+                return False
+            return True
 
-            self.overlays.pop("inference", None)
+        def ask() -> bool:
+            """Open `FileDialog` to select which model to use for inference overlay."""
 
-        else:
-            # Select model to use and add inference to overlays
+            if not should_visualize():
+                return False
 
             filters = ["Model (*.json)"]
 
@@ -1735,6 +1749,7 @@ class MainWindow(QMainWindow):
                     os.path.dirname(self.state["filename"]), "models/"
                 )
 
+            # TODO(LM): Filter through trained models (folders containing a best.h5)
             # Show dialog
             filename, selected_filter = FileDialog.open(
                 self,
@@ -1744,14 +1759,21 @@ class MainWindow(QMainWindow):
             )
 
             if len(filename) == 0:
-                return
+                return False
 
-            # Model as overlay datasource
-            # This will show live inference results
+            params["filename"] = filename
+            return True
+
+        def do() -> bool:
+            """Add live inference results to overlays."""
+
+            if not should_visualize():
+                return True
 
             from sleap.gui.overlays.base import DataOverlay
 
-            predictor = DataOverlay.make_predictor(filename)
+            filename = params["filename"]
+            predictor: VisualPredictor = DataOverlay.make_viz_predictor(filename)
             show_pafs = False
 
             # If multi-head model with both confmaps and pafs,
@@ -1764,15 +1786,31 @@ class MainWindow(QMainWindow):
                     form_name="head_type_form"
                 ).get_results()
                 show_pafs = "Part Affinity" in results["head_type"]
-
-            overlay = DataOverlay.from_predictor(
-                predictor=predictor,
-                video=self.state["video"],
-                player=self.player,
-                show_pafs=show_pafs,
-            )
+            try:
+                overlay = DataOverlay.from_predictor(
+                    predictor=predictor,
+                    video=self.state["video"],
+                    player=self.player,
+                    show_pafs=show_pafs,
+                )
+            except Exception as e:
+                self.state["visualize models"] = False  # XXX(LM): Does not work
+                self._menu_actions["visualize models"].setChecked(
+                    False
+                )  # XXX(LM): Does not work
+                raise Exception("Error visualizing model") from e
 
             self.overlays["inference"] = overlay
+
+            return True
+
+        if ask():
+            do()
+        else:
+            self.state["visualize models"] = False  # XXX(LM): Does not work
+            self._menu_actions["visualize models"].setChecked(
+                False
+            )  # XXX(LM): Does not work
 
         self.plotFrame()
 
@@ -1888,3 +1926,11 @@ def main(args: Optional[list] = None):
         app.exec_()
 
     pass
+
+
+if __name__ == "__main__":
+    import os
+
+    ds = os.environ["ds-dmc"]
+
+    main([ds])

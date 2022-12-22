@@ -1,5 +1,4 @@
-"""
-Module for gui command context and commands objects.
+"""Module for gui command context and commands objects.
 
 Each open project (i.e., `MainWindow`) will have its own `CommandContext`.
 The context enables commands to access and modify the `GuiState` and `Labels`,
@@ -24,6 +23,7 @@ instead of `ask` and `do_action` you should add an `ask_and_do` method
 handle both the GUI and the action). Ideally we'd endorse separation of "ask"
 and "do" for all commands (this is important if we're going to implement undo)--
 for now it's at least easy to see where this separation is violated.
+
 """
 
 import attr
@@ -44,6 +44,8 @@ import numpy as np
 from qtpy import QtCore, QtWidgets, QtGui
 
 from qtpy.QtWidgets import QMessageBox, QProgressDialog
+from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
+from sleap.nn.inference import VisualPredictor
 
 from sleap.skeleton import Node, Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
@@ -507,6 +509,9 @@ class CommandContext:
 
     def addUserInstancesFromPredictions(self):
         self.execute(AddUserInstancesFromPredictions)
+
+    def addInferenceToOverlays(self):
+        self.execute(AddInferenceToOverlays)
 
     def deleteSelectedInstance(self):
         """Deletes currently selected instance."""
@@ -2865,6 +2870,91 @@ class AddUserInstancesFromPredictions(EditCommand):
         # Add the instances
         for new_instance in new_instances:
             context.labels.add_instance(context.state["labeled_frame"], new_instance)
+
+
+# XXX(LM): Using this command instead of _handle_model_overlay_command results in
+# inability to propogate pop "inference" overlay to MainWindow
+class AddInferenceToOverlays(EditCommand):
+    topics = [UpdateTopic.frame]  # Need the self.plotFrame() callback
+
+    @staticmethod
+    def should_visualize(context: CommandContext) -> bool:
+        """Returns whether to visualize models and handles removal of visuals."""
+        if not context.state["visualize models"]:
+            # Remove inference from overlays
+            context.app.overlays.pop("inference", None)
+            return False
+        return True
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        """Open `FileDialog` to select which model to use for inference overlay."""
+
+        # Handle case when inference overlay should not be visualized
+        if not AddInferenceToOverlays.should_visualize(context):
+            return False
+
+        # Otherwise, open FileDialog for user to select which model to use.
+        filters = ["Model (*.json)"]
+
+        # Default to opening from models directory from project
+        models_dir = None
+        if context.state["filename"] is not None:
+            models_dir = os.path.join(
+                os.path.dirname(context.state["filename"]), "models/"
+            )
+
+        # TODO(LM): Filter through trained models (folders containing a best.h5)
+        # Show dialog
+        filename, selected_filter = FileDialog.open(
+            context.app,
+            dir=models_dir,
+            caption="Import model outputs...",
+            filter=";;".join(filters),
+        )
+
+        # If no file was selected, set "visualize models" to False
+        if len(filename) == 0:
+            context.state["visualize models"] = False  # XXX(LM): Does not work
+            return False
+
+        params["filename"] = filename
+
+        return True
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        """Add live inference results to overlays."""
+
+        if not AddInferenceToOverlays.should_visualize(context):
+            return
+
+        from sleap.gui.overlays.base import DataOverlay
+
+        filename = params["filename"]
+        predictor: VisualPredictor = DataOverlay.make_viz_predictor(filename)
+
+        # If multi-head model with both confmaps and pafs, ask user which to show.
+        show_pafs = False
+        if (
+            predictor.confidence_maps_key_name
+            and predictor.part_affinity_fields_key_name
+        ):
+            results = FormBuilderModalDialog(form_name="head_type_form").get_results()
+            show_pafs = "Part Affinity" in results["head_type"]
+
+        try:
+            overlay = DataOverlay.from_predictor(
+                predictor=predictor,
+                video=context.state["video"],
+                player=context.app.player,
+                show_pafs=show_pafs,
+            )
+        except Exception as e:
+            context.app.state["visualize models"] = False  # XXX(LM): Does not work
+            raise Exception("Error visualizing model") from e
+
+        context.app.overlays["inference"] = overlay
 
 
 def open_website(url: str):
