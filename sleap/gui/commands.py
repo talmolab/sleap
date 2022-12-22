@@ -1098,8 +1098,10 @@ class SaveProjectAs(AppCommand):
 
 
 class ExportAnalysisFile(AppCommand):
-    export_formats = {"SLEAP Analysis HDF5 (*.h5)": "h5", 
-                      "NIX for Tracking data (*.nix)": "nix"}
+    export_formats = {
+        "SLEAP Analysis HDF5 (*.h5)": "h5",
+        "NIX for Tracking data (*.nix)": "nix",
+    }
     export_filter = ";;".join(export_formats.keys())
 
     @classmethod

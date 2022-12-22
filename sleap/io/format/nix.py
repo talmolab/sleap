@@ -344,7 +344,12 @@ class NixAdaptor(Adaptor):
                 "node map",
                 "nix.tracking.node_map",
                 col_names=["name", "weight", "index", "skeleton"],
-                col_dtypes=[nix.DataType.String, nix.DataType.Float, nix.DataType.Int8, nix.DataType.Int8],
+                col_dtypes=[
+                    nix.DataType.String,
+                    nix.DataType.Float,
+                    nix.DataType.Int8,
+                    nix.DataType.Int8,
+                ],
             )
             table_data = []
             for node in nodes.keys():
