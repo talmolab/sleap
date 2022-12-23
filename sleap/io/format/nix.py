@@ -107,7 +107,7 @@ class NixAdaptor(Adaptor):
             sec["fps"] = getattr(video.backend, "fps", 0.0)
             sec.props["fps"].unit = "Hz"
             sec["frames"] = video.num_frames
-            sec["grayscale"] = video.backend.grayscale
+            sec["grayscale"] = getattr(video.backend, "grayscale", None)
             sec["height"] = video.backend.height
             sec["width"] = video.backend.width
             src.metadata = sec
