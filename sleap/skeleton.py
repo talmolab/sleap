@@ -56,7 +56,7 @@ class Node:
         weight: Weight of the node (not currently used).
     """
 
-    name: str = attr.ib(default="", validator=attr.validators.instance_of(str))
+    name: str = attr.ib(validator=attr.validators.instance_of(str))
     weight: float = attr.ib(default=1.0)
 
     @staticmethod
