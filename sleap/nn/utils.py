@@ -134,7 +134,7 @@ def reset_input_layer(
 ):
     """Returns a copy of `keras_model` with input shape reset to `new_shape`.
 
-    This method was modeified from https://stackoverflow.com/a/58485055.
+    This method was modified from https://stackoverflow.com/a/58485055.
 
     Args:
         keras_model: `tf.keras.Model` to return a copy of (with input shape reset).
@@ -148,30 +148,15 @@ def reset_input_layer(
         new_shape = (None, None, None, keras_model.input_shape[-1])
 
     model_config = keras_model.get_config()
-
-    input_layer_name = model_config["layers"][0]["name"]
-    model_config["layers"][0] = {
-        "name": f"{input_layer_name}",
-        "class_name": "InputLayer",
-        "config": {
-            "batch_input_shape": new_shape,
-            "dtype": "float32",
-            "sparse": False,
-            "name": f"{input_layer_name}",
-        },
-        "inbound_nodes": [],
-    }
-
-    model_config["layers"][1]["inbound_nodes"] = [[[f"{input_layer_name}", 0, 0, {}]]]
-    model_config["input_layers"] = [[f"{input_layer_name}", 0, 0]]
-
-    new_model: tf.keras.Model = keras_model.__class__.from_config(
+    model_config["layers"][0]["config"]["batch_input_shape"] = new_shape
+    new_model: tf.keras.Model = tf.keras.Model.from_config(
         model_config, custom_objects={}
     )  # Change custom objects if necessary
 
     # Iterate over all the layers that we want to get weights from
-    weights = [layer.get_weights() for layer in keras_model.layers[1:]]
-    for layer, weight in zip(new_model.layers[1:], weights):
-        layer.set_weights(weight)
+    weights = [layer.get_weights() for layer in keras_model.layers]
+    for layer, weight in zip(new_model.layers, weights):
+        if len(weight) > 0:
+            layer.set_weights(weight)
 
     return new_model
