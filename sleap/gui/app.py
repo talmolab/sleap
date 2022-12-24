@@ -1475,7 +1475,7 @@ class MainWindow(QMainWindow):
             return
 
         gui_video_callback = Labels.make_gui_video_callback(
-            search_paths=[os.path.dirname(filename)]
+            search_paths=[os.path.dirname(filename)], context=self.state
         )
 
         has_loaded = False
@@ -1495,6 +1495,7 @@ class MainWindow(QMainWindow):
         if has_loaded:
             self.loadLabelsObject(labels, filename)
             self.state["project_loaded"] = True
+            self.state["has_changes"] = self.state["changed_on_load"]
 
     def loadLabelsObject(self, labels: Labels, filename: Optional[str] = None):
         """
@@ -1879,3 +1880,9 @@ def main(args: Optional[list] = None):
         app.exec_()
 
     pass
+
+if __name__ == "__main__":
+    import os
+
+    ds = os.environ["ds-sdm"]
+    main([ds, "--no-usage-data"])
