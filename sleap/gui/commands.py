@@ -245,6 +245,19 @@ class CommandContext:
         """Create a new project in a new window."""
         self.execute(NewProject)
 
+    def loadLabelsObject(self, labels: Labels, filename: Optional[str] = None):
+        """Loads a `Labels` object into the GUI, replacing any currently loaded.
+
+        Args:
+            labels: The `Labels` object to load.
+            filename: The filename where this file is saved, if any.
+
+        Returns:
+            None.
+
+        """
+        self.execute(LoadLabelsObject, labels=labels, filename=filename)
+
     def loadProjectFile(self, filename: str):
         """Loads given labels file into GUI.
 
@@ -596,7 +609,7 @@ class NewProject(AppCommand):
         window.showMaximized()
 
 
-class LoadProjectFile(AppCommand):
+class LoadLabelsObject(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
         """Loads a `Labels` object into the GUI, replacing any currently loaded.
@@ -611,8 +624,6 @@ class LoadProjectFile(AppCommand):
         """
         filename = params["filename"]
         labels: Labels = params["labels"]
-
-        # self.loadLabelsObject(labels, filename)
 
         context.state["labels"] = labels
         context.state["filename"] = filename
@@ -636,6 +647,8 @@ class LoadProjectFile(AppCommand):
         # This is not listed as an edit command since we want a clean changestack
         context.app.on_data_update([UpdateTopic.project, UpdateTopic.all])
 
+
+class LoadProjectFile(LoadLabelsObject):
     @staticmethod
     def ask(context: "CommandContext", params: dict):
         filename = params["filename"]
@@ -682,9 +695,9 @@ class OpenProject(AppCommand):
         if do_open_in_new:
             new_window = context.app.__class__()
             new_window.showMaximized()
-            new_window.loadProjectFile(filename)
+            new_window.commands.loadProjectFile(filename)
         else:
-            context.app.loadProjectFile(filename)
+            context.loadProjectFile(filename)
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
@@ -721,7 +734,7 @@ class ImportAlphaTracker(AppCommand):
 
         new_window = context.app.__class__()
         new_window.showMaximized()
-        new_window.loadLabelsObject(labels=labels)
+        new_window.commands.loadLabelsObject(labels=labels)
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
@@ -756,7 +769,7 @@ class ImportNWB(AppCommand):
 
         new_window = context.app.__class__()
         new_window.showMaximized()
-        new_window.loadLabelsObject(labels=labels)
+        new_window.commands.loadLabelsObject(labels=labels)
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
@@ -793,7 +806,7 @@ class ImportDeepPoseKit(AppCommand):
 
         new_window = context.app.__class__()
         new_window.showMaximized()
-        new_window.loadLabelsObject(labels=labels)
+        new_window.commands.loadLabelsObject(labels=labels)
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
@@ -840,7 +853,7 @@ class ImportLEAP(AppCommand):
 
         new_window = context.app.__class__()
         new_window.showMaximized()
-        new_window.loadLabelsObject(labels=labels)
+        new_window.commands.loadLabelsObject(labels=labels)
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
@@ -871,7 +884,7 @@ class ImportCoco(AppCommand):
 
         new_window = context.app.__class__()
         new_window.showMaximized()
-        new_window.loadLabelsObject(labels=labels)
+        new_window.commands.loadLabelsObject(labels=labels)
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
@@ -901,7 +914,7 @@ class ImportDeepLabCut(AppCommand):
 
         new_window = context.app.__class__()
         new_window.showMaximized()
-        new_window.loadLabelsObject(labels=labels)
+        new_window.commands.loadLabelsObject(labels=labels)
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
@@ -939,7 +952,7 @@ class ImportDeepLabCutFolder(AppCommand):
 
             new_window = context.app.__class__()
             new_window.showMaximized()
-            new_window.loadLabelsObject(labels=merged_labels)
+            new_window.commands.loadLabelsObject(labels=merged_labels)
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
@@ -984,7 +997,7 @@ class ImportAnalysisFile(AppCommand):
 
         new_window = context.app.__class__()
         new_window.showMaximized()
-        new_window.loadLabelsObject(labels=labels)
+        new_window.commands.loadLabelsObject(labels=labels)
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
