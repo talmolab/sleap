@@ -181,7 +181,7 @@ class MainWindow(QMainWindow):
             self.restoreState(prefs["window state"])
 
         if labels_path:
-            self.loadProjectFile(labels_path)
+            self.commands.loadProjectFile(filename=labels_path)
         else:
             self.state["project_loaded"] = False
 
@@ -1461,15 +1461,15 @@ class MainWindow(QMainWindow):
         msg.exec_()
 
     def loadProjectFile(self, filename: Optional[str] = None):
-        """
-        Loads given labels file into GUI.
+        """Loads given labels file into GUI.
 
         Args:
             filename: The path to the saved labels dataset. If None,
                 then don't do anything.
 
         Returns:
-            None:
+            None
+
         """
         if len(filename) == 0:
             return
@@ -1880,6 +1880,7 @@ def main(args: Optional[list] = None):
         app.exec_()
 
     pass
+
 
 if __name__ == "__main__":
     import os

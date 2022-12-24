@@ -2596,6 +2596,8 @@ class Labels(MutableSequence):
                     if not okay:
                         return True  # True for stop
 
+                    context["changed_on_load"] = True
+
             if not use_gui and sum(missing):
                 # If we got the same number of paths as there are videos
                 if len(filenames) == len(new_paths):
@@ -2626,8 +2628,6 @@ class Labels(MutableSequence):
 
                     vid = DummyVideo(filename=item["backend"]["filename"])
                     item["backend"] = cattr.unstructure(vid)
-
-            context["changed_on_load"] = True
 
         return video_callback
 
