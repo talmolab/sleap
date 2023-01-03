@@ -1225,11 +1225,6 @@ class Skeleton:
 
         return skeleton
 
-    def __eq__(self, other):
-        if not isinstance(other, Skeleton):
-            return False
-        return self.name == other.name
-
     def __hash__(self):
         """
         Construct a hash from skeleton id.

@@ -391,10 +391,10 @@ class NixAdaptor(Adaptor):
         if video is None:
             print(f"No video specified, exporting the first one {video}...")
             video = source_object.videos[0]
-
         nix_file = create_file(filename, source_path, video)
-        write_data(nix_file.blocks[0], source_object, video)
+
         try:
+            write_data(nix_file.blocks[0], source_object, video)
             print(" done")
         except Exception as e:
             print(f"\n\t Writing failed with error message {e}!")

@@ -20,4 +20,3 @@ jupyterlab
 jedi==0.17.2
 ipykernel
 click==8.0.4
-nixio>=1.5.3
