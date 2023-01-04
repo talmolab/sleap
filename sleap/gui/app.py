@@ -364,7 +364,8 @@ class MainWindow(QMainWindow):
         def connect_check(key):
             self._menu_actions[key].setCheckable(True)
             self._menu_actions[key].setChecked(self.state[key])
-            # TODO(LM): This is only called when the state is changed, but the click()
+
+            # This is only called when the state is changed, but the click()
             # slot activation on the button will toggle the checkable state anyway!
             # https://doc.qt.io/qt-6/qabstractbutton.html#toggled
             self.state.connect(
@@ -375,17 +376,57 @@ class MainWindow(QMainWindow):
         def add_menu_check_item(
             menu, key: str, name: str, callback_func: Optional[Callable] = None
         ):
+            """Add menu check item that calls callback_func before the state is toggled.
+
+            Args:
+                menu: The QMenu to add a QAbstractButton to.
+                key: The name of the GuiState key connected to the QAbstractButton.
+                name: The variable name of the QAbstactButton being added.
+                callback_func: The function to call after the button is clicked, but
+                    before the GuiState is changed. This function should return the
+                    expected state of the key or raise an error (which results in no
+                    change in the state).
+            """
+
             def create_callback(callback_func, key):
+                """Return the callback to call before the key state is toggled.
+
+                Args:
+                    callback_func: The function to call after the button is clicked, but
+                        before the GuiState is changed. This function should return the
+                        expected state of the key or raise an error (which results in no
+                        change in the state).
+                    key: The name of the GuiState key connected to the QAbstractButton.
+
+                """
+
                 def new_callback():
-                    print(f"self.state['{key}'] = {self.state[key]}")
-                    success = True
-                    if callback_func is not None:
-                        success = callback_func()
-                        print(f"callback success = {success}")
-                        print(f"self.state['{key}'] = {self.state[key]}")
-                    if success:
-                        print(f"Toggling '{key}'!")
-                        self.state.toggle(key)
+                    """Set the key state to the value returned from callback_func().
+
+                    If no callback_func is supplied, then the key state is toggled.
+                    If an error is raised in the callback_func, then the key state is
+                    not changed.
+
+                    Raises:
+                        Exception if an error occured in the callback_func.
+
+                    """
+                    variable_state = self.state[key]
+                    try:
+                        if callback_func is not None:
+                            variable_state = not callback_func()  # Pre-toggle state
+                        self.state.set(key, not variable_state)
+                    except Exception as e:
+                        QMessageBox(
+                            text=(
+                                f"An error occcured while executing '{name}'.\n"
+                                "Your terminal may have more information about the error."
+                            )
+                        ).exec_()
+                        raise e
+                    finally:
+                        # Run all callbacks connected to key.
+                        self.state.emit(key)
 
                 return new_callback
 
@@ -1683,6 +1724,7 @@ class MainWindow(QMainWindow):
 
         Returns:
             None.
+
         """
         from sleap.gui.learning.dialog import LearningDialog
 
@@ -1741,19 +1783,34 @@ class MainWindow(QMainWindow):
         self._child_windows["metrics"].show()
 
     def _handle_model_overlay_command(self):
-        """GUI for adding/removing overlay with live visualization of predictions."""
+        """GUI for adding/removing overlay with live visualization of predictions.
+
+        Raises:
+            Exception when error visualizing the model.
+
+        Note:
+            This command is called before the state is toggled.
+
+        """
         params = {}
 
         def should_visualize():
             """Return whether to visualize models and handles removal of visuals."""
-            if self.state["visualize models"]:
+            # Called before state is toggled
+            visualize = not self.state["visualize models"]
+            if not visualize:
                 # Remove inference from overlays
                 self.overlays.pop("inference", None)
                 return False
             return True
 
         def ask() -> bool:
-            """Open `FileDialog` to select which model to use for inference overlay."""
+            """Open `FileDialog` to select which model to use for inference overlay.
+
+            Returns:
+                Bool indicating whether the model output should be overlaid.
+
+            """
 
             if not should_visualize():
                 return False
@@ -1783,10 +1840,18 @@ class MainWindow(QMainWindow):
             return True
 
         def do() -> bool:
-            """Add live inference results to overlays."""
+            """Add live inference results to overlays.
+
+            Returns:
+                Bool indicating whether the model output should be overlaid.
+
+            Raises:
+                Exception when error visualizing the model.
+
+            """
 
             if not should_visualize():
-                return True
+                return False
 
             from sleap.gui.overlays.base import DataOverlay
 
@@ -1795,8 +1860,6 @@ class MainWindow(QMainWindow):
                 predictor: VisualPredictor = DataOverlay.make_viz_predictor(filename)
 
             except Exception as e:
-                print(f"Returning false")  # TODO(LM): Remove
-                return False  # TODO(LM): Remove
                 raise Exception("Error visualizing model") from e
 
             show_pafs = False
@@ -1823,16 +1886,11 @@ class MainWindow(QMainWindow):
 
             return True
 
-        success = True
-        if ask():
-            success = do()
-        else:
-            return False
+        visualize = False if not ask() else do()
 
         self.plotFrame()
 
-        print(f"success = {success}")
-        return success
+        return visualize
 
     def _handle_instance_double_click(
         self, instance: Instance, event: QtGui.QMouseEvent = None
