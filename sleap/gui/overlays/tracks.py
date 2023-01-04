@@ -134,8 +134,10 @@ class TrackTrailOverlay(BaseOverlay):
         all_track_trails = self.get_track_trails(frame_selection)
 
         for track, trails in all_track_trails.items():
-
-            color = QtGui.QColor(*self.player.color_manager.get_track_color(track))
+            trail_color = tuple(
+                c * 0.6 for c in self.player.color_manager.get_track_color(track)
+            )
+            color = QtGui.QColor(*trail_color)
             pen = QtGui.QPen()
             pen.setCosmetic(True)
             pen.setColor(color)
