@@ -167,9 +167,6 @@ class MainWindow(QMainWindow):
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
         self.state.connect("show non-visible nodes", self.plotFrame)
-        self.state.connect(
-            "visualize models", self._handle_model_overlay_command
-        )  # XXX(LM): commands.addInferenceToOverlays)
 
         self.release_checker = ReleaseChecker()
 
@@ -367,13 +364,33 @@ class MainWindow(QMainWindow):
         def connect_check(key):
             self._menu_actions[key].setCheckable(True)
             self._menu_actions[key].setChecked(self.state[key])
+            # TODO(LM): This is only called when the state is changed, but the click()
+            # slot activation on the button will toggle the checkable state anyway!
+            # https://doc.qt.io/qt-6/qabstractbutton.html#toggled
             self.state.connect(
                 key, lambda: self._menu_actions[key].setChecked(self.state[key])
             )
 
         # add checkable menu item connected to state variable
-        def add_menu_check_item(menu, key: str, name: str):
-            menu_item = add_menu_item(menu, key, name, lambda: self.state.toggle(key))
+        def add_menu_check_item(
+            menu, key: str, name: str, callback_func: Optional[Callable] = None
+        ):
+            def create_callback(callback_func, key):
+                def new_callback():
+                    print(f"self.state['{key}'] = {self.state[key]}")
+                    success = True
+                    if callback_func is not None:
+                        success = callback_func()
+                        print(f"callback success = {success}")
+                        print(f"self.state['{key}'] = {self.state[key]}")
+                    if success:
+                        print(f"Toggling '{key}'!")
+                        self.state.toggle(key)
+
+                return new_callback
+
+            action = create_callback(callback_func, key)
+            menu_item = add_menu_item(menu, key, name, action)
             connect_check(key)
             return menu_item
 
@@ -843,6 +860,7 @@ class MainWindow(QMainWindow):
             predictionMenu,
             "visualize models",
             "Visualize Model Outputs...",
+            self._handle_model_overlay_command,
         )
 
         predictionMenu.addSeparator()
@@ -1728,7 +1746,7 @@ class MainWindow(QMainWindow):
 
         def should_visualize():
             """Return whether to visualize models and handles removal of visuals."""
-            if not self.state["visualize models"]:
+            if self.state["visualize models"]:
                 # Remove inference from overlays
                 self.overlays.pop("inference", None)
                 return False
@@ -1773,7 +1791,14 @@ class MainWindow(QMainWindow):
             from sleap.gui.overlays.base import DataOverlay
 
             filename = params["filename"]
-            predictor: VisualPredictor = DataOverlay.make_viz_predictor(filename)
+            try:
+                predictor: VisualPredictor = DataOverlay.make_viz_predictor(filename)
+
+            except Exception as e:
+                print(f"Returning false")  # TODO(LM): Remove
+                return False  # TODO(LM): Remove
+                raise Exception("Error visualizing model") from e
+
             show_pafs = False
 
             # If multi-head model with both confmaps and pafs,
@@ -1786,33 +1811,28 @@ class MainWindow(QMainWindow):
                     form_name="head_type_form"
                 ).get_results()
                 show_pafs = "Part Affinity" in results["head_type"]
-            try:
-                overlay = DataOverlay.from_predictor(
-                    predictor=predictor,
-                    video=self.state["video"],
-                    player=self.player,
-                    show_pafs=show_pafs,
-                )
-            except Exception as e:
-                self.state["visualize models"] = False  # XXX(LM): Does not work
-                self._menu_actions["visualize models"].setChecked(
-                    False
-                )  # XXX(LM): Does not work
-                raise Exception("Error visualizing model") from e
+
+            overlay = DataOverlay.from_predictor(
+                predictor=predictor,
+                video=self.state["video"],
+                player=self.player,
+                show_pafs=show_pafs,
+            )
 
             self.overlays["inference"] = overlay
 
             return True
 
+        success = True
         if ask():
-            do()
+            success = do()
         else:
-            self.state["visualize models"] = False  # XXX(LM): Does not work
-            self._menu_actions["visualize models"].setChecked(
-                False
-            )  # XXX(LM): Does not work
+            return False
 
         self.plotFrame()
+
+        print(f"success = {success}")
+        return success
 
     def _handle_instance_double_click(
         self, instance: Instance, event: QtGui.QMouseEvent = None
