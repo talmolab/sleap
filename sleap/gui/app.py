@@ -1186,7 +1186,7 @@ class MainWindow(QMainWindow):
     def _load_overlays(self):
         """Load all standard video overlays."""
         self.overlays["track_labels"] = TrackListOverlay(self.labels, self.player)
-            self.overlays["trails"] = TrackTrailOverlay(
+        self.overlays["trails"] = TrackTrailOverlay(
             labels=self.labels,
             player=self.player,
             trail_shade=self.state["trail_shade"],
