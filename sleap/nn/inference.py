@@ -63,6 +63,7 @@ from sleap.nn.data.pipelines import (
     InstanceCentroidFinder,
     KerasModelPredictor,
 )
+from sleap.nn.utils import reset_input_layer
 from sleap.io.dataset import Labels
 from sleap.util import frame_list
 
@@ -124,6 +125,7 @@ class Predictor(ABC):
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
         batch_size: int = 4,
+        resize_input_layer: bool = True,
     ) -> "Predictor":
         """Create the appropriate `Predictor` subclass from a list of model paths.
 
@@ -139,6 +141,8 @@ class Predictor(ABC):
             batch_size: The default batch size to use when loading data for inference.
                 Higher values increase inference speed at the cost of higher memory
                 usage.
+            resize_input_layer: If True, the the input layer of the `tf.Keras.model` is
+                resized to (None, None, None, num_color_channels).
 
         Returns:
             A subclass of `Predictor`.
@@ -161,6 +165,7 @@ class Predictor(ABC):
                 integral_refinement=integral_refinement,
                 integral_patch_size=integral_patch_size,
                 batch_size=batch_size,
+                resize_input_layer=resize_input_layer,
             )
 
         elif (
@@ -190,6 +195,7 @@ class Predictor(ABC):
                     peak_threshold=peak_threshold,
                     integral_refinement=integral_refinement,
                     integral_patch_size=integral_patch_size,
+                    resize_input_layer=resize_input_layer,
                 )
             else:
                 predictor = TopDownPredictor.from_trained_models(
@@ -199,6 +205,7 @@ class Predictor(ABC):
                     peak_threshold=peak_threshold,
                     integral_refinement=integral_refinement,
                     integral_patch_size=integral_patch_size,
+                    resize_input_layer=resize_input_layer,
                 )
 
         elif "multi_instance" in model_types:
@@ -208,6 +215,7 @@ class Predictor(ABC):
                 integral_refinement=integral_refinement,
                 integral_patch_size=integral_patch_size,
                 batch_size=batch_size,
+                resize_input_layer=resize_input_layer,
             )
 
         elif "multi_class_bottomup" in model_types:
@@ -217,6 +225,7 @@ class Predictor(ABC):
                 integral_refinement=integral_refinement,
                 integral_patch_size=integral_patch_size,
                 batch_size=batch_size,
+                resize_input_layer=resize_input_layer,
             )
 
         else:
@@ -683,7 +692,7 @@ class InferenceLayer(tf.keras.layers.Layer):
     Attributes:
         keras_model: A `tf.keras.Model` that will be called on the input to this layer.
         input_scale: If not 1.0, input image will be resized by this factor.
-        pad_to_stride: If not 1, input image will be paded to ensure that it is
+        pad_to_stride: If not 1, input image will be padded to ensure that it is
             divisible by this value (after scaling).
         ensure_grayscale: If `True`, converts inputs to grayscale if not already. If
             `False`, converts inputs to RGB if not already. If `None` (default), infer
@@ -1228,6 +1237,7 @@ class SingleInstancePredictor(Predictor):
                 peak_threshold=self.peak_threshold,
                 refinement="integral" if self.integral_refinement else "local",
                 integral_patch_size=self.integral_patch_size,
+                output_stride=self.confmap_config.model.heads.single_instance.output_stride,
             )
         )
 
@@ -1248,6 +1258,7 @@ class SingleInstancePredictor(Predictor):
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
         batch_size: int = 4,
+        resize_input_layer: bool = True,
     ) -> "SingleInstancePredictor":
         """Create the predictor from a saved model.
 
@@ -1266,6 +1277,8 @@ class SingleInstancePredictor(Predictor):
             batch_size: The default batch size to use when loading data for inference.
                 Higher values increase inference speed at the cost of higher memory
                 usage.
+            resize_input_layer: If True, the the input layer of the `tf.Keras.model` is
+                resized to (None, None, None, num_color_channels).
 
         Returns:
             An instance of`SingleInstancePredictor` with the models loaded.
@@ -1277,6 +1290,10 @@ class SingleInstancePredictor(Predictor):
         confmap_model.keras_model = tf.keras.models.load_model(
             confmap_keras_model_path, compile=False
         )
+        if resize_input_layer:
+            confmap_model.keras_model = reset_input_layer(
+                keras_model=confmap_model.keras_model, new_shape=None
+            )
         obj = cls(
             confmap_config=confmap_config,
             confmap_model=confmap_model,
@@ -1461,7 +1478,7 @@ class CentroidCrop(InferenceLayer):
         if output_stride is None:
             # Attempt to automatically infer the output stride.
             output_stride = get_model_output_stride(
-                self.keras_model, 0, self.confmaps_ind
+                self.keras_model, output_ind=self.confmaps_ind
             )
         self.output_stride = output_stride
         self.peak_threshold = peak_threshold
@@ -1754,7 +1771,7 @@ class FindInstancePeaks(InferenceLayer):
         if output_stride is None:
             # Attempt to automatically infer the output stride.
             output_stride = get_model_output_stride(
-                self.keras_model, 0, self.confmaps_ind
+                self.keras_model, output_ind=self.confmaps_ind
             )
         self.output_stride = output_stride
 
@@ -2120,6 +2137,7 @@ class TopDownPredictor(Predictor):
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
+        resize_input_layer: bool = True,
     ) -> "TopDownPredictor":
         """Create predictor from saved models.
 
@@ -2141,6 +2159,8 @@ class TopDownPredictor(Predictor):
                 offset regression head.
             integral_patch_size: Size of patches to crop around each rough peak for
                 integral refinement as an integer scalar.
+            resize_input_layer: If True, the the input layer of the `tf.Keras.model` is
+                resized to (None, None, None, num_color_channels).
 
         Returns:
             An instance of `TopDownPredictor` with the loaded models.
@@ -2161,6 +2181,11 @@ class TopDownPredictor(Predictor):
             centroid_model.keras_model = tf.keras.models.load_model(
                 centroid_keras_model_path, compile=False
             )
+            if resize_input_layer:
+                # Reset input layer dimensions to be more flexible
+                centroid_model.keras_model = reset_input_layer(
+                    keras_model=centroid_model.keras_model, new_shape=None
+                )
         else:
             centroid_config = None
             centroid_model = None
@@ -2173,6 +2198,11 @@ class TopDownPredictor(Predictor):
             confmap_model.keras_model = tf.keras.models.load_model(
                 confmap_keras_model_path, compile=False
             )
+            if resize_input_layer:
+                # Reset input layer dimensions to be more flexible
+                confmap_model.keras_model = reset_input_layer(
+                    keras_model=confmap_model.keras_model, new_shape=None
+                )
         else:
             confmap_config = None
             confmap_model = None
@@ -2743,6 +2773,8 @@ class BottomUpPredictor(Predictor):
                 peak_threshold=self.peak_threshold,
                 refinement="integral" if self.integral_refinement else "local",
                 integral_patch_size=self.integral_patch_size,
+                cm_output_stride=self.bottomup_config.model.heads.multi_instance.confmaps.output_stride,
+                paf_output_stride=self.bottomup_config.model.heads.multi_instance.pafs.output_stride,
             )
         )
 
@@ -2767,6 +2799,7 @@ class BottomUpPredictor(Predictor):
         dist_penalty_weight: float = 1.0,
         paf_line_points: int = 10,
         min_line_scores: float = 0.25,
+        resize_input_layer: bool = True,
     ) -> "BottomUpPredictor":
         """Create predictor from a saved model.
 
@@ -2795,6 +2828,8 @@ class BottomUpPredictor(Predictor):
             min_line_scores: Minimum line score (between -1 and 1) required to form a
                 match between candidate point pairs. Useful for rejecting spurious
                 detections when there are no better ones.
+            resize_input_layer: If True, the the input layer of the `tf.Keras.model` is
+                resized to (None, None, None, num_color_channels).
 
         Returns:
             An instance of `BottomUpPredictor` with the loaded model.
@@ -2806,6 +2841,10 @@ class BottomUpPredictor(Predictor):
         bottomup_model.keras_model = tf.keras.models.load_model(
             bottomup_keras_model_path, compile=False
         )
+        if resize_input_layer:
+            bottomup_model.keras_model = reset_input_layer(
+                keras_model=bottomup_model.keras_model, new_shape=None
+            )
         obj = cls(
             bottomup_config=bottomup_config,
             bottomup_model=bottomup_model,
@@ -3246,6 +3285,8 @@ class BottomUpMultiClassPredictor(Predictor):
                 peak_threshold=self.peak_threshold,
                 refinement="integral" if self.integral_refinement else "local",
                 integral_patch_size=self.integral_patch_size,
+                cm_output_stride=self.config.model.heads.multi_class_bottomup.confmaps.output_stride,
+                class_maps_output_stride=self.config.model.heads.multi_class_bottomup.class_maps.output_stride,
             )
         )
 
@@ -3257,6 +3298,7 @@ class BottomUpMultiClassPredictor(Predictor):
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
+        resize_input_layer: bool = True,
     ) -> "BottomUpMultiClassPredictor":
         """Create predictor from a saved model.
 
@@ -3275,6 +3317,8 @@ class BottomUpMultiClassPredictor(Predictor):
                 offset regression head.
             integral_patch_size: Size of patches to crop around each rough peak for
                 integral refinement as an integer scalar.
+            resize_input_layer: If True, the the input layer of the `tf.Keras.model` is
+                resized to (None, None, None, num_color_channels).
 
         Returns:
             An instance of `BottomUpPredictor` with the loaded model.
@@ -3284,6 +3328,10 @@ class BottomUpMultiClassPredictor(Predictor):
         keras_model_path = get_keras_model_path(model_path)
         model = Model.from_config(config.model)
         model.keras_model = tf.keras.models.load_model(keras_model_path, compile=False)
+        if resize_input_layer:
+            model.keras_model = reset_input_layer(
+                keras_model=model.keras_model, new_shape=None
+            )
         obj = cls(
             config=config,
             model=model,
@@ -3487,7 +3535,7 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
         if output_stride is None:
             # Attempt to automatically infer the output stride.
             output_stride = get_model_output_stride(
-                self.keras_model, 0, self.confmaps_ind
+                self.keras_model, output_ind=self.confmaps_ind
             )
         self.output_stride = output_stride
 
@@ -3835,6 +3883,7 @@ class TopDownMultiClassPredictor(Predictor):
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
+        resize_input_layer: bool = True,
     ) -> "TopDownMultiClassPredictor":
         """Create predictor from saved models.
 
@@ -3856,6 +3905,8 @@ class TopDownMultiClassPredictor(Predictor):
                 offset regression head.
             integral_patch_size: Size of patches to crop around each rough peak for
                 integral refinement as an integer scalar.
+            resize_input_layer: If True, the the input layer of the `tf.Keras.model` is
+                resized to (None, None, None, num_color_channels).
 
         Returns:
             An instance of `TopDownPredictor` with the loaded models.
@@ -3876,6 +3927,10 @@ class TopDownMultiClassPredictor(Predictor):
             centroid_model.keras_model = tf.keras.models.load_model(
                 centroid_keras_model_path, compile=False
             )
+            if resize_input_layer:
+                centroid_model.keras_model = reset_input_layer(
+                    keras_model=centroid_model.keras_model, new_shape=None
+                )
         else:
             centroid_config = None
             centroid_model = None
@@ -3888,6 +3943,10 @@ class TopDownMultiClassPredictor(Predictor):
             confmap_model.keras_model = tf.keras.models.load_model(
                 confmap_keras_model_path, compile=False
             )
+            if resize_input_layer:
+                confmap_model.keras_model = reset_input_layer(
+                    keras_model=confmap_model.keras_model, new_shape=None
+                )
         else:
             confmap_config = None
             confmap_model = None
@@ -4323,6 +4382,7 @@ def load_model(
     tracker_max_instances: Optional[int] = None,
     disable_gpu_preallocation: bool = True,
     progress_reporting: str = "rich",
+    resize_input_layer: bool = True,
 ) -> Predictor:
     """Load a trained SLEAP model.
 
@@ -4355,6 +4415,8 @@ def load_model(
             for programmatic progress monitoring. If `"none"`, nothing is displayed
             during inference -- this is recommended when running on clusters or headless
             machines where the output is captured to a log file.
+        resize_input_layer: If True, the the input layer of the `tf.Keras.model` is
+            resized to (None, None, None, num_color_channels).
 
     Returns:
         An instance of a `Predictor` based on which model type was detected.
@@ -4396,11 +4458,12 @@ def load_model(
     if disable_gpu_preallocation:
         sleap.disable_preallocation()
 
-    predictor = Predictor.from_model_paths(
+    predictor: Predictor = Predictor.from_model_paths(
         model_paths,
         peak_threshold=peak_threshold,
         integral_refinement=refinement == "integral",
         batch_size=batch_size,
+        resize_input_layer=resize_input_layer,
     )
     predictor.verbosity = progress_reporting
     if tracker is not None:
@@ -4448,7 +4511,7 @@ def export_model(
             multi-instance model returns. This is enforced during centroid
             cropping and therefore only compatible with TopDown models.
     """
-    predictor = load_model(model_path)
+    predictor = load_model(model_path, resize_input_layer=False)
 
     predictor.export_model(
         save_path,
@@ -4873,7 +4936,7 @@ def _make_tracker_from_cli(args: argparse.Namespace) -> Optional[Tracker]:
     return None
 
 
-def main(args: list = None):
+def main(args: Optional[list] = None):
     """Entrypoint for `sleap-track` CLI for running inference.
 
     Args:
@@ -5007,7 +5070,3 @@ def main(args: list = None):
 
     if args.open_in_gui:
         subprocess.call(["sleap-label", output_path])
-
-
-if __name__ == "__main__":
-    main()

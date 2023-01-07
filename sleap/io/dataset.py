@@ -2516,12 +2516,21 @@ class Labels(MutableSequence):
             inst._fix_array()
 
     @classmethod
-    def make_gui_video_callback(cls, search_paths: Optional[List] = None) -> Callable:
-        return cls.make_video_callback(search_paths=search_paths, use_gui=True)
+    def make_gui_video_callback(
+        cls,
+        search_paths: Optional[List] = None,
+        context: Optional[Dict[str, bool]] = None,
+    ) -> Callable:
+        return cls.make_video_callback(
+            search_paths=search_paths, use_gui=True, context=context
+        )
 
     @classmethod
     def make_video_callback(
-        cls, search_paths: Optional[List] = None, use_gui: bool = False
+        cls,
+        search_paths: Optional[List] = None,
+        use_gui: bool = False,
+        context: Optional[Dict[str, bool]] = None,
     ) -> Callable:
         """Create a callback for finding missing videos.
 
@@ -2534,14 +2543,31 @@ class Labels(MutableSequence):
         Args:
             search_paths: If specified, this is a list of paths where
                 we'll automatically try to find the missing videos.
+            context: A dictionary containing a "changed_on_load" key with a boolean
+                value. Used externally to determine if any filenames were updated.
 
         Returns:
             The callback function.
         """
         search_paths = search_paths or []
 
-        def video_callback(video_list, new_paths=search_paths):
+        def video_callback(
+            video_list: List[dict],
+            new_paths: List[str] = search_paths,
+            context: Optional[Dict[str, bool]] = context,
+        ):
+            """Callback to find videos which have been moved (or moved across systems).
+
+            Args:
+                video_list: A list of serialized `Video` objects stored as nested
+                    dictionaries.
+                new_paths: A list of paths where we'll autimatically try to find the
+                    missing videos.
+                context: A dictionary containing a "changed_on_load" key with a boolean
+                    value. Used externally to determine if any filenames were updated.
+            """
             filenames = [item["backend"]["filename"] for item in video_list]
+            context = context or {"changed_on_load": False}
             missing = pathutils.list_file_missing(filenames)
 
             # Try changing the prefix using saved patterns
@@ -2569,6 +2595,8 @@ class Labels(MutableSequence):
 
                     if not okay:
                         return True  # True for stop
+
+                    context["changed_on_load"] = True
 
             if not use_gui and sum(missing):
                 # If we got the same number of paths as there are videos
