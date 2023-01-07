@@ -19,6 +19,7 @@ from sleap.nn.data.confidence_maps import (
 from sleap.nn.inference import (
     InferenceLayer,
     InferenceModel,
+    Predictor,
     get_model_output_stride,
     find_head,
     SingleInstanceInferenceLayer,
@@ -796,28 +797,87 @@ def test_topdown_multiclass_predictor_high_threshold(
     assert len(labels_pr[0].instances) == 0
 
 
-def test_load_model(
-    min_single_instance_robot_model_path,
+@pytest.mark.parametrize("resize_input_shape", [True, False])
+@pytest.mark.parametrize(
+    "model_fixture_name",
+    [
+        "min_centroid_model_path",
+        "min_centered_instance_model_path",
+        "min_bottomup_model_path",
+        "min_single_instance_robot_model_path",
+        "min_bottomup_multiclass_model_path",
+        "min_topdown_multiclass_model_path",
+    ],
+)
+def test_load_model(resize_input_shape, model_fixture_name, request):
+    model_path = request.getfixturevalue(model_fixture_name)
+    fname_mname_ptype_ishape = [
+        ("centroid", "centroid_model", TopDownPredictor, (None, 384, 384, 1)),
+        ("centered_instance", "confmap_model", TopDownPredictor, (None, 96, 96, 1)),
+        ("bottomup_model", "bottomup_model", BottomUpPredictor, (None, 384, 384, 1)),
+        (
+            "single_instance",
+            "confmap_model",
+            SingleInstancePredictor,
+            (None, 160, 280, 3),
+        ),
+        (
+            "bottomup_multiclass",
+            "model",
+            BottomUpMultiClassPredictor,
+            (None, 512, 512, 1),
+        ),
+        (
+            "topdown_multiclass",
+            "confmap_model",
+            TopDownMultiClassPredictor,
+            (None, 128, 128, 1),
+        ),
+    ]
+    expected_model_name = None
+    expected_predictor_type = None
+    input_shape = None
+
+    # Create predictor
+    predictor = load_model(model_path, resize_input_layer=resize_input_shape)
+
+    # Determine predictor type
+    for (fname, mname, ptype, ishape) in fname_mname_ptype_ishape:
+        if fname in model_fixture_name:
+            expected_model_name = mname
+            expected_predictor_type = ptype
+            input_shape = ishape
+            break
+
+    # Assert predictor type and model input shape are correct
+    assert isinstance(predictor, expected_predictor_type)
+    keras_model = getattr(predictor, expected_model_name).keras_model
+    if resize_input_shape:
+        assert keras_model.input_shape == (None, None, None, input_shape[-1])
+    else:
+        assert keras_model.input_shape == input_shape
+
+
+def test_topdown_multi_size_inference(
     min_centroid_model_path,
     min_centered_instance_model_path,
-    min_bottomup_model_path,
-    min_topdown_multiclass_model_path,
-    min_bottomup_multiclass_model_path,
+    centered_pair_labels,
+    min_tracks_2node_labels,
 ):
-    predictor = load_model(min_single_instance_robot_model_path)
-    assert isinstance(predictor, SingleInstancePredictor)
+    imgs = centered_pair_labels.video[:2]
+    assert imgs.shape == (2, 384, 384, 1)
 
-    predictor = load_model([min_centroid_model_path, min_centered_instance_model_path])
-    assert isinstance(predictor, TopDownPredictor)
+    predictor = load_model(
+        [min_centroid_model_path, min_centered_instance_model_path],
+        resize_input_layer=True,
+    )
+    preds = predictor.predict(imgs)
+    assert len(preds) == 2
 
-    predictor = load_model(min_bottomup_model_path)
-    assert isinstance(predictor, BottomUpPredictor)
-
-    predictor = load_model([min_centroid_model_path, min_topdown_multiclass_model_path])
-    assert isinstance(predictor, TopDownMultiClassPredictor)
-
-    predictor = load_model(min_bottomup_multiclass_model_path)
-    assert isinstance(predictor, BottomUpMultiClassPredictor)
+    imgs = min_tracks_2node_labels.video[:2]
+    assert imgs.shape == (2, 1024, 1024, 1)
+    preds = predictor.predict(imgs)
+    assert len(preds) == 2
 
 
 def test_ensure_numpy(
@@ -1077,13 +1137,15 @@ def test_single_instance_predictor_save(min_single_instance_robot_model_path, tm
 
     # directly initialize predictor
     predictor = SingleInstancePredictor.from_trained_models(
-        min_single_instance_robot_model_path
+        min_single_instance_robot_model_path, resize_input_layer=False
     )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
     # high level load to predictor
-    predictor = load_model(min_single_instance_robot_model_path)
+    predictor = load_model(
+        min_single_instance_robot_model_path, resize_input_layer=False
+    )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
@@ -1117,12 +1179,16 @@ def test_topdown_predictor_save(
     predictor = TopDownPredictor.from_trained_models(
         centroid_model_path=min_centroid_model_path,
         confmap_model_path=min_centered_instance_model_path,
+        resize_input_layer=False,
     )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
     # high level load to predictor
-    predictor = load_model([min_centroid_model_path, min_centered_instance_model_path])
+    predictor = load_model(
+        [min_centroid_model_path, min_centered_instance_model_path],
+        resize_input_layer=False,
+    )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
@@ -1156,12 +1222,16 @@ def test_topdown_id_predictor_save(
     predictor = TopDownMultiClassPredictor.from_trained_models(
         centroid_model_path=min_centroid_model_path,
         confmap_model_path=min_topdown_multiclass_model_path,
+        resize_input_layer=False,
     )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
     # high level load to predictor
-    predictor = load_model([min_centroid_model_path, min_topdown_multiclass_model_path])
+    predictor = load_model(
+        [min_centroid_model_path, min_topdown_multiclass_model_path],
+        resize_input_layer=False,
+    )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
