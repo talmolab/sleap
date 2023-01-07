@@ -25,6 +25,7 @@ def find_padding_for_stride(
         A tuple of (pad_bottom, pad_right), integers with the number of pixels that the
         image would need to be padded by to meet the divisibility requirement.
     """
+    # The outer-most modulo handles edge case when image_height % max_stride == 0
     pad_bottom = (max_stride - (image_height % max_stride)) % max_stride
     pad_right = (max_stride - (image_width % max_stride)) % max_stride
     return pad_bottom, pad_right

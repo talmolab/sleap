@@ -182,7 +182,7 @@ class MainWindow(QMainWindow):
             self.restoreState(prefs["window state"])
 
         if labels_path:
-            self.loadProjectFile(labels_path)
+            self.commands.loadProjectFile(filename=labels_path)
         else:
             self.state["project_loaded"] = False
 
@@ -1473,72 +1473,6 @@ class MainWindow(QMainWindow):
             "Note: Some preferences may not take effect until application is restarted."
         )
         msg.exec_()
-
-    def loadProjectFile(self, filename: Optional[str] = None):
-        """
-        Loads given labels file into GUI.
-
-        Args:
-            filename: The path to the saved labels dataset. If None,
-                then don't do anything.
-
-        Returns:
-            None:
-        """
-        if len(filename) == 0:
-            return
-
-        gui_video_callback = Labels.make_gui_video_callback(
-            search_paths=[os.path.dirname(filename)]
-        )
-
-        has_loaded = False
-        labels = None
-        if type(filename) == Labels:
-            labels = filename
-            filename = None
-            has_loaded = True
-        else:
-            try:
-                labels = Labels.load_file(filename, video_search=gui_video_callback)
-                has_loaded = True
-            except ValueError as e:
-                print(e)
-                QMessageBox(text=f"Unable to load {filename}.").exec_()
-
-        if has_loaded:
-            self.loadLabelsObject(labels, filename)
-            self.state["project_loaded"] = True
-
-    def loadLabelsObject(self, labels: Labels, filename: Optional[str] = None):
-        """
-        Loads a `Labels` object into the GUI, replacing any currently loaded.
-
-        Args:
-            labels: The `Labels` object to load.
-            filename: The filename where this file is saved, if any.
-
-        Returns:
-            None.
-
-        """
-        self.state["labels"] = labels
-        self.state["filename"] = filename
-
-        self.commands.changestack_clear()
-        self.color_manager.labels = self.labels
-        self.color_manager.set_palette(self.state["palette"])
-
-        self._load_overlays()
-
-        if len(self.labels.skeletons):
-            self.state["skeleton"] = self.labels.skeletons[0]
-
-        # Load first video
-        if len(self.labels.videos):
-            self.state["video"] = self.labels.videos[0]
-
-        self.on_data_update([UpdateTopic.project, UpdateTopic.all])
 
     def _update_track_menu(self):
         """Updates track menu options."""
