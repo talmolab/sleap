@@ -128,6 +128,7 @@ def main(args: list = None):
             for v in labels.videos:  # check if it is among the videos in the project
                 if args.video in v.backend.filename:
                     vids.append(v)
+                    break
         else:
             vids = labels.videos  # otherwise all videos are converted
 
