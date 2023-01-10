@@ -1110,7 +1110,7 @@ class ExportAnalysisFile(AppCommand):
         from sleap.io.format.nix import NixAdaptor
 
         for output_path, video in params["analysis_videos"]:
-            if output_path.split(".")[-1] == "nix":
+            if Path(output_path).suffix[1:] == "nix":
                 adaptor = NixAdaptor
             else:
                 adaptor = SleapAnalysisAdaptor
