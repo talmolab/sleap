@@ -11,12 +11,22 @@ from sleap.io.video import Video
 
 
 class NixAdaptor(Adaptor):
-    """Adaptor class for export of tracking analysis results to the generic [NIX](https://github.com/g-node/nix) format.
-    NIX defines a generic data model for scientific data that combines data and data annotations within the same container. The written files are hdf5 files that can be read with any hdf5 library but follow the entity definitions of the NIX data model. For reading nix-files with python install the nixio low-level library ```pip install nixio``` or use the high-level api [nixtrack](https://github.com/bendalab/nixtrack).
+    """Adaptor class for export of tracking analysis results to the generic
+    [NIX](https://github.com/g-node/nix) format.
+    NIX defines a generic data model for scientific data that combines data and data
+    annotations within the same container. The written files are hdf5 files that can
+    be read with any hdf5 library but follow the entity definitions of the NIX data
+    model. For reading nix-files with python install the nixio low-level library
+    ```pip install nixio``` or use the high-level api
+    [nixtrack](https://github.com/bendalab/nixtrack).
 
-    So far the adaptor exports the tracked positions for each node of each instance, the track and skeleton information along with the respective scores and the centroid. Additionally, the video information is exported as metadata.
-    For more information on the mapping from sleap to nix see the docs on [nixtrack](https://github.com/bendalab/nixtrack) (work in progress).
-    The adaptor uses a chunked writing approach which avoids numpy out of memory exceptions when exporting large datasets.
+    So far the adaptor exports the tracked positions for each node of each instance,
+    the track and skeleton information along with the respective scores and the
+    centroid. Additionally, the video information is exported as metadata.
+    For more information on the mapping from sleap to nix see the docs on
+    [nixtrack](https://github.com/bendalab/nixtrack) (work in progress).
+    The adaptor uses a chunked writing approach which avoids numpy out of memory
+    exceptions when exporting large datasets.
 
     author: Jan Grewe (jan.grewe@g-node.org)
     """
