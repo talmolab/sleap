@@ -107,13 +107,15 @@ class NixAdaptor(Adaptor):
                 s["writer"] = str(cls)[8:-2]
                 if project is not None:
                     s["project"] = project
-    
+
                 name = Path(video.backend.filename).name
                 b = nf.create_block(name, "nix.tracking_results")
-    
+
                 # add video metadata, if exists
                 src = b.create_source(name, "nix.tracking.source.video")
-                sec = src.file.create_section(name, "nix.tracking.source.video.metadata")
+                sec = src.file.create_section(
+                    name, "nix.tracking.source.video.metadata"
+                )
                 sec["filename"] = video.backend.filename
                 sec["fps"] = getattr(video.backend, "fps", 0.0)
                 sec.props["fps"].unit = "Hz"
