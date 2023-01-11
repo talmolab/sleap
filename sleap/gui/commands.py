@@ -642,7 +642,7 @@ class LoadLabelsObject(AppCommand):
             context.state["video"] = labels.videos[0]
 
         context.state["project_loaded"] = True
-        context.state["has_changes"] = getattr(params, "changed_on_load", False)
+        context.state["has_changes"] = params.get("changed_on_load", False)
 
         # This is not listed as an edit command since we want a clean changestack
         context.app.on_data_update([UpdateTopic.project, UpdateTopic.all])

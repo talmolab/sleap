@@ -2550,6 +2550,7 @@ class Labels(MutableSequence):
             The callback function.
         """
         search_paths = search_paths or []
+        context = context or {}
 
         def video_callback(
             video_list: List[dict],
@@ -2616,6 +2617,9 @@ class Labels(MutableSequence):
                         for i, filename in enumerate(filenames):
                             if missing[i]:
                                 filenames[i] = new_paths[i]
+
+                        # Solely for testing since only gui will have a `CommandContext`
+                        context["changed_on_load"] = True
 
             # Replace the video filenames with changes by user
             for i, item in enumerate(video_list):
