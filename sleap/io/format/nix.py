@@ -99,28 +99,32 @@ class NixAdaptor(Adaptor):
         def create_file(filename, project, video):
             print(f"...creating nix file {filename} for {project}", end="\t")
             nf = nix.File.open(filename, nix.FileMode.Overwrite)
-            s = nf.create_section("TrackingAnalysis", "nix.tracking.metadata")
-            s["version"] = "0.1.0"
-            s["format"] = "nix.tracking"
-            s["definitions"] = "https://github.com/bendalab/nixtrack"
-            s["writer"] = str(cls)[8:-2]
-            if project is not None:
-                s["project"] = project
-
-            name = Path(video.backend.filename).name
-            b = nf.create_block(name, "nix.tracking_results")
-
-            # add video metadata, if exists
-            src = b.create_source(name, "nix.tracking.source.video")
-            sec = src.file.create_section(name, "nix.tracking.source.video.metadata")
-            sec["filename"] = video.backend.filename
-            sec["fps"] = getattr(video.backend, "fps", 0.0)
-            sec.props["fps"].unit = "Hz"
-            sec["frames"] = video.num_frames
-            sec["grayscale"] = getattr(video.backend, "grayscale", None)
-            sec["height"] = video.backend.height
-            sec["width"] = video.backend.width
-            src.metadata = sec
+            try:
+                s = nf.create_section("TrackingAnalysis", "nix.tracking.metadata")
+                s["version"] = "0.1.0"
+                s["format"] = "nix.tracking"
+                s["definitions"] = "https://github.com/bendalab/nixtrack"
+                s["writer"] = str(cls)[8:-2]
+                if project is not None:
+                    s["project"] = project
+    
+                name = Path(video.backend.filename).name
+                b = nf.create_block(name, "nix.tracking_results")
+    
+                # add video metadata, if exists
+                src = b.create_source(name, "nix.tracking.source.video")
+                sec = src.file.create_section(name, "nix.tracking.source.video.metadata")
+                sec["filename"] = video.backend.filename
+                sec["fps"] = getattr(video.backend, "fps", 0.0)
+                sec.props["fps"].unit = "Hz"
+                sec["frames"] = video.num_frames
+                sec["grayscale"] = getattr(video.backend, "grayscale", None)
+                sec["height"] = video.backend.height
+                sec["width"] = video.backend.width
+                src.metadata = sec
+            except Exception as e:
+                nf.close()
+                raise e
 
             print("done")
             return nf
@@ -401,12 +405,14 @@ class NixAdaptor(Adaptor):
         if video is None:
             print(f"No video specified, exporting the first one {video}...")
             video = source_object.videos[0]
-        nix_file = create_file(filename, source_path, video)
 
+        nix_file = None
         try:
+            nix_file = create_file(filename, source_path, video)
             write_data(nix_file.blocks[0], source_object, video)
             print(" done")
         except Exception as e:
-            print(f"\n\t Writing failed with error message {e}!")
+            print(f"\n\t Writing failed with following error:\n{e}!")
         finally:
-            nix_file.close()
+            if nix_file is not None:
+                nix_file.close()
