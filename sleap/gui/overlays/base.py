@@ -115,7 +115,7 @@ class DataOverlay(BaseOverlay):
 
     @classmethod
     def make_viz_predictor(cls, filename: str) -> VisualPredictor:
-        return VisualPredictor.from_model_path(filename)
+        return VisualPredictor.from_trained_models(filename)
 
     @classmethod
     def from_model(cls, filename: str, *args, **kwargs):

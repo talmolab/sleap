@@ -1,5 +1,5 @@
 import ast
-from typing import cast
+from typing import Union, cast
 import pytest
 import numpy as np
 import json
@@ -18,8 +18,7 @@ from sleap.nn.data.confidence_maps import (
 
 from sleap.nn.inference import (
     InferenceLayer,
-    InferenceModel,
-    Predictor,
+    VisualPredictor,
     get_model_output_stride,
     find_head,
     SingleInstanceInferenceLayer,
@@ -44,8 +43,6 @@ from sleap.nn.inference import (
     main as sleap_track,
     export_cli as sleap_export,
 )
-
-from sleap.gui.learning import runners
 
 sleap.nn.system.use_cpu_only()
 
@@ -91,6 +88,9 @@ def test_pipeline(test_labels):
     )
     p += sleap.nn.data.pipelines.Batcher(batch_size=4, unrag=False)
     return p
+
+
+# Layer tests
 
 
 def test_centroid_crop_gt_layer(test_labels, test_pipeline):
@@ -384,7 +384,7 @@ def test_inference_layer():
     x_in = tf.keras.layers.Input([4, 4, 1])
     x = tf.keras.layers.Lambda(lambda x: x)(x_in)
     keras_model = tf.keras.Model(x_in, x)
-    layer = sleap.nn.inference.InferenceLayer(
+    layer = InferenceLayer(
         keras_model=keras_model, input_scale=1.0, pad_to_stride=1, ensure_grayscale=None
     )
     data = tf.cast(tf.fill([1, 4, 4, 1], 255), tf.uint8)
@@ -397,7 +397,7 @@ def test_inference_layer():
     x_in = tf.keras.layers.Input([4, 4, 1])
     x = tf.keras.layers.Lambda(lambda x: x)(x_in)
     keras_model = tf.keras.Model(x_in, x)
-    layer = sleap.nn.inference.InferenceLayer(
+    layer = InferenceLayer(
         keras_model=keras_model, input_scale=1.0, pad_to_stride=1, ensure_grayscale=None
     )
     data = tf.cast(tf.fill([1, 4, 4, 3], 255), tf.uint8)
@@ -411,7 +411,7 @@ def test_inference_layer():
     x_in = tf.keras.layers.Input([4, 4, 3])
     x = tf.keras.layers.Lambda(lambda x: x)(x_in)
     keras_model = tf.keras.Model(x_in, x)
-    layer = sleap.nn.inference.InferenceLayer(
+    layer = InferenceLayer(
         keras_model=keras_model, input_scale=1.0, pad_to_stride=1, ensure_grayscale=None
     )
     data = tf.cast(tf.fill([1, 4, 4, 1], 255), tf.uint8)
@@ -425,7 +425,7 @@ def test_inference_layer():
     x_in = tf.keras.layers.Input([4, 4, 1])
     x = tf.keras.layers.Lambda(lambda x: x)(x_in)
     keras_model = tf.keras.Model(x_in, x)
-    layer = sleap.nn.inference.InferenceLayer(
+    layer = InferenceLayer(
         keras_model=keras_model, input_scale=0.5, pad_to_stride=1, ensure_grayscale=None
     )
     data = tf.cast(tf.fill([1, 8, 8, 1], 255), tf.uint8)
@@ -438,7 +438,7 @@ def test_inference_layer():
     x_in = tf.keras.layers.Input([4, 4, 1])
     x = tf.keras.layers.Lambda(lambda x: x)(x_in)
     keras_model = tf.keras.Model(x_in, x)
-    layer = sleap.nn.inference.InferenceLayer(
+    layer = InferenceLayer(
         keras_model=keras_model, input_scale=1, pad_to_stride=2, ensure_grayscale=None
     )
     data = tf.cast(tf.fill([1, 3, 3, 1], 255), tf.uint8)
@@ -450,7 +450,7 @@ def test_inference_layer():
     x_in = tf.keras.layers.Input([4, 4, 1])
     x = tf.keras.layers.Lambda(lambda x: x)(x_in)
     keras_model = tf.keras.Model(x_in, x)
-    layer = sleap.nn.inference.InferenceLayer(
+    layer = InferenceLayer(
         keras_model=keras_model, input_scale=0.5, pad_to_stride=2, ensure_grayscale=None
     )
     data = tf.cast(tf.fill([1, 6, 6, 1], 255), tf.uint8)
@@ -551,10 +551,78 @@ def test_single_instance_inference():
     assert "confmaps" in preds
 
 
+def test_centroid_inference():
+
+    xv, yv = make_grid_vectors(image_height=12, image_width=12, output_stride=1)
+    points = tf.cast([[[1.75, 2.75]], [[3.75, 4.75]], [[5.75, 6.75]]], tf.float32)
+    cms = tf.expand_dims(make_multi_confmaps(points, xv, yv, sigma=1.5), axis=0)
+
+    x_in = tf.keras.layers.Input([12, 12, 1])
+    x_out = tf.keras.layers.Lambda(lambda x: x, name="CentroidConfmapsHead")(x_in)
+    model = tf.keras.Model(inputs=x_in, outputs=x_out)
+
+    layer = CentroidCrop(
+        keras_model=model,
+        input_scale=1.0,
+        crop_size=3,
+        pad_to_stride=1,
+        output_stride=None,
+        refinement="local",
+        integral_patch_size=5,
+        peak_threshold=0.2,
+        return_confmaps=False,
+        return_crops=False,
+    )
+
+    # For Codecov to realize the wrapped CentroidCrop.call is tested/covered,
+    # we need to unbind CentroidCrop.call from its bind with TfMethodTarget object
+    # and then rebind the standalone function with the CentroidCrop object
+    TfMethodTarget_object = layer.call.__wrapped__.__self__  # Get the bound object
+    original_func = TfMethodTarget_object.weakrefself_func__()  # Get unbound function
+    layer.call = original_func.__get__(layer, layer.__class__)  # Bind function
+
+    out = layer(cms)
+    assert tuple(out["centroids"].shape) == (1, None, 2)
+    assert tuple(out["centroid_vals"].shape) == (1, None)
+
+    assert tuple(out["centroids"].bounding_shape()) == (1, 3, 2)
+    assert tuple(out["centroid_vals"].bounding_shape()) == (1, 3)
+
+    assert_allclose(out["centroids"][0].numpy(), points.numpy().squeeze(axis=1))
+    assert_allclose(out["centroid_vals"][0].numpy(), [1, 1, 1], atol=0.1)
+
+    model = CentroidInferenceModel(layer)
+
+    preds = model.predict(cms)
+
+    assert preds["centroids"].shape == (1, 3, 2)
+    assert preds["centroid_vals"].shape == (1, 3)
+
+    # test max instances (>3 will fail)
+    layer.max_instances = 3
+    out = layer(cms)
+
+    model = CentroidInferenceModel(layer)
+
+    preds = model.predict(cms)
+
+
+# Predictor tests
+
+
+@pytest.mark.parametrize(
+    "predictor_class",
+    [
+        SingleInstancePredictor,
+        VisualPredictor,
+    ],
+)
 def test_single_instance_predictor(
-    min_labels_robot, min_single_instance_robot_model_path
+    min_labels_robot,
+    min_single_instance_robot_model_path,
+    predictor_class: Union[SingleInstancePredictor, VisualPredictor],
 ):
-    predictor = SingleInstancePredictor.from_trained_models(
+    predictor = predictor_class.from_trained_models(
         min_single_instance_robot_model_path
     )
     predictor.verbosity = "none"
@@ -596,10 +664,19 @@ def test_single_instance_predictor_high_peak_thresh(
     assert len(labels_pr[1]) == 0
 
 
-def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
-    predictor = TopDownPredictor.from_trained_models(
-        centroid_model_path=min_centroid_model_path
-    )
+@pytest.mark.parametrize(
+    "predictor_class",
+    [
+        TopDownPredictor,
+        VisualPredictor,
+    ],
+)
+def test_topdown_predictor_centroid(
+    min_labels,
+    min_centroid_model_path,
+    predictor_class: Union[TopDownPredictor, VisualPredictor],
+):
+    predictor = predictor_class.from_trained_models(model_paths=min_centroid_model_path)
 
     predictor.verbosity = "none"
     labels_pr = predictor.predict(min_labels)
@@ -797,6 +874,9 @@ def test_topdown_multiclass_predictor_high_threshold(
     assert len(labels_pr[0].instances) == 0
 
 
+# Load model tests
+
+
 @pytest.mark.parametrize("resize_input_shape", [True, False])
 @pytest.mark.parametrize(
     "model_fixture_name",
@@ -953,60 +1033,7 @@ def test_ensure_numpy(
     assert type(out["n_valid"]) == np.ndarray
 
 
-def test_centroid_inference():
-
-    xv, yv = make_grid_vectors(image_height=12, image_width=12, output_stride=1)
-    points = tf.cast([[[1.75, 2.75]], [[3.75, 4.75]], [[5.75, 6.75]]], tf.float32)
-    cms = tf.expand_dims(make_multi_confmaps(points, xv, yv, sigma=1.5), axis=0)
-
-    x_in = tf.keras.layers.Input([12, 12, 1])
-    x_out = tf.keras.layers.Lambda(lambda x: x, name="CentroidConfmapsHead")(x_in)
-    model = tf.keras.Model(inputs=x_in, outputs=x_out)
-
-    layer = CentroidCrop(
-        keras_model=model,
-        input_scale=1.0,
-        crop_size=3,
-        pad_to_stride=1,
-        output_stride=None,
-        refinement="local",
-        integral_patch_size=5,
-        peak_threshold=0.2,
-        return_confmaps=False,
-        return_crops=False,
-    )
-
-    # For Codecov to realize the wrapped CentroidCrop.call is tested/covered,
-    # we need to unbind CentroidCrop.call from its bind with TfMethodTarget object
-    # and then rebind the standalone function with the CentroidCrop object
-    TfMethodTarget_object = layer.call.__wrapped__.__self__  # Get the bound object
-    original_func = TfMethodTarget_object.weakrefself_func__()  # Get unbound function
-    layer.call = original_func.__get__(layer, layer.__class__)  # Bind function
-
-    out = layer(cms)
-    assert tuple(out["centroids"].shape) == (1, None, 2)
-    assert tuple(out["centroid_vals"].shape) == (1, None)
-
-    assert tuple(out["centroids"].bounding_shape()) == (1, 3, 2)
-    assert tuple(out["centroid_vals"].bounding_shape()) == (1, 3)
-
-    assert_allclose(out["centroids"][0].numpy(), points.numpy().squeeze(axis=1))
-    assert_allclose(out["centroid_vals"][0].numpy(), [1, 1, 1], atol=0.1)
-
-    model = CentroidInferenceModel(layer)
-
-    preds = model.predict(cms)
-
-    assert preds["centroids"].shape == (1, 3, 2)
-    assert preds["centroid_vals"].shape == (1, 3)
-
-    # test max instances (>3 will fail)
-    layer.max_instances = 3
-    out = layer(cms)
-
-    model = CentroidInferenceModel(layer)
-
-    preds = model.predict(cms)
+# Save models tests
 
 
 def export_frozen_graph(model, preds, output_path):
@@ -1257,6 +1284,9 @@ def test_topdown_id_predictor_save(
     )
 
 
+# Tracking tests
+
+
 @pytest.mark.parametrize(
     "output_path,tracker_method", [("not_default", "flow"), (None, "simple")]
 )
@@ -1360,3 +1390,7 @@ def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
         for key in tracker.candidate_maker.shifted_instances.keys():
             assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
             assert abs(key[0] - key[1]) <= track_window  # References within window
+
+
+if __name__ == "__main__":
+    pytest.main([r"tests\nn\test_inference.py::test_topdown_predictor_centroid", "-rP"])
