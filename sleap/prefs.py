@@ -19,6 +19,7 @@ class Preferences(object):
         "palette": "standard",
         "bold lines": False,
         "trail length": 0,
+        "trail shade": "Normal",
         "trail width": 4.0,
         "trail node count": 1,
         "marker size": 4,
