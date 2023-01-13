@@ -156,6 +156,7 @@ class MainWindow(QMainWindow):
         self.state["edge style"] = prefs["edge style"]
         self.state["fit"] = False
         self.state["color predicted"] = prefs["color predicted"]
+        self.state["trail_shade"] = prefs["trail shade"]
         self.state["marker size"] = prefs["marker size"]
         self.state["propagate track labels"] = prefs["propagate track labels"]
         self.state["node label size"] = prefs["node label size"]
@@ -218,6 +219,7 @@ class MainWindow(QMainWindow):
         prefs["edge style"] = self.state["edge style"]
         prefs["propagate track labels"] = self.state["propagate track labels"]
         prefs["color predicted"] = self.state["color predicted"]
+        prefs["trail shade"] = self.state["trail_shade"]
         prefs["share usage data"] = self.state["share usage data"]
 
         # Save preferences.
@@ -632,11 +634,18 @@ class MainWindow(QMainWindow):
             key="node label size",
         )
 
+        viewMenu.addSeparator()
         add_submenu_choices(
             menu=viewMenu,
             title="Trail Length",
-            options=(0, 10, 50, 100, 250),
+            options=TrackTrailOverlay.get_length_options(),
             key="trail_length",
+        )
+        add_submenu_choices(
+            menu=viewMenu,
+            title="Trail Shade",
+            options=tuple(TrackTrailOverlay.get_shade_options().keys()),
+            key="trail_shade",
         )
 
         viewMenu.addSeparator()
@@ -1177,7 +1186,11 @@ class MainWindow(QMainWindow):
     def _load_overlays(self):
         """Load all standard video overlays."""
         self.overlays["track_labels"] = TrackListOverlay(self.labels, self.player)
-        self.overlays["trails"] = TrackTrailOverlay(self.labels, self.player)
+        self.overlays["trails"] = TrackTrailOverlay(
+            labels=self.labels,
+            player=self.player,
+            trail_shade=self.state["trail_shade"],
+        )
         self.overlays["instance"] = InstanceOverlay(
             self.labels, self.player, self.state
         )
@@ -1196,6 +1209,7 @@ class MainWindow(QMainWindow):
             )
 
         overlay_state_connect(self.overlays["trails"], "trail_length")
+        overlay_state_connect(self.overlays["trails"], "trail_shade")
 
         overlay_state_connect(self.color_manager, "palette")
         overlay_state_connect(self.color_manager, "distinctly_color")
