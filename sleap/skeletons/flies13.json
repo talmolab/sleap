@@ -1,0 +1,449 @@
+{
+    "directed": true,
+    "graph": {
+        "name": "flies13",
+        "num_edges_inserted": 46
+    },
+    "links": [
+        {
+            "edge_insert_idx": 44,
+            "key": 0,
+            "source": {
+                "py/object": "sleap.skeleton.Node",
+                "py/state": {
+                    "py/tuple": [
+                        "head",
+                        1.0
+                    ]
+                }
+            },
+            "target": {
+                "py/object": "sleap.skeleton.Node",
+                "py/state": {
+                    "py/tuple": [
+                        "eyeL",
+                        1.0
+                    ]
+                }
+            },
+            "type": {
+                "py/reduce": [
+                    {
+                        "py/type": "sleap.skeleton.EdgeType"
+                    },
+                    {
+                        "py/tuple": [
+                            1
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "edge_insert_idx": 45,
+            "key": 0,
+            "source": {
+                "py/id": 1
+            },
+            "target": {
+                "py/object": "sleap.skeleton.Node",
+                "py/state": {
+                    "py/tuple": [
+                        "eyeR",
+                        1.0
+                    ]
+                }
+            },
+            "type": {
+                "py/id": 3
+            }
+        },
+        {
+            "edge_insert_idx": 34,
+            "key": 0,
+            "source": {
+                "py/object": "sleap.skeleton.Node",
+                "py/state": {
+                    "py/tuple": [
+                        "thorax",
+                        1.0
+                    ]
+                }
+            },
+            "target": {
+                "py/id": 1
+            },
+            "type": {
+                "py/id": 3
+            }
+        },
+        {
+            "edge_insert_idx": 35,
+            "key": 0,
+            "source": {
+                "py/id": 5
+            },
+            "target": {
+                "py/object": "sleap.skeleton.Node",
+                "py/state": {
+                    "py/tuple": [
+                        "abdomen",
+                        1.0
+                    ]
+                }
+            },
+            "type": {
+                "py/id": 3
+            }
+        },
+        {
+            "edge_insert_idx": 36,
+            "key": 0,
+            "source": {
+                "py/id": 5
+            },
+            "target": {
+                "py/object": "sleap.skeleton.Node",
+                "py/state": {
+                    "py/tuple": [
+                        "wingL",
+                        1.0
+                    ]
+                }
+            },
+            "type": {
+                "py/id": 3
+            }
+        },
+        {
+            "edge_insert_idx": 37,
+            "key": 0,
+            "source": {
+                "py/id": 5
+            },
+            "target": {
+                "py/object": "sleap.skeleton.Node",
+                "py/state": {
+                    "py/tuple": [
+                        "wingR",
+                        1.0
+                    ]
+                }
+            },
+            "type": {
+                "py/id": 3
+            }
+        },
+        {
+            "edge_insert_idx": 38,
+            "key": 0,
+            "source": {
+                "py/id": 5
+            },
+            "target": {
+                "py/object": "sleap.skeleton.Node",
+                "py/state": {
+                    "py/tuple": [
+                        "forelegL4",
+                        1.0
+                    ]
+                }
+            },
+            "type": {
+                "py/id": 3
+            }
+        },
+        {
+            "edge_insert_idx": 39,
+            "key": 0,
+            "source": {
+                "py/id": 5
+            },
+            "target": {
+                "py/object": "sleap.skeleton.Node",
+                "py/state": {
+                    "py/tuple": [
+                        "forelegR4",
+                        1.0
+                    ]
+                }
+            },
+            "type": {
+                "py/id": 3
+            }
+        },
+        {
+            "edge_insert_idx": 40,
+            "key": 0,
+            "source": {
+                "py/id": 5
+            },
+            "target": {
+                "py/object": "sleap.skeleton.Node",
+                "py/state": {
+                    "py/tuple": [
+                        "midlegL4",
+                        1.0
+                    ]
+                }
+            },
+            "type": {
+                "py/id": 3
+            }
+        },
+        {
+            "edge_insert_idx": 41,
+            "key": 0,
+            "source": {
+                "py/id": 5
+            },
+            "target": {
+                "py/object": "sleap.skeleton.Node",
+                "py/state": {
+                    "py/tuple": [
+                        "midlegR4",
+                        1.0
+                    ]
+                }
+            },
+            "type": {
+                "py/id": 3
+            }
+        },
+        {
+            "edge_insert_idx": 42,
+            "key": 0,
+            "source": {
+                "py/id": 5
+            },
+            "target": {
+                "py/object": "sleap.skeleton.Node",
+                "py/state": {
+                    "py/tuple": [
+                        "hindlegL4",
+                        1.0
+                    ]
+                }
+            },
+            "type": {
+                "py/id": 3
+            }
+        },
+        {
+            "edge_insert_idx": 43,
+            "key": 0,
+            "source": {
+                "py/id": 5
+            },
+            "target": {
+                "py/object": "sleap.skeleton.Node",
+                "py/state": {
+                    "py/tuple": [
+                        "hindlegR4",
+                        1.0
+                    ]
+                }
+            },
+            "type": {
+                "py/id": 3
+            }
+        },
+        {
+            "key": 0,
+            "source": {
+                "py/id": 7
+            },
+            "target": {
+                "py/id": 8
+            },
+            "type": {
+                "py/reduce": [
+                    {
+                        "py/type": "sleap.skeleton.EdgeType"
+                    },
+                    {
+                        "py/tuple": [
+                            2
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "key": 0,
+            "source": {
+                "py/id": 8
+            },
+            "target": {
+                "py/id": 7
+            },
+            "type": {
+                "py/id": 15
+            }
+        },
+        {
+            "key": 0,
+            "source": {
+                "py/id": 9
+            },
+            "target": {
+                "py/id": 10
+            },
+            "type": {
+                "py/id": 15
+            }
+        },
+        {
+            "key": 0,
+            "source": {
+                "py/id": 10
+            },
+            "target": {
+                "py/id": 9
+            },
+            "type": {
+                "py/id": 15
+            }
+        },
+        {
+            "key": 0,
+            "source": {
+                "py/id": 11
+            },
+            "target": {
+                "py/id": 12
+            },
+            "type": {
+                "py/id": 15
+            }
+        },
+        {
+            "key": 0,
+            "source": {
+                "py/id": 12
+            },
+            "target": {
+                "py/id": 11
+            },
+            "type": {
+                "py/id": 15
+            }
+        },
+        {
+            "key": 0,
+            "source": {
+                "py/id": 13
+            },
+            "target": {
+                "py/id": 14
+            },
+            "type": {
+                "py/id": 15
+            }
+        },
+        {
+            "key": 0,
+            "source": {
+                "py/id": 14
+            },
+            "target": {
+                "py/id": 13
+            },
+            "type": {
+                "py/id": 15
+            }
+        },
+        {
+            "key": 0,
+            "source": {
+                "py/id": 2
+            },
+            "target": {
+                "py/id": 4
+            },
+            "type": {
+                "py/id": 15
+            }
+        },
+        {
+            "key": 0,
+            "source": {
+                "py/id": 4
+            },
+            "target": {
+                "py/id": 2
+            },
+            "type": {
+                "py/id": 15
+            }
+        }
+    ],
+    "multigraph": true,
+    "nodes": [
+        {
+            "id": {
+                "py/id": 1
+            }
+        },
+        {
+            "id": {
+                "py/id": 5
+            }
+        },
+        {
+            "id": {
+                "py/id": 6
+            }
+        },
+        {
+            "id": {
+                "py/id": 7
+            }
+        },
+        {
+            "id": {
+                "py/id": 8
+            }
+        },
+        {
+            "id": {
+                "py/id": 9
+            }
+        },
+        {
+            "id": {
+                "py/id": 10
+            }
+        },
+        {
+            "id": {
+                "py/id": 11
+            }
+        },
+        {
+            "id": {
+                "py/id": 12
+            }
+        },
+        {
+            "id": {
+                "py/id": 13
+            }
+        },
+        {
+            "id": {
+                "py/id": 14
+            }
+        },
+        {
+            "id": {
+                "py/id": 2
+            }
+        },
+        {
+            "id": {
+                "py/id": 4
+            }
+        }
+    ]
+}
