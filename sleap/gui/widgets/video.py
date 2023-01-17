@@ -786,6 +786,8 @@ class GraphicsView(QGraphicsView):
         self.canPan = True
         self.click_mode = ""
         self.in_zoom = False
+        
+        self.selection_mode = True
 
         self.zoomFactor = 1
         anchor_mode = QGraphicsView.AnchorUnderMouse
@@ -997,6 +999,9 @@ class GraphicsView(QGraphicsView):
                 if self.canZoom:
                     self.in_zoom = True
                     self.setDragMode(QGraphicsView.RubberBandDrag)
+
+            elif event.modifiers() == Qt.ShiftModifier:
+                self.setDragMode(QGraphicsView.RubberBandDrag)
 
             self.leftMouseButtonPressed.emit(scenePos.x(), scenePos.y())
 
