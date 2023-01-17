@@ -1514,16 +1514,14 @@ class QtNode(QGraphicsEllipseItem):
             # Select instance this nodes belong to.
             self.parentObject().player.state["instance"] = self.parentObject().instance
 
-            # Alt-click to drag instance
+            # Alt-click to select all nodes
             if event.modifiers() == Qt.AltModifier:
-                self.dragParent = True
-                self.parentObject().setFlag(QGraphicsItem.ItemIsMovable)
-                # set origin to point clicked so that we can rotate around this point
-                self.parentObject().setTransformOriginPoint(self.scenePos())
-                self.parentObject().mousePressEvent(event)
-            # Shift-click to mark all points as complete
+                for node in self._parent_instance.nodes():
+                    self._parent_instance.selected_node(node)
+            # Shift-click to select an additional node
             elif event.modifiers() == Qt.ShiftModifier:
-                self.parentObject().updatePoints(complete=True, user_change=True)
+                # self.parentObject().updatePoints(complete=True, user_change=True)
+                self._parent_instance.selected_node(self)
             else:
                 self.dragParent = False
                 super(QtNode, self).mousePressEvent(event)
@@ -2019,6 +2017,10 @@ class QtInstance(QGraphicsObject):
     @property
     def selected_nodes(self):
         return self.selected_nodes
+
+    @property
+    def nodes(self):
+        return self.nodes
 
     @selected_nodes.setter
     def selected_nodes(self, node: QtNode):
