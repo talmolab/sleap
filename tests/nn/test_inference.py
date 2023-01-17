@@ -1360,3 +1360,17 @@ def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
         for key in tracker.candidate_maker.shifted_instances.keys():
             assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
             assert abs(key[0] - key[1]) <= track_window  # References within window
+
+
+def test_top_down_model(
+    centered_pair_predictions: Labels, min_centroid_model_path: str
+):
+    labels = centered_pair_predictions
+    video = sleap.load_video(labels.videos[0].backend.filename)
+    predictor = sleap.load_model(min_centroid_model_path, batch_size=16)
+
+    # Preload images
+    imgs = video[:1024]
+
+    with pytest.raises(TypeError):
+        predictor.predict(imgs[:16])  # warmup
