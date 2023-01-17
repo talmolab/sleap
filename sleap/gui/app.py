@@ -1075,6 +1075,15 @@ class MainWindow(QMainWindow):
         hbw.setLayout(hb)
         skeleton_layout.addWidget(hbw)
 
+        skeletons_folder = sleap.util.get_package_file("sleap/skeletons")
+        skeletons_json_files = sleap.util.find_file_by_suffix(
+            skeletons_folder, suffix=".json", depth=1
+        )
+        skeletons_names = [json.name.split(".")[0] for json in skeletons_json_files]
+        self.skeletonTemplates = QComboBox()
+        self.skeletonTemplates.setPlaceholderText("")
+        self.skeletonTemplates.addItems(skeletons_names)
+
         ####### Suggestions #######
         suggestions_layout = _make_dock(
             "Labeling Suggestions", tab_with=videos_layout.parent().parent()

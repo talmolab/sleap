@@ -1,7 +1,7 @@
 {
     "directed": true,
     "graph": {
-        "name": "flies32",
+        "name": "fly32",
         "num_edges_inserted": 25
     },
     "links": [
