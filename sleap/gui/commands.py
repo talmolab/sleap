@@ -45,6 +45,7 @@ from qtpy import QtCore, QtWidgets, QtGui
 
 from qtpy.QtWidgets import QMessageBox, QProgressDialog
 
+from sleap.util import get_package_file
 from sleap.skeleton import Node, Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
 from sleap.io.video import Video
@@ -1863,15 +1864,24 @@ class OpenSkeleton(EditCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-
         filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
-        filename, selected_filter = FileDialog.open(
-            context.app, dir=None, caption="Open skeleton...", filter=";;".join(filters)
-        )
+        template = (
+            context.app.skeletonTemplates.currentText()
+        )  # get selected template from dropdown
+        if template == "Custom":  # check whether to load from file or preset
+            filename, selected_filter = FileDialog.open(
+                context.app,
+                dir=None,
+                caption="Open skeleton...",
+                filter=";;".join(filters),
+            )
+        else:
+            filename = get_package_file(
+                f"sleap/skeletons/{template}.json"
+            )  # load from selected preset
 
         if len(filename) == 0:
             return False
-
         okay = True
         if len(context.labels.skeletons) > 0:
             # Ask user permission to merge skeletons
