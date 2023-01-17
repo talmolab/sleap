@@ -1778,6 +1778,7 @@ class QtInstance(QGraphicsObject):
         self.nodeLabelSize = nodeLabelSize
 
         self.nodes = {}
+        self.selected_nodes = {}
         self.edges = []
         self.edges_shown = True
         self.labels = {}
@@ -2014,6 +2015,18 @@ class QtInstance(QGraphicsObject):
         self._selected = selected
         # Update the selection box for this skeleton instance
         self.updateBox()
+
+    @property
+    def selected_nodes(self):
+        return self.selected_nodes
+
+    @selected_nodes.setter
+    def selected_nodes(self, node: QtNode):
+        for n in self.nodes.items():
+            if node._parent_instance == n._parent_instance:
+                self.selected_nodes.append(node)
+                break
+
 
     def showInstances(self, show: bool):
         """
