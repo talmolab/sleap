@@ -2147,7 +2147,14 @@ class TopDownInferenceModel(InferenceModel):
         crop_output = self.centroid_crop(example)
 
         if isinstance(self.instance_peaks, FindInstancePeaksGroundTruth):
-            peaks_output = self.instance_peaks(example, crop_output)
+
+            if "instances" in example:
+                peaks_output = self.instance_peaks(example, crop_output)
+            else:
+                raise TypeError(
+                    "Ground truth data was not detected... "
+                    "Please load both models when predicting on non-ground-truth data."
+                )
         else:
             peaks_output = self.instance_peaks(crop_output)
         return peaks_output
