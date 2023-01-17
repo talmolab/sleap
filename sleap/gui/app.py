@@ -1067,6 +1067,7 @@ class MainWindow(QMainWindow):
         gb.setLayout(vb)
         skeleton_layout.addWidget(gb)
 
+        # hb = QHBoxLayout()
         skeletons_folder = sleap.util.get_package_file("sleap/skeletons")
         skeletons_json_files = sleap.util.find_files_by_suffix(
             skeletons_folder, suffix=".json", depth=1
@@ -1075,8 +1076,11 @@ class MainWindow(QMainWindow):
         skeletons_names.insert(0, "Custom")
         self.skeletonTemplates = QComboBox()
         self.skeletonTemplates.addItems(skeletons_names)
+        self.skeletonTemplates.setEditable(False)
+        template_label = QLabel("Template:")
+        template_label.setBuddy(self.skeletonTemplates)
+        hb.addWidget(template_label)
         hb.addWidget(self.skeletonTemplates)
-
         hb = QHBoxLayout()
         _add_button(hb, "Load Skeleton", self.commands.openSkeleton)
         _add_button(hb, "Save Skeleton", self.commands.saveSkeleton)
