@@ -1732,6 +1732,99 @@ class QtEdge(QGraphicsPolygonItem):
             self.setLine(line)
 
 
+class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
+    def __init__(self, rect, parent=None):
+        super().__init__(rect, parent)
+        if parent is not None:
+            self.box_width = parent.markerRadius
+            color_manager = parent.player.color_manager
+            int_color = color_manager.get_item_color(parent.instance)
+            self.int_color = QColor(*int_color)
+        else:
+            self.box_width = 7
+            self.int_color = Qt.white
+
+        box_pen = QPen(Qt.black)
+        box_pen.setCosmetic(True)
+        box_brush = QBrush(self.int_color)
+
+        # Create the edge boxes
+        self.top_left_box = QtWidgets.QGraphicsRectItem(parent=self)
+        self.top_left_box.setPen(box_pen)
+        self.top_left_box.setBrush(box_brush)
+        self.top_left_box.setOpacity(0.8)
+
+        self.top_right_box = QtWidgets.QGraphicsRectItem(parent=self)
+        self.top_right_box.setPen(box_pen)
+        self.top_right_box.setBrush(box_brush)
+        self.top_right_box.setOpacity(0.8)
+
+        self.bottom_left_box = QtWidgets.QGraphicsRectItem(parent=self)
+        self.bottom_left_box.setPen(box_pen)
+        self.bottom_left_box.setBrush(box_brush)
+        self.bottom_left_box.setOpacity(0.8)
+
+        self.bottom_right_box = QtWidgets.QGraphicsRectItem(parent=self)
+        self.bottom_right_box.setPen(box_pen)
+        self.bottom_right_box.setBrush(box_brush)
+        self.bottom_right_box.setOpacity(0.8)
+
+    def setRect(self, rect: QRectF):
+        # Update edge boxes along with instance box
+        super().setRect(rect)
+        x1, y1, x2, y2 = rect.getCoords()
+        w = self.box_width
+        self.top_left_box.setRect(QRectF(QPointF(x1, y1), QPointF(x1 + w, y1 + w)))
+        self.top_right_box.setRect(QRectF(QPointF(x2 - w, y1), QPointF(x2, y1 + w)))
+        self.bottom_left_box.setRect(QRectF(QPointF(x1, y2 - w), QPointF(x1 + w, y2)))
+        self.bottom_right_box.setRect(QRectF(QPointF(x2 - w, y2 - w), QPointF(x2, y2)))
+
+    def mousePressEvent(self, event):
+        # Check if the user clicked on one of the edge boxes
+        print(event)
+        if self.top_left_box.contains(event.pos()):
+            self.resizing = "top_left"
+        elif self.top_right_box.contains(event.pos()):
+            self.resizing = "top_right"
+        elif self.bottom_left_box.contains(event.pos()):
+            self.resizing = "bottom_left"
+        elif self.bottom_right_box.contains(event.pos()):
+            self.resizing = "bottom_right"
+        else:
+            self.resizing = None
+
+    def mouseMoveEvent(self, event):
+        # Scale the bounding rectangle if the user is dragging one of the edge boxes
+        if self.resizing == "top_left":
+            self.setRect(
+                event.pos().x(),
+                event.pos().y(),
+                self.rect().width(),
+                self.rect().height(),
+            )
+        elif self.resizing == "top_right":
+            self.setRect(
+                self.rect().x(),
+                event.pos().y(),
+                event.pos().x() - self.rect().x(),
+                self.rect().height(),
+            )
+        elif self.resizing == "bottom_left":
+            self.setRect(
+                event.pos().x(),
+                self.rect().y(),
+                self.rect().width(),
+                event.pos().y() - self.rect().y(),
+            )
+        elif self.resizing == "bottom_right":
+            self.setRect(
+                self.rect().x(),
+                self.rect().y(),
+                event.pos().x() - self.rect().x(),
+                event.pos().y() - self.rect().y(),
+            )
+
+
 class QtInstance(QGraphicsObject):
     """
     QGraphicsObject for skeleton instances.
@@ -1795,7 +1888,7 @@ class QtInstance(QGraphicsObject):
             )
 
         # Add box to go around instance for selection
-        self.box = QGraphicsRectItem(parent=self)
+        self.box = VisibleBoundingBox(rect=self._bounding_rect, parent=self)
         box_pen_width = color_manager.get_item_pen_width(self.instance)
         box_pen = QPen(QColor(*color), box_pen_width)
         box_pen.setStyle(Qt.DashLine)
@@ -2155,11 +2248,10 @@ def plot_instances(scene, frame_idx, labels, video=None, fixed=True):
 if __name__ == "__main__":
 
     import argparse
-    from sleap.io.dataset import Labels
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("data_path", help="Path to labels json file")
+    parser.add_argument("data_path", help="Path to labels file")
     args = parser.parse_args()
 
-    labels = Labels.load_json(args.data_path)
+    labels = sleap.load_file(args.data_path)
     video_demo(labels=labels, standalone=True)
