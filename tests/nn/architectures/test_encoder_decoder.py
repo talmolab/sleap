@@ -6,8 +6,31 @@ use_cpu_only()  # hide GPUs for test
 
 from sleap.nn.architectures import encoder_decoder
 
-
 class EncoderDecoderTests(tf.test.TestCase):
+    def test_simple_conv_res_block(self):
+        block = encoder_decoder.ConvResBlock(
+            pooling_stride=2,
+            filters= 32,
+            kernel_size = 3,
+            stride = 1,
+            dilation_rate = 1,
+            conv_shortcut = True,
+        )
+        x_in = tf.keras.Input((8, 8, 1))
+        x = block.make_block(x_in)
+        model = tf.keras.Model(x_in, x)
+
+        if block.conv_shortcut:
+            self.assertEqual(len(model.layers), 1 + 3*3 + 2 + 1)
+            self.assertEqual(len(model.trainable_weights), 16)
+            self.assertEqual(model.count_params(), 15072)
+            self.assertAllEqual(model.output.shape, (None, 4, 4, 128))
+        elif block.conv_shortcut == False:
+            self.assertEqual(len(model.layers), 1 + 3 * 3 + 1)
+            self.assertEqual(len(model.trainable_weights), 16)
+            self.assertEqual(model.count_params(), 15072)
+            self.assertAllEqual(model.output.shape, (None, 4, 4, 128))
+
     def test_simple_conv_block(self):
         block = encoder_decoder.SimpleConvBlock(
             pooling_stride=2,

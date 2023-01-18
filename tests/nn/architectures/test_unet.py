@@ -83,6 +83,87 @@ class UnetTests(tf.test.TestCase):
         with self.subTest("decoder stride"):
             self.assertEqual(arch.decoder_features_stride, 1)
 
+    def test_unet_res_reference(self):
+        # Reference implementation from the original paper.
+        arch = unet.UNet(
+            filters=64,
+            filters_rate=2,
+            kernel_size=3,
+            convs_per_block=2,
+            stem_blocks=0,
+            down_blocks=4,
+            middle_block=True,
+            up_blocks=4,
+            up_interpolate=False,
+            block_contraction=False,
+            residual=True,
+        )
+        x_in = tf.keras.layers.Input((192, 192, 1))
+        x, x_mid = arch.make_backbone(x_in)
+        model = tf.keras.Model(x_in, x)
+        param_counts = [
+            np.prod(train_var.shape) for train_var in model.trainable_weights
+        ]
+
+        layer_shapes_gt = {
+            "stack0_enc0_0_conv": (None, 192, 192, 256),
+            "stack0_enc0_1_conv": (None, 192, 192, 64),
+            "stack0_enc0_2_conv": (None, 192, 192, 64),
+            "stack0_enc0_3_conv": (None, 192, 192, 256),
+            "stack0_enc1_0_conv": (None, 96, 96, 512),
+            "stack0_enc1_1_conv": (None, 96, 96, 128),
+            "stack0_enc1_2_conv": (None, 96, 96, 128),
+            "stack0_enc1_3_conv": (None, 96, 96, 512),
+            "stack0_enc2_0_conv": (None, 48, 48, 1024),
+            "stack0_enc2_1_conv": (None, 48, 48, 256),
+            "stack0_enc2_2_conv": (None, 48, 48, 256),
+            "stack0_enc2_3_conv": (None, 48, 48, 1024),
+            "stack0_enc3_0_conv": (None, 24, 24, 2048),
+            "stack0_enc3_1_conv": (None, 24, 24, 512),
+            "stack0_enc3_2_conv": (None, 24, 24, 512),
+            "stack0_enc3_3_conv": (None, 24, 24, 2048),
+            "stack0_enc4_last_pool": (None, 12, 12, 2048),
+            "stack0_enc5_middle_expand_conv0": (None, 12, 12, 1024),
+            "stack0_enc6_middle_contract_conv0": (None, 12, 12, 1024),
+            "stack0_dec0_s16_to_s8_trans_conv": (None, 24, 24, 512),
+            "stack0_dec0_s16_to_s8_refine_conv0": (None, 24, 24, 512),
+            "stack0_dec0_s16_to_s8_refine_conv1": (None, 24, 24, 512),
+            "stack0_dec1_s8_to_s4_trans_conv": (None, 48, 48, 256),
+            "stack0_dec1_s8_to_s4_refine_conv0": (None, 48, 48, 256),
+            "stack0_dec1_s8_to_s4_refine_conv1": (None, 48, 48, 256),
+            "stack0_dec2_s4_to_s2_trans_conv": (None, 96, 96, 128),
+            "stack0_dec2_s4_to_s2_refine_conv0": (None, 96, 96, 128),
+            "stack0_dec2_s4_to_s2_refine_conv1": (None, 96, 96, 128),
+            "stack0_dec3_s2_to_s1_trans_conv": (None, 192, 192, 64),
+            "stack0_dec3_s2_to_s1_refine_conv0": (None, 192, 192, 64),
+            "stack0_dec3_s2_to_s1_refine_conv1": (None, 192, 192, 64),
+        }
+
+        with self.subTest("layer shapes"):
+            layer_shapes = {
+                l.name: l.output_shape
+                for l in model.layers
+                if isinstance(l, (tf.keras.layers.Conv2D, tf.keras.layers.MaxPool2D))
+            }
+            self.assertEqual(layer_shapes, layer_shapes_gt)
+        with self.subTest("number of layers"):
+            self.assertEqual(len(model.layers), 82) 
+        with self.subTest("number of trainable weights"):
+            self.assertEqual(len(model.trainable_weights), 92)
+        with self.subTest("trainable parameter count"):
+            self.assertEqual(np.sum(param_counts), 61379840)
+        with self.subTest("total parameter count"):
+            self.assertEqual(model.count_params(), 61399040)
+        with self.subTest("output shape"):
+            self.assertAllEqual(model.output.shape, (None, 192, 192, 64))
+        with self.subTest("number of intermediate features"):
+            self.assertEqual(len(x_mid), 4)
+        with self.subTest("encoder stride"):
+            self.assertEqual(arch.encoder_features_stride, 16)
+        with self.subTest("decoder stride"):
+            self.assertEqual(arch.decoder_features_stride, 1)
+
+
     def test_unet_no_middle_block(self):
         arch = unet.UNet(
             filters=8,
@@ -232,3 +313,4 @@ class UnetTests(tf.test.TestCase):
             self.assertEqual(arch.encoder_features_stride, 16)
         with self.subTest("decoder stride"):
             self.assertEqual(arch.decoder_features_stride, 1)
+
