@@ -983,7 +983,12 @@ class Skeleton:
             indexed_node_graph = self._graph
 
         # Encode to JSON
-        json_str = jsonpickle.encode(json_graph.node_link_data(indexed_node_graph))
+        dicts = {
+            "nx_graph": json_graph.node_link_data(indexed_node_graph),
+            "description": self.description,
+            "preview_image": self.preview_image,
+        }
+        json_str = jsonpickle.encode(dicts)
 
         return json_str
 
@@ -1032,7 +1037,10 @@ class Skeleton:
         Returns:
             An instance of the `Skeleton` object decoded from the JSON.
         """
-        graph = json_graph.node_link_graph(jsonpickle.decode(json_str))
+        dicts = jsonpickle.decode(json_str)
+        if "nx_graph" not in dicts:
+            dicts = {"nx_graph": dicts, "description": None, "preview_image": None}
+        graph = json_graph.node_link_graph(dicts["nx_graph"])
 
         # Replace graph node indices with corresponding nodes from node_map
         if idx_to_node is not None:
@@ -1040,6 +1048,8 @@ class Skeleton:
 
         skeleton = Skeleton()
         skeleton._graph = graph
+        skeleton.description = dicts["description"]
+        skeleton.preview_image = dicts["preview_image"]
 
         return skeleton
 
