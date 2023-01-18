@@ -1007,6 +1007,10 @@ class GraphicsView(QGraphicsView):
 
         elif event.button() == Qt.RightButton:
             self.rightMouseButtonPressed.emit(scenePos.x(), scenePos.y())
+
+        if event.modifiers() != Qt.ShiftModifier:
+
+
         QGraphicsView.mousePressEvent(self, event)
 
     def mouseReleaseEvent(self, event):
@@ -2026,12 +2030,12 @@ class QtInstance(QGraphicsObject):
         self.updateBox()
 
     @property
-    def selected_nodes(self):
-        return self.selected_nodes
-
-    @property
     def nodes(self):
         return self.nodes
+
+    @property
+    def selected_nodes(self):
+        return self.selected_nodes
 
     @selected_nodes.setter
     def selected_nodes(self, node: QtNode):
@@ -2039,6 +2043,11 @@ class QtInstance(QGraphicsObject):
             if node._parent_instance == n._parent_instance:
                 self.selected_nodes.append(node)
                 break
+
+    @selected_nodes.setter
+    def clear_selected_nodes(self):
+        self.selected_nodes = []
+
 
 
     def showInstances(self, show: bool):
