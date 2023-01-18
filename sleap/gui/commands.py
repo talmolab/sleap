@@ -1865,20 +1865,18 @@ class OpenSkeleton(EditCommand):
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
-        template = (
-            context.app.skeletonTemplates.currentText()
-        )  # get selected template from dropdown
-        if template == "Custom":  # check whether to load from file or preset
+        # Get selected template from dropdown
+        template = context.app.skeletonTemplates.currentText()
+        # Check whether to load from file or preset
+        if template == "Custom":
             filename, selected_filter = FileDialog.open(
                 context.app,
                 dir=None,
                 caption="Open skeleton...",
                 filter=";;".join(filters),
             )
-        else:
-            filename = get_package_file(
-                f"sleap/skeletons/{template}.json"
-            )  # load from selected preset
+        else:  # Load from selected preset
+            filename = get_package_file(f"sleap/skeletons/{template}.json")
 
         if len(filename) == 0:
             return False
