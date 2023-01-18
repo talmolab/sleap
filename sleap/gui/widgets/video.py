@@ -1537,7 +1537,7 @@ class QtNode(QGraphicsEllipseItem):
 
             # Alt-click to select all nodes
             if event.modifiers() == Qt.AltModifier:
-                for node in self._parent_instance.nodes():
+                for node in self._parent_instance.get_all_nodes():
                     self._parent_instance.selected_node(node)
             # Shift-click to select an additional node
             elif event.modifiers() == Qt.ShiftModifier:
@@ -2036,7 +2036,7 @@ class QtInstance(QGraphicsObject):
         self.updateBox()
 
     @property
-    def nodes(self):
+    def get_all_nodes(self):
         return self.nodes
 
     @property
