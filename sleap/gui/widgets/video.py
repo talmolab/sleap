@@ -2037,7 +2037,7 @@ class QtInstance(QGraphicsObject):
 
     @property
     def get_all_nodes(self):
-        return self.nodes
+        return self.nodes.items()
 
     @property
     def selected_nodes(self):
