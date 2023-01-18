@@ -1032,7 +1032,8 @@ class GraphicsView(QGraphicsView):
                 self.zoomToRect(zoom_rect)
 
             elif self.selection_mode:
-                for item in self.selectedItems():
+                # for item in self.selectedItems():
+                for item in self.getSelectionInstance.get_all_nodes():
                     if isinstance(item, QtNode):
                         item._parent_instance.selected_node(item)
 
