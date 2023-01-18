@@ -1539,11 +1539,13 @@ class QtNode(QGraphicsEllipseItem):
             # Alt-click to select all nodes
             if event.modifiers() == Qt.AltModifier:
                 for node in self._parent_instance.get_all_nodes():
-                    self._parent_instance.add_selected_node(node)
+                    if isinstance(node, QtNode):
+                        self._parent_instance.add_selected_node(node)
+
             # Shift-click to select an additional node
             elif event.modifiers() == Qt.ShiftModifier:
-                # self.parentObject().updatePoints(complete=True, user_change=True)
                 self._parent_instance.add_selected_node(self)
+                print(len(self._parent_instance.selected_nodes))
             else:
                 self.dragParent = False
                 super(QtNode, self).mousePressEvent(event)
@@ -1566,7 +1568,6 @@ class QtNode(QGraphicsEllipseItem):
 
     def mouseMoveEvent(self, event):
         """Custom event handler for mouse move."""
-        # print(event)
         if self.dragParent:
             self.parentObject().mouseMoveEvent(event)
         else:
@@ -1577,7 +1578,6 @@ class QtNode(QGraphicsEllipseItem):
 
     def mouseReleaseEvent(self, event):
         """Custom event handler for mouse release."""
-        # print(event)
         self.unsetCursor()
         if self.dragParent:
             self.parentObject().mouseReleaseEvent(event)
@@ -2037,16 +2037,21 @@ class QtInstance(QGraphicsObject):
         self.updateBox()
 
     def get_all_nodes(self):
-        return list(self.nodes.items())
+        return list(self.nodes.values())
 
+    @property
     def selected_nodes(self):
         return self._selected_nodes
 
     def add_selected_node(self, node: QtNode):
-        if node in self._selected_nodes:
+        if not isinstance(node, QtNode):
+            raise TypeError("Added Object is not a QtNode")
+
+        elif node in self._selected_nodes:
             pass
+        
         else:
-            for n in self.nodes.items():
+            for n in self.nodes.values():
                 if node._parent_instance == n._parent_instance:
                     self._selected_nodes.append(node)
                     break
