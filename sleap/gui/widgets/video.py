@@ -1531,6 +1531,7 @@ class QtNode(QGraphicsEllipseItem):
             return
 
         self.setCursor(Qt.ArrowCursor)
+        print(len(self._parent_instance.selected_nodes))
 
         if event.button() == Qt.LeftButton:
             # Select instance this nodes belong to.
@@ -1539,13 +1540,14 @@ class QtNode(QGraphicsEllipseItem):
             # Alt-click to select all nodes
             if event.modifiers() == Qt.AltModifier:
                 for node in self._parent_instance.get_all_nodes():
-                    if isinstance(node, QtNode):
-                        self._parent_instance.add_selected_node(node)
+                    self._parent_instance.add_selected_node(node)
 
             # Shift-click to select an additional node
             elif event.modifiers() == Qt.ShiftModifier:
                 self._parent_instance.add_selected_node(self)
-                print(len(self._parent_instance.selected_nodes))
+
+                # print(len(self._parent_instance.selected_nodes))
+
             else:
                 self.dragParent = False
                 super(QtNode, self).mousePressEvent(event)
@@ -2036,29 +2038,25 @@ class QtInstance(QGraphicsObject):
         # Update the selection box for this skeleton instance
         self.updateBox()
 
-    def get_all_nodes(self):
-        return list(self.nodes.values())
-
     @property
     def selected_nodes(self):
         return self._selected_nodes
 
-    def add_selected_node(self, node: QtNode):
-        if not isinstance(node, QtNode):
-            raise TypeError("Added Object is not a QtNode")
+    def get_all_nodes(self):
+        return list(self.nodes.values())
 
-        elif node in self._selected_nodes:
+
+    def add_selected_node(self, node: QtNode):
+        if node in self._selected_nodes:
             pass
-        
         else:
-            for n in self.nodes.values():
-                if node._parent_instance == n._parent_instance:
-                    self._selected_nodes.append(node)
-                    break
+            self._selected_nodes.append(node)
+            print(node)
+            print(len(self._selected_nodes))
 
     def clear_selected_nodes(self):
+        print("cleared")
         self._selected_nodes = []
-
 
 
     def showInstances(self, show: bool):
