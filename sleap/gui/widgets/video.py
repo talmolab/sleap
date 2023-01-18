@@ -1024,6 +1024,12 @@ class GraphicsView(QGraphicsView):
                 self.scene.setSelectionArea(QPainterPath())  # clear selection
                 self.zoomToRect(zoom_rect)
 
+            elif self.selection_mode:
+                # TODO: How to get instance????
+                for item in QGraphicsView.selectedItems():
+                    if isinstance(item, QtNode):
+                        self.getSelectionInstance().selected_node(item)
+                
             elif self.click_mode == "":
                 # Check if this was just a tap (not a drag)
                 if not has_moved:
