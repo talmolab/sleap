@@ -423,7 +423,7 @@ class SizeMatcher:
                     offset_y = (self.max_image_height - target_height) // 2
                 else:
                     offset_x, offset_y = 0, 0
-                
+
                 # Pad the image with zeroes to match specified dimensions.
                 image = tf.image.pad_to_bounding_box(
                     image,
@@ -456,10 +456,10 @@ class SizeMatcher:
 
             # Translate the instance points accordingly
             if self.points_key and self.points_key in example:
-                offsets = tf.cast(tf.reshape([offset_x, offset_y], [1, 1, 2]), tf.float32)
-                example[self.points_key] = (
-                    example[self.points_key] + offsets
+                offsets = tf.cast(
+                    tf.reshape([offset_x, offset_y], [1, 1, 2]), tf.float32
                 )
+                example[self.points_key] = example[self.points_key] + offsets
 
             return example
 

@@ -215,7 +215,9 @@ def test_size_matcher():
     assert im2.shape == (750, 750, 1)
 
     # Check SizeMatcher when target is larger in both dimensions
-    size_matcher = SizeMatcher(max_image_height=560, max_image_width=560, center_pad=True)
+    size_matcher = SizeMatcher(
+        max_image_height=560, max_image_width=560, center_pad=True
+    )
     transform_iter = iter(size_matcher.transform_dataset(ds))
     ex = next(transform_iter)
     im1 = ex["image"]
