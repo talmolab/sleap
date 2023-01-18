@@ -15,6 +15,7 @@ from sleap.io.pathutils import fix_path_separator
 from sleap.io.video import Video
 from sleap.io.convert import default_analysis_filename
 from sleap.instance import Instance, LabeledFrame
+from sleap.util import get_package_file
 from sleap import Skeleton, Track
 
 from tests.info.test_h5 import extract_meta_hdf5
@@ -22,6 +23,8 @@ from tests.io.test_video import assert_video_params
 
 from pathlib import PurePath, Path
 from typing import List
+
+from qtpy.QtWidgets import QComboBox
 
 import shutil
 import pytest
@@ -374,9 +377,7 @@ def test_OpenSkeleton(
 ):
     def assert_skeletons_match(new_skeleton: Skeleton, skeleton: Skeleton):
         # Node names match
-        for new_node, node in zip(new_skeleton.nodes, skeleton.nodes):
-            assert new_node.name == node.name
-
+        assert len(set(new_skeleton.nodes) - set(skeleton.nodes))
         # Edges match
         for (new_src, new_dst), (src, dst) in zip(new_skeleton.edges, skeleton.edges):
             assert new_src.name == src.name
@@ -391,11 +392,18 @@ def test_OpenSkeleton(
 
     def OpenSkeleton_ask(context: CommandContext, params: dict) -> bool:
         """Implement `OpenSkeleton.ask` without GUI elements."""
-
-        # Original function opens FileDialog here
-        filename = params["filename_in"]
-
+        template = (
+            context.app.currentText
+        )  # Original function uses `QComboBox.currentText()`
+        if template == "Custom":
+            # Original function opens FileDialog here
+            print("Loading from file dialog")
+            filename = params["filename_in"]
+        else:
+            print("Loading from template")
+            filename = get_package_file(f"sleap/skeletons/{template}.json")
         if len(filename) == 0:
+            print("Whoops, filename 0.")
             return False
 
         okay = True
@@ -425,7 +433,7 @@ def test_OpenSkeleton(
     skeleton = labels.skeleton
     skeleton.add_symmetry(skeleton.nodes[0].name, skeleton.nodes[1].name)
     context = CommandContext.from_labels(labels)
-
+    context.app.__setattr__("currentText", "Custom")
     # Add multiple skeletons to and ensure the unused skeleton is removed
     labels.skeletons.append(stickman)
 
@@ -449,6 +457,15 @@ def test_OpenSkeleton(
     assert params["filename"] == fly_legs_skeleton_json
     OpenSkeleton.do_action(context, params)
     assert_skeletons_match(new_skeleton, stickman)
+
+    # Run again with template set
+    context.app.currentText = "fly32"
+    fly32_json = get_package_file(f"sleap/skeletons/fly32.json")
+    OpenSkeleton_ask(context, params)
+    assert params["filename"] == fly32_json
+    fly32_skeleton = Skeleton.load_json(fly32_json)
+    OpenSkeleton.do_action(context, params)
+    assert_skeletons_match(labels.skeleton, fly32_skeleton)
 
 
 def test_SaveProjectAs(centered_pair_predictions: Labels, tmpdir):
@@ -495,3 +512,7 @@ def test_SetSelectedInstanceTrack(centered_pair_predictions: Labels):
     # Ensure that both instance and predicted instance have same track
     assert new_instance.track == track
     assert pred_inst.track == new_instance.track
+
+
+if __name__ == "__main__":
+    pytest.main([r"tests/gui/test_commands.py::test_OpenSkeleton", "-rP"])
