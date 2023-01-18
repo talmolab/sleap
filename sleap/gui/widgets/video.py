@@ -1,16 +1,11 @@
 """
 Module for showing and manipulating skeleton instances within a video.
-
 All interactions should go through `QtVideoPlayer`.
-
 Example usage: ::
-
     >>> my_video = Video(...)
     >>> my_instance = Instance(...)
-
     >>> vp = QtVideoPlayer(video=my_video)
     >>> vp.addInstance(instance=my_instance, color=(r, g, b))
-
 """
 from collections import deque
 
@@ -81,21 +76,17 @@ import qimage2ndarray
 class LoadImageWorker(QtCore.QObject):
     """
     Object to load video frames in background thread.
-
     Requests to load a frame image are sent by calling the `request` method with
     the frame idx; the video attribute should already be set to the correct
     video.
-
     These requests are added to a FILO queue polled by the `doProcessing`
     method, called whenever there's time during the Qt event loop.
     (It's also added to the event queue if it hasn't been called for a while
     and we get a request, since the timer doesn't seem to emit events if the
     user has been holding down the mouse for a while.)
-
     The actual frame loading is wrapped with a mutex lock so that we only load
     a single frame at a time; this helps us not get a bunch of older frame
     requests running concurrently.
-
     Once the frame loads, the `QImage` is sent via the `result` signal.
     (Qt handles the cross-thread communication if we use signals.)
     """
@@ -190,15 +181,12 @@ class LoadImageWorker(QtCore.QObject):
 class QtVideoPlayer(QWidget):
     """
     Main QWidget for displaying video with skeleton instances.
-
     Signals:
         * changedPlot: Emitted whenever the plot is redrawn
-
     Attributes:
         video: The :class:`Video` to display
         color_manager: A :class:`ColorManager` object which determines
             which color to show the instances.
-
     """
 
     changedPlot = QtCore.Signal(QWidget, int, Instance)
@@ -399,7 +387,6 @@ class QtVideoPlayer(QWidget):
     def load_video(self, video: Video, plot=True):
         """
         Load video into viewer.
-
         Args:
             video: the :class:`Video` to display
             plot: If True, plot the video frame. Otherwise, just load the data.
@@ -448,10 +435,8 @@ class QtVideoPlayer(QWidget):
 
     def addInstance(self, instance, **kwargs):
         """Add a skeleton instance to the video.
-
         Args:
             instance: this can be either a `QtInstance` or an `Instance`
-
             Any other named args are passed along if/when creating QtInstance.
         """
         # Check if instance is an Instance (or subclass of Instance)
@@ -491,7 +476,6 @@ class QtVideoPlayer(QWidget):
 
     def showInstances(self, show):
         """Show/hide all instances in viewer.
-
         Args:
             show: Show if True, hide otherwise.
         """
@@ -502,7 +486,6 @@ class QtVideoPlayer(QWidget):
 
     def showLabels(self, show):
         """Show/hide node labels for all instances in viewer.
-
         Args:
             show: Show if True, hide otherwise.
         """
@@ -511,7 +494,6 @@ class QtVideoPlayer(QWidget):
 
     def showEdges(self, show):
         """Show/hide node edges for all instances in viewer.
-
         Args:
             show: Show if True, hide otherwise.
         """
@@ -551,17 +533,13 @@ class QtVideoPlayer(QWidget):
     ):
         """
         Collect a sequence of instances (through user selection).
-
         When the sequence is complete, the `on_success` callback is called.
         After each selection in sequence, the `on_each` callback is called
         (if given). If the user cancels (by unselecting without new
         selection), the `on_failure` callback is called (if given).
-
         Note:
             If successful, we call ::
-
                >>> on_success(list_of_instances)
-
         Args:
             seq_len: Number of instances we want to collect in sequence.
             on_success: Callback for when user has selected desired number of
@@ -569,7 +547,6 @@ class QtVideoPlayer(QWidget):
             on_each: Callback after user selects each instance.
             on_failure: Callback if user cancels process before selecting
                 enough instances.
-
         """
 
         selected_instances = []
@@ -616,12 +593,10 @@ class QtVideoPlayer(QWidget):
     def _signal_once(signal: QtCore.Signal, callback: Callable):
         """
         Connects callback for next occurrence of signal.
-
         Args:
             signal: The signal on which we want callback to be called.
             callback: The function that should be called just once, the next
                 time the signal is emitted.
-
         Returns:
             None.
         """
@@ -635,11 +610,9 @@ class QtVideoPlayer(QWidget):
     def onPointSelection(self, callback: Callable):
         """
         Starts mode for user to click point, callback called when finished.
-
         Args:
             callback: The function called after user clicks point, should
                 take x and y as arguments.
-
         Returns:
             None.
         """
@@ -650,11 +623,9 @@ class QtVideoPlayer(QWidget):
     def onAreaSelection(self, callback: Callable):
         """
         Starts mode for user to select area, callback called when finished.
-
         Args:
             callback: The function called after user clicks point, should
                 take x0, y0, x1, y1 as arguments.
-
         Returns:
             None.
         """
@@ -725,10 +696,8 @@ class QtVideoPlayer(QWidget):
 class GraphicsView(QGraphicsView):
     """
     Custom `QGraphicsView` used by `QtVideoPlayer`.
-
     This contains elements for display of video and event handlers for zoom
     and selection of instances in view.
-
     Signals:
         * updatedViewer: Emitted after update to view (e.g., zoom).
             Used internally so we know when to update points for each instance.
@@ -745,7 +714,6 @@ class GraphicsView(QGraphicsView):
         * rightMouseButtonReleased: Emitted by event handler.
         * leftMouseButtonDoubleClicked: Emitted by event handler.
         * rightMouseButtonDoubleClicked: Emitted by event handler.
-
     """
 
     updatedViewer = QtCore.Signal()
@@ -786,9 +754,7 @@ class GraphicsView(QGraphicsView):
         self.canPan = True
         self.click_mode = ""
         self.in_zoom = False
-        
-        self.selection_mode = True
-        self.selected_parents = []
+        self._selected_nodes = []
 
         self.zoomFactor = 1
         anchor_mode = QGraphicsView.AnchorUnderMouse
@@ -835,13 +801,10 @@ class GraphicsView(QGraphicsView):
     def setImage(self, image: Union[QImage, QPixmap, np.ndarray]):
         """
         Set the scene's current image pixmap to the input QImage or QPixmap.
-
         Args:
             image: The QPixmap or QImage to display.
-
         Raises:
             RuntimeError: If the input image is not QImage or QPixmap
-
         Returns:
             None.
         """
@@ -891,7 +854,6 @@ class GraphicsView(QGraphicsView):
     def instances(self) -> List["QtInstance"]:
         """
         Returns a list of instances.
-
         Order should match the order in which instances were added to scene.
         """
         return list(filter(lambda x: not x.predicted, self.all_instances))
@@ -900,7 +862,6 @@ class GraphicsView(QGraphicsView):
     def predicted_instances(self) -> List["QtInstance"]:
         """
         Returns a list of predicted instances.
-
         Order should match the order in which instances were added to scene.
         """
         return list(filter(lambda x: x.predicted, self.all_instances))
@@ -909,7 +870,6 @@ class GraphicsView(QGraphicsView):
     def selectable_instances(self) -> List["QtInstance"]:
         """
         Returns a list of instances which user can select.
-
         Order should match the order in which instances were added to scene.
         """
         return list(filter(lambda x: x.selectable, self.all_instances))
@@ -918,7 +878,6 @@ class GraphicsView(QGraphicsView):
     def all_instances(self) -> List["QtInstance"]:
         """
         Returns a list of all `QtInstance` objects in scene.
-
         Order should match the order in which instances were added to scene.
         """
         scene_items = self.scene.items(Qt.SortOrder.AscendingOrder)
@@ -927,10 +886,8 @@ class GraphicsView(QGraphicsView):
     def selectInstance(self, select: Union[Instance, int]):
         """
         Select a particular instance in view.
-
         Args:
             select: Either `Instance` or index of instance in view.
-
         Returns:
             None
         """
@@ -976,6 +933,25 @@ class GraphicsView(QGraphicsView):
 
         return None
 
+    @property
+    def selected_nodes(self):
+        return self._selected_nodes
+
+    def add_selected_node(self, node):
+        if node in self._selected_nodes:
+            pass
+        else:
+            self._selected_nodes.append(node)
+
+    def remove_selected_node(self, node):
+        if node not in self._selected_nodes:
+            pass
+        else:
+            self._selected_nodes.remove(node)
+
+    def clear_selected_node(self):
+        self._selected_node = []
+
     def resizeEvent(self, event):
         """Maintain current zoom on resize."""
         self.updateViewer()
@@ -1001,19 +977,10 @@ class GraphicsView(QGraphicsView):
                     self.in_zoom = True
                     self.setDragMode(QGraphicsView.RubberBandDrag)
 
-            elif event.modifiers() == Qt.ShiftModifier:
-                self.setDragMode(QGraphicsView.RubberBandDrag)
-
             self.leftMouseButtonPressed.emit(scenePos.x(), scenePos.y())
 
         elif event.button() == Qt.RightButton:
             self.rightMouseButtonPressed.emit(scenePos.x(), scenePos.y())
-
-        if event.modifiers() != Qt.ShiftModifier:
-            for parent in self.selected_parents:
-                parent.clear_selected_nodes()
-
-
         QGraphicsView.mousePressEvent(self, event)
 
     def mouseReleaseEvent(self, event):
@@ -1031,15 +998,6 @@ class GraphicsView(QGraphicsView):
                 self.scene.setSelectionArea(QPainterPath())  # clear selection
                 self.zoomToRect(zoom_rect)
 
-            elif self.selection_mode:
-                for item in self.getSelectionInstance().get_all_nodes():
-                    if isinstance(item, QtNode):
-                        item._parent_instance.selected_node(item)
-
-                        if item._parent_instance not in self.selected_parents:
-                            self.selected_parents.append(item._parent_instance)
-
-                
             elif self.click_mode == "":
                 # Check if this was just a tap (not a drag)
                 if not has_moved:
@@ -1079,11 +1037,9 @@ class GraphicsView(QGraphicsView):
     def zoomToRect(self, zoom_rect: QRectF):
         """
         Method to zoom scene to a given rectangle.
-
         The rect can either be given relative to the current zoom
         (this is useful if it's the rect drawn by user) or it can be
         given in absolute coordinates for displayed frame.
-
         Args:
             zoom_rect: The `QRectF` to which we want to zoom.
         """
@@ -1108,15 +1064,12 @@ class GraphicsView(QGraphicsView):
         instances: List["QtInstance"], margin: float = 0.0
     ) -> QRectF:
         """Return a rectangle containing all instances.
-
         Args:
             instances: List of QtInstance objects.
             margin: Margin for padding the rectangle. Padding is applied equally on all
                 sides.
-
         Returns:
             The `QRectF` which contains all of the instances.
-
         Notes:
             The returned rectangle will be null if the instance list is empty.
         """
@@ -1130,7 +1083,6 @@ class GraphicsView(QGraphicsView):
     def instancesBoundingRect(self, margin: float = 0) -> QRectF:
         """
         Returns a rect which contains all displayed skeleton instances.
-
         Args:
             margin: Margin for padding the rect.
         Returns:
@@ -1190,7 +1142,6 @@ class GraphicsView(QGraphicsView):
 class QtNodeLabel(QGraphicsTextItem):
     """
     QGraphicsTextItem to handle display of node text label.
-
     Args:
         node: The `QtNode` to which this label is attached.
         parent: The `QtInstance` which will contain this item.
@@ -1240,7 +1191,6 @@ class QtNodeLabel(QGraphicsTextItem):
 
     def adjustPos(self, *args, **kwargs):
         """Update the position of the label based on the position of the node.
-
         Args:
             Accepts arbitrary arguments so we can connect to various signals.
         """
@@ -1352,7 +1302,6 @@ class QtNodeLabel(QGraphicsTextItem):
 class QtNode(QGraphicsEllipseItem):
     """
     QGraphicsEllipseItem to handle display of skeleton instance node.
-
     Args:
         parent: The `QtInstance` which will contain this item.
         node: The :class:`Node` corresponding to this visual node.
@@ -1462,7 +1411,6 @@ class QtNode(QGraphicsEllipseItem):
     def updatePoint(self, user_change: bool = False):
         """
         Method to update data for node/edge when node position is manipulated.
-
         Args:
             user_change: Whether this being called because of change by user.
         """
@@ -1523,6 +1471,12 @@ class QtNode(QGraphicsEllipseItem):
         else:
             self.point.visible = visible
 
+    def select(self, status: bool):
+        if status:
+            self.player.view.add_selected_node(self)
+        else:
+            self.player.view.remove_selected_node(self)
+
     def mousePressEvent(self, event):
         """Custom event handler for mouse press."""
         # Do nothing if node is from predicted instance
@@ -1530,22 +1484,19 @@ class QtNode(QGraphicsEllipseItem):
             return
 
         self.setCursor(Qt.ArrowCursor)
-        print(len(self._parent_instance.selected_nodes))
 
         if event.button() == Qt.LeftButton:
             # Select instance this nodes belong to.
             self.parentObject().player.state["instance"] = self.parentObject().instance
-
-            # Alt-click to select all nodes
+            
+            # Alt-click to select all nodes of instance
             if event.modifiers() == Qt.AltModifier:
-                for node in self._parent_instance.get_all_nodes():
-                    self._parent_instance.add_selected_node(node)
-
-            # Shift-click to select an additional node
+                for node in self.parentObject().get_all_nodes():
+                    node.select(True)
+                    
+            # Shift-click to select one node of instance
             elif event.modifiers() == Qt.ShiftModifier:
-                self._parent_instance.add_selected_node(self)
-
-                # print(len(self._parent_instance.selected_nodes))
+                self.select(True)
 
             else:
                 self.dragParent = False
@@ -1569,6 +1520,7 @@ class QtNode(QGraphicsEllipseItem):
 
     def mouseMoveEvent(self, event):
         """Custom event handler for mouse move."""
+        # print(event)
         if self.dragParent:
             self.parentObject().mouseMoveEvent(event)
         else:
@@ -1579,6 +1531,7 @@ class QtNode(QGraphicsEllipseItem):
 
     def mouseReleaseEvent(self, event):
         """Custom event handler for mouse release."""
+        # print(event)
         self.unsetCursor()
         if self.dragParent:
             self.parentObject().mouseReleaseEvent(event)
@@ -1609,7 +1562,6 @@ class QtNode(QGraphicsEllipseItem):
 class QtEdge(QGraphicsPolygonItem):
     """
     QGraphicsLineItem to handle display of edge between skeleton instance nodes.
-
     Args:
         parent: `QGraphicsObject` which will contain this item.
         src: The `QtNode` source node for the edge.
@@ -1695,10 +1647,8 @@ class QtEdge(QGraphicsPolygonItem):
     def connected_to(self, node: QtNode):
         """
         Return the other node along the edge.
-
         Args:
             node: One of the edge's nodes.
-
         Returns:
             The other node (or None if edge doesn't have node).
         """
@@ -1712,7 +1662,6 @@ class QtEdge(QGraphicsPolygonItem):
     def angle_to(self, node: QtNode) -> float:
         """
         Returns the angle from one edge node to the other.
-
         Args:
             node: The node from which we're measuring the angle.
         Returns:
@@ -1727,10 +1676,8 @@ class QtEdge(QGraphicsPolygonItem):
     def updateEdge(self, node: QtNode):
         """
         Updates the visual display of node.
-
         Args:
             node: The node to update.
-
         Returns:
             None.
         """
@@ -1756,17 +1703,13 @@ class QtEdge(QGraphicsPolygonItem):
 class QtInstance(QGraphicsObject):
     """
     QGraphicsObject for skeleton instances.
-
     This object stores the data for one skeleton instance
     and handles the events to manipulate the skeleton within
     a video frame (i.e., moving, rotating, marking nodes).
-
     It should be instantiated with an `Instance` and added to the relevant
     `QGraphicsScene`.
-
     When instantiated, it creates `QtNode`, `QtEdge`, and
     `QtNodeLabel` items as children of itself.
-
     Args:
         instance: The :class:`Instance` to show.
         markerRadius: Radius of nodes.
@@ -1799,7 +1742,6 @@ class QtInstance(QGraphicsObject):
         self.nodeLabelSize = nodeLabelSize
 
         self.nodes = {}
-        self._selected_nodes = []
         self.edges = []
         self.edges_shown = True
         self.labels = {}
@@ -1911,15 +1853,12 @@ class QtInstance(QGraphicsObject):
 
     def updatePoints(self, complete: bool = False, user_change: bool = False):
         """Update data and display for all points in skeleton.
-
         This is called any time the skeleton is manipulated as a whole.
-
         Args:
             complete: Whether to update all nodes by setting "completed"
                 attribute.
             user_change: Whether method is called because of change made by
                 user.
-
         Returns:
             None.
         """
@@ -1978,7 +1917,6 @@ class QtInstance(QGraphicsObject):
     def updateBox(self, *args, **kwargs):
         """
         Updates the box drawn around a selected skeleton.
-
         This updates both the box attribute stored and the visual box.
         The box attribute is used to determine whether a click should
         select this instance.
@@ -2037,30 +1975,13 @@ class QtInstance(QGraphicsObject):
         # Update the selection box for this skeleton instance
         self.updateBox()
 
-    @property
-    def selected_nodes(self):
-        return self._selected_nodes
-
     def get_all_nodes(self):
-        return list(self.nodes.values())
-
-
-    def add_selected_node(self, node: QtNode):
-        if node in self._selected_nodes:
-            pass
-        else:
-            self._selected_nodes.append(node)
-            print(node)
-            print(len(self._selected_nodes))
-
-    def clear_selected_nodes(self):
-        self._selected_nodes = []
+        return self.nodes.values()
 
 
     def showInstances(self, show: bool):
         """
         Shows/hides skeleton instance.
-
         Args:
             show: Show skeleton if True, hide otherwise.
         """
@@ -2069,7 +1990,6 @@ class QtInstance(QGraphicsObject):
     def showLabels(self, show: bool):
         """
         Draws/hides the labels for this skeleton instance.
-
         Args:
             show: Show labels if True, hide them otherwise.
         """
@@ -2081,7 +2001,6 @@ class QtInstance(QGraphicsObject):
     def showEdges(self, show: bool):
         """
         Draws/hides the edges for this skeleton instance.
-
         Args:
             show: Show edges if True, hide them otherwise.
         """
@@ -2102,7 +2021,6 @@ class QtInstance(QGraphicsObject):
 class QtTextWithBackground(QGraphicsTextItem):
     """
     Inherits methods/behavior of `QGraphicsTextItem`, but with background box.
-
     Color of background box is light or dark depending on the text color.
     """
 
