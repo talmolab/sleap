@@ -1797,7 +1797,7 @@ class QtInstance(QGraphicsObject):
         self.nodeLabelSize = nodeLabelSize
 
         self.nodes = {}
-        self.selected_nodes = {}
+        self._selected_nodes = []
         self.edges = []
         self.edges_shown = True
         self.labels = {}
@@ -2041,21 +2041,21 @@ class QtInstance(QGraphicsObject):
 
     @property
     def selected_nodes(self):
-        return self.selected_nodes
+        return self._selected_nodes
 
     @selected_nodes.setter
     def selected_nodes(self, node: QtNode):
-        if node in self.selected_nodes:
+        if node in self._selected_nodes:
             pass
         else:
             for n in self.nodes.items():
                 if node._parent_instance == n._parent_instance:
-                    self.selected_nodes.append(node)
+                    self._selected_nodes.append(node)
                     break
 
     @selected_nodes.setter
     def clear_selected_nodes(self):
-        self.selected_nodes = []
+        self._selected_nodes = []
 
 
 
