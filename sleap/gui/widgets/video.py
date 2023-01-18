@@ -1009,6 +1009,7 @@ class GraphicsView(QGraphicsView):
             self.rightMouseButtonPressed.emit(scenePos.x(), scenePos.y())
 
         if event.modifiers() != Qt.ShiftModifier:
+            self.getSelectionInstance().clear_selected_nodes()
 
 
         QGraphicsView.mousePressEvent(self, event)
