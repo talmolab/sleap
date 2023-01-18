@@ -385,13 +385,34 @@ def test_inference_layer():
     x = tf.keras.layers.Lambda(lambda x: x)(x_in)
     keras_model = tf.keras.Model(x_in, x)
     layer = sleap.nn.inference.InferenceLayer(
-        keras_model=keras_model, input_scale=1.0, pad_to_stride=1, ensure_grayscale=None
+        keras_model=keras_model,
+        input_scale=1.0,
+        pad_to_stride=1,
+        ensure_grayscale=None,
+        ensure_float=True,
     )
     data = tf.cast(tf.fill([1, 4, 4, 1], 255), tf.uint8)
     out = layer(data)
     assert out.dtype == tf.float32
     assert tuple(out.shape) == (1, 4, 4, 1)
     assert tf.reduce_all(out == 1.0)
+
+    # Not convert to float
+    x_in = tf.keras.layers.Input([4, 4, 1], dtype="uint8")
+    x = tf.keras.layers.Lambda(lambda x: x)(x_in)
+    keras_model = tf.keras.Model(x_in, x)
+    layer = sleap.nn.inference.InferenceLayer(
+        keras_model=keras_model,
+        input_scale=1.0,
+        pad_to_stride=1,
+        ensure_grayscale=True,
+        ensure_float=False,
+    )
+    data = tf.cast(tf.fill([1, 4, 4, 1], 255), tf.uint8)
+    out = layer(data)
+    assert out.dtype == tf.uint8
+    assert tuple(out.shape) == (1, 4, 4, 1)
+    assert tf.reduce_all(out == 255)
 
     # Convert from rgb to grayscale, infer ensure grayscale
     x_in = tf.keras.layers.Input([4, 4, 1])

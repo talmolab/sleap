@@ -46,7 +46,9 @@ def ensure_float(image: tf.Tensor) -> tf.Tensor:
 
     See also: tf.image.convert_image_dtype
     """
-    return tf.image.convert_image_dtype(image, tf.float32)
+    image = tf.image.convert_image_dtype(image, tf.float32)
+    image = tf.cast(image, tf.float32)
+    return image
 
 
 def ensure_int(image: tf.Tensor) -> tf.Tensor:
