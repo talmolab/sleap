@@ -397,13 +397,10 @@ def test_OpenSkeleton(
         )  # Original function uses `QComboBox.currentText()`
         if template == "Custom":
             # Original function opens FileDialog here
-            print("Loading from file dialog")
             filename = params["filename_in"]
         else:
-            print("Loading from template")
             filename = get_package_file(f"sleap/skeletons/{template}.json")
         if len(filename) == 0:
-            print("Whoops, filename 0.")
             return False
 
         okay = True
@@ -512,7 +509,3 @@ def test_SetSelectedInstanceTrack(centered_pair_predictions: Labels):
     # Ensure that both instance and predicted instance have same track
     assert new_instance.track == track
     assert pred_inst.track == new_instance.track
-
-
-if __name__ == "__main__":
-    pytest.main([r"tests/gui/test_commands.py::test_OpenSkeleton", "-rP"])
