@@ -473,6 +473,7 @@ class UNetConfig:
             convolutions for upsampling. This can save computations but may lower
             overall accuracy.
         stacks: Number of repeated stacks of the network (excluding the stem).
+        residual: If True, use residual blocks instead of simple conv blocks. 
     """
 
     stem_stride: Optional[int] = None
@@ -483,6 +484,7 @@ class UNetConfig:
     middle_block: bool = True
     up_interpolate: bool = False
     stacks: int = 1
+    residual: bool = False
 
 
 @attr.s(auto_attribs=True)

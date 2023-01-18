@@ -80,6 +80,8 @@ class UNet(encoder_decoder.EncoderDecoder):
             and decoder blocks. This has the effect of introducing an additional
             bottleneck before each upsampling step. The original implementation does not
             do this, but the CARE implementation does.
+        residual: If True, adds residual layers for the encoder stack instead of simple 
+            convolutions. 
 
     Note:
         This bears some differences with other implementations, particularly with
@@ -100,6 +102,7 @@ class UNet(encoder_decoder.EncoderDecoder):
     up_blocks: int = 4
     up_interpolate: bool = False
     block_contraction: bool = False
+    residual: bool = False ### Default should be false
 
     @property
     def stem_stack(self) -> Optional[List[encoder_decoder.SimpleConvBlock]]:
@@ -133,23 +136,40 @@ class UNet(encoder_decoder.EncoderDecoder):
     def encoder_stack(self) -> List[encoder_decoder.SimpleConvBlock]:
         """Define the encoder stack."""
         blocks = []
-        for block in range(self.down_blocks):
-            block_filters = int(
-                self.filters * (self.filters_rate ** (block + self.stem_blocks))
-            )
-            blocks.append(
-                encoder_decoder.SimpleConvBlock(
-                    pool=(block > 0),
-                    pool_before_convs=True,
-                    pooling_stride=2,
-                    num_convs=self.convs_per_block,
-                    filters=block_filters,
-                    kernel_size=self.kernel_size,
-                    use_bias=True,
-                    batch_norm=False,
-                    activation="relu",
+        if self.residual == False: ###
+            for block in range(self.down_blocks):
+                block_filters = int(
+                    self.filters * (self.filters_rate ** (block + self.stem_blocks))
                 )
-            )
+                blocks.append(
+                    encoder_decoder.SimpleConvBlock(
+                        pool=(block > 0),
+                        pool_before_convs=True,
+                        pooling_stride=2,
+                        num_convs=self.convs_per_block,
+                        filters=block_filters,
+                        kernel_size=self.kernel_size,
+                        use_bias=True,
+                        batch_norm=False,
+                        activation="relu",
+                    )
+                )
+        elif self.residual: ###
+            for block in range(self.down_blocks):
+                block_filters = int(
+                    self.filters * (self.filters_rate ** (block + self.stem_blocks))
+                )
+                blocks.append(
+                    encoder_decoder.ConvResBlock(
+                        pool=(block > 0),
+                        pooling_stride=2, 
+                        filters = block_filters, 
+                        kernel_size = self.kernel_size,
+                        stride = 2,
+                        dilation_rate =  1,
+                        conv_shortcut = True,
+                    )
+                )
 
         # Always finish with a pooling block to account for pooling before convs.
         blocks.append(PoolingBlock(pool=True, pooling_stride=2))
@@ -275,4 +295,5 @@ class UNet(encoder_decoder.EncoderDecoder):
             up_blocks=up_blocks,
             up_interpolate=config.up_interpolate,
             stacks=config.stacks,
+            residual=config.residual,
         )

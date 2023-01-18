@@ -31,6 +31,7 @@ import attr
 from typing import Text, TypeVar, Sequence, Optional, Tuple, List, Union
 
 from sleap.nn.architectures.common import IntermediateFeature
+from sleap.nn.architectures.resnet import block_v1
 
 
 @attr.s(auto_attribs=True)
@@ -51,6 +52,41 @@ class EncoderBlock:
         raise NotImplementedError(
             "Subclasses of EncoderBlock must implement make_block."
         )
+
+@attr.s(auto_attribs=True)
+class ConvResBlock(EncoderBlock):
+    """Block of residual convolution
+    
+    Attributes:
+        pool: If True, applies max pooling at the end of the block.
+        pooling_stride: Stride of the max pooling operation. If 1, the output of this
+            block will be at the same stride (== 1/scale) as the input.
+        filters: integer, filters of the bottleneck layer.
+        kernel_size: default 3, kernel size of the bottleneck layer.
+        stride: default 1, stride of the first layer.
+        dilation_rate: default 1, atrous convolution dilation rate of first layer.
+        conv_shortcut: default True, use convolution shortcut if True,
+            otherwise identity shortcut.
+    """
+    pool: bool = True
+    pooling_stride: int = 2
+    filters: int = 32 
+    kernel_size: int = 3
+    stride: int = 1
+    dilation_rate: int = 1
+    conv_shortcut: bool = True
+
+    def make_block(self, x_in: tf.Tensor, prefix: Text = "conv_res_block") -> tf.Tensor:
+        x = block_v1(
+                x = x_in, 
+                filters = self.filters, 
+                kernel_size = self.kernel_size,
+                stride = self.pooling_stride if self.pool else 1,
+                dilation_rate = self.dilation_rate,
+                conv_shortcut = self.conv_shortcut,
+                name = prefix,
+                )
+        return x
 
 
 @attr.s(auto_attribs=True)

@@ -280,6 +280,11 @@ model:
     label: Up Interpolate
     name: model.backbone.unet.up_interpolate
     type: bool
+  - default: false
+    help: If True, use residual layers for the encoder stack. 
+    label: Residual Layers
+    name: model.backbone.unet.residual
+    type: bool
   # - default: 1
   #   help: Number of repeated stacks of the network (excluding the stem).
   #   label: Stacks
