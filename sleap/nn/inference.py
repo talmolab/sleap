@@ -2151,7 +2151,7 @@ class TopDownInferenceModel(InferenceModel):
             if "instances" in example:
                 peaks_output = self.instance_peaks(example, crop_output)
             else:
-                raise TypeError(
+                raise ValueError(
                     "Ground truth data was not detected... "
                     "Please load both models when predicting on non-ground-truth data."
                 )

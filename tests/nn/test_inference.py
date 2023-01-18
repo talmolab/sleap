@@ -1362,15 +1362,17 @@ def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
             assert abs(key[0] - key[1]) <= track_window  # References within window
 
 
-def test_top_down_model(
-    centered_pair_predictions: Labels, min_centroid_model_path: str
-):
-    labels = centered_pair_predictions
+def test_top_down_model(min_tracks_2node_labels: Labels, min_centroid_model_path: str):
+    labels = min_tracks_2node_labels
     video = sleap.load_video(labels.videos[0].backend.filename)
     predictor = sleap.load_model(min_centroid_model_path, batch_size=16)
 
     # Preload images
-    imgs = video[:1024]
+    imgs = video[:3]
 
-    with pytest.raises(TypeError):
-        predictor.predict(imgs[:16])  # warmup
+    # Raise better error message
+    with pytest.raises(ValueError):
+        predictor.predict(imgs[:1])
+
+    # Runs without error message
+    predictor.predict(labels.extract(inds=[0, 1]))
