@@ -1031,14 +1031,13 @@ class GraphicsView(QGraphicsView):
                 self.scene.setSelectionArea(QPainterPath())  # clear selection
                 self.zoomToRect(zoom_rect)
 
-            # elif self.selection_mode:
-            #     # for item in self.selectedItems():
-            #     for item in self.getSelectionInstance().get_all_nodes():
-            #         if isinstance(item, QtNode):
-            #             item._parent_instance.selected_node(item)
+            elif self.selection_mode:
+                for item in self.getSelectionInstance().get_all_nodes():
+                    if isinstance(item, QtNode):
+                        item._parent_instance.selected_node(item)
 
-            #             if item._parent_instance not in self.selected_parents:
-            #                 self.selected_parents.append(item._parent_instance)
+                        if item._parent_instance not in self.selected_parents:
+                            self.selected_parents.append(item._parent_instance)
 
                 
             elif self.click_mode == "":
@@ -2055,7 +2054,6 @@ class QtInstance(QGraphicsObject):
             print(len(self._selected_nodes))
 
     def clear_selected_nodes(self):
-        print("cleared")
         self._selected_nodes = []
 
 
