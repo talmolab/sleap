@@ -76,6 +76,47 @@ def test_data_reader(min_labels_slp_path):
     assert data_readers.test_labels_reader.example_indices == [0]
 
 
+def test_train_load_single_instance(min_labels_robot, cfg, tmp_path):
+    # set save directory
+    cfg.outputs.run_name = 'test_run'
+    cfg.outputs.runs_folder = str(tmp_path / "training_runs")  # ensure it's a string
+    cfg.outputs.save_outputs = True  # enable saving
+    cfg.outputs.checkpointing.latest_model = True  # save latest model
+
+    cfg.model.heads.single_instance = SingleInstanceConfmapsHeadConfig(
+        sigma=1.5, output_stride=1, offset_refinement=False
+    )
+    trainer = SingleInstanceModelTrainer.from_config(
+        cfg, training_labels=min_labels_robot
+    )
+    trainer.setup()
+    trainer.train()
+
+    # now load a new model and resume the checkpoint
+    cfg.model.resume_training = True
+    # set the model checkpoint folder
+    cfg.model.base_checkpoint = cfg.outputs.run_path
+    # unset save directory
+    cfg.outputs.run_name = None
+    cfg.outputs.runs_folder = None
+    cfg.outputs.save_outputs = False  # disable saving
+    cfg.outputs.checkpointing.latest_model = False  # disable saving latest model
+
+    trainer2 = SingleInstanceModelTrainer.from_config(
+        cfg, training_labels=min_labels_robot
+    )
+    trainer2.setup()
+
+    # check the weights are the same
+    for layer, layer2 in zip(trainer.keras_model.layers, trainer2.keras_model.layers):
+        # grabbing the weights from the first model
+        weights = layer.get_weights()
+        # grabbing the weights from the second model
+        weights2 = layer2.get_weights()
+        # check the weights are the same
+        for w, w2 in zip(weights, weights2):
+            assert (w == w2).all()
+
 def test_train_single_instance(min_labels_robot, cfg):
     cfg.model.heads.single_instance = SingleInstanceConfmapsHeadConfig(
         sigma=1.5, output_stride=1, offset_refinement=False
