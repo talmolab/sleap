@@ -334,6 +334,9 @@ class Predictor(ABC):
                 ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
 
             # Adjust for potential SizeMatcher scaling.
+            offset_x = ex.get("offset_x", 0)
+            offset_y = ex.get("offset_y", 0)
+            ex["instance_peaks"] -= np.reshape([offset_x, offset_y], [-1, 1, 1, 2])
             ex["instance_peaks"] /= np.expand_dims(
                 np.expand_dims(ex["scale"], axis=1), axis=1
             )

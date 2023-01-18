@@ -213,3 +213,17 @@ def test_size_matcher():
     check_padding(im1, 700, 750, 0, 750)
     im2 = next(transform_iter)["image"]
     assert im2.shape == (750, 750, 1)
+
+    # Check SizeMatcher when target is larger in both dimensions
+    size_matcher = SizeMatcher(max_image_height=560, max_image_width=560, center_pad=True)
+    transform_iter = iter(size_matcher.transform_dataset(ds))
+    ex = next(transform_iter)
+    im1 = ex["image"]
+    assert im1.shape == (560, 560, 1)
+    # Check padding is on the top and bottom
+    check_padding(im1, 440, 560, 0, 560)
+    check_padding(im1, 0, 120, 0, 560)
+    assert ex["offset_x"] == 0
+    assert ex["offset_y"] == 120
+    im2 = next(transform_iter)["image"]
+    assert im2.shape == (560, 560, 1)
