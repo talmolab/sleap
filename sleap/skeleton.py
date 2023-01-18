@@ -92,11 +92,16 @@ class Skeleton:
     The skeleton represents the constituent parts of the animal whose
     pose is being estimated.
 
-    An index variable used to give skeletons a default name that should
-    be unique across all skeletons.
+    Attributes:
+        _skeleton_idx: An index variable used to give skeletons a default name that should
+        be unique across all skeletons.
+        preview_image: A byte string containing an encoded preview image for the skeleton
+        description: A text description of the skeleton. Used mostly for presets
     """
 
     _skeleton_idx = count(0)
+    preview_image: Optional[bytes] = None
+    description: Optional[str] = None
 
     def __init__(self, name: str = None):
         """Initialize an empty skeleton object.
