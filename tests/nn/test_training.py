@@ -78,7 +78,7 @@ def test_data_reader(min_labels_slp_path):
 
 def test_train_load_single_instance(min_labels_robot, cfg, tmp_path):
     # set save directory
-    cfg.outputs.run_name = 'test_run'
+    cfg.outputs.run_name = "test_run"
     cfg.outputs.runs_folder = str(tmp_path / "training_runs")  # ensure it's a string
     cfg.outputs.save_outputs = True  # enable saving
     cfg.outputs.checkpointing.latest_model = True  # save latest model
@@ -116,6 +116,7 @@ def test_train_load_single_instance(min_labels_robot, cfg, tmp_path):
         # check the weights are the same
         for w, w2 in zip(weights, weights2):
             assert (w == w2).all()
+
 
 def test_train_single_instance(min_labels_robot, cfg):
     cfg.model.heads.single_instance = SingleInstanceConfmapsHeadConfig(
