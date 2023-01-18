@@ -788,6 +788,7 @@ class GraphicsView(QGraphicsView):
         self.in_zoom = False
         
         self.selection_mode = True
+        self.selected_parents = []
 
         self.zoomFactor = 1
         anchor_mode = QGraphicsView.AnchorUnderMouse
@@ -1009,7 +1010,8 @@ class GraphicsView(QGraphicsView):
             self.rightMouseButtonPressed.emit(scenePos.x(), scenePos.y())
 
         if event.modifiers() != Qt.ShiftModifier:
-            self.getSelectionInstance().clear_selected_nodes()
+            for parent in self.selected_parents:
+                parent.clear_selected_nodes()
 
 
         QGraphicsView.mousePressEvent(self, event)
@@ -1030,10 +1032,13 @@ class GraphicsView(QGraphicsView):
                 self.zoomToRect(zoom_rect)
 
             elif self.selection_mode:
-                # TODO: How to get instance????
                 for item in QGraphicsView.selectedItems():
                     if isinstance(item, QtNode):
-                        self.getSelectionInstance().selected_node(item)
+                        item._parent_instance.selected_node(item)
+
+                        if item._parent_instance not in self.selected_parents:
+                            self.selected_parents.append(item._parent_instance)
+
                 
             elif self.click_mode == "":
                 # Check if this was just a tap (not a drag)
