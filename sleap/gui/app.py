@@ -1,35 +1,27 @@
 """
 Main GUI application for labeling, training/inference, and proofreading.
-
 Each open project is an instance of :py:class:`MainWindow`.
-
 The main window contains a :py:class:`QtVideoPlayer` widget for showing
 video frames (the video player widget contains both a graphics view widget
 that shows the frame image and a seekbar widget for navigation). The main
 window also contains various "data views"--tables which can be docked
 in the window as well as a status bar.
-
 When a new instance of :py:class:`MainWindow` is created, it creates
 all of these widgets, sets up the menus, and also creates
-
 - single :py:class:`GuiState` object
 - single :py:class:`CommandContext` object
 - single :py:class:`ColorManager` object
 - multiple overlay objects (subclasses of :py:class:`BaseOverlay`)
-
 A timer is started (runs via Qt event loop) which enables/disables
 various menu items and buttons based on current state (e.g., you
 can't delete an instance if no instance is selected).
-
 Shortcuts are loaded using :py:class:`Shortcuts` class. Preferences
 are loaded by importing `prefs`, a singleton instance of
 :py:class:`Preferences`.
-
 :py:class:`GuiState` is used for storing "global" state for the project
 (e.g., :py:class:`Labels` object, the current frame, current instance,
 whether to show track trails, etc.). every menu command with state
 (e.g., check/uncheck) should be connected to a state variable.
-
 :py:class:`CommandContext` has methods which can be triggered
 by menu items/buttons/etc in the GUI to perform various actions. The
 command context enforces a pattern for implementing each command in
@@ -38,7 +30,6 @@ its own class, it keeps track of whether there are unsaved changes
 it handles triggering the relevant updates in the GUI based on the
 effects of the command (these are passed using `UpdateTopic` enum and
 handed by :py:method:`MainWindow.on_data_update()`).
-
 :py:class:`ColorManager` loads color palettes, keeps track of current
 palette, and should always be queried for how to draw instances--this
 ensures consistency (e.g.) between color of instances drawn on video
@@ -98,10 +89,8 @@ from sleap.prefs import prefs
 
 class MainWindow(QMainWindow):
     """The SLEAP GUI application.
-
     Each project (`Labels` dataset) that you have loaded in the GUI will
     have its own `MainWindow` object.
-
     Attributes:
         labels: The :class:`Labels` dataset. If None, a new, empty project
             (i.e., :class:`Labels` object) will be created.
@@ -118,7 +107,6 @@ class MainWindow(QMainWindow):
         **kwargs,
     ):
         """Initialize the app.
-
         Args:
             labels_path: Path to saved :class:`Labels` dataset.
             reset: If `True`, reset preferences to default (including window state).
@@ -195,9 +183,7 @@ class MainWindow(QMainWindow):
 
     def event(self, e: QEvent) -> bool:
         """Custom event handler.
-
         We use this to ignore events that would clear status bar.
-
         Args:
             e: The event.
         Returns:
@@ -311,7 +297,8 @@ class MainWindow(QMainWindow):
         self.player = QtVideoPlayer(
             color_manager=self.color_manager, state=self.state, context=self.commands
         )
-        self.player.changedPlot.connect(self._after_plot_update)
+        self.player.changedPlot.connect(self._after_plot_change)
+        self.player.updatedPlot.connect(self._after_plot_update)
 
         self.player.view.instanceDoubleClicked.connect(
             self._handle_instance_double_click
@@ -1185,14 +1172,16 @@ class MainWindow(QMainWindow):
 
     def _load_overlays(self):
         """Load all standard video overlays."""
-        self.overlays["track_labels"] = TrackListOverlay(self.labels, self.player)
+        self.overlays["track_labels"] = TrackListOverlay(
+            labels=self.labels, player=self.player
+        )
         self.overlays["trails"] = TrackTrailOverlay(
             labels=self.labels,
             player=self.player,
             trail_shade=self.state["trail_shade"],
         )
         self.overlays["instance"] = InstanceOverlay(
-            self.labels, self.player, self.state
+            labels=self.labels, player=self.player, state=self.state
         )
 
         # When gui state changes, we also want to set corresponding attribute
@@ -1380,7 +1369,12 @@ class MainWindow(QMainWindow):
 
         self.player.plot()
 
-    def _after_plot_update(self, player, frame_idx, selected_inst):
+    def _after_plot_update(self, frame_idx):
+        """Run after plot is updated, but stay on same frame."""
+        overlay: TrackTrailOverlay = self.overlays["trails"]
+        overlay.redraw(self.state["video"], frame_idx)
+
+    def _after_plot_change(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
 
         # Store the current LabeledFrame (or make new, empty object)
@@ -1531,7 +1525,6 @@ class MainWindow(QMainWindow):
 
     def _get_frames_for_prediction(self):
         """Builds options for frames on which to run inference.
-
         Args:
             None.
         Returns:
@@ -1599,12 +1592,10 @@ class MainWindow(QMainWindow):
 
     def _show_learning_dialog(self, mode: str):
         """Helper function to show learning dialog in given mode.
-
         Args:
             mode: A string representing mode for dialog, which could be:
             * "training"
             * "inference"
-
         Returns:
             None.
         """
@@ -1720,11 +1711,9 @@ class MainWindow(QMainWindow):
     ):
         """
         Handles when the user has double-clicked an instance.
-
         If prediction, then copy to new user-instance.
         If already user instance, then add any missing nodes (in case
         skeleton has been changed after instance was created).
-
         Args:
             instance: The :class:`Instance` that was double-clicked.
         """

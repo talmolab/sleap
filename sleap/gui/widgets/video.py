@@ -183,6 +183,8 @@ class QtVideoPlayer(QWidget):
     Main QWidget for displaying video with skeleton instances.
     Signals:
         * changedPlot: Emitted whenever the plot is redrawn
+        * updatedPlot: Emitted whenever a node is moved (updates trails overlays)
+
     Attributes:
         video: The :class:`Video` to display
         color_manager: A :class:`ColorManager` object which determines
@@ -190,6 +192,7 @@ class QtVideoPlayer(QWidget):
     """
 
     changedPlot = QtCore.Signal(QWidget, int, Instance)
+    updatedPlot = QtCore.Signal(int)
 
     def __init__(
         self,
@@ -473,6 +476,10 @@ class QtVideoPlayer(QWidget):
         # for too long before they were received by the loader).
         self._video_image_loader.video = self.video
         self._video_image_loader.request(idx)
+
+    def update_plot(self):
+        idx = self.state["frame_idx"] or 0
+        self.updatedPlot.emit(idx)
 
     def showInstances(self, show):
         """Show/hide all instances in viewer.
@@ -943,7 +950,7 @@ class GraphicsView(QGraphicsView):
         else:
             self._selected_nodes.append(node)
 
-        print(f"Added: {len(self._selected_nodes)}")
+        # print(f"Added: {len(self._selected_nodes)}")
 
 
     def remove_selected_node(self, node):
@@ -953,11 +960,11 @@ class GraphicsView(QGraphicsView):
             self._selected_nodes.remove(node)
 
 
-        print(f"Removed: {len(self._selected_nodes)}")
+        # print(f"Removed: {len(self._selected_nodes)}")
 
     def clear_selected_node(self):
         self._selected_node = []
-        print(f"Cleared: {len(self._selected_nodes)}")
+        # print(f"Cleared: {len(self._selected_nodes)}")
 
     def resizeEvent(self, event):
         """Maintain current zoom on resize."""
@@ -1038,7 +1045,7 @@ class GraphicsView(QGraphicsView):
             self.setDragMode(QGraphicsView.NoDrag)
             self.rightMouseButtonReleased.emit(scenePos.x(), scenePos.y())
 
-        if event.modifiers() != Qt.ShiftModifier:
+        if event.modifiers() != Qt.ShiftModifier and event.modifiers() != Qt.AltModifier:
                 self.clear_selected_node()
 
     def mouseMoveEvent(self, event):
@@ -1564,7 +1571,7 @@ class QtNode(QGraphicsEllipseItem):
             super(QtNode, self).mouseReleaseEvent(event)
             self.updatePoint(user_change=True)
         self.dragParent = False
-        # self.player.plot()  # Redraw trails after node is moved
+        self.player.update_plot()  # Redraw trails after node is moved 
 
     def wheelEvent(self, event):
         """Custom event handler for mouse scroll wheel."""
