@@ -309,3 +309,24 @@ def test_train_cropping(
         trainer.config.data.instance_cropping.crop_size % trainer.model.maximum_stride
         == 0
     )
+
+def test_resume_training_cli(tmp_path, training_labels, cfg):
+    """
+    Test CLI to resume training.
+    """
+    import os
+    from sleap.nn.training import main
+
+    # path to sleap/tests/data/models/minimal_robot.UNet.single_instance
+    base_checkpoint_path = os.path.join(
+        os.path.dirname(__file__), "..", "data", "models", "minimal_robot.UNet.single_instance"
+    )
+    json_path = os.path.join(
+        base_checkpoint_path, "training_config.json"
+    )
+    labels_path = os.path.join(
+        base_checkpoint_path, "labels_gt.slp"
+    )
+
+    # run CLI to resume training
+    main(["--training_job_path", json_path, "--labels_path", labels_path, "--resume", "--base_checkpoint", base_checkpoint_path])
