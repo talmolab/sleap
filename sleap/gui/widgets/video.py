@@ -943,14 +943,21 @@ class GraphicsView(QGraphicsView):
         else:
             self._selected_nodes.append(node)
 
+        print(f"Added: {len(self._selected_nodes)}")
+
+
     def remove_selected_node(self, node):
         if node not in self._selected_nodes:
             pass
         else:
             self._selected_nodes.remove(node)
 
+
+        print(f"Removed: {len(self._selected_nodes)}")
+
     def clear_selected_node(self):
         self._selected_node = []
+        print(f"Cleared: {len(self._selected_nodes)}")
 
     def resizeEvent(self, event):
         """Maintain current zoom on resize."""
@@ -976,6 +983,9 @@ class GraphicsView(QGraphicsView):
                 if self.canZoom:
                     self.in_zoom = True
                     self.setDragMode(QGraphicsView.RubberBandDrag)
+
+            elif event.modifiers() == Qt.ShiftModifier:
+                self.setDragMode(QGraphicsView.RubberBandDrag)
 
             self.leftMouseButtonPressed.emit(scenePos.x(), scenePos.y())
 
@@ -1027,6 +1037,9 @@ class GraphicsView(QGraphicsView):
 
             self.setDragMode(QGraphicsView.NoDrag)
             self.rightMouseButtonReleased.emit(scenePos.x(), scenePos.y())
+
+        if event.modifiers() != Qt.ShiftModifier:
+                self.clear_selected_node()
 
     def mouseMoveEvent(self, event):
         # re-enable contextual menu if necessary
@@ -1477,6 +1490,12 @@ class QtNode(QGraphicsEllipseItem):
         else:
             self.player.view.remove_selected_node(self)
 
+    def selected_checker(self):
+        if self in self.player.view.selected_nodes:
+            return True
+        
+        return False
+
     def mousePressEvent(self, event):
         """Custom event handler for mouse press."""
         # Do nothing if node is from predicted instance
@@ -1496,8 +1515,12 @@ class QtNode(QGraphicsEllipseItem):
                     
             # Shift-click to select one node of instance
             elif event.modifiers() == Qt.ShiftModifier:
-                self.select(True)
-
+                print(self.player.view.selected_nodes)
+                if self.selected_checker():
+                    self.select(False)
+                else:
+                    self.select(True)
+                
             else:
                 self.dragParent = False
                 super(QtNode, self).mousePressEvent(event)
@@ -1542,7 +1565,7 @@ class QtNode(QGraphicsEllipseItem):
             super(QtNode, self).mouseReleaseEvent(event)
             self.updatePoint(user_change=True)
         self.dragParent = False
-        self.player.plot()  # Redraw trails after node is moved
+        # self.player.plot()  # Redraw trails after node is moved
 
     def wheelEvent(self, event):
         """Custom event handler for mouse scroll wheel."""
