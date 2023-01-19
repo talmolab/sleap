@@ -1871,16 +1871,12 @@ def main(args: Optional[List] = None):
     parser.add_argument(
         "--resume",
         action="store_true",
-        help=(
-            "Resume training from last checkpoint."
-        ),
+        help=("Resume training from last checkpoint."),
     )
     parser.add_argument(
         "--base_checkpoint",
         default="",
-        help=(
-            "Path to base checkpoint to resume training from."
-        ),
+        help=("Path to base checkpoint to resume training from."),
     )
 
     device_group = parser.add_mutually_exclusive_group(required=False)
