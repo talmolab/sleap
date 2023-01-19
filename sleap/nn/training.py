@@ -746,7 +746,7 @@ class Trainer(ABC):
             logger.info(f"    [{i}] = {output}")
 
         # Resuming training if flagged
-        if self.config.model.resume_training:
+        if self.config.model.base_checkpoint:
             # grab the 'best_model.h5' file from the previous training run
             # and load it into the current model
             previous_model_path = os.path.join(
@@ -1869,13 +1869,8 @@ def main(args: Optional[List] = None):
     parser.add_argument("--suffix", default="", help="Suffix to append to run name.")
 
     parser.add_argument(
-        "--resume",
-        action="store_true",
-        help=("Resume training from last checkpoint."),
-    )
-    parser.add_argument(
         "--base_checkpoint",
-        default="",
+        type=str,
         help=("Path to base checkpoint to resume training from."),
     )
 
@@ -1938,7 +1933,6 @@ def main(args: Optional[List] = None):
     if len(args.video_paths) == 0:
         args.video_paths = None
 
-    job_config.model.resume_training = args.resume
     job_config.model.base_checkpoint = args.base_checkpoint
 
     logger.info("Versions:")

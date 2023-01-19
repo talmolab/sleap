@@ -93,7 +93,6 @@ def test_train_load_single_instance(min_labels_robot, cfg, tmp_path):
     trainer.train()
 
     # now load a new model and resume the checkpoint
-    cfg.model.resume_training = True
     # set the model checkpoint folder
     cfg.model.base_checkpoint = cfg.outputs.run_path
     # unset save directory
@@ -336,7 +335,6 @@ def test_resume_training_cli(tmp_path, training_labels, cfg):
             json_path,
             "--labels_path",
             labels_path,
-            "--resume",
             "--base_checkpoint",
             base_checkpoint_path,
         ]
