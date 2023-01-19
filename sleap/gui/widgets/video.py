@@ -1515,7 +1515,6 @@ class QtNode(QGraphicsEllipseItem):
                     
             # Shift-click to select one node of instance
             elif event.modifiers() == Qt.ShiftModifier:
-                print(self.player.view.selected_nodes)
                 if self.selected_checker():
                     self.select(False)
                 else:
