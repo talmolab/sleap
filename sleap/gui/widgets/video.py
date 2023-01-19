@@ -50,6 +50,7 @@ from qtpy.QtGui import (
     QPen,
     QBrush,
     QColor,
+    QCursor,
     QFont,
     QPolygonF,
     QKeyEvent,
@@ -1733,6 +1734,23 @@ class QtEdge(QGraphicsPolygonItem):
 
 
 class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
+    """
+    QGraphicsRectItem for user instance bounding boxes.
+
+    This object defines a scalable bounding box that encases an instance and handles
+    the relevant scaling operations. It is instantiated when its respective QtInstance
+    object is instantiated.
+
+    When instantiated, it creates 4 boxes, which are properties of the overall object,
+    on the corners of the overall bounding box. These corner boxes can be dragged to
+    scale the overall bounding box.
+
+    Args:
+        rect: The :class:`QRectF` object which defines the non-scalable bounding box.
+        parent: The :class:`QtInstance` to encompass.
+
+    """
+
     def __init__(self, rect, parent=None):
         super().__init__(rect, parent)
         if parent is not None:
@@ -1744,6 +1762,11 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
             self.box_width = 7
             self.int_color = Qt.white
 
+        self.parent = parent
+        self.origin = rect.topLeft()
+        self.ref_width = rect.width()
+        self.ref_height = rect.height()
+
         box_pen = QPen(Qt.black)
         box_pen.setCosmetic(True)
         box_brush = QBrush(self.int_color)
@@ -1753,21 +1776,25 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
         self.top_left_box.setPen(box_pen)
         self.top_left_box.setBrush(box_brush)
         self.top_left_box.setOpacity(0.8)
+        self.top_left_box.setCursor(QCursor(Qt.DragMoveCursor))
 
         self.top_right_box = QtWidgets.QGraphicsRectItem(parent=self)
         self.top_right_box.setPen(box_pen)
         self.top_right_box.setBrush(box_brush)
         self.top_right_box.setOpacity(0.8)
+        self.top_right_box.setCursor(QCursor(Qt.DragMoveCursor))
 
         self.bottom_left_box = QtWidgets.QGraphicsRectItem(parent=self)
         self.bottom_left_box.setPen(box_pen)
         self.bottom_left_box.setBrush(box_brush)
         self.bottom_left_box.setOpacity(0.8)
+        self.bottom_left_box.setCursor(QCursor(Qt.DragMoveCursor))
 
         self.bottom_right_box = QtWidgets.QGraphicsRectItem(parent=self)
         self.bottom_right_box.setPen(box_pen)
         self.bottom_right_box.setBrush(box_brush)
         self.bottom_right_box.setOpacity(0.8)
+        self.bottom_right_box.setCursor(QCursor(Qt.DragMoveCursor))
 
     def setRect(self, rect: QRectF):
         # Update edge boxes along with instance box
@@ -1780,49 +1807,135 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
         self.bottom_right_box.setRect(QRectF(QPointF(x2 - w, y2 - w), QPointF(x2, y2)))
 
     def mousePressEvent(self, event):
-        # Check if the user clicked on one of the edge boxes
-        print(event)
-        if self.top_left_box.contains(event.pos()):
-            self.resizing = "top_left"
-        elif self.top_right_box.contains(event.pos()):
-            self.resizing = "top_right"
-        elif self.bottom_left_box.contains(event.pos()):
-            self.resizing = "bottom_left"
-        elif self.bottom_right_box.contains(event.pos()):
-            self.resizing = "bottom_right"
-        else:
+        """Custom event handler for pressing on an adjustable corner box.
+
+        This function recognizes that the user has begun resizing the instance and
+        stores relevant information about the bounding box before the transformation.
+        """
+        if event.button() == Qt.RightButton:
             self.resizing = None
+        else:
+            # Check if the user clicked on one of the edge boxes
+            if self.top_left_box.contains(event.pos()):
+                self.resizing = "top_left"
+                self.origin = self.rect().bottomRight()
+            elif self.top_right_box.contains(event.pos()):
+                self.resizing = "top_right"
+                self.origin = self.rect().bottomLeft()
+            elif self.bottom_left_box.contains(event.pos()):
+                self.resizing = "bottom_left"
+                self.origin = self.rect().topRight()
+            elif self.bottom_right_box.contains(event.pos()):
+                self.resizing = "bottom_right"
+                self.origin = self.rect().topLeft()
+            else:
+                self.resizing = None
+
+        self.ref_width = self.rect().width()
+        self.ref_height = self.rect().height()
 
     def mouseMoveEvent(self, event):
-        # Scale the bounding rectangle if the user is dragging one of the edge boxes
-        if self.resizing == "top_left":
-            self.setRect(
-                event.pos().x(),
-                event.pos().y(),
-                self.rect().width(),
-                self.rect().height(),
-            )
-        elif self.resizing == "top_right":
-            self.setRect(
-                self.rect().x(),
-                event.pos().y(),
-                event.pos().x() - self.rect().x(),
-                self.rect().height(),
-            )
-        elif self.resizing == "bottom_left":
-            self.setRect(
-                event.pos().x(),
-                self.rect().y(),
-                self.rect().width(),
-                event.pos().y() - self.rect().y(),
-            )
-        elif self.resizing == "bottom_right":
-            self.setRect(
-                self.rect().x(),
-                self.rect().y(),
-                event.pos().x() - self.rect().x(),
-                event.pos().y() - self.rect().y(),
-            )
+        """Custom event handler for moving an adjustable corner box.
+
+        This function resizes the bounding box as the user drags one of its corners.
+        """
+        # Scale the bounding box and QtInstance if an edge box is selected
+        if event.button() == Qt.RightButton:
+            pass
+        else:
+            scaling_buffer = 10
+
+            x1, y1, x2, y2 = self.rect().getCoords()
+            new_x = event.pos().x()
+            new_y = event.pos().y()
+
+            w = self.parent.player.video.width
+            h = self.parent.player.video.height
+
+            if self.resizing == "top_left":
+                # Check to see if outside the range of the original bounding box
+                if new_x < 0:
+                    new_x = 0
+                if new_x >= x2 - scaling_buffer - self.box_width:
+                    new_x = x2 - scaling_buffer - self.box_width
+                if new_y < 0:
+                    new_y = 0
+                if new_y >= y2 - scaling_buffer - self.box_width:
+                    new_y = y2 - scaling_buffer - self.box_width
+
+                # Update the bounding box
+                self.setRect(QRectF(QPointF(new_x, new_y), QPointF(x2, y2)))
+
+            elif self.resizing == "top_right":
+                # Check to see if outside the range of the original bounding box
+                if new_x > w:
+                    new_x = w
+                if new_x <= x1 + scaling_buffer + self.box_width:
+                    new_x = x1 + scaling_buffer + self.box_width
+                if new_y < 0:
+                    new_y = 0
+                if new_y >= y2 - scaling_buffer - self.box_width:
+                    new_y = y2 - scaling_buffer - self.box_width
+
+                # Update the bounding box
+                self.setRect(QRectF(QPointF(x1, new_y), QPointF(new_x, y2)))
+
+            elif self.resizing == "bottom_left":
+                # Check to see if outside the range of the original bounding box
+                if new_x < 0:
+                    new_x = 0
+                if new_x >= x2 - scaling_buffer - self.box_width:
+                    new_x = x2 - scaling_buffer - self.box_width
+                if new_y > h:
+                    new_y = h
+                if new_y <= y1 + scaling_buffer + self.box_width:
+                    new_y = y1 + scaling_buffer + self.box_width
+
+                # Update the bounding box
+                self.setRect(QRectF(QPointF(new_x, y1), QPointF(x2, new_y)))
+
+            elif self.resizing == "bottom_right":
+                # Check to see if outside the range of the original bounding box
+                if new_x > w:
+                    new_x = w
+                if new_x <= x1 + scaling_buffer + self.box_width:
+                    new_x = x1 + scaling_buffer + self.box_width
+                if new_y > h:
+                    new_y = h
+                if new_y <= y1 + scaling_buffer + self.box_width:
+                    new_y = y1 + scaling_buffer + self.box_width
+
+                # Update the bounding box
+                self.setRect(QRectF(QPointF(x1, y1), QPointF(new_x, new_y)))
+
+    def mouseReleaseEvent(self, event):
+        """Custom event handler for releasing an adjustable corner box.
+
+        This function recognizes the end of a scaling operation by transforming the
+        instance linked to the bounding box. This is done by updating the positions of
+        the nodes belonging to the instance and then calling the instance's updatePoints
+        function to update the entire instance.
+        """
+        if event.button() == Qt.RightButton:
+            pass
+        else:
+            # Scale the instance
+            scale_x = self.rect().width() / self.ref_width
+            scale_y = self.rect().height() / self.ref_height
+
+            for node_key, node_value in self.parent.nodes.items():
+                new_x = (
+                    scale_x * (node_value.point.x - self.origin.x()) + self.origin.x()
+                )
+                new_y = (
+                    scale_y * (node_value.point.y - self.origin.y()) + self.origin.y()
+                )
+                self.parent.nodes[node_key].setPos(new_x, new_y)
+
+            # Update the instance
+            self.parent.updatePoints(complete=True, user_change=True)
+
+            self.resizing = None
 
 
 class QtInstance(QGraphicsObject):
@@ -1888,7 +2001,10 @@ class QtInstance(QGraphicsObject):
             )
 
         # Add box to go around instance for selection
-        self.box = VisibleBoundingBox(rect=self._bounding_rect, parent=self)
+        if self.predicted:
+            self.box = QGraphicsRectItem(parent=self)
+        else:
+            self.box = VisibleBoundingBox(rect=self._bounding_rect, parent=self)
         box_pen_width = color_manager.get_item_pen_width(self.instance)
         box_pen = QPen(QColor(*color), box_pen_width)
         box_pen.setStyle(Qt.DashLine)
