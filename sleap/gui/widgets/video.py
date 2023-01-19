@@ -1839,9 +1839,7 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
         This function resizes the bounding box as the user drags one of its corners.
         """
         # Scale the bounding box and QtInstance if an edge box is selected
-        if event.button() == Qt.RightButton:
-            pass
-        else:
+        if event.button() == Qt.LeftButton:
             scaling_buffer = 10
 
             x1, y1, x2, y2 = self.rect().getCoords()
