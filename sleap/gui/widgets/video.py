@@ -1796,7 +1796,7 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
         self.bottom_right_box.setCursor(QCursor(Qt.DragMoveCursor))
 
     def setRect(self, rect: QRectF):
-        # Update edge boxes along with instance box
+        """Update edge boxes along with instance box."""
         super().setRect(rect)
         x1, y1, x2, y2 = rect.getCoords()
         w = self.box_width
