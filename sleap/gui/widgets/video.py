@@ -193,7 +193,7 @@ class QtVideoPlayer(QWidget):
 
     Signals:
         * changedPlot: Emitted whenever the plot is redrawn
-        * updatedPlot: Emitted whenever a node is moved (updates overlays s.a. trails)
+        * updatedPlot: Emitted whenever a node is moved (updates trails overlays)
 
     Attributes:
         video: The :class:`Video` to display

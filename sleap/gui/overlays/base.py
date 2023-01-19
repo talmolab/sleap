@@ -49,7 +49,7 @@ class BaseOverlay(abc.ABC):
         To use the `remove_from_scene` and `redraw` methods, keep track of a list of
         `QGraphicsItem`s added in this function.
         """
-        # Start you method with:
+        # Start your method with:
         self.items = []
 
         # As items are added to the `QtVideoPlayer`, keep track of these items:
