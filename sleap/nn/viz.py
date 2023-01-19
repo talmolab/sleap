@@ -4,7 +4,10 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
+import base64
 from typing import Union, Tuple, Optional, Text
+from io import BytesIO
+from PIL import Image
 
 
 def imgfig(
@@ -296,3 +299,33 @@ def plot_bbox(bbox, **kwargs):
         bbox = bbox.bounding_box
     y1, x1, y2, x2 = bbox
     plt.plot([x1, x2, x2, x1, x1], [y1, y1, y2, y2, y1], "-", **kwargs)
+
+
+def generate_skeleton_preview_image(instance: sleap.Instance) -> bytes:
+    """
+    Generate preview image for skeleton based on given instance.
+
+    args:
+        instance: A `sleap.Instance` object for which to generate the preview image from.
+
+    returns:
+        A byte string encoding of the preview image.
+    """
+    y1, x1, y2, x2 = instance.bounding_box
+    frame = plot_img(instance.video.get_frame(instance.frame_idx))
+    skeleton = plot_instance(instance, skeleton=instance.skeleton, color_by_node=False)
+    fig = skeleton[0][0].figure
+    ax = fig.gca()
+    ax.get_yaxis().set_visible(False)
+    ax.get_xaxis().set_visible(False)
+    fig.set(facecolor="white", frameon=False)
+    img_buf = BytesIO()
+    plt.savefig(img_buf, format="jpeg", facecolor="white")
+    im = Image.open(img_buf)
+    im = im.crop([x1, y1, x2, y2])
+    im.thumbnail((128, 128))
+    img_stream = BytesIO()
+    im.save(img_stream, format="jpeg")
+    img_bytes = img_stream.getvalue()  # image in binary format
+    img_b64 = base64.b64encode(img_bytes)
+    return img_b64

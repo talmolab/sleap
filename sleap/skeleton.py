@@ -125,20 +125,23 @@ class Skeleton:
     def __repr__(self) -> str:
         """Return full description of the skeleton."""
         return (
-            f"Skeleton(name='{self.name}', "
+            f"Skeleton(name='{self.name}', ",
+            f"description={self.description}, ",
             f"nodes={self.node_names}, "
             f"edges={self.edge_names}, "
             f"symmetries={self.symmetry_names}"
-            ")"
+            ")",
         )
 
     def __str__(self) -> str:
         """Return short readable description of the skeleton."""
+        description = self.description
         nodes = ", ".join(self.node_names)
         edges = ", ".join([f"{s}->{d}" for (s, d) in self.edge_names])
         symm = ", ".join([f"{s}<->{d}" for (s, d) in self.symmetry_names])
         return (
             "Skeleton("
+            f"description={description}, "
             f"nodes=[{nodes}], "
             f"edges=[{edges}], "
             f"symmetries=[{symm}]"
