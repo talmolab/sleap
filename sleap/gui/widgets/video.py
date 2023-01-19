@@ -1913,9 +1913,7 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
         the nodes belonging to the instance and then calling the instance's updatePoints
         function to update the entire instance.
         """
-        if event.button() == Qt.RightButton:
-            pass
-        else:
+        if event.button() == Qt.LeftButton:
             # Scale the instance
             scale_x = self.rect().width() / self.ref_width
             scale_y = self.rect().height() / self.ref_height
