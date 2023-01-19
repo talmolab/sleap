@@ -1734,8 +1734,7 @@ class QtEdge(QGraphicsPolygonItem):
 
 
 class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
-    """
-    QGraphicsRectItem for user instance bounding boxes.
+    """QGraphicsRectItem for user instance bounding boxes.
 
     This object defines a scalable bounding box that encases an instance and handles
     the relevant scaling operations. It is instantiated when its respective QtInstance
