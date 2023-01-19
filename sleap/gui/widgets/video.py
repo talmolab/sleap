@@ -1750,7 +1750,7 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
 
     """
 
-    def __init__(self, rect, parent=None):
+    def __init__(self, rect: QRectF, parent: Optional[QtInstance] = None):
         super().__init__(rect, parent)
         if parent is not None:
             self.box_width = parent.markerRadius
