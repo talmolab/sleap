@@ -1794,7 +1794,7 @@ class TopDownMultiClassModelTrainer(Trainer):
         )
 
 
-def main():
+def main(args: Optional[List] = None):
     """Create CLI for training and run."""
     import argparse
 
@@ -1868,6 +1868,21 @@ def main():
     parser.add_argument("--prefix", default="", help="Prefix to prepend to run name.")
     parser.add_argument("--suffix", default="", help="Suffix to append to run name.")
 
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help=(
+            "Resume training from last checkpoint."
+        ),
+    )
+    parser.add_argument(
+        "--base_checkpoint",
+        default="",
+        help=(
+            "Path to base checkpoint to resume training from."
+        ),
+    )
+
     device_group = parser.add_mutually_exclusive_group(required=False)
     device_group.add_argument(
         "--cpu",
@@ -1894,7 +1909,7 @@ def main():
         ),
     )
 
-    args, _ = parser.parse_known_args()
+    args, _ = parser.parse_known_args(args)
 
     # Find job configuration file.
     job_filename = args.training_job_path
@@ -1926,6 +1941,9 @@ def main():
     args.video_paths = args.video_paths.split(",")
     if len(args.video_paths) == 0:
         args.video_paths = None
+
+    job_config.model.resume_training = args.resume
+    job_config.model.base_checkpoint = args.base_checkpoint
 
     logger.info("Versions:")
     sleap.versions()
