@@ -466,11 +466,16 @@ class Predictor(ABC):
             data = VideoReader(data)
 
         if tensor_rt:
-            # todo: handle directories correctly
-            self.convert_model("foo1", "foo2")
+            base_pb_dir = self.model_paths[-1].replace("training_config.json", "")
+            pb_dir_1 = os.path.join(base_pb_dir, "pb_1")
+            pb_dir_2 = os.path.join(base_pb_dir, "pb_2")
+
+            if not os.path.exists(pb_dir_2):
+                # convert model to tensorrt if not done already
+                self.convert_model(pb_dir_1, pb_dir_2)
 
             # load model func
-            saved_model_loaded = tf.saved_model.load("foo2")
+            saved_model_loaded = tf.saved_model.load(pb_dir_2)
             self.loaded_model_fn = saved_model_loaded.signatures["serving_default"]
 
         # Initialize inference loop generator.
