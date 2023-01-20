@@ -1825,5 +1825,5 @@ def main(args: Optional[list] = None):
         cProfile.runctx("app.exec_()", globals=globals(), locals=locals())
     else:
         app.exec_()
-
+        
     pass
