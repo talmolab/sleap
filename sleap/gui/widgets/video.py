@@ -826,6 +826,7 @@ class GraphicsView(QGraphicsView):
             self._pixmapHandle = self._add_pixmap(pixmap)
 
     def add_selected_instance(self, instance):
+        """Adds instance to selected instance list"""
         if instance in self.selectable_instances:
             pass
 
@@ -833,6 +834,7 @@ class GraphicsView(QGraphicsView):
             self.selectable_instances.append(instance)
 
     def remove_selected_instance(self, instance):
+        """Removes instance from instance list"""
         self.selectable_instances.remove(instance)
 
     def _add_pixmap(self, pixmap):
@@ -1527,6 +1529,7 @@ class QtNode(QGraphicsEllipseItem):
             self.point.visible = visible
 
     def select(self, status: bool):
+        """Toggle function to select a group of nodes"""
         if status:
             self._parent_instance.add_selected_node(self)
         else:
@@ -2055,19 +2058,29 @@ class QtInstance(QGraphicsObject):
 
     @property
     def selected_nodes(self):
+        """Gets list of selected nodes"""
         return self._selected_nodes
 
-    def add_selected_node(self, node):
+    def add_selected_node(self, node: QtNode):
+        """
+        Adds a node to selected list
+
+        Args:
+            node: Qtnode to be selected
+        """
         if node in self._selected_nodes:
             pass
         else:
             self._selected_nodes.append(node)
             self.player.view.add_selected_instance(self)
 
-        print(f"Added: {len(self._selected_nodes)}")
+    def remove_selected_node(self, node: QtNode):
+        """
+        Removes a node to selected list
 
-
-    def remove_selected_node(self, node):
+        Args:
+            node: Qtnode to be removed
+        """
         if node not in self._selected_nodes:
             pass
         else:
@@ -2076,12 +2089,10 @@ class QtInstance(QGraphicsObject):
             if len(self._selected_nodes) == 0:
                 self.player.view.remove_selected_instance(self)
 
-        print(f"Removed: {len(self._selected_nodes)}")
-
     def clear_selected_node(self):
+        """Clears instance to selected list"""
         self._selected_nodes = []
         self.player.view.remove_selected_instance(self)
-        print(f"Cleared: {len(self._selected_nodes)}")
 
     def showInstances(self, show: bool):
         """
