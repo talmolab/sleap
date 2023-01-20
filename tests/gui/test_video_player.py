@@ -9,7 +9,7 @@ from sleap.gui.widgets.video import (
 )
 
 from qtpy import QtCore, QtWidgets
-from qtpy.QtGui import QColor, QMouseEvent
+from qtpy.QtGui import QColor
 
 
 def test_gui_video(qtbot):
