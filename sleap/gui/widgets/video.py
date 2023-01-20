@@ -574,8 +574,7 @@ class QtVideoPlayer(QWidget):
                 instances.
             on_each: Callback after user selects each instance.
             on_failure: Callback if user cancels process before selecting
-                enough instances.
-                
+                enough instances.   
         """
 
         selected_instances = []
@@ -641,9 +640,11 @@ class QtVideoPlayer(QWidget):
     def onPointSelection(self, callback: Callable):
         """
         Starts mode for user to click point, callback called when finished.
+
         Args:
             callback: The function called after user clicks point, should
                 take x and y as arguments.
+                
         Returns:
             None.
         """
@@ -1830,6 +1831,9 @@ class QtInstance(QGraphicsObject):
         self.markerRadius = markerRadius
         self.nodeLabelSize = nodeLabelSize
 
+
+        print("Yes")
+
         self.nodes = {}
         self.edges = []
         self.edges_shown = True
@@ -2117,7 +2121,7 @@ class QtInstance(QGraphicsObject):
 class QtTextWithBackground(QGraphicsTextItem):
     """
     Inherits methods/behavior of `QGraphicsTextItem`, but with background box.
-    
+
     Color of background box is light or dark depending on the text color.
     """
 
