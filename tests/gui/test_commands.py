@@ -1,4 +1,10 @@
+import shutil
+from pathlib import PurePath, Path
+from typing import List
 from tempfile import tempdir
+
+import pytest
+
 from sleap.gui.commands import (
     CommandContext,
     ImportDeepLabCutFolder,
@@ -16,15 +22,9 @@ from sleap.io.video import Video
 from sleap.io.convert import default_analysis_filename
 from sleap.instance import Instance, LabeledFrame
 from sleap import Skeleton, Track
-
 from tests.info.test_h5 import extract_meta_hdf5
 from tests.io.test_video import assert_video_params
-
-from pathlib import PurePath, Path
-from typing import List
-
-import shutil
-import pytest
+from tests.io.test_formats import read_nix_meta
 
 
 def test_delete_user_dialog(centered_pair_predictions):
@@ -85,8 +85,12 @@ def test_get_new_version_filename():
     )
 
 
+@pytest.mark.parametrize("out_suffix", ["h5", "nix"])
 def test_ExportAnalysisFile(
-    centered_pair_predictions: Labels, small_robot_mp4_vid: Video, tmpdir
+    centered_pair_predictions: Labels,
+    small_robot_mp4_vid: Video,
+    out_suffix: str,
+    tmpdir,
 ):
     def ExportAnalysisFile_ask(context: CommandContext, params: dict):
         """Taken from ExportAnalysisFile.ask()"""
@@ -98,7 +102,7 @@ def test_ExportAnalysisFile(
 
         labels = context.labels
         if len(labels.labeled_frames) == 0:
-            return False
+            raise ValueError("No labeled frames in project. Nothing to export.")
 
         if params["all_videos"]:
             all_videos = context.labels.videos
@@ -108,7 +112,7 @@ def test_ExportAnalysisFile(
         # Check for labeled frames in each video
         videos = [video for video in all_videos if len(labels.get(video)) != 0]
         if len(videos) == 0:
-            return False
+            raise ValueError("No labeled frames in video(s). Nothing to export.")
 
         default_name = context.state["filename"] or "labels"
         fn = PurePath(tmpdir, default_name)
@@ -132,6 +136,7 @@ def test_ExportAnalysisFile(
                 video=video,
                 output_path=dirname,
                 output_prefix=str(fn.stem),
+                format_suffix=out_suffix,
             )
             filename = default_name if use_default else ask_for_filename(default_name)
 
@@ -153,10 +158,10 @@ def test_ExportAnalysisFile(
             output_paths.append(output_path)
 
             if labels_path is not None:
-                read_meta = extract_meta_hdf5(
-                    output_path, dset_names_in=["labels_path"]
-                )
-                assert read_meta["labels_path"] == labels_path
+                meta_reader = extract_meta_hdf5 if out_suffix == "h5" else read_nix_meta
+                labels_key = "labels_path" if out_suffix == "h5" else "project"
+                read_meta = meta_reader(output_path, dset_names_in=["labels_path"])
+                assert read_meta[labels_key] == labels_path
 
         assert len(output_paths) == num_videos, "Wrong number of outputs written"
         assert len(set(output_paths)) == num_videos, "Some output paths overwritten"
@@ -243,8 +248,8 @@ def test_ExportAnalysisFile(
         labels.remove_video(labels.videos[-1])
 
     params = {"all_videos": True}
-    okay = ExportAnalysisFile_ask(context=context, params=params)
-    assert okay == False
+    with pytest.raises(ValueError):
+        okay = ExportAnalysisFile_ask(context=context, params=params)
 
 
 def test_ToggleGrayscale(centered_pair_predictions: Labels):
