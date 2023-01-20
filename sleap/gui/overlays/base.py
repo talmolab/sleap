@@ -1,5 +1,6 @@
 """
 Base classes for overlays.
+
 Overlays are used for showing additional visuals on top of a video frame (i.e.,
 a `QtVideoPlayer` object). Overlay objects are created in the main GUI app,
 which then automatically calls the `add_to_scene` for each loaded overlay after
@@ -25,9 +26,11 @@ from sleap.nn.inference import VisualPredictor
 @attr.s(auto_attribs=True)
 class BaseOverlay(abc.ABC):
     """Abstract base class for overlays.
+
     Most overlays need rely on the `Labels` from which to get data and need the
     `QtVideoPlayer` to which a `QGraphicsItem` will be added, so these
     attributes are included in the base class.
+
     Args:
         labels: the `Labels` from which to get data
         player: the `QtVideoPlayer` to which a `QGraphicsObject` item will be added
@@ -42,6 +45,7 @@ class BaseOverlay(abc.ABC):
     @abc.abstractmethod
     def add_to_scene(self, video: Video, frame_idx: int):
         """Add items to scene.
+
         To use the `remove_from_scene` and `redraw` methods, keep track of a list of
         `QGraphicsItem`s added in this function.
         """
@@ -54,6 +58,7 @@ class BaseOverlay(abc.ABC):
 
     def remove_from_scene(self):
         """Remove all items added to scene by this overlay.
+
         This method does not need to be called when changing the plot to a new frame.
         """
         for item in self.items:
@@ -61,6 +66,7 @@ class BaseOverlay(abc.ABC):
 
     def redraw(self, video, frame_idx, *args, **kwargs):
         """Remove all items from the scene before adding new items to the scene.
+
         This method does not need to be called when changing the plot to a new frame.
         """
         self.remove_from_scene(*args, **kwargs)
@@ -101,10 +107,12 @@ class ModelData(Sequence):
 class DataOverlay(BaseOverlay):
     """
     Base class for confidence maps/part affinity fields overlays.
+
     These overlays use a `ModelData` class which provides the confidence maps/
     part affinity fields for the frame (by running inference with a model).
     They could easily be modified to use another "data" class, e.g., one
     which load saved confidence maps/part affinity fields from a file.
+
     Attributes:
         data: instance of a class such that you can use `data[frame_idx]`
             to get the data (e.g., confmaps) for a given frame.

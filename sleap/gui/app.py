@@ -1,4 +1,5 @@
-"""Main GUI application for labeling, training/inference, and proofreading.
+"""
+Main GUI application for labeling, training/inference, and proofreading.
 
 Each open project is an instance of :py:class:`MainWindow`.
 
@@ -194,11 +195,11 @@ class MainWindow(QMainWindow):
 
     def event(self, e: QEvent) -> bool:
         """Custom event handler.
+
         We use this to ignore events that would clear status bar.
 
         Args:
             e: The event.
-            
         Returns:
             True if we ignore event, otherwise returns whatever the usual
             event handler would return.
@@ -1538,6 +1539,7 @@ class MainWindow(QMainWindow):
 
     def _get_frames_for_prediction(self):
         """Builds options for frames on which to run inference.
+
         Args:
             None.
         Returns:
@@ -1605,10 +1607,12 @@ class MainWindow(QMainWindow):
 
     def _show_learning_dialog(self, mode: str):
         """Helper function to show learning dialog in given mode.
+
         Args:
             mode: A string representing mode for dialog, which could be:
             * "training"
             * "inference"
+
         Returns:
             None.
         """
@@ -1724,9 +1728,11 @@ class MainWindow(QMainWindow):
     ):
         """
         Handles when the user has double-clicked an instance.
+
         If prediction, then copy to new user-instance.
         If already user instance, then add any missing nodes (in case
         skeleton has been changed after instance was created).
+
         Args:
             instance: The :class:`Instance` that was double-clicked.
         """
