@@ -174,3 +174,21 @@ def unrag_tensor(x: tf.RaggedTensor, max_size: int, axis: int) -> tf.Tensor:
     max_size = tf.reshape(max_size, [-1])  # Ensure (n,) shape for indexing.
     shape = tf.tensor_scatter_nd_update(bounding_shape, axis, max_size)
     return x.to_tensor(default_value=tf.cast(np.NaN, x.dtype), shape=shape)
+
+
+class UnragLayer(tf.keras.layers.Layer):
+    """
+    This is a helper class to unrag ragged tensors prior to saving a model.
+    Useful when converting models to be TensorRT compatible. The main difference
+    from the above `unrag_example` function is that we need to create a copy
+    rather than unragging in place.
+    """
+
+    def call(self, x):
+        example = {}
+        for key in x:
+            if isinstance(x[key], tf.RaggedTensor):
+                example[key] = x[key].to_tensor(
+                    default_value=tf.cast(np.nan, x[key].dtype)
+                )
+        return example
