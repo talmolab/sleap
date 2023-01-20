@@ -152,7 +152,7 @@ def test_AddRemoveNodes(qtbot, small_robot_mp4_vid, centered_pair_labels):
     nodes[0].mousePressEvent(shift_leftclick_event)
 
     # Check if first node is added
-    selected_list = vp.view.selected_nodes
+    selected_list = inst.selected_nodes
 
     assert len(selected_list) == 1
     assert selected_list[0] == nodes[0]
@@ -161,7 +161,7 @@ def test_AddRemoveNodes(qtbot, small_robot_mp4_vid, centered_pair_labels):
     nodes[1].mousePressEvent(shift_leftclick_event)
 
     # Check if second node is added
-    selected_list = vp.view.selected_nodes
+    selected_list = inst.selected_nodes
     
     assert len(selected_list) == 2
     assert selected_list[0] == nodes[0]
@@ -171,7 +171,7 @@ def test_AddRemoveNodes(qtbot, small_robot_mp4_vid, centered_pair_labels):
     nodes[0].mousePressEvent(shift_leftclick_event)
 
     # Check if first node is removed
-    selected_list = vp.view.selected_nodes
+    selected_list = inst.selected_nodes
 
     assert len(selected_list) == 1
     assert selected_list[0] == nodes[1]
@@ -205,14 +205,14 @@ def test_SelectClearAllNodes(qtbot, small_robot_mp4_vid, centered_pair_labels):
     nodes[0].mousePressEvent(alt_leftclick_event)
 
     # Check if first nodes is added
-    selected_list = vp.view.selected_nodes
+    selected_list = inst.selected_nodes
 
     assert len(selected_list) == len(nodes)
 
     #clear all nodes
-    vp.view.clear_selected_node()
+    inst.clear_selected_node()
 
     # Check if nodes are deleted
-    selected_list = vp.view.selected_nodes
+    selected_list = inst.selected_nodes
     
     assert len(selected_list) == 0

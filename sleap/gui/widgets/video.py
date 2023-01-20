@@ -644,7 +644,7 @@ class QtVideoPlayer(QWidget):
         Args:
             callback: The function called after user clicks point, should
                 take x and y as arguments.
-                
+
         Returns:
             None.
         """
@@ -791,7 +791,7 @@ class GraphicsView(QGraphicsView):
         self.canPan = True
         self.click_mode = ""
         self.in_zoom = False
-        self._selected_nodes = []
+        self.selected_instances = []
 
         self.zoomFactor = 1
         anchor_mode = QGraphicsView.AnchorUnderMouse
@@ -824,6 +824,16 @@ class GraphicsView(QGraphicsView):
         if self._pixmapHandle:
             # add the pixmap back
             self._pixmapHandle = self._add_pixmap(pixmap)
+
+    def add_selected_instance(self, instance):
+        if instance in self.selectable_instances:
+            pass
+
+        else:
+            self.selectable_instances.append(instance)
+
+    def remove_selected_instance(self, instance):
+        self.selectable_instances.remove(instance)
 
     def _add_pixmap(self, pixmap):
         """Adds a pixmap to the scene and transforms it to midpoint coordinates."""
@@ -979,32 +989,6 @@ class GraphicsView(QGraphicsView):
 
         return None
 
-    @property
-    def selected_nodes(self):
-        return self._selected_nodes
-
-    def add_selected_node(self, node):
-        if node in self._selected_nodes:
-            pass
-        else:
-            self._selected_nodes.append(node)
-
-        # print(f"Added: {len(self._selected_nodes)}")
-
-
-    def remove_selected_node(self, node):
-        if node not in self._selected_nodes:
-            pass
-        else:
-            self._selected_nodes.remove(node)
-
-
-        # print(f"Removed: {len(self._selected_nodes)}")
-
-    def clear_selected_node(self):
-        self._selected_nodes = []
-        # print(f"Cleared: {len(self._selected_nodes)}")
-
     def resizeEvent(self, event):
         """Maintain current zoom on resize."""
         self.updateViewer()
@@ -1085,7 +1069,8 @@ class GraphicsView(QGraphicsView):
             self.rightMouseButtonReleased.emit(scenePos.x(), scenePos.y())
 
         if event.modifiers() != Qt.ShiftModifier and event.modifiers() != Qt.AltModifier:
-                self.clear_selected_node()
+                for ins in self.selectable_instances:
+                    ins.clear_selected_node()
 
     def mouseMoveEvent(self, event):
         # re-enable contextual menu if necessary
@@ -1543,15 +1528,9 @@ class QtNode(QGraphicsEllipseItem):
 
     def select(self, status: bool):
         if status:
-            self.player.view.add_selected_node(self)
+            self._parent_instance.add_selected_node(self)
         else:
-            self.player.view.remove_selected_node(self)
-
-    def selected_checker(self):
-        if self in self.player.view.selected_nodes:
-            return True
-        
-        return False
+            self._parent_instance.remove_selected_node(self)
 
     def mousePressEvent(self, event):
         """Custom event handler for mouse press."""
@@ -1572,7 +1551,7 @@ class QtNode(QGraphicsEllipseItem):
                     
             # Shift-click to select one node of instance
             elif event.modifiers() == Qt.ShiftModifier:
-                if self.selected_checker():
+                if self in self._parent_instance.selected_nodes:
                     self.select(False)
                 else:
                     self.select(True)
@@ -1831,10 +1810,8 @@ class QtInstance(QGraphicsObject):
         self.markerRadius = markerRadius
         self.nodeLabelSize = nodeLabelSize
 
-
-        print("Yes")
-
         self.nodes = {}
+        self._selected_nodes = []
         self.edges = []
         self.edges_shown = True
         self.labels = {}
@@ -2075,6 +2052,36 @@ class QtInstance(QGraphicsObject):
     def get_all_nodes(self):
         """Gets all nodes of the instances"""
         return self.nodes.values()
+
+    @property
+    def selected_nodes(self):
+        return self._selected_nodes
+
+    def add_selected_node(self, node):
+        if node in self._selected_nodes:
+            pass
+        else:
+            self._selected_nodes.append(node)
+            self.player.view.add_selected_instance(self)
+
+        print(f"Added: {len(self._selected_nodes)}")
+
+
+    def remove_selected_node(self, node):
+        if node not in self._selected_nodes:
+            pass
+        else:
+            self._selected_nodes.remove(node)
+
+            if len(self._selected_nodes) == 0:
+                self.player.view.remove_selected_instance(self)
+
+        print(f"Removed: {len(self._selected_nodes)}")
+
+    def clear_selected_node(self):
+        self._selected_nodes = []
+        self.player.view.remove_selected_instance(self)
+        print(f"Cleared: {len(self._selected_nodes)}")
 
     def showInstances(self, show: bool):
         """
