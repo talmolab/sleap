@@ -22,6 +22,7 @@ from sleap.nn.config.model import (
     UpsamplingConfig,
     ResNetConfig,
     PretrainedEncoderConfig,
+    RSUNetConfig,
     BackboneConfig,
     ModelConfig,
 )
