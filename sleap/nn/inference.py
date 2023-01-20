@@ -47,6 +47,7 @@ import tensorflow as tf
 import numpy as np
 
 import sleap
+from sleap.nn.movenet import MoveNetPredictor
 from sleap.nn.config import TrainingJobConfig, DataConfig
 from sleap.nn.data.resizing import SizeMatcher
 from sleap.nn.model import Model
@@ -221,6 +222,16 @@ class Predictor(ABC):
         elif "multi_class_bottomup" in model_types:
             predictor = BottomUpMultiClassPredictor.from_trained_models(
                 model_path=model_paths[model_types.index("multi_class_bottomup")],
+                peak_threshold=peak_threshold,
+                integral_refinement=integral_refinement,
+                integral_patch_size=integral_patch_size,
+                batch_size=batch_size,
+                resize_input_layer=resize_input_layer,
+            )
+
+        elif "movenet" in model_types:
+            predictor = MoveNetPredictor.from_trained_models(
+                model_path=model_paths[model_types.index("movenet")],
                 peak_threshold=peak_threshold,
                 integral_refinement=integral_refinement,
                 integral_patch_size=integral_patch_size,
