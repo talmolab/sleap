@@ -127,7 +127,7 @@ class temp_event:
         def pos(self):
             return self._pos
 
-def test_AddRemoveNodes(small_robot_mp4_vid, centered_pair_labels):
+def test_AddRemoveNodes(qtbot, small_robot_mp4_vid, centered_pair_labels):
     vp = QtVideoPlayer(small_robot_mp4_vid)
 
     test_frame_idx = 63
