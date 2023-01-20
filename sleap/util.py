@@ -409,7 +409,7 @@ def encode_preview_image(im_path: str) -> bytes:
     img = Image.open(im_path)
     img_stream = BytesIO()
     img.save(
-        img_stream, format="PNG"
+        img_stream, format="jpeg"
     )  # encode the image as PNG (TODO: compress/resize)
     img_bytes = img_stream.getvalue()  # image in binary format
     img_b64 = base64.b64encode(img_bytes)

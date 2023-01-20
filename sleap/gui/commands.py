@@ -1922,6 +1922,10 @@ class OpenSkeleton(EditCommand):
         # Load new skeleton
         filename = params["filename"]
         new_skeleton = OpenSkeleton.load_skeleton(filename)
+        if new_skeleton.description == None:
+            new_skeleton.description = f"Custom Skeleton loaded from {filename}"
+        context.state["skeleton_description"] = new_skeleton.description
+        context.state["skeleton_preview_image"] = new_skeleton.preview_image
 
         # Case 1: No skeleton exists in project
         if len(context.labels.skeletons) == 0:
