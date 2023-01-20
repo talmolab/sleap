@@ -1136,7 +1136,7 @@ class ExportAnalysisFile(AppCommand):
         # Ensure labels has labeled frames
         labels = context.labels
         if len(labels.labeled_frames) == 0:
-            return False
+            raise ValueError("No labeled frames in project. Nothing to export.")
 
         # Get a subset of videos
         if params["all_videos"]:
@@ -1147,7 +1147,7 @@ class ExportAnalysisFile(AppCommand):
         # Only use videos with labeled frames
         videos = [video for video in all_videos if len(labels.get(video)) != 0]
         if len(videos) == 0:
-            return False
+            raise ValueError("No labeled frames in video(s). Nothing to export.")
 
         # Specify (how to get) the output filename
         default_name = context.state["filename"] or "labels"

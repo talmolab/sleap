@@ -1,3 +1,12 @@
+import os
+from pathlib import Path, PurePath
+
+import numpy as np
+from numpy.testing import assert_array_equal
+import pytest
+import nixio
+
+from sleap.io.video import Video
 from sleap.instance import Instance, LabeledFrame, PredictedInstance, Track
 from sleap.io.dataset import Labels
 from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, filehandle
@@ -8,14 +17,6 @@ from sleap.io.format.nix import NixAdaptor
 from sleap.gui.commands import ImportAlphaTracker
 from sleap.gui.app import MainWindow
 from sleap.gui.state import GuiState
-
-import pytest
-import os
-from pathlib import Path, PurePath
-import numpy as np
-from numpy.testing import assert_array_equal
-
-from sleap.io.video import Video
 
 
 def test_text_adaptor(tmpdir):
@@ -431,26 +432,52 @@ def test_nix_adaptor(
     import nixio
 
     file = nixio.File.open(filename, nixio.FileMode.ReadOnly)
-    file_meta = file.sections[0]
-    assert file_meta["format"] == "nix.tracking"
-    assert "sleap" in file_meta["writer"].lower()
+    try:
+        file_meta = file.sections[0]
+        assert file_meta["format"] == "nix.tracking"
+        assert "sleap" in file_meta["writer"].lower()
 
-    assert len([b for b in file.blocks if b.type == "nix.tracking_results"]) > 0
-    b = file.blocks[0]
-    assert (
-        len([da for da in b.data_arrays if da.type == "nix.tracking.instance_position"])
-        == 1
-    )
-    assert (
-        len([da for da in b.data_arrays if da.type == "nix.tracking.instance_frameidx"])
-        == 1
-    )
+        assert len([b for b in file.blocks if b.type == "nix.tracking_results"]) > 0
+        b = file.blocks[0]
+        assert (
+            len(
+                [
+                    da
+                    for da in b.data_arrays
+                    if da.type == "nix.tracking.instance_position"
+                ]
+            )
+            == 1
+        )
+        assert (
+            len(
+                [
+                    da
+                    for da in b.data_arrays
+                    if da.type == "nix.tracking.instance_frameidx"
+                ]
+            )
+            == 1
+        )
 
-    inst_positions = b.data_arrays["position"]
-    assert len(inst_positions.shape) == 3
-    assert len(inst_positions.shape) == len(inst_positions.dimensions)
-    assert inst_positions.shape[2] == len(centered_pair_predictions.nodes)
+        inst_positions = b.data_arrays["position"]
+        assert len(inst_positions.shape) == 3
+        assert len(inst_positions.shape) == len(inst_positions.dimensions)
+        assert inst_positions.shape[2] == len(centered_pair_predictions.nodes)
 
-    frame_indices = b.data_arrays["frame"]
-    assert len(frame_indices.shape) == 1
-    assert frame_indices.shape[0] == inst_positions.shape[0]
+        frame_indices = b.data_arrays["frame"]
+        assert len(frame_indices.shape) == 1
+        assert frame_indices.shape[0] == inst_positions.shape[0]
+    except Exception as e:
+        file.close()
+        raise e
+
+
+def read_nix_meta(filename, *args, **kwargs):
+    file = nixio.File.open(filename, nixio.FileMode.ReadOnly)
+    try:
+        file_meta = file_meta = file.sections[0]
+    except Exception:
+        file.close()
+
+    return file_meta

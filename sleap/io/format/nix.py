@@ -2,12 +2,14 @@ import numpy as np
 import nixio as nix
 
 from pathlib import Path
-from typing import List
+from typing import Dict, List, Optional, cast
+from sleap.instance import Track
 
 from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.format.filehandle import FileHandle
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
+from sleap.skeleton import Node, Skeleton
 
 
 class NixAdaptor(Adaptor):
@@ -75,29 +77,39 @@ class NixAdaptor(Adaptor):
         raise NotImplementedError("NixAdaptor does not support reading.")
 
     @classmethod
-    def __check_video(cls, labels, video):
-        if video is None and len(labels.videos) == 0:
+    def __check_video(cls, labels: Labels, video: Optional[Video]):
+        if (video is None) and (len(labels.videos) == 0):
             raise ValueError(
-                f"There are no videos in this project. NO output file will be be written."
+                f"There are no videos in this project. "
+                "No analysis file will be be written."
             )
-        if video is not None and video not in labels.videos:
-            raise ValueError(
-                f"Specified video {video} is not part of this project. NO output file will be be written."
-            )
+        if video is not None:
+            if video not in labels.videos:
+                raise ValueError(
+                    f"Specified video {video} is not part of this project. "
+                    "Skipping the analysis file for this video."
+                )
+            if len(labels.get(video)) == 0:
+                raise ValueError(
+                    f"No labeled frames in {video.backend.filename}. "
+                    "Skipping the analysis file for this video."
+                )
 
     @classmethod
     def write(
         cls,
         filename: str,
         source_object: object,
-        source_path: str = "None",
-        video: Video = None,
+        source_path: Optional[str] = None,
+        video: Optional[Video] = None,
     ):
         """Writes the object to a file."""
+        source_object = cast(Labels, source_object)
+
         cls.__check_video(source_object, video)
 
-        def create_file(filename, project, video):
-            print(f"...creating nix file {filename} for {project}", end="\t")
+        def create_file(filename: str, project: Optional[str], video: Video):
+            print(f"Creating nix file...", end="\t")
             nf = nix.File.open(filename, nix.FileMode.Overwrite)
             try:
                 s = nf.create_section("TrackingAnalysis", "nix.tracking.metadata")
@@ -131,24 +143,24 @@ class NixAdaptor(Adaptor):
             print("done")
             return nf
 
-        def track_map(source: Labels):
-            track_map = {}
+        def track_map(source: Labels) -> Dict[Track, int]:
+            track_map: Dict[Track, int] = {}
             for track in source.tracks:
                 if track in track_map:
                     continue
                 track_map[track] = len(track_map)
             return track_map
 
-        def skeleton_map(source: Labels):
-            skel_map = {}
+        def skeleton_map(source: Labels) -> Dict[Skeleton, int]:
+            skel_map: Dict[Skeleton, int] = {}
             for skeleton in source.skeletons:
                 if skeleton in skel_map:
                     continue
                 skel_map[skeleton] = len(skel_map)
             return skel_map
 
-        def node_map(source: Labels):
-            n_map = {}
+        def node_map(source: Labels) -> Dict[Node, int]:
+            n_map: Dict[Node, int] = {}
             for node in source.nodes:
                 if node in n_map:
                     continue
@@ -388,6 +400,36 @@ class NixAdaptor(Adaptor):
                 table_data.append((track.name, track.spawned_on, tracks[track]))
             tm.append_rows(table_data)
 
+            # Print shape info
+            data_dict = {
+                "instances": instances,
+                "frameid_array": frameid_array,
+                "positions_array": positions_array,
+                "track_array": track_array,
+                "skeleton_array": skeleton_array,
+                "point_score": point_score,
+                "instance_score": instance_score,
+                "tracking_score": tracking_score,
+                "centroid_array": centroid_array,
+                "tracks": tracks,
+                "nodes": nodes,
+                "skeletons": skeletons,
+            }
+            for key, val in data_dict.items():
+                print(f"\t{key}:", end=" ")
+                if hasattr(val, "shape"):
+                    print(f"{val.shape}")
+                else:
+                    print(f"{len(val)}")
+
+            # Print labels/video info
+            print(
+                f"\tlabels path: {source_path}\n"
+                f"\tvideo path: {video.backend.filename}\n"
+                f"\tvideo index = {source_object.videos.index(video)}"
+            )
+
+            print(f"Writing to NIX file...")
             chunked_write(
                 instances,
                 frameid_array,
@@ -402,19 +444,20 @@ class NixAdaptor(Adaptor):
                 nodes,
                 skeletons,
             )
+            print(f"done")
 
-        print(f"Exporting analysis to NIX file {filename} ...", end="\n")
+        print(f"\nExporting to NIX analysis file...")
         if video is None:
-            print(f"No video specified, exporting the first one {video}...")
             video = source_object.videos[0]
+            print(f"No video specified, exporting the first one...")
 
         nix_file = None
         try:
             nix_file = create_file(filename, source_path, video)
             write_data(nix_file.blocks[0], source_object, video)
-            print(" done")
+            print(f"Saved as {filename}")
         except Exception as e:
-            print(f"\n\t Writing failed with following error:\n{e}!")
+            print(f"\n\tWriting failed with following error:\n{e}!")
         finally:
             if nix_file is not None:
                 nix_file.close()

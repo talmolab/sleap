@@ -135,7 +135,7 @@ def main(args: list = None):
         outnames = [path for path in args.outputs]
         if len(outnames) < len(vids):
             # if there are less outnames provided than videos to convert...
-            outsuffix = "nix" if "nix" in args.format else "h5"
+            out_suffix = "nix" if "nix" in args.format else "h5"
             fn = args.input_path
             fn = re.sub("(\.json(\.zip)?|\.h5|\.slp)$", "", fn)
             fn = PurePath(fn)
@@ -146,7 +146,7 @@ def main(args: list = None):
                     video=video,
                     output_path=str(fn.parent),
                     output_prefix=str(fn.stem),
-                    format_suffix=outsuffix,
+                    format_suffix=out_suffix,
                 )
                 outnames.append(dflt_name)
 
@@ -154,7 +154,10 @@ def main(args: list = None):
             from sleap.io.format.nix import NixAdaptor
 
             for video, outname in zip(vids, outnames):
-                NixAdaptor.write(outname, labels, args.input_path, video)
+                try:
+                    NixAdaptor.write(outname, labels, args.input_path, video)
+                except ValueError as e:
+                    print(e.args[0])
         else:
             from sleap.info.write_tracking_h5 import main as write_analysis
 
