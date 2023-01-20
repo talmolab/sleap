@@ -963,7 +963,7 @@ class GraphicsView(QGraphicsView):
         # print(f"Removed: {len(self._selected_nodes)}")
 
     def clear_selected_node(self):
-        self._selected_node = []
+        self._selected_nodes = []
         # print(f"Cleared: {len(self._selected_nodes)}")
 
     def resizeEvent(self, event):
@@ -1004,7 +1004,7 @@ class GraphicsView(QGraphicsView):
         """Stop mouse pan or zoom mode (apply zoom if valid)."""
         QGraphicsView.mouseReleaseEvent(self, event)
         scenePos = self.mapToScene(event.pos())
-
+        
         # check if mouse moved during click
         has_moved = event.pos() != self._down_pos
         if event.button() == Qt.LeftButton:

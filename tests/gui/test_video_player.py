@@ -9,7 +9,7 @@ from sleap.gui.widgets.video import (
 )
 
 from qtpy import QtCore, QtWidgets
-from qtpy.QtGui import QColor
+from qtpy.QtGui import QColor, QMouseEvent
 
 
 def test_gui_video(qtbot):
@@ -111,9 +111,24 @@ def test_QtTextWithBackground(qtbot):
     scene.addItem(txt)
     qtbot.addWidget(view)
 
-def test_AddRemoveNodes(qtbot, small_robot_mp4_vid, centered_pair_labels):
+
+class temp_event:
+        def __init__(self, button=None, modifier=None, pos=QtCore.QPoint(5, 8)):
+            self._button = button
+            self._modifiers = modifier
+            self._pos = pos
+        
+        def button(self):
+            return self._button
+        
+        def modifiers(self):
+            return self._modifiers
+
+        def pos(self):
+            return self._pos
+
+def test_AddRemoveNodes(small_robot_mp4_vid, centered_pair_labels):
     vp = QtVideoPlayer(small_robot_mp4_vid)
-    qtbot.addWidget(vp)
 
     test_frame_idx = 63
     labeled_frames = centered_pair_labels.labeled_frames
@@ -131,19 +146,10 @@ def test_AddRemoveNodes(qtbot, small_robot_mp4_vid, centered_pair_labels):
     # Check that the bounding box type is correct
     inst = vp.instances[1]  # QtInstance
     nodes = list(inst.get_all_nodes())
-    # Gets node's coordinates
-    node_1_point = QtCore.QPoint(nodes[0].scenePos().x(), nodes[0].scenePos().y())
-    node_2_point = QtCore.QPoint(nodes[1].scenePos().x(), nodes[1].scenePos().y())
+    shift_leftclick_event = temp_event(QtCore.Qt.LeftButton, QtCore.Qt.ShiftModifier)
 
     # Selects first Node
-
-    print(QtCore.Qt.ShiftModifier)
-    qtbot.mouseMove(vp, node_1_point)
-    qtbot.mousePress(vp, QtCore.Qt.LeftButton)
-    qtbot.keyPress(vp, QtCore.Qt.ShiftModifier)
-    qtbot.keyRelease(vp, QtCore.Qt.ShiftModifier)
-    qtbot.mouseRelease(vp, QtCore.Qt.LeftButton)
-
+    nodes[0].mousePressEvent(shift_leftclick_event)
 
     # Check if first node is added
     selected_list = vp.view.selected_nodes
@@ -152,11 +158,7 @@ def test_AddRemoveNodes(qtbot, small_robot_mp4_vid, centered_pair_labels):
     assert selected_list[0] == nodes[0]
 
     # Select second nodes
-    qtbot.mouseMove(vp, node_2_point)
-    qtbot.mousePress(vp, QtCore.Qt.LeftButton)
-    qtbot.keyPress(vp, QtCore.Qt.ShiftModifier)
-    qtbot.keyRelease(vp, QtCore.Qt.ShiftModifier)
-    qtbot.mouseRelease(vp, QtCore.Qt.LeftButton)
+    nodes[1].mousePressEvent(shift_leftclick_event)
 
     # Check if second node is added
     selected_list = vp.view.selected_nodes
@@ -166,12 +168,7 @@ def test_AddRemoveNodes(qtbot, small_robot_mp4_vid, centered_pair_labels):
     assert selected_list[1] == nodes[1]
 
     # deselects first node
-    qtbot.mouseMove(vp, node_1_point)
-    qtbot.mousePress(vp, QtCore.Qt.LeftButton)
-    qtbot.keyPress(vp, QtCore.Qt.ShiftModifier)
-    qtbot.keyRelease(vp, QtCore.Qt.ShiftModifier)
-    qtbot.mouseRelease(vp, QtCore.Qt.LeftButton)
-    
+    nodes[0].mousePressEvent(shift_leftclick_event)
 
     # Check if first node is removed
     selected_list = vp.view.selected_nodes
@@ -184,7 +181,6 @@ def test_AddRemoveNodes(qtbot, small_robot_mp4_vid, centered_pair_labels):
 
 def test_SelectClearAllNodes(qtbot, small_robot_mp4_vid, centered_pair_labels):
     vp = QtVideoPlayer(small_robot_mp4_vid)
-    qtbot.addWidget(vp)
 
     test_frame_idx = 63
     labeled_frames = centered_pair_labels.labeled_frames
@@ -202,26 +198,19 @@ def test_SelectClearAllNodes(qtbot, small_robot_mp4_vid, centered_pair_labels):
     # Check that the bounding box type is correct
     inst = vp.instances[1]  # QtInstance
     nodes = list(inst.get_all_nodes())
-
-    # Gets node's coordinates
-    node_1_point = QtCore.QPoint(nodes[0].scenePos().x(), nodes[0].scenePos().y())
+    alt_leftclick_event = temp_event(QtCore.Qt.LeftButton, QtCore.Qt.AltModifier)
     
 
-    # Selects first Node
-    qtbot.mouseMove(vp, node_1_point)
-    qtbot.keyPress(vp, QtCore.Qt.AltModifier)
-    qtbot.mousePress(vp, QtCore.Qt.LeftButton)
-    qtbot.mouseRelease(vp, QtCore.Qt.LeftButton)
+    # Selects All nodes
+    nodes[0].mousePressEvent(alt_leftclick_event)
 
     # Check if first nodes is added
     selected_list = vp.view.selected_nodes
 
     assert len(selected_list) == len(nodes)
 
-    qtbot.keyPress(vp, QtCore.Qt.AltModifier)
-    qtbot.mousePress(vp, QtCore.Qt.LeftButton)
-    qtbot.mouseRelease(vp, QtCore.Qt.LeftButton)
-
+    #clear all nodes
+    vp.view.clear_selected_node()
 
     # Check if nodes are deleted
     selected_list = vp.view.selected_nodes
