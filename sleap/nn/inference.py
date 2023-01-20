@@ -300,7 +300,7 @@ class Predictor(ABC):
         pass
 
     def _predict_generator(
-        self, data_provider: Provider
+        self, data_provider: Provider, tensor_rt: bool = False
     ) -> Iterator[Dict[str, np.ndarray]]:
         """Create a generator that yields batches of inference results.
 
@@ -310,6 +310,10 @@ class Predictor(ABC):
         Args:
             data_provider: The `sleap.pipelines.Provider` that contains data that should
                 be used for inference.
+            tensor_rt: If `True`, convert to TensorRT optimized model. `False` by
+                default since TensorRT is system dependent. If available, can
+                offer substantial performance gains when running inference on
+                Nvidia GPUs. This should be set during when calling `predict`.
 
         Returns:
             A generator yielding batches predicted results as dictionaries of numpy
@@ -322,7 +326,21 @@ class Predictor(ABC):
 
         def process_batch(ex):
             # Run inference on current batch.
-            preds = self.inference_model.predict_on_batch(ex, numpy=True)
+
+            if tensor_rt:
+                preds = self.loaded_model_fn(tf.constant(ex["image"]))
+
+                # todo: the unragging seems to lose the dict keys. Should see if
+                # we can handle this better, but for now just replace keys and
+                # cast peaks to numpy...
+
+                # preds['centroid_vals'] = preds['unrag_layer']
+                # preds['centroids'] = preds['unrag_layer_1']
+                # preds['instance_peak_vals'] = preds['unrag_layer_2']
+                preds["instance_peaks"] = preds["unrag_layer_3"].numpy()
+
+            else:
+                preds = self.inference_model.predict_on_batch(ex, numpy=True)
 
             # Add model outputs to the input data example.
             ex.update(preds)
@@ -416,7 +434,10 @@ class Predictor(ABC):
                 yield process_batch(ex)
 
     def predict(
-        self, data: Union[Provider, sleap.Labels, sleap.Video], make_labels: bool = True
+        self,
+        data: Union[Provider, sleap.Labels, sleap.Video],
+        make_labels: bool = True,
+        tensor_rt: bool = False,
     ) -> Union[List[Dict[str, np.ndarray]], sleap.Labels]:
         """Run inference on a data source.
 
@@ -426,6 +447,10 @@ class Predictor(ABC):
             make_labels: If `True` (the default), returns a `sleap.Labels` instance with
                 `sleap.PredictedInstance`s. If `False`, just return a list of
                 dictionaries containing the raw arrays returned by the inference model.
+            tensor_rt: If `True`, convert to TensorRT optimized model. `False` by
+                default since TensorRT is system dependent. If available, can
+                offer substantial performance gains when running inference on
+                Nvidia GPUs.
 
         Returns:
             A `sleap.Labels` with `sleap.PredictedInstance`s if `make_labels` is `True`,
@@ -440,8 +465,16 @@ class Predictor(ABC):
         elif isinstance(data, sleap.Video):
             data = VideoReader(data)
 
+        if tensor_rt:
+            # todo: handle directories correctly
+            self.convert_model("foo1", "foo2")
+
+            # load model func
+            saved_model_loaded = tf.saved_model.load("foo2")
+            self.loaded_model_fn = saved_model_loaded.signatures["serving_default"]
+
         # Initialize inference loop generator.
-        generator = self._predict_generator(data)
+        generator = self._predict_generator(data, tensor_rt)
 
         if make_labels:
             # Create SLEAP data structures while consuming results.
@@ -451,6 +484,53 @@ class Predictor(ABC):
         else:
             # Just return the raw results.
             return list(generator)
+
+    def create_tracing_batch(self, inference_model):
+
+        first_inference_layer = inference_model.layers[0]
+
+        keras_model_shape = first_inference_layer.keras_model.input.shape
+
+        sample_shape = tuple(
+            (
+                np.array(keras_model_shape[1:3]) / first_inference_layer.input_scale
+            ).astype(int)
+        ) + (keras_model_shape[3],)
+
+        tracing_batch = np.zeros((1,) + sample_shape, dtype="uint8")
+
+        return tracing_batch, sample_shape
+
+    def convert_model(self, save_path: str, save_path_2: str):
+
+        # todo: add try/except with raise for the cases in which a runtimeerror
+        # will occur due to tensorflow not being compiled with tensorrt support
+        from tensorflow.python.compiler.tensorrt import trt_convert as tf_trt
+
+        self._initialize_inference_model()
+
+        # create tracing batch
+        tracing_batch, sample_shape = self.create_tracing_batch(self.inference_model)
+
+        x_in = tf.keras.layers.Input(sample_shape, dtype="uint8")
+        x = self.inference_model(x_in)
+
+        # need to unrag tensors
+        x = sleap.nn.data.utils.UnragLayer()(x)
+
+        # pass through model
+        model = tf.keras.Model(x_in, x)
+        outputs = model.predict(tracing_batch)
+
+        # save initial protobuffer
+        model.save(save_path, save_format="tf", save_traces=True)
+
+        # convert to tensorRT
+        converter = tf_trt.TrtGraphConverterV2(input_saved_model_dir=save_path)
+        converter.convert()
+
+        # save converted protobuffer
+        converter.save(save_path_2)
 
     def export_model(
         self,
@@ -495,16 +575,8 @@ class Predictor(ABC):
             else:
                 raise Exception(f"{predictor_name} does not support max instance limit")
 
-        first_inference_layer = self.inference_model.layers[0]
-        keras_model_shape = first_inference_layer.keras_model.input.shape
+        tracing_batch, _ = self.create_tracing_batch(self.inference_model)
 
-        sample_shape = tuple(
-            (
-                np.array(keras_model_shape[1:3]) / first_inference_layer.input_scale
-            ).astype(int)
-        ) + (keras_model_shape[3],)
-
-        tracing_batch = np.zeros((1,) + sample_shape, dtype="uint8")
         outputs = self.inference_model.predict(tracing_batch)
 
         self.inference_model.export_model(
