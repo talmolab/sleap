@@ -494,6 +494,24 @@ lists of points.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="sleap.nn.utils.reset_input_layer">
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.utils.</span></span><span class="sig-name descname"><span class="pre">reset_input_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keras_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">keras.engine.training.Model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/utils.py#L131-L162"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.utils.reset_input_layer" title="Permalink to this definition">#</a></dt>
+<dd><p>Returns a copy of <code class="xref py py-obj docutils literal notranslate"><span class="pre">keras_model</span></code> with input shape reset to <code class="xref py py-obj docutils literal notranslate"><span class="pre">new_shape</span></code>.</p>
+<p>This method was modified from <a class="reference external" href="https://stackoverflow.com/a/58485055">https://stackoverflow.com/a/58485055</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>keras_model</strong> – <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.Model</span></code> to return a copy of (with input shape reset).</p></li>
+<li><p><strong>new_shape</strong> – Shape of the returned model’s input layer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A copy of <code class="xref py py-obj docutils literal notranslate"><span class="pre">keras_model</span></code> with input shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">new_shape</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.utils.tf_linear_sum_assignment">
 <span class="sig-prename descclassname"><span class="pre">sleap.nn.utils.</span></span><span class="sig-name descname"><span class="pre">tf_linear_sum_assignment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cost_matrix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="headerlink" href="#sleap.nn.utils.tf_linear_sum_assignment" title="Permalink to this definition">#</a></dt>
 <dd><p>Run <code class="xref py py-obj docutils literal notranslate"><span class="pre">linear_sum_assignment</span></code> as a TensorFlow function.</p>
@@ -527,7 +545,7 @@ lists of points.</p>
   
     By SLEAP Developers<br/>
   
-      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+      &copy; Copyright 2019–2023, Talmo Lab.<br/>
 </p>
         </footer>
     </div>

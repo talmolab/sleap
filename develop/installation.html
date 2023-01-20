@@ -648,12 +648,12 @@ title="Open an issue"
 These will make sure that Anaconda is easily accessible from most places on your computer.</p></li>
 </ul>
 <p><strong>On Linux</strong>, it might be easier to do this straight from the terminal (<kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>) with this one-liner:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget -nc https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh <span class="o">&amp;&amp;</span> bash Miniconda3-latest-Linux-x86_64.sh -b <span class="o">&amp;&amp;</span> ~/miniconda3/bin/conda init bash
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>-nc<span class="w"> </span>https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>bash<span class="w"> </span>Miniconda3-latest-Linux-x86_64.sh<span class="w"> </span>-b<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>~/miniconda3/bin/conda<span class="w"> </span>init<span class="w"> </span>bash
 </pre></div>
 </div>
 <p>Restart the terminal after running this command.</p>
 <p><strong>On Macs</strong>, you can run the graphical installer using the pkg file, or this terminal command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget -nc https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh <span class="o">&amp;&amp;</span> bash Miniconda3-latest-MacOSX-x86_64.sh -b <span class="o">&amp;&amp;</span> ~/miniconda3/bin/conda init zsh
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>-nc<span class="w"> </span>https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>bash<span class="w"> </span>Miniconda3-latest-MacOSX-x86_64.sh<span class="w"> </span>-b<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>~/miniconda3/bin/conda<span class="w"> </span>init<span class="w"> </span>zsh
 </pre></div>
 </div>
 </section>
@@ -672,7 +672,7 @@ These will make sure that Anaconda is easily accessible from most places on your
 </div>
 <section id="conda-package">
 <h3><a class="toc-backref" href="#id3"><code class="docutils literal notranslate"><span class="pre">conda</span></code> package</a><a class="headerlink" href="#conda-package" title="Permalink to this headline">#</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda create -y -n sleap -c sleap -c nvidia -c conda-forge <span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.2.9
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>nvidia<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.2.9
 </pre></div>
 </div>
 <p><strong>This is the recommended installation method</strong>. Works on <strong>Windows</strong> and <strong>Linux</strong>.</p>
@@ -689,22 +689,22 @@ These will make sure that Anaconda is easily accessible from most places on your
 <h3><a class="toc-backref" href="#id4"><code class="docutils literal notranslate"><span class="pre">conda</span></code> from source</a><a class="headerlink" href="#conda-from-source" title="Permalink to this headline">#</a></h3>
 <ol>
 <li><p>First, ensure git is installed:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git --version
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>--version
 </pre></div>
 </div>
 <p>If ‘git’ is not recognized, then <a class="reference external" href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">install git</a>.</p>
 </li>
 <li><p>Then, clone the repository:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/talmolab/sleap <span class="o">&amp;&amp;</span> <span class="nb">cd</span> sleap
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>sleap
 </pre></div>
 </div>
 </li>
 <li><p>Finally, install from the environment file:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda env create -f environment.yml -n sleap
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment.yml<span class="w"> </span>-n<span class="w"> </span>sleap
 </pre></div>
 </div>
 <p>If you do not have a NVIDIA GPU, then you should use the no CUDA environment file:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda env create -f environment_no_cuda.yml -n sleap
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_no_cuda.yml<span class="w"> </span>-n<span class="w"> </span>sleap
 </pre></div>
 </div>
 <p>This works on <strong>Windows</strong>, <strong>Linux</strong> and <strong>Mac OS X</strong> (pre-M1). This is the <strong>recommended method for development</strong>.</p>
@@ -720,7 +720,7 @@ These will make sure that Anaconda is easily accessible from most places on your
 </section>
 <section id="pip-package">
 <h3><a class="toc-backref" href="#id5"><code class="docutils literal notranslate"><span class="pre">pip</span></code> package</a><a class="headerlink" href="#pip-package" title="Permalink to this headline">#</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install <span class="nv">sleap</span><span class="o">==</span><span class="m">1</span>.2.9
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">sleap</span><span class="o">==</span><span class="m">1</span>.2.9
 </pre></div>
 </div>
 <p>This works on <strong>any OS except M1</strong> and on <strong>Google Colab</strong>.</p>
@@ -743,39 +743,39 @@ These will make sure that Anaconda is easily accessible from most places on your
 <ol>
 <li><p>In addition to being on an M1 Mac, make sure you’re on <strong>macOS Monterey</strong>, i.e., version 12+. We’ve tested this on a MacBook Pro (14-inch, 2021) running macOS version 12.0.1.</p></li>
 <li><p>If you don’t have it yet, install <strong>homebrew</strong>, a convenient package manager for Macs (skip this if you can run <code class="docutils literal notranslate"><span class="pre">brew</span></code> from the terminal):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/bin/bash -c <span class="s2">&quot;</span><span class="k">$(</span>curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh<span class="k">)</span><span class="s2">&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/bin/bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh<span class="k">)</span><span class="s2">&quot;</span>
 </pre></div>
 </div>
 <p>This might take a little while since it’ll also install Xcode (which we’ll need later). Once it’s finished, run this to enable the <code class="docutils literal notranslate"><span class="pre">brew</span></code> command in your shell, then close and re-open the terminal for it to take effect:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span> <span class="s1">&#39;eval &quot;$(/opt/homebrew/bin/brew shellenv)&quot;&#39;</span> &gt;&gt; ~/.zprofile <span class="o">&amp;&amp;</span> <span class="nb">eval</span> <span class="s2">&quot;</span><span class="k">$(</span>/opt/homebrew/bin/brew shellenv<span class="k">)</span><span class="s2">&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;eval &quot;$(/opt/homebrew/bin/brew shellenv)&quot;&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.zprofile<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">eval</span><span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>/opt/homebrew/bin/brew<span class="w"> </span>shellenv<span class="k">)</span><span class="s2">&quot;</span>
 </pre></div>
 </div>
 </li>
 <li><p>Install wget, a CLI downloading utility (also makes sure your homebrew setup worked):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew install wget
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>wget
 </pre></div>
 </div>
 </li>
 <li><p>Install the <strong>M1 Mac version of Miniconda</strong> – this is important, so make sure you don’t have the regular Mac version! If you’re not sure, type <code class="docutils literal notranslate"><span class="pre">which</span> <span class="pre">conda</span></code> and delete the containing directory to uninstall your existing conda. To install the correct Miniconda, just run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget -nc https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh <span class="o">&amp;&amp;</span> bash Miniconda3-latest-MacOSX-arm64.sh -b <span class="o">&amp;&amp;</span> rm Miniconda3-latest-MacOSX-arm64.sh <span class="o">&amp;&amp;</span> ~/miniconda3/bin/conda init zsh
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>-nc<span class="w"> </span>https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>bash<span class="w"> </span>Miniconda3-latest-MacOSX-arm64.sh<span class="w"> </span>-b<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span>Miniconda3-latest-MacOSX-arm64.sh<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>~/miniconda3/bin/conda<span class="w"> </span>init<span class="w"> </span>zsh
 </pre></div>
 </div>
 <p>Then close and re-open the terminal again.</p>
 </li>
 <li><p><strong>Download the SLEAP</strong>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> ~ <span class="o">&amp;&amp;</span> git clone https://github.com/talmolab/sleap.git sleap <span class="o">&amp;&amp;</span> <span class="nb">cd</span> sleap
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>~<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap.git<span class="w"> </span>sleap<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>sleap
 </pre></div>
 </div>
 </li>
 <li><p><strong>Install SLEAP in a conda environment</strong>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda env create -f environment_m1.yml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_m1.yml
 </pre></div>
 </div>
 <p>Your Mac will then automatically sign a devil’s pact with Apple to install the correct versions of everything on your system. Once the blood sacrifice/installation process completes, SLEAP will be available in an environment called <code class="docutils literal notranslate"><span class="pre">sleap</span></code>.</p>
 <p><em>Note:</em> This installs SLEAP in development mode, so changes to the source code are immediately applied in case you wanted to mess around with it. You can also just do a <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">pull</span></code> to update it (no need to re-do any of the previous steps).</p>
 </li>
 <li><p><strong>Test it out</strong> by activating the environment and opening the GUI!</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda activate sleap
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>sleap
 </pre></div>
 </div>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sleap-label
@@ -788,7 +788,7 @@ These will make sure that Anaconda is easily accessible from most places on your
 <section id="testing-that-things-are-working">
 <h2><a class="toc-backref" href="#id7">Testing that things are working</a><a class="headerlink" href="#testing-that-things-are-working" title="Permalink to this headline">#</a></h2>
 <p>If you installed using <code class="docutils literal notranslate"><span class="pre">conda</span></code>, first activate the <code class="docutils literal notranslate"><span class="pre">sleap</span></code> environment by opening a terminal and typing:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda activate sleap
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>sleap
 </pre></div>
 </div>
 <div class="admonition hint">
@@ -809,7 +809,7 @@ These will make sure that Anaconda is easily accessible from most places on your
 <section id="importing">
 <h3><a class="toc-backref" href="#id9">Importing</a><a class="headerlink" href="#importing" title="Permalink to this headline">#</a></h3>
 <p>To check if SLEAP is installed correctly in non-interactive environments, such as remote servers, confirm that you can import it with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -c <span class="s2">&quot;import sleap; sleap.versions()&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import sleap; sleap.versions()&quot;</span>
 </pre></div>
 </div>
 <p><small><strong>Output:</strong></small></p>
@@ -826,7 +826,7 @@ OS: Windows-10-10.0.19041-SP0
 <h3><a class="toc-backref" href="#id10">GPU support</a><a class="headerlink" href="#gpu-support" title="Permalink to this headline">#</a></h3>
 <p>Assuming you installed using either of the <code class="docutils literal notranslate"><span class="pre">conda</span></code>-based methods on Windows or Linux, SLEAP should automatically have GPU support enabled.</p>
 <p>To check, verify that SLEAP can detect the GPUs on your system:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -c <span class="s2">&quot;import sleap; sleap.system_summary()&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import sleap; sleap.system_summary()&quot;</span>
 </pre></div>
 </div>
 <p><small><strong>Output:</strong></small></p>
@@ -843,7 +843,7 @@ GPUs: 2/2 available
 </pre></div>
 </div>
 <p>SLEAP uses TensorFlow for GPU acceleration. To directly check if TensorFlow is detecting your GPUs:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -c <span class="s2">&quot;import tensorflow as tf; print(tf.config.list_physical_devices(&#39;GPU&#39;))&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import tensorflow as tf; print(tf.config.list_physical_devices(&#39;GPU&#39;))&quot;</span>
 </pre></div>
 </div>
 <p><small><strong>Output:</strong></small></p>
@@ -864,7 +864,7 @@ GPUs: 2/2 available
 <p class="admonition-title">Warning</p>
 <p>TensorFlow 2.7+ is currently failing to detect CUDA Toolkit and CuDNN on some systems (see <a class="reference external" href="https://github.com/tensorflow/tensorflow/issues/52988">Issue thread</a>).</p>
 <p>If you run into issues, try downgrading the TensorFlow 2.6:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install <span class="nv">tensorflow</span><span class="o">==</span><span class="m">2</span>.6.3
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">tensorflow</span><span class="o">==</span><span class="m">2</span>.6.3
 </pre></div>
 </div>
 </div>
@@ -874,13 +874,13 @@ GPUs: 2/2 available
 <h2><a class="toc-backref" href="#id11">Upgrading and uninstalling</a><a class="headerlink" href="#upgrading-and-uninstalling" title="Permalink to this headline">#</a></h2>
 <p>We <strong>strongly recommend</strong> installing SLEAP in a fresh environment when updating. This is because dependency versions might change, and depending on the state of your previous environment, directly updating might break compatibility with some of them.</p>
 <p>To uninstall an existing environment named <code class="docutils literal notranslate"><span class="pre">sleap</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda env remove -n sleap
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>remove<span class="w"> </span>-n<span class="w"> </span>sleap
 </pre></div>
 </div>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
 <p>Not sure what <code class="docutils literal notranslate"><span class="pre">conda</span></code> environments you already installed? You can get a list of the environments on your system with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda env list
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>list
 </pre></div>
 </div>
 </div>
@@ -894,7 +894,7 @@ GPUs: 2/2 available
 </pre></div>
 </div>
 <p>If you were not able to get SLEAP installed, activate the conda environment it is in and generate a list of the package versions installed:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda list
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>list
 </pre></div>
 </div>
 <p>Then, <a class="reference external" href="https://github.com/talmolab/sleap/issues">open a new Issue</a> providing the versions from either command above, as well as any errors you saw in the console during the installation. Or <a class="reference external" href="https://github.com/talmolab/sleap/discussions">start a discussion</a> to get help from the community.</p>
@@ -932,7 +932,7 @@ GPUs: 2/2 available
   
     By SLEAP Developers<br/>
   
-      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+      &copy; Copyright 2019–2023, Talmo Lab.<br/>
 </p>
         </footer>
     </div>

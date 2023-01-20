@@ -585,8 +585,8 @@ title="Open an issue"
 <p>Note: Before installing SLEAP check <a class="reference external" href="https://github.com/talmolab/sleap/releases">SLEAP releases</a> page for the latest version.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip uninstall -y opencv-python opencv-contrib-python
-<span class="o">!</span>pip install sleap
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip<span class="w"> </span>uninstall<span class="w"> </span>-y<span class="w"> </span>opencv-python<span class="w"> </span>opencv-contrib-python
+<span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>sleap
 </pre></div>
 </div>
 </div>
@@ -626,7 +626,7 @@ title="Open an issue"
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s2">&quot;/content/drive/My Drive/sleap&quot;</span><span class="p">)</span>
-<span class="o">!</span>unzip colab.slp.training_job.zip
+<span class="o">!</span>unzip<span class="w"> </span>colab.slp.training_job.zip
 <span class="o">!</span>ls
 </pre></div>
 </div>
@@ -653,7 +653,7 @@ title="Open an issue"
 <p>If you don’t stop training, it will run for 200 epochs or until validation loss fails to improve for some number of epochs (controlled by the early_stopping fields in the training profile).</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-train multi_instance.json colab.pkg.slp
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-train<span class="w"> </span>multi_instance.json<span class="w"> </span>colab.pkg.slp
 </pre></div>
 </div>
 </div>
@@ -709,7 +709,7 @@ title="Open an issue"
 <p>Let’s inspect the predictions file:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-inspect colab_demo.mp4.predictions.slp
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-inspect<span class="w"> </span>colab_demo.mp4.predictions.slp
 </pre></div>
 </div>
 </div>
@@ -765,7 +765,7 @@ title="Open an issue"
   
     By SLEAP Developers<br/>
   
-      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+      &copy; Copyright 2019–2023, Talmo Lab.<br/>
 </p>
         </footer>
     </div>

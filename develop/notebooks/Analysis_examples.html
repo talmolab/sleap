@@ -550,7 +550,7 @@ title="Open an issue"
 <p>We’ll just download the <code class="docutils literal notranslate"><span class="pre">predictions.analysis.h5</span></code> file:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>wget -O predictions.analysis.h5 https://github.com/talmolab/sleap/raw/main/docs/notebooks/analysis_example/predictions.analysis.h5
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>wget<span class="w"> </span>-O<span class="w"> </span>predictions.analysis.h5<span class="w"> </span>https://github.com/talmolab/sleap/raw/main/docs/notebooks/analysis_example/predictions.analysis.h5
 </pre></div>
 </div>
 </div>
@@ -680,7 +680,7 @@ instance count: 2
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">interp1d</span>
 
 <span class="k">def</span> <span class="nf">fill_missing</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Fills missing values independently along each dimension after the first.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fills missing values independently along each dimension after the first.&quot;&quot;&quot;</span>
 
     <span class="c1"># Store initial shape.</span>
     <span class="n">initial_shape</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">shape</span>
@@ -799,7 +799,7 @@ instance count: 2
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">savgol_filter</span>
 
 <span class="k">def</span> <span class="nf">smooth_diff</span><span class="p">(</span><span class="n">node_loc</span><span class="p">,</span> <span class="n">win</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">poly</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    node_loc is a [frames, 2] array</span>
 <span class="sd">    </span>
 <span class="sd">    win defines the window to smooth over</span>
@@ -898,7 +898,7 @@ instance count: 2
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 <span class="k">def</span> <span class="nf">corr_roll</span><span class="p">(</span><span class="n">datax</span><span class="p">,</span> <span class="n">datay</span><span class="p">,</span> <span class="n">win</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    datax, datay are the two timeseries to find correlations between</span>
 <span class="sd">    </span>
 <span class="sd">    win sets the number of frames over which the covariance is computed</span>
@@ -1074,7 +1074,7 @@ instance count: 2
   
     By SLEAP Developers<br/>
   
-      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+      &copy; Copyright 2019–2023, Talmo Lab.<br/>
 </p>
         </footer>
     </div>

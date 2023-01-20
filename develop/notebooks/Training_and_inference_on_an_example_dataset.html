@@ -493,8 +493,8 @@ title="Open an issue"
 <p>Note: Before installing SLEAP check <a class="reference external" href="https://github.com/talmolab/sleap/releases">SLEAP releases</a> page for the latest version.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip uninstall -y opencv-python opencv-contrib-python
-<span class="o">!</span>pip install sleap
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip<span class="w"> </span>uninstall<span class="w"> </span>-y<span class="w"> </span>opencv-python<span class="w"> </span>opencv-contrib-python
+<span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>sleap
 </pre></div>
 </div>
 </div>
@@ -505,12 +505,12 @@ title="Open an issue"
 <p>Let’s download a sample dataset from the SLEAP <a class="reference external" href="https://github.com/talmolab/sleap-datasets">sample datasets repository</a> into Colab.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>apt-get install tree
-<span class="o">!</span>wget -O dataset.zip https://github.com/talmolab/sleap-datasets/releases/download/dm-courtship-v1/drosophila-melanogaster-courtship.zip
-<span class="o">!</span>mkdir dataset
-<span class="o">!</span>unzip dataset.zip -d dataset
-<span class="o">!</span>rm dataset.zip
-<span class="o">!</span>tree dataset
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>apt-get<span class="w"> </span>install<span class="w"> </span>tree
+<span class="o">!</span>wget<span class="w"> </span>-O<span class="w"> </span>dataset.zip<span class="w"> </span>https://github.com/talmolab/sleap-datasets/releases/download/dm-courtship-v1/drosophila-melanogaster-courtship.zip
+<span class="o">!</span>mkdir<span class="w"> </span>dataset
+<span class="o">!</span>unzip<span class="w"> </span>dataset.zip<span class="w"> </span>-d<span class="w"> </span>dataset
+<span class="o">!</span>rm<span class="w"> </span>dataset.zip
+<span class="o">!</span>tree<span class="w"> </span>dataset
 </pre></div>
 </div>
 </div>
@@ -525,7 +525,7 @@ title="Open an issue"
 <p>If you don’t stop training, it will run for 200 epochs or until validation loss fails to improve for some number of epochs (controlled by the <code class="docutils literal notranslate"><span class="pre">early_stopping</span></code> fields in the training profile).</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-train baseline.centroid.json <span class="s2">&quot;dataset/drosophila-melanogaster-courtship/courtship_labels.slp&quot;</span> --run_name <span class="s2">&quot;courtship.centroid&quot;</span> --video-paths <span class="s2">&quot;dataset/drosophila-melanogaster-courtship/20190128_113421.mp4&quot;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-train<span class="w"> </span>baseline.centroid.json<span class="w"> </span><span class="s2">&quot;dataset/drosophila-melanogaster-courtship/courtship_labels.slp&quot;</span><span class="w"> </span>--run_name<span class="w"> </span><span class="s2">&quot;courtship.centroid&quot;</span><span class="w"> </span>--video-paths<span class="w"> </span><span class="s2">&quot;dataset/drosophila-melanogaster-courtship/20190128_113421.mp4&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -533,7 +533,7 @@ title="Open an issue"
 <p>Let’s now train a centered-instance model.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-train baseline_medium_rf.topdown.json <span class="s2">&quot;dataset/drosophila-melanogaster-courtship/courtship_labels.slp&quot;</span> --run_name <span class="s2">&quot;courtship.topdown_confmaps&quot;</span> --video-paths <span class="s2">&quot;dataset/drosophila-melanogaster-courtship/20190128_113421.mp4&quot;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-train<span class="w"> </span>baseline_medium_rf.topdown.json<span class="w"> </span><span class="s2">&quot;dataset/drosophila-melanogaster-courtship/courtship_labels.slp&quot;</span><span class="w"> </span>--run_name<span class="w"> </span><span class="s2">&quot;courtship.topdown_confmaps&quot;</span><span class="w"> </span>--video-paths<span class="w"> </span><span class="s2">&quot;dataset/drosophila-melanogaster-courtship/20190128_113421.mp4&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -541,7 +541,7 @@ title="Open an issue"
 <p>The models (along with the profiles and ground truth data used to train and validate the model) are saved in the <code class="docutils literal notranslate"><span class="pre">models/</span></code> directory:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>tree models/
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>tree<span class="w"> </span>models/
 </pre></div>
 </div>
 </div>
@@ -573,7 +573,7 @@ title="Open an issue"
 <p>Let’s run inference with our trained models for centroids and centered instances.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-track <span class="s2">&quot;dataset/drosophila-melanogaster-courtship/20190128_113421.mp4&quot;</span> --frames <span class="m">0</span>-100 -m <span class="s2">&quot;models/courtship.centroid&quot;</span> -m <span class="s2">&quot;models/courtship.topdown_confmaps&quot;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-track<span class="w"> </span><span class="s2">&quot;dataset/drosophila-melanogaster-courtship/20190128_113421.mp4&quot;</span><span class="w"> </span>--frames<span class="w"> </span><span class="m">0</span>-100<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;models/courtship.centroid&quot;</span><span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;models/courtship.topdown_confmaps&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -581,7 +581,7 @@ title="Open an issue"
 <p>When inference is finished, predictions are saved in a file. Since we didn’t specify a path, it will be saved as <code class="docutils literal notranslate"><span class="pre">&lt;video</span> <span class="pre">filename&gt;.predictions.slp</span></code> in the same directory as the video:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>tree dataset/drosophila-melanogaster-courtship
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>tree<span class="w"> </span>dataset/drosophila-melanogaster-courtship
 </pre></div>
 </div>
 </div>
@@ -600,7 +600,7 @@ title="Open an issue"
 <p>You can inspect your predictions file using <code class="docutils literal notranslate"><span class="pre">sleap-inspect</span></code>:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-inspect dataset/drosophila-melanogaster-courtship/20190128_113421.mp4.predictions.slp
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-inspect<span class="w"> </span>dataset/drosophila-melanogaster-courtship/20190128_113421.mp4.predictions.slp
 </pre></div>
 </div>
 </div>
@@ -609,7 +609,7 @@ title="Open an issue"
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Zip up the models directory</span>
-<span class="o">!</span>zip -r trained_models.zip models/
+<span class="o">!</span>zip<span class="w"> </span>-r<span class="w"> </span>trained_models.zip<span class="w"> </span>models/
 
 <span class="c1"># Download.</span>
 <span class="kn">from</span> <span class="nn">google.colab</span> <span class="kn">import</span> <span class="n">files</span>
@@ -662,7 +662,7 @@ title="Open an issue"
   
     By SLEAP Developers<br/>
   
-      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+      &copy; Copyright 2019–2023, Talmo Lab.<br/>
 </p>
         </footer>
     </div>

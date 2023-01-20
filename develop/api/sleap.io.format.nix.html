@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>sleap.io.format.adaptor &#8212; SLEAP (v1.2.9)</title>
+    <title>sleap.io.format.nix &#8212; SLEAP (v1.2.9)</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -41,7 +41,7 @@
     <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <link rel="canonical" href="/develop/api/sleap.io.format.adaptor.html" />
+    <link rel="canonical" href="/develop/api/sleap.io.format.nix.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -372,7 +372,7 @@ title="Source repository"
       </li>
       
       <li>
-        <a href="https://github.com/talmolab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.io.format.adaptor.html&body=Your%20issue%20content%20here."
+        <a href="https://github.com/talmolab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.io.format.nix.html&body=Your%20issue%20content%20here."
    class="headerbtn"
    data-toggle="tooltip"
 data-placement="left"
@@ -403,7 +403,7 @@ title="Open an issue"
         <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
-                <h1>sleap.io.format.adaptor</h1>
+                <h1>sleap.io.format.nix</h1>
                 <!-- Table of contents -->
                 <div id="print-main-content">
                     <div id="jb-print-toc">
@@ -415,96 +415,89 @@ title="Open an issue"
                 
               <div>
                 
-  <section id="module-sleap.io.format.adaptor">
-<span id="sleap-io-format-adaptor"></span><h1>sleap.io.format.adaptor<a class="headerlink" href="#module-sleap.io.format.adaptor" title="Permalink to this headline">#</a></h1>
-<p>File format adaptor base class.</p>
+  <section id="module-sleap.io.format.nix">
+<span id="sleap-io-format-nix"></span><h1>sleap.io.format.nix<a class="headerlink" href="#module-sleap.io.format.nix" title="Permalink to this headline">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="sleap.io.format.adaptor.Adaptor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.format.adaptor.</span></span><span class="sig-name descname"><span class="pre">Adaptor</span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/io/format/adaptor.py#L21-L92"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor" title="Permalink to this definition">#</a></dt>
-<dd><p>File format adaptor base class.</p>
-<p>An adaptor handles reading and/or writing a specific file format. To add
-support for a new file format, you’ll create a new class which inherits from
-the Adaptor base class and implements the relevant functions.</p>
+<dt class="sig sig-object py" id="sleap.io.format.nix.NixAdaptor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.format.nix.</span></span><span class="sig-name descname"><span class="pre">NixAdaptor</span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/io/format/nix.py#L15-L463"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.nix.NixAdaptor" title="Permalink to this definition">#</a></dt>
+<dd><p>Adaptor class for export of tracking analysis results to the generic
+[NIX](<a class="reference external" href="https://github.com/g-node/nix">https://github.com/g-node/nix</a>) format.
+NIX defines a generic data model for scientific data that combines data and data
+annotations within the same container. The written files are hdf5 files that can
+be read with any hdf5 library but follow the entity definitions of the NIX data
+model. For reading nix-files with python install the nixio low-level library
+<code class="docutils literal notranslate"><span class="pre">`pip</span> <span class="pre">install</span> <span class="pre">nixio`</span></code> or use the high-level api
+[nixtrack](<a class="reference external" href="https://github.com/bendalab/nixtrack">https://github.com/bendalab/nixtrack</a>).</p>
+<p>So far the adaptor exports the tracked positions for each node of each instance,
+the track and skeleton information along with the respective scores and the
+centroid. Additionally, the video information is exported as metadata.
+For more information on the mapping from sleap to nix see the docs on
+[nixtrack](<a class="reference external" href="https://github.com/bendalab/nixtrack">https://github.com/bendalab/nixtrack</a>) (work in progress).
+The adaptor uses a chunked writing approach which avoids numpy out of memory
+exceptions when exporting large datasets.</p>
+<p>author: Jan Grewe (<a class="reference external" href="mailto:jan&#46;grewe&#37;&#52;&#48;g-node&#46;org">jan<span>&#46;</span>grewe<span>&#64;</span>g-node<span>&#46;</span>org</a>)</p>
 <dl class="py property">
-<dt class="sig sig-object py" id="sleap.io.format.adaptor.Adaptor.all_exts">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_exts</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.all_exts" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.nix.NixAdaptor.all_exts">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_exts</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.io.format.nix.NixAdaptor.all_exts" title="Permalink to this definition">#</a></dt>
 <dd><p>List of all file extensions supported by adaptor.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="sleap.io.format.adaptor.Adaptor.can_read_file">
-<span class="sig-name descname"><span class="pre">can_read_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/io/format/adaptor.py#L55-L57"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.can_read_file" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.nix.NixAdaptor.can_read_file">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">can_read_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/io/format/nix.py#L55-L58"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.nix.NixAdaptor.can_read_file" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns whether this adaptor can read this file.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="sleap.io.format.adaptor.Adaptor.can_write_filename">
-<span class="sig-name descname"><span class="pre">can_write_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/io/format/adaptor.py#L59-L61"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.can_write_filename" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.nix.NixAdaptor.can_write_filename">
+<span class="sig-name descname"><span class="pre">can_write_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/io/format/nix.py#L60-L62"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.nix.NixAdaptor.can_write_filename" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns whether this adaptor can write format of this filename.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="sleap.io.format.adaptor.Adaptor.default_ext">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_ext</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.default_ext" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.nix.NixAdaptor.default_ext">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_ext</span></span><a class="headerlink" href="#sleap.io.format.nix.NixAdaptor.default_ext" title="Permalink to this definition">#</a></dt>
 <dd><p>The default file extension, e.g., ‘json’ (without ‘.’).</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="sleap.io.format.adaptor.Adaptor.does_match_ext">
-<span class="sig-name descname"><span class="pre">does_match_ext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/io/format/adaptor.py#L81-L87"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.does_match_ext" title="Permalink to this definition">#</a></dt>
-<dd><p>Returns whether this adaptor can write format of this filename.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="sleap.io.format.adaptor.Adaptor.does_read">
-<span class="sig-name descname"><span class="pre">does_read</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/io/format/adaptor.py#L63-L65"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.does_read" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.nix.NixAdaptor.does_read">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">does_read</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/io/format/nix.py#L64-L67"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.nix.NixAdaptor.does_read" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns whether this adaptor supports reading.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="sleap.io.format.adaptor.Adaptor.does_write">
-<span class="sig-name descname"><span class="pre">does_write</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/io/format/adaptor.py#L67-L69"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.does_write" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.nix.NixAdaptor.does_write">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">does_write</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/io/format/nix.py#L69-L72"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.nix.NixAdaptor.does_write" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns whether this adaptor supports writing.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="sleap.io.format.adaptor.Adaptor.formatted_ext_options">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">formatted_ext_options</span></span><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.formatted_ext_options" title="Permalink to this definition">#</a></dt>
-<dd><p>String for Qt file dialog extension options.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="sleap.io.format.adaptor.Adaptor.handles">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#sleap.io.format.adaptor.SleapObjectType" title="sleap.io.format.adaptor.SleapObjectType"><span class="pre">sleap.io.format.adaptor.SleapObjectType</span></a></em><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.handles" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.nix.NixAdaptor.handles">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">handles</span></span><a class="headerlink" href="#sleap.io.format.nix.NixAdaptor.handles" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the type of object that can be read/written.</p>
 <p>The Dispatch class calls this method on all registered adaptors to
 determine which to use for reading/writing.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="sleap.io.format.adaptor.Adaptor.name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.name" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.nix.NixAdaptor.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.io.format.nix.NixAdaptor.name" title="Permalink to this definition">#</a></dt>
 <dd><p>Human-reading name of the file format</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="sleap.io.format.adaptor.Adaptor.read">
-<span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">object</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/io/format/adaptor.py#L71-L73"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.read" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.nix.NixAdaptor.read">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">object</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/io/format/nix.py#L74-L77"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.nix.NixAdaptor.read" title="Permalink to this definition">#</a></dt>
 <dd><p>Reads the file and returns the appropriate deserialized object.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="sleap.io.format.adaptor.Adaptor.write">
-<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_object</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/io/format/adaptor.py#L75-L77"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.Adaptor.write" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.format.nix.NixAdaptor.write">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_object</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">sleap.io.video.Video</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/io/format/nix.py#L98-L463"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.nix.NixAdaptor.write" title="Permalink to this definition">#</a></dt>
 <dd><p>Writes the object to a file.</p>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="sleap.io.format.adaptor.SleapObjectType">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.format.adaptor.</span></span><span class="sig-name descname"><span class="pre">SleapObjectType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/io/format/adaptor.py#L13-L17"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.adaptor.SleapObjectType" title="Permalink to this definition">#</a></dt>
-<dd><p>Types of files that an adaptor could read/write.</p>
 </dd></dl>
 
 </section>
