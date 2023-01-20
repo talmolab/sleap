@@ -26,7 +26,7 @@ model:
 - default: unet
   label: Backbone
   name: _backbone_name
-  options: leap,unet,hourglass,resnet,pretrained_encoder
+  options: leap,unet,hourglass,resnet,pretrained_encoder,rsunet
   type: stacked
 
 #####
@@ -236,6 +236,35 @@ model:
 #####
 
 #####
+  rsunet:
+  - default: 16
+    help: Determines the number of downsampling blocks in the network, increasing
+      receptive field size at the cost of network size.
+    label: Max Stride
+    name: model.backbone.rsunet.maximum_stride
+    type: int
+  # - default: 1
+  #   help: The stride of the output confidence maps relative to the input image. This
+  #     is the reciprocal of the resolution, e.g., an output stride of 2 results in
+  #     confidence maps that are 0.5x the size of the input. Increasing this value can
+  #     considerably speed up model performance and decrease memory requirements, at
+  #     the cost of decreased spatial resolution.
+  #   label: Output Stride
+  #   name: model.backbone.rsunet.output_stride
+  #   type: int
+  - default: 24
+    help: Base number of filters in the network.
+    label: Filters
+    name: model.backbone.rsunet.filters
+    type: int
+  - default: 2
+    help: Factor to scale the number of filters by at each block.
+    label: Filters Rate
+    name: model.backbone.rsunet.filters_rate
+    type: double
+#####
+
+#####
   unet:
   - default: null
     help: If not None, controls how many stem blocks to use for initial downsampling.
@@ -245,7 +274,7 @@ model:
     name: model.backbone.unet.stem_stride
     type: optional_int
   - default: 16
-    help: Determines the number of downsampling blocks in the network, increasing
+    help: Determines the number of downsampling +blocks in the network, increasing
       receptive field size at the cost of network size.
     label: Max Stride
     name: model.backbone.unet.max_stride

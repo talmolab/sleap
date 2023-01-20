@@ -625,6 +625,24 @@ class PretrainedEncoderConfig:
     decoder_batchnorm: bool = True
 
 
+@attr.s(auto_attribs=True)
+class RSUNetConfig:
+    """RSUNet backbone configuration.
+
+    Attributes:
+        max_stride: Determines the number of downsampling blocks in the network,
+            increasing receptive field size at the cost of network size.
+        output_stride: Determines the number of upsampling blocks in the network.
+        filters: Base number of filters in the network.
+        filters_rate: Factor to scale the number of filters by at each block.
+    """
+
+    maximum_stride: int = 16
+    output_stride: int = 1
+    filters: int = 64
+    filters_rate: float = 2
+
+
 @oneof
 @attr.s(auto_attribs=True)
 class BackboneConfig:
@@ -637,6 +655,7 @@ class BackboneConfig:
         unet: A `UNetConfig` instance.
         hourglass: A `HourglassConfig` instance.
         resnet: A `ResNetConfig` instance.
+        rsunet: A `RSUNetConfig` instance.
     """
 
     leap: Optional[LEAPConfig] = None
@@ -644,6 +663,7 @@ class BackboneConfig:
     hourglass: Optional[HourglassConfig] = None
     resnet: Optional[ResNetConfig] = None
     pretrained_encoder: Optional[PretrainedEncoderConfig] = None
+    rsunet: Optional[RSUNetConfig] = None
 
 
 @attr.s(auto_attribs=True)
