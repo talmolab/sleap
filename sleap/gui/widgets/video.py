@@ -1790,6 +1790,7 @@ class QtInstance(QGraphicsObject):
         self.labels = {}
         self.labels_shown = True
         self._selected = False
+        self._bounding_rect = QRectF()
 
         # Show predicted instances behind non-predicted ones
         self.setZValue(1 if self.predicted else 2)
@@ -1799,8 +1800,6 @@ class QtInstance(QGraphicsObject):
             self.instance.fill_missing(
                 max_x=self.player.video.width, max_y=self.player.video.height
             )
-
-        self._bounding_rect = self.getPointsBoundingRect()
 
         # Add box to go around instance for selection
         if self.predicted:
@@ -2090,7 +2089,7 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
         rect: QRectF,
         parent: QtInstance,
         opacity: float = 0.8,
-        scaling_padding=10.0,
+        scaling_padding: float = 10.0,
     ):
         super().__init__(rect, parent)
         self.box_width = parent.markerRadius
