@@ -317,7 +317,7 @@ class RSUNet:
     @property
     def maximum_stride(self) -> int:
         """Return the maximum encoder stride relative to the input."""
-        return int(2 ** self.down_blocks)  ##CHANGE
+        return int(2 ** (self.down_blocks - 1))  ##CHANGE
 
     @property
     def output_stride(self) -> int:
