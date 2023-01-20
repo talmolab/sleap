@@ -1,27 +1,34 @@
-"""
-Main GUI application for labeling, training/inference, and proofreading.
+"""Main GUI application for labeling, training/inference, and proofreading.
+
 Each open project is an instance of :py:class:`MainWindow`.
+
 The main window contains a :py:class:`QtVideoPlayer` widget for showing
 video frames (the video player widget contains both a graphics view widget
 that shows the frame image and a seekbar widget for navigation). The main
 window also contains various "data views"--tables which can be docked
 in the window as well as a status bar.
+
 When a new instance of :py:class:`MainWindow` is created, it creates
 all of these widgets, sets up the menus, and also creates
+
 - single :py:class:`GuiState` object
 - single :py:class:`CommandContext` object
 - single :py:class:`ColorManager` object
 - multiple overlay objects (subclasses of :py:class:`BaseOverlay`)
+
 A timer is started (runs via Qt event loop) which enables/disables
 various menu items and buttons based on current state (e.g., you
 can't delete an instance if no instance is selected).
+
 Shortcuts are loaded using :py:class:`Shortcuts` class. Preferences
 are loaded by importing `prefs`, a singleton instance of
 :py:class:`Preferences`.
+
 :py:class:`GuiState` is used for storing "global" state for the project
 (e.g., :py:class:`Labels` object, the current frame, current instance,
 whether to show track trails, etc.). every menu command with state
 (e.g., check/uncheck) should be connected to a state variable.
+
 :py:class:`CommandContext` has methods which can be triggered
 by menu items/buttons/etc in the GUI to perform various actions. The
 command context enforces a pattern for implementing each command in
@@ -30,6 +37,7 @@ its own class, it keeps track of whether there are unsaved changes
 it handles triggering the relevant updates in the GUI based on the
 effects of the command (these are passed using `UpdateTopic` enum and
 handed by :py:method:`MainWindow.on_data_update()`).
+
 :py:class:`ColorManager` loads color palettes, keeps track of current
 palette, and should always be queried for how to draw instances--this
 ensures consistency (e.g.) between color of instances drawn on video
@@ -89,8 +97,10 @@ from sleap.prefs import prefs
 
 class MainWindow(QMainWindow):
     """The SLEAP GUI application.
+
     Each project (`Labels` dataset) that you have loaded in the GUI will
     have its own `MainWindow` object.
+
     Attributes:
         labels: The :class:`Labels` dataset. If None, a new, empty project
             (i.e., :class:`Labels` object) will be created.
@@ -107,6 +117,7 @@ class MainWindow(QMainWindow):
         **kwargs,
     ):
         """Initialize the app.
+
         Args:
             labels_path: Path to saved :class:`Labels` dataset.
             reset: If `True`, reset preferences to default (including window state).
@@ -184,8 +195,10 @@ class MainWindow(QMainWindow):
     def event(self, e: QEvent) -> bool:
         """Custom event handler.
         We use this to ignore events that would clear status bar.
+
         Args:
             e: The event.
+            
         Returns:
             True if we ignore event, otherwise returns whatever the usual
             event handler would return.
