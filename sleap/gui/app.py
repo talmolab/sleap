@@ -311,7 +311,8 @@ class MainWindow(QMainWindow):
         self.player = QtVideoPlayer(
             color_manager=self.color_manager, state=self.state, context=self.commands
         )
-        self.player.changedPlot.connect(self._after_plot_update)
+        self.player.changedPlot.connect(self._after_plot_change)
+        self.player.updatedPlot.connect(self._after_plot_update)
 
         self.player.view.instanceDoubleClicked.connect(
             self._handle_instance_double_click
@@ -1185,14 +1186,16 @@ class MainWindow(QMainWindow):
 
     def _load_overlays(self):
         """Load all standard video overlays."""
-        self.overlays["track_labels"] = TrackListOverlay(self.labels, self.player)
+        self.overlays["track_labels"] = TrackListOverlay(
+            labels=self.labels, player=self.player
+        )
         self.overlays["trails"] = TrackTrailOverlay(
             labels=self.labels,
             player=self.player,
             trail_shade=self.state["trail_shade"],
         )
         self.overlays["instance"] = InstanceOverlay(
-            self.labels, self.player, self.state
+            labels=self.labels, player=self.player, state=self.state
         )
 
         # When gui state changes, we also want to set corresponding attribute
@@ -1380,7 +1383,12 @@ class MainWindow(QMainWindow):
 
         self.player.plot()
 
-    def _after_plot_update(self, player, frame_idx, selected_inst):
+    def _after_plot_update(self, frame_idx):
+        """Run after plot is updated, but stay on same frame."""
+        overlay: TrackTrailOverlay = self.overlays["trails"]
+        overlay.redraw(self.state["video"], frame_idx)
+
+    def _after_plot_change(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
 
         # Store the current LabeledFrame (or make new, empty object)
@@ -1402,7 +1410,7 @@ class MainWindow(QMainWindow):
         # Update related displays
         self.updateStatusMessage()
         self.on_data_update([UpdateTopic.on_frame])
-
+        
         # Trigger event after the overlays have been added
         player.view.updatedViewer.emit()
 

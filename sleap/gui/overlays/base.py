@@ -1,6 +1,5 @@
 """
 Base classes for overlays.
-
 Overlays are used for showing additional visuals on top of a video frame (i.e.,
 a `QtVideoPlayer` object). Overlay objects are created in the main GUI app,
 which then automatically calls the `add_to_scene` for each loaded overlay after
@@ -66,7 +65,7 @@ class BaseOverlay(abc.ABC):
 
     def redraw(self, video, frame_idx, *args, **kwargs):
         """Remove all items from the scene before adding new items to the scene.
-
+        
         This method does not need to be called when changing the plot to a new frame.
         """
         self.remove_from_scene(*args, **kwargs)
@@ -107,12 +106,10 @@ class ModelData(Sequence):
 class DataOverlay(BaseOverlay):
     """
     Base class for confidence maps/part affinity fields overlays.
-
     These overlays use a `ModelData` class which provides the confidence maps/
     part affinity fields for the frame (by running inference with a model).
     They could easily be modified to use another "data" class, e.g., one
     which load saved confidence maps/part affinity fields from a file.
-
     Attributes:
         data: instance of a class such that you can use `data[frame_idx]`
             to get the data (e.g., confmaps) for a given frame.
