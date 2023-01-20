@@ -194,6 +194,7 @@ class QtVideoPlayer(QWidget):
 
     Signals:
         * changedPlot: Emitted whenever the plot is redrawn
+        * updatedPlot: Emitted whenever a node is moved (updates trails overlays)
 
     Attributes:
         video: The :class:`Video` to display
@@ -203,6 +204,7 @@ class QtVideoPlayer(QWidget):
     """
 
     changedPlot = QtCore.Signal(QWidget, int, Instance)
+    updatedPlot = QtCore.Signal(int)
 
     def __init__(
         self,
@@ -489,6 +491,10 @@ class QtVideoPlayer(QWidget):
         # for too long before they were received by the loader).
         self._video_image_loader.video = self.video
         self._video_image_loader.request(idx)
+
+    def update_plot(self):
+        idx = self.state["frame_idx"] or 0
+        self.updatedPlot.emit(idx)
 
     def showInstances(self, show):
         """Show/hide all instances in viewer.
@@ -1569,7 +1575,7 @@ class QtNode(QGraphicsEllipseItem):
             super(QtNode, self).mouseReleaseEvent(event)
             self.updatePoint(user_change=True)
         self.dragParent = False
-        self.player.plot()  # Redraw trails after node is moved
+        self.player.update_plot()  # Redraw trails after node is moved
 
     def wheelEvent(self, event):
         """Custom event handler for mouse scroll wheel."""
