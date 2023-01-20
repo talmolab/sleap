@@ -229,6 +229,7 @@ class Predictor(ABC):
                 resize_input_layer=resize_input_layer,
             )
 
+        # TODO (Jiaying): double check if this is correct.
         elif "movenet" in model_types:
             predictor = MoveNetPredictor.from_trained_models(
                 model_path=model_paths[model_types.index("movenet")],
@@ -246,11 +247,13 @@ class Predictor(ABC):
         predictor.model_paths = model_paths
         return predictor
 
+    # TODO (Jiaying): create a from_trained_models for the movenet.
     @classmethod
     @abstractmethod
     def from_trained_models(cls, *args, **kwargs):
         pass
 
+    # TODO (Jiaying): create a data_config for the movenet.
     @property
     @abstractmethod
     def data_config(self) -> DataConfig:

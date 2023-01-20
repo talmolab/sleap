@@ -9,6 +9,7 @@ import tensorflow as tf
 import sleap
 from numpy.testing import assert_array_equal, assert_allclose
 from pathlib import Path
+from sleap.nn.movenet import MoveNetPredictor
 
 from sleap.nn.data.confidence_maps import (
     make_confmaps,
@@ -1381,3 +1382,28 @@ def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
         for key in tracker.candidate_maker.shifted_instances.keys():
             assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
             assert abs(key[0] - key[1]) <= track_window  # References within window
+
+
+# TODO (Jiaying): need to modify this test.
+def test_movenet_predictor(min_tracks_2node_labels, min_movenet_model_path):
+    labels_gt = sleap.Labels(min_tracks_2node_labels[[0]])
+    predictor = MoveNetPredictor.from_trained_models(
+        confmap_model_path=min_movenet_model_path,
+        peak_threshold=0.7,
+        integral_refinement=False,
+    )
+    labels_pr = predictor.predict(labels_gt)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 2
+
+    inds1 = np.argsort([x.track.name for x in labels_gt[0]])
+    inds2 = np.argsort([x.track.name for x in labels_pr[0]])
+    assert labels_gt[0][inds1[0]].track == labels_pr[0][inds2[0]].track
+    assert labels_gt[0][inds1[1]].track == labels_pr[0][inds2[1]].track
+
+    assert_allclose(
+        labels_gt[0][inds1[0]].numpy(), labels_pr[0][inds2[0]].numpy(), rtol=0.02
+    )
+    assert_allclose(
+        labels_gt[0][inds1[1]].numpy(), labels_pr[0][inds2[1]].numpy(), rtol=0.02
+    )
