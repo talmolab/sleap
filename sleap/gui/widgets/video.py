@@ -1,11 +1,16 @@
 """
 Module for showing and manipulating skeleton instances within a video.
+
 All interactions should go through `QtVideoPlayer`.
+
 Example usage: ::
+
     >>> my_video = Video(...)
     >>> my_instance = Instance(...)
+
     >>> vp = QtVideoPlayer(video=my_video)
     >>> vp.addInstance(instance=my_instance, color=(r, g, b))
+
 """
 from collections import deque
 

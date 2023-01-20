@@ -17,15 +17,18 @@ from qtpy import QtCore, QtGui
 @attr.s(auto_attribs=True)
 class TrackTrailOverlay(BaseOverlay):
     """Class to show track trails as overlay on video frame.
+
     Initialize this object with both its data source and its visual output
     scene, and it handles both extracting the relevant data for a given
     frame and plotting it in the output.
+
     Attributes:
         labels: The :class:`Labels` dataset from which to get overlay data.
         player: The video player in which to show overlay.
         trail_length: The maximum number of frames to include in trail.
         trail_shade: A literal "Dark", "Normal", or "Bright" which determines the shade
             of the trail color.
+
     Usage:
         After class is instantiated, call :meth:`add_to_scene(frame_idx)`
         to plot the trails in scene.
@@ -55,9 +58,11 @@ class TrackTrailOverlay(BaseOverlay):
 
     def get_track_trails(self, frame_selection: Iterable["LabeledFrame"]):
         """Get data needed to draw track trail.
+
         Args:
             frame_selection: an iterable with the :class:`LabeledFrame`
                 objects to include in trail.
+
         Returns:
             Dictionary keyed by track, value is list of lists of (x, y) tuples
                 i.e., for every node in instance, we get a list of positions
@@ -110,6 +115,7 @@ class TrackTrailOverlay(BaseOverlay):
         self, video: Video, frame_idx: int, include_trails: bool = False
     ) -> List[Track]:
         """Returns list of tracks that have instance in specified frame.
+
         Args:
             video: Video for which we want tracks.
             frame_idx: Frame index for which we want tracks.
@@ -118,6 +124,7 @@ class TrackTrailOverlay(BaseOverlay):
                 within trail_length).
         Returns:
             List of tracks.
+
         """
 
         if include_trails:
@@ -131,9 +138,11 @@ class TrackTrailOverlay(BaseOverlay):
 
     def add_to_scene(self, video: Video, frame_idx: int):
         """Plot the trail on a given frame.
+
         Args:
             video: current video
             frame_idx: index of the frame to which the trail is attached
+
         """
         self.items = []
 
