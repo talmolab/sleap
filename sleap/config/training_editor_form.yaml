@@ -26,7 +26,7 @@ model:
 - default: unet
   label: Backbone
   name: _backbone_name
-  options: leap,unet,hourglass,resnet,pretrained_encoder,rsunet
+  options: leap,unet,hourglass,resnet,pretrained_encoder,rsunet,convnext
   type: stacked
 
 #####
@@ -262,6 +262,16 @@ model:
     label: Filters Rate
     name: model.backbone.rsunet.filters_rate
     type: double
+#####
+
+#####
+  convnext:
+  - default: 152
+    help: Determines the crop size which will be used to crop images and calculate
+      max stride.
+    label: Crop Size
+    name: model.backbone.convnext.crop_size
+    type: optional_int
 #####
 
 #####
