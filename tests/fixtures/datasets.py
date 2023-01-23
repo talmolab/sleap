@@ -237,4 +237,4 @@ def centered_pair_predictions_slp_path():
 
 @pytest.fixture
 def min_dance_labels():
-    return Labels.load_file(TEST_MIN_DANCE_LABELS)
+    return Labels.load_file(TEST_MIN_DANCE_LABELS, video_search=["tests/data/videos/dance.mp4"])
