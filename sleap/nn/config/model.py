@@ -626,6 +626,18 @@ class PretrainedEncoderConfig:
 
 
 @attr.s(auto_attribs=True)
+class ConvNeXTConfig:
+    """ConvNeXT backbone configuration.
+
+    Attributes:
+        CROP_SIZE: Determines the size of the crops used to calculate stride for the
+            encoder and decoder
+    """
+
+    crop_size: int = 160
+
+
+@attr.s(auto_attribs=True)
 class RSUNetConfig:
     """RSUNet backbone configuration.
 
@@ -664,6 +676,7 @@ class BackboneConfig:
     resnet: Optional[ResNetConfig] = None
     pretrained_encoder: Optional[PretrainedEncoderConfig] = None
     rsunet: Optional[RSUNetConfig] = None
+    convnext: Optional[ConvNeXTConfig] = None
 
 
 @attr.s(auto_attribs=True)
