@@ -21,6 +21,7 @@ from sleap.nn.config.model import (
     HourglassConfig,
     UpsamplingConfig,
     ResNetConfig,
+    ConvNeXTConfig,
     PretrainedEncoderConfig,
     RSUNetConfig,
     BackboneConfig,

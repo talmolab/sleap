@@ -14,3 +14,4 @@ from sleap.nn.architectures.resnet import ResNetv1, ResNet50, ResNet101, ResNet1
 from sleap.nn.architectures.common import IntermediateFeature
 from sleap.nn.architectures.pretrained_encoders import UnetPretrainedEncoder
 from sleap.nn.architectures.rsunet import RSUNet
+from sleap.nn.architectures.convnext import ConvNeXT
