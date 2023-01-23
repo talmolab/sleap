@@ -5,6 +5,8 @@ from sleap.nn.inference import Predictor
 from typing import Optional, Text, Iterator, Dict, List
 from sleap.nn.data.pipelines import Pipeline, Provider
 from sleap.nn.config import DataConfig
+
+# from sleap.nn.model import Model
 import numpy as np
 
 
