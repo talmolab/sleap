@@ -9,7 +9,7 @@ import tensorflow as tf
 import sleap
 from numpy.testing import assert_array_equal, assert_allclose
 from pathlib import Path
-
+import tensorflow_hub as hub
 from sleap.nn.data.confidence_maps import (
     make_confmaps,
     make_grid_vectors,
@@ -37,6 +37,10 @@ from sleap.nn.inference import (
     BottomUpPredictor,
     BottomUpMultiClassPredictor,
     TopDownMultiClassPredictor,
+    MoveNetPredictor,
+    MoveNetInferenceLayer,
+    MoveNetInferenceModel,
+    MOVENET_MODELS,
     load_model,
     export_model,
     _make_cli_parser,
@@ -45,12 +49,6 @@ from sleap.nn.inference import (
     export_cli as sleap_export,
 )
 
-from sleap.nn.movenet import (
-    MoveNetPredictor,
-    MoveNetInferenceLayer,
-    MoveNetInferenceModel,
-    MOVENET_MODELS,
-)
 
 from sleap.gui.learning import runners
 
@@ -1390,86 +1388,32 @@ def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
             assert abs(key[0] - key[1]) <= track_window  # References within window
 
 
-# TODO (Jiaying): need to modify this test.
 def test_movenet_inference():
+    inference_layer = MoveNetInferenceLayer(model_name="lightning")
+    inference_model = MoveNetInferenceModel(inference_layer)
 
-    # TODO (Jiaying): Temporarily using cms as a substitute for img.
-    # Check what this part is for. Change cms and points.
+    video = sleap.Video.from_image_filenames(["tests/data/videos/white_guy.png"])
 
-    xv, yv = make_grid_vectors(image_height=12, image_width=12, output_stride=1)
-    points = tf.cast([[1.75, 2.75], [3.75, 4.75], [5.75, 6.75]], tf.float32)
-    points = np.stack([points, points + 1], axis=0)
-    cms = tf.stack(
-        [
-            make_confmaps(points[0], xv, yv, sigma=1.0),
-            make_confmaps(points[1], xv, yv, sigma=1.0),
-        ],
-        axis=0,
+    p = sleap.pipelines.Pipeline(sleap.pipelines.VideoReader(video))
+    p += sleap.pipelines.SizeMatcher(
+        points_key=None,
+        max_image_width=inference_model.image_size,
+        max_image_height=inference_model.image_size,
+        center_pad=True,
     )
+    p += sleap.pipelines.Batcher(batch_size=4)
 
-    model_path = MOVENET_MODELS["lightning"][
-        "model_path"
-    ]  # TODO (Jiaying): Might need to change "lightning" into a variable.
-    image_size = MOVENET_MODELS["lightning"]["image_size"]
-
-    x_in = tf.keras.layers.Input(
-        [12, 12, 3]
-    )  # TODO (Jiaying): Might need to modify the shape here.
-    x = tf.keras.layers.Lambda(
-        lambda x: tf.cast(x, dtype=tf.int32), name="cast_to_int32"
-    )(x_in)
-    layer = hub.KerasLayer(
-        model_path,
-        signature="serving_default",
-        output_key="output_0",
-        name="movenet_layer",
-    )
-    x = layer(x)
-
-    def split_outputs(x):
-        x_ = tf.reshape(x, [-1, 17, 3])
-        keypoints = tf.gather(x_, [1, 0], axis=-1)
-        keypoints *= image_size
-        scores = tf.squeeze(tf.gather(x_, [2], axis=-1), axis=-1)
-        return keypoints, scores
-
-    x = tf.keras.layers.Lambda(split_outputs, name="keypoints_and_scores")(x)
-    model = tf.keras.Model(x_in, x)
-
-    layer = MoveNetInferenceLayer(keras_model=model, ensure_float=False)
-    assert layer.output_stride == 1
-
-    out = layer(cms)
-
-    assert tuple(out["instance_peaks"].shape) == (2, 1, 3, 2)
-    out["instance_peaks"] = tf.squeeze(out["instance_peaks"], axis=1)
-    assert tuple(out["confidences"].shape) == (2, 1, 3)
-    out["confidences"] = tf.squeeze(out["confidences"], axis=1)
-    assert_array_equal(out["instance_peaks"], points)
-    assert_allclose(out["confidences"], 1.0, atol=0.1)
-
-    assert tuple(out["instance_peaks"].shape) == (2, 1, 3, 2)
-    out = layer(
-        {"image": cms}
-    )  # TODO (Jiaying): Change this part as layer doesn't have image.
-    out["instance_peaks"] = tf.squeeze(out["instance_peaks"], axis=1)
-    assert_array_equal(out["instance_peaks"], points)
-
-    model = MoveNetInferenceLayer(layer)
-    preds = model.predict(cms)
-    assert preds["instance_peaks"].shape == (2, 1, 3, 2)
-    preds["instance_peaks"] = preds["instance_peaks"].squeeze(axis=1)
-    assert_array_equal(preds["instance_peaks"], points)
-    assert "confidences" in preds
+    ex = p.peek(1)
+    preds = inference_model.predict_on_batch(ex)
+    assert preds["instance_peaks"].shape == (1, 1, 17, 2)
 
 
-# TODO (Jiaying): Add video and check this function.
-def test_movenet_predictor(min_dance_labels, min_movenet_model_path):
-    predictor = MoveNetPredictor.from_trained_models(min_movenet_model_path)
+def test_movenet_predictor(min_dance_labels):
+    predictor = MoveNetPredictor.from_trained_models("thunder")
     predictor.verbosity = "none"
     assert predictor.is_grayscale == False
     labels_pr = predictor.predict(min_dance_labels)
-    assert len(labels_pr) == 2
+    assert len(labels_pr) == 450
     assert len(labels_pr[0].instances) == 1
 
     points_gt = np.concatenate(
@@ -1478,4 +1422,6 @@ def test_movenet_predictor(min_dance_labels, min_movenet_model_path):
     points_pr = np.concatenate(
         [labels_pr[0][0].numpy(), labels_pr[1][0].numpy()], axis=0
     )
-    assert_allclose(points_gt, points_pr, atol=10.0)
+
+    max_diff = np.nanmax(np.abs(points_gt - points_pr))
+    assert max_diff < 0.1

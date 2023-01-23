@@ -21,12 +21,10 @@ TEST_MAT_LABELS = "tests/data/mat/labels.mat"
 TEST_SLP_MIN_LABELS_ROBOT = "tests/data/slp_hdf5/small_robot_minimal.slp"
 TEST_SLP_SIV_ROBOT = "tests/data/siv_format_v1/robot_siv.slp"
 TEST_MIN_TRACKS_2NODE_LABELS = "tests/data/tracks/clip.2node.slp"
-TEST_MIN_DANCE_LABELS = (
-    " "  # TODO (Jiaying): Check with Liezl on how to create a file like this.
-)
 TEST_MIN_TRACKS_13NODE_LABELS = "tests/data/tracks/clip.slp"
 TEST_HDF5_PREDICTIONS = "tests/data/hdf5_format_v1/centered_pair_predictions.h5"
 TEST_SLP_PREDICTIONS = "tests/data/hdf5_format_v1/centered_pair_predictions.slp"
+TEST_MIN_DANCE_LABELS = "tests/data/slp_hdf5/dance.mp4.labels.slp"
 
 
 @pytest.fixture
@@ -69,14 +67,6 @@ def siv_robot():
 def min_tracks_2node_labels():
     return Labels.load_file(
         TEST_MIN_TRACKS_2NODE_LABELS, video_search=["tests/data/tracks/clip.mp4"]
-    )
-
-
-# TODO (Jiaying): Check with Liezl to see if this is correct.
-@pytest.fixture
-def min_dance_labels():
-    return Labels.load_file(
-        TEST_MIN_DANCE_LABELS, video_search=["tests/data/videos/dance.mp4"]
     )
 
 
@@ -243,3 +233,8 @@ def centered_pair_predictions_hdf5_path():
 @pytest.fixture
 def centered_pair_predictions_slp_path():
     return TEST_SLP_PREDICTIONS
+
+
+@pytest.fixture
+def min_dance_labels():
+    return Labels.load_file(TEST_MIN_DANCE_LABELS)
