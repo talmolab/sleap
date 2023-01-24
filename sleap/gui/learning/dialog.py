@@ -601,6 +601,7 @@ class LearningDialog(QtWidgets.QDialog):
         """Run with current dialog settings."""
 
         pipeline_form_data = self.pipeline_form_widget.get_form_data()
+        # TODO: debug ^^^
         items_for_inference = self.get_items_for_inference(pipeline_form_data)
 
         config_info_list = self.get_every_head_config_data(pipeline_form_data)
@@ -873,6 +874,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self._cfg_list_widget = None
         self._receptive_field_widget = None
         self._use_trained_model = None
+        self._resume_training = None
         self._require_trained = require_trained
         self.head = head
 
@@ -954,10 +956,15 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                 self._use_trained_model = QtWidgets.QCheckBox("Use Trained Model")
                 self._use_trained_model.setEnabled(False)
                 self._use_trained_model.setVisible(False)
+                self._resume_training = QtWidgets.QCheckBox("Resume Training")
+                self._resume_training.setEnabled(False)
+                self._resume_training.setVisible(False)
 
                 self._use_trained_model.stateChanged.connect(self._update_use_trained)
+                self._resume_training.stateChanged.connect(self._update_use_trained)
 
                 layout.addWidget(self._use_trained_model)
+                layout.addWidget(self._resume_training)
 
         elif self._require_trained:
             self._update_use_trained()
@@ -993,6 +1000,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         if self._use_trained_model:
             self._use_trained_model.setVisible(has_trained_model)
             self._use_trained_model.setEnabled(has_trained_model)
+            self._resume_training.setVisible(has_trained_model)
 
         self.update_receptive_field()
 
@@ -1038,11 +1046,34 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         else:
             use_trained = check_state == QtCore.Qt.CheckState.Checked
 
-        for form in self.form_widgets.values():
-            form.set_enabled(not use_trained)
+        # check if self._resume_training is None, because it might not be initialized yet
+        resume_training = self._resume_training and self._resume_training.isChecked()
+
+        if self._use_trained_model is not None:
+            for form in self.form_widgets.values():
+                form.set_enabled(
+                    (not self._use_trained_model.isChecked())
+                    or (
+                        self._use_trained_model.isChecked()
+                        and self._resume_training.isChecked()
+                    )
+                )
+
+            if self._use_trained_model.isChecked():
+                self._resume_training.setEnabled(True)
+
+                if resume_training:
+                    self.form_widgets["model"].set_enabled(False)
+            else:
+                # change the checkbox to unchecked
+                self._resume_training.setChecked(False)
+                self._resume_training.setEnabled(False)
+        else:
+            for form in self.form_widgets.values():
+                form.set_enabled(not use_trained)
 
         # If user wants to use trained model, then reset form to match config
-        if use_trained and self._cfg_list_widget:
+        if use_trained and self._cfg_list_widget and (not resume_training):
             cfg_info = self._cfg_list_widget.getSelectedConfigInfo()
             self._load_config(cfg_info)
 
@@ -1081,13 +1112,21 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         return use_trained
 
     @property
+    def resume_training(self) -> bool:
+        resume_training = False
+        if self._resume_training and self._resume_training.isChecked():
+            resume_training = True
+        return resume_training
+
+    @property
     def trained_config_info_to_use(self) -> Optional[configs.ConfigFileInfo]:
         trained_config_info = self._cfg_list_widget.getSelectedConfigInfo()
         if trained_config_info is None:
             return None
 
         if self.use_trained:
-            trained_config_info.dont_retrain = True
+            if not self.resume_training:
+                trained_config_info.dont_retrain = True
         else:
             # Set certain parameters to defaults
             trained_config = trained_config_info.config
@@ -1095,6 +1134,14 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             trained_config.outputs.run_name = None
             trained_config.outputs.run_name_prefix = ""
             trained_config.outputs.run_name_suffix = None
+
+        if self.resume_training:
+            # get the folder path of trained_config_info.path and set it as the output folder
+            trained_config_info.config.model.base_checkpoint = os.path.dirname(
+                trained_config_info.path
+            )
+        else:
+            trained_config_info.config.model.base_checkpoint = None
 
         return trained_config_info
 
