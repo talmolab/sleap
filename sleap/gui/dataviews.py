@@ -150,12 +150,14 @@ class GenericTableModel(QtCore.QAbstractTableModel):
             item, key = self.get_from_idx(index)
 
             # If nothing changed of the item, return true. (Issue #1013)
-            if isinstance(item, dict) and key in item:
-                item_value = item[key]
-            if hasattr(item, key):
+            if isinstance(item, dict):
+                item_value = item.get(key, None)
+            elif hasattr(item, key):
                 item_value = getattr(item, key)
+            else:
+                item_value = None
 
-            if item_value == value:
+            if (item_value is not None) and (item_value == value):
                 return True
 
             # Otherwise set the item

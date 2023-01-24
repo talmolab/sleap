@@ -4849,7 +4849,7 @@ def main(args: Optional[list] = None):
     parser = _make_cli_parser()
 
     # Parse inputs.
-    args, _ = parser.parse_known_args(args=args)
+    args, _ = parser.parse_known_args(args)
     print("Args:")
     pprint(vars(args))
     print()
