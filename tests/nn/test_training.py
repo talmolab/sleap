@@ -326,7 +326,7 @@ def test_resume_training_cli(tmp_path, training_labels, cfg):
         "minimal_robot.UNet.single_instance",
     )
     json_path = os.path.join(base_checkpoint_path, "training_config.json")
-    labels_path = os.path.join(base_checkpoint_path, "labels_gt.slp")
+    labels_path = os.path.join(base_checkpoint_path, "labels_gt.train.slp")
 
     # run CLI to resume training
     main(
