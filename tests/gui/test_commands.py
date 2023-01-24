@@ -1,4 +1,11 @@
+from pathlib import PurePath, Path
+import shutil
 from tempfile import tempdir
+from typing import List
+
+import pytest
+
+from sleap import Skeleton, Track
 from sleap.gui.commands import (
     CommandContext,
     ImportDeepLabCutFolder,
@@ -8,23 +15,16 @@ from sleap.gui.commands import (
     SaveProjectAs,
     get_new_version_filename,
 )
-from sleap.io.format.adaptor import Adaptor
+from sleap.gui.state import GuiState
+from sleap.instance import Instance, LabeledFrame
+from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
+from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.pathutils import fix_path_separator
 from sleap.io.video import Video
-from sleap.io.convert import default_analysis_filename
-from sleap.instance import Instance, LabeledFrame
-from sleap import Skeleton, Track
-
 from tests.info.test_h5 import extract_meta_hdf5
 from tests.io.test_video import assert_video_params
-
-from pathlib import PurePath, Path
-from typing import List
-
-import shutil
-import pytest
 
 
 def test_delete_user_dialog(centered_pair_predictions):
@@ -495,3 +495,44 @@ def test_SetSelectedInstanceTrack(centered_pair_predictions: Labels):
     # Ensure that both instance and predicted instance have same track
     assert new_instance.track == track
     assert pred_inst.track == new_instance.track
+
+
+def test_LoadLabelsObject(
+    centered_pair_predictions: Labels, centered_pair_predictions_slp_path: str, tmpdir
+):
+    """Test that changing a labels object on load flags any changes."""
+
+    class FlexyObject:
+        """Object that allows adding object attributes."""
+        def __getattr__(self, value):
+            self.value = FlexyObject()
+            return self.value
+        
+        def __call__(self, *args, **kwargs):
+            return self.__init__()
+
+    def ask_LoadProjectFile(context):
+        gui_video_callback = Labels.make_video_callback(context=context)
+        labels = Labels.load_file(centered_pair_predictions_slp_path, video_search=gui_video_callback)
+        return labels
+
+    # Move labels video to tmpdir
+    labels = centered_pair_predictions
+    video_path = Path(labels.video.filename).absolute()
+    new_video_path = Path(tmpdir, "new_video.mp4")
+    try:
+        shutil.move(video_path, new_video_path)
+    except Exception:
+        pass
+
+    # Load the project
+    context: CommandContext = CommandContext(state=GuiState(), app=FlexyObject())
+    labels = ask_LoadProjectFile(context = context)
+    context.loadLabelsObject(labels=labels, filename="it_doesnt_matter")
+
+    # Assert project has changes
+    print(context.state["has_changes"])
+    assert context.state["has_changes"]
+
+if __name__ == "__main__":
+    pytest.main([r"tests\gui\test_commands.py::test_LoadLabelsObject"])
