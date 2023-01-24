@@ -240,3 +240,8 @@ def min_dance_labels():
     return Labels.load_file(
         TEST_MIN_DANCE_LABELS, video_search=["tests/data/videos/dance.mp4"]
     )
+
+
+@pytest.fixture
+def movenet_video():
+    return Video.from_filename("tests/data/videos/dance.mp4")

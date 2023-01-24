@@ -48,7 +48,6 @@ import numpy as np
 
 import sleap
 
-# from sleap.nn.movenet import MoveNetPredictor
 from sleap.nn.config import TrainingJobConfig, DataConfig
 from sleap.nn.data.resizing import SizeMatcher
 from sleap.nn.model import Model

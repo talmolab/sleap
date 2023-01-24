@@ -1388,13 +1388,13 @@ def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
             assert abs(key[0] - key[1]) <= track_window  # References within window
 
 
-def test_movenet_inference():
+def test_movenet_inference(movenet_video):
     inference_layer = MoveNetInferenceLayer(model_name="lightning")
     inference_model = MoveNetInferenceModel(inference_layer)
 
-    video = sleap.Video.from_image_filenames(["tests/data/videos/white_guy.png"])
-
-    p = sleap.pipelines.Pipeline(sleap.pipelines.VideoReader(video))
+    p = sleap.pipelines.Pipeline(
+        sleap.pipelines.VideoReader(video=movenet_video, example_indices=[0])
+    )
     p += sleap.pipelines.SizeMatcher(
         points_key=None,
         max_image_width=inference_model.image_size,
@@ -1408,12 +1408,16 @@ def test_movenet_inference():
     assert preds["instance_peaks"].shape == (1, 1, 17, 2)
 
 
-def test_movenet_predictor(min_dance_labels):
+def test_movenet_predictor(min_dance_labels, movenet_video):
     predictor = MoveNetPredictor.from_trained_models("thunder")
     predictor.verbosity = "none"
     assert predictor.is_grayscale == False
     labels_pr = predictor.predict(min_dance_labels)
-    assert len(labels_pr) == 450
+
+    vr = sleap.pipelines.VideoReader(video=movenet_video, example_indices=[0, 1, 2])
+    labels_pr = predictor.predict(data=vr)
+
+    assert len(labels_pr) == 3
     assert len(labels_pr[0].instances) == 1
 
     points_gt = np.concatenate(
@@ -1425,3 +1429,6 @@ def test_movenet_predictor(min_dance_labels):
 
     max_diff = np.nanmax(np.abs(points_gt - points_pr))
     assert max_diff < 0.1
+
+
+# TODO (Jiaying): add a test for test_load_model
