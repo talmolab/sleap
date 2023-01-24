@@ -39,7 +39,7 @@ class ScopedKeyDict:
             current_dict[key] = val
         else:
             top_key, *subkey_list = key.split(".")
-            if top_key not in current_dict:
+            if top_key not in current_dict or current_dict[top_key] is None:
                 current_dict[top_key] = dict()
             subkey = ".".join(subkey_list)
             cls.set_hierarchical_key_val(current_dict[top_key], subkey, val)

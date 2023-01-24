@@ -156,6 +156,7 @@ class MainWindow(QMainWindow):
         self.state["edge style"] = prefs["edge style"]
         self.state["fit"] = False
         self.state["color predicted"] = prefs["color predicted"]
+        self.state["trail_shade"] = prefs["trail shade"]
         self.state["marker size"] = prefs["marker size"]
         self.state["propagate track labels"] = prefs["propagate track labels"]
         self.state["node label size"] = prefs["node label size"]
@@ -218,6 +219,7 @@ class MainWindow(QMainWindow):
         prefs["edge style"] = self.state["edge style"]
         prefs["propagate track labels"] = self.state["propagate track labels"]
         prefs["color predicted"] = self.state["color predicted"]
+        prefs["trail shade"] = self.state["trail_shade"]
         prefs["share usage data"] = self.state["share usage data"]
 
         # Save preferences.
@@ -309,7 +311,8 @@ class MainWindow(QMainWindow):
         self.player = QtVideoPlayer(
             color_manager=self.color_manager, state=self.state, context=self.commands
         )
-        self.player.changedPlot.connect(self._after_plot_update)
+        self.player.changedPlot.connect(self._after_plot_change)
+        self.player.updatedPlot.connect(self._after_plot_update)
 
         self.player.view.instanceDoubleClicked.connect(
             self._handle_instance_double_click
@@ -632,11 +635,18 @@ class MainWindow(QMainWindow):
             key="node label size",
         )
 
+        viewMenu.addSeparator()
         add_submenu_choices(
             menu=viewMenu,
             title="Trail Length",
-            options=(0, 10, 50, 100, 250),
+            options=TrackTrailOverlay.get_length_options(),
             key="trail_length",
+        )
+        add_submenu_choices(
+            menu=viewMenu,
+            title="Trail Shade",
+            options=tuple(TrackTrailOverlay.get_shade_options().keys()),
+            key="trail_shade",
         )
 
         viewMenu.addSeparator()
@@ -1176,10 +1186,16 @@ class MainWindow(QMainWindow):
 
     def _load_overlays(self):
         """Load all standard video overlays."""
-        self.overlays["track_labels"] = TrackListOverlay(self.labels, self.player)
-        self.overlays["trails"] = TrackTrailOverlay(self.labels, self.player)
+        self.overlays["track_labels"] = TrackListOverlay(
+            labels=self.labels, player=self.player
+        )
+        self.overlays["trails"] = TrackTrailOverlay(
+            labels=self.labels,
+            player=self.player,
+            trail_shade=self.state["trail_shade"],
+        )
         self.overlays["instance"] = InstanceOverlay(
-            self.labels, self.player, self.state
+            labels=self.labels, player=self.player, state=self.state
         )
 
         # When gui state changes, we also want to set corresponding attribute
@@ -1196,6 +1212,7 @@ class MainWindow(QMainWindow):
             )
 
         overlay_state_connect(self.overlays["trails"], "trail_length")
+        overlay_state_connect(self.overlays["trails"], "trail_shade")
 
         overlay_state_connect(self.color_manager, "palette")
         overlay_state_connect(self.color_manager, "distinctly_color")
@@ -1366,7 +1383,12 @@ class MainWindow(QMainWindow):
 
         self.player.plot()
 
-    def _after_plot_update(self, player, frame_idx, selected_inst):
+    def _after_plot_update(self, frame_idx):
+        """Run after plot is updated, but stay on same frame."""
+        overlay: TrackTrailOverlay = self.overlays["trails"]
+        overlay.redraw(self.state["video"], frame_idx)
+
+    def _after_plot_change(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
 
         # Store the current LabeledFrame (or make new, empty object)
