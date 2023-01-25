@@ -172,6 +172,7 @@ class Predictor(ABC):
     def from_model_paths(
         cls,
         model_paths: Union[str, List[str]],
+        model_name: str = None,
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
@@ -198,7 +199,8 @@ class Predictor(ABC):
         Returns:
             A subclass of `Predictor`.
 
-        See also: `SingleInstancePredictor`, `TopDownPredictor`, `BottomUpPredictor`
+        See also: `SingleInstancePredictor`, `TopDownPredictor`, `BottomUpPredictor`,
+            "MoveNetPredictor"
         """
         # Read configs and find model types.
         if isinstance(model_paths, str):
@@ -279,9 +281,9 @@ class Predictor(ABC):
                 resize_input_layer=resize_input_layer,
             )
 
-        elif "thunder" == model_types or "lightning" == model_types:
+        elif "thunder" == model_name or "lightning" == model_name:
             predictor = MoveNetPredictor.from_trained_models(
-                model_path=model_paths[model_types.index(model_types)],
+                model_path=MOVENET_MODELS[model_name]["model_path"],
                 peak_threshold=peak_threshold,
                 integral_refinement=integral_refinement,
                 integral_patch_size=integral_patch_size,
