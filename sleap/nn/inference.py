@@ -210,6 +210,7 @@ class Predictor(ABC):
         model_types = [
             cfg.model.heads.which_oneof_attrib_name() for cfg in model_configs
         ]
+        model_types.append(model_name)
 
         if "single_instance" in model_types:
             predictor = SingleInstancePredictor.from_trained_models(
@@ -281,7 +282,7 @@ class Predictor(ABC):
                 resize_input_layer=resize_input_layer,
             )
 
-        elif "thunder" == model_name or "lightning" == model_name:
+        elif "thunder" in model_types or "lightning" in model_types:
             predictor = MoveNetPredictor.from_trained_models(
                 model_path=MOVENET_MODELS[model_name]["model_path"],
                 peak_threshold=peak_threshold,
