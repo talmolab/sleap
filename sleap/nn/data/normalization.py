@@ -46,8 +46,8 @@ def ensure_float(image: tf.Tensor) -> tf.Tensor:
 
     See also: tf.image.convert_image_dtype
     """
-    image = tf.image.convert_image_dtype(image, tf.float32)
-    image = tf.cast(image, tf.float32)
+    image = tf.image.convert_image_dtype(image, tf.float32) # This returns an image concerted to dtype.
+    image = tf.cast(image, tf.float32) # This returns a Tensor with the same shape as image and same type as dtype. 
     return image
 
 
