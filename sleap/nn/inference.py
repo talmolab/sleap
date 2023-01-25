@@ -300,7 +300,7 @@ class Predictor(ABC):
         pass
 
     def _predict_generator(
-        self, data_provider: Provider, tensor_rt: bool = False
+        self, data_provider: Provider, tensor_rt: str = None
     ) -> Iterator[Dict[str, np.ndarray]]:
         """Create a generator that yields batches of inference results.
 
@@ -310,10 +310,14 @@ class Predictor(ABC):
         Args:
             data_provider: The `sleap.pipelines.Provider` that contains data that should
                 be used for inference.
-            tensor_rt: If `True`, convert to TensorRT optimized model. `False` by
-                default since TensorRT is system dependent. If available, can
-                offer substantial performance gains when running inference on
-                Nvidia GPUs. This should be set during when calling `predict`.
+            tensor_rt: An optimization engine to use. If set to None (the default),
+                no added optimization will occur and prediction will run
+                normally. If set to `FP32` or `FP16`, the model graph will first
+                be optimized using TensorRT (if available). Note that this is a
+                heavily experimental feature and is not available on certain
+                systems. If available, can offer substantial performance gains
+                when running inference on Nvidia GPUs. This should be set when
+                calling `predict`.
 
         Returns:
             A generator yielding batches predicted results as dictionaries of numpy
@@ -327,17 +331,30 @@ class Predictor(ABC):
         def process_batch(ex):
             # Run inference on current batch.
 
-            if tensor_rt:
+            if tensor_rt is not None:
                 preds = self.loaded_model_fn(tf.constant(ex["image"]))
 
-                # todo: the unragging seems to lose the dict keys. Should see if
+                # Todo: the unragging seems to lose the dict keys. Should see if
                 # we can handle this better, but for now just replace keys and
                 # cast peaks to numpy...
 
                 # preds['centroid_vals'] = preds['unrag_layer']
                 # preds['centroids'] = preds['unrag_layer_1']
                 # preds['instance_peak_vals'] = preds['unrag_layer_2']
-                preds["instance_peaks"] = preds["unrag_layer_3"].numpy()
+                # preds["instance_peaks"] = preds["unrag_layer_3"]
+
+                # when running this in an outer loop (e.g during benchmarking),
+                # it seems as if the keys get cached? So then the keys start to
+                # increment (unrag_layer_2 -> unrag_layer_1_2). For now we know
+                # that we just need the instance peaks to be cast to numpy for
+                # the top down models, so check key by tensor shape:
+
+                for k in preds.keys():
+                    if len(preds[k].shape) == 4:
+                        replace = k
+
+                # replace key and cast to numpy (for use below)
+                preds["instance_peaks"] = preds[replace].numpy()
 
             else:
                 preds = self.inference_model.predict_on_batch(ex, numpy=True)
@@ -437,7 +454,7 @@ class Predictor(ABC):
         self,
         data: Union[Provider, sleap.Labels, sleap.Video],
         make_labels: bool = True,
-        tensor_rt: bool = False,
+        tensor_rt: str = None,
     ) -> Union[List[Dict[str, np.ndarray]], sleap.Labels]:
         """Run inference on a data source.
 
@@ -447,10 +464,13 @@ class Predictor(ABC):
             make_labels: If `True` (the default), returns a `sleap.Labels` instance with
                 `sleap.PredictedInstance`s. If `False`, just return a list of
                 dictionaries containing the raw arrays returned by the inference model.
-            tensor_rt: If `True`, convert to TensorRT optimized model. `False` by
-                default since TensorRT is system dependent. If available, can
-                offer substantial performance gains when running inference on
-                Nvidia GPUs.
+            tensor_rt: An optimization engine to use. If set to None (the default),
+                no added optimization will occur and prediction will run
+                normally. If set to `FP32` or `FP16`, the model graph will first
+                be optimized using TensorRT (if available). Note that this is a
+                heavily experimental feature and is not available on certain
+                systems. If available, can offer substantial performance gains
+                when running inference on Nvidia GPUs.
 
         Returns:
             A `sleap.Labels` with `sleap.PredictedInstance`s if `make_labels` is `True`,
@@ -465,18 +485,36 @@ class Predictor(ABC):
         elif isinstance(data, sleap.Video):
             data = VideoReader(data)
 
-        if tensor_rt:
-            base_pb_dir = self.model_paths[-1].replace("training_config.json", "")
-            pb_dir_1 = os.path.join(base_pb_dir, "pb_1")
-            pb_dir_2 = os.path.join(base_pb_dir, "pb_2")
+        engines = [None, "FP32", "FP16"]
+        assert (
+            tensor_rt in engines
+        ), f"{tensor_rt} is not an engine option, choose from valid engines: {engines}"
 
-            if not os.path.exists(pb_dir_2):
-                # convert model to tensorrt if not done already
-                self.convert_model(pb_dir_1, pb_dir_2)
+        if tensor_rt is not None:
 
-            # load model func
-            saved_model_loaded = tf.saved_model.load(pb_dir_2)
-            self.loaded_model_fn = saved_model_loaded.signatures["serving_default"]
+            from tensorflow.python.compiler.tensorrt.trt_convert import _pywrap_py_utils
+
+            # first check to see if TensorRT has been compiled correctly. If it
+            # hasn't, run prediction without optimization.
+            if not _pywrap_py_utils.is_tensorrt_enabled():
+                print(
+                    "\n Tensorflow has not been built with TensorRT support, reverting to normal prediction \n"
+                )
+                tensor_rt = None
+
+            else:
+                # write protobuffers out to model directory
+                base_pb_dir = self.model_paths[-1].replace("training_config.json", "")
+                pb_dir_1 = os.path.join(base_pb_dir, "pb_1")
+                pb_dir_2 = os.path.join(base_pb_dir, "pb_2")
+
+                if not os.path.exists(pb_dir_2):
+                    # convert model to tensorrt if not done already
+                    self.convert_model(pb_dir_1, pb_dir_2, precision=tensor_rt)
+
+                # load model func
+                saved_model_loaded = tf.saved_model.load(pb_dir_2)
+                self.loaded_model_fn = saved_model_loaded.signatures["serving_default"]
 
         # Initialize inference loop generator.
         generator = self._predict_generator(data, tensor_rt)
@@ -492,6 +530,8 @@ class Predictor(ABC):
 
     def create_tracing_batch(self, inference_model):
 
+        # create a tracing batch of data so we can save the graph
+
         first_inference_layer = inference_model.layers[0]
 
         keras_model_shape = first_inference_layer.keras_model.input.shape
@@ -506,32 +546,42 @@ class Predictor(ABC):
 
         return tracing_batch, sample_shape
 
-    def convert_model(self, save_path: str, save_path_2: str):
+    def convert_model(self, save_path: str, save_path_2: str, precision: str = "FP32"):
 
-        # todo: add try/except with raise for the cases in which a runtimeerror
-        # will occur due to tensorflow not being compiled with tensorrt support
         from tensorflow.python.compiler.tensorrt import trt_convert as tf_trt
 
         self._initialize_inference_model()
 
         # create tracing batch
+        # Todo: we should instead use real data. Using a tracing batch means
+        # some operations cannot be converted which limits optimization / speed
         tracing_batch, sample_shape = self.create_tracing_batch(self.inference_model)
 
+        # create input, pass through model
         x_in = tf.keras.layers.Input(sample_shape, dtype="uint8")
         x = self.inference_model(x_in)
 
-        # need to unrag tensors
+        # need to unrag tensors for tensorrt
         x = sleap.nn.data.utils.UnragLayer()(x)
 
-        # pass through model
+        # run inference
         model = tf.keras.Model(x_in, x)
         outputs = model.predict(tracing_batch)
 
         # save initial protobuffer
         model.save(save_path, save_format="tf", save_traces=True)
 
+        # set precision
+        conversion_params = tf.experimental.tensorrt.ConversionParams(
+            precision_mode=precision
+        )
+
+        # create a converter
+        converter = tf_trt.TrtGraphConverterV2(
+            input_saved_model_dir=save_path, conversion_params=conversion_params
+        )
+
         # convert to tensorRT
-        converter = tf_trt.TrtGraphConverterV2(input_saved_model_dir=save_path)
         converter.convert()
 
         # save converted protobuffer
