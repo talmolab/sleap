@@ -1431,7 +1431,7 @@ def test_movenet_predictor(min_dance_labels, movenet_video):
     assert max_diff < 0.1
 
 
-# TODO (Jiaying): add a test for test_load_model. Leaving this part out for now as 
+# TODO (Jiaying): add a test for test_load_model. Leaving this part out for now as
 # Predictor.from_trained_models returns None not only for MoveNet but also other models.
 def test_load_model(min_dance_labels, movenet_video, model_name="ligntning"):
     predictor = Predictor.from_trained_models(
