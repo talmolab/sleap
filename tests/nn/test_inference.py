@@ -1431,4 +1431,18 @@ def test_movenet_predictor(min_dance_labels, movenet_video):
     assert max_diff < 0.1
 
 
-# TODO (Jiaying): add a test for test_load_model
+# TODO (Jiaying): add a test for test_load_model. Leaving this part out for now as 
+# Predictor.from_trained_models returns None not only for MoveNet but also other models.
+def test_load_model(min_dance_labels, movenet_video, model_name="ligntning"):
+    predictor = Predictor.from_trained_models(
+        model_name,
+        peak_threshold=0.2,
+        batch_size=1,
+    )
+    print(predictor)
+    predictor.verbosity = "none"
+    labels_pr = predictor.predict(min_dance_labels)
+    vr = sleap.pipelines.VideoReader(video=movenet_video, example_indices=[0, 1, 2])
+    labels_pr = predictor.predict(data=vr)
+    assert len(labels_pr) == 3
+    assert len(labels_pr[0].instances) == 0
