@@ -755,6 +755,8 @@ class Trainer(ABC):
 
             self.keras_model.load_weights(previous_model_path)
             logger.info(f"Loaded previous model weights from {previous_model_path}")
+        else:
+            logger.info("Training from scratch")
 
     @property
     def keras_model(self) -> tf.keras.Model:
