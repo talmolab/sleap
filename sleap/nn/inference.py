@@ -172,7 +172,6 @@ class Predictor(ABC):
     def from_model_paths(
         cls,
         model_paths: Union[str, List[str]],
-        model_name: str = None,
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
@@ -210,7 +209,6 @@ class Predictor(ABC):
         model_types = [
             cfg.model.heads.which_oneof_attrib_name() for cfg in model_configs
         ]
-        model_types.append(model_name)
 
         if "single_instance" in model_types:
             predictor = SingleInstancePredictor.from_trained_models(
@@ -282,16 +280,6 @@ class Predictor(ABC):
                 resize_input_layer=resize_input_layer,
             )
 
-        elif "thunder" in model_types or "lightning" in model_types:
-            predictor = MoveNetPredictor.from_trained_models(
-                model_path=MOVENET_MODELS[model_name]["model_path"],
-                peak_threshold=peak_threshold,
-                integral_refinement=integral_refinement,
-                integral_patch_size=integral_patch_size,
-                batch_size=batch_size,
-                resize_input_layer=resize_input_layer,
-            )
-
         else:
             raise ValueError(
                 "Could not create predictor from model paths:" + "\n".join(model_paths)
@@ -299,10 +287,42 @@ class Predictor(ABC):
         predictor.model_paths = model_paths
         return predictor
 
-    @classmethod
     @abstractmethod
-    def from_trained_models(cls, *args, **kwargs):
-        pass
+    def from_trained_models(model_name: str) -> tf.keras.Model:
+        """Load a MoveNet model by name.
+
+        Args:
+            model_name: Name of the model ("lightning" or "thunder")
+
+        Returns:
+            A tf.keras.Model ready for inference.
+        """
+        model_path = MOVENET_MODELS[model_name]["model_path"]
+        image_size = MOVENET_MODELS[model_name]["image_size"]
+
+        x_in = tf.keras.layers.Input([image_size, image_size, 3], name="image")
+
+        x = tf.keras.layers.Lambda(
+            lambda x: tf.cast(x, dtype=tf.int32), name="cast_to_int32"
+        )(x_in)
+        layer = hub.KerasLayer(
+            model_path,
+            signature="serving_default",
+            output_key="output_0",
+            name="movenet_layer",
+        )
+        x = layer(x)
+
+        def split_outputs(x):
+            x_ = tf.reshape(x, [-1, 17, 3])
+            keypoints = tf.gather(x_, [1, 0], axis=-1)
+            keypoints *= image_size
+            scores = tf.squeeze(tf.gather(x_, [2], axis=-1), axis=-1)
+            return keypoints, scores
+
+        x = tf.keras.layers.Lambda(split_outputs, name="keypoints_and_scores")(x)
+        model = tf.keras.Model(x_in, x)
+        return model
 
     @property
     @abstractmethod
