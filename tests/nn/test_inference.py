@@ -1431,6 +1431,6 @@ def test_movenet_predictor(min_dance_labels, movenet_video):
     assert max_diff < 0.1
 
 
-def test_load_model(min_dance_labels, movenet_video):
-    model = Predictor.from_trained_models("thunder")
+def test_load_model(model_name="thunder"):
+    model = Predictor.from_trained_models(model_name)
     assert model.input.get_shape().as_list() == [None, 256, 256, 3]
