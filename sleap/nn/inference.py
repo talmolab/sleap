@@ -287,42 +287,10 @@ class Predictor(ABC):
         predictor.model_paths = model_paths
         return predictor
 
+    @classmethod
     @abstractmethod
-    def from_trained_models(model_name: str) -> tf.keras.Model:
-        """Load a MoveNet model by name.
-
-        Args:
-            model_name: Name of the model ("lightning" or "thunder")
-
-        Returns:
-            A tf.keras.Model ready for inference.
-        """
-        model_path = MOVENET_MODELS[model_name]["model_path"]
-        image_size = MOVENET_MODELS[model_name]["image_size"]
-
-        x_in = tf.keras.layers.Input([image_size, image_size, 3], name="image")
-
-        x = tf.keras.layers.Lambda(
-            lambda x: tf.cast(x, dtype=tf.int32), name="cast_to_int32"
-        )(x_in)
-        layer = hub.KerasLayer(
-            model_path,
-            signature="serving_default",
-            output_key="output_0",
-            name="movenet_layer",
-        )
-        x = layer(x)
-
-        def split_outputs(x):
-            x_ = tf.reshape(x, [-1, 17, 3])
-            keypoints = tf.gather(x_, [1, 0], axis=-1)
-            keypoints *= image_size
-            scores = tf.squeeze(tf.gather(x_, [2], axis=-1), axis=-1)
-            return keypoints, scores
-
-        x = tf.keras.layers.Lambda(split_outputs, name="keypoints_and_scores")(x)
-        model = tf.keras.Model(x_in, x)
-        return model
+    def from_trained_models(cls, *args, **kwargs):
+        pass
 
     @property
     @abstractmethod
