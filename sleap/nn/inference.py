@@ -203,7 +203,17 @@ class Predictor(ABC):
         """
         # Read configs and find model types.
         if isinstance(model_paths, str):
+            # Special case for handling movenet models
+            if "movenet" in model_paths:
+                model_name = model_paths.split("-")[-1]  # Expect movenet-<model_name>
+                predictor = MoveNetPredictor.from_trained_models(
+                    model_name=model_name, peak_threshold=peak_threshold
+                )
+                predictor.model_paths = MOVENET_MODELS[model_name]["model_path"]
+                return predictor
+
             model_paths = [model_paths]
+
         model_configs = [sleap.load_config(model_path) for model_path in model_paths]
         model_paths = [cfg.filename for cfg in model_configs]
         model_types = [
@@ -4486,7 +4496,7 @@ class MoveNetPredictor(Predictor):
 
     @classmethod
     def from_trained_models(
-        cls, model_name: Text, peak_threshold: float = 0.2, batch_size: int = 1
+        cls, model_name: Text, peak_threshold: float = 0.2
     ) -> "MoveNetPredictor":
         """Create the predictor from a saved model.
         Args:

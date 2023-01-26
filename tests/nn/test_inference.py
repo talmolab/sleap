@@ -1431,6 +1431,13 @@ def test_movenet_predictor(min_dance_labels, movenet_video):
     assert max_diff < 0.1
 
 
-def test_load_model(model_name="thunder"):
-    model = Predictor.from_trained_models(model_name)
-    assert model.input.get_shape().as_list() == [None, 256, 256, 3]
+@pytest.mark.parametrize("movenet_name", ["thunder", "lightning"])
+def test_movenet_load_model(movenet_name):
+    model_path = f"movenet-{movenet_name}"
+    model_name = model_path.split("-")[-1]
+    assert model_name == movenet_name
+
+    predictor = Predictor.from_model_paths(model_path)
+    assert predictor.model_paths == MOVENET_MODELS[model_name]["model_path"]
+    assert isinstance(predictor, MoveNetPredictor)
+    assert predictor.model_name == model_name
