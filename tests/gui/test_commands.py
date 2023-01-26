@@ -1,6 +1,5 @@
 from pathlib import PurePath, Path
 import shutil
-from tempfile import tempdir
 from typing import List
 
 import pytest
@@ -15,7 +14,6 @@ from sleap.gui.commands import (
     SaveProjectAs,
     get_new_version_filename,
 )
-from sleap.gui.state import GuiState
 from sleap.instance import Instance, LabeledFrame
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
