@@ -1,5 +1,6 @@
 from pathlib import PurePath, Path
 import shutil
+import sys
 from typing import List
 
 import pytest
@@ -504,6 +505,11 @@ def test_SetSelectedInstanceTrack(centered_pair_predictions: Labels):
     assert pred_inst.track == new_instance.track
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("win"),
+    reason="Files being using in parallel by linux CI tests via Github Actions "
+    "(and linux tests give us codecov reports)",
+)
 @pytest.mark.parametrize("video_move_case", ["new_directory", "new_name"])
 def test_LoadProjectFile(
     centered_pair_predictions_slp_path: str,
