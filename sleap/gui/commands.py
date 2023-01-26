@@ -670,7 +670,7 @@ class LoadProjectFile(LoadLabelsObject):
                 has_loaded = True
             except ValueError as e:
                 print(e)
-                QMessageBox(text=f"Unable to load {filename}.").exec_()
+                QtWidgets.QMessageBox(text=f"Unable to load {filename}.").exec_()
 
         params["labels"] = labels
 

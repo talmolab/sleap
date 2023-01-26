@@ -23,6 +23,9 @@ from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.pathutils import fix_path_separator
 from sleap.io.video import Video
+
+# These imports cause trouble when running `pytest.main()` from within the file
+# Comment out to debug tests file via VSCode's "Debug Python File"
 from tests.info.test_h5 import extract_meta_hdf5
 from tests.io.test_video import assert_video_params
 from tests.io.test_formats import read_nix_meta
@@ -503,42 +506,51 @@ def test_SetSelectedInstanceTrack(centered_pair_predictions: Labels):
     assert pred_inst.track == new_instance.track
 
 
-def test_LoadLabelsObject(
-    centered_pair_predictions: Labels, centered_pair_predictions_slp_path: str, tmpdir
+@pytest.mark.parametrize("video_move_case", ["new_directory", "new_name"])
+def test_LoadProjectFile(
+    centered_pair_predictions_slp_path: str,
+    video_move_case,
+    tmpdir,
 ):
     """Test that changing a labels object on load flags any changes."""
 
-    class FlexyObject:
-        """Object that allows adding object attributes."""
-        def __getattr__(self, value):
-            self.value = FlexyObject()
-            return self.value
-        
-        def __call__(self, *args, **kwargs):
-            return self.__init__()
-
-    def ask_LoadProjectFile(context):
-        gui_video_callback = Labels.make_video_callback(context=context)
-        labels = Labels.load_file(centered_pair_predictions_slp_path, video_search=gui_video_callback)
+    def ask_LoadProjectFile(params):
+        """Implement `LoadProjectFile.ask` without GUI elements."""
+        filename: Path = params["filename"]
+        gui_video_callback = Labels.make_video_callback(
+            search_paths=[str(filename)], context=params
+        )
+        labels = Labels.load_file(
+            centered_pair_predictions_slp_path, video_search=gui_video_callback
+        )
         return labels
 
-    # Move labels video to tmpdir
-    labels = centered_pair_predictions
-    video_path = Path(labels.video.filename).absolute()
-    new_video_path = Path(tmpdir, "new_video.mp4")
+    def load_and_assert_changes(new_video_path: Path):
+        # Load the project
+        params = {"filename": new_video_path}
+        ask_LoadProjectFile(params)
+
+        # Assert project has changes
+        assert params["changed_on_load"]
+
+    # Get labels and video path
+    labels = Labels.load_file(centered_pair_predictions_slp_path)
+    expected_video_path = Path(labels.video.backend.filename)
+
+    # Move video to new location based on case
+    if video_move_case == "new_directory":  # Needs to have same name
+        new_video_path = Path(tmpdir, expected_video_path.name)
+    else:  # Needs to have different name
+        new_video_path = expected_video_path.with_name("new_name.mp4")
+    shutil.move(expected_video_path, new_video_path)  # Move video to new location
+
+    # Shorten video path if using directory location only
+    search_path = (
+        new_video_path.parent if video_move_case == "new_directory" else new_video_path
+    )
+
+    # Load project and assert changes
     try:
-        shutil.move(video_path, new_video_path)
-    except Exception:
-        pass
-
-    # Load the project
-    context: CommandContext = CommandContext(state=GuiState(), app=FlexyObject())
-    labels = ask_LoadProjectFile(context = context)
-    context.loadLabelsObject(labels=labels, filename="it_doesnt_matter")
-
-    # Assert project has changes
-    print(context.state["has_changes"])
-    assert context.state["has_changes"]
-
-if __name__ == "__main__":
-    pytest.main([r"tests\gui\test_commands.py::test_LoadLabelsObject"])
+        load_and_assert_changes(search_path)
+    finally:  # Move video back to original location - for ease of re-testing
+        shutil.move(new_video_path, expected_video_path)
