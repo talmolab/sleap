@@ -172,7 +172,6 @@ class Predictor(ABC):
     def from_model_paths(
         cls,
         model_paths: Union[str, List[str]],
-        model_name: str = "thunder",
         peak_threshold: float = 0.2,
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
@@ -203,131 +202,90 @@ class Predictor(ABC):
             "MoveNetPredictor"
         """
         # Read configs and find model types.
+        if isinstance(model_paths, str):
+            model_paths = [model_paths]
+        model_configs = [sleap.load_config(model_path) for model_path in model_paths]
+        model_paths = [cfg.filename for cfg in model_configs]
+        model_types = [
+            cfg.model.heads.which_oneof_attrib_name() for cfg in model_configs
+        ]
 
-        if model_name != None:
-            model_path = MOVENET_MODELS[model_name]["model_path"]
-            image_size = MOVENET_MODELS[model_name]["image_size"]
-
-            x_in = tf.keras.layers.Input([image_size, image_size, 3], name="image")
-
-            x = tf.keras.layers.Lambda(
-                lambda x: tf.cast(x, dtype=tf.int32), name="cast_to_int32"
-            )(x_in)
-            layer = hub.KerasLayer(
-                model_path,
-                signature="serving_default",
-                output_key="output_0",
-                name="movenet_layer",
+        if "single_instance" in model_types:
+            predictor = SingleInstancePredictor.from_trained_models(
+                model_path=model_paths[model_types.index("single_instance")],
+                peak_threshold=peak_threshold,
+                integral_refinement=integral_refinement,
+                integral_patch_size=integral_patch_size,
+                batch_size=batch_size,
+                resize_input_layer=resize_input_layer,
             )
-            x = layer(x)
 
-            def split_outputs(x):
-                x_ = tf.reshape(x, [-1, 17, 3])
-                keypoints = tf.gather(x_, [1, 0], axis=-1)
-                keypoints *= image_size
-                scores = tf.squeeze(tf.gather(x_, [2], axis=-1), axis=-1)
-                return keypoints, scores
+        elif (
+            "centroid" in model_types
+            or "centered_instance" in model_types
+            or "multi_class_topdown" in model_types
+        ):
+            centroid_model_path = None
+            if "centroid" in model_types:
+                centroid_model_path = model_paths[model_types.index("centroid")]
 
-            x = tf.keras.layers.Lambda(split_outputs, name="keypoints_and_scores")(x)
-            predictor = tf.keras.Model(x_in, x)
+            confmap_model_path = None
+            if "centered_instance" in model_types:
+                confmap_model_path = model_paths[model_types.index("centered_instance")]
+
+            td_multiclass_model_path = None
+            if "multi_class_topdown" in model_types:
+                td_multiclass_model_path = model_paths[
+                    model_types.index("multi_class_topdown")
+                ]
+
+            if td_multiclass_model_path is not None:
+                predictor = TopDownMultiClassPredictor.from_trained_models(
+                    centroid_model_path=centroid_model_path,
+                    confmap_model_path=td_multiclass_model_path,
+                    batch_size=batch_size,
+                    peak_threshold=peak_threshold,
+                    integral_refinement=integral_refinement,
+                    integral_patch_size=integral_patch_size,
+                    resize_input_layer=resize_input_layer,
+                )
+            else:
+                predictor = TopDownPredictor.from_trained_models(
+                    centroid_model_path=centroid_model_path,
+                    confmap_model_path=confmap_model_path,
+                    batch_size=batch_size,
+                    peak_threshold=peak_threshold,
+                    integral_refinement=integral_refinement,
+                    integral_patch_size=integral_patch_size,
+                    resize_input_layer=resize_input_layer,
+                )
+
+        elif "multi_instance" in model_types:
+            predictor = BottomUpPredictor.from_trained_models(
+                model_path=model_paths[model_types.index("multi_instance")],
+                peak_threshold=peak_threshold,
+                integral_refinement=integral_refinement,
+                integral_patch_size=integral_patch_size,
+                batch_size=batch_size,
+                resize_input_layer=resize_input_layer,
+            )
+
+        elif "multi_class_bottomup" in model_types:
+            predictor = BottomUpMultiClassPredictor.from_trained_models(
+                model_path=model_paths[model_types.index("multi_class_bottomup")],
+                peak_threshold=peak_threshold,
+                integral_refinement=integral_refinement,
+                integral_patch_size=integral_patch_size,
+                batch_size=batch_size,
+                resize_input_layer=resize_input_layer,
+            )
 
         else:
-            if isinstance(model_paths, str):
-                model_paths = [model_paths]
-            model_configs = [
-                sleap.load_config(model_path) for model_path in model_paths
-            ]
-            model_paths = [cfg.filename for cfg in model_configs]
-            model_types = [
-                cfg.model.heads.which_oneof_attrib_name() for cfg in model_configs
-            ]
-
-            if "single_instance" in model_types:
-                predictor = SingleInstancePredictor.from_trained_models(
-                    model_path=model_paths[model_types.index("single_instance")],
-                    peak_threshold=peak_threshold,
-                    integral_refinement=integral_refinement,
-                    integral_patch_size=integral_patch_size,
-                    batch_size=batch_size,
-                    resize_input_layer=resize_input_layer,
-                )
-
-            elif (
-                "centroid" in model_types
-                or "centered_instance" in model_types
-                or "multi_class_topdown" in model_types
-            ):
-                centroid_model_path = None
-                if "centroid" in model_types:
-                    centroid_model_path = model_paths[model_types.index("centroid")]
-
-                confmap_model_path = None
-                if "centered_instance" in model_types:
-                    confmap_model_path = model_paths[
-                        model_types.index("centered_instance")
-                    ]
-
-                td_multiclass_model_path = None
-                if "multi_class_topdown" in model_types:
-                    td_multiclass_model_path = model_paths[
-                        model_types.index("multi_class_topdown")
-                    ]
-
-                if td_multiclass_model_path is not None:
-                    predictor = TopDownMultiClassPredictor.from_trained_models(
-                        centroid_model_path=centroid_model_path,
-                        confmap_model_path=td_multiclass_model_path,
-                        batch_size=batch_size,
-                        peak_threshold=peak_threshold,
-                        integral_refinement=integral_refinement,
-                        integral_patch_size=integral_patch_size,
-                        resize_input_layer=resize_input_layer,
-                    )
-                else:
-                    predictor = TopDownPredictor.from_trained_models(
-                        centroid_model_path=centroid_model_path,
-                        confmap_model_path=confmap_model_path,
-                        batch_size=batch_size,
-                        peak_threshold=peak_threshold,
-                        integral_refinement=integral_refinement,
-                        integral_patch_size=integral_patch_size,
-                        resize_input_layer=resize_input_layer,
-                    )
-
-            elif "multi_instance" in model_types:
-                predictor = BottomUpPredictor.from_trained_models(
-                    model_path=model_paths[model_types.index("multi_instance")],
-                    peak_threshold=peak_threshold,
-                    integral_refinement=integral_refinement,
-                    integral_patch_size=integral_patch_size,
-                    batch_size=batch_size,
-                    resize_input_layer=resize_input_layer,
-                )
-
-            elif "multi_class_bottomup" in model_types:
-                predictor = BottomUpMultiClassPredictor.from_trained_models(
-                    model_path=model_paths[model_types.index("multi_class_bottomup")],
-                    peak_threshold=peak_threshold,
-                    integral_refinement=integral_refinement,
-                    integral_patch_size=integral_patch_size,
-                    batch_size=batch_size,
-                    resize_input_layer=resize_input_layer,
-                )
-
-            else:
-                raise ValueError(
-                    "Could not create predictor from model paths:"
-                    + "\n".join(model_paths)
-                )
-
-            predictor.model_paths = model_paths
-
+            raise ValueError(
+                "Could not create predictor from model paths:" + "\n".join(model_paths)
+            )
+        predictor.model_paths = model_paths
         return predictor
-
-    @classmethod
-    @abstractmethod
-    def from_trained_models(cls, *args, **kwargs):
-        pass
 
     @abstractmethod
     def from_trained_models(model_name: str) -> tf.keras.Model:
@@ -339,6 +297,32 @@ class Predictor(ABC):
         Returns:
             A tf.keras.Model ready for inference.
         """
+        model_path = MOVENET_MODELS[model_name]["model_path"]
+        image_size = MOVENET_MODELS[model_name]["image_size"]
+
+        x_in = tf.keras.layers.Input([image_size, image_size, 3], name="image")
+
+        x = tf.keras.layers.Lambda(
+            lambda x: tf.cast(x, dtype=tf.int32), name="cast_to_int32"
+        )(x_in)
+        layer = hub.KerasLayer(
+            model_path,
+            signature="serving_default",
+            output_key="output_0",
+            name="movenet_layer",
+        )
+        x = layer(x)
+
+        def split_outputs(x):
+            x_ = tf.reshape(x, [-1, 17, 3])
+            keypoints = tf.gather(x_, [1, 0], axis=-1)
+            keypoints *= image_size
+            scores = tf.squeeze(tf.gather(x_, [2], axis=-1), axis=-1)
+            return keypoints, scores
+
+        x = tf.keras.layers.Lambda(split_outputs, name="keypoints_and_scores")(x)
+        model = tf.keras.Model(x_in, x)
+        return model
 
     @property
     @abstractmethod
