@@ -4334,7 +4334,7 @@ class TopDownMultiClassPredictor(Predictor):
             )
 
 
-def load_movenet_model(model_name: str) -> tf.keras.Model:
+def make_model_movenet(model_name: str) -> tf.keras.Model:
     """Load a MoveNet model by name.
 
     Args:
@@ -4393,7 +4393,7 @@ class MoveNetInferenceLayer(InferenceLayer):
     """
 
     def __init__(self, model_name="lightning"):
-        self.keras_model = load_movenet_model(model_name)
+        self.keras_model = make_model_movenet(model_name)
         self.model_name = model_name
         self.image_size = MOVENET_MODELS[model_name]["image_size"]
         super().__init__(
