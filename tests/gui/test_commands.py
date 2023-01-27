@@ -1,10 +1,11 @@
-import shutil
 from pathlib import PurePath, Path
+import shutil
+import sys
 from typing import List
-from tempfile import tempdir
 
 import pytest
 
+from sleap import Skeleton, Track
 from sleap.gui.commands import (
     CommandContext,
     ImportDeepLabCutFolder,
@@ -14,14 +15,16 @@ from sleap.gui.commands import (
     SaveProjectAs,
     get_new_version_filename,
 )
-from sleap.io.format.adaptor import Adaptor
+from sleap.instance import Instance, LabeledFrame
+from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
+from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.pathutils import fix_path_separator
 from sleap.io.video import Video
-from sleap.io.convert import default_analysis_filename
-from sleap.instance import Instance, LabeledFrame
-from sleap import Skeleton, Track
+
+# These imports cause trouble when running `pytest.main()` from within the file
+# Comment out to debug tests file via VSCode's "Debug Python File"
 from tests.info.test_h5 import extract_meta_hdf5
 from tests.io.test_video import assert_video_params
 from tests.io.test_formats import read_nix_meta
@@ -500,3 +503,58 @@ def test_SetSelectedInstanceTrack(centered_pair_predictions: Labels):
     # Ensure that both instance and predicted instance have same track
     assert new_instance.track == track
     assert pred_inst.track == new_instance.track
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("win"),
+    reason="Files being using in parallel by linux CI tests via Github Actions "
+    "(and linux tests give us codecov reports)",
+)
+@pytest.mark.parametrize("video_move_case", ["new_directory", "new_name"])
+def test_LoadProjectFile(
+    centered_pair_predictions_slp_path: str,
+    video_move_case,
+    tmpdir,
+):
+    """Test that changing a labels object on load flags any changes."""
+
+    def ask_LoadProjectFile(params):
+        """Implement `LoadProjectFile.ask` without GUI elements."""
+        filename: Path = params["filename"]
+        gui_video_callback = Labels.make_video_callback(
+            search_paths=[str(filename)], context=params
+        )
+        labels = Labels.load_file(
+            centered_pair_predictions_slp_path, video_search=gui_video_callback
+        )
+        return labels
+
+    def load_and_assert_changes(new_video_path: Path):
+        # Load the project
+        params = {"filename": new_video_path}
+        ask_LoadProjectFile(params)
+
+        # Assert project has changes
+        assert params["changed_on_load"]
+
+    # Get labels and video path
+    labels = Labels.load_file(centered_pair_predictions_slp_path)
+    expected_video_path = Path(labels.video.backend.filename)
+
+    # Move video to new location based on case
+    if video_move_case == "new_directory":  # Needs to have same name
+        new_video_path = Path(tmpdir, expected_video_path.name)
+    else:  # Needs to have different name
+        new_video_path = expected_video_path.with_name("new_name.mp4")
+    shutil.move(expected_video_path, new_video_path)  # Move video to new location
+
+    # Shorten video path if using directory location only
+    search_path = (
+        new_video_path.parent if video_move_case == "new_directory" else new_video_path
+    )
+
+    # Load project and assert changes
+    try:
+        load_and_assert_changes(search_path)
+    finally:  # Move video back to original location - for ease of re-testing
+        shutil.move(new_video_path, expected_video_path)
