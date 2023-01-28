@@ -1,20 +1,22 @@
+import os
+from pathlib import Path, PurePath
+
+import numpy as np
+from numpy.testing import assert_array_equal
+import pytest
+import nixio
+
+from sleap.io.video import Video
 from sleap.instance import Instance, LabeledFrame, PredictedInstance, Track
 from sleap.io.dataset import Labels
 from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, filehandle
 from sleap.io.format.adaptor import SleapObjectType
 from sleap.io.format.alphatracker import AlphaTrackerAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
+from sleap.io.format.nix import NixAdaptor
 from sleap.gui.commands import ImportAlphaTracker
 from sleap.gui.app import MainWindow
 from sleap.gui.state import GuiState
-
-import pytest
-import os
-from pathlib import Path, PurePath
-import numpy as np
-from numpy.testing import assert_array_equal
-
-from sleap.io.video import Video
 
 
 def test_text_adaptor(tmpdir):
@@ -397,3 +399,85 @@ def test_nwb(
     labels.instances = []
     with pytest.raises(TypeError):
         NDXPoseAdaptor.write(NDXPoseAdaptor, filename, labels)
+
+
+def test_nix_adaptor(
+    centered_pair_predictions: Labels,
+    small_robot_mp4_vid: Video,
+    tmpdir,
+):
+    # general tests
+    na = NixAdaptor()
+    assert na.default_ext == "nix"
+    assert "nix" in na.all_exts
+    assert len(na.name) > 0
+    assert na.can_write_filename("somefile.nix")
+    assert not na.can_write_filename("somefile.slp")
+    assert NixAdaptor.does_read() == False
+    assert NixAdaptor.does_write() == True
+
+    with pytest.raises(NotImplementedError):
+        NixAdaptor.read("some file")
+
+    print("writing test predictions to nix file...")
+    filename = str(PurePath(tmpdir, "ndx_pose_test.nix"))
+    with pytest.raises(ValueError):
+        NixAdaptor.write(filename, centered_pair_predictions, video=small_robot_mp4_vid)
+    NixAdaptor.write(filename, centered_pair_predictions)
+    NixAdaptor.write(
+        filename, centered_pair_predictions, video=centered_pair_predictions.videos[0]
+    )
+
+    # basic read tests using the generic nix library
+    import nixio
+
+    file = nixio.File.open(filename, nixio.FileMode.ReadOnly)
+    try:
+        file_meta = file.sections[0]
+        assert file_meta["format"] == "nix.tracking"
+        assert "sleap" in file_meta["writer"].lower()
+
+        assert len([b for b in file.blocks if b.type == "nix.tracking_results"]) > 0
+        b = file.blocks[0]
+        assert (
+            len(
+                [
+                    da
+                    for da in b.data_arrays
+                    if da.type == "nix.tracking.instance_position"
+                ]
+            )
+            == 1
+        )
+        assert (
+            len(
+                [
+                    da
+                    for da in b.data_arrays
+                    if da.type == "nix.tracking.instance_frameidx"
+                ]
+            )
+            == 1
+        )
+
+        inst_positions = b.data_arrays["position"]
+        assert len(inst_positions.shape) == 3
+        assert len(inst_positions.shape) == len(inst_positions.dimensions)
+        assert inst_positions.shape[2] == len(centered_pair_predictions.nodes)
+
+        frame_indices = b.data_arrays["frame"]
+        assert len(frame_indices.shape) == 1
+        assert frame_indices.shape[0] == inst_positions.shape[0]
+    except Exception as e:
+        file.close()
+        raise e
+
+
+def read_nix_meta(filename, *args, **kwargs):
+    file = nixio.File.open(filename, nixio.FileMode.ReadOnly)
+    try:
+        file_meta = file_meta = file.sections[0]
+    except Exception:
+        file.close()
+
+    return file_meta

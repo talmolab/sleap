@@ -43,8 +43,6 @@ import numpy as np
 
 from qtpy import QtCore, QtWidgets, QtGui
 
-from qtpy.QtWidgets import QMessageBox, QProgressDialog
-
 from sleap.skeleton import Node, Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
 from sleap.io.video import Video
@@ -642,7 +640,7 @@ class LoadLabelsObject(AppCommand):
             context.state["video"] = labels.videos[0]
 
         context.state["project_loaded"] = True
-        context.state["has_changes"] = getattr(params, "changed_on_load", False)
+        context.state["has_changes"] = params.get("changed_on_load", False)
 
         # This is not listed as an edit command since we want a clean changestack
         context.app.on_data_update([UpdateTopic.project, UpdateTopic.all])
@@ -672,7 +670,7 @@ class LoadProjectFile(LoadLabelsObject):
                 has_loaded = True
             except ValueError as e:
                 print(e)
-                QMessageBox(text=f"Unable to load {filename}.").exec_()
+                QtWidgets.QMessageBox(text=f"Unable to load {filename}.").exec_()
 
         params["labels"] = labels
 
@@ -1100,12 +1098,23 @@ class SaveProjectAs(AppCommand):
 
 
 class ExportAnalysisFile(AppCommand):
+    export_formats = {
+        "SLEAP Analysis HDF5 (*.h5)": "h5",
+        "NIX for Tracking data (*.nix)": "nix",
+    }
+    export_filter = ";;".join(export_formats.keys())
+
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
+        from sleap.io.format.nix import NixAdaptor
 
         for output_path, video in params["analysis_videos"]:
-            SleapAnalysisAdaptor.write(
+            if Path(output_path).suffix[1:] == "nix":
+                adaptor = NixAdaptor
+            else:
+                adaptor = SleapAnalysisAdaptor
+            adaptor.write(
                 filename=output_path,
                 source_object=context.labels,
                 source_path=context.state["filename"],
@@ -1120,14 +1129,14 @@ class ExportAnalysisFile(AppCommand):
                 context.app,
                 caption="Export Analysis File...",
                 dir=default_name,
-                filter="SLEAP Analysis HDF5 (*.h5)",
+                filter=ExportAnalysisFile.export_filter,
             )
             return filename
 
         # Ensure labels has labeled frames
         labels = context.labels
         if len(labels.labeled_frames) == 0:
-            return False
+            raise ValueError("No labeled frames in project. Nothing to export.")
 
         # Get a subset of videos
         if params["all_videos"]:
@@ -1138,11 +1147,12 @@ class ExportAnalysisFile(AppCommand):
         # Only use videos with labeled frames
         videos = [video for video in all_videos if len(labels.get(video)) != 0]
         if len(videos) == 0:
-            return False
+            raise ValueError("No labeled frames in video(s). Nothing to export.")
 
         # Specify (how to get) the output filename
         default_name = context.state["filename"] or "labels"
         fn = PurePath(default_name)
+        file_extension = "h5"
         if len(videos) == 1:
             # Allow user to specify the filename
             use_default = False
@@ -1155,6 +1165,18 @@ class ExportAnalysisFile(AppCommand):
                 caption="Select Folder to Export Analysis Files...",
                 dir=str(fn.parent),
             )
+            if len(ExportAnalysisFile.export_formats) > 1:
+                item, ok = QtWidgets.QInputDialog.getItem(
+                    context.app,
+                    "Select export format",
+                    "Available export formats",
+                    list(ExportAnalysisFile.export_formats.keys()),
+                    0,
+                    False,
+                )
+                if not ok:
+                    return False
+                file_extension = ExportAnalysisFile.export_formats[item]
             if len(dirname) == 0:
                 return False
 
@@ -1168,9 +1190,10 @@ class ExportAnalysisFile(AppCommand):
                 video=video,
                 output_path=dirname,
                 output_prefix=str(fn.stem),
+                format_suffix=file_extension,
             )
-            filename = default_name if use_default else ask_for_filename(default_name)
 
+            filename = default_name if use_default else ask_for_filename(default_name)
             # Check that filename is valid and create list of video / output paths
             if len(filename) != 0:
                 analysis_videos.append(video)
@@ -1327,7 +1350,9 @@ def export_dataset_gui(
             instances.
         suggested: If `True`, include image data for suggested frames.
     """
-    win = QProgressDialog("Exporting dataset with frame images...", "Cancel", 0, 1)
+    win = QtWidgets.QProgressDialog(
+        "Exporting dataset with frame images...", "Cancel", 0, 1
+    )
 
     def update_progress(n, n_total):
         if win.wasCanceled():
@@ -1729,7 +1754,7 @@ class ReplaceVideo(EditCommand):
 
         # Warn user: newly added labels will be discarded if project is not saved
         if not context.state["filename"] or context.state["has_changes"]:
-            QMessageBox(
+            QtWidgets.QMessageBox(
                 text=("You have unsaved changes. Please save before replacing videos.")
             ).exec_()
             return False
@@ -1799,15 +1824,15 @@ class RemoveVideo(EditCommand):
 
         # Warn if there are labels that will be deleted
         if n > 0:
-            response = QMessageBox.critical(
+            response = QtWidgets.QMessageBox.critical(
                 context.app,
                 "Removing video with labels",
                 f"{n} labeled frames in this video will be deleted, "
                 "are you sure you want to remove this video?",
-                QMessageBox.Yes,
-                QMessageBox.No,
+                QtWidgets.QMessageBox.Yes,
+                QtWidgets.QMessageBox.No,
             )
-            if response == QMessageBox.No:
+            if response == QtWidgets.QMessageBox.No:
                 return False
 
         params["video"] = video
@@ -2104,11 +2129,15 @@ class InstanceDeleteCommand(EditCommand):
         )
 
         # Confirm that we want to delete
-        resp = QMessageBox.critical(
-            context.app, title, message, QMessageBox.Yes, QMessageBox.No
+        resp = QtWidgets.QMessageBox.critical(
+            context.app,
+            title,
+            message,
+            QtWidgets.QMessageBox.Yes,
+            QtWidgets.QMessageBox.No,
         )
 
-        if resp == QMessageBox.No:
+        if resp == QtWidgets.QMessageBox.No:
             return False
 
         return True
@@ -2565,14 +2594,14 @@ class ClearSuggestions(EditCommand):
 
         # Warn that suggestions will be cleared
 
-        response = QMessageBox.warning(
+        response = QtWidgets.QMessageBox.warning(
             context.app,
             "Clearing all suggestions",
             "Are you sure you want to remove all suggestions from the project?",
-            QMessageBox.Yes,
-            QMessageBox.No,
+            QtWidgets.QMessageBox.Yes,
+            QtWidgets.QMessageBox.No,
         )
-        if response == QMessageBox.No:
+        if response == QtWidgets.QMessageBox.No:
             return False
 
         return True

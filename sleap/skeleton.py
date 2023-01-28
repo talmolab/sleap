@@ -171,42 +171,39 @@ class Skeleton:
     @property
     def is_arborescence(self) -> bool:
         """Return whether this skeleton graph forms an arborescence."""
-        return nx.algorithms.tree.recognition.is_arborescence(self._graph)
+        return nx.algorithms.tree.recognition.is_arborescence(self.graph)
 
     @property
     def in_degree_over_one(self) -> List[Node]:
-        return [node for node, in_degree in self._graph.in_degree if in_degree > 1]
+        return [node for node, in_degree in self.graph.in_degree if in_degree > 1]
 
     @property
     def root_nodes(self) -> List[Node]:
-        return [node for node, in_degree in self._graph.in_degree if in_degree == 0]
+        return [node for node, in_degree in self.graph.in_degree if in_degree == 0]
 
     @property
     def cycles(self) -> List[List[Node]]:
-        return list(nx.algorithms.simple_cycles(self._graph))
+        return list(nx.algorithms.simple_cycles(self.graph))
 
     @property
     def graph(self):
-        """Return subgraph of BODY edges for skeleton."""
-        edges = [
-            (src, dst, key)
-            for src, dst, key, edge_type in self._graph.edges(keys=True, data="type")
-            if edge_type == EdgeType.BODY
-        ]
-        # TODO: properly induce subgraph for MultiDiGraph
-        #   Currently, NetworkX will just return the nodes in the subgraph.
-        #   See: https://stackoverflow.com/questions/16150557/networkxcreating-a-subgraph-induced-from-edges
-        return self._graph.edge_subgraph(edges)
+        """Return a view on the subgraph of body nodes and edges for skeleton."""
+
+        def edge_filter_fn(src, dst, edge_key):
+            edge_data = self._graph.get_edge_data(src, dst, edge_key)
+            return edge_data["type"] == EdgeType.BODY
+
+        return nx.subgraph_view(self._graph, filter_edge=edge_filter_fn)
 
     @property
     def graph_symmetry(self):
         """Return subgraph of symmetric edges for skeleton."""
-        edges = [
-            (src, dst, key)
-            for src, dst, key, edge_type in self._graph.edges(keys=True, data="type")
-            if edge_type == EdgeType.SYMMETRY
-        ]
-        return self._graph.edge_subgraph(edges)
+
+        def edge_filter_fn(src, dst, edge_key):
+            edge_data = self._graph.get_edge_data(src, dst, edge_key)
+            return edge_data["type"] == EdgeType.SYMMETRY
+
+        return nx.subgraph_view(self._graph, filter_edge=edge_filter_fn)
 
     @staticmethod
     def find_unique_nodes(skeletons: List["Skeleton"]) -> List[Node]:
