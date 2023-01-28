@@ -199,7 +199,7 @@ class Predictor(ABC):
             A subclass of `Predictor`.
 
         See also: `SingleInstancePredictor`, `TopDownPredictor`, `BottomUpPredictor`,
-            "MoveNetPredictor"
+            `MoveNetPredictor`
         """
         # Read configs and find model types.
         if isinstance(model_paths, str):
