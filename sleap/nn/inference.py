@@ -334,6 +334,9 @@ class Predictor(ABC):
                 ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
 
             # Adjust for potential SizeMatcher scaling.
+            offset_x = ex.get("offset_x", 0)
+            offset_y = ex.get("offset_y", 0)
+            ex["instance_peaks"] -= np.reshape([offset_x, offset_y], [-1, 1, 1, 2])
             ex["instance_peaks"] /= np.expand_dims(
                 np.expand_dims(ex["scale"], axis=1), axis=1
             )
@@ -828,6 +831,8 @@ class InferenceLayer(tf.keras.layers.Layer):
         ensure_grayscale: If `True`, converts inputs to grayscale if not already. If
             `False`, converts inputs to RGB if not already. If `None` (default), infer
             from the shape of the input layer of the model.
+        ensure_float: If `True`, converts inputs to `float32` and scales the values to
+            be between 0 and 1.
     """
 
     def __init__(
@@ -836,6 +841,7 @@ class InferenceLayer(tf.keras.layers.Layer):
         input_scale: float = 1.0,
         pad_to_stride: int = 1,
         ensure_grayscale: Optional[bool] = None,
+        ensure_float: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -845,6 +851,7 @@ class InferenceLayer(tf.keras.layers.Layer):
         if ensure_grayscale is None:
             ensure_grayscale = self.keras_model.inputs[0].shape[-1] == 1
         self.ensure_grayscale = ensure_grayscale
+        self.ensure_float = ensure_float
 
     def preprocess(self, imgs: tf.Tensor) -> tf.Tensor:
         """Apply all preprocessing operations configured for this layer.
@@ -863,7 +870,8 @@ class InferenceLayer(tf.keras.layers.Layer):
         else:
             imgs = sleap.nn.data.normalization.ensure_rgb(imgs)
 
-        imgs = sleap.nn.data.normalization.ensure_float(imgs)
+        if self.ensure_float:
+            imgs = sleap.nn.data.normalization.ensure_float(imgs)
 
         if self.input_scale != 1.0:
             imgs = sleap.nn.data.resizing.resize_image(imgs, self.input_scale)
