@@ -3,7 +3,6 @@ import tensorflow as tf
 from sleap.nn.system import use_cpu_only
 
 use_cpu_only()  # hide GPUs for test
-from tests.fixtures.videos import TEST_H5_FILE, TEST_SMALL_ROBOT_MP4_FILE
 import sleap
 from sleap.nn.data import providers
 
@@ -81,8 +80,8 @@ def test_labels_reader_subset(min_labels):
     assert examples[1]["example_ind"] == 1
 
 
-def test_video_reader_mp4():
-    video_reader = providers.VideoReader.from_filepath(TEST_SMALL_ROBOT_MP4_FILE)
+def test_video_reader_mp4(small_robot_mp4_path):
+    video_reader = providers.VideoReader.from_filepath(small_robot_mp4_path)
     ds = video_reader.make_dataset()
     example = next(iter(ds))
 
@@ -101,9 +100,9 @@ def test_video_reader_mp4():
     assert example["scale"].dtype == tf.float32
 
 
-def test_video_reader_mp4_subset():
+def test_video_reader_mp4_subset(small_robot_mp4_path):
     video_reader = providers.VideoReader.from_filepath(
-        TEST_SMALL_ROBOT_MP4_FILE, example_indices=[2, 1, 4]
+        small_robot_mp4_path, example_indices=[2, 1, 4]
     )
 
     assert len(video_reader) == 3
@@ -117,9 +116,9 @@ def test_video_reader_mp4_subset():
     assert examples[2]["frame_ind"] == 4
 
 
-def test_video_reader_mp4_grayscale():
+def test_video_reader_mp4_grayscale(small_robot_mp4_path):
     video_reader = providers.VideoReader.from_filepath(
-        TEST_SMALL_ROBOT_MP4_FILE, grayscale=True
+        small_robot_mp4_path, grayscale=True
     )
     ds = video_reader.make_dataset()
     example = next(iter(ds))
@@ -133,9 +132,9 @@ def test_video_reader_mp4_grayscale():
     np.testing.assert_array_equal(example["raw_image_size"], (320, 560, 1))
 
 
-def test_video_reader_hdf5():
+def test_video_reader_hdf5(hdf5_file_path):
     video_reader = providers.VideoReader.from_filepath(
-        TEST_H5_FILE, dataset="/box", input_format="channels_first"
+        hdf5_file_path, dataset="/box", input_format="channels_first"
     )
     ds = video_reader.make_dataset()
     example = next(iter(ds))
@@ -149,16 +148,14 @@ def test_video_reader_hdf5():
     np.testing.assert_array_equal(example["raw_image_size"], (512, 512, 1))
 
 
-def test_labels_reader_multi_size():
+def test_labels_reader_multi_size(small_robot_mp4_path, hdf5_file_path):
     # Create some fake data using two different size videos.
     skeleton = sleap.Skeleton.from_names_and_edge_inds(["A"])
     labels = sleap.Labels(
         [
             sleap.LabeledFrame(
                 frame_idx=0,
-                video=sleap.Video.from_filename(
-                    TEST_SMALL_ROBOT_MP4_FILE, grayscale=True
-                ),
+                video=sleap.Video.from_filename(small_robot_mp4_path, grayscale=True),
                 instances=[
                     sleap.Instance.from_pointsarray(
                         np.array([[128, 128]]), skeleton=skeleton
@@ -168,7 +165,7 @@ def test_labels_reader_multi_size():
             sleap.LabeledFrame(
                 frame_idx=0,
                 video=sleap.Video.from_filename(
-                    TEST_H5_FILE, dataset="/box", input_format="channels_first"
+                    hdf5_file_path, dataset="/box", input_format="channels_first"
                 ),
                 instances=[
                     sleap.Instance.from_pointsarray(

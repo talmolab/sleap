@@ -1441,3 +1441,19 @@ def test_movenet_load_model(movenet_name):
     assert predictor.model_paths == MOVENET_MODELS[model_name]["model_path"]
     assert isinstance(predictor, MoveNetPredictor)
     assert predictor.model_name == model_name
+
+
+def test_top_down_model(min_tracks_2node_labels: Labels, min_centroid_model_path: str):
+    labels = min_tracks_2node_labels
+    video = sleap.load_video(labels.videos[0].backend.filename)
+    predictor = sleap.load_model(min_centroid_model_path, batch_size=16)
+
+    # Preload images
+    imgs = video[:3]
+
+    # Raise better error message
+    with pytest.raises(ValueError):
+        predictor.predict(imgs[:1])
+
+    # Runs without error message
+    predictor.predict(labels.extract(inds=[0, 1]))
