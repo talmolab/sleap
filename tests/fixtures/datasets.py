@@ -24,6 +24,7 @@ TEST_MIN_TRACKS_2NODE_LABELS = "tests/data/tracks/clip.2node.slp"
 TEST_MIN_TRACKS_13NODE_LABELS = "tests/data/tracks/clip.slp"
 TEST_HDF5_PREDICTIONS = "tests/data/hdf5_format_v1/centered_pair_predictions.h5"
 TEST_SLP_PREDICTIONS = "tests/data/hdf5_format_v1/centered_pair_predictions.slp"
+TEST_MIN_DANCE_LABELS = "tests/data/slp_hdf5/dance.mp4.labels.slp"
 
 
 @pytest.fixture
@@ -232,3 +233,15 @@ def centered_pair_predictions_hdf5_path():
 @pytest.fixture
 def centered_pair_predictions_slp_path():
     return TEST_SLP_PREDICTIONS
+
+
+@pytest.fixture
+def min_dance_labels():
+    return Labels.load_file(
+        TEST_MIN_DANCE_LABELS, video_search=["tests/data/videos/dance.mp4"]
+    )
+
+
+@pytest.fixture
+def movenet_video():
+    return Video.from_filename("tests/data/videos/dance.mp4")
