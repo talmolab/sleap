@@ -302,13 +302,38 @@ class MergeTableModel(QtCore.QAbstractTableModel):
 
 
 class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
-    """Qt dialog for handling skeleton replacement."""
+    """Qt dialog for handling skeleton replacement.
+
+    Args:
+        delete_nodes: The nodes that will be deleted.
+        add_nodes: The nodes that will be added.
+
+    Attributes:
+        results_data: The results of the dialog. This is a dictionary with the keys
+            being the new node names and the values being the old node names.
+        delete_nodes: The nodes that will be deleted.
+        add_nodes: The nodes that will be added.
+        table: The table widget that displays the nodes.
+
+    Methods:
+        add_combo_boxes_to_table: Add combo boxes to the table.
+        find_unused_nodes: Find unused nodes.
+        create_combo_box: Create a combo box.
+        get_table_data: Get the data from the table.
+        accept: Accept the dialog.
+        result: Get the result of the dialog.
+
+    Returns:
+        The results of the dialog.
+    """
 
     def __init__(self, delete_nodes, add_nodes, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.results_data: Optional[Dict[str, str]] = None
+
+        # The only data we need
         self.delete_nodes = delete_nodes
         self.add_nodes = add_nodes
+        self.results_data: Optional[Dict[str, str]] = None
 
         # Set table name
         self.setWindowTitle("Replace Nodes")
@@ -329,11 +354,11 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
         self.table.setShowGrid(False)
         self.table.setAlternatingRowColors(True)
 
+        # Add data to table
         column = 0
         for i, node in enumerate(self.add_nodes):
             row = i
             self.table.setItem(row, column, QtWidgets.QTableWidgetItem(node))
-
         self.add_combo_boxes_to_table(init=True)
 
         # Add table to application
@@ -345,13 +370,21 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
         button.clicked.connect(self.accept)
         layout.addWidget(button)
 
+        # Set layout (otherwise nothing will be shown)
         self.setLayout(layout)
 
     def add_combo_boxes_to_table(
         self: "ReplaceSkeletonTableDialog",
         init: bool = False,
     ):
-        """Adds combo boxes to table."""
+        """Adds combo boxes to table.
+
+        Args:
+            init: If True, the combo boxes will be initialized with all
+                `self.delete_nodes`. If False, the combo boxes will be initialized with
+                all `self.delete_nodes` excluding nodes that have already been used by
+                other combo boxes.
+        """
         for i in range(self.table.rowCount()):
             current_combo = self.table.cellWidget(i, 1)
             current_combo_text = current_combo.currentText() if current_combo else ""
@@ -362,7 +395,11 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
             )
 
     def find_unused_nodes(self: "ReplaceSkeletonTableDialog"):
-        """Finds set of nodes from `delete_nodes` that are not used by table combo boxes."""
+        """Finds set of nodes from `delete_nodes` that are not used by combo boxes.
+
+        Returns:
+            List of unused nodes.
+        """
         unused_nodes = set(self.delete_nodes)
         for i in range(self.table.rowCount()):
             combo = self.table.cellWidget(i, 1)
@@ -375,7 +412,19 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
         set_text: str = "",
         init: bool = False,
     ):
-        """Creates combo box with unused nodes from `delete_nodes`"""
+        """Creates combo box with unused nodes from `delete_nodes`.
+
+        Args:
+            set_text: Text to set combo box to.
+            init: If True, the combo boxes will be initialized with all
+                `self.delete_nodes`. If False, the combo boxes will be initialized with
+                all `self.delete_nodes` excluding nodes that have already been used by
+                other combo boxes.
+
+        Returns:
+            Combo box with unused nodes from `delete_nodes` plus an empty string and the
+            `set_text`.
+        """
         unused_nodes = self.delete_nodes if init else self.find_unused_nodes()
         combo = QtWidgets.QComboBox()
         combo.addItem("")
@@ -396,16 +445,14 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
                 data[new_node] = old_node
         return data
 
-    def exit_widget(self: "ReplaceSkeletonTableDialog"):
-        """Exits widget and returns table data."""
-        self.close()
-
     def accept(self):
+        """Overrides accept method to return table data."""
         data = self.get_table_data()
         self.results_data = data
         super().accept()
 
     def result(self):
+        """Overrides result method to return table data."""
         return self.results_data
 
 
