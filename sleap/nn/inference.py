@@ -181,7 +181,8 @@ class Predictor(ABC):
         """Create the appropriate `Predictor` subclass from a list of model paths.
 
         Args:
-            model_paths: A single or list of trained model paths.
+            model_paths: A single or list of trained model paths. Special cases of
+                non-SLEAP models include "movenet-thunder" and "movenet-lightning".
             peak_threshold: Minimum confidence map value to consider a peak as valid.
             integral_refinement: If `True`, peaks will be refined with integral
                 regression. If `False`, `"local"`, peaks will be refined with quarter
@@ -4587,7 +4588,8 @@ def load_model(
     Args:
         model_path: Path to model or list of path to models that were trained by SLEAP.
             These should be the directories that contain `training_job.json` and
-            `best_model.h5`.
+            `best_model.h5`. Special cases of non-SLEAP models include "movenet-thunder"
+            and "movenet-lightning".
         batch_size: Number of frames to predict at a time. Larger values result in
             faster inference speeds, but require more memory.
         peak_threshold: Minimum confidence map value to consider a peak as valid.
@@ -4633,25 +4635,39 @@ def load_model(
 
     See also: TopDownPredictor, BottomUpPredictor, SingleInstancePredictor
     """
-    if isinstance(model_path, str):
-        model_paths = [model_path]
-    else:
-        model_paths = model_path
 
-    # Uncompress ZIP packaged models.
+    def unpack_sleap_model(model_path):
+        """Returns uncompressed ZIP packaged model path.
+
+        Also returns `TemporaryDirectory` where model was extracted to.
+        """
+        if isinstance(model_path, str):
+            model_paths = [model_path]
+        else:
+            model_paths = model_path
+
+        # Uncompress ZIP packaged models.
+        tmp_dirs = []
+        for i, model_path in enumerate(model_paths):
+            if model_path.endswith(".zip"):
+                # Create temp dir on demand.
+                tmp_dir = tempfile.TemporaryDirectory()
+                tmp_dirs.append(tmp_dir)
+
+                # Remove the temp dir when program exits in case something goes wrong.
+                atexit.register(shutil.rmtree, tmp_dir.name, ignore_errors=True)
+
+                # Extract and replace in the list.
+                shutil.unpack_archive(model_path, extract_dir=tmp_dir.name)
+                model_paths[i] = tmp_dir.name
+
+        return model_paths, tmp_dirs
+
     tmp_dirs = []
-    for i, model_path in enumerate(model_paths):
-        if model_path.endswith(".zip"):
-            # Create temp dir on demand.
-            tmp_dir = tempfile.TemporaryDirectory()
-            tmp_dirs.append(tmp_dir)
-
-            # Remove the temp dir when program exits in case something goes wrong.
-            atexit.register(shutil.rmtree, tmp_dir.name, ignore_errors=True)
-
-            # Extract and replace in the list.
-            shutil.unpack_archive(model_path, extract_dir=tmp_dir.name)
-            model_paths[i] = tmp_dir.name
+    if "movenet" in model_path:
+        model_paths = model_path
+    else:
+        model_paths, tmp_dirs = unpack_sleap_model(model_path)
 
     if disable_gpu_preallocation:
         sleap.disable_preallocation()
