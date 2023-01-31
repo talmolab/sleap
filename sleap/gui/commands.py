@@ -1827,9 +1827,9 @@ class OpenSkeleton(EditCommand):
             new_skeleton = sk_list[0]
         return new_skeleton
 
-    @staticmethod
+    @classmethod
     def compare_skeletons(
-        skeleton: Skeleton, new_skeleton: Skeleton
+        cls, skeleton: Skeleton, new_skeleton: Skeleton
     ) -> Tuple[List[str], List[str]]:
 
         delete_nodes = []
@@ -1891,6 +1891,30 @@ class OpenSkeleton(EditCommand):
             (delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
                 skeleton, new_skeleton
             )
+
+            # # Create QTable Widget to display skeleton differences
+            # table = QtWidgets.QTableWidget()
+            # table.setColumnCount(2)
+            # table.setRowCount(len(delete_nodes) + len(add_nodes))
+            # table.setHorizontalHeaderLabels(["Base", "New"])
+            # table.verticalHeader().setVisible(False)
+            # table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+            # table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+            # table.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+            # table.setShowGrid(False)
+            # table.setAlternatingRowColors(True)
+            # # Add combo boxes to New column
+            # for i, node in enumerate(add_nodes):
+            #     combo = QtWidgets.QComboBox()
+            #     combo.addItems(skeleton.node_names)
+            #     table.setCellWidget(i, 1, combo)
+            # # Add items to table
+            # for i, node in enumerate(delete_nodes):
+            #     table.setItem(i, 0, QtWidgets.QTableWidgetItem(node))
+            # for i, node in enumerate(add_nodes):
+            #     table.setItem(
+            #         i + len(delete_nodes), 0, QtWidgets.QTableWidgetItem(node)
+            #     )
 
             if (len(delete_nodes) > 0) or (len(add_nodes) > 0):
                 # Warn about mismatching skeletons
@@ -3031,3 +3055,91 @@ def copy_to_clipboard(text: str):
     clipboard = QtWidgets.QApplication.clipboard()
     clipboard.clear(mode=clipboard.Clipboard)
     clipboard.setText(text, mode=clipboard.Clipboard)
+
+
+if __name__ == "__main__":
+    import os
+
+    import sleap
+
+    ds = os.environ["ds-dmc"]
+
+    labels = sleap.load_file(ds)
+    skeleton = labels.skeletons[0]
+
+    ds_new_skeleton = r"D:\social-leap-estimates-animal-poses\pull-requests\sleap\sleap\skeletons\gerbils.json"
+    skeleton_new = sleap.Skeleton.load_json(ds_new_skeleton)
+    delete_nodes, add_nodes = OpenSkeleton.compare_skeletons(skeleton, skeleton_new)
+
+    # Construct QApplication
+    app = QtWidgets.QApplication([])
+    app.setApplicationName("Replace Skeleton")
+
+    # Create QTable Widget to display skeleton differences
+    table = QtWidgets.QTableWidget()
+    table.setColumnCount(2)
+    table.setRowCount(len(add_nodes))
+    table.setHorizontalHeaderLabels(["New", "Old"])
+    table.verticalHeader().setVisible(False)
+    table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+    table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+    table.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+    table.setShowGrid(False)
+    table.setAlternatingRowColors(True)
+
+    # Add all nodes to be added to to table
+    def add_combo_boxes_to_table(
+        table: QtWidgets.QTableWidget,
+        init: bool = False,
+    ):
+        """Adds combo boxes to table."""
+        for i in range(table.rowCount()):
+            current_combo = table.cellWidget(i, 1)
+            current_combo_text = current_combo.currentText() if current_combo else ""
+            table.setCellWidget(
+                i,
+                1,
+                create_combo_box(table, set_text=current_combo_text, init=init),
+            )
+
+    def find_unused_nodes(table: QtWidgets.QTableWidget):
+        """Finds set of nodes from `delete_nodes` that are not used by table combo boxes."""
+        unused_nodes = set(delete_nodes)
+        for i in range(table.rowCount()):
+            combo = table.cellWidget(i, 1)
+            if combo.currentText() in unused_nodes:
+                unused_nodes.remove(combo.currentText())
+        return list(unused_nodes)
+
+    def create_combo_box(
+        table: QtWidgets.QTableWidget,
+        set_text: str = "",
+        init: bool = False,
+    ):
+        """Creates combo box with unused nodes from `delete_nodes`"""
+        unused_nodes = delete_nodes if init else find_unused_nodes(table)
+        combo = QtWidgets.QComboBox()
+        combo.addItem("")
+        if set_text != "":
+            combo.addItem(set_text)
+        combo.addItems(unused_nodes)
+        combo.setCurrentText(set_text)  # Set text to current text
+        combo.currentTextChanged.connect(lambda: add_combo_boxes_to_table(table))
+        return combo
+
+    column = 0
+    for i, node in enumerate(add_nodes):
+        row = i
+        table.setItem(row, column, QtWidgets.QTableWidgetItem(node))
+
+    add_combo_boxes_to_table(table, init=True)
+
+    # Add table to application
+    layout = QtWidgets.QVBoxLayout()
+    layout.addWidget(table)
+    widget = QtWidgets.QWidget()
+    widget.setLayout(layout)
+    widget.show()
+
+    # Start application
+    app.exec_()

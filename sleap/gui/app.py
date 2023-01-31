@@ -1037,6 +1037,7 @@ class MainWindow(QMainWindow):
             lambda label: self.skeleton_description.setText(f"Description: {label}"),
         )
 
+        # TODO (LM): Call this when self.skeletonTemplates changes
         def updatePreviewImage(preview_image: bytes):
             if preview_image is None:
                 print("No preview image available to display!")
