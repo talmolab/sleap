@@ -4381,9 +4381,11 @@ def make_model_movenet(model_name: str) -> tf.keras.Model:
 
 class MoveNetInferenceLayer(InferenceLayer):
     """Inference layer for applying single instance models.
+
     This layer encapsulates all of the inference operations requires for generating
     predictions from a single instance confidence map model. This includes
     preprocessing, model forward pass, peak finding and coordinate adjustment.
+
     Attributes:
         keras_model: A `tf.keras.Model` that accepts rank-4 images as input and predicts
             rank-4 confidence maps as output. This should be a model that is trained on
@@ -4427,8 +4429,10 @@ class MoveNetInferenceLayer(InferenceLayer):
 
 class MoveNetInferenceModel(InferenceModel):
     """MoveNet prediction model.
+
     This model encapsulates the basic MoveNet approach. The images are passed to a model
     which is trained to detect all body parts (17 joints in total).
+
     Attributes:
         inference_layer: A MoveNet layer. This layer takes as input full images/videos and
         outputs the detected peaks.
@@ -4453,10 +4457,12 @@ class MoveNetInferenceModel(InferenceModel):
 @attr.s(auto_attribs=True)
 class MoveNetPredictor(Predictor):
     """MoveNet predictor.
+
     This high-level class handles initialization, preprocessing and tracking using a
     trained MoveNet model.
     This should be initialized using the `from_trained_models()` constructor or the
     high-level API (`sleap.load_model`).
+
     Attributes:
         inference_model: A `sleap.nn.inference.MoveNetInferenceModel` that wraps
             a trained `tf.keras.Model` to implement preprocessing and peak finding.
@@ -4507,14 +4513,13 @@ class MoveNetPredictor(Predictor):
         cls, model_name: Text, peak_threshold: float = 0.2
     ) -> "MoveNetPredictor":
         """Create the predictor from a saved model.
+
         Args:
             model_name: Variable indicating which model of MoveNet to use, either "lightning"
                 or "thunder."
             peak_threshold: Minimum confidence map value to consider a global peak as
                 valid.
-            batch_size: The default batch size to use when loading data for inference.
-                Higher values increase inference speed at the cost of higher memory
-                usage.
+
         Returns:
             An instance of`MoveNetPredictor` with the models loaded.
         """
