@@ -4,7 +4,7 @@ Gui for merging two labels files with options to resolve conflicts.
 
 import attr
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from sleap.instance import LabeledFrame
 from sleap.io.dataset import Labels
@@ -301,6 +301,114 @@ class MergeTableModel(QtCore.QAbstractTableModel):
         return None
 
 
+class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
+    """Qt dialog for handling skeleton replacement."""
+
+    def __init__(self, delete_nodes, add_nodes, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.results_data: Optional[Dict[str, str]] = None
+        self.delete_nodes = delete_nodes
+        self.add_nodes = add_nodes
+
+        # Set table name
+        self.setWindowTitle("Replace Nodes")
+
+        # Add table to dialog
+        self.table = QtWidgets.QTableWidget(self)
+
+        # Create QTable Widget to display skeleton differences
+        self.table.setColumnCount(2)
+        self.table.setRowCount(len(self.add_nodes))
+        self.table.setHorizontalHeaderLabels(["New", "Old"])
+        self.table.verticalHeader().setVisible(False)
+        self.table.horizontalHeader().setSectionResizeMode(
+            QtWidgets.QHeaderView.Stretch
+        )
+        self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.table.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+        self.table.setShowGrid(False)
+        self.table.setAlternatingRowColors(True)
+
+        column = 0
+        for i, node in enumerate(self.add_nodes):
+            row = i
+            self.table.setItem(row, column, QtWidgets.QTableWidgetItem(node))
+
+        self.add_combo_boxes_to_table(init=True)
+
+        # Add table to application
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.addWidget(self.table)
+
+        # Add button to application
+        button = QtWidgets.QPushButton("Replace")
+        button.clicked.connect(self.accept)
+        layout.addWidget(button)
+
+        self.setLayout(layout)
+
+    def add_combo_boxes_to_table(
+        self: "ReplaceSkeletonTableDialog",
+        init: bool = False,
+    ):
+        """Adds combo boxes to table."""
+        for i in range(self.table.rowCount()):
+            current_combo = self.table.cellWidget(i, 1)
+            current_combo_text = current_combo.currentText() if current_combo else ""
+            self.table.setCellWidget(
+                i,
+                1,
+                self.create_combo_box(set_text=current_combo_text, init=init),
+            )
+
+    def find_unused_nodes(self: "ReplaceSkeletonTableDialog"):
+        """Finds set of nodes from `delete_nodes` that are not used by table combo boxes."""
+        unused_nodes = set(self.delete_nodes)
+        for i in range(self.table.rowCount()):
+            combo = self.table.cellWidget(i, 1)
+            if combo.currentText() in unused_nodes:
+                unused_nodes.remove(combo.currentText())
+        return list(unused_nodes)
+
+    def create_combo_box(
+        self: "ReplaceSkeletonTableDialog",
+        set_text: str = "",
+        init: bool = False,
+    ):
+        """Creates combo box with unused nodes from `delete_nodes`"""
+        unused_nodes = self.delete_nodes if init else self.find_unused_nodes()
+        combo = QtWidgets.QComboBox()
+        combo.addItem("")
+        if set_text != "":
+            combo.addItem(set_text)
+        combo.addItems(unused_nodes)
+        combo.setCurrentText(set_text)  # Set text to current text
+        combo.currentTextChanged.connect(lambda: self.add_combo_boxes_to_table())
+        return combo
+
+    def get_table_data(self: "ReplaceSkeletonTableDialog"):
+        """Gets data from table."""
+        data = {}
+        for i in range(self.table.rowCount()):
+            new_node = self.table.item(i, 0).text()
+            old_node = self.table.cellWidget(i, 1).currentText()
+            if old_node != "":
+                data[new_node] = old_node
+        return data
+
+    def exit_widget(self: "ReplaceSkeletonTableDialog"):
+        """Exits widget and returns table data."""
+        self.close()
+
+    def accept(self):
+        data = self.get_table_data()
+        self.results_data = data
+        super().accept()
+
+    def result(self):
+        return self.results_data
+
+
 def show_instance_type_counts(instance_list: List["Instance"]) -> str:
     """
     Returns string of instance counts to show in table.
@@ -320,19 +428,23 @@ def show_instance_type_counts(instance_list: List["Instance"]) -> str:
 
 if __name__ == "__main__":
 
-    #     file_a = "tests/data/json_format_v1/centered_pair.json"
-    #     file_b = "tests/data/json_format_v2/centered_pair_predictions.json"
-    # file_a = "files/merge/a.h5"
-    # file_b = "files/merge/b.h5"
-    file_a = r"sleap_sandbox/skeleton_merge_conflicts/base_labels.slp"
-    # file_b = r"sleap_sandbox/skeleton_merge_conflicts/labels.renamed_node.slp")
-    # file_b = r"sleap_sandbox/skeleton_merge_conflicts/labels.new_node.slp"
-    file_b = r"sleap_sandbox/skeleton_merge_conflicts/labels.deleted_node.slp"
+    import os
 
-    base_labels = Labels.load_file(file_a)
-    new_labels = Labels.load_file(file_b)
+    import sleap
+    from sleap.gui.commands import OpenSkeleton
+
+    ds = os.environ["ds-dmc"]
+
+    labels = sleap.load_file(ds)
+    skeleton = labels.skeletons[0]
+
+    ds_new_skeleton = r"D:\social-leap-estimates-animal-poses\pull-requests\sleap\sleap\skeletons\gerbils.json"
+    skeleton_new = sleap.Skeleton.load_json(ds_new_skeleton)
+    delete_nodes, add_nodes = OpenSkeleton.compare_skeletons(skeleton, skeleton_new)
 
     app = QtWidgets.QApplication()
-    win = MergeDialog(base_labels, new_labels)
-    win.show()
-    app.exec_()
+    win = ReplaceSkeletonTableDialog(delete_nodes, add_nodes)
+    win.exec_()
+
+    # Get return value after closing window
+    data = win.result()
