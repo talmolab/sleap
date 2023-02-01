@@ -324,7 +324,8 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
         result: Get the result of the dialog.
 
     Returns:
-        The results of the dialog.
+        If accepted, returns a dictionary with the keys being the new node names and the values being the
+        old node names. If rejected, returns None.
     """
 
     def __init__(self, delete_nodes, add_nodes, *args, **kwargs):
@@ -361,8 +362,20 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
             self.table.setItem(row, column, QtWidgets.QTableWidgetItem(node))
         self.add_combo_boxes_to_table(init=True)
 
-        # Add table to application
+        # Add table and message to application
         layout = QtWidgets.QVBoxLayout(self)
+        message = (
+            "<p><b>Warning:</b> Pre-existing skeleton found."
+            "<p>The following nodes will be <b>deleted</b> from all instances:"
+            f"<br><em>From base labels</em>: {', '.join(self.delete_nodes)}<br></p>"
+            "<p>The following nodes will be <b>added</b> to all instances:<br>"
+            f"<em>From new labels</em>: {','.join(self.add_nodes)}</p>"
+            "<p>Nodes to be deleted can be linked to nodes being added via the table "
+            "below.</p>"
+        )
+        label = QtWidgets.QLabel(message)
+        label.setWordWrap(True)
+        layout.addWidget(label)
         layout.addWidget(self.table)
 
         # Add button to application
@@ -495,3 +508,4 @@ if __name__ == "__main__":
 
     # Get return value after closing window
     data = win.result()
+    print(f"data:\n{data}")
