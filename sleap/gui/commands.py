@@ -1917,6 +1917,23 @@ class OpenSkeleton(EditCommand):
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
+        """Replace skeleton with new skeleton.
+
+        Note that we modify the existing skeleton in-place to essentially match the new
+        skeleton. However, we cannot rename the skeleton since `Skeleton.name` is used
+        for hashing (see `Skeleton.name` setter).
+
+        Args:
+            context: CommandContext
+            params: dict
+                filename: str
+                delete_nodes: List[str]
+                add_nodes: List[str]
+                linked_nodes: Dict[str, str]
+
+        Returns:
+            None
+        """
 
         # TODO (LM): This is a hack to get around the fact that we do some dangerous
         # in-place operations on the skeleton. We should fix this.
