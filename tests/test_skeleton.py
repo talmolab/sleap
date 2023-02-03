@@ -169,6 +169,18 @@ def test_symmetry():
     with pytest.raises(ValueError):
         s1.delete_symmetry("1", "5")
 
+    s2 = Skeleton()
+    s2.add_nodes(["1", "2", "3"])
+    s2.add_edge("1", "2")
+    s2.add_edge("2", "3")
+    s2.add_symmetry("1", "3")
+    assert s2.graph.number_of_edges() == 2
+    assert s2.graph_symmetry.number_of_edges() == 2
+    assert list(s2.graph_symmetry.edges()) == [
+        (s2.nodes[0], s2.nodes[2]),
+        (s2.nodes[2], s2.nodes[0]),
+    ]
+
 
 def test_json(skeleton, tmpdir):
     """
@@ -253,6 +265,9 @@ def test_name_change(skeleton):
 
 def test_graph_property(skeleton):
     assert [node for node in skeleton.graph.nodes()] == skeleton.nodes
+
+    no_edge_skel = Skeleton.from_names_and_edge_inds(["A", "B"])
+    assert [node for node in no_edge_skel.graph.nodes()] == no_edge_skel.nodes
 
 
 def test_load_mat_format():
@@ -396,3 +411,13 @@ def test_arborescence():
     assert len(skeleton.cycles) == 0
     assert len(skeleton.root_nodes) == 1
     assert len(skeleton.in_degree_over_one) == 1
+
+    # symmetry edges should be ignored
+    skeleton = Skeleton()
+    skeleton.add_node("a")
+    skeleton.add_node("b")
+    skeleton.add_node("c")
+    skeleton.add_edge("a", "b")
+    skeleton.add_edge("b", "c")
+    skeleton.add_symmetry("a", "c")
+    assert skeleton.is_arborescence
