@@ -1028,6 +1028,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             self._use_trained_model.setVisible(has_trained_model)
             self._use_trained_model.setEnabled(has_trained_model)
             self._resume_training.setVisible(has_trained_model)
+            self._resume_training.setEnabled(has_trained_model)
 
         self.update_receptive_field()
 
@@ -1068,36 +1069,58 @@ class TrainingEditorWidget(QtWidgets.QWidget):
     #     self._cfg_list_widget.setUserConfigData(cfg_form_data_dict)
 
     def _update_use_trained(self, check_state=0):
-        if self._require_trained:
-            use_trained = True
-        else:
-            use_trained = check_state == QtCore.Qt.CheckState.Checked
+        """Update config GUI based on _use_trained_model and _resume_training checkboxes.
 
-        # check if self._resume_training is None, because it might not be initialized yet
-        resume_training = self._resume_training and self._resume_training.isChecked()
+        This function is called when either _use_trained_model or _resume_training checkbox
+        is checked/unchecked or when _require_trained is changed.
 
-        if self._use_trained_model is not None:
-            for form in self.form_widgets.values():
-                form.set_enabled(
-                    (not self._use_trained_model.isChecked())
-                    or (
-                        self._use_trained_model.isChecked()
-                        and self._resume_training.isChecked()
-                    )
-                )
+        If _require_trained is True, then we'll disable all fields.
+        If _use_trained_model is checked, then we'll disable all fields.
+        If _resume_training is checked, then we'll disable only the model field.
 
-            if self._use_trained_model.isChecked():
-                self._resume_training.setEnabled(True)
+        Args:
+            check_state (int, optional): Check state of checkbox. Defaults to 0. Unused.
 
-                if resume_training:
-                    self.form_widgets["model"].set_enabled(False)
-            else:
-                # change the checkbox to unchecked
+        Returns:
+            None
+
+        Side Effects:
+            Disables/Enables fields based on checkbox values (and _required_training).
+        """
+
+        # If we're requiring a trained model, then we don't plan on retraining the model
+        sender = self.sender()
+        use_trained = self._require_trained
+        resume_training = False
+
+        # Either _use_trained_model or _resume_training checkbox value changed
+        if not self._require_trained:
+
+            # Uncheck _resume_training checkbox if _use_trained_model is unchecked
+            if (
+                self._use_trained_model == sender
+                and not self._use_trained_model.isChecked()
+            ):
                 self._resume_training.setChecked(False)
-                self._resume_training.setEnabled(False)
-        else:
-            for form in self.form_widgets.values():
-                form.set_enabled(not use_trained)
+
+            # Check _use_trained_model checkbox if _resume_training is checked
+            elif self._resume_training == sender and self._resume_training.isChecked():
+                self._use_trained_model.setChecked(True)
+
+            # Determine what to do with the form widgets
+            use_trained = (
+                self._use_trained_model.isChecked()
+                and not self._resume_training.isChecked()
+            )
+            resume_training = (
+                self._resume_training and self._resume_training.isChecked()
+            )
+
+        # Update form widgets
+        for form in self.form_widgets.values():
+            form.set_enabled(not use_trained)
+        if resume_training:
+            self.form_widgets["model"].set_enabled(False)
 
         # If user wants to use trained model, then reset form to match config
         if use_trained and self._cfg_list_widget and (not resume_training):
