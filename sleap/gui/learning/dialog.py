@@ -412,6 +412,43 @@ class LearningDialog(QtWidgets.QDialog):
                     continue
             head_data[key] = val
 
+    @staticmethod
+    def update_loaded_config(
+        loaded_cfg: configs.TrainingJobConfig, tab_cfg_key_val_dict: dict
+    ) -> scopedkeydict.ScopedKeyDict:
+        """Update a loaded preset config with values from the training editor.
+
+        Args:
+            loaded_cfg: A `TrainingJobConfig` that was loaded from a preset or previous
+                training run.
+            tab_cfg_key_val_dict: A dictionary with the values extracted from the training
+                editor GUI tab.
+
+        Returns:
+            A `ScopedKeyDict` with the loaded config values overriden by the corresponding
+            ones from the `tab_cfg_key_val_dict`.
+        """
+        # Serialize training config
+        loaded_cfg_hierarchical: dict = cattr.unstructure(loaded_cfg)
+
+        # Clear backbone subfields since these will be set by the GUI
+        if (
+            "model" in loaded_cfg_hierarchical
+            and "backbone" in loaded_cfg_hierarchical["model"]
+        ):
+            for k in loaded_cfg_hierarchical["model"]["backbone"]:
+                loaded_cfg_hierarchical["model"]["backbone"][k] = None
+
+        loaded_cfg_scoped: scopedkeydict.ScopedKeyDict = (
+            scopedkeydict.ScopedKeyDict.from_hierarchical_dict(loaded_cfg_hierarchical)
+        )
+
+        # Replace params exposed in GUI with values from GUI
+        for param, value in tab_cfg_key_val_dict.items():
+            loaded_cfg_scoped.key_val_dict[param] = value
+
+        return loaded_cfg_scoped
+
     def get_every_head_config_data(
         self, pipeline_form_data
     ) -> List[configs.ConfigFileInfo]:
@@ -436,23 +473,13 @@ class LearningDialog(QtWidgets.QDialog):
                 scopedkeydict.apply_cfg_transforms_to_key_val_dict(tab_cfg_key_val_dict)
 
                 if trained_cfg_info is None:
-                    # Config could not be loaded
+                    # Config could not be loaded, just use the values from the GUI
                     loaded_cfg_scoped: dict = tab_cfg_key_val_dict
                 else:
-                    # Config loaded
-                    loaded_cfg: configs.TrainingJobConfig = trained_cfg_info.config
-
-                    # Serialize and flatten training config
-                    loaded_cfg_heirarchical: dict = cattr.unstructure(loaded_cfg)
-                    loaded_cfg_scoped: scopedkeydict.ScopedKeyDict = (
-                        scopedkeydict.ScopedKeyDict.from_hierarchical_dict(
-                            loaded_cfg_heirarchical
-                        )
+                    # Config was loaded, override with the values from the GUI
+                    loaded_cfg_scoped = LearningDialog.update_loaded_config(
+                        trained_cfg_info.config, tab_cfg_key_val_dict
                     )
-
-                    # Replace params exposed in GUI with values from GUI
-                    for param, value in tab_cfg_key_val_dict.items():
-                        loaded_cfg_scoped.key_val_dict[param] = value
 
                 # Deserialize merged dict to object
                 cfg = scopedkeydict.make_training_config_from_key_val_dict(

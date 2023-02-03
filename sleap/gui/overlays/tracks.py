@@ -144,6 +144,7 @@ class TrackTrailOverlay(BaseOverlay):
             frame_idx: index of the frame to which the trail is attached
 
         """
+        self.items = []
 
         if not self.show or self.trail_length == 0:
             return
@@ -188,7 +189,8 @@ class TrackTrailOverlay(BaseOverlay):
                 for segment in segments:
                     pen.setWidthF(width)
                     path = self.map_to_qt_path(segment)
-                    self.player.scene.addPath(path, pen)
+                    item = self.player.scene.addPath(path, pen)
+                    self.items.append(item)
                     width /= 2
 
     @staticmethod

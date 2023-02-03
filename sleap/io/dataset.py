@@ -2582,6 +2582,7 @@ class Labels(MutableSequence):
                     if fixed_path != filename:
                         filenames[i] = fixed_path
                         missing[i] = False
+                        context["changed_on_load"] = True
 
             if use_gui:
                 # If there are still missing paths, prompt user

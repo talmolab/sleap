@@ -8,29 +8,33 @@ import re
 import pytest
 
 
+@pytest.mark.parametrize("format", ["analysis", "analysis.nix"])
 def test_analysis_format(
     min_labels_slp: Labels,
     min_labels_slp_path: Labels,
     small_robot_mp4_vid: Video,
+    format: str,
     tmpdir,
 ):
     labels = min_labels_slp
     slp_path = PurePath(min_labels_slp_path)
     tmpdir = PurePath(tmpdir)
 
-    def generate_filenames(paths):
+    def generate_filenames(paths, format="analysis"):
         output_paths = [path for path in paths]
 
         # Generate filenames if user has not specified (enough) output filenames
         labels_path = str(slp_path)
         fn = re.sub("(\\.json(\\.zip)?|\\.h5|\\.slp)$", "", labels_path)
         fn = PurePath(fn)
+        out_suffix = "nix" if "nix" in format else "h5"
         default_names = [
             default_analysis_filename(
                 labels=labels,
                 video=video,
                 output_path=str(fn.parent),
                 output_prefix=str(fn.stem),
+                format_suffix=out_suffix,
             )
             for video in labels.videos[len(paths) :]
         ]
@@ -38,8 +42,8 @@ def test_analysis_format(
         output_paths.extend(default_names)
         return output_paths
 
-    def assert_analysis_existance(output_paths: list):
-        output_paths = generate_filenames(output_paths)
+    def assert_analysis_existance(output_paths: list, format="analysis"):
+        output_paths = generate_filenames(output_paths, format)
         for video, path in zip(labels.videos, output_paths):
             video_exists = Path(path).exists()
             if len(labels.get(video)) == 0:
@@ -47,21 +51,21 @@ def test_analysis_format(
             else:
                 assert video_exists
 
-    def sleap_convert_assert(output_paths, slp_path):
+    def sleap_convert_assert(output_paths, slp_path, format="analysis"):
         output_args = ""
         for path in output_paths:
             output_args += f"-o {path} "
-        args = f"--format analysis {output_args}{slp_path}".split()
+        args = f"--format {format} {output_args}{slp_path}".split()
         sleap_convert(args)
-        assert_analysis_existance(output_paths)
+        assert_analysis_existance(output_paths, format)
 
     # No output specified
     output_paths = []
-    sleap_convert_assert(output_paths, slp_path)
+    sleap_convert_assert(output_paths, slp_path, format)
 
     # Specify output and retest
     output_paths = [str(tmpdir.with_name("prefix")), str(tmpdir.with_name("prefix2"))]
-    sleap_convert_assert(output_paths, slp_path)
+    sleap_convert_assert(output_paths, slp_path, format)
 
     # Add video and retest
     labels.add_video(small_robot_mp4_vid)
@@ -69,7 +73,7 @@ def test_analysis_format(
     labels.save(filename=slp_path)
 
     output_paths = [str(tmpdir.with_name("prefix"))]
-    sleap_convert_assert(output_paths, slp_path)
+    sleap_convert_assert(output_paths, slp_path, format)
 
     # Add labeled frame to video and retest
     labeled_frame = labels.find(video=labels.videos[1], frame_idx=0, return_new=True)[0]
@@ -80,7 +84,7 @@ def test_analysis_format(
     labels.save(filename=slp_path)
 
     output_paths = [str(tmpdir.with_name("prefix"))]
-    sleap_convert_assert(output_paths, slp_path)
+    sleap_convert_assert(output_paths, slp_path, format)
 
 
 def test_sleap_format(
