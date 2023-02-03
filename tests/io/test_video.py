@@ -14,8 +14,6 @@ from sleap.io.video import (
 )
 from tests.fixtures.datasets import TEST_SLP_SIV_ROBOT
 from tests.fixtures.videos import (
-    TEST_H5_FILE,
-    TEST_SMALL_ROBOT_MP4_FILE,
     TEST_H5_DSET,
     TEST_H5_INPUT_FORMAT,
     TEST_SMALL_CENTERED_PAIR_VID,
@@ -31,20 +29,18 @@ from typing import List
 # See: https://github.com/pytest-dev/pytest/issues/349
 
 
-def test_from_filename():
-    assert type(Video.from_filename(TEST_H5_FILE).backend) == HDF5Video
-    assert type(Video.from_filename(TEST_SMALL_ROBOT_MP4_FILE).backend) == MediaVideo
+def test_from_filename(hdf5_file_path, small_robot_mp4_path):
+    assert type(Video.from_filename(hdf5_file_path).backend) == HDF5Video
+    assert type(Video.from_filename(small_robot_mp4_path).backend) == MediaVideo
 
 
-def test_backend_extra_kwargs():
-    Video.from_filename(TEST_H5_FILE, grayscale=True, another_kwarg=False)
-    Video.from_filename(
-        TEST_SMALL_ROBOT_MP4_FILE, dataset="no dataset", fake_kwarg=True
-    )
+def test_backend_extra_kwargs(hdf5_file_path, small_robot_mp4_path):
+    Video.from_filename(hdf5_file_path, grayscale=True, another_kwarg=False)
+    Video.from_filename(small_robot_mp4_path, dataset="no dataset", fake_kwarg=True)
 
 
-def test_grayscale_video():
-    assert Video.from_filename(TEST_SMALL_ROBOT_MP4_FILE, grayscale=True).shape[-1] == 1
+def test_grayscale_video(small_robot_mp4_path):
+    assert Video.from_filename(small_robot_mp4_path, grayscale=True).shape[-1] == 1
 
 
 def test_hdf5_get_shape(hdf5_vid):
@@ -123,14 +119,12 @@ def test_numpy_frames(small_robot_mp4_vid):
     assert np.all(np.equal(np_vid.get_frame(1), small_robot_mp4_vid.get_frame(7)))
 
 
-def test_is_missing():
-    vid = Video.from_media(TEST_SMALL_ROBOT_MP4_FILE)
+def test_is_missing(small_robot_mp4_path):
+    vid = Video.from_media(small_robot_mp4_path)
     assert not vid.is_missing
     vid = Video.from_media("non-existent-filename.mp4")
     assert vid.is_missing
-    vid = Video.from_numpy(
-        Video.from_media(TEST_SMALL_ROBOT_MP4_FILE).get_frames((3, 7, 9))
-    )
+    vid = Video.from_numpy(Video.from_media(small_robot_mp4_path).get_frames((3, 7, 9)))
     assert not vid.is_missing
 
 
@@ -331,8 +325,8 @@ def test_hdf5_indexing(small_robot_mp4_vid, tmpdir):
         hdf5_vid2.get_frames([0, 1, 2])
 
 
-def test_hdf5_vid_from_open_dataset():
-    with h5py.File(TEST_H5_FILE, "r") as f:
+def test_hdf5_vid_from_open_dataset(hdf5_file_path):
+    with h5py.File(hdf5_file_path, "r") as f:
         dataset = f[TEST_H5_DSET]
 
         vid = Video(

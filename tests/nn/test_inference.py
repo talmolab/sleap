@@ -9,7 +9,7 @@ import tensorflow as tf
 import sleap
 from numpy.testing import assert_array_equal, assert_allclose
 from pathlib import Path
-
+import tensorflow_hub as hub
 from sleap.nn.data.confidence_maps import (
     make_confmaps,
     make_grid_vectors,
@@ -37,6 +37,10 @@ from sleap.nn.inference import (
     BottomUpPredictor,
     BottomUpMultiClassPredictor,
     TopDownMultiClassPredictor,
+    MoveNetPredictor,
+    MoveNetInferenceLayer,
+    MoveNetInferenceModel,
+    MOVENET_MODELS,
     load_model,
     export_model,
     _make_cli_parser,
@@ -44,6 +48,7 @@ from sleap.nn.inference import (
     main as sleap_track,
     export_cli as sleap_export,
 )
+
 
 from sleap.gui.learning import runners
 
@@ -385,13 +390,34 @@ def test_inference_layer():
     x = tf.keras.layers.Lambda(lambda x: x)(x_in)
     keras_model = tf.keras.Model(x_in, x)
     layer = sleap.nn.inference.InferenceLayer(
-        keras_model=keras_model, input_scale=1.0, pad_to_stride=1, ensure_grayscale=None
+        keras_model=keras_model,
+        input_scale=1.0,
+        pad_to_stride=1,
+        ensure_grayscale=None,
+        ensure_float=True,
     )
     data = tf.cast(tf.fill([1, 4, 4, 1], 255), tf.uint8)
     out = layer(data)
     assert out.dtype == tf.float32
     assert tuple(out.shape) == (1, 4, 4, 1)
     assert tf.reduce_all(out == 1.0)
+
+    # Not convert to float
+    x_in = tf.keras.layers.Input([4, 4, 1], dtype="uint8")
+    x = tf.keras.layers.Lambda(lambda x: x)(x_in)
+    keras_model = tf.keras.Model(x_in, x)
+    layer = sleap.nn.inference.InferenceLayer(
+        keras_model=keras_model,
+        input_scale=1.0,
+        pad_to_stride=1,
+        ensure_grayscale=True,
+        ensure_float=False,
+    )
+    data = tf.cast(tf.fill([1, 4, 4, 1], 255), tf.uint8)
+    out = layer(data)
+    assert out.dtype == tf.uint8
+    assert tuple(out.shape) == (1, 4, 4, 1)
+    assert tf.reduce_all(out == 255)
 
     # Convert from rgb to grayscale, infer ensure grayscale
     x_in = tf.keras.layers.Input([4, 4, 1])
@@ -1360,3 +1386,80 @@ def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
         for key in tracker.candidate_maker.shifted_instances.keys():
             assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
             assert abs(key[0] - key[1]) <= track_window  # References within window
+
+
+def test_movenet_inference(movenet_video):
+    inference_layer = MoveNetInferenceLayer(model_name="lightning")
+    inference_model = MoveNetInferenceModel(inference_layer)
+
+    p = sleap.pipelines.Pipeline(
+        sleap.pipelines.VideoReader(video=movenet_video, example_indices=[0])
+    )
+    p += sleap.pipelines.SizeMatcher(
+        points_key=None,
+        max_image_width=inference_model.image_size,
+        max_image_height=inference_model.image_size,
+        center_pad=True,
+    )
+    p += sleap.pipelines.Batcher(batch_size=4)
+
+    ex = p.peek(1)
+    preds = inference_model.predict_on_batch(ex)
+    assert preds["instance_peaks"].shape == (1, 1, 17, 2)
+
+
+def test_movenet_predictor(min_dance_labels, movenet_video):
+    predictor = MoveNetPredictor.from_trained_models("thunder")
+    predictor.verbosity = "none"
+    assert predictor.is_grayscale == False
+    labels_pr = predictor.predict(min_dance_labels)
+
+    vr = sleap.pipelines.VideoReader(video=movenet_video, example_indices=[0, 1, 2])
+    labels_pr = predictor.predict(data=vr)
+
+    assert len(labels_pr) == 3
+    assert len(labels_pr[0].instances) == 1
+
+    points_gt = np.concatenate(
+        [min_dance_labels[0][0].numpy(), min_dance_labels[1][0].numpy()], axis=0
+    )
+    points_pr = np.concatenate(
+        [labels_pr[0][0].numpy(), labels_pr[1][0].numpy()], axis=0
+    )
+
+    max_diff = np.nanmax(np.abs(points_gt - points_pr))
+    assert max_diff < 0.1
+
+
+@pytest.mark.parametrize(
+    "loading_function", ["load_model", "Predictor.from_model_paths"]
+)
+@pytest.mark.parametrize("movenet_name", ["thunder", "lightning"])
+def test_movenet_load_model(loading_function, movenet_name):
+    model_path = f"movenet-{movenet_name}"
+    model_name = model_path.split("-")[-1]
+    assert model_name == movenet_name
+
+    if loading_function == "load_model":
+        predictor = load_model(model_path)
+    else:
+        predictor = Predictor.from_model_paths(model_path)
+    assert predictor.model_paths == MOVENET_MODELS[model_name]["model_path"]
+    assert isinstance(predictor, MoveNetPredictor)
+    assert predictor.model_name == model_name
+
+
+def test_top_down_model(min_tracks_2node_labels: Labels, min_centroid_model_path: str):
+    labels = min_tracks_2node_labels
+    video = sleap.load_video(labels.videos[0].backend.filename)
+    predictor = sleap.load_model(min_centroid_model_path, batch_size=16)
+
+    # Preload images
+    imgs = video[:3]
+
+    # Raise better error message
+    with pytest.raises(ValueError):
+        predictor.predict(imgs[:1])
+
+    # Runs without error message
+    predictor.predict(labels.extract(inds=[0, 1]))
