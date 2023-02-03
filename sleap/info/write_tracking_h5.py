@@ -258,9 +258,11 @@ def write_occupancy_file(
     """
 
     with h5.File(output_path, "w") as f:
+        print(f"\nExporting to SLEAP Analysis file...")
         for key, val in data_dict.items():
+            print(f"\t{key}: ", end="")
             if isinstance(val, np.ndarray):
-                print(f"{key}: {val.shape}")
+                print(f"{val.shape}")
 
                 if transpose:
                     # Transpose since MATLAB expects column-major
@@ -276,9 +278,9 @@ def write_occupancy_file(
                     )
             else:
                 if isinstance(val, (str, int, type(None))):
-                    print(f"{key}: {val}")
+                    print(f"{val}")
                 else:
-                    print(f"{key}: {len(val)}")
+                    print(f"{len(val)}")
                 f.create_dataset(key, data=val)
 
     print(f"Saved as {output_path}")

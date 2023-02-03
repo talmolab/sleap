@@ -2147,7 +2147,14 @@ class TopDownInferenceModel(InferenceModel):
         crop_output = self.centroid_crop(example)
 
         if isinstance(self.instance_peaks, FindInstancePeaksGroundTruth):
-            peaks_output = self.instance_peaks(example, crop_output)
+
+            if "instances" in example:
+                peaks_output = self.instance_peaks(example, crop_output)
+            else:
+                raise ValueError(
+                    "Ground truth data was not detected... "
+                    "Please load both models when predicting on non-ground-truth data."
+                )
         else:
             peaks_output = self.instance_peaks(crop_output)
         return peaks_output
@@ -4842,7 +4849,7 @@ def main(args: Optional[list] = None):
     parser = _make_cli_parser()
 
     # Parse inputs.
-    args, _ = parser.parse_known_args(args=args)
+    args, _ = parser.parse_known_args(args)
     print("Args:")
     pprint(vars(args))
     print()

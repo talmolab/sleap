@@ -2,16 +2,14 @@ from sleap.gui.learning.dialog import LearningDialog, TrainingEditorWidget
 from sleap.gui.learning.configs import TrainingConfigFilesWidget
 from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.gui.learning.scopedkeydict import (
-    make_training_config_from_key_val_dict,
     ScopedKeyDict,
     apply_cfg_transforms_to_key_val_dict,
 )
 from sleap.gui.app import MainWindow
+from sleap.nn.config import TrainingJobConfig, UNetConfig
 
-import pytest
 import cattr
 from pathlib import Path
-from qtpy import QtWidgets
 
 
 def test_use_hidden_params_from_loaded_config(
@@ -90,3 +88,31 @@ def test_use_hidden_params_from_loaded_config(
         elif k not in params_reset:
             # 2. Uses hidden parameters from loaded config
             assert config_info_dict[k] == training_cfg_info_dict[k]
+
+
+def test_update_loaded_config():
+    base_cfg = TrainingJobConfig()
+    base_cfg.data.preprocessing.input_scaling = 0.5
+    base_cfg.model.backbone.unet = UNetConfig(max_stride=32, output_stride=2)
+    base_cfg.optimization.augmentation_config.rotation_max_angle = 180
+    base_cfg.optimization.augmentation_config.rotation_min_angle = -180
+
+    gui_vals = {
+        "data.preprocessing.input_scaling": 1.0,
+        "model.backbone.pretrained_encoder.encoder": "vgg16",
+    }
+
+    scoped_cfg = LearningDialog.update_loaded_config(base_cfg, gui_vals)
+    assert scoped_cfg.key_val_dict["data.preprocessing.input_scaling"] == 1.0
+    assert scoped_cfg.key_val_dict["model.backbone.unet"] is None
+    assert (
+        scoped_cfg.key_val_dict["model.backbone.pretrained_encoder.encoder"] == "vgg16"
+    )
+    assert (
+        scoped_cfg.key_val_dict["optimization.augmentation_config.rotation_max_angle"]
+        == 180
+    )
+    assert (
+        scoped_cfg.key_val_dict["optimization.augmentation_config.rotation_min_angle"]
+        == -180
+    )
