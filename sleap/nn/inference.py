@@ -39,7 +39,7 @@ import json
 from time import time
 from datetime import datetime
 from pathlib import Path
-
+import tensorflow_hub as hub
 from abc import ABC, abstractmethod
 from typing import Text, Optional, List, Dict, Union, Iterator, Tuple
 
@@ -47,6 +47,7 @@ import tensorflow as tf
 import numpy as np
 
 import sleap
+
 from sleap.nn.config import TrainingJobConfig, DataConfig
 from sleap.nn.data.resizing import SizeMatcher
 from sleap.nn.model import Model
@@ -69,6 +70,56 @@ from sleap.util import frame_list
 
 from tensorflow.python.framework.convert_to_constants import (
     convert_variables_to_constants_v2,
+)
+
+MOVENET_MODELS = {
+    "lightning": {
+        "model_path": "https://tfhub.dev/google/movenet/singlepose/lightning/4",
+        "image_size": 192,
+    },
+    "thunder": {
+        "model_path": "https://tfhub.dev/google/movenet/singlepose/thunder/4",
+        "image_size": 256,
+    },
+}
+
+MOVENET_SKELETON = sleap.Skeleton.from_names_and_edge_inds(
+    [
+        "nose",
+        "left_eye",
+        "right_eye",
+        "left_ear",
+        "right_ear",
+        "left_shoulder",
+        "right_shoulder",
+        "left_elbow",
+        "right_elbow",
+        "left_wrist",
+        "right_wrist",
+        "left_hip",
+        "right_hip",
+        "left_knee",
+        "right_knee",
+        "left_ankle",
+        "right_ankle",
+    ],
+    [
+        (10, 8),
+        (8, 6),
+        (6, 5),
+        (5, 7),
+        (7, 9),
+        (6, 12),
+        (5, 11),
+        (12, 14),
+        (14, 16),
+        (11, 13),
+        (13, 15),
+        (4, 2),
+        (2, 0),
+        (0, 1),
+        (1, 3),
+    ],
 )
 
 logger = logging.getLogger(__name__)
@@ -130,7 +181,8 @@ class Predictor(ABC):
         """Create the appropriate `Predictor` subclass from a list of model paths.
 
         Args:
-            model_paths: A single or list of trained model paths.
+            model_paths: A single or list of trained model paths. Special cases of
+                non-SLEAP models include "movenet-thunder" and "movenet-lightning".
             peak_threshold: Minimum confidence map value to consider a peak as valid.
             integral_refinement: If `True`, peaks will be refined with integral
                 regression. If `False`, `"local"`, peaks will be refined with quarter
@@ -147,11 +199,22 @@ class Predictor(ABC):
         Returns:
             A subclass of `Predictor`.
 
-        See also: `SingleInstancePredictor`, `TopDownPredictor`, `BottomUpPredictor`
+        See also: `SingleInstancePredictor`, `TopDownPredictor`, `BottomUpPredictor`,
+            `MoveNetPredictor`
         """
         # Read configs and find model types.
         if isinstance(model_paths, str):
+            # Special case for handling movenet models
+            if "movenet" in model_paths:
+                model_name = model_paths.split("-")[-1]  # Expect movenet-<model_name>
+                predictor = MoveNetPredictor.from_trained_models(
+                    model_name=model_name, peak_threshold=peak_threshold
+                )
+                predictor.model_paths = MOVENET_MODELS[model_name]["model_path"]
+                return predictor
+
             model_paths = [model_paths]
+
         model_configs = [sleap.load_config(model_path) for model_path in model_paths]
         model_paths = [cfg.filename for cfg in model_configs]
         model_types = [
@@ -334,6 +397,9 @@ class Predictor(ABC):
                 ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
 
             # Adjust for potential SizeMatcher scaling.
+            offset_x = ex.get("offset_x", 0)
+            offset_y = ex.get("offset_y", 0)
+            ex["instance_peaks"] -= np.reshape([offset_x, offset_y], [-1, 1, 1, 2])
             ex["instance_peaks"] /= np.expand_dims(
                 np.expand_dims(ex["scale"], axis=1), axis=1
             )
@@ -828,6 +894,8 @@ class InferenceLayer(tf.keras.layers.Layer):
         ensure_grayscale: If `True`, converts inputs to grayscale if not already. If
             `False`, converts inputs to RGB if not already. If `None` (default), infer
             from the shape of the input layer of the model.
+        ensure_float: If `True`, converts inputs to `float32` and scales the values to
+            be between 0 and 1.
     """
 
     def __init__(
@@ -836,6 +904,7 @@ class InferenceLayer(tf.keras.layers.Layer):
         input_scale: float = 1.0,
         pad_to_stride: int = 1,
         ensure_grayscale: Optional[bool] = None,
+        ensure_float: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -845,6 +914,7 @@ class InferenceLayer(tf.keras.layers.Layer):
         if ensure_grayscale is None:
             ensure_grayscale = self.keras_model.inputs[0].shape[-1] == 1
         self.ensure_grayscale = ensure_grayscale
+        self.ensure_float = ensure_float
 
     def preprocess(self, imgs: tf.Tensor) -> tf.Tensor:
         """Apply all preprocessing operations configured for this layer.
@@ -863,7 +933,8 @@ class InferenceLayer(tf.keras.layers.Layer):
         else:
             imgs = sleap.nn.data.normalization.ensure_rgb(imgs)
 
-        imgs = sleap.nn.data.normalization.ensure_float(imgs)
+        if self.ensure_float:
+            imgs = sleap.nn.data.normalization.ensure_float(imgs)
 
         if self.input_scale != 1.0:
             imgs = sleap.nn.data.resizing.resize_image(imgs, self.input_scale)
@@ -2147,7 +2218,14 @@ class TopDownInferenceModel(InferenceModel):
         crop_output = self.centroid_crop(example)
 
         if isinstance(self.instance_peaks, FindInstancePeaksGroundTruth):
-            peaks_output = self.instance_peaks(example, crop_output)
+
+            if "instances" in example:
+                peaks_output = self.instance_peaks(example, crop_output)
+            else:
+                raise ValueError(
+                    "Ground truth data was not detected... "
+                    "Please load both models when predicting on non-ground-truth data."
+                )
         else:
             peaks_output = self.instance_peaks(crop_output)
         return peaks_output
@@ -4264,6 +4342,240 @@ class TopDownMultiClassPredictor(Predictor):
             )
 
 
+def make_model_movenet(model_name: str) -> tf.keras.Model:
+    """Load a MoveNet model by name.
+
+    Args:
+        model_name: Name of the model ("lightning" or "thunder")
+
+    Returns:
+        A tf.keras.Model ready for inference.
+    """
+    model_path = MOVENET_MODELS[model_name]["model_path"]
+    image_size = MOVENET_MODELS[model_name]["image_size"]
+
+    x_in = tf.keras.layers.Input([image_size, image_size, 3], name="image")
+
+    x = tf.keras.layers.Lambda(
+        lambda x: tf.cast(x, dtype=tf.int32), name="cast_to_int32"
+    )(x_in)
+    layer = hub.KerasLayer(
+        model_path,
+        signature="serving_default",
+        output_key="output_0",
+        name="movenet_layer",
+    )
+    x = layer(x)
+
+    def split_outputs(x):
+        x_ = tf.reshape(x, [-1, 17, 3])
+        keypoints = tf.gather(x_, [1, 0], axis=-1)
+        keypoints *= image_size
+        scores = tf.squeeze(tf.gather(x_, [2], axis=-1), axis=-1)
+        return keypoints, scores
+
+    x = tf.keras.layers.Lambda(split_outputs, name="keypoints_and_scores")(x)
+    model = tf.keras.Model(x_in, x)
+    return model
+
+
+class MoveNetInferenceLayer(InferenceLayer):
+    """Inference layer for applying single instance models.
+
+    This layer encapsulates all of the inference operations requires for generating
+    predictions from a single instance confidence map model. This includes
+    preprocessing, model forward pass, peak finding and coordinate adjustment.
+
+    Attributes:
+        keras_model: A `tf.keras.Model` that accepts rank-4 images as input and predicts
+            rank-4 confidence maps as output. This should be a model that is trained on
+            single instance confidence maps.
+        model_name: Variable indicating which model of MoveNet to use, either "lightning"
+            or "thunder."
+        input_scale: Float indicating if the images should be resized before being
+            passed to the model.
+        pad_to_stride: If not 1, input image will be paded to ensure that it is
+            divisible by this value (after scaling). This should be set to the max
+            stride of the model.
+        ensure_grayscale: Boolean indicating whether the type of input data is grayscale
+            or not.
+        ensure_float: Boolean indicating whether the type of data is float or not.
+    """
+
+    def __init__(self, model_name="lightning"):
+        self.keras_model = make_model_movenet(model_name)
+        self.model_name = model_name
+        self.image_size = MOVENET_MODELS[model_name]["image_size"]
+        super().__init__(
+            keras_model=self.keras_model,
+            input_scale=1.0,
+            pad_to_stride=1,
+            ensure_grayscale=False,
+            ensure_float=False,
+        )
+
+    def call(self, ex):
+        if type(ex) == dict:
+            img = ex["image"]
+
+        else:
+            img = ex
+
+        points, confidences = super().call(img)
+        points = tf.expand_dims(points, axis=1)  # (batch, 1, nodes, 2)
+        confidences = tf.expand_dims(confidences, axis=1)  # (batch, 1, nodes)
+        return {"instance_peaks": points, "confidences": confidences}
+
+
+class MoveNetInferenceModel(InferenceModel):
+    """MoveNet prediction model.
+
+    This model encapsulates the basic MoveNet approach. The images are passed to a model
+    which is trained to detect all body parts (17 joints in total).
+
+    Attributes:
+        inference_layer: A MoveNet layer. This layer takes as input full images/videos and
+        outputs the detected peaks.
+    """
+
+    def __init__(self, inference_layer, **kwargs):
+        super().__init__(**kwargs)
+        self.inference_layer = inference_layer
+
+    @property
+    def model_name(self):
+        return self.inference_layer.model_name
+
+    @property
+    def image_size(self):
+        return self.inference_layer.image_size
+
+    def call(self, x):
+        return self.inference_layer(x)
+
+
+@attr.s(auto_attribs=True)
+class MoveNetPredictor(Predictor):
+    """MoveNet predictor.
+
+    This high-level class handles initialization, preprocessing and tracking using a
+    trained MoveNet model.
+    This should be initialized using the `from_trained_models()` constructor or the
+    high-level API (`sleap.load_model`).
+
+    Attributes:
+        inference_model: A `sleap.nn.inference.MoveNetInferenceModel` that wraps
+            a trained `tf.keras.Model` to implement preprocessing and peak finding.
+        pipeline: A `sleap.nn.data.Pipeline` that loads the data and batches input data.
+            This will be updated dynamically if new data sources are used.
+        peak_threshold: Minimum confidence map value to consider a global peak as valid.
+        batch_size: The default batch size to use when loading data for inference.
+            Higher values increase inference speed at the cost of higher memory usage.
+        model_name: Variable indicating which model of MoveNet to use, either "lightning"
+            or "thunder."
+    """
+
+    inference_model: Optional[MoveNetInferenceModel] = attr.ib(default=None)
+    pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
+    peak_threshold: float = 0.2
+    batch_size: int = 1
+    model_name: str = "lightning"
+
+    def _initialize_inference_model(self):
+        """Initialize the inference model from the trained model and configuration."""
+        # Force batch size to be 1 since that's what the underlying model expects.
+        self.batch_size = 1
+        self.inference_model = MoveNetInferenceModel(
+            MoveNetInferenceLayer(
+                model_name=self.model_name,
+            )
+        )
+
+    @property
+    def data_config(self) -> DataConfig:
+
+        if self.inference_model is None:
+            self._initialize_inference_model()
+
+        data_config = DataConfig()
+        data_config.preprocessing.resize_and_pad_to_target = True
+        data_config.preprocessing.target_height = self.inference_model.image_size
+        data_config.preprocessing.target_width = self.inference_model.image_size
+        return data_config
+
+    @property
+    def is_grayscale(self) -> bool:
+        """Return whether the model expects grayscale inputs."""
+        return False
+
+    @classmethod
+    def from_trained_models(
+        cls, model_name: Text, peak_threshold: float = 0.2
+    ) -> "MoveNetPredictor":
+        """Create the predictor from a saved model.
+
+        Args:
+            model_name: Variable indicating which model of MoveNet to use, either "lightning"
+                or "thunder."
+            peak_threshold: Minimum confidence map value to consider a global peak as
+                valid.
+
+        Returns:
+            An instance of`MoveNetPredictor` with the models loaded.
+        """
+
+        obj = cls(
+            model_name=model_name,
+            peak_threshold=peak_threshold,
+            batch_size=1,
+        )
+        obj._initialize_inference_model()
+        return obj
+
+    def _make_labeled_frames_from_generator(
+        self, generator: Iterator[Dict[str, np.ndarray]], data_provider: Provider
+    ) -> List[sleap.LabeledFrame]:
+
+        skeleton = MOVENET_SKELETON
+
+        # Loop over batches.
+        predicted_frames = []
+        for ex in generator:
+
+            # Loop over frames.
+            for video_ind, frame_ind, points, confidences in zip(
+                ex["video_ind"],
+                ex["frame_ind"],
+                ex["instance_peaks"],
+                ex["confidences"],
+            ):
+                # Filter out points with low confidences
+                points[confidences < self.peak_threshold] = np.nan
+
+                # Create predicted instances from MoveNet predictions
+                if np.isnan(points).all():
+                    predicted_instances = []
+                else:
+                    predicted_instances = [
+                        sleap.instance.PredictedInstance.from_arrays(
+                            points=points[0],  # (nodes, 2)
+                            point_confidences=confidences[0],  # (nodes,)
+                            instance_score=np.nansum(confidences[0]),  # ()
+                            skeleton=skeleton,
+                        )
+                    ]
+
+                predicted_frames.append(
+                    sleap.LabeledFrame(
+                        video=data_provider.videos[video_ind],
+                        frame_idx=frame_ind,
+                        instances=predicted_instances,
+                    )
+                )
+
+        return predicted_frames
+
+
 def load_model(
     model_path: Union[str, List[str]],
     batch_size: int = 4,
@@ -4281,7 +4593,8 @@ def load_model(
     Args:
         model_path: Path to model or list of path to models that were trained by SLEAP.
             These should be the directories that contain `training_job.json` and
-            `best_model.h5`.
+            `best_model.h5`. Special cases of non-SLEAP models include "movenet-thunder"
+            and "movenet-lightning".
         batch_size: Number of frames to predict at a time. Larger values result in
             faster inference speeds, but require more memory.
         peak_threshold: Minimum confidence map value to consider a peak as valid.
@@ -4327,25 +4640,39 @@ def load_model(
 
     See also: TopDownPredictor, BottomUpPredictor, SingleInstancePredictor
     """
-    if isinstance(model_path, str):
-        model_paths = [model_path]
-    else:
-        model_paths = model_path
 
-    # Uncompress ZIP packaged models.
+    def unpack_sleap_model(model_path):
+        """Returns uncompressed ZIP packaged model path.
+
+        Also returns `TemporaryDirectory` where model was extracted to.
+        """
+        if isinstance(model_path, str):
+            model_paths = [model_path]
+        else:
+            model_paths = model_path
+
+        # Uncompress ZIP packaged models.
+        tmp_dirs = []
+        for i, model_path in enumerate(model_paths):
+            if model_path.endswith(".zip"):
+                # Create temp dir on demand.
+                tmp_dir = tempfile.TemporaryDirectory()
+                tmp_dirs.append(tmp_dir)
+
+                # Remove the temp dir when program exits in case something goes wrong.
+                atexit.register(shutil.rmtree, tmp_dir.name, ignore_errors=True)
+
+                # Extract and replace in the list.
+                shutil.unpack_archive(model_path, extract_dir=tmp_dir.name)
+                model_paths[i] = tmp_dir.name
+
+        return model_paths, tmp_dirs
+
     tmp_dirs = []
-    for i, model_path in enumerate(model_paths):
-        if model_path.endswith(".zip"):
-            # Create temp dir on demand.
-            tmp_dir = tempfile.TemporaryDirectory()
-            tmp_dirs.append(tmp_dir)
-
-            # Remove the temp dir when program exits in case something goes wrong.
-            atexit.register(shutil.rmtree, tmp_dir.name, ignore_errors=True)
-
-            # Extract and replace in the list.
-            shutil.unpack_archive(model_path, extract_dir=tmp_dir.name)
-            model_paths[i] = tmp_dir.name
+    if "movenet" in model_path:
+        model_paths = model_path
+    else:
+        model_paths, tmp_dirs = unpack_sleap_model(model_path)
 
     if disable_gpu_preallocation:
         sleap.disable_preallocation()
@@ -4842,7 +5169,7 @@ def main(args: Optional[list] = None):
     parser = _make_cli_parser()
 
     # Parse inputs.
-    args, _ = parser.parse_known_args(args=args)
+    args, _ = parser.parse_known_args(args)
     print("Args:")
     pprint(vars(args))
     print()

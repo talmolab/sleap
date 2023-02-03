@@ -6,6 +6,7 @@ from sleap.gui.widgets.video import (
     QtInstance,
     QtVideoPlayer,
     QtTextWithBackground,
+    VisibleBoundingBox,
 )
 
 from qtpy import QtCore, QtWidgets
@@ -110,3 +111,36 @@ def test_QtTextWithBackground(qtbot):
 
     scene.addItem(txt)
     qtbot.addWidget(view)
+
+
+def test_VisibleBoundingBox(qtbot, centered_pair_labels):
+    vp = QtVideoPlayer(centered_pair_labels.video)
+
+    test_idx = 27
+    for instance in centered_pair_labels.labeled_frames[test_idx].instances:
+        vp.addInstance(instance)
+
+    inst = vp.instances[0]
+
+    # Check if type of bounding box is correct
+    assert type(inst.box) == VisibleBoundingBox
+
+    # Scale the bounding box
+    start_top_left = inst.box.rect().topLeft()
+    start_bottom_right = inst.box.rect().bottomRight()
+    initial_width = inst.box.rect().width()
+    initial_height = inst.box.rect().height()
+
+    dx = 5
+    dy = 10
+
+    end_top_left = QtCore.QPointF(start_top_left.x() - dx, start_top_left.y() - dy)
+    end_bottom_right = QtCore.QPointF(
+        start_bottom_right.x() + dx, start_bottom_right.y() + dy
+    )
+
+    inst.box.setRect(QtCore.QRectF(end_top_left, end_bottom_right))
+
+    # Check if bounding box scaled appropriately
+    assert inst.box.rect().width() - initial_width == 2 * dx
+    assert inst.box.rect().height() - initial_height == 2 * dy
