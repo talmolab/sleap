@@ -1835,3 +1835,16 @@ def main(args: Optional[list] = None):
         app.exec_()
 
     pass
+
+
+if __name__ == "__main__":
+    import os
+
+    ds = os.environ["ds-dmc"]
+
+    app = QApplication([])
+
+    window = MainWindow(labels_path=ds, no_usage_data=True)
+    window._show_learning_dialog("training")
+
+    app.exec_()

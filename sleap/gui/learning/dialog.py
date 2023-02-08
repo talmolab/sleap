@@ -75,7 +75,7 @@ class LearningDialog(QtWidgets.QDialog):
 
         self.current_pipeline = ""
 
-        self.tabs = dict()
+        self.tabs: Dict[str, TrainingEditorWidget] = dict()
         self.shown_tab_names = []
 
         self._cfg_getter = configs.TrainingConfigsGetter.make_from_labels_filename(
@@ -907,7 +907,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         yaml_name = "training_editor_form"
 
-        self.form_widgets = dict()
+        self.form_widgets: Dict[str, YamlFormWidget] = dict()
 
         for key in ("model", "data", "augmentation", "optimization", "outputs"):
             self.form_widgets[key] = YamlFormWidget.from_name(
@@ -1024,9 +1024,11 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self._load_config(cfg_info)
 
         has_trained_model = cfg_info.has_trained_model
-        if self._use_trained_model:
+        if self._use_trained_model is not None:
             self._use_trained_model.setVisible(has_trained_model)
             self._use_trained_model.setEnabled(has_trained_model)
+        # Redundant check (for readability) since this checkbox exists if the above does
+        if self._resume_training is not None:
             self._resume_training.setVisible(has_trained_model)
             self._resume_training.setEnabled(has_trained_model)
 
@@ -1088,42 +1090,44 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             Disables/Enables fields based on checkbox values (and _required_training).
         """
 
-        # If we're requiring a trained model, then we don't plan on retraining the model
+        # Check which checkbox changed its value (if any)
         sender = self.sender()
-        use_trained = self._require_trained
-        resume_training = False
 
-        # Either _use_trained_model or _resume_training checkbox value changed
-        if not self._require_trained:
+        # Uncheck _resume_training checkbox if _use_trained_model is unchecked
+        if (sender == self._use_trained_model) and (
+            not self._use_trained_model.isChecked()
+        ):
+            self._resume_training.setChecked(False)
 
-            # Uncheck _resume_training checkbox if _use_trained_model is unchecked
-            if (
-                self._use_trained_model == sender
-                and not self._use_trained_model.isChecked()
-            ):
-                self._resume_training.setChecked(False)
-
-            # Check _use_trained_model checkbox if _resume_training is checked
-            elif self._resume_training == sender and self._resume_training.isChecked():
-                self._use_trained_model.setChecked(True)
-
-            # Determine what to do with the form widgets
-            use_trained = (
-                self._use_trained_model.isChecked()
-                and not self._resume_training.isChecked()
-            )
-            resume_training = (
-                self._resume_training and self._resume_training.isChecked()
-            )
+        # Check _use_trained_model checkbox if _resume_training is checked
+        elif (sender == self._resume_training) and self._resume_training.isChecked():
+            self._use_trained_model.setChecked(True)
 
         # Update form widgets
+
+        use_trained_params = self.use_trained
+        use_model_params = self.resume_training
         for form in self.form_widgets.values():
-            form.set_enabled(not use_trained)
-        if resume_training:
+            form.set_enabled(not use_trained_params)
+
+        if use_trained_params or use_model_params:
+            cfg_info = self._cfg_list_widget.getSelectedConfigInfo()
+
+        # If user wants to resume training, then reset only model form to match config
+        if use_model_params:
             self.form_widgets["model"].set_enabled(False)
 
-        # If user wants to use trained model, then reset form to match config
-        if use_trained and self._cfg_list_widget and (not resume_training):
+            # Set model form to match config
+            cfg = cfg_info.config
+            cfg_dict = cattr.unstructure(cfg)
+            model_dict = {"model": cfg_dict["model"]}
+            key_val_dict = scopedkeydict.ScopedKeyDict.from_hierarchical_dict(
+                model_dict
+            ).key_val_dict
+            self.set_fields_from_key_val_dict(key_val_dict)
+
+        # If user wants to use trained model, then reset entire form to match config
+        if use_trained_params:
             cfg_info = self._cfg_list_widget.getSelectedConfigInfo()
             self._load_config(cfg_info)
 
@@ -1154,19 +1158,23 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
     @property
     def use_trained(self) -> bool:
-        use_trained = False
         if self._require_trained:
-            use_trained = True
-        elif self._use_trained_model and self._use_trained_model.isChecked():
-            use_trained = True
-        return use_trained
+            return True
+
+        if (
+            (self._use_trained_model is not None)
+            and self._use_trained_model.isChecked()
+            and (not self.resume_training)
+        ):
+            return True
+
+        return False
 
     @property
     def resume_training(self) -> bool:
-        resume_training = False
-        if self._resume_training and self._resume_training.isChecked():
-            resume_training = True
-        return resume_training
+        if (self._resume_training is not None) and self._resume_training.isChecked():
+            return True
+        return False
 
     @property
     def trained_config_info_to_use(self) -> Optional[configs.ConfigFileInfo]:
@@ -1175,8 +1183,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             return None
 
         if self.use_trained:
-            if not self.resume_training:
-                trained_config_info.dont_retrain = True
+            trained_config_info.dont_retrain = True
         else:
             # Set certain parameters to defaults
             trained_config = trained_config_info.config
@@ -1186,7 +1193,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             trained_config.outputs.run_name_suffix = None
 
         if self.resume_training:
-            # get the folder path of trained_config_info.path and set it as the output folder
+            # Get the folder path of trained config and set it as the output folder
             trained_config_info.config.model.base_checkpoint = os.path.dirname(
                 trained_config_info.path
             )
