@@ -14,7 +14,7 @@ from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.learning import runners, scopedkeydict, configs, datagen, receptivefield
 
-from typing import Dict, List, Optional, Text, Optional
+from typing import Dict, List, Optional, Text, Optional, cast
 
 from qtpy import QtWidgets, QtCore
 
@@ -962,11 +962,10 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         # If we have an object which gets a list of config files,
         # then we'll show a menu to allow selection from the list.
-
-        if self._cfg_getter:
+        if self._cfg_getter is not None:
             self._cfg_list_widget = configs.TrainingConfigFilesWidget(
                 cfg_getter=self._cfg_getter,
-                head_name=head,
+                head_name=cast(str, head),  # Expect head to be a string
                 require_trained=require_trained,
             )
             self._cfg_list_widget.onConfigSelection.connect(
@@ -976,25 +975,22 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
             layout.addWidget(self._cfg_list_widget)
 
-            # Add option for using trained model from selected config
-            if self._require_trained:
-                self._update_use_trained()
-            else:
-                self._use_trained_model = QtWidgets.QCheckBox("Use Trained Model")
-                self._use_trained_model.setEnabled(False)
-                self._use_trained_model.setVisible(False)
-                self._resume_training = QtWidgets.QCheckBox("Resume Training")
-                self._resume_training.setEnabled(False)
-                self._resume_training.setVisible(False)
-
-                self._use_trained_model.stateChanged.connect(self._update_use_trained)
-                self._resume_training.stateChanged.connect(self._update_use_trained)
-
-                layout.addWidget(self._use_trained_model)
-                layout.addWidget(self._resume_training)
-
-        elif self._require_trained:
+        if self._require_trained:
             self._update_use_trained()
+        elif self._cfg_list_widget is not None:
+            # Add option for using trained model from selected config file
+            self._use_trained_model = QtWidgets.QCheckBox("Use Trained Model")
+            self._use_trained_model.setEnabled(False)
+            self._use_trained_model.setVisible(False)
+            self._resume_training = QtWidgets.QCheckBox("Resume Training")
+            self._resume_training.setEnabled(False)
+            self._resume_training.setVisible(False)
+
+            self._use_trained_model.stateChanged.connect(self._update_use_trained)
+            self._resume_training.stateChanged.connect(self._update_use_trained)
+
+            layout.addWidget(self._use_trained_model)
+            layout.addWidget(self._resume_training)
 
         layout.addWidget(self._layout_widget(col_layout))
         self.setLayout(layout)
@@ -1025,10 +1021,12 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         has_trained_model = cfg_info.has_trained_model
         if self._use_trained_model is not None:
+            self._use_trained_model.setChecked(self._require_trained)
             self._use_trained_model.setVisible(has_trained_model)
             self._use_trained_model.setEnabled(has_trained_model)
         # Redundant check (for readability) since this checkbox exists if the above does
         if self._resume_training is not None:
+            self._use_trained_model.setChecked(False)
             self._resume_training.setVisible(has_trained_model)
             self._resume_training.setEnabled(has_trained_model)
 
@@ -1104,7 +1102,6 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             self._use_trained_model.setChecked(True)
 
         # Update form widgets
-
         use_trained_params = self.use_trained
         use_model_params = self.resume_training
         for form in self.form_widgets.values():
@@ -1128,7 +1125,6 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         # If user wants to use trained model, then reset entire form to match config
         if use_trained_params:
-            cfg_info = self._cfg_list_widget.getSelectedConfigInfo()
             self._load_config(cfg_info)
 
         self._set_head()
@@ -1158,10 +1154,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
     @property
     def use_trained(self) -> bool:
-        if self._require_trained:
-            return True
-
-        if (
+        if self._require_trained or (
             (self._use_trained_model is not None)
             and self._use_trained_model.isChecked()
             and (not self.resume_training)
@@ -1178,8 +1171,15 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
     @property
     def trained_config_info_to_use(self) -> Optional[configs.ConfigFileInfo]:
-        trained_config_info = self._cfg_list_widget.getSelectedConfigInfo()
-        if trained_config_info is None:
+        # If `TrainingEditorWidget` was initialized with a config getter, then
+        # we expect to have a list of config files
+        if self._cfg_list_widget is None:
+            return None
+
+        trained_config_info: Optional[
+            configs.ConfigFileInfo
+        ] = self._cfg_list_widget.getSelectedConfigInfo()
+        if (trained_config_info is None) or (not trained_config_info.has_trained_model):
             return None
 
         if self.use_trained:
@@ -1194,8 +1194,8 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         if self.resume_training:
             # Get the folder path of trained config and set it as the output folder
-            trained_config_info.config.model.base_checkpoint = os.path.dirname(
-                trained_config_info.path
+            trained_config_info.config.model.base_checkpoint = str(
+                Path(cast(str, trained_config_info.path)).parent
             )
         else:
             trained_config_info.config.model.base_checkpoint = None
@@ -1204,9 +1204,13 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
     @property
     def has_trained_config_selected(self) -> bool:
+        if self._cfg_list_widget is None:
+            return False
+
         cfg_info = self._cfg_list_widget.getSelectedConfigInfo()
         if cfg_info and cfg_info.has_trained_model:
             return True
+
         return False
 
     def get_all_form_data(self) -> dict:
