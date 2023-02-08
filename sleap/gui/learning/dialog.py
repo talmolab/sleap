@@ -1091,8 +1091,10 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         # Check which checkbox changed its value (if any)
         sender = self.sender()
 
+        if sender is None:  # If sender is None, then _required_training is True
+            pass
         # Uncheck _resume_training checkbox if _use_trained_model is unchecked
-        if (sender == self._use_trained_model) and (
+        elif (sender == self._use_trained_model) and (
             not self._use_trained_model.isChecked()
         ):
             self._resume_training.setChecked(False)

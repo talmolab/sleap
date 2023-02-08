@@ -1845,6 +1845,6 @@ if __name__ == "__main__":
     app = QApplication([])
 
     window = MainWindow(labels_path=ds, no_usage_data=True)
-    window._show_learning_dialog("training")
+    window._show_learning_dialog("inference")
 
     app.exec_()
