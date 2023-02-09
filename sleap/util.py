@@ -408,9 +408,7 @@ def encode_preview_image(im_path: str) -> bytes:
 
     img = Image.open(im_path)
     img_stream = BytesIO()
-    img.save(
-        img_stream, format="jpeg"
-    )  # encode the image as PNG (TODO: compress/resize)
+    img.save(img_stream, format="jpeg")
     img_bytes = img_stream.getvalue()  # image in binary format
     img_b64 = base64.b64encode(img_bytes)
     return img_b64
@@ -426,6 +424,8 @@ def decode_preview_image(img_b64: bytes) -> Image:
     Returns:
         A PIL.Image of the skeleton preview
     """
-
-    img = Image.open(BytesIO(base64.b64decode(img_b64)))
+    bytes = base64.b64decode(img_b64)
+    buffer = BytesIO(bytes)
+    img = Image.open(buffer)
+    img.load()
     return img
