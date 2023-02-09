@@ -129,7 +129,6 @@ def test_update_loaded_config():
     )
 
 
-# Parameters: LearningDialog type (training, inference), config type (trained, untrained)
 def test_training_editor_checkbox_states(
     qtbot, tmpdir, min_labels: Labels, min_centroid_model_path: str
 ):
@@ -266,12 +265,20 @@ def test_training_editor_checkbox_states(
     video = labels.video
     skeleton = labels.skeleton
     model_path = Path(min_centroid_model_path)
-    head_name = (model_path.name).split(".")[-1]
-    mode = "training"
+
+    # Spoof an untrained model
+    untrained_model_path = Path(tmpdir, model_path.parts[-1])
+    untrained_model_path.mkdir()
+    shutil.copy(
+        Path(model_path, "training_config.json"),
+        Path(untrained_model_path, "training_config.json"),
+    )
 
     # Create a training TrainingEditorWidget
+    head_name = (model_path.name).split(".")[-1]
+    mode = "training"
     cfg_getter = TrainingConfigsGetter(
-        dir_paths=[str(model_path)], head_filter=head_name
+        dir_paths=[str(model_path), str(untrained_model_path)], head_filter=head_name
     )
     ted = TrainingEditorWidget(
         video=video,
@@ -298,10 +305,29 @@ def test_training_editor_checkbox_states(
     for action in action_trajectory:
         assert_form_state(action, ted, og_form_data)
 
-    # TODO (LM): Add test for when an untrained model is selected (check that boxes are unchecked)
-    # TODO (LM): Add test for when mode is inference (check that boxes are unchecked)
+    # Test the case where the user selectes untrained model
+    ted._cfg_list_widget.setCurrentIndex(1)
+    assert not ted.has_trained_config_selected
+    assert not ted._resume_training.isChecked()
+    assert not ted._resume_training.isVisible()
+    assert not ted._use_trained_model.isVisible()
+    assert not ted._use_trained_model.isChecked()
+    assert not ted.use_trained
+    assert not ted.resume_training
 
-
-# TODO (LM): Remove after testing
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_training_editor_checkbox_states", "-vv", "-rP"])
+    # Test the case where the user opts to perform inference
+    mode = "inference"
+    ted = TrainingEditorWidget(
+        video=video,
+        skeleton=skeleton,
+        head=head_name,
+        cfg_getter=cfg_getter,
+        require_trained=(mode == "inference"),
+    )
+    ted.update_file_list()
+    assert len(ted._cfg_list_widget._cfg_list) == 1
+    assert ted.has_trained_config_selected
+    assert ted._resume_training is None
+    assert ted._use_trained_model is None
+    assert ted.use_trained
+    assert not ted.resume_training
