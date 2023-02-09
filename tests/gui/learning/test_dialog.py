@@ -1,15 +1,26 @@
+import shutil
+from typing import Optional, List, Callable, Set
+from pathlib import Path
+import traceback
+
+import cattr
+import pytest
+from qtpy import QtWidgets
+
 from sleap.gui.learning.dialog import LearningDialog, TrainingEditorWidget
-from sleap.gui.learning.configs import TrainingConfigFilesWidget
-from sleap.gui.learning.configs import ConfigFileInfo
+from sleap.gui.learning.configs import (
+    TrainingConfigFilesWidget,
+    ConfigFileInfo,
+    TrainingConfigsGetter,
+)
 from sleap.gui.learning.scopedkeydict import (
     ScopedKeyDict,
     apply_cfg_transforms_to_key_val_dict,
 )
 from sleap.gui.app import MainWindow
+from sleap.io.dataset import Labels
 from sleap.nn.config import TrainingJobConfig, UNetConfig
-
-import cattr
-from pathlib import Path
+from sleap.util import get_package_file
 
 
 def test_use_hidden_params_from_loaded_config(
@@ -116,3 +127,181 @@ def test_update_loaded_config():
         scoped_cfg.key_val_dict["optimization.augmentation_config.rotation_min_angle"]
         == -180
     )
+
+
+# Parameters: LearningDialog type (training, inference), config type (trained, untrained)
+def test_training_editor_checkbox_states(
+    qtbot, tmpdir, min_labels: Labels, min_centroid_model_path: str
+):
+    """Test that Use Trained Model and Resume Training checkboxes operate correctly."""
+
+    def assert_checkbox_states(
+        ted: TrainingEditorWidget,
+        use_trained: Optional[bool] = None,
+        resume_training: Optional[bool] = None,
+    ):
+        assert (
+            ted._use_trained_model.isChecked() == use_trained
+            if use_trained is not None
+            else True
+        )
+        assert (
+            ted._resume_training.isChecked() == resume_training
+            if resume_training is not None
+            else True
+        )
+
+    def switch_states(
+        ted: TrainingEditorWidget,
+        prev_use_trained: Optional[bool] = None,
+        prev_resume_training: Optional[bool] = None,
+        new_use_trained: Optional[bool] = None,
+        new_resume_training: Optional[bool] = None,
+    ):
+        """Switch the states of the checkboxes."""
+
+        # Assert previous checkbox state
+        assert_checkbox_states(
+            ted, use_trained=prev_use_trained, resume_training=prev_resume_training
+        )
+
+        # Switch states
+        if new_use_trained is not None:
+            ted._use_trained_model.setChecked(new_use_trained)
+        if new_resume_training is not None:
+            ted._resume_training.setChecked(new_resume_training)
+
+        # Assert new checkbox state
+        assert_checkbox_states(
+            ted, use_trained=new_use_trained, resume_training=new_resume_training
+        )
+
+    def check_resume_training(
+        ted: TrainingEditorWidget, prev_use_trained: Optional[bool] = None
+    ):
+        """Check the Resume Training checkbox."""
+        switch_states(
+            ted,
+            prev_use_trained=prev_use_trained,
+            new_use_trained=True,
+            new_resume_training=True,
+        )
+        assert not ted.use_trained
+        assert ted.resume_training
+
+    def check_resume_training_00(ted: TrainingEditorWidget):
+        """Check the Resume Training checkbox when Use Trained is unchecked."""
+        check_resume_training(ted, prev_use_trained=False)
+
+    def check_resume_training_10(ted: TrainingEditorWidget):
+        """Check the Resume Training checkbox when Use Trained is checked."""
+        check_resume_training(ted, prev_use_trained=True)
+
+    def check_use_trained(ted: TrainingEditorWidget):
+        """Check the Use Trained checkbox when Resume Training is unchecked."""
+        switch_states(ted, prev_resume_training=False, new_use_trained=True)
+        assert ted.use_trained
+        assert not ted.resume_training
+
+    def uncheck_resume_training(ted: TrainingEditorWidget):
+        """Uncheck the Resume Training checkbox when Use Trained is checked."""
+        switch_states(ted, prev_use_trained=True, new_resume_training=False)
+        assert ted.use_trained
+        assert not ted.resume_training
+
+    def uncheck_use_trained(
+        ted: TrainingEditorWidget, prev_resume_training: Optional[bool] = None
+    ):
+        """Uncheck the Use Trained checkbox."""
+        switch_states(
+            ted,
+            prev_resume_training=prev_resume_training,
+            new_use_trained=False,
+            new_resume_training=False,
+        )
+        assert not ted.use_trained
+        assert not ted.resume_training
+
+    def uncheck_use_trained_10(ted: TrainingEditorWidget):
+        """Uncheck the Use Trained checkbox when Resume Training is unchecked."""
+        uncheck_use_trained(ted, prev_resume_training=False)
+
+    def uncheck_use_trained_11(ted: TrainingEditorWidget):
+        """Uncheck the Use Trained checkbox when Resume Training is checked."""
+        uncheck_use_trained(ted, prev_resume_training=True)
+
+    def assert_form_state(
+        change_state: Callable,
+        ted: TrainingEditorWidget,
+        og_form_data: dict,
+        reset_causing_actions: Set[Callable] = {
+            check_use_trained,
+            uncheck_resume_training,
+        },
+    ):
+        expected_form_data = dict()
+        actual_form_data = dict()
+
+        # Read form values before changing state
+        if change_state not in reset_causing_actions:
+            for key in ted.form_widgets.keys():
+                expected_form_data[key] = ted.form_widgets[key].get_form_data()
+
+        # Change state
+        change_state(ted)
+
+        # Modify expected form values depending on state, and check if form is enabled
+        if ted.resume_training:
+            expected_form_data["model"] = og_form_data["model"]
+        elif ted.use_trained:
+            expected_form_data = og_form_data
+
+        # Read form values after changing state
+        for key in ted.form_widgets.keys():
+            actual_form_data[key] = ted.form_widgets[key].get_form_data()
+        assert expected_form_data == actual_form_data
+
+    # Load the data
+    labels: Labels = min_labels
+    video = labels.video
+    skeleton = labels.skeleton
+    model_path = Path(min_centroid_model_path)
+    head_name = (model_path.name).split(".")[-1]
+    mode = "training"
+
+    # Create a training TrainingEditorWidget
+    cfg_getter = TrainingConfigsGetter(
+        dir_paths=[str(model_path)], head_filter=head_name
+    )
+    ted = TrainingEditorWidget(
+        video=video,
+        skeleton=skeleton,
+        head=head_name,
+        cfg_getter=cfg_getter,
+        require_trained=(mode == "inference"),
+    )
+    ted.update_file_list()
+
+    og_form_data = dict()
+    for key in ted.form_widgets.keys():
+        og_form_data[key] = ted.form_widgets[key].get_form_data()
+
+    # The action trajectory below should cover the entire state space of the checkboxes
+    action_trajectory: List[Callable] = [
+        check_resume_training_00,
+        uncheck_use_trained_11,
+        check_use_trained,
+        check_resume_training_10,
+        uncheck_resume_training,
+        uncheck_use_trained_10,
+    ]
+    for action in action_trajectory:
+        assert_form_state(action, ted, og_form_data)
+
+    # TODO (LM): Add test for when an untrained model is selected (check that boxes are unchecked)
+    # TODO (LM): Add test for when mode is inference (check that boxes are unchecked)
+
+
+# TODO (LM): Remove after testing
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::test_training_editor_checkbox_states", "-vv", "-rP"])

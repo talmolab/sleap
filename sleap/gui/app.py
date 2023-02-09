@@ -1837,6 +1837,7 @@ def main(args: Optional[list] = None):
     pass
 
 
+# TODO (LM): Remove after testing
 if __name__ == "__main__":
     import os
 
