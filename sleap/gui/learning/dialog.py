@@ -628,7 +628,7 @@ class LearningDialog(QtWidgets.QDialog):
         """Run with current dialog settings."""
 
         pipeline_form_data = self.pipeline_form_widget.get_form_data()
-        # TODO: debug ^^^
+
         items_for_inference = self.get_items_for_inference(pipeline_form_data)
 
         config_info_list = self.get_every_head_config_data(pipeline_form_data)
