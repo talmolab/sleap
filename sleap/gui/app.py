@@ -46,6 +46,7 @@ frame and instances listed in data view table.
 """
 
 
+import base64
 import re
 import os
 import random
@@ -53,8 +54,6 @@ import platform
 from pathlib import Path
 
 from typing import Callable, List, Optional, Tuple
-
-from PIL.ImageQt import ImageQt
 
 from qtpy import QtCore, QtGui
 from qtpy.QtCore import Qt, QEvent
@@ -1062,8 +1061,17 @@ class MainWindow(QMainWindow):
                     get_package_file("sleap/gui/no-preview.png")
                 )
             else:
+
                 preview_image = decode_preview_image(preview_image)
-                preview_image = ImageQt(preview_image)
+
+                # Create a QImage from the Image
+                preview_image = QtGui.QImage(
+                    preview_image.tobytes(),
+                    preview_image.size[0],
+                    preview_image.size[1],
+                    QtGui.QImage.Format_RGB888,  # Format for RGB images (see Image.mode)
+                )
+
                 preview_image = QtGui.QPixmap.fromImage(preview_image)
 
             preview_image = preview_image.scaledToHeight(160, Qt.SmoothTransformation)

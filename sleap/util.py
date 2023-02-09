@@ -427,5 +427,4 @@ def decode_preview_image(img_b64: bytes) -> Image:
     bytes = base64.b64decode(img_b64)
     buffer = BytesIO(bytes)
     img = Image.open(buffer)
-    img.load()
     return img
