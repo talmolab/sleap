@@ -239,25 +239,24 @@ def test_training_editor_checkbox_states(
         },
     ):
         expected_form_data = dict()
-        actual_form_data = dict()
 
         # Read form values before changing state
         if change_state not in reset_causing_actions:
-            for key in ted.form_widgets.keys():
-                expected_form_data[key] = ted.form_widgets[key].get_form_data()
+            expected_form_data = ted.get_all_form_data()
 
         # Change state
         change_state(ted)
 
         # Modify expected form values depending on state, and check if form is enabled
         if ted.resume_training:
-            expected_form_data["model"] = og_form_data["model"]
+            for key, val in og_form_data.items():
+                if key.startswith("model."):
+                    expected_form_data[key] = val
         elif ted.use_trained:
             expected_form_data = og_form_data
 
         # Read form values after changing state
-        for key in ted.form_widgets.keys():
-            actual_form_data[key] = ted.form_widgets[key].get_form_data()
+        actual_form_data = ted.get_all_form_data()
         assert expected_form_data == actual_form_data
 
     # Load the data
@@ -289,9 +288,15 @@ def test_training_editor_checkbox_states(
     )
     ted.update_file_list()
 
-    og_form_data = dict()
-    for key in ted.form_widgets.keys():
-        og_form_data[key] = ted.form_widgets[key].get_form_data()
+    og_form_data = ted.get_all_form_data()
+
+    # Modify the form data
+    copy_form_data_everything = og_form_data.copy()
+    copy_form_data_everything["data.labels.validation_fraction"] = 0.3
+    copy_form_data_everything["optimization.augmentation_config.rotate"] = True
+    copy_form_data_everything["optimization.epochs"] = 50
+    copy_form_data_except_model = copy_form_data_everything.copy()
+    copy_form_data_everything["_backbone_name"] = "leap"
 
     # The action trajectory below should cover the entire state space of the checkboxes
     action_trajectory: List[Callable] = [
@@ -302,8 +307,21 @@ def test_training_editor_checkbox_states(
         uncheck_resume_training,
         uncheck_use_trained_10,
     ]
+
+    actions_that_allow_change_everything_except_model = {
+        check_resume_training_00,
+        check_resume_training_10,
+    }
+    actions_that_allow_change_everything = {
+        uncheck_use_trained_10,
+        uncheck_use_trained_10,
+    }
     for action in action_trajectory:
         assert_form_state(action, ted, og_form_data)
+        if action in actions_that_allow_change_everything:
+            ted.set_fields_from_key_val_dict(copy_form_data_everything)
+        elif action in actions_that_allow_change_everything_except_model:
+            ted.set_fields_from_key_val_dict(copy_form_data_except_model)
 
     # Test the case where the user selectes untrained model
     ted._cfg_list_widget.setCurrentIndex(1)
