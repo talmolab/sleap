@@ -1839,6 +1839,14 @@ def main(args: Optional[List] = None):
         ),
     )
     parser.add_argument(
+        "--base_checkpoint",
+        type=str,
+        help=(
+            "Path to base checkpoint (directory containing best_model.h5) to resume "
+            "training from."
+        ),
+    )
+    parser.add_argument(
         "--tensorboard",
         action="store_true",
         help=(
@@ -1869,12 +1877,6 @@ def main(args: Optional[List] = None):
     )
     parser.add_argument("--prefix", default="", help="Prefix to prepend to run name.")
     parser.add_argument("--suffix", default="", help="Suffix to append to run name.")
-
-    parser.add_argument(
-        "--base_checkpoint",
-        type=str,
-        help=("Path to base checkpoint to resume training from."),
-    )
 
     device_group = parser.add_mutually_exclusive_group(required=False)
     device_group.add_argument(
