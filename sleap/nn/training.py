@@ -746,7 +746,7 @@ class Trainer(ABC):
             logger.info(f"    [{i}] = {output}")
 
         # Resuming training if flagged
-        if self.config.model.base_checkpoint:
+        if self.config.model.base_checkpoint is not None:
             # grab the 'best_model.h5' file from the previous training run
             # and load it into the current model
             previous_model_path = os.path.join(
@@ -2000,6 +2000,8 @@ def main(args: Optional[List] = None):
         video_search_paths=args.video_paths,
     )
     trainer.train()
+
+    return trainer
 
 
 if __name__ == "__main__":

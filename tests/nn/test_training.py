@@ -1,4 +1,7 @@
+from pathlib import Path
+
 import pytest
+
 import sleap
 from sleap.io.dataset import Labels
 from sleap.nn.config.data import LabelsConfig
@@ -19,6 +22,7 @@ from sleap.nn.training import (
     TopdownConfmapsModelTrainer,
     TopDownMultiClassModelTrainer,
     Trainer,
+    main as sleap_train,
 )
 
 sleap.use_cpu_only()
@@ -310,26 +314,17 @@ def test_train_cropping(
     )
 
 
-def test_resume_training_cli(tmp_path, training_labels, cfg):
+def test_resume_training_cli(min_single_instance_robot_model_path):
     """
     Test CLI to resume training.
     """
-    import os
-    from sleap.nn.training import main
 
-    # path to sleap/tests/data/models/minimal_robot.UNet.single_instance
-    base_checkpoint_path = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "data",
-        "models",
-        "minimal_robot.UNet.single_instance",
-    )
-    json_path = os.path.join(base_checkpoint_path, "training_config.json")
-    labels_path = os.path.join(base_checkpoint_path, "labels_gt.train.slp")
+    base_checkpoint_path = min_single_instance_robot_model_path
+    json_path = str(Path(base_checkpoint_path, "training_config.json"))
+    labels_path = str(Path(base_checkpoint_path, "labels_gt.train.slp"))
 
-    # run CLI to resume training
-    main(
+    # Run CLI to resume training
+    trainer = sleap_train(
         [
             "--training_job_path",
             json_path,
@@ -339,3 +334,10 @@ def test_resume_training_cli(tmp_path, training_labels, cfg):
             base_checkpoint_path,
         ]
     )
+    assert trainer.config.model.base_checkpoint == base_checkpoint_path
+
+    # Run CLI without base checkpoint
+    trainer = sleap_train(
+        ["--training_job_path", json_path, "--labels_path", labels_path]
+    )
+    assert trainer.config.model.base_checkpoint is None
