@@ -653,11 +653,9 @@ class ModelConfig:
     Attributes:
         backbone: Configurations related to the main network architecture.
         heads: Configurations related to the output heads.
-        resume_training: If `True`, resume training from the latest checkpoint.
         base_checkpoint: Path to model folder for loading a checkpoint. Should contain the .h5 file
     """
 
     backbone: BackboneConfig = attr.ib(factory=BackboneConfig)
     heads: HeadsConfig = attr.ib(factory=HeadsConfig)
-    resume_training: bool = False
     base_checkpoint: Optional[Text] = None

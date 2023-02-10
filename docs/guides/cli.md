@@ -60,6 +60,9 @@ optional arguments:
                         Path to labels file to use for test. If specified,
                         overrides the path specified in the training job
                         config.
+  --base_checkpoint BASE_CHECKPOINT
+                        Path to base checkpoint (directory containing best_model.h5)
+                        to resume training from.
   --tensorboard         Enable TensorBoard logging to the run path if not
                         already specified in the training job config.
   --save_viz            Enable saving of prediction visualizations to the run
