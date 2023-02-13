@@ -747,11 +747,14 @@ class Trainer(ABC):
 
         # Resuming training if flagged
         if self.config.model.base_checkpoint is not None:
-            # grab the 'best_model.h5' file from the previous training run
+            # TODO (AL): Add flexibilty to resume from any checkpoint (e.g.
+            # latest_model, specific epoch, etc.)
+
+            # Grab the 'best_model.h5' file from the previous training run
             # and load it into the current model
             previous_model_path = os.path.join(
                 self.config.model.base_checkpoint, "best_model.h5"
-            )  # TODO: add flexibilty to resume from any checkpoint (e.g. latest_model, specific epoch, etc.)
+            )
 
             self.keras_model.load_weights(previous_model_path)
             logger.info(f"Loaded previous model weights from {previous_model_path}")
