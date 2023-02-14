@@ -1,5 +1,4 @@
-"""
-Main GUI application for labeling, training/inference, and proofreading.
+"""Main GUI application for labeling, training/inference, and proofreading.
 
 Each open project is an instance of :py:class:`MainWindow`.
 
@@ -46,7 +45,6 @@ frame and instances listed in data view table.
 """
 
 
-import base64
 import re
 import os
 import random
@@ -1074,8 +1072,6 @@ class MainWindow(QMainWindow):
 
                 preview_image = QtGui.QPixmap.fromImage(preview_image)
 
-            preview_image = preview_image.scaledToHeight(160, Qt.SmoothTransformation)
-
             self.skeleton_preview_image.setPixmap(preview_image)
 
         self.state.connect("skeleton_preview_image", updatePreviewImage)
@@ -1922,10 +1918,3 @@ def main(args: Optional[list] = None):
         app.exec_()
 
     pass
-
-
-if __name__ == "__main__":
-    import os
-
-    ds = os.environ["ds-dmc"]
-    main([ds])

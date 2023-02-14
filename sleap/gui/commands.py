@@ -1902,7 +1902,7 @@ class OpenSkeleton(EditCommand):
                 query.exec_()
 
                 # Give the okay to add/delete nodes
-                linked_nodes = query.result()
+                linked_nodes: Optional[Dict[str, str]] = query.result()
                 if linked_nodes is not None:
                     delete_nodes = list(set(delete_nodes) - set(linked_nodes.values()))
                     add_nodes = list(set(add_nodes) - set(linked_nodes.keys()))
