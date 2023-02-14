@@ -304,7 +304,7 @@ def plot_bbox(bbox, **kwargs):
 
 def generate_skeleton_preview_image(
     instance: Instance, square_bb: bool = True, thumbnail_size=(128, 128)
-) -> Image:  # bytes:
+) -> bytes:
     """Generate preview image for skeleton based on given instance.
 
     Args:
@@ -372,16 +372,18 @@ def generate_skeleton_preview_image(
     ax.get_yaxis().set_visible(False)
     ax.get_xaxis().set_visible(False)
     fig.set(facecolor="white", frameon=False)
+
     img_buf = BytesIO()
     plt.savefig(img_buf, format="jpeg", facecolor="white")
     im = Image.open(img_buf)
     im = im.crop(bb)
     im.thumbnail(thumbnail_size)
-    # img_stream = BytesIO()
-    # im.save(img_stream, format="jpeg")
-    # img_bytes = img_stream.getvalue()  # image in binary format
-    # img_b64 = base64.b64encode(img_bytes)
-    return im  # img_b64
+
+    img_stream = BytesIO()
+    im.save(img_stream, format="jpeg")
+    img_bytes = img_stream.getvalue()  # image in binary format
+    img_b64 = base64.b64encode(img_bytes)
+    return img_b64
 
 
 if __name__ == "__main__":
@@ -394,6 +396,7 @@ if __name__ == "__main__":
     from sleap.instance import LabeledFrame
     from sleap.io.dataset import Labels
     from sleap.skeleton import Skeleton
+    from sleap.util import decode_preview_image
 
     ds_dict = {
         "ds-fly32": {"lf_idx": 1, "track": None},
@@ -428,8 +431,13 @@ if __name__ == "__main__":
                 instance for instance in lf.instances if instance.track.name == track
             )
 
-        img: Image = generate_skeleton_preview_image(inst)
-        img.show()
-        # skeleton.preview_image = img
-        # skeleton.save_json(skeleton_file)
+        img_b64: bytes = generate_skeleton_preview_image(inst)
+
+        skeleton.preview_image = img_b64
+        skeleton.save_json(skeleton_file)
+
+        skeleton = Skeleton.load_json(skeleton_file)
+        skeleton_img: Image = decode_preview_image(skeleton.preview_image)
+        skeleton_img.show()
+
         print()
