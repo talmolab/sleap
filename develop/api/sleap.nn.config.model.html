@@ -1020,7 +1020,7 @@ overall accuracy.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.model.ModelConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.model.</span></span><span class="sig-name descname"><span class="pre">ModelConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.BackboneConfig" title="sleap.nn.config.model.BackboneConfig"><span class="pre">sleap.nn.config.model.BackboneConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.HeadsConfig" title="sleap.nn.config.model.HeadsConfig"><span class="pre">sleap.nn.config.model.HeadsConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/config/model.py#L650-L659"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.model.ModelConfig" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.model.</span></span><span class="sig-name descname"><span class="pre">ModelConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.BackboneConfig" title="sleap.nn.config.model.BackboneConfig"><span class="pre">sleap.nn.config.model.BackboneConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.HeadsConfig" title="sleap.nn.config.model.HeadsConfig"><span class="pre">sleap.nn.config.model.HeadsConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.2.9/sleap/nn/config/model.py#L650-L661"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.model.ModelConfig" title="Permalink to this definition">#</a></dt>
 <dd><p>Configurations related to model architecture.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.model.ModelConfig.backbone">
@@ -1040,6 +1040,17 @@ overall accuracy.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="#sleap.nn.config.model.HeadsConfig" title="sleap.nn.config.model.HeadsConfig">sleap.nn.config.model.HeadsConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sleap.nn.config.model.ModelConfig.base_checkpoint">
+<span class="sig-name descname"><span class="pre">base_checkpoint</span></span><a class="headerlink" href="#sleap.nn.config.model.ModelConfig.base_checkpoint" title="Permalink to this definition">#</a></dt>
+<dd><p>Path to model folder for loading a checkpoint. Should contain the .h5 file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[str]</p>
 </dd>
 </dl>
 </dd></dl>

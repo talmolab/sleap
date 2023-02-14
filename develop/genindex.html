@@ -586,6 +586,8 @@ title="Open an issue"
       </ul></li>
       <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.BackboneConfig">BackboneConfig (class in sleap.nn.config.model)</a>
 </li>
+      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.ModelConfig.base_checkpoint">base_checkpoint (sleap.nn.config.model.ModelConfig attribute)</a>
+</li>
       <li><a href="api/sleap.message.html#sleap.message.BaseMessageParticipant">BaseMessageParticipant (class in sleap.message)</a>
 </li>
       <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.BaseTracker">BaseTracker (class in sleap.nn.tracking)</a>
@@ -602,6 +604,8 @@ title="Open an issue"
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassPredictor.batch_size">(sleap.nn.inference.BottomUpMultiClassPredictor attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.batch_size">(sleap.nn.inference.BottomUpPredictor attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetPredictor.batch_size">(sleap.nn.inference.MoveNetPredictor attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.batch_size">(sleap.nn.inference.SingleInstancePredictor attribute)</a>
 </li>
@@ -624,10 +628,10 @@ title="Open an issue"
 </li>
       <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.block_prefix">block_prefix (sleap.nn.architectures.encoder_decoder.SimpleConvBlock attribute)</a>
 </li>
-      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.UpsamplingConfig.block_stride">block_stride (sleap.nn.config.model.UpsamplingConfig attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.UpsamplingConfig.block_stride">block_stride (sleap.nn.config.model.UpsamplingConfig attribute)</a>
+</li>
       <li><a href="api/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.block_v1">block_v1() (in module sleap.nn.architectures.resnet)</a>
 </li>
       <li><a href="api/sleap.nn.architectures.hrnet.html#sleap.nn.architectures.hrnet.HigherHRNet.bottleneck">bottleneck (sleap.nn.architectures.hrnet.HigherHRNet attribute)</a>
@@ -706,6 +710,10 @@ title="Open an issue"
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.FindInstancePeaksGroundTruth.call">(sleap.nn.inference.FindInstancePeaksGroundTruth method)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.InferenceLayer.call">(sleap.nn.inference.InferenceLayer method)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetInferenceLayer.call">(sleap.nn.inference.MoveNetInferenceLayer method)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetInferenceModel.call">(sleap.nn.inference.MoveNetInferenceModel method)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstanceInferenceLayer.call">(sleap.nn.inference.SingleInstanceInferenceLayer method)</a>
 </li>
@@ -789,6 +797,8 @@ title="Open an issue"
       <li><a href="api/sleap.nn.data.instance_centroids.html#sleap.nn.data.instance_centroids.InstanceCentroidFinder.center_on_anchor_part">center_on_anchor_part (sleap.nn.data.instance_centroids.InstanceCentroidFinder attribute)</a>
 </li>
       <li><a href="api/sleap.nn.config.data.html#sleap.nn.config.data.InstanceCroppingConfig.center_on_part">center_on_part (sleap.nn.config.data.InstanceCroppingConfig attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.data.resizing.html#sleap.nn.data.resizing.SizeMatcher.center_pad">center_pad (sleap.nn.data.resizing.SizeMatcher attribute)</a>
 </li>
       <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.HeadsConfig.centered_instance">centered_instance (sleap.nn.config.model.HeadsConfig attribute)</a>
 </li>
@@ -890,12 +900,12 @@ title="Open an issue"
 </li>
       <li><a href="api/sleap.nn.config.outputs.html#sleap.nn.config.outputs.CheckpointingConfig">CheckpointingConfig (class in sleap.nn.config.outputs)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.io.asyncvideo.html#sleap.io.asyncvideo.AsyncVideo.chunks">chunks (sleap.io.asyncvideo.AsyncVideo property)</a>
 </li>
       <li><a href="api/sleap.nn.data.identity.html#sleap.nn.data.identity.ClassMapGenerator.class_map_threshold">class_map_threshold (sleap.nn.data.identity.ClassMapGenerator attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.MultiClassBottomUpConfig.class_maps">class_maps (sleap.nn.config.model.MultiClassBottomUpConfig attribute)</a>
 </li>
       <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.BottomUpMultiClassPipeline.class_maps_head">class_maps_head (sleap.nn.data.pipelines.BottomUpMultiClassPipeline attribute)</a>
@@ -1419,7 +1429,13 @@ title="Open an issue"
       <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder">EncoderDecoder (class in sleap.nn.architectures.encoder_decoder)</a>
 </li>
       <li><a href="api/sleap.nn.data.normalization.html#sleap.nn.data.normalization.Normalizer.ensure_float">ensure_float (sleap.nn.data.normalization.Normalizer attribute)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.InferenceLayer.ensure_float">(sleap.nn.inference.InferenceLayer attribute)</a>
 </li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetInferenceLayer.ensure_float">(sleap.nn.inference.MoveNetInferenceLayer attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/sleap.nn.data.normalization.html#sleap.nn.data.normalization.ensure_float">ensure_float() (in module sleap.nn.data.normalization)</a>
 </li>
       <li><a href="api/sleap.nn.config.data.html#sleap.nn.config.data.PreprocessingConfig.ensure_grayscale">ensure_grayscale (sleap.nn.config.data.PreprocessingConfig attribute)</a>
@@ -1428,6 +1444,8 @@ title="Open an issue"
         <li><a href="api/sleap.nn.data.normalization.html#sleap.nn.data.normalization.Normalizer.ensure_grayscale">(sleap.nn.data.normalization.Normalizer attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.InferenceLayer.ensure_grayscale">(sleap.nn.inference.InferenceLayer attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetInferenceLayer.ensure_grayscale">(sleap.nn.inference.MoveNetInferenceLayer attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -1694,14 +1712,14 @@ title="Open an issue"
         <li><a href="api/sleap.io.format.alphatracker.html#sleap.io.format.alphatracker.AlphaTrackerAdaptor.formatted_ext_options">(sleap.io.format.alphatracker.AlphaTrackerAdaptor property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.forward_pass">forward_pass() (sleap.nn.inference.BottomUpInferenceLayer method)</a>
 
       <ul>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.forward_pass">(sleap.nn.inference.BottomUpMultiClassInferenceLayer method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.io.video.html#sleap.io.video.MediaVideo.fps">fps (sleap.io.video.MediaVideo property)</a>
 
       <ul>
@@ -1852,6 +1870,8 @@ title="Open an issue"
 
       <ul>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.from_trained_models">(sleap.nn.inference.BottomUpPredictor class method)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetPredictor.from_trained_models">(sleap.nn.inference.MoveNetPredictor class method)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.from_trained_models">(sleap.nn.inference.SingleInstancePredictor class method)</a>
 </li>
@@ -2229,11 +2249,17 @@ title="Open an issue"
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceModel.inference_layer">inference_layer (sleap.nn.inference.BottomUpMultiClassInferenceModel attribute)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetInferenceModel.inference_layer">(sleap.nn.inference.MoveNetInferenceModel attribute)</a>
 </li>
+      </ul></li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassPredictor.inference_model">inference_model (sleap.nn.inference.BottomUpMultiClassPredictor attribute)</a>
 
       <ul>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.inference_model">(sleap.nn.inference.BottomUpPredictor attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetPredictor.inference_model">(sleap.nn.inference.MoveNetPredictor attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.inference_model">(sleap.nn.inference.SingleInstancePredictor attribute)</a>
 </li>
@@ -2338,6 +2364,8 @@ title="Open an issue"
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.FindInstancePeaks.input_scale">(sleap.nn.inference.FindInstancePeaks attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.InferenceLayer.input_scale">(sleap.nn.inference.InferenceLayer attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetInferenceLayer.input_scale">(sleap.nn.inference.MoveNetInferenceLayer attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstanceInferenceLayer.input_scale">(sleap.nn.inference.SingleInstanceInferenceLayer attribute)</a>
 </li>
@@ -2453,6 +2481,8 @@ title="Open an issue"
       <ul>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.is_grayscale">(sleap.nn.inference.BottomUpPredictor property)</a>
 </li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetPredictor.is_grayscale">(sleap.nn.inference.MoveNetPredictor property)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.Predictor.is_grayscale">(sleap.nn.inference.Predictor property)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.is_grayscale">(sleap.nn.inference.SingleInstancePredictor property)</a>
@@ -2526,6 +2556,8 @@ title="Open an issue"
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.FindInstancePeaks.keras_model">(sleap.nn.inference.FindInstancePeaks attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.InferenceLayer.keras_model">(sleap.nn.inference.InferenceLayer attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetInferenceLayer.keras_model">(sleap.nn.inference.MoveNetInferenceLayer attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstanceInferenceLayer.keras_model">(sleap.nn.inference.SingleInstanceInferenceLayer attribute)</a>
 </li>
@@ -2812,6 +2844,8 @@ title="Open an issue"
 </li>
       <li><a href="api/sleap.nn.model.html#sleap.nn.model.Model.make_model">make_model() (sleap.nn.model.Model method)</a>
 </li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.make_model_movenet">make_model_movenet() (in module sleap.nn.inference)</a>
+</li>
       <li><a href="api/sleap.nn.data.confidence_maps.html#sleap.nn.data.confidence_maps.make_multi_confmaps">make_multi_confmaps() (in module sleap.nn.data.confidence_maps)</a>
 </li>
       <li><a href="api/sleap.nn.data.confidence_maps.html#sleap.nn.data.confidence_maps.make_multi_confmaps_with_offsets">make_multi_confmaps_with_offsets() (in module sleap.nn.data.confidence_maps)</a>
@@ -2986,12 +3020,12 @@ title="Open an issue"
 </li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.merge_matching_frames">merge_matching_frames() (sleap.io.dataset.Labels method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.merge_nodes">merge_nodes() (sleap.io.dataset.Labels method)</a>
 </li>
       <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.meta">meta (sleap.info.feature_suggestions.ItemStack attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameGroupSet.method">method (sleap.info.feature_suggestions.FrameGroupSet attribute)</a>
 
       <ul>
@@ -3045,7 +3079,13 @@ title="Open an issue"
 </li>
       </ul></li>
       <li><a href="api/sleap.nn.architectures.resnet.html#sleap.nn.architectures.resnet.ResNetv1.model_name">model_name (sleap.nn.architectures.resnet.ResNetv1 attribute)</a>
+
+      <ul>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetInferenceLayer.model_name">(sleap.nn.inference.MoveNetInferenceLayer attribute)</a>
 </li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetPredictor.model_name">(sleap.nn.inference.MoveNetPredictor attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/sleap.nn.callbacks.html#sleap.nn.callbacks.ModelCheckpointOnEvent">ModelCheckpointOnEvent (class in sleap.nn.callbacks)</a>
 </li>
       <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.ModelConfig">ModelConfig (class in sleap.nn.config.model)</a>
@@ -3221,6 +3261,12 @@ title="Open an issue"
         <li><a href="api/sleap.util.html#module-sleap.util">sleap.util</a>
 </li>
       </ul></li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetInferenceLayer">MoveNetInferenceLayer (class in sleap.nn.inference)</a>
+</li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetInferenceModel">MoveNetInferenceModel (class in sleap.nn.inference)</a>
+</li>
+      <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetPredictor">MoveNetPredictor (class in sleap.nn.inference)</a>
+</li>
       <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.HeadsConfig.multi_class_bottomup">multi_class_bottomup (sleap.nn.config.model.HeadsConfig attribute)</a>
 </li>
       <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.HeadsConfig.multi_class_topdown">multi_class_topdown (sleap.nn.config.model.HeadsConfig attribute)</a>
@@ -3668,6 +3714,8 @@ title="Open an issue"
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.InferenceLayer.pad_to_stride">(sleap.nn.inference.InferenceLayer attribute)</a>
 </li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetInferenceLayer.pad_to_stride">(sleap.nn.inference.MoveNetInferenceLayer attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstanceInferenceLayer.pad_to_stride">(sleap.nn.inference.SingleInstanceInferenceLayer attribute)</a>
 </li>
       </ul></li>
@@ -3736,6 +3784,8 @@ title="Open an issue"
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.FindInstancePeaks.peak_threshold">(sleap.nn.inference.FindInstancePeaks attribute)</a>
 </li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetPredictor.peak_threshold">(sleap.nn.inference.MoveNetPredictor attribute)</a>
+</li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstanceInferenceLayer.peak_threshold">(sleap.nn.inference.SingleInstanceInferenceLayer attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.peak_threshold">(sleap.nn.inference.SingleInstancePredictor attribute)</a>
@@ -3757,6 +3807,8 @@ title="Open an issue"
 
       <ul>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.pipeline">(sleap.nn.inference.BottomUpPredictor attribute)</a>
+</li>
+        <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.MoveNetPredictor.pipeline">(sleap.nn.inference.MoveNetPredictor attribute)</a>
 </li>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.SingleInstancePredictor.pipeline">(sleap.nn.inference.SingleInstancePredictor attribute)</a>
 </li>
@@ -3791,12 +3843,12 @@ title="Open an issue"
         <li><a href="api/sleap.nn.callbacks.html#sleap.nn.callbacks.TensorBoardMatplotlibWriter.plot_fn">(sleap.nn.callbacks.TensorBoardMatplotlibWriter attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.plot_img">plot_img() (in module sleap.nn.viz)</a>
 </li>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.plot_instance">plot_instance() (in module sleap.nn.viz)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.plot_instances">plot_instances() (in module sleap.nn.viz)</a>
 </li>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.plot_pafs">plot_pafs() (in module sleap.nn.viz)</a>
