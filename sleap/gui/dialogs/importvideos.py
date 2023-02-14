@@ -141,6 +141,12 @@ class ImportParamDialog(QDialog):
                 "video_class": Video.from_filename,
                 "params": [],
             },
+            {
+                "video_type": "single_image",
+                "match": "jpg,png,tif,jpeg,tiff",
+                "video_class": Video.from_filename,
+                "params": [{"name": "grayscale", "type": "check"}],
+            },
         ]
 
         outer_layout = QVBoxLayout()
