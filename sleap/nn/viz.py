@@ -304,16 +304,15 @@ def plot_bbox(bbox, **kwargs):
 
 def generate_skeleton_preview_image(
     instance: Instance, square_bb: bool = True, thumbnail_size=(128, 128)
-) -> bytes:
-    """
-    Generate preview image for skeleton based on given instance.
+) -> Image:  # bytes:
+    """Generate preview image for skeleton based on given instance.
 
-    args:
+    Args:
         instance: A `sleap.Instance` object for which to generate the preview image from.
         square_bb: A boolean flag for whether or not the preview image should be a square image
         thumbnail_size: A tuple of (w,h) for what the size of the thumbnail image should be
 
-    returns:
+    Returns:
         A byte string encoding of the preview image.
     """
 
@@ -353,14 +352,21 @@ def generate_skeleton_preview_image(
         return (new_x1, new_y1, new_x2, new_y2)
 
     if square_bb:
-        bb = get_square_bounding_box(instance.bounding_box)
+        x1, y1, x2, y2 = get_square_bounding_box(instance.bounding_box)
     else:
         y1, x1, y2, x2 = instance.bounding_box
-        bb = [x1, y1, x2, y2]
+    bb = [x1, y1, x2, y2]
+    bb = [coor - 20 if idx < 2 else coor + 20 for idx, coor in enumerate(bb)]
+
     frame = plot_img(instance.video.get_frame(instance.frame_idx))
-    skeleton = viz.plot_instance(
-        instance, skeleton=instance.skeleton, color_by_node=False
+
+    max_dim = max(abs(y1 - y2), abs(x1 - x2))
+    ms = int(max_dim / 7)
+    lw = int(max_dim / 30)
+    skeleton = plot_instance(
+        instance, skeleton=instance.skeleton, lw=lw, ms=ms, color_by_node=False
     )
+
     fig = skeleton[0][0].figure
     ax = fig.gca()
     ax.get_yaxis().set_visible(False)
@@ -371,8 +377,59 @@ def generate_skeleton_preview_image(
     im = Image.open(img_buf)
     im = im.crop(bb)
     im.thumbnail(thumbnail_size)
-    img_stream = BytesIO()
-    im.save(img_stream, format="jpeg")
-    img_bytes = img_stream.getvalue()  # image in binary format
-    img_b64 = base64.b64encode(img_bytes)
-    return img_b64
+    # img_stream = BytesIO()
+    # im.save(img_stream, format="jpeg")
+    # img_bytes = img_stream.getvalue()  # image in binary format
+    # img_b64 = base64.b64encode(img_bytes)
+    return im  # img_b64
+
+
+if __name__ == "__main__":
+    """Display preview images for all skeletons in sleap.skeletons directory."""
+
+    import os
+    from pathlib import Path
+
+    import sleap
+    from sleap.instance import LabeledFrame
+    from sleap.io.dataset import Labels
+    from sleap.skeleton import Skeleton
+
+    ds_dict = {
+        "ds-fly32": {"lf_idx": 1, "track": None},
+        "ds-bees": {"lf_idx": 630, "track": "track_1"},
+        "ds-mice_hc": {"lf_idx": 1497, "track": "track_0"},
+        "ds-mice_of": {"lf_idx": 11, "track": "track_3"},
+        "ds-flies13": {"lf_idx": 201, "track": "track_0"},
+        "ds-gerbils": {"lf_idx": 819, "track": "female"},
+    }
+
+    skeletons_dir = r"sleap\skeletons"
+
+    for ds, info in ds_dict.items():
+        print(ds)
+        ds: str = os.environ[ds]
+        ds_base_name: str = Path(ds).stem
+
+        lf_idx: int = info["lf_idx"]
+        track: str = info["track"]
+
+        video_file = str(Path(ds).with_suffix(".mp4"))
+        labels: Labels = sleap.load_file(ds, search_paths=[video_file])
+
+        skeleton_file = Path(skeletons_dir, ds_base_name + ".json")
+        skeleton = Skeleton.load_json(skeleton_file)
+
+        lf: LabeledFrame = labels.labeled_frames[lf_idx]
+        if track is None:
+            inst = lf.instances[0]
+        else:
+            inst = next(
+                instance for instance in lf.instances if instance.track.name == track
+            )
+
+        img: Image = generate_skeleton_preview_image(inst)
+        img.show()
+        # skeleton.preview_image = img
+        # skeleton.save_json(skeleton_file)
+        print()
