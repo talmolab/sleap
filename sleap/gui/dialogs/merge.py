@@ -378,7 +378,7 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
         if len(self.add_nodes) > 0:
             message += (
                 "<p>The following nodes will be <b>added</b> to all instances:<br>"
-                f"<em>From new labels</em>: {','.join(self.add_nodes)}</p>"
+                f"<em>From new labels</em>: {', '.join(self.add_nodes)}</p>"
             )
         else:
             message += "<p>No nodes will be added.</p>"
@@ -571,22 +571,20 @@ def show_instance_type_counts(instance_list: List["Instance"]) -> str:
 if __name__ == "__main__":
 
     import os
+    from pathlib import Path
 
     import sleap
     from sleap.gui.commands import OpenSkeleton
 
-    ds_name = "ds-mice_of"
+    ds_name = "ds-bees"
     ds_basename = ds_name.split("-")[-1]
-    ds = f"D:\\social-leap-estimates-animal-poses\\datasets\\{ds_basename}\\{ds_basename} copy.slp"  # os.environ[ds_name]
+    ds = os.environ[ds_name]
 
     labels = sleap.load_file(ds)
     skeleton = labels.skeletons[0]
 
-    ds_new_skeleton = (
-        "D:\\social-leap-estimates-animal-poses\\pull-requests\\sleap\\sleap\\skeletons\\"
-        + "mice_hc"
-        + ".json"
-    )
+    skeletons_dir = r"sleap/skeletons"
+    ds_new_skeleton = Path(skeletons_dir, ds_basename).with_suffix(".json")
     skeleton_new = sleap.Skeleton.load_json(ds_new_skeleton)
     rename_nodes, delete_nodes, add_nodes = OpenSkeleton.compare_skeletons(
         skeleton, skeleton_new
@@ -597,8 +595,6 @@ if __name__ == "__main__":
         rename_nodes,
         delete_nodes,
         add_nodes,
-        skeleton.node_names,
-        skeleton_new.node_names,
     )
     win.exec_()
 
