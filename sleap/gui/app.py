@@ -1067,7 +1067,7 @@ class MainWindow(QMainWindow):
                     preview_image.tobytes(),
                     preview_image.size[0],
                     preview_image.size[1],
-                    QtGui.QImage.Format_RGB888,  # Format for RGB images (see Image.mode)
+                    QtGui.QImage.Format_RGBA8888,  # Format for RGBA images (see Image.mode)
                 )
 
                 preview_image = QtGui.QPixmap.fromImage(preview_image)
