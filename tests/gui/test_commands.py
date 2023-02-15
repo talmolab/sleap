@@ -411,7 +411,7 @@ def test_OpenSkeleton(
 
             # Load new skeleton and compare
             new_skeleton = OpenSkeleton.load_skeleton(filename)
-            (delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
+            (rename_nodes, delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
                 skeleton, new_skeleton
             )
 

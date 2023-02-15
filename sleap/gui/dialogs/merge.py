@@ -305,8 +305,11 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
     """Qt dialog for handling skeleton replacement.
 
     Args:
+        rename_nodes: The nodes that will be renamed.
         delete_nodes: The nodes that will be deleted.
         add_nodes: The nodes that will be added.
+        skeleton_nodes: The nodes in the current skeleton.
+        new_skeleton_nodes: The nodes in the new skeleton.
 
     Attributes:
         results_data: The results of the dialog. This is a dictionary with the keys
@@ -328,23 +331,87 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
         old node names. If rejected, returns None.
     """
 
-    def __init__(self, delete_nodes, add_nodes, *args, **kwargs):
+    def __init__(
+        self,
+        rename_nodes: List[str],
+        delete_nodes: List[str],
+        add_nodes: List[str],
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
 
         # The only data we need
+        self.rename_nodes = rename_nodes
         self.delete_nodes = delete_nodes
         self.add_nodes = add_nodes
+
+        # We want the skeleton nodes to be ordered with rename nodes first
+        self.skeleton_nodes = list(self.rename_nodes)
+        self.skeleton_nodes.extend(self.delete_nodes)
+        self.new_skeleton_nodes = list(self.rename_nodes)
+        self.new_skeleton_nodes.extend(self.add_nodes)
+
         self.results_data: Optional[Dict[str, str]] = None
 
         # Set table name
         self.setWindowTitle("Replace Nodes")
 
-        # Add table to dialog
+        # Add table to dialog (if any nodes exist to link)
+        if (len(self.add_nodes) > 0) or (len(self.delete_nodes) > 0):
+            self.create_table()
+        else:
+            self.table = None
+
+        # Add table and message to application
+        layout = QtWidgets.QVBoxLayout(self)
+
+        # Dynamically create message
+        message = "<p><b>Warning:</b> Pre-existing skeleton found."
+        if len(self.delete_nodes) > 0:
+            message += (
+                "<p>The following nodes will be <b>deleted</b> from all instances:"
+                f"<br><em>From base labels</em>: {', '.join(self.delete_nodes)}<br></p>"
+            )
+        else:
+            message += "<p>No nodes will be deleted.</p>"
+        if len(self.add_nodes) > 0:
+            message += (
+                "<p>The following nodes will be <b>added</b> to all instances:<br>"
+                f"<em>From new labels</em>: {','.join(self.add_nodes)}</p>"
+            )
+        else:
+            message += "<p>No nodes will be added.</p>"
+        if self.table is not None:
+            message += (
+                "<p>Old nodes to can be linked to new nodes via the table below.</p>"
+            )
+
+        label = QtWidgets.QLabel(message)
+        label.setWordWrap(True)
+        layout.addWidget(label)
+        if self.table is not None:
+            layout.addWidget(self.table)
+
+        # Add button to application
+        button = QtWidgets.QPushButton("Replace")
+        button.clicked.connect(self.accept)
+        layout.addWidget(button)
+
+        # Set layout (otherwise nothing will be shown)
+        self.setLayout(layout)
+
+    def create_table(self: "ReplaceSkeletonTableDialog") -> QtWidgets.QTableWidget:
+        """Create the table widget."""
+
         self.table = QtWidgets.QTableWidget(self)
+
+        if self.table is None:
+            return
 
         # Create QTable Widget to display skeleton differences
         self.table.setColumnCount(2)
-        self.table.setRowCount(len(self.add_nodes))
+        self.table.setRowCount(len(self.new_skeleton_nodes))
         self.table.setHorizontalHeaderLabels(["New", "Old"])
         self.table.verticalHeader().setVisible(False)
         self.table.horizontalHeader().setSectionResizeMode(
@@ -357,34 +424,10 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
 
         # Add data to table
         column = 0
-        for i, node in enumerate(self.add_nodes):
+        for i, new_node in enumerate(self.new_skeleton_nodes):
             row = i
-            self.table.setItem(row, column, QtWidgets.QTableWidgetItem(node))
+            self.table.setItem(row, column, QtWidgets.QTableWidgetItem(new_node))
         self.add_combo_boxes_to_table(init=True)
-
-        # Add table and message to application
-        layout = QtWidgets.QVBoxLayout(self)
-        message = (
-            "<p><b>Warning:</b> Pre-existing skeleton found."
-            "<p>The following nodes will be <b>deleted</b> from all instances:"
-            f"<br><em>From base labels</em>: {', '.join(self.delete_nodes)}<br></p>"
-            "<p>The following nodes will be <b>added</b> to all instances:<br>"
-            f"<em>From new labels</em>: {','.join(self.add_nodes)}</p>"
-            "<p>Nodes to be deleted can be linked to nodes being added via the table "
-            "below.</p>"
-        )
-        label = QtWidgets.QLabel(message)
-        label.setWordWrap(True)
-        layout.addWidget(label)
-        layout.addWidget(self.table)
-
-        # Add button to application
-        button = QtWidgets.QPushButton("Replace")
-        button.clicked.connect(self.accept)
-        layout.addWidget(button)
-
-        # Set layout (otherwise nothing will be shown)
-        self.setLayout(layout)
 
     def add_combo_boxes_to_table(
         self: "ReplaceSkeletonTableDialog",
@@ -398,9 +441,19 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
                 all `self.delete_nodes` excluding nodes that have already been used by
                 other combo boxes.
         """
+        if self.table is None:
+            return
+
         for i in range(self.table.rowCount()):
-            current_combo = self.table.cellWidget(i, 1)
-            current_combo_text = current_combo.currentText() if current_combo else ""
+            # Get text from table item in column 1
+            new_node_name = self.table.item(i, 0).text()
+            if init and (new_node_name in self.rename_nodes):
+                current_combo_text = new_node_name
+            else:
+                current_combo = self.table.cellWidget(i, 1)
+                current_combo_text = (
+                    current_combo.currentText() if current_combo else ""
+                )
             self.table.setCellWidget(
                 i,
                 1,
@@ -413,10 +466,15 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
         Returns:
             List of unused nodes.
         """
-        unused_nodes = set(self.delete_nodes)
+        if self.table is None:
+            return
+
+        unused_nodes = set(self.skeleton_nodes)
         for i in range(self.table.rowCount()):
             combo = self.table.cellWidget(i, 1)
-            if combo.currentText() in unused_nodes:
+            if combo is None:
+                break
+            elif combo.currentText() in unused_nodes:
                 unused_nodes.remove(combo.currentText())
         return list(unused_nodes)
 
@@ -443,25 +501,49 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
         combo.addItem("")
         if set_text != "":
             combo.addItem(set_text)
-        combo.addItems(unused_nodes)
+        combo.addItems(sorted(unused_nodes))
         combo.setCurrentText(set_text)  # Set text to current text
-        combo.currentTextChanged.connect(lambda: self.add_combo_boxes_to_table())
+        combo.currentTextChanged.connect(
+            lambda: self.add_combo_boxes_to_table(init=False)
+        )
         return combo
 
     def get_table_data(self: "ReplaceSkeletonTableDialog"):
         """Gets data from table."""
+        if self.table is None:
+            return {}
+
         data = {}
         for i in range(self.table.rowCount()):
             new_node = self.table.item(i, 0).text()
             old_node = self.table.cellWidget(i, 1).currentText()
-            if old_node != "":
+            if (old_node != "") and (new_node != old_node):
                 data[new_node] = old_node
+
+        # Sort the data s.t. skeleton nodes are renamed to new nodes first
+        data = dict(
+            sorted(data.items(), key=lambda item: item[0] in self.skeleton_nodes)
+        )
+
+        # This case happens if complete bipartite match `self.rename_nodes` in new order
+        if len(data) > 0:
+            first_new_node, first_old_node = list(data.items())[0]
+            if first_new_node in self.skeleton_nodes:
+                # Reordering has failed!
+                raise ValueError(
+                    f"Cannot rename skeleton node '{first_old_node}' to already existing "
+                    f"node '{first_new_node}'. Please rename existing skeleton node "
+                    f"'{first_new_node}' manually before linking."
+                )
         return data
 
     def accept(self):
         """Overrides accept method to return table data."""
-        data = self.get_table_data()
-        self.results_data = data
+        try:
+            self.results_data = self.get_table_data()
+        except ValueError as e:
+            QtWidgets.QMessageBox.critical(self, "Error", str(e))
+            return  # Allow user to fix error if possible instead of closing dialog
         super().accept()
 
     def result(self):
@@ -493,17 +575,31 @@ if __name__ == "__main__":
     import sleap
     from sleap.gui.commands import OpenSkeleton
 
-    ds = os.environ["ds-dmc"]
+    ds_name = "ds-mice_of"
+    ds_basename = ds_name.split("-")[-1]
+    ds = f"D:\\social-leap-estimates-animal-poses\\datasets\\{ds_basename}\\{ds_basename} copy.slp"  # os.environ[ds_name]
 
     labels = sleap.load_file(ds)
     skeleton = labels.skeletons[0]
 
-    ds_new_skeleton = r"D:\social-leap-estimates-animal-poses\pull-requests\sleap\sleap\skeletons\gerbils.json"
+    ds_new_skeleton = (
+        "D:\\social-leap-estimates-animal-poses\\pull-requests\\sleap\\sleap\\skeletons\\"
+        + "mice_hc"
+        + ".json"
+    )
     skeleton_new = sleap.Skeleton.load_json(ds_new_skeleton)
-    delete_nodes, add_nodes = OpenSkeleton.compare_skeletons(skeleton, skeleton_new)
+    rename_nodes, delete_nodes, add_nodes = OpenSkeleton.compare_skeletons(
+        skeleton, skeleton_new
+    )
 
     app = QtWidgets.QApplication()
-    win = ReplaceSkeletonTableDialog(delete_nodes, add_nodes)
+    win = ReplaceSkeletonTableDialog(
+        rename_nodes,
+        delete_nodes,
+        add_nodes,
+        skeleton.node_names,
+        skeleton_new.node_names,
+    )
     win.exec_()
 
     # Get return value after closing window

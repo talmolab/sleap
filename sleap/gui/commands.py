@@ -1831,7 +1831,7 @@ class OpenSkeleton(EditCommand):
     @staticmethod
     def compare_skeletons(
         skeleton: Skeleton, new_skeleton: Skeleton
-    ) -> Tuple[List[str], List[str]]:
+    ) -> Tuple[List[str], List[str], List[str]]:
 
         delete_nodes = []
         add_nodes = []
@@ -1842,7 +1842,12 @@ class OpenSkeleton(EditCommand):
             delete_nodes = [node for node in base_nodes if node not in new_nodes]
             add_nodes = [node for node in new_nodes if node not in base_nodes]
 
-        return delete_nodes, add_nodes
+        # We want to run this even if the skeletons are the same
+        rename_nodes = [
+            node for node in skeleton.node_names if node not in delete_nodes
+        ]
+
+        return rename_nodes, delete_nodes, add_nodes
 
     @staticmethod
     def delete_extra_skeletons(labels: Labels):
@@ -1890,19 +1895,22 @@ class OpenSkeleton(EditCommand):
 
             # Load new skeleton and compare
             new_skeleton = OpenSkeleton.load_skeleton(filename)
-            (delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
+            (rename_nodes, delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
                 skeleton, new_skeleton
             )
 
             if (len(delete_nodes) > 0) or (len(add_nodes) > 0):
                 # Allow user to link mismatched nodes
                 query = ReplaceSkeletonTableDialog(
-                    delete_nodes=delete_nodes, add_nodes=add_nodes
+                    rename_nodes=rename_nodes,
+                    delete_nodes=delete_nodes,
+                    add_nodes=add_nodes,
                 )
                 query.exec_()
 
                 # Give the okay to add/delete nodes
                 linked_nodes: Optional[Dict[str, str]] = query.result()
+                print(f"linked_nodes: {linked_nodes}")
                 if linked_nodes is not None:
                     delete_nodes = list(set(delete_nodes) - set(linked_nodes.values()))
                     add_nodes = list(set(add_nodes) - set(linked_nodes.keys()))
@@ -1976,7 +1984,7 @@ class OpenSkeleton(EditCommand):
             add_nodes: List[str] = params["add_nodes"]
         else:
             # Otherwise, load new skeleton and compare
-            (delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
+            (rename_nodes, delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
                 skeleton, new_skeleton
             )
 
