@@ -48,3 +48,8 @@ def skeleton():
     skeleton.add_symmetry(node1="left-wing", node2="right-wing")
 
     return skeleton
+
+
+@pytest.fixture
+def flies13_skeleton():
+    return Skeleton.load_json(r"sleap\skeletons\flies13.json")

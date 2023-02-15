@@ -2,19 +2,22 @@
 Gui for merging two labels files with options to resolve conflicts.
 """
 
-import attr
 
+import logging
 from typing import Dict, List, Optional
+
+import attr
+from qtpy import QtWidgets, QtCore
 
 from sleap.instance import LabeledFrame
 from sleap.io.dataset import Labels
-
-from qtpy import QtWidgets, QtCore
 
 USE_BASE_STRING = "Use base, discard conflicting new instances"
 USE_NEW_STRING = "Use new, discard conflicting base instances"
 USE_NEITHER_STRING = "Discard all conflicting instances"
 CLEAN_STRING = "Accept clean merge"
+
+log = logging.getLogger(__name__)
 
 
 class MergeDialog(QtWidgets.QDialog):
@@ -525,11 +528,13 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
             sorted(data.items(), key=lambda item: item[0] in self.skeleton_nodes)
         )
 
-        # This case happens if complete bipartite match `self.rename_nodes` in new order
+        # This case happens if exclusively bipartite match (new) `self.rename_nodes`
+        # with set including (old) `self.delete_nodes` and `self.rename_nodes`
         if len(data) > 0:
             first_new_node, first_old_node = list(data.items())[0]
             if first_new_node in self.skeleton_nodes:
                 # Reordering has failed!
+                log.debug(f"Linked nodes (new: old): {data}")
                 raise ValueError(
                     f"Cannot rename skeleton node '{first_old_node}' to already existing "
                     f"node '{first_new_node}'. Please rename existing skeleton node "
@@ -548,7 +553,7 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
 
     def result(self):
         """Overrides result method to return table data."""
-        return self.results_data
+        return self.get_table_data() if self.results_data is None else self.results_data
 
 
 def show_instance_type_counts(instance_list: List["Instance"]) -> str:
