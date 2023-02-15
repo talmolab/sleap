@@ -399,11 +399,11 @@ if __name__ == "__main__":
     from sleap.util import decode_preview_image
 
     ds_dict = {
-        "ds-fly32": {"lf_idx": 1, "track": None},
-        "ds-bees": {"lf_idx": 630, "track": "track_1"},
+        # "ds-fly32": {"lf_idx": 1, "track": None},
+        # "ds-bees": {"lf_idx": 630, "track": "track_1"},
         "ds-mice_hc": {"lf_idx": 1497, "track": "track_0"},
         "ds-mice_of": {"lf_idx": 11, "track": "track_3"},
-        "ds-flies13": {"lf_idx": 201, "track": "track_0"},
+        # "ds-flies13": {"lf_idx": 201, "track": "track_0"},
         "ds-gerbils": {"lf_idx": 819, "track": "female"},
     }
 
@@ -414,28 +414,27 @@ if __name__ == "__main__":
         ds: str = os.environ[ds]
         ds_base_name: str = Path(ds).stem
 
-        lf_idx: int = info["lf_idx"]
-        track: str = info["track"]
+        # lf_idx: int = info["lf_idx"]
+        # track: str = info["track"]
 
-        video_file = str(Path(ds).with_suffix(".mp4"))
-        labels: Labels = sleap.load_file(ds, search_paths=[video_file])
+        # video_file = str(Path(ds).with_suffix(".mp4"))
+        # labels: Labels = sleap.load_file(ds, search_paths=[video_file])
 
         skeleton_file = Path(skeletons_dir, ds_base_name + ".json")
         skeleton = Skeleton.load_json(skeleton_file)
 
-        lf: LabeledFrame = labels.labeled_frames[lf_idx]
-        if track is None:
-            inst = lf.instances[0]
-        else:
-            inst = next(
-                instance for instance in lf.instances if instance.track.name == track
-            )
+        # lf: LabeledFrame = labels.labeled_frames[lf_idx]
+        # if track is None:
+        #     inst = lf.instances[0]
+        # else:
+        #     inst = next(
+        #         instance for instance in lf.instances if instance.track.name == track
+        #     )
 
-        img_b64: bytes = generate_skeleton_preview_image(inst)
+        # img_b64: bytes = generate_skeleton_preview_image(inst)
 
-        skeleton.preview_image = img_b64
+        # skeleton.preview_image = img_b64
         skeleton.save_json(skeleton_file)
-
         skeleton = Skeleton.load_json(skeleton_file)
         skeleton_img: Image = decode_preview_image(skeleton.preview_image)
         skeleton_img.show()
