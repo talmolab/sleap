@@ -395,25 +395,6 @@ def parse_uri_path(uri: str) -> str:
     return Path(url2pathname(urlparse(unquote(uri)).path)).as_posix()
 
 
-def encode_preview_image(im_path: str) -> bytes:
-    """
-    Encode a skeleton preview image to a ByteString"
-
-    Args:
-        im_path: Path to preview image file
-
-    Returns:
-        Bytes encoding the image as a byte string
-    """
-
-    img = Image.open(im_path)
-    img_stream = BytesIO()
-    img.save(img_stream, format="png")
-    img_bytes = img_stream.getvalue()  # image in binary format
-    img_b64 = base64.b64encode(img_bytes)
-    return img_b64
-
-
 def decode_preview_image(img_b64: bytes) -> Image:
     """
     Decode a skeleton preview image byte string representation to a `PIL.Image`
