@@ -60,6 +60,9 @@ optional arguments:
                         Path to labels file to use for test. If specified,
                         overrides the path specified in the training job
                         config.
+  --base_checkpoint BASE_CHECKPOINT
+                        Path to base checkpoint (directory containing best_model.h5)
+                        to resume training from.
   --tensorboard         Enable TensorBoard logging to the run path if not
                         already specified in the training job config.
   --save_viz            Enable saving of prediction visualizations to the run
@@ -307,8 +310,9 @@ optional arguments:
                               only a single --output argument was specified, the
                               analysis file for the latter video is given a default name.
   --format FORMAT       Output format. Default ('slp') is SLEAP dataset;
-                        'analysis' results in analysis.h5 file; 'h5' or 'json'
-                        results in SLEAP dataset with specified file format.
+                        'analysis' results in analysis.h5 file; 'analysis.nix' results
+                        in an analysis nix file; 'h5' or 'json' results in SLEAP dataset
+                        with specified file format.
   --video VIDEO         Path to video (if needed for conversion).
 ```
 

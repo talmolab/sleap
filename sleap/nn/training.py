@@ -745,6 +745,22 @@ class Trainer(ABC):
         for i, output in enumerate(self.model.keras_model.outputs):
             logger.info(f"    [{i}] = {output}")
 
+        # Resuming training if flagged
+        if self.config.model.base_checkpoint is not None:
+            # TODO (AL): Add flexibilty to resume from any checkpoint (e.g.
+            # latest_model, specific epoch, etc.)
+
+            # Grab the 'best_model.h5' file from the previous training run
+            # and load it into the current model
+            previous_model_path = os.path.join(
+                self.config.model.base_checkpoint, "best_model.h5"
+            )
+
+            self.keras_model.load_weights(previous_model_path)
+            logger.info(f"Loaded previous model weights from {previous_model_path}")
+        else:
+            logger.info("Training from scratch")
+
     @property
     def keras_model(self) -> tf.keras.Model:
         """Alias for `self.model.keras_model`."""
@@ -1783,7 +1799,7 @@ class TopDownMultiClassModelTrainer(Trainer):
         )
 
 
-def main():
+def main(args: Optional[List] = None):
     """Create CLI for training and run."""
     import argparse
 
@@ -1823,6 +1839,14 @@ def main():
         help=(
             "Path to labels file to use for test. If specified, overrides the path "
             "specified in the training job config."
+        ),
+    )
+    parser.add_argument(
+        "--base_checkpoint",
+        type=str,
+        help=(
+            "Path to base checkpoint (directory containing best_model.h5) to resume "
+            "training from."
         ),
     )
     parser.add_argument(
@@ -1883,7 +1907,7 @@ def main():
         ),
     )
 
-    args, _ = parser.parse_known_args()
+    args, _ = parser.parse_known_args(args)
 
     # Find job configuration file.
     job_filename = args.training_job_path
@@ -1915,6 +1939,8 @@ def main():
     args.video_paths = args.video_paths.split(",")
     if len(args.video_paths) == 0:
         args.video_paths = None
+
+    job_config.model.base_checkpoint = args.base_checkpoint
 
     logger.info("Versions:")
     sleap.versions()
@@ -1979,6 +2005,8 @@ def main():
         video_search_paths=args.video_paths,
     )
     trainer.train()
+
+    return trainer
 
 
 if __name__ == "__main__":

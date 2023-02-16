@@ -1,4 +1,12 @@
-from tempfile import tempdir
+from pathlib import PurePath, Path
+import shutil
+import sys
+from typing import List
+
+import pytest
+from qtpy.QtWidgets import QComboBox
+
+from sleap import Skeleton, Track
 from sleap.gui.commands import (
     CommandContext,
     ImportDeepLabCutFolder,
@@ -8,26 +16,20 @@ from sleap.gui.commands import (
     SaveProjectAs,
     get_new_version_filename,
 )
-from sleap.io.format.adaptor import Adaptor
+from sleap.instance import Instance, LabeledFrame
+from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
+from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.pathutils import fix_path_separator
 from sleap.io.video import Video
-from sleap.io.convert import default_analysis_filename
-from sleap.instance import Instance, LabeledFrame
 from sleap.util import get_package_file
-from sleap import Skeleton, Track
 
+# These imports cause trouble when running `pytest.main()` from within the file
+# Comment out to debug tests file via VSCode's "Debug Python File"
 from tests.info.test_h5 import extract_meta_hdf5
 from tests.io.test_video import assert_video_params
-
-from pathlib import PurePath, Path
-from typing import List
-
-from qtpy.QtWidgets import QComboBox
-
-import shutil
-import pytest
+from tests.io.test_formats import read_nix_meta
 
 
 def test_delete_user_dialog(centered_pair_predictions):
@@ -88,8 +90,12 @@ def test_get_new_version_filename():
     )
 
 
+@pytest.mark.parametrize("out_suffix", ["h5", "nix"])
 def test_ExportAnalysisFile(
-    centered_pair_predictions: Labels, small_robot_mp4_vid: Video, tmpdir
+    centered_pair_predictions: Labels,
+    small_robot_mp4_vid: Video,
+    out_suffix: str,
+    tmpdir,
 ):
     def ExportAnalysisFile_ask(context: CommandContext, params: dict):
         """Taken from ExportAnalysisFile.ask()"""
@@ -101,7 +107,7 @@ def test_ExportAnalysisFile(
 
         labels = context.labels
         if len(labels.labeled_frames) == 0:
-            return False
+            raise ValueError("No labeled frames in project. Nothing to export.")
 
         if params["all_videos"]:
             all_videos = context.labels.videos
@@ -111,7 +117,7 @@ def test_ExportAnalysisFile(
         # Check for labeled frames in each video
         videos = [video for video in all_videos if len(labels.get(video)) != 0]
         if len(videos) == 0:
-            return False
+            raise ValueError("No labeled frames in video(s). Nothing to export.")
 
         default_name = context.state["filename"] or "labels"
         fn = PurePath(tmpdir, default_name)
@@ -135,6 +141,7 @@ def test_ExportAnalysisFile(
                 video=video,
                 output_path=dirname,
                 output_prefix=str(fn.stem),
+                format_suffix=out_suffix,
             )
             filename = default_name if use_default else ask_for_filename(default_name)
 
@@ -156,10 +163,10 @@ def test_ExportAnalysisFile(
             output_paths.append(output_path)
 
             if labels_path is not None:
-                read_meta = extract_meta_hdf5(
-                    output_path, dset_names_in=["labels_path"]
-                )
-                assert read_meta["labels_path"] == labels_path
+                meta_reader = extract_meta_hdf5 if out_suffix == "h5" else read_nix_meta
+                labels_key = "labels_path" if out_suffix == "h5" else "project"
+                read_meta = meta_reader(output_path, dset_names_in=["labels_path"])
+                assert read_meta[labels_key] == labels_path
 
         assert len(output_paths) == num_videos, "Wrong number of outputs written"
         assert len(set(output_paths)) == num_videos, "Some output paths overwritten"
@@ -246,8 +253,8 @@ def test_ExportAnalysisFile(
         labels.remove_video(labels.videos[-1])
 
     params = {"all_videos": True}
-    okay = ExportAnalysisFile_ask(context=context, params=params)
-    assert okay == False
+    with pytest.raises(ValueError):
+        okay = ExportAnalysisFile_ask(context=context, params=params)
 
 
 def test_ToggleGrayscale(centered_pair_predictions: Labels):
@@ -517,3 +524,58 @@ def test_SetSelectedInstanceTrack(centered_pair_predictions: Labels):
     # Ensure that both instance and predicted instance have same track
     assert new_instance.track == track
     assert pred_inst.track == new_instance.track
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("win"),
+    reason="Files being using in parallel by linux CI tests via Github Actions "
+    "(and linux tests give us codecov reports)",
+)
+@pytest.mark.parametrize("video_move_case", ["new_directory", "new_name"])
+def test_LoadProjectFile(
+    centered_pair_predictions_slp_path: str,
+    video_move_case,
+    tmpdir,
+):
+    """Test that changing a labels object on load flags any changes."""
+
+    def ask_LoadProjectFile(params):
+        """Implement `LoadProjectFile.ask` without GUI elements."""
+        filename: Path = params["filename"]
+        gui_video_callback = Labels.make_video_callback(
+            search_paths=[str(filename)], context=params
+        )
+        labels = Labels.load_file(
+            centered_pair_predictions_slp_path, video_search=gui_video_callback
+        )
+        return labels
+
+    def load_and_assert_changes(new_video_path: Path):
+        # Load the project
+        params = {"filename": new_video_path}
+        ask_LoadProjectFile(params)
+
+        # Assert project has changes
+        assert params["changed_on_load"]
+
+    # Get labels and video path
+    labels = Labels.load_file(centered_pair_predictions_slp_path)
+    expected_video_path = Path(labels.video.backend.filename)
+
+    # Move video to new location based on case
+    if video_move_case == "new_directory":  # Needs to have same name
+        new_video_path = Path(tmpdir, expected_video_path.name)
+    else:  # Needs to have different name
+        new_video_path = expected_video_path.with_name("new_name.mp4")
+    shutil.move(expected_video_path, new_video_path)  # Move video to new location
+
+    # Shorten video path if using directory location only
+    search_path = (
+        new_video_path.parent if video_move_case == "new_directory" else new_video_path
+    )
+
+    # Load project and assert changes
+    try:
+        load_and_assert_changes(search_path)
+    finally:  # Move video back to original location - for ease of re-testing
+        shutil.move(new_video_path, expected_video_path)
