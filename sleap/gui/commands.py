@@ -26,23 +26,22 @@ and "do" for all commands (this is important if we're going to implement undo)--
 for now it's at least easy to see where this separation is violated.
 """
 
-import attr
+import logging
 import operator
 import os
-import cv2
 import re
 import sys
 import subprocess
-
 from enum import Enum
 from glob import glob
 from pathlib import PurePath, Path
+import traceback
 from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
 
 import numpy as np
-
+import cv2
+import attr
 from qtpy import QtCore, QtWidgets, QtGui
-
 from qtpy.QtWidgets import QMessageBox, QProgressDialog
 
 from sleap.util import get_package_file
@@ -57,7 +56,7 @@ from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.gui.dialogs.importvideos import ImportVideos
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
-from sleap.gui.dialogs.merge import MergeDialog
+from sleap.gui.dialogs.merge import MergeDialog, ReplaceSkeletonTableDialog
 from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.dialogs.query import QueryDialog
 from sleap.gui.suggestions import VideoFrameSuggestions
@@ -66,6 +65,8 @@ from sleap.gui.state import GuiState
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
+
+logger = logging.getLogger(__name__)
 
 
 class UpdateTopic(Enum):
@@ -1830,7 +1831,7 @@ class OpenSkeleton(EditCommand):
     @staticmethod
     def compare_skeletons(
         skeleton: Skeleton, new_skeleton: Skeleton
-    ) -> Tuple[List[str], List[str]]:
+    ) -> Tuple[List[str], List[str], List[str]]:
 
         delete_nodes = []
         add_nodes = []
@@ -1841,7 +1842,12 @@ class OpenSkeleton(EditCommand):
             delete_nodes = [node for node in base_nodes if node not in new_nodes]
             add_nodes = [node for node in new_nodes if node not in base_nodes]
 
-        return delete_nodes, add_nodes
+        # We want to run this even if the skeletons are the same
+        rename_nodes = [
+            node for node in skeleton.node_names if node not in delete_nodes
+        ]
+
+        return rename_nodes, delete_nodes, add_nodes
 
     @staticmethod
     def delete_extra_skeletons(labels: Labels):
@@ -1880,6 +1886,7 @@ class OpenSkeleton(EditCommand):
 
         if len(filename) == 0:
             return False
+
         okay = True
         if len(context.labels.skeletons) > 0:
             # Ask user permission to merge skeletons
@@ -1888,27 +1895,26 @@ class OpenSkeleton(EditCommand):
 
             # Load new skeleton and compare
             new_skeleton = OpenSkeleton.load_skeleton(filename)
-            (delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
+            (rename_nodes, delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
                 skeleton, new_skeleton
             )
 
             if (len(delete_nodes) > 0) or (len(add_nodes) > 0):
-                # Warn about mismatching skeletons
-                title = "Replace Skeleton"
-                message = (
-                    "<p><b>Warning:</b> Pre-existing skeleton found."
-                    "<p>The following nodes will be <b>deleted</b> from all instances:"
-                    f"<br><em>From base labels</em>: {','.join(delete_nodes)}<br></p>"
-                    "<p>The following nodes will be <b>added</b> to all instances:<br>"
-                    f"<em>From new labels</em>: {','.join(add_nodes)}</p>"
-                    "<p>Nodes can be deleted or merged from the skeleton editor after "
-                    "merging labels.</p>"
+                # Allow user to link mismatched nodes
+                query = ReplaceSkeletonTableDialog(
+                    rename_nodes=rename_nodes,
+                    delete_nodes=delete_nodes,
+                    add_nodes=add_nodes,
                 )
-                query = QueryDialog(title=title, message=message)
                 query.exec_()
 
                 # Give the okay to add/delete nodes
-                okay = bool(query.result())
+                linked_nodes: Optional[Dict[str, str]] = query.result()
+                if linked_nodes is not None:
+                    delete_nodes = list(set(delete_nodes) - set(linked_nodes.values()))
+                    add_nodes = list(set(add_nodes) - set(linked_nodes.keys()))
+                    params["linked_nodes"] = linked_nodes
+                    okay = True
 
             params["delete_nodes"] = delete_nodes
             params["add_nodes"] = add_nodes
@@ -1918,6 +1924,38 @@ class OpenSkeleton(EditCommand):
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
+        """Replace skeleton with new skeleton.
+
+        Note that we modify the existing skeleton in-place to essentially match the new
+        skeleton. However, we cannot rename the skeleton since `Skeleton.name` is used
+        for hashing (see `Skeleton.name` setter).
+
+        Args:
+            context: CommandContext
+            params: dict
+                filename: str
+                delete_nodes: List[str]
+                add_nodes: List[str]
+                linked_nodes: Dict[str, str]
+
+        Returns:
+            None
+        """
+
+        # TODO (LM): This is a hack to get around the fact that we do some dangerous
+        # in-place operations on the skeleton. We should fix this.
+        def try_and_skip_if_error(func, *args, **kwargs):
+            """This is a helper function to try and skip if there is an error."""
+            try:
+                func(*args, **kwargs)
+            except Exception as e:
+                tb_str = traceback.format_exception(
+                    etype=type(e), value=e, tb=e.__traceback__
+                )
+                logger.warning(
+                    f"Recieved the following error while replacing skeleton:\n"
+                    f"{''.join(tb_str)}"
+                )
 
         # Load new skeleton
         filename = params["filename"]
@@ -1945,7 +1983,7 @@ class OpenSkeleton(EditCommand):
             add_nodes: List[str] = params["add_nodes"]
         else:
             # Otherwise, load new skeleton and compare
-            (delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
+            (rename_nodes, delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
                 skeleton, new_skeleton
             )
 
@@ -1953,22 +1991,28 @@ class OpenSkeleton(EditCommand):
         for src, dst in skeleton.symmetries:
             skeleton.delete_symmetry(src, dst)
 
+        # Link mismatched nodes
+        if "linked_nodes" in params.keys():
+            linked_nodes = params["linked_nodes"]
+            for new_name, old_name in linked_nodes.items():
+                try_and_skip_if_error(skeleton.relabel_node, old_name, new_name)
+
         # Delete nodes from skeleton that are not in new skeleton
         for node in delete_nodes:
-            skeleton.delete_node(node)
+            try_and_skip_if_error(skeleton.delete_node, node)
 
         # Add nodes that only exist in the new skeleton
         for node in add_nodes:
-            skeleton.add_node(node)
+            try_and_skip_if_error(skeleton.add_node, node)
 
         # Add edges
         skeleton.clear_edges()
         for src, dest in new_skeleton.edges:
-            skeleton.add_edge(src.name, dest.name)
+            try_and_skip_if_error(skeleton.add_edge, src.name, dest.name)
 
         # Add new symmetry
         for src, dst in new_skeleton.symmetries:
-            skeleton.add_symmetry(src.name, dst.name)
+            try_and_skip_if_error(skeleton.add_symmetry, src.name, dst.name)
 
         # Set state of context
         context.state["skeleton"] = skeleton

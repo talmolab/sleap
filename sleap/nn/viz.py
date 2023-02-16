@@ -305,15 +305,14 @@ def plot_bbox(bbox, **kwargs):
 def generate_skeleton_preview_image(
     instance: Instance, square_bb: bool = True, thumbnail_size=(128, 128)
 ) -> bytes:
-    """
-    Generate preview image for skeleton based on given instance.
+    """Generate preview image for skeleton based on given instance.
 
-    args:
+    Args:
         instance: A `sleap.Instance` object for which to generate the preview image from.
         square_bb: A boolean flag for whether or not the preview image should be a square image
         thumbnail_size: A tuple of (w,h) for what the size of the thumbnail image should be
 
-    returns:
+    Returns:
         A byte string encoding of the preview image.
     """
 
@@ -353,26 +352,36 @@ def generate_skeleton_preview_image(
         return (new_x1, new_y1, new_x2, new_y2)
 
     if square_bb:
-        bb = get_square_bounding_box(instance.bounding_box)
+        x1, y1, x2, y2 = get_square_bounding_box(instance.bounding_box)
     else:
         y1, x1, y2, x2 = instance.bounding_box
-        bb = [x1, y1, x2, y2]
+    bb = [x1, y1, x2, y2]
+    bb = [coor - 20 if idx < 2 else coor + 20 for idx, coor in enumerate(bb)]
+
     frame = plot_img(instance.video.get_frame(instance.frame_idx))
-    skeleton = viz.plot_instance(
-        instance, skeleton=instance.skeleton, color_by_node=False
+
+    # Custom formula for scaling line width and marker size based on bounding box size.
+    max_dim = max(abs(y1 - y2), abs(x1 - x2))
+    ms = int(max_dim / 7)
+    lw = int(max_dim / 30)
+    skeleton = plot_instance(
+        instance, skeleton=instance.skeleton, lw=lw, ms=ms, color_by_node=False
     )
+
     fig = skeleton[0][0].figure
     ax = fig.gca()
     ax.get_yaxis().set_visible(False)
     ax.get_xaxis().set_visible(False)
     fig.set(facecolor="white", frameon=False)
+
     img_buf = BytesIO()
-    plt.savefig(img_buf, format="jpeg", facecolor="white")
+    plt.savefig(img_buf, format="png", facecolor="white")
     im = Image.open(img_buf)
     im = im.crop(bb)
     im.thumbnail(thumbnail_size)
+
     img_stream = BytesIO()
-    im.save(img_stream, format="jpeg")
+    im.save(img_stream, format="png")
     img_bytes = img_stream.getvalue()  # image in binary format
     img_b64 = base64.b64encode(img_bytes)
     return img_b64

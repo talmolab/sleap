@@ -808,8 +808,7 @@ class Skeleton:
         return len(self.nodes)
 
     def relabel_node(self, old_name: str, new_name: str):
-        """
-        Relabel a single node to a new name.
+        """Relabel a single node to a new name.
 
         Args:
             old_name: The old name of the node.
@@ -821,8 +820,7 @@ class Skeleton:
         self.relabel_nodes({old_name: new_name})
 
     def relabel_nodes(self, mapping: Dict[str, str]):
-        """
-        Relabel the nodes of the skeleton.
+        """Relabel the nodes of the skeleton.
 
         Args:
             mapping: A dictionary with the old labels as keys and new
