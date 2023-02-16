@@ -10,7 +10,7 @@ def test_generate_skeleton_preview_image(
     centered_pair_predictions_slp_path: str,
     centered_pair_vid_path: str,
 ):
-    """Encode/decode preview images for all skeletons in sleap.skeletons directory."""
+    """Encode preview images for all skeletons in sleap.skeletons directory."""
 
     video_file = centered_pair_vid_path
     labels: Labels = sleap.load_file(
