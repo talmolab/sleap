@@ -1084,7 +1084,7 @@ class MainWindow(QMainWindow):
             if idx > 0:
                 skel = Skeleton.load_json(skeletons_json_files[idx - 1])
             else:
-                skel = Skeleton()  # TODO: handle custom?
+                skel = Skeleton()
             self.state["skeleton_description"] = (
                 f"{skel.description}<br><br>"
                 f"<strong>Nodes ({len(skel)}):</strong> {', '.join(skel.node_names)}"
@@ -1101,7 +1101,7 @@ class MainWindow(QMainWindow):
         hbw.setLayout(hb)
         skeleton_layout.addWidget(hbw)
 
-        gb = QGroupBox("Nodes")
+        nodes_widget = QWidget()
         vb = QVBoxLayout()
         graph_tabs = QTabWidget()
         self.skeletonNodesTable = GenericTableView(
@@ -1119,14 +1119,13 @@ class MainWindow(QMainWindow):
         hbw = QWidget()
         hbw.setLayout(hb)
         vb.addWidget(hbw)
-        gb.setLayout(vb)
-        graph_tabs.addTab(gb, "Nodes")
-        # skeleton_layout.addWidget(graph_tabs)
+        nodes_widget.setLayout(vb)
+        graph_tabs.addTab(nodes_widget, "Nodes")
 
         def _update_edge_src():
             self.skeletonEdgesDst.model().skeleton = self.state["skeleton"]
 
-        gb = QGroupBox("Edges")
+        edges_widget = QWidget()
         vb = QVBoxLayout()
         self.skeletonEdgesTable = GenericTableView(
             state=self.state,
@@ -1163,8 +1162,8 @@ class MainWindow(QMainWindow):
         hbw = QWidget()
         hbw.setLayout(hb)
         vb.addWidget(hbw)
-        gb.setLayout(vb)
-        graph_tabs.addTab(gb, "Edges")
+        edges_widget.setLayout(vb)
+        graph_tabs.addTab(edges_widget, "Edges")
         skeleton_layout.addWidget(graph_tabs)
 
         ####### Suggestions #######
