@@ -1918,16 +1918,3 @@ def main(args: Optional[list] = None):
         app.exec_()
 
     pass
-
-
-if __name__ == "__main__":
-    import os
-    from pathlib import Path
-
-    import sleap
-
-    ds = str(Path(os.environ["ds-gerbils"]).with_name("gerbils copy.slp"))
-    labels = sleap.load_file(ds)
-    skeletons = labels.skeletons
-
-    print(labels.skeletons)

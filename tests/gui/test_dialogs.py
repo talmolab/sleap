@@ -104,7 +104,3 @@ def test_ReplaceSkeletonTableDialog(
     assert win.table.item(len(rename_nodes), 0).text() not in skeleton.node_names
     data = win.result()
     assert data == {"head1": "forelegL2", "forelegL1": "forelegR3"}
-
-
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_ReplaceSkeletonTableDialog", "--durations=-1"])

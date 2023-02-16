@@ -52,4 +52,4 @@ def skeleton():
 
 @pytest.fixture
 def flies13_skeleton():
-    return Skeleton.load_json(r"sleap\skeletons\flies13.json")
+    return Skeleton.load_json("sleap/skeletons/flies13.json")

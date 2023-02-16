@@ -517,7 +517,3 @@ def test_SetSelectedInstanceTrack(centered_pair_predictions: Labels):
     # Ensure that both instance and predicted instance have same track
     assert new_instance.track == track
     assert pred_inst.track == new_instance.track
-
-
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_OpenSkeleton"])

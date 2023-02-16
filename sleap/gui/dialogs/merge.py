@@ -571,38 +571,3 @@ def show_instance_type_counts(instance_list: List["Instance"]) -> str:
     )
     user_count = len(instance_list) - prediction_count
     return f"{user_count} (user) / {prediction_count} (pred)"
-
-
-if __name__ == "__main__":
-
-    import os
-    from pathlib import Path
-
-    import sleap
-    from sleap.gui.commands import OpenSkeleton
-
-    ds_name = "ds-bees"
-    ds_basename = ds_name.split("-")[-1]
-    ds = os.environ[ds_name]
-
-    labels = sleap.load_file(ds)
-    skeleton = labels.skeletons[0]
-
-    skeletons_dir = r"sleap/skeletons"
-    ds_new_skeleton = Path(skeletons_dir, ds_basename).with_suffix(".json")
-    skeleton_new = sleap.Skeleton.load_json(ds_new_skeleton)
-    rename_nodes, delete_nodes, add_nodes = OpenSkeleton.compare_skeletons(
-        skeleton, skeleton_new
-    )
-
-    app = QtWidgets.QApplication()
-    win = ReplaceSkeletonTableDialog(
-        rename_nodes,
-        delete_nodes,
-        add_nodes,
-    )
-    win.exec_()
-
-    # Get return value after closing window
-    data = win.result()
-    print(f"data:\n{data}")
