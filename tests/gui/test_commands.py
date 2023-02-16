@@ -411,14 +411,20 @@ def test_OpenSkeleton(
 
             # Load new skeleton and compare
             new_skeleton = OpenSkeleton.load_skeleton(filename)
-            (delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
+            (rename_nodes, delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
                 skeleton, new_skeleton
             )
 
             # Original function shows pop-up warning here
             if (len(delete_nodes) > 0) or (len(add_nodes) > 0):
-                # Warn about mismatching skeletons
-                pass
+                linked_nodes = {
+                    "abdomen": "body",
+                    "wingL": "left-arm",
+                    "wingR": "right-arm",
+                }
+                delete_nodes = list(set(delete_nodes) - set(linked_nodes.values()))
+                add_nodes = list(set(add_nodes) - set(linked_nodes.keys()))
+                params["linked_nodes"] = linked_nodes
 
             params["delete_nodes"] = delete_nodes
             params["add_nodes"] = add_nodes
@@ -452,6 +458,8 @@ def test_OpenSkeleton(
     params = {"filename_in": fly_legs_skeleton_json}
     OpenSkeleton_ask(context, params)
     assert params["filename"] == fly_legs_skeleton_json
+    assert len(set(params["delete_nodes"]) & set(params["linked_nodes"])) == 0
+    assert len(set(params["add_nodes"]) & set(params["linked_nodes"])) == 0
     OpenSkeleton.do_action(context, params)
     assert_skeletons_match(new_skeleton, stickman)
 

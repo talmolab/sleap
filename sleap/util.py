@@ -21,8 +21,12 @@ import psutil
 import json
 import rapidjson
 import yaml
+import base64
 
 from typing import Any, Dict, Hashable, Iterable, List, Optional
+
+from PIL import Image
+from io import BytesIO
 
 import sleap.version as sleap_version
 
@@ -389,3 +393,19 @@ def find_files_by_suffix(
 def parse_uri_path(uri: str) -> str:
     """Parse a URI starting with 'file:///' to a posix path."""
     return Path(url2pathname(urlparse(unquote(uri)).path)).as_posix()
+
+
+def decode_preview_image(img_b64: bytes) -> Image:
+    """
+    Decode a skeleton preview image byte string representation to a `PIL.Image`
+
+    Args:
+        img_b64: a byte string representation of a skeleton preview image
+
+    Returns:
+        A PIL.Image of the skeleton preview
+    """
+    bytes = base64.b64decode(img_b64)
+    buffer = BytesIO(bytes)
+    img = Image.open(buffer)
+    return img

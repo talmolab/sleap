@@ -4,7 +4,11 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
+import base64
 from typing import Union, Tuple, Optional, Text
+from sleap import Instance
+from io import BytesIO
+from PIL import Image
 
 
 def imgfig(
@@ -194,7 +198,7 @@ def plot_instance(
     ms=10,
     bbox=None,
     scale=1.0,
-    **kwargs
+    **kwargs,
 ):
     """Plot a single instance with edge coloring."""
     if cmap is None:
@@ -296,3 +300,88 @@ def plot_bbox(bbox, **kwargs):
         bbox = bbox.bounding_box
     y1, x1, y2, x2 = bbox
     plt.plot([x1, x2, x2, x1, x1], [y1, y1, y2, y2, y1], "-", **kwargs)
+
+
+def generate_skeleton_preview_image(
+    instance: Instance, square_bb: bool = True, thumbnail_size=(128, 128)
+) -> bytes:
+    """Generate preview image for skeleton based on given instance.
+
+    Args:
+        instance: A `sleap.Instance` object for which to generate the preview image from.
+        square_bb: A boolean flag for whether or not the preview image should be a square image
+        thumbnail_size: A tuple of (w,h) for what the size of the thumbnail image should be
+
+    Returns:
+        A byte string encoding of the preview image.
+    """
+
+    def get_square_bounding_box(bb):
+        """
+        Convert rectangular bounding box to square bounding box
+
+        args:
+            bb: A tuple representing a bounding box in `sleap.Instance.bounding_box` format: [y1, x1, y2, x2]
+
+        returns:
+            A square bounding box in `PIL.Image.crop()` format: [x1, y1, x2, y2]
+        """
+
+        y1, x1, y2, x2 = bb
+
+        # Get side lengths
+        dist_x = x2 - x1
+        dist_y = y2 - y1
+
+        mid_x = x1 + dist_x / 2
+        mid_y = y1 + dist_y / 2
+
+        max_dist = max(
+            dist_x, dist_y
+        )  # Get max side length to use as square side length
+
+        # Get new coordinates
+        new_x1 = mid_x - max_dist / 2
+        new_x2 = mid_x + max_dist / 2
+        new_y1 = mid_y - max_dist / 2
+        new_y2 = mid_y + max_dist / 2
+
+        assert new_x2 - new_x1 == new_y2 - new_y1, ValueError(
+            f"{new_x2-new_x1} != {new_y2-new_y1}"
+        )
+        return (new_x1, new_y1, new_x2, new_y2)
+
+    if square_bb:
+        x1, y1, x2, y2 = get_square_bounding_box(instance.bounding_box)
+    else:
+        y1, x1, y2, x2 = instance.bounding_box
+    bb = [x1, y1, x2, y2]
+    bb = [coor - 20 if idx < 2 else coor + 20 for idx, coor in enumerate(bb)]
+
+    frame = plot_img(instance.video.get_frame(instance.frame_idx))
+
+    # Custom formula for scaling line width and marker size based on bounding box size.
+    max_dim = max(abs(y1 - y2), abs(x1 - x2))
+    ms = int(max_dim / 7)
+    lw = int(max_dim / 30)
+    skeleton = plot_instance(
+        instance, skeleton=instance.skeleton, lw=lw, ms=ms, color_by_node=False
+    )
+
+    fig = skeleton[0][0].figure
+    ax = fig.gca()
+    ax.get_yaxis().set_visible(False)
+    ax.get_xaxis().set_visible(False)
+    fig.set(facecolor="white", frameon=False)
+
+    img_buf = BytesIO()
+    plt.savefig(img_buf, format="png", facecolor="white")
+    im = Image.open(img_buf)
+    im = im.crop(bb)
+    im.thumbnail(thumbnail_size)
+
+    img_stream = BytesIO()
+    im.save(img_stream, format="png")
+    img_bytes = img_stream.getvalue()  # image in binary format
+    img_b64 = base64.b64encode(img_bytes)
+    return img_b64

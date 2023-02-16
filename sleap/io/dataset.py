@@ -2616,6 +2616,7 @@ class Labels(MutableSequence):
                         for i, filename in enumerate(filenames):
                             if missing[i]:
                                 filenames[i] = new_paths[i]
+                                missing[i] = False
 
             # Replace the video filenames with changes by user
             for i, item in enumerate(video_list):

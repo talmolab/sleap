@@ -1,5 +1,4 @@
-"""
-Main GUI application for labeling, training/inference, and proofreading.
+"""Main GUI application for labeling, training/inference, and proofreading.
 
 Each open project is an instance of :py:class:`MainWindow`.
 
@@ -50,7 +49,6 @@ import re
 import os
 import random
 import platform
-import requests
 from pathlib import Path
 
 from typing import Callable, List, Optional, Tuple
@@ -59,7 +57,7 @@ from qtpy import QtCore, QtGui
 from qtpy.QtCore import Qt, QEvent
 
 from qtpy.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
-from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox
+from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QTabWidget
 from qtpy.QtWidgets import QLabel, QPushButton, QComboBox
 from qtpy.QtWidgets import QMessageBox
 
@@ -81,7 +79,12 @@ from sleap.gui.dataviews import (
     LabeledFrameTableModel,
     SkeletonNodeModel,
 )
-from sleap.util import parse_uri_path
+from sleap.util import (
+    parse_uri_path,
+    decode_preview_image,
+    get_package_file,
+    find_files_by_suffix,
+)
 
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget, FormBuilderModalDialog
@@ -161,6 +164,8 @@ class MainWindow(QMainWindow):
         self.state["propagate track labels"] = prefs["propagate track labels"]
         self.state["node label size"] = prefs["node label size"]
         self.state["share usage data"] = prefs["share usage data"]
+        self.state["skeleton_preview_image"] = None
+        self.state["skeleton_description"] = "No skeleton loaded yet"
         if no_usage_data:
             self.state["share usage data"] = False
         self.state.connect("marker size", self.plotFrame)
@@ -1003,9 +1008,101 @@ class MainWindow(QMainWindow):
         skeleton_layout = _make_dock(
             "Skeleton", tab_with=videos_layout.parent().parent()
         )
+        gb = QGroupBox("Load Skeleton")
+        vb = QVBoxLayout()
+        hb = QHBoxLayout()
+
+        skeletons_folder = get_package_file("sleap/skeletons")
+        skeletons_json_files = find_files_by_suffix(
+            skeletons_folder, suffix=".json", depth=1
+        )
+        skeletons_names = [json.name.split(".")[0] for json in skeletons_json_files]
+        skeletons_names.insert(0, "Custom")
+        hb.addWidget(QLabel("Load from preset:"))
+        self.skeletonTemplates = QComboBox()
+        self.skeletonTemplates.addItems(skeletons_names)
+        self.skeletonTemplates.setEditable(False)
+        hb.addWidget(self.skeletonTemplates)
+        hb.addWidget(QLabel("skeleton template"))
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        vb.addWidget(hbw)
+
+        hb = QHBoxLayout()
+        preview_image = QtGui.QPixmap(get_package_file("sleap/gui/no-preview.png"))
+        self.skeleton_preview_image = QLabel("Preview Skeleton")
+        self.skeleton_preview_image.setPixmap(preview_image)
+        hb.addWidget(self.skeleton_preview_image)
+        hb.setAlignment(self.skeleton_preview_image, Qt.AlignLeft)
+
+        self.skeleton_description = QLabel(
+            f'<strong>Description:</strong> {self.state["skeleton_description"]}'
+        )
+        self.skeleton_description.setWordWrap(True)
+        hb.addWidget(self.skeleton_description)
+        hb.setAlignment(self.skeleton_description, Qt.AlignLeft)
+
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        vb.addWidget(hbw)
+
+        self.state.connect(
+            "skeleton_description",
+            lambda label: self.skeleton_description.setText(
+                f"<strong>Description:</strong> {label}"
+            ),
+        )
+
+        def updatePreviewImage(preview_image: bytes):
+            if preview_image is None:
+                preview_image = QtGui.QPixmap(
+                    get_package_file("sleap/gui/no-preview.png")
+                )
+            else:
+
+                preview_image = decode_preview_image(preview_image)
+
+                # Create a QImage from the Image
+                preview_image = QtGui.QImage(
+                    preview_image.tobytes(),
+                    preview_image.size[0],
+                    preview_image.size[1],
+                    QtGui.QImage.Format_RGBA8888,  # Format for RGBA images (see Image.mode)
+                )
+
+                preview_image = QtGui.QPixmap.fromImage(preview_image)
+
+            self.skeleton_preview_image.setPixmap(preview_image)
+
+        self.state.connect("skeleton_preview_image", updatePreviewImage)
+
+        gb.setLayout(vb)
+        skeleton_layout.addWidget(gb)
+
+        def update_skeleton_preview(idx: int):
+            if idx > 0:
+                skel = Skeleton.load_json(skeletons_json_files[idx - 1])
+            else:
+                skel = Skeleton()  # TODO: handle custom?
+            self.state["skeleton_description"] = (
+                f"{skel.description}<br><br>"
+                f"<strong>Nodes ({len(skel)}):</strong> {', '.join(skel.node_names)}"
+            )
+            updatePreviewImage(skel.preview_image)
+
+        self.skeletonTemplates.currentIndexChanged.connect(update_skeleton_preview)
+
+        hb = QHBoxLayout()
+        _add_button(hb, "Load Skeleton", self.commands.openSkeleton)
+        _add_button(hb, "Save Skeleton", self.commands.saveSkeleton)
+
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        skeleton_layout.addWidget(hbw)
 
         gb = QGroupBox("Nodes")
         vb = QVBoxLayout()
+        graph_tabs = QTabWidget()
         self.skeletonNodesTable = GenericTableView(
             state=self.state,
             row_name="node",
@@ -1022,7 +1119,8 @@ class MainWindow(QMainWindow):
         hbw.setLayout(hb)
         vb.addWidget(hbw)
         gb.setLayout(vb)
-        skeleton_layout.addWidget(gb)
+        graph_tabs.addTab(gb, "Nodes")
+        # skeleton_layout.addWidget(graph_tabs)
 
         def _update_edge_src():
             self.skeletonEdgesDst.model().skeleton = self.state["skeleton"]
@@ -1065,31 +1163,8 @@ class MainWindow(QMainWindow):
         hbw.setLayout(hb)
         vb.addWidget(hbw)
         gb.setLayout(vb)
-        skeleton_layout.addWidget(gb)
-
-        skeletons_folder = sleap.util.get_package_file("sleap/skeletons")
-        skeletons_json_files = sleap.util.find_files_by_suffix(
-            skeletons_folder, suffix=".json", depth=1
-        )
-        skeletons_names = [json.name.split(".")[0] for json in skeletons_json_files]
-        skeletons_names.insert(0, "Custom")
-
-        self.skeletonTemplates = QComboBox()
-        self.skeletonTemplates.addItems(skeletons_names)
-        self.skeletonTemplates.setEditable(False)
-
-        template_label = QLabel("Template:")
-        template_label.setBuddy(self.skeletonTemplates)
-
-        hb.addWidget(template_label)
-        hb.addWidget(self.skeletonTemplates)
-        hb = QHBoxLayout()
-        _add_button(hb, "Load Skeleton", self.commands.openSkeleton)
-        _add_button(hb, "Save Skeleton", self.commands.saveSkeleton)
-
-        hbw = QWidget()
-        hbw.setLayout(hb)
-        skeleton_layout.addWidget(hbw)
+        graph_tabs.addTab(gb, "Edges")
+        skeleton_layout.addWidget(graph_tabs)
 
         ####### Suggestions #######
         suggestions_layout = _make_dock(
