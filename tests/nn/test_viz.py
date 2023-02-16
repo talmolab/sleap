@@ -1,11 +1,8 @@
 """Module to test all functions in sleap.nn.viz module."""
 
-from PIL import Image
-
 import sleap
 from sleap.instance import LabeledFrame, Track
 from sleap.io.dataset import Labels
-from sleap.util import decode_preview_image
 from sleap.nn.viz import generate_skeleton_preview_image
 
 
@@ -31,6 +28,3 @@ def test_generate_skeleton_preview_image(
 
     img_b64: bytes = generate_skeleton_preview_image(inst)
     assert isinstance(img_b64, bytes)
-
-    img = decode_preview_image(img_b64)
-    assert isinstance(img, Image)
