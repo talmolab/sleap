@@ -86,17 +86,17 @@ class Node:
 
 
 class Skeleton:
-    """
-    The main object for representing animal skeletons.
+    """The main object for representing animal skeletons.
 
     The skeleton represents the constituent parts of the animal whose
     pose is being estimated.
 
     Attributes:
-        _skeleton_idx: An index variable used to give skeletons a default name that should
-        be unique across all skeletons.
-        preview_image: A byte string containing an encoded preview image for the skeleton
-        description: A text description of the skeleton. Used mostly for presets
+        _skeleton_idx: An index variable used to give skeletons a default name that
+            should be unique across all skeletons.
+        preview_image: A byte string containing an encoded preview image for the
+            skeleton.
+        description: A text description of the skeleton. Used mostly for presets.
     """
 
     _skeleton_idx = count(0)

@@ -317,14 +317,14 @@ def generate_skeleton_preview_image(
     """
 
     def get_square_bounding_box(bb):
-        """
-        Convert rectangular bounding box to square bounding box
+        """Convert rectangular bounding box to square bounding box.
 
         Args:
-            bb: A tuple representing a bounding box in `sleap.Instance.bounding_box` format: [y1, x1, y2, x2]
+            bb: A tuple representing a bounding box in `sleap.Instance.bounding_box`
+                with the format [y1, x1, y2, x2]
 
         Returns:
-            A square bounding box in `PIL.Image.crop()` format: [x1, y1, x2, y2]
+            A square bounding box in `PIL.Image.crop()` with the format [x1, y1, x2, y2]
         """
 
         y1, x1, y2, x2 = bb
