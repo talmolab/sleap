@@ -1,4 +1,7 @@
+from pathlib import Path
+
 import pytest
+
 import sleap
 from sleap.io.dataset import Labels
 from sleap.nn.config.data import LabelsConfig
@@ -19,6 +22,7 @@ from sleap.nn.training import (
     TopdownConfmapsModelTrainer,
     TopDownMultiClassModelTrainer,
     Trainer,
+    main as sleap_train,
 )
 
 sleap.use_cpu_only()
@@ -74,6 +78,49 @@ def test_data_reader(min_labels_slp_path):
     assert data_readers.training_labels_reader.example_indices == [0]
     assert data_readers.validation_labels_reader.example_indices == [0]
     assert data_readers.test_labels_reader.example_indices == [0]
+
+
+def test_train_load_single_instance(
+    min_labels_robot: Labels, cfg: TrainingJobConfig, tmp_path: str
+):
+    # set save directory
+    cfg.outputs.run_name = "test_run"
+    cfg.outputs.runs_folder = str(tmp_path / "training_runs")  # ensure it's a string
+    cfg.outputs.save_outputs = True  # enable saving
+    cfg.outputs.checkpointing.latest_model = True  # save latest model
+
+    cfg.model.heads.single_instance = SingleInstanceConfmapsHeadConfig(
+        sigma=1.5, output_stride=1, offset_refinement=False
+    )
+    trainer = SingleInstanceModelTrainer.from_config(
+        cfg, training_labels=min_labels_robot
+    )
+    trainer.setup()
+    trainer.train()
+
+    # now load a new model and resume the checkpoint
+    # set the model checkpoint folder
+    cfg.model.base_checkpoint = cfg.outputs.run_path
+    # unset save directory
+    cfg.outputs.run_name = None
+    cfg.outputs.runs_folder = None
+    cfg.outputs.save_outputs = False  # disable saving
+    cfg.outputs.checkpointing.latest_model = False  # disable saving latest model
+
+    trainer2 = SingleInstanceModelTrainer.from_config(
+        cfg, training_labels=min_labels_robot
+    )
+    trainer2.setup()
+
+    # check the weights are the same
+    for layer, layer2 in zip(trainer.keras_model.layers, trainer2.keras_model.layers):
+        # grabbing the weights from the first model
+        weights = layer.get_weights()
+        # grabbing the weights from the second model
+        weights2 = layer2.get_weights()
+        # check the weights are the same
+        for w, w2 in zip(weights, weights2):
+            assert (w == w2).all()
 
 
 def test_train_single_instance(min_labels_robot, cfg):
@@ -267,3 +314,45 @@ def test_train_cropping(
         trainer.config.data.instance_cropping.crop_size % trainer.model.maximum_stride
         == 0
     )
+
+
+def test_resume_training_cli(
+    min_single_instance_robot_model_path: str, small_robot_mp4_path: str, tmp_path: str
+):
+    """Test CLI to resume training."""
+
+    base_checkpoint_path = min_single_instance_robot_model_path
+    cfg = TrainingJobConfig.load_json(
+        str(Path(base_checkpoint_path, "training_config.json"))
+    )
+    cfg.optimization.preload_data = False
+    cfg.optimization.batch_size = 1
+    cfg.optimization.batches_per_epoch = 2
+    cfg.optimization.epochs = 1
+    cfg.outputs.save_outputs = False
+
+    # Save training config to tmp folder
+    cfg_path = str(Path(tmp_path, "training_config.json"))
+    cfg.save_json(cfg_path)
+
+    # TODO (LM): Stop saving absolute paths in labels files!
+    # We need to do this reload because we save absolute paths (for the video).
+    labels_path = str(Path(base_checkpoint_path, "labels_gt.train.slp"))
+    labels: Labels = sleap.load_file(labels_path, search_paths=[small_robot_mp4_path])
+    labels_path = str(Path(tmp_path, "labels_gt.train.slp"))
+    labels.save_file(labels, labels_path)
+
+    # Run CLI to resume training
+    trainer = sleap_train(
+        [
+            cfg_path,
+            labels_path,
+            "--base_checkpoint",
+            base_checkpoint_path,
+        ]
+    )
+    assert trainer.config.model.base_checkpoint == base_checkpoint_path
+
+    # Run CLI without base checkpoint
+    trainer = sleap_train([cfg_path, labels_path])
+    assert trainer.config.model.base_checkpoint is None
