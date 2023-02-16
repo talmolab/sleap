@@ -45,6 +45,14 @@ def test_ReplaceSkeletonTableDialog(
 
     win = ReplaceSkeletonTableDialog(
         rename_nodes,
+        delete_nodes=[],
+        add_nodes=[],
+    )
+
+    assert win.table is None
+
+    win = ReplaceSkeletonTableDialog(
+        rename_nodes,
         delete_nodes,
         add_nodes,
     )
