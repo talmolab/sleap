@@ -206,6 +206,18 @@ class ImportParamDialog(QDialog):
             button_layout.addWidget(all_channels_first_button)
             all_channels_last_button.clicked.connect(self.set_all_channels_last)
             all_channels_first_button.clicked.connect(self.set_all_channels_first)
+        if any(
+            [
+                widget.import_type["video_type"] == "single_image"
+                for widget in self.import_widgets
+            ]
+        ):
+            all_grayscale_button = QPushButton("All grayscale")
+            all_rgb_button = QPushButton("All RGB")
+            button_layout.addWidget(all_grayscale_button)
+            button_layout.addWidget(all_rgb_button)
+            all_grayscale_button.clicked.connect(self.set_all_grayscale)
+            all_rgb_button.clicked.connect(self.set_all_rgb)
 
         cancel_button = QPushButton("Cancel")
         import_button = QPushButton("Import")
@@ -607,8 +619,11 @@ class VideoPreviewWidget(QWidget):
         frame = self.video.get_frame(idx)
         # Clear existing objects
         self.view.clear()
+        # Re-size the preview image
+        decimate = 10
+        frame_resized = frame[::decimate, ::decimate]
         # Convert ndarray to QImage
-        image = qimage2ndarray.array2qimage(frame)
+        image = qimage2ndarray.array2qimage(frame_resized)
         # Display image
         self.view.setImage(image)
 
