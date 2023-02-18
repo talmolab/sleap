@@ -987,6 +987,7 @@ class MainWindow(QMainWindow):
             row_name="video",
             is_activatable=True,
             model=VideosTableModel(items=self.labels.videos, context=self.commands),
+            ellipsis_left=True,
         )
         videos_layout.addWidget(self.videosTable)
 
