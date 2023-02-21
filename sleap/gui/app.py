@@ -1009,7 +1009,8 @@ class MainWindow(QMainWindow):
         skeleton_layout = _make_dock(
             "Skeleton", tab_with=videos_layout.parent().parent()
         )
-        gb = QGroupBox("Load Skeleton")
+
+        gb = QGroupBox("Templates")
         vb = QVBoxLayout()
         hb = QHBoxLayout()
 
@@ -1018,21 +1019,17 @@ class MainWindow(QMainWindow):
             skeletons_folder, suffix=".json", depth=1
         )
         skeletons_names = [json.name.split(".")[0] for json in skeletons_json_files]
-        skeletons_names.insert(0, "Custom")
-        hb.addWidget(QLabel("Load from preset:"))
         self.skeletonTemplates = QComboBox()
         self.skeletonTemplates.addItems(skeletons_names)
         self.skeletonTemplates.setEditable(False)
         hb.addWidget(self.skeletonTemplates)
-        hb.addWidget(QLabel("skeleton template"))
+        _add_button(hb, "Load", self.commands.openSkeletonTemplate)
         hbw = QWidget()
         hbw.setLayout(hb)
         vb.addWidget(hbw)
 
         hb = QHBoxLayout()
-        preview_image = QtGui.QPixmap(get_package_file("sleap/gui/no-preview.png"))
         self.skeleton_preview_image = QLabel("Preview Skeleton")
-        self.skeleton_preview_image.setPixmap(preview_image)
         hb.addWidget(self.skeleton_preview_image)
         hb.setAlignment(self.skeleton_preview_image, Qt.AlignLeft)
 
@@ -1054,24 +1051,20 @@ class MainWindow(QMainWindow):
             ),
         )
 
-        def updatePreviewImage(preview_image: bytes):
-            if preview_image is None:
-                preview_image = QtGui.QPixmap(
-                    get_package_file("sleap/gui/no-preview.png")
-                )
-            else:
+        def updatePreviewImage(preview_image_bytes: bytes):
 
-                preview_image = decode_preview_image(preview_image)
+            # Decode the preview image
+            preview_image = decode_preview_image(preview_image_bytes)
 
-                # Create a QImage from the Image
-                preview_image = QtGui.QImage(
-                    preview_image.tobytes(),
-                    preview_image.size[0],
-                    preview_image.size[1],
-                    QtGui.QImage.Format_RGBA8888,  # Format for RGBA images (see Image.mode)
-                )
+            # Create a QImage from the Image
+            preview_image = QtGui.QImage(
+                preview_image.tobytes(),
+                preview_image.size[0],
+                preview_image.size[1],
+                QtGui.QImage.Format_RGBA8888,  # Format for RGBA images (see Image.mode)
+            )
 
-                preview_image = QtGui.QPixmap.fromImage(preview_image)
+            preview_image = QtGui.QPixmap.fromImage(preview_image)
 
             self.skeleton_preview_image.setPixmap(preview_image)
 
@@ -1081,10 +1074,7 @@ class MainWindow(QMainWindow):
         skeleton_layout.addWidget(gb)
 
         def update_skeleton_preview(idx: int):
-            if idx > 0:
-                skel = Skeleton.load_json(skeletons_json_files[idx - 1])
-            else:
-                skel = Skeleton()
+            skel = Skeleton.load_json(skeletons_json_files[idx])
             self.state["skeleton_description"] = (
                 f"{skel.description}<br><br>"
                 f"<strong>Nodes ({len(skel)}):</strong> {', '.join(skel.node_names)}"
@@ -1092,14 +1082,10 @@ class MainWindow(QMainWindow):
             updatePreviewImage(skel.preview_image)
 
         self.skeletonTemplates.currentIndexChanged.connect(update_skeleton_preview)
+        update_skeleton_preview(idx=0)
 
-        hb = QHBoxLayout()
-        _add_button(hb, "Load Skeleton", self.commands.openSkeleton)
-        _add_button(hb, "Save Skeleton", self.commands.saveSkeleton)
-
-        hbw = QWidget()
-        hbw.setLayout(hb)
-        skeleton_layout.addWidget(hbw)
+        gb = QGroupBox("Project Skeleton")
+        vgb = QVBoxLayout()
 
         nodes_widget = QWidget()
         vb = QVBoxLayout()
@@ -1164,7 +1150,19 @@ class MainWindow(QMainWindow):
         vb.addWidget(hbw)
         edges_widget.setLayout(vb)
         graph_tabs.addTab(edges_widget, "Edges")
-        skeleton_layout.addWidget(graph_tabs)
+        vgb.addWidget(graph_tabs)
+
+        hb = QHBoxLayout()
+        _add_button(hb, "Load From File...", self.commands.openSkeleton)
+        _add_button(hb, "Save As...", self.commands.saveSkeleton)
+
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        vgb.addWidget(hbw)
+
+        # Add graph tabs to "Project Skeleton" group box
+        gb.setLayout(vgb)
+        skeleton_layout.addWidget(gb)
 
         ####### Suggestions #######
         suggestions_layout = _make_dock(

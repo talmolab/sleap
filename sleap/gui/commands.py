@@ -428,6 +428,10 @@ class CommandContext:
         """Removes selected video from project."""
         self.execute(RemoveVideo)
 
+    def openSkeletonTemplate(self):
+        """Shows gui for loading saved skeleton into project."""
+        self.execute(OpenSkeleton, template=True)
+
     def openSkeleton(self):
         """Shows gui for loading saved skeleton into project."""
         self.execute(OpenSkeleton)
@@ -1898,18 +1902,19 @@ class OpenSkeleton(EditCommand):
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
-        # Get selected template from dropdown
-        template = context.app.skeletonTemplates.currentText()
         # Check whether to load from file or preset
-        if template == "Custom":
+        if params.get("template", False):
+            # Get selected template from dropdown
+            template = context.app.skeletonTemplates.currentText()
+            # Load from selected preset
+            filename = get_package_file(f"sleap/skeletons/{template}.json")
+        else:
             filename, selected_filter = FileDialog.open(
                 context.app,
                 dir=None,
                 caption="Open skeleton...",
                 filter=";;".join(filters),
             )
-        else:  # Load from selected preset
-            filename = get_package_file(f"sleap/skeletons/{template}.json")
 
         if len(filename) == 0:
             return False
