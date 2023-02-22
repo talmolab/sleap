@@ -8,6 +8,7 @@ from qtpy.QtWidgets import (
     QToolButton,
     QFrame,
     QSizePolicy,
+    QComboBox,
 )
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
@@ -91,6 +92,11 @@ class CollapsibleWidget(QWidget):
         # Hide children if we're collapsing
         for child in self.content_area.findChildren(QWidget):
             child.setVisible(checked)
+
+        # Collapse combo box (otherwise, visiblity opens combo)
+        if checked:
+            combo = self.content_area.findChild(QComboBox)
+            combo.hidePopup()
 
     def set_content_layout(self, content_layout):
         self.content_area.setLayout(content_layout)
