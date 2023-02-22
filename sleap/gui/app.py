@@ -1044,13 +1044,6 @@ class MainWindow(QMainWindow):
         hbw.setLayout(hb)
         vb.addWidget(hbw)
 
-        self.state.connect(
-            "skeleton_description",
-            lambda label: self.skeleton_description.setText(
-                f"<strong>Description:</strong> {label}"
-            ),
-        )
-
         def updatePreviewImage(preview_image_bytes: bytes):
 
             # Decode the preview image
@@ -1068,17 +1061,16 @@ class MainWindow(QMainWindow):
 
             self.skeleton_preview_image.setPixmap(preview_image)
 
-        self.state.connect("skeleton_preview_image", updatePreviewImage)
-
         gb.setLayout(vb)
         skeleton_layout.addWidget(gb)
 
         def update_skeleton_preview(idx: int):
             skel = Skeleton.load_json(skeletons_json_files[idx])
             self.state["skeleton_description"] = (
-                f"{skel.description}<br><br>"
+                f"<strong>Description:</strong> {skel.description}<br><br>"
                 f"<strong>Nodes ({len(skel)}):</strong> {', '.join(skel.node_names)}"
             )
+            self.skeleton_description.setText(self.state["skeleton_description"])
             updatePreviewImage(skel.preview_image)
 
         self.skeletonTemplates.currentIndexChanged.connect(update_skeleton_preview)
