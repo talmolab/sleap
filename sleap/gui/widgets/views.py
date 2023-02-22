@@ -66,3 +66,4 @@ class CollapsibleWidget(QWidget):
 
     def set_content_layout(self, content_layout):
         self.content_area.setLayout(content_layout)
+        self.toggle_button_callback(self.toggle_button.isChecked())
