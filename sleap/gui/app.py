@@ -68,6 +68,7 @@ from sleap.instance import Instance, LabeledFrame
 from sleap.io.dataset import Labels
 from sleap.info.summary import StatisticSeries
 from sleap.gui.commands import CommandContext, UpdateTopic
+from sleap.gui.widgets.views import CollapsibleGroupBox
 from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.gui.widgets.slider import set_slider_marks_from_labels
 from sleap.gui.dataviews import (
@@ -1010,7 +1011,7 @@ class MainWindow(QMainWindow):
             "Skeleton", tab_with=videos_layout.parent().parent()
         )
 
-        gb = QGroupBox("Templates")
+        gb = CollapsibleGroupBox("Templates")
         vb = QVBoxLayout()
         hb = QHBoxLayout()
 
@@ -1915,3 +1916,7 @@ def main(args: Optional[list] = None):
         app.exec_()
 
     pass
+
+
+if __name__ == "__main__":
+    main()
