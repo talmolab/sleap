@@ -55,6 +55,11 @@ def small_robot_mp4_vid():
 
 
 @pytest.fixture
+def centered_pair_vid_path():
+    return TEST_SMALL_CENTERED_PAIR_VID
+
+
+@pytest.fixture
 def centered_pair_vid():
     return Video.from_media(TEST_SMALL_CENTERED_PAIR_VID)
 
