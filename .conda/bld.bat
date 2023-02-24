@@ -36,6 +36,7 @@ pip install imgaug==0.4.0
 pip install scikit-image
 pip install scikit-learn==1.0.*
 pip install scikit-video
+pip install tensorflow-hub
 pip install imgstore==0.2.9
 pip install qimage2ndarray==1.9.0
 pip install jsmin
