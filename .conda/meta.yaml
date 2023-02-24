@@ -16,7 +16,7 @@ about:
   summary: {{ data.get('description') }}
 
 build:
-  number: 2
+  number: 4
 
 source:
   path: ../
