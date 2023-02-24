@@ -10,6 +10,11 @@ TEST_H5_INPUT_FORMAT = "channels_first"
 
 
 @pytest.fixture
+def hdf5_file_path():
+    return TEST_H5_FILE
+
+
+@pytest.fixture
 def hdf5_vid():
     return Video.from_hdf5(
         filename=TEST_H5_FILE, dataset=TEST_H5_DSET, input_format=TEST_H5_INPUT_FORMAT
@@ -40,8 +45,18 @@ TEST_SMALL_CENTERED_PAIR_VID = "tests/data/videos/centered_pair_small.mp4"
 
 
 @pytest.fixture
+def small_robot_mp4_path():
+    return TEST_SMALL_ROBOT_MP4_FILE
+
+
+@pytest.fixture
 def small_robot_mp4_vid():
     return Video.from_media(TEST_SMALL_ROBOT_MP4_FILE)
+
+
+@pytest.fixture
+def centered_pair_vid_path():
+    return TEST_SMALL_CENTERED_PAIR_VID
 
 
 @pytest.fixture

@@ -9,7 +9,7 @@ import tensorflow as tf
 import sleap
 from numpy.testing import assert_array_equal, assert_allclose
 from pathlib import Path
-
+import tensorflow_hub as hub
 from sleap.nn.data.confidence_maps import (
     make_confmaps,
     make_grid_vectors,
@@ -19,6 +19,7 @@ from sleap.nn.data.confidence_maps import (
 from sleap.nn.inference import (
     InferenceLayer,
     InferenceModel,
+    Predictor,
     get_model_output_stride,
     find_head,
     SingleInstanceInferenceLayer,
@@ -36,12 +37,18 @@ from sleap.nn.inference import (
     BottomUpPredictor,
     BottomUpMultiClassPredictor,
     TopDownMultiClassPredictor,
+    MoveNetPredictor,
+    MoveNetInferenceLayer,
+    MoveNetInferenceModel,
+    MOVENET_MODELS,
     load_model,
     export_model,
     _make_cli_parser,
     _make_tracker_from_cli,
     main as sleap_track,
+    export_cli as sleap_export,
 )
+
 
 from sleap.gui.learning import runners
 
@@ -383,13 +390,34 @@ def test_inference_layer():
     x = tf.keras.layers.Lambda(lambda x: x)(x_in)
     keras_model = tf.keras.Model(x_in, x)
     layer = sleap.nn.inference.InferenceLayer(
-        keras_model=keras_model, input_scale=1.0, pad_to_stride=1, ensure_grayscale=None
+        keras_model=keras_model,
+        input_scale=1.0,
+        pad_to_stride=1,
+        ensure_grayscale=None,
+        ensure_float=True,
     )
     data = tf.cast(tf.fill([1, 4, 4, 1], 255), tf.uint8)
     out = layer(data)
     assert out.dtype == tf.float32
     assert tuple(out.shape) == (1, 4, 4, 1)
     assert tf.reduce_all(out == 1.0)
+
+    # Not convert to float
+    x_in = tf.keras.layers.Input([4, 4, 1], dtype="uint8")
+    x = tf.keras.layers.Lambda(lambda x: x)(x_in)
+    keras_model = tf.keras.Model(x_in, x)
+    layer = sleap.nn.inference.InferenceLayer(
+        keras_model=keras_model,
+        input_scale=1.0,
+        pad_to_stride=1,
+        ensure_grayscale=True,
+        ensure_float=False,
+    )
+    data = tf.cast(tf.fill([1, 4, 4, 1], 255), tf.uint8)
+    out = layer(data)
+    assert out.dtype == tf.uint8
+    assert tuple(out.shape) == (1, 4, 4, 1)
+    assert tf.reduce_all(out == 255)
 
     # Convert from rgb to grayscale, infer ensure grayscale
     x_in = tf.keras.layers.Input([4, 4, 1])
@@ -574,19 +602,31 @@ def test_single_instance_predictor_high_peak_thresh(
     min_labels_robot, min_single_instance_robot_model_path
 ):
     predictor = SingleInstancePredictor.from_trained_models(
+        min_single_instance_robot_model_path, peak_threshold=0
+    )
+    predictor.verbosity = "none"
+    labels_pr = predictor.predict(min_labels_robot)
+    assert len(labels_pr) == 2
+    assert len(labels_pr[0]) == 1
+    assert labels_pr[0][0].n_visible_points == 2
+    assert len(labels_pr[1]) == 1
+    assert labels_pr[1][0].n_visible_points == 2
+
+    predictor = SingleInstancePredictor.from_trained_models(
         min_single_instance_robot_model_path, peak_threshold=1.5
     )
     predictor.verbosity = "none"
     labels_pr = predictor.predict(min_labels_robot)
     assert len(labels_pr) == 2
-    assert labels_pr[0][0].n_visible_points == 0
-    assert labels_pr[1][0].n_visible_points == 0
+    assert len(labels_pr[0]) == 0
+    assert len(labels_pr[1]) == 0
 
 
 def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
     predictor = TopDownPredictor.from_trained_models(
         centroid_model_path=min_centroid_model_path
     )
+
     predictor.verbosity = "none"
     labels_pr = predictor.predict(min_labels)
     assert len(labels_pr) == 1
@@ -602,6 +642,23 @@ def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
     )
     inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
+
+    # test max_instances (>2 will fail)
+    predictor.inference_model.centroid_crop.max_instances = 2
+    labels_pr = predictor.predict(min_labels)
+
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 2
+
+
+def test_topdown_predictor_centroid_high_threshold(min_labels, min_centroid_model_path):
+    predictor = TopDownPredictor.from_trained_models(
+        centroid_model_path=min_centroid_model_path, peak_threshold=1.5
+    )
+    predictor.verbosity = "none"
+    labels_pr = predictor.predict(min_labels)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 0
 
 
 def test_topdown_predictor_centered_instance(
@@ -610,6 +667,7 @@ def test_topdown_predictor_centered_instance(
     predictor = TopDownPredictor.from_trained_models(
         confmap_model_path=min_centered_instance_model_path
     )
+
     predictor.verbosity = "none"
     labels_pr = predictor.predict(min_labels)
     assert len(labels_pr) == 1
@@ -625,6 +683,18 @@ def test_topdown_predictor_centered_instance(
     )
     inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
+
+
+def test_topdown_predictor_centered_instance_high_threshold(
+    min_labels, min_centered_instance_model_path
+):
+    predictor = TopDownPredictor.from_trained_models(
+        confmap_model_path=min_centered_instance_model_path, peak_threshold=1.5
+    )
+    predictor.verbosity = "none"
+    labels_pr = predictor.predict(min_labels)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 0
 
 
 def test_bottomup_predictor(min_labels, min_bottomup_model_path):
@@ -655,6 +725,16 @@ def test_bottomup_predictor(min_labels, min_bottomup_model_path):
     predictor.verbosity = "none"
     labels_pr = predictor.predict(min_labels)
     assert len(labels_pr[0]) == 0
+
+
+def test_bottomup_predictor_high_peak_thresh(min_labels, min_bottomup_model_path):
+    predictor = BottomUpPredictor.from_trained_models(
+        model_path=min_bottomup_model_path, peak_threshold=1.5
+    )
+    predictor.verbosity = "none"
+    labels_pr = predictor.predict(min_labels)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 0
 
 
 def test_bottomup_multiclass_predictor(
@@ -689,6 +769,20 @@ def test_bottomup_multiclass_predictor(
     labels_pr[0][1].track.name == "male"
 
 
+def test_bottomup_multiclass_predictor_high_threshold(
+    min_tracks_2node_labels, min_bottomup_multiclass_model_path
+):
+    labels_gt = sleap.Labels(min_tracks_2node_labels[[0]])
+    predictor = BottomUpMultiClassPredictor.from_trained_models(
+        model_path=min_bottomup_multiclass_model_path,
+        peak_threshold=1.5,
+        integral_refinement=False,
+    )
+    labels_pr = predictor.predict(labels_gt)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 0
+
+
 def test_topdown_multiclass_predictor(
     min_tracks_2node_labels, min_topdown_multiclass_model_path
 ):
@@ -715,28 +809,101 @@ def test_topdown_multiclass_predictor(
     )
 
 
-def test_load_model(
-    min_single_instance_robot_model_path,
+def test_topdown_multiclass_predictor_high_threshold(
+    min_tracks_2node_labels, min_topdown_multiclass_model_path
+):
+    labels_gt = sleap.Labels(min_tracks_2node_labels[[0]])
+    predictor = TopDownMultiClassPredictor.from_trained_models(
+        confmap_model_path=min_topdown_multiclass_model_path,
+        peak_threshold=1.5,
+        integral_refinement=False,
+    )
+    labels_pr = predictor.predict(labels_gt)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 0
+
+
+@pytest.mark.parametrize("resize_input_shape", [True, False])
+@pytest.mark.parametrize(
+    "model_fixture_name",
+    [
+        "min_centroid_model_path",
+        "min_centered_instance_model_path",
+        "min_bottomup_model_path",
+        "min_single_instance_robot_model_path",
+        "min_bottomup_multiclass_model_path",
+        "min_topdown_multiclass_model_path",
+    ],
+)
+def test_load_model(resize_input_shape, model_fixture_name, request):
+    model_path = request.getfixturevalue(model_fixture_name)
+    fname_mname_ptype_ishape = [
+        ("centroid", "centroid_model", TopDownPredictor, (None, 384, 384, 1)),
+        ("centered_instance", "confmap_model", TopDownPredictor, (None, 96, 96, 1)),
+        ("bottomup_model", "bottomup_model", BottomUpPredictor, (None, 384, 384, 1)),
+        (
+            "single_instance",
+            "confmap_model",
+            SingleInstancePredictor,
+            (None, 160, 280, 3),
+        ),
+        (
+            "bottomup_multiclass",
+            "model",
+            BottomUpMultiClassPredictor,
+            (None, 512, 512, 1),
+        ),
+        (
+            "topdown_multiclass",
+            "confmap_model",
+            TopDownMultiClassPredictor,
+            (None, 128, 128, 1),
+        ),
+    ]
+    expected_model_name = None
+    expected_predictor_type = None
+    input_shape = None
+
+    # Create predictor
+    predictor = load_model(model_path, resize_input_layer=resize_input_shape)
+
+    # Determine predictor type
+    for (fname, mname, ptype, ishape) in fname_mname_ptype_ishape:
+        if fname in model_fixture_name:
+            expected_model_name = mname
+            expected_predictor_type = ptype
+            input_shape = ishape
+            break
+
+    # Assert predictor type and model input shape are correct
+    assert isinstance(predictor, expected_predictor_type)
+    keras_model = getattr(predictor, expected_model_name).keras_model
+    if resize_input_shape:
+        assert keras_model.input_shape == (None, None, None, input_shape[-1])
+    else:
+        assert keras_model.input_shape == input_shape
+
+
+def test_topdown_multi_size_inference(
     min_centroid_model_path,
     min_centered_instance_model_path,
-    min_bottomup_model_path,
-    min_topdown_multiclass_model_path,
-    min_bottomup_multiclass_model_path,
+    centered_pair_labels,
+    min_tracks_2node_labels,
 ):
-    predictor = load_model(min_single_instance_robot_model_path)
-    assert isinstance(predictor, SingleInstancePredictor)
+    imgs = centered_pair_labels.video[:2]
+    assert imgs.shape == (2, 384, 384, 1)
 
-    predictor = load_model([min_centroid_model_path, min_centered_instance_model_path])
-    assert isinstance(predictor, TopDownPredictor)
+    predictor = load_model(
+        [min_centroid_model_path, min_centered_instance_model_path],
+        resize_input_layer=True,
+    )
+    preds = predictor.predict(imgs)
+    assert len(preds) == 2
 
-    predictor = load_model(min_bottomup_model_path)
-    assert isinstance(predictor, BottomUpPredictor)
-
-    predictor = load_model([min_centroid_model_path, min_topdown_multiclass_model_path])
-    assert isinstance(predictor, TopDownMultiClassPredictor)
-
-    predictor = load_model(min_bottomup_multiclass_model_path)
-    assert isinstance(predictor, BottomUpMultiClassPredictor)
+    imgs = min_tracks_2node_labels.video[:2]
+    assert imgs.shape == (2, 1024, 1024, 1)
+    preds = predictor.predict(imgs)
+    assert len(preds) == 2
 
 
 def test_ensure_numpy(
@@ -858,6 +1025,14 @@ def test_centroid_inference():
 
     assert preds["centroids"].shape == (1, 3, 2)
     assert preds["centroid_vals"].shape == (1, 3)
+
+    # test max instances (>3 will fail)
+    layer.max_instances = 3
+    out = layer(cms)
+
+    model = CentroidInferenceModel(layer)
+
+    preds = model.predict(cms)
 
 
 def export_frozen_graph(model, preds, output_path):
@@ -988,19 +1163,38 @@ def test_single_instance_predictor_save(min_single_instance_robot_model_path, tm
 
     # directly initialize predictor
     predictor = SingleInstancePredictor.from_trained_models(
-        min_single_instance_robot_model_path
+        min_single_instance_robot_model_path, resize_input_layer=False
     )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
     # high level load to predictor
-    predictor = load_model(min_single_instance_robot_model_path)
+    predictor = load_model(
+        min_single_instance_robot_model_path, resize_input_layer=False
+    )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
-    # high level export
-
+    # high level export (with unragging)
     export_model(min_single_instance_robot_model_path, save_path=tmp_path.as_posix())
+    cmd = f"-m {min_single_instance_robot_model_path} -e {tmp_path.as_posix()}"
+    sleap_export(cmd.split())
+
+    # high level export (without unragging)
+    export_model(
+        min_single_instance_robot_model_path,
+        save_path=tmp_path.as_posix(),
+        unrag_outputs=False,
+    )
+
+    # max_instances should raise an exception for single instance
+    with pytest.raises(Exception):
+        export_model(
+            min_single_instance_robot_model_path,
+            save_path=tmp_path.as_posix(),
+            unrag_outputs=False,
+            max_instances=1,
+        )
 
 
 def test_topdown_predictor_save(
@@ -1011,19 +1205,38 @@ def test_topdown_predictor_save(
     predictor = TopDownPredictor.from_trained_models(
         centroid_model_path=min_centroid_model_path,
         confmap_model_path=min_centered_instance_model_path,
+        resize_input_layer=False,
     )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
     # high level load to predictor
-    predictor = load_model([min_centroid_model_path, min_centered_instance_model_path])
+    predictor = load_model(
+        [min_centroid_model_path, min_centered_instance_model_path],
+        resize_input_layer=False,
+    )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
-    # high level export
+    # high level export (with unragging)
     export_model(
         [min_centroid_model_path, min_centered_instance_model_path],
         save_path=tmp_path.as_posix(),
+    )
+
+    # high level export (without unragging)
+    export_model(
+        [min_centroid_model_path, min_centered_instance_model_path],
+        save_path=tmp_path.as_posix(),
+        unrag_outputs=False,
+    )
+
+    # test max instances
+    export_model(
+        [min_centroid_model_path, min_centered_instance_model_path],
+        save_path=tmp_path.as_posix(),
+        unrag_outputs=False,
+        max_instances=4,
     )
 
 
@@ -1035,19 +1248,38 @@ def test_topdown_id_predictor_save(
     predictor = TopDownMultiClassPredictor.from_trained_models(
         centroid_model_path=min_centroid_model_path,
         confmap_model_path=min_topdown_multiclass_model_path,
+        resize_input_layer=False,
     )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
     # high level load to predictor
-    predictor = load_model([min_centroid_model_path, min_topdown_multiclass_model_path])
+    predictor = load_model(
+        [min_centroid_model_path, min_topdown_multiclass_model_path],
+        resize_input_layer=False,
+    )
 
     predictor.export_model(save_path=tmp_path.as_posix())
 
-    # high level export
+    # high level export (with unragging)
     export_model(
         [min_centroid_model_path, min_topdown_multiclass_model_path],
         save_path=tmp_path.as_posix(),
+    )
+
+    # high level export (without unragging)
+    export_model(
+        [min_centroid_model_path, min_topdown_multiclass_model_path],
+        save_path=tmp_path.as_posix(),
+        unrag_outputs=False,
+    )
+
+    # test max instances
+    export_model(
+        [min_centroid_model_path, min_topdown_multiclass_model_path],
+        save_path=tmp_path.as_posix(),
+        unrag_outputs=False,
+        max_instances=4,
     )
 
 
@@ -1154,3 +1386,80 @@ def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
         for key in tracker.candidate_maker.shifted_instances.keys():
             assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
             assert abs(key[0] - key[1]) <= track_window  # References within window
+
+
+def test_movenet_inference(movenet_video):
+    inference_layer = MoveNetInferenceLayer(model_name="lightning")
+    inference_model = MoveNetInferenceModel(inference_layer)
+
+    p = sleap.pipelines.Pipeline(
+        sleap.pipelines.VideoReader(video=movenet_video, example_indices=[0])
+    )
+    p += sleap.pipelines.SizeMatcher(
+        points_key=None,
+        max_image_width=inference_model.image_size,
+        max_image_height=inference_model.image_size,
+        center_pad=True,
+    )
+    p += sleap.pipelines.Batcher(batch_size=4)
+
+    ex = p.peek(1)
+    preds = inference_model.predict_on_batch(ex)
+    assert preds["instance_peaks"].shape == (1, 1, 17, 2)
+
+
+def test_movenet_predictor(min_dance_labels, movenet_video):
+    predictor = MoveNetPredictor.from_trained_models("thunder")
+    predictor.verbosity = "none"
+    assert predictor.is_grayscale == False
+    labels_pr = predictor.predict(min_dance_labels)
+
+    vr = sleap.pipelines.VideoReader(video=movenet_video, example_indices=[0, 1, 2])
+    labels_pr = predictor.predict(data=vr)
+
+    assert len(labels_pr) == 3
+    assert len(labels_pr[0].instances) == 1
+
+    points_gt = np.concatenate(
+        [min_dance_labels[0][0].numpy(), min_dance_labels[1][0].numpy()], axis=0
+    )
+    points_pr = np.concatenate(
+        [labels_pr[0][0].numpy(), labels_pr[1][0].numpy()], axis=0
+    )
+
+    max_diff = np.nanmax(np.abs(points_gt - points_pr))
+    assert max_diff < 0.1
+
+
+@pytest.mark.parametrize(
+    "loading_function", ["load_model", "Predictor.from_model_paths"]
+)
+@pytest.mark.parametrize("movenet_name", ["thunder", "lightning"])
+def test_movenet_load_model(loading_function, movenet_name):
+    model_path = f"movenet-{movenet_name}"
+    model_name = model_path.split("-")[-1]
+    assert model_name == movenet_name
+
+    if loading_function == "load_model":
+        predictor = load_model(model_path)
+    else:
+        predictor = Predictor.from_model_paths(model_path)
+    assert predictor.model_paths == MOVENET_MODELS[model_name]["model_path"]
+    assert isinstance(predictor, MoveNetPredictor)
+    assert predictor.model_name == model_name
+
+
+def test_top_down_model(min_tracks_2node_labels: Labels, min_centroid_model_path: str):
+    labels = min_tracks_2node_labels
+    video = sleap.load_video(labels.videos[0].backend.filename)
+    predictor = sleap.load_model(min_centroid_model_path, batch_size=16)
+
+    # Preload images
+    imgs = video[:3]
+
+    # Raise better error message
+    with pytest.raises(ValueError):
+        predictor.predict(imgs[:1])
+
+    # Runs without error message
+    predictor.predict(labels.extract(inds=[0, 1]))

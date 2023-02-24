@@ -799,11 +799,11 @@ class Instance:
         """
         self._fix_array()
         y1, x1, y2, x2 = self.bounding_box
-        y1, x1 = max(y1, 0), max(x1, 0)
+        y1, x1 = np.nanmax([y1, 0]), np.nanmax([x1, 0])
         if max_x is not None:
-            x2 = min(x2, max_x)
+            x2 = np.nanmin([x2, max_x])
         if max_y is not None:
-            y2 = min(y2, max_y)
+            y2 = np.nanmin([y2, max_y])
         w, h = y2 - y1, x2 - x1
 
         for node in self.skeleton.nodes:

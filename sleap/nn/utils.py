@@ -3,7 +3,7 @@
 import tensorflow as tf
 import numpy as np
 from collections import defaultdict
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 from scipy.optimize import linear_sum_assignment
 
 
@@ -126,3 +126,37 @@ def match_points(points1: tf.Tensor, points2: tf.Tensor) -> Tuple[tf.Tensor, tf.
         axis=-1,
     )
     return tf_linear_sum_assignment(dists)
+
+
+def reset_input_layer(
+    keras_model: tf.keras.Model,
+    new_shape: Optional[Tuple[Optional[int], Optional[int], Optional[int], int]] = None,
+):
+    """Returns a copy of `keras_model` with input shape reset to `new_shape`.
+
+    This method was modified from https://stackoverflow.com/a/58485055.
+
+    Args:
+        keras_model: `tf.keras.Model` to return a copy of (with input shape reset).
+        new_shape: Shape of the returned model's input layer.
+
+    Returns:
+        A copy of `keras_model` with input shape `new_shape`.
+    """
+
+    if new_shape is None:
+        new_shape = (None, None, None, keras_model.input_shape[-1])
+
+    model_config = keras_model.get_config()
+    model_config["layers"][0]["config"]["batch_input_shape"] = new_shape
+    new_model: tf.keras.Model = tf.keras.Model.from_config(
+        model_config, custom_objects={}
+    )  # Change custom objects if necessary
+
+    # Iterate over all the layers that we want to get weights from
+    weights = [layer.get_weights() for layer in keras_model.layers]
+    for layer, weight in zip(new_model.layers, weights):
+        if len(weight) > 0:
+            layer.set_weights(weight)
+
+    return new_model

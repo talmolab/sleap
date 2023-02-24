@@ -20,6 +20,7 @@ import json
 import copy
 
 import sleap
+from sleap import Labels
 from sleap.util import get_package_file
 
 # Config
@@ -89,11 +90,11 @@ class DataReaders:
 
     Attributes:
         training_labels_reader: LabelsReader pipeline provider for a training data from
-            a sleap.Labels instance.
+            a `Labels` instance.
         validation_labels_reader: LabelsReader pipeline provider for a validation data
-            from a sleap.Labels instance.
+            from a `Labels` instance.
         test_labels_reader: LabelsReader pipeline provider for a test set data from a
-            sleap.Labels instance. This is not necessary for training.
+            `Labels` instance. This is not necessary for training.
     """
 
     training_labels_reader: LabelsReader
@@ -104,9 +105,9 @@ class DataReaders:
     def from_config(
         cls,
         labels_config: LabelsConfig,
-        training: Union[Text, sleap.Labels],
-        validation: Union[Text, sleap.Labels, float],
-        test: Optional[Union[Text, sleap.Labels]] = None,
+        training: Union[Text, Labels],
+        validation: Union[Text, Labels, float],
+        test: Optional[Union[Text, Labels]] = None,
         video_search_paths: Optional[List[Text]] = None,
         update_config: bool = False,
         with_track_only: bool = False,
@@ -128,7 +129,7 @@ class DataReaders:
         if labels_config.search_path_hints is not None:
             video_search_paths.extend(labels_config.search_path_hints)
 
-        # Update the config fields with arguments (if not a full sleap.Labels instance).
+        # Update the config fields with arguments (if not a full Labels instance).
         if update_config:
             if isinstance(training, Text):
                 labels_config.training_labels = training
@@ -154,18 +155,20 @@ class DataReaders:
     @classmethod
     def from_labels(
         cls,
-        training: Union[Text, sleap.Labels],
-        validation: Union[Text, sleap.Labels, float],
-        test: Optional[Union[Text, sleap.Labels]] = None,
+        training: Union[Text, Labels],
+        validation: Union[Text, Labels, float],
+        test: Optional[Union[Text, Labels]] = None,
         video_search_paths: Optional[List[Text]] = None,
         labels_config: Optional[LabelsConfig] = None,
         update_config: bool = False,
         with_track_only: bool = False,
     ) -> "DataReaders":
-        """Create data readers from sleap.Labels datasets as data providers."""
+        """Create data readers from `Labels` datasets as data providers."""
         if isinstance(training, str):
             logger.info(f"Loading training labels from: {training}")
-            training = sleap.load_file(training, search_paths=video_search_paths)
+            training: Labels = sleap.load_file(
+                training, search_paths=video_search_paths
+            )
 
         if labels_config is not None and labels_config.split_by_inds:
             # First try to split by indices if specified in config.
@@ -177,14 +180,13 @@ class DataReaders:
                     "Creating validation split from explicit indices "
                     f"(n = {len(labels_config.validation_inds)})."
                 )
-                validation = training[labels_config.validation_inds]
-
+                validation = training.extract(labels_config.validation_inds, copy=False)
             if labels_config.test_inds is not None and len(labels_config.test_inds) > 0:
                 logger.info(
                     "Creating test split from explicit indices "
                     f"(n = {len(labels_config.test_inds)})."
                 )
-                test = training[labels_config.test_inds]
+                test = training.extract(labels_config.test_inds, copy=False)
 
             if (
                 labels_config.training_inds is not None
@@ -194,14 +196,12 @@ class DataReaders:
                     "Creating training split from explicit indices "
                     f"(n = {len(labels_config.training_inds)})."
                 )
-                training = training[labels_config.training_inds]
+                training = training.extract(labels_config.training_inds, copy=False)
 
         if isinstance(validation, str):
             # If validation is still a path, load it.
             logger.info(f"Loading validation labels from: {validation}")
-            validation = sleap.Labels.load_file(
-                validation, search_paths=video_search_paths
-            )
+            validation = Labels.load_file(validation, search_paths=video_search_paths)
         elif isinstance(validation, float):
             logger.info(
                 "Creating training and validation splits from "
@@ -249,18 +249,18 @@ class DataReaders:
         )
 
     @property
-    def training_labels(self) -> sleap.Labels:
-        """Return the sleap.Labels underlying the training data reader."""
+    def training_labels(self) -> Labels:
+        """Return the `Labels` underlying the training data reader."""
         return self.training_labels_reader.labels
 
     @property
-    def validation_labels(self) -> sleap.Labels:
-        """Return the sleap.Labels underlying the validation data reader."""
+    def validation_labels(self) -> Labels:
+        """Return the `Labels` underlying the validation data reader."""
         return self.validation_labels_reader.labels
 
     @property
-    def test_labels(self) -> sleap.Labels:
-        """Return the sleap.Labels underlying the test data reader."""
+    def test_labels(self) -> Labels:
+        """Return the `Labels` underlying the test data reader."""
         if self.test_labels_reader is None:
             raise ValueError("No test labels provided to data reader.")
         return self.test_labels_reader.labels
@@ -618,9 +618,9 @@ class Trainer(ABC):
     def from_config(
         cls,
         config: TrainingJobConfig,
-        training_labels: Optional[Union[Text, sleap.Labels]] = None,
-        validation_labels: Optional[Union[Text, sleap.Labels, float]] = None,
-        test_labels: Optional[Union[Text, sleap.Labels]] = None,
+        training_labels: Optional[Union[Text, Labels]] = None,
+        validation_labels: Optional[Union[Text, Labels, float]] = None,
+        test_labels: Optional[Union[Text, Labels]] = None,
         video_search_paths: Optional[List[Text]] = None,
     ) -> "Trainer":
         """Initialize the trainer from a training job configuration.
@@ -745,6 +745,22 @@ class Trainer(ABC):
         for i, output in enumerate(self.model.keras_model.outputs):
             logger.info(f"    [{i}] = {output}")
 
+        # Resuming training if flagged
+        if self.config.model.base_checkpoint is not None:
+            # TODO (AL): Add flexibilty to resume from any checkpoint (e.g.
+            # latest_model, specific epoch, etc.)
+
+            # Grab the 'best_model.h5' file from the previous training run
+            # and load it into the current model
+            previous_model_path = os.path.join(
+                self.config.model.base_checkpoint, "best_model.h5"
+            )
+
+            self.keras_model.load_weights(previous_model_path)
+            logger.info(f"Loaded previous model weights from {previous_model_path}")
+        else:
+            logger.info("Training from scratch")
+
     @property
     def keras_model(self) -> tf.keras.Model:
         """Alias for `self.model.keras_model`."""
@@ -852,16 +868,16 @@ class Trainer(ABC):
             self.config.save_json(os.path.join(self.run_path, "training_config.json"))
 
             # Save input (ground truth) labels.
-            sleap.Labels.save_file(
+            Labels.save_file(
                 self.data_readers.training_labels_reader.labels,
                 os.path.join(self.run_path, "labels_gt.train.slp"),
             )
-            sleap.Labels.save_file(
+            Labels.save_file(
                 self.data_readers.validation_labels_reader.labels,
                 os.path.join(self.run_path, "labels_gt.val.slp"),
             )
             if self.data_readers.test_labels_reader is not None:
-                sleap.Labels.save_file(
+                Labels.save_file(
                     self.data_readers.test_labels_reader.labels,
                     os.path.join(self.run_path, "labels_gt.test.slp"),
                 )
@@ -1783,7 +1799,7 @@ class TopDownMultiClassModelTrainer(Trainer):
         )
 
 
-def main():
+def main(args: Optional[List] = None):
     """Create CLI for training and run."""
     import argparse
 
@@ -1823,6 +1839,14 @@ def main():
         help=(
             "Path to labels file to use for test. If specified, overrides the path "
             "specified in the training job config."
+        ),
+    )
+    parser.add_argument(
+        "--base_checkpoint",
+        type=str,
+        help=(
+            "Path to base checkpoint (directory containing best_model.h5) to resume "
+            "training from."
         ),
     )
     parser.add_argument(
@@ -1883,7 +1907,7 @@ def main():
         ),
     )
 
-    args, _ = parser.parse_known_args()
+    args, _ = parser.parse_known_args(args)
 
     # Find job configuration file.
     job_filename = args.training_job_path
@@ -1915,6 +1939,8 @@ def main():
     args.video_paths = args.video_paths.split(",")
     if len(args.video_paths) == 0:
         args.video_paths = None
+
+    job_config.model.base_checkpoint = args.base_checkpoint
 
     logger.info("Versions:")
     sleap.versions()
@@ -1979,6 +2005,8 @@ def main():
         video_search_paths=args.video_paths,
     )
     trainer.train()
+
+    return trainer
 
 
 if __name__ == "__main__":

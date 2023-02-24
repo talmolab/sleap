@@ -1,5 +1,4 @@
-"""
-Main GUI application for labeling, training/inference, and proofreading.
+"""Main GUI application for labeling, training/inference, and proofreading.
 
 Each open project is an instance of :py:class:`MainWindow`.
 
@@ -50,7 +49,6 @@ import re
 import os
 import random
 import platform
-import requests
 from pathlib import Path
 
 from typing import Callable, List, Optional, Tuple
@@ -59,7 +57,7 @@ from qtpy import QtCore, QtGui
 from qtpy.QtCore import Qt, QEvent
 
 from qtpy.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
-from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox
+from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QTabWidget
 from qtpy.QtWidgets import QLabel, QPushButton, QComboBox
 from qtpy.QtWidgets import QMessageBox
 
@@ -70,6 +68,7 @@ from sleap.instance import Instance, LabeledFrame
 from sleap.io.dataset import Labels
 from sleap.info.summary import StatisticSeries
 from sleap.gui.commands import CommandContext, UpdateTopic
+from sleap.gui.widgets.views import CollapsibleWidget
 from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.gui.widgets.slider import set_slider_marks_from_labels
 from sleap.gui.dataviews import (
@@ -81,7 +80,12 @@ from sleap.gui.dataviews import (
     LabeledFrameTableModel,
     SkeletonNodeModel,
 )
-from sleap.util import parse_uri_path
+from sleap.util import (
+    parse_uri_path,
+    decode_preview_image,
+    get_package_file,
+    find_files_by_suffix,
+)
 
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget, FormBuilderModalDialog
@@ -156,10 +160,13 @@ class MainWindow(QMainWindow):
         self.state["edge style"] = prefs["edge style"]
         self.state["fit"] = False
         self.state["color predicted"] = prefs["color predicted"]
+        self.state["trail_shade"] = prefs["trail shade"]
         self.state["marker size"] = prefs["marker size"]
         self.state["propagate track labels"] = prefs["propagate track labels"]
         self.state["node label size"] = prefs["node label size"]
         self.state["share usage data"] = prefs["share usage data"]
+        self.state["skeleton_preview_image"] = None
+        self.state["skeleton_description"] = "No skeleton loaded yet"
         if no_usage_data:
             self.state["share usage data"] = False
         self.state.connect("marker size", self.plotFrame)
@@ -181,7 +188,7 @@ class MainWindow(QMainWindow):
             self.restoreState(prefs["window state"])
 
         if labels_path:
-            self.loadProjectFile(labels_path)
+            self.commands.loadProjectFile(filename=labels_path)
         else:
             self.state["project_loaded"] = False
 
@@ -218,6 +225,7 @@ class MainWindow(QMainWindow):
         prefs["edge style"] = self.state["edge style"]
         prefs["propagate track labels"] = self.state["propagate track labels"]
         prefs["color predicted"] = self.state["color predicted"]
+        prefs["trail shade"] = self.state["trail_shade"]
         prefs["share usage data"] = self.state["share usage data"]
 
         # Save preferences.
@@ -309,7 +317,8 @@ class MainWindow(QMainWindow):
         self.player = QtVideoPlayer(
             color_manager=self.color_manager, state=self.state, context=self.commands
         )
-        self.player.changedPlot.connect(self._after_plot_update)
+        self.player.changedPlot.connect(self._after_plot_change)
+        self.player.updatedPlot.connect(self._after_plot_update)
 
         self.player.view.instanceDoubleClicked.connect(
             self._handle_instance_double_click
@@ -632,11 +641,18 @@ class MainWindow(QMainWindow):
             key="node label size",
         )
 
+        viewMenu.addSeparator()
         add_submenu_choices(
             menu=viewMenu,
             title="Trail Length",
-            options=(0, 10, 50, 100, 250),
+            options=TrackTrailOverlay.get_length_options(),
             key="trail_length",
+        )
+        add_submenu_choices(
+            menu=viewMenu,
+            title="Trail Shade",
+            options=tuple(TrackTrailOverlay.get_shade_options().keys()),
+            key="trail_shade",
         )
 
         viewMenu.addSeparator()
@@ -977,6 +993,7 @@ class MainWindow(QMainWindow):
             row_name="video",
             is_activatable=True,
             model=VideosTableModel(items=self.labels.videos, context=self.commands),
+            ellipsis_left=True,
         )
         videos_layout.addWidget(self.videosTable)
 
@@ -995,8 +1012,78 @@ class MainWindow(QMainWindow):
             "Skeleton", tab_with=videos_layout.parent().parent()
         )
 
-        gb = QGroupBox("Nodes")
+        gb = CollapsibleWidget("Templates")
         vb = QVBoxLayout()
+        hb = QHBoxLayout()
+
+        skeletons_folder = get_package_file("sleap/skeletons")
+        skeletons_json_files = find_files_by_suffix(
+            skeletons_folder, suffix=".json", depth=1
+        )
+        skeletons_names = [json.name.split(".")[0] for json in skeletons_json_files]
+        self.skeletonTemplates = QComboBox()
+        self.skeletonTemplates.addItems(skeletons_names)
+        self.skeletonTemplates.setEditable(False)
+        hb.addWidget(self.skeletonTemplates)
+        _add_button(hb, "Load", self.commands.openSkeletonTemplate)
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        vb.addWidget(hbw)
+
+        hb = QHBoxLayout()
+        self.skeleton_preview_image = QLabel("Preview Skeleton")
+        hb.addWidget(self.skeleton_preview_image)
+        hb.setAlignment(self.skeleton_preview_image, Qt.AlignLeft)
+
+        self.skeleton_description = QLabel(
+            f'<strong>Description:</strong> {self.state["skeleton_description"]}'
+        )
+        self.skeleton_description.setWordWrap(True)
+        hb.addWidget(self.skeleton_description)
+        hb.setAlignment(self.skeleton_description, Qt.AlignLeft)
+
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        vb.addWidget(hbw)
+
+        def updatePreviewImage(preview_image_bytes: bytes):
+
+            # Decode the preview image
+            preview_image = decode_preview_image(preview_image_bytes)
+
+            # Create a QImage from the Image
+            preview_image = QtGui.QImage(
+                preview_image.tobytes(),
+                preview_image.size[0],
+                preview_image.size[1],
+                QtGui.QImage.Format_RGBA8888,  # Format for RGBA images (see Image.mode)
+            )
+
+            preview_image = QtGui.QPixmap.fromImage(preview_image)
+
+            self.skeleton_preview_image.setPixmap(preview_image)
+
+        gb.set_content_layout(vb)
+        skeleton_layout.addWidget(gb)
+
+        def update_skeleton_preview(idx: int):
+            skel = Skeleton.load_json(skeletons_json_files[idx])
+            self.state["skeleton_description"] = (
+                f"<strong>Description:</strong> {skel.description}<br><br>"
+                f"<strong>Nodes ({len(skel)}):</strong> {', '.join(skel.node_names)}"
+            )
+            self.skeleton_description.setText(self.state["skeleton_description"])
+            updatePreviewImage(skel.preview_image)
+
+        self.skeletonTemplates.currentIndexChanged.connect(update_skeleton_preview)
+        update_skeleton_preview(idx=0)
+
+        gb = QGroupBox("Project Skeleton")
+        vgb = QVBoxLayout()
+
+        nodes_widget = QWidget()
+        vb = QVBoxLayout()
+        graph_tabs = QTabWidget()
         self.skeletonNodesTable = GenericTableView(
             state=self.state,
             row_name="node",
@@ -1012,13 +1099,13 @@ class MainWindow(QMainWindow):
         hbw = QWidget()
         hbw.setLayout(hb)
         vb.addWidget(hbw)
-        gb.setLayout(vb)
-        skeleton_layout.addWidget(gb)
+        nodes_widget.setLayout(vb)
+        graph_tabs.addTab(nodes_widget, "Nodes")
 
         def _update_edge_src():
             self.skeletonEdgesDst.model().skeleton = self.state["skeleton"]
 
-        gb = QGroupBox("Edges")
+        edges_widget = QWidget()
         vb = QVBoxLayout()
         self.skeletonEdgesTable = GenericTableView(
             state=self.state,
@@ -1055,16 +1142,21 @@ class MainWindow(QMainWindow):
         hbw = QWidget()
         hbw.setLayout(hb)
         vb.addWidget(hbw)
-        gb.setLayout(vb)
-        skeleton_layout.addWidget(gb)
+        edges_widget.setLayout(vb)
+        graph_tabs.addTab(edges_widget, "Edges")
+        vgb.addWidget(graph_tabs)
 
         hb = QHBoxLayout()
-        _add_button(hb, "Load Skeleton", self.commands.openSkeleton)
-        _add_button(hb, "Save Skeleton", self.commands.saveSkeleton)
+        _add_button(hb, "Load From File...", self.commands.openSkeleton)
+        _add_button(hb, "Save As...", self.commands.saveSkeleton)
 
         hbw = QWidget()
         hbw.setLayout(hb)
-        skeleton_layout.addWidget(hbw)
+        vgb.addWidget(hbw)
+
+        # Add graph tabs to "Project Skeleton" group box
+        gb.setLayout(vgb)
+        skeleton_layout.addWidget(gb)
 
         ####### Suggestions #######
         suggestions_layout = _make_dock(
@@ -1176,10 +1268,16 @@ class MainWindow(QMainWindow):
 
     def _load_overlays(self):
         """Load all standard video overlays."""
-        self.overlays["track_labels"] = TrackListOverlay(self.labels, self.player)
-        self.overlays["trails"] = TrackTrailOverlay(self.labels, self.player)
+        self.overlays["track_labels"] = TrackListOverlay(
+            labels=self.labels, player=self.player
+        )
+        self.overlays["trails"] = TrackTrailOverlay(
+            labels=self.labels,
+            player=self.player,
+            trail_shade=self.state["trail_shade"],
+        )
         self.overlays["instance"] = InstanceOverlay(
-            self.labels, self.player, self.state
+            labels=self.labels, player=self.player, state=self.state
         )
 
         # When gui state changes, we also want to set corresponding attribute
@@ -1196,6 +1294,7 @@ class MainWindow(QMainWindow):
             )
 
         overlay_state_connect(self.overlays["trails"], "trail_length")
+        overlay_state_connect(self.overlays["trails"], "trail_shade")
 
         overlay_state_connect(self.color_manager, "palette")
         overlay_state_connect(self.color_manager, "distinctly_color")
@@ -1366,7 +1465,12 @@ class MainWindow(QMainWindow):
 
         self.player.plot()
 
-    def _after_plot_update(self, player, frame_idx, selected_inst):
+    def _after_plot_update(self, frame_idx):
+        """Run after plot is updated, but stay on same frame."""
+        overlay: TrackTrailOverlay = self.overlays["trails"]
+        overlay.redraw(self.state["video"], frame_idx)
+
+    def _after_plot_change(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
 
         # Store the current LabeledFrame (or make new, empty object)
@@ -1459,72 +1563,6 @@ class MainWindow(QMainWindow):
             "Note: Some preferences may not take effect until application is restarted."
         )
         msg.exec_()
-
-    def loadProjectFile(self, filename: Optional[str] = None):
-        """
-        Loads given labels file into GUI.
-
-        Args:
-            filename: The path to the saved labels dataset. If None,
-                then don't do anything.
-
-        Returns:
-            None:
-        """
-        if len(filename) == 0:
-            return
-
-        gui_video_callback = Labels.make_gui_video_callback(
-            search_paths=[os.path.dirname(filename)]
-        )
-
-        has_loaded = False
-        labels = None
-        if type(filename) == Labels:
-            labels = filename
-            filename = None
-            has_loaded = True
-        else:
-            try:
-                labels = Labels.load_file(filename, video_search=gui_video_callback)
-                has_loaded = True
-            except ValueError as e:
-                print(e)
-                QMessageBox(text=f"Unable to load {filename}.").exec_()
-
-        if has_loaded:
-            self.loadLabelsObject(labels, filename)
-            self.state["project_loaded"] = True
-
-    def loadLabelsObject(self, labels: Labels, filename: Optional[str] = None):
-        """
-        Loads a `Labels` object into the GUI, replacing any currently loaded.
-
-        Args:
-            labels: The `Labels` object to load.
-            filename: The filename where this file is saved, if any.
-
-        Returns:
-            None.
-
-        """
-        self.state["labels"] = labels
-        self.state["filename"] = filename
-
-        self.commands.changestack_clear()
-        self.color_manager.labels = self.labels
-        self.color_manager.set_palette(self.state["palette"])
-
-        self._load_overlays()
-
-        if len(self.labels.skeletons):
-            self.state["skeleton"] = self.labels.skeletons[0]
-
-        # Load first video
-        if len(self.labels.videos):
-            self.state["video"] = self.labels.videos[0]
-
-        self.on_data_update([UpdateTopic.project, UpdateTopic.all])
 
     def _update_track_menu(self):
         """Updates track menu options."""
@@ -1879,3 +1917,7 @@ def main(args: Optional[list] = None):
         app.exec_()
 
     pass
+
+
+if __name__ == "__main__":
+    main()

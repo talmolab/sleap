@@ -13,8 +13,6 @@ from sleap.nn.data import resizing
 from sleap.nn.data import providers
 from sleap.nn.data.resizing import SizeMatcher
 
-from tests.fixtures.videos import TEST_H5_FILE, TEST_SMALL_ROBOT_MP4_FILE
-
 
 def test_find_padding_for_stride():
     assert resizing.find_padding_for_stride(
@@ -132,16 +130,14 @@ def test_resizer_from_config():
         )
 
 
-def test_size_matcher():
+def test_size_matcher(small_robot_mp4_path, hdf5_file_path):
     # Create some fake data using two different size videos.
     skeleton = sleap.Skeleton.from_names_and_edge_inds(["A"])
     labels = sleap.Labels(
         [
             sleap.LabeledFrame(
                 frame_idx=0,
-                video=sleap.Video.from_filename(
-                    TEST_SMALL_ROBOT_MP4_FILE, grayscale=True
-                ),
+                video=sleap.Video.from_filename(small_robot_mp4_path, grayscale=True),
                 instances=[
                     sleap.Instance.from_pointsarray(
                         np.array([[128, 128]]), skeleton=skeleton
@@ -151,7 +147,7 @@ def test_size_matcher():
             sleap.LabeledFrame(
                 frame_idx=0,
                 video=sleap.Video.from_filename(
-                    TEST_H5_FILE, dataset="/box", input_format="channels_first"
+                    hdf5_file_path, dataset="/box", input_format="channels_first"
                 ),
                 instances=[
                     sleap.Instance.from_pointsarray(
@@ -213,3 +209,19 @@ def test_size_matcher():
     check_padding(im1, 700, 750, 0, 750)
     im2 = next(transform_iter)["image"]
     assert im2.shape == (750, 750, 1)
+
+    # Check SizeMatcher when target is larger in both dimensions
+    size_matcher = SizeMatcher(
+        max_image_height=560, max_image_width=560, center_pad=True
+    )
+    transform_iter = iter(size_matcher.transform_dataset(ds))
+    ex = next(transform_iter)
+    im1 = ex["image"]
+    assert im1.shape == (560, 560, 1)
+    # Check padding is on the top and bottom
+    check_padding(im1, 440, 560, 0, 560)
+    check_padding(im1, 0, 120, 0, 560)
+    assert ex["offset_x"] == 0
+    assert ex["offset_y"] == 120
+    im2 = next(transform_iter)["image"]
+    assert im2.shape == (560, 560, 1)

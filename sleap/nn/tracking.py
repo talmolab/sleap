@@ -403,6 +403,10 @@ class Tracker(BaseTracker):
             after the other tracking has run for all frames.
         min_new_track_points: We won't spawn a new track for an instance with
             fewer than this many points.
+        robust_best_instance (float): if the value is between 0 and 1 (excluded),
+            use a robust quantile similarity score for the track. If the value is 1,
+            use the max similarity (non-robust). For selecting a robust score,
+            0.95 is a good value.
     """
 
     track_window: int = 5
@@ -414,6 +418,7 @@ class Tracker(BaseTracker):
     target_instance_count: int = 0
     pre_cull_function: Optional[Callable] = None
     post_connect_single_breaks: bool = False
+    robust_best_instance: float = 1.0
 
     min_new_track_points: int = 0
 
@@ -510,6 +515,7 @@ class Tracker(BaseTracker):
                 candidate_instances=candidate_instances,
                 similarity_function=self.similarity_function,
                 matching_function=self.matching_function,
+                robust_best_instance=self.robust_best_instance,
             )
 
             # Store the most recent match data (for outside inspection).
@@ -596,6 +602,7 @@ class Tracker(BaseTracker):
         similarity: str = "instance",
         match: str = "greedy",
         track_window: int = 5,
+        robust: float = 1.0,
         min_new_track_points: int = 0,
         min_match_points: int = 0,
         # Optical flow options
@@ -663,6 +670,7 @@ class Tracker(BaseTracker):
 
         tracker_obj = cls(
             track_window=track_window,
+            robust_best_instance=robust,
             min_new_track_points=min_new_track_points,
             similarity_function=similarity_function,
             matching_function=matching_function,
@@ -749,6 +757,14 @@ class Tracker(BaseTracker):
         option = dict(name="match", default="greedy")
         option["type"] = str
         option["options"] = list(match_policies.keys())
+        options.append(option)
+
+        option = dict(name="robust", default=1)
+        option["type"] = float
+        option["help"] = (
+            "Robust quantile of similarity score for instance matching. "
+            "If equal to 1, keep the max similarity score (non-robust)."
+        )
         options.append(option)
 
         option = dict(name="track_window", default=5)

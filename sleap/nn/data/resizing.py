@@ -25,6 +25,7 @@ def find_padding_for_stride(
         A tuple of (pad_bottom, pad_right), integers with the number of pixels that the
         image would need to be padded by to meet the divisibility requirement.
     """
+    # The outer-most modulo handles edge case when image_height % max_stride == 0
     pad_bottom = (max_stride - (image_height % max_stride)) % max_stride
     pad_right = (max_stride - (image_width % max_stride)) % max_stride
     return pad_bottom, pad_right
@@ -266,6 +267,8 @@ class SizeMatcher:
         full_image_key: String name of the key containing the full images.
         max_image_height: int The target height to which all smaller images will be resized/padded to.
         max_image_width: int The target width to which all smaller images will be resized/padded to.
+        center_pad: If True, pad on the left/top to center the non-zero pixels rather than aligning
+            them to the top-left. The offsets will be stored in the "offset_x" and "offset_y" keys.
     """
 
     image_key: Text = "image"
@@ -275,6 +278,7 @@ class SizeMatcher:
     full_image_key: Text = "full_image"
     max_image_height: int = None
     max_image_width: int = None
+    center_pad: bool = False
 
     @classmethod
     def from_config(
@@ -330,6 +334,7 @@ class SizeMatcher:
             full_image_key=full_image_key,
             max_image_height=max_height,
             max_image_width=max_width,
+            center_pad=False,  # TODO(jiaying): Add center padding to the configs.
         )
 
     @property
@@ -346,6 +351,7 @@ class SizeMatcher:
         output_keys = self.input_keys
         if self.keep_full_image:
             output_keys.append(self.full_image_key)
+        output_keys.extend(["offset_x", "offset_y"])
         return output_keys
 
     def transform_dataset(self, ds_input: tf.data.Dataset) -> tf.data.Dataset:
@@ -378,6 +384,7 @@ class SizeMatcher:
             current_shape = tf.shape(image)
             channels = image.shape[-1]
             effective_scaling_ratio = 1.0
+            offset_x, offset_y = 0, 0
 
             # Only apply this transform if image shape differs from target
             if (
@@ -409,12 +416,19 @@ class SizeMatcher:
                 image = tf.image.resize_with_pad(
                     image, target_height=target_height, target_width=target_width
                 )
-                # Pad the image on bottom/right with zeroes to match specified
-                # dimensions
+
+                # Switch between center padding and bottom/right padding.
+                if self.center_pad:
+                    offset_x = (self.max_image_width - target_width) // 2
+                    offset_y = (self.max_image_height - target_height) // 2
+                else:
+                    offset_x, offset_y = 0, 0
+
+                # Pad the image with zeroes to match specified dimensions.
                 image = tf.image.pad_to_bounding_box(
                     image,
-                    offset_height=0,
-                    offset_width=0,
+                    offset_height=offset_y,
+                    offset_width=offset_x,
                     target_height=self.max_image_height,
                     target_width=self.max_image_width,
                 )
@@ -429,11 +443,23 @@ class SizeMatcher:
 
             # Update the scale factor
             example[self.scale_key] = example[self.scale_key] * effective_scaling_ratio
+
             # Scale the instance points accordingly
             if self.points_key and self.points_key in example:
                 example[self.points_key] = (
                     example[self.points_key] * effective_scaling_ratio
                 )
+
+            # Update the offsets
+            example["offset_x"] = offset_x
+            example["offset_y"] = offset_y
+
+            # Translate the instance points accordingly
+            if self.points_key and self.points_key in example:
+                offsets = tf.cast(
+                    tf.reshape([offset_x, offset_y], [1, 1, 2]), tf.float32
+                )
+                example[self.points_key] = example[self.points_key] + offsets
 
             return example
 

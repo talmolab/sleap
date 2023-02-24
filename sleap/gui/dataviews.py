@@ -74,7 +74,6 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         super(GenericTableModel, self).__init__()
         self.properties = properties or self.properties or []
         self.context = context
-
         self.items = items
 
     def object_to_items(self, item_list):
@@ -142,6 +141,13 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         elif role == QtCore.Qt.ForegroundRole:
             return self.get_item_color(self.original_items[idx], key)
 
+        elif role == QtCore.Qt.ToolTipRole:
+            if isinstance(item, dict) and key in item:
+                return item[key]
+
+            if hasattr(item, key):
+                return getattr(item, key)
+
         return None
 
     def setData(self, index: QtCore.QModelIndex, value: str, role=QtCore.Qt.EditRole):
@@ -150,12 +156,14 @@ class GenericTableModel(QtCore.QAbstractTableModel):
             item, key = self.get_from_idx(index)
 
             # If nothing changed of the item, return true. (Issue #1013)
-            if isinstance(item, dict) and key in item:
-                item_value = item[key]
-            if hasattr(item, key):
+            if isinstance(item, dict):
+                item_value = item.get(key, None)
+            elif hasattr(item, key):
                 item_value = getattr(item, key)
+            else:
+                item_value = None
 
-            if item_value == value:
+            if (item_value is not None) and (item_value == value):
                 return True
 
             # Otherwise set the item
@@ -270,6 +278,11 @@ class GenericTableView(QtWidgets.QTableView):
     for some reason you need this to be different. For instance, the table
     of instances in the GUI sets this to "" so that the row for an instance
     is automatically selected when `state["instance"]` is set outside the table.
+
+    "ellipsis_left" can be used to make the TableView truncate cell content on
+    the left instead of the right side. By default, the argument is set to
+    False, i.e. truncation on the right side, which is also the default for
+    QTableView.
     """
 
     row_name: Optional[str] = None
@@ -285,6 +298,7 @@ class GenericTableView(QtWidgets.QTableView):
         name_prefix: Optional[str] = None,
         is_sortable: bool = False,
         is_activatable: bool = False,
+        ellipsis_left: bool = False,
     ):
         super(GenericTableView, self).__init__()
 
@@ -296,6 +310,10 @@ class GenericTableView(QtWidgets.QTableView):
 
         self.setModel(model)
 
+        if ellipsis_left:
+            self.setTextElideMode(QtCore.Qt.ElideLeft)
+            self.setWordWrap(False)
+        self.horizontalHeader().setStretchLastSection(True)
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.setSortingEnabled(self.is_sortable)

@@ -1,6 +1,5 @@
-"""
-Track trail and track list overlays.
-"""
+"""Track trail and track list overlays."""
+
 from sleap.gui.overlays.base import BaseOverlay
 from sleap.instance import Track
 from sleap.io.dataset import Labels
@@ -10,7 +9,7 @@ from sleap.gui.widgets.video import QtTextWithBackground
 
 import attr
 
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Dict
 
 from qtpy import QtCore, QtGui
 
@@ -27,6 +26,8 @@ class TrackTrailOverlay(BaseOverlay):
         labels: The :class:`Labels` dataset from which to get overlay data.
         player: The video player in which to show overlay.
         trail_length: The maximum number of frames to include in trail.
+        trail_shade: A literal "Dark", "Normal", or "Bright" which determines the shade
+            of the trail color.
 
     Usage:
         After class is instantiated, call :meth:`add_to_scene(frame_idx)`
@@ -34,8 +35,26 @@ class TrackTrailOverlay(BaseOverlay):
     """
 
     trail_length: int = 0
+    trail_shade: str = attr.ib(
+        default="Normal", validator=attr.validators.in_(["Dark", "Normal", "Light"])
+    )
     show: bool = True
     max_node_count: Optional[int] = None
+
+    def __attrs_post_init__(self):
+        """Initialize the shade options attribute after initalizing the instance."""
+
+        self.shade_options = self.get_shade_options()
+
+    @classmethod
+    def get_length_options(cls):
+        return (0, 10, 50, 100, 250)
+
+    @classmethod
+    def get_shade_options(cls):
+        """Return a dictionary with values to multiply each RGB value by."""
+
+        return {"Dark": 0.6, "Normal": 1.0, "Light": 1.25}
 
     def get_track_trails(self, frame_selection: Iterable["LabeledFrame"]):
         """Get data needed to draw track trail.
@@ -85,9 +104,7 @@ class TrackTrailOverlay(BaseOverlay):
         return all_track_trails
 
     def get_frame_selection(self, video: Video, frame_idx: int):
-        """
-        Return `LabeledFrame` objects to include in trail for specified frame.
-        """
+        """Return `LabeledFrame` objects to include in trail for specified frame."""
 
         frame_selection = self.labels.find(video, range(0, frame_idx + 1))
         frame_selection.sort(key=lambda x: x.frame_idx)
@@ -97,8 +114,7 @@ class TrackTrailOverlay(BaseOverlay):
     def get_tracks_in_frame(
         self, video: Video, frame_idx: int, include_trails: bool = False
     ) -> List[Track]:
-        """
-        Returns list of tracks that have instance in specified frame.
+        """Returns list of tracks that have instance in specified frame.
 
         Args:
             video: Video for which we want tracks.
@@ -108,6 +124,7 @@ class TrackTrailOverlay(BaseOverlay):
                 within trail_length).
         Returns:
             List of tracks.
+
         """
 
         if include_trails:
@@ -125,7 +142,10 @@ class TrackTrailOverlay(BaseOverlay):
         Args:
             video: current video
             frame_idx: index of the frame to which the trail is attached
+
         """
+        self.items = []
+
         if not self.show or self.trail_length == 0:
             return
 
@@ -134,8 +154,11 @@ class TrackTrailOverlay(BaseOverlay):
         all_track_trails = self.get_track_trails(frame_selection)
 
         for track, trails in all_track_trails.items():
-
-            color = QtGui.QColor(*self.player.color_manager.get_track_color(track))
+            trail_color = tuple(
+                min(c * self.shade_options[self.trail_shade], 255)
+                for c in self.player.color_manager.get_track_color(track)
+            )
+            color = QtGui.QColor(*trail_color)
             pen = QtGui.QPen()
             pen.setCosmetic(True)
             pen.setColor(color)
@@ -166,7 +189,8 @@ class TrackTrailOverlay(BaseOverlay):
                 for segment in segments:
                     pen.setWidthF(width)
                     path = self.map_to_qt_path(segment)
-                    self.player.scene.addPath(path, pen)
+                    item = self.player.scene.addPath(path, pen)
+                    self.items.append(item)
                     width /= 2
 
     @staticmethod
@@ -183,9 +207,7 @@ class TrackTrailOverlay(BaseOverlay):
 
 @attr.s(auto_attribs=True)
 class TrackListOverlay(BaseOverlay):
-    """
-    Class to show track number and names in overlay.
-    """
+    """Class to show track number and names in overlay."""
 
     text_box: Optional[QtTextWithBackground] = None
 
