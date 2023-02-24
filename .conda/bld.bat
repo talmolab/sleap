@@ -21,6 +21,7 @@ pip install attrs==21.2.0
 pip install cattrs==1.1.1
 pip install jsonpickle==1.2
 pip install networkx
+pip install nixio>=1.5.3
 @REM pip install tensorflow>=2.6.3,<=2.7.1
 @REM pip install h5py>=3.1.0,<=3.6.0
 pip install python-rapidjson
