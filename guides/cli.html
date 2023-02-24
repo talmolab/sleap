@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Command line interfaces &#8212; SLEAP (v1.2.9)</title>
+    <title>Command line interfaces &#8212; SLEAP (v1.3.0a0)</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -90,7 +90,7 @@
       <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">SLEAP (v1.2.9)</h1>
+      <h1 class="site-logo" id="site-title">SLEAP (v1.3.0a0)</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
@@ -725,6 +725,9 @@ optional arguments:
                         Path to labels file to use for test. If specified,
                         overrides the path specified in the training job
                         config.
+  --base_checkpoint BASE_CHECKPOINT
+                        Path to base checkpoint (directory containing best_model.h5)
+                        to resume training from.
   --tensorboard         Enable TensorBoard logging to the run path if not
                         already specified in the training job config.
   --save_viz            Enable saving of prediction visualizations to the run
@@ -753,9 +756,17 @@ optional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -m MODELS, --model MODELS
-                        Path to trained model directory (with training_config.json). Multiple models can be specified, each preceded by --model.
+                        Path to trained model directory (with training_config.json). Multiple
+                        models can be specified, each preceded by --model.
   -e [EXPORT_PATH], --export_path [EXPORT_PATH]
-                        Path to output directory where the frozen model will be exported to. Defaults to a folder named &#39;exported_model&#39;.
+                        Path to output directory where the frozen model will be exported to.
+                        Defaults to a folder named &#39;exported_model&#39;.
+  -u, --unrag UNRAG
+                        Convert ragged tensors into regular tensors with NaN padding.
+                        Defaults to True.
+  -i, --max_instances MAX_INSTANCES
+                        Limit maximum number of instances in multi-instance models.
+                        Defaults to None.
 </pre></div>
 </div>
 </section>
@@ -956,8 +967,9 @@ optional arguments:
                               only a single --output argument was specified, the
                               analysis file for the latter video is given a default name.
   --format FORMAT       Output format. Default (&#39;slp&#39;) is SLEAP dataset;
-                        &#39;analysis&#39; results in analysis.h5 file; &#39;h5&#39; or &#39;json&#39;
-                        results in SLEAP dataset with specified file format.
+                        &#39;analysis&#39; results in analysis.h5 file; &#39;analysis.nix&#39; results
+                        in an analysis nix file; &#39;h5&#39; or &#39;json&#39; results in SLEAP dataset
+                        with specified file format.
   --video VIDEO         Path to video (if needed for conversion).
 </pre></div>
 </div>
@@ -1071,7 +1083,7 @@ optional arguments:
   
     By SLEAP Developers<br/>
   
-      &copy; Copyright 2019–2022, Talmo Lab.<br/>
+      &copy; Copyright 2019–2023, Talmo Lab.<br/>
 </p>
         </footer>
     </div>
