@@ -5218,6 +5218,9 @@ def main(args: Optional[list] = None):
     # Setup tracker.
     tracker = _make_tracker_from_cli(args)
 
+    if "movenet" in args.models[0]:
+        args.models = args.models[0]
+
     # Either run inference (and tracking) or just run tracking
     if args.models is not None:
 
