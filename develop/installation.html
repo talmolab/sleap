@@ -456,8 +456,8 @@ title="Open an issue"
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#m1-macs">
-     M1 Macs
+    <a class="reference internal nav-link" href="#apple-silicon-macs">
+     Apple Silicon Macs
     </a>
    </li>
   </ul>
@@ -554,8 +554,8 @@ title="Open an issue"
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#m1-macs">
-     M1 Macs
+    <a class="reference internal nav-link" href="#apple-silicon-macs">
+     Apple Silicon Macs
     </a>
    </li>
   </ul>
@@ -604,7 +604,7 @@ title="Open an issue"
                 
   <section class="tex2jax_ignore mathjax_ignore" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">#</a></h1>
-<p>SLEAP can be installed as a Python package on Windows, Linux and Mac OS X. We currently provide <a class="reference internal" href="#m1mac"><span class="std std-ref">experimental support for M1 Macs</span></a>.</p>
+<p>SLEAP can be installed as a Python package on Windows, Linux and Mac OS X. We currently provide <a class="reference internal" href="#apple-silicon"><span class="std std-ref">experimental support for Apple Silicon Macs</span></a>.</p>
 <p>SLEAP requires many complex dependencies, so we <strong>strongly</strong> recommend using <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a> to install it in its own isolated environment. See <a class="reference internal" href="#miniconda"><span class="std std-ref">Installing Miniconda</span></a> below for more instructions.</p>
 <p>The newest version of SLEAP can always be found in the <a class="reference external" href="https://github.com/talmolab/sleap/releases">Releases page</a>.</p>
 <div class="contents local topic" id="contents">
@@ -616,7 +616,7 @@ title="Open an issue"
 <li><p><a class="reference internal" href="#conda-package" id="id3"><code class="docutils literal notranslate"><span class="pre">conda</span></code> package</a></p></li>
 <li><p><a class="reference internal" href="#conda-from-source" id="id4"><code class="docutils literal notranslate"><span class="pre">conda</span></code> from source</a></p></li>
 <li><p><a class="reference internal" href="#pip-package" id="id5"><code class="docutils literal notranslate"><span class="pre">pip</span></code> package</a></p></li>
-<li><p><a class="reference internal" href="#m1-macs" id="id6">M1 Macs</a></p></li>
+<li><p><a class="reference internal" href="#apple-silicon-macs" id="id6">Apple Silicon Macs</a></p></li>
 </ul>
 </li>
 <li><p><a class="reference internal" href="#testing-that-things-are-working" id="id7">Testing that things are working</a></p>
@@ -707,7 +707,7 @@ These will make sure that Anaconda is easily accessible from most places on your
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_no_cuda.yml<span class="w"> </span>-n<span class="w"> </span>sleap
 </pre></div>
 </div>
-<p>This works on <strong>Windows</strong>, <strong>Linux</strong> and <strong>Mac OS X</strong> (pre-M1). This is the <strong>recommended method for development</strong>.</p>
+<p>This works on <strong>Windows</strong>, <strong>Linux</strong> and <strong>Mac OS X</strong> (pre Apple Silicon). This is the <strong>recommended method for development</strong>.</p>
 </li>
 </ol>
 <div class="admonition note">
@@ -723,7 +723,7 @@ These will make sure that Anaconda is easily accessible from most places on your
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">sleap</span><span class="o">==</span><span class="m">1</span>.2.9
 </pre></div>
 </div>
-<p>This works on <strong>any OS except M1</strong> and on <strong>Google Colab</strong>.</p>
+<p>This works on <strong>any OS except Apple silicon</strong> and on <strong>Google Colab</strong>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
@@ -737,11 +737,11 @@ These will make sure that Anaconda is easily accessible from most places on your
 <p>We strongly recommend that you <strong>only use this method if you know what you’re doing</strong>!</p>
 </div>
 </section>
-<section id="m1-macs">
-<span id="m1mac"></span><h3><a class="toc-backref" href="#id6">M1 Macs</a><a class="headerlink" href="#m1-macs" title="Permalink to this headline">#</a></h3>
-<p>SLEAP can be installed on newer M1 Macs by following these instructions:</p>
+<section id="apple-silicon-macs">
+<span id="apple-silicon"></span><h3><a class="toc-backref" href="#id6">Apple Silicon Macs</a><a class="headerlink" href="#apple-silicon-macs" title="Permalink to this headline">#</a></h3>
+<p>SLEAP can be installed on newer Apple Silicon Macs by following these instructions:</p>
 <ol>
-<li><p>In addition to being on an M1 Mac, make sure you’re on <strong>macOS Monterey</strong>, i.e., version 12+. We’ve tested this on a MacBook Pro (14-inch, 2021) running macOS version 12.0.1.</p></li>
+<li><p>In addition to being on an Apple Silicon Mac, make sure you’re on <strong>macOS Monterey</strong>, i.e., version 12+. We’ve tested this on a MacBook Pro (14-inch, 2021) running macOS version 12.0.1.</p></li>
 <li><p>If you don’t have it yet, install <strong>homebrew</strong>, a convenient package manager for Macs (skip this if you can run <code class="docutils literal notranslate"><span class="pre">brew</span></code> from the terminal):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/bin/bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh<span class="k">)</span><span class="s2">&quot;</span>
 </pre></div>
@@ -756,7 +756,7 @@ These will make sure that Anaconda is easily accessible from most places on your
 </pre></div>
 </div>
 </li>
-<li><p>Install the <strong>M1 Mac version of Miniconda</strong> – this is important, so make sure you don’t have the regular Mac version! If you’re not sure, type <code class="docutils literal notranslate"><span class="pre">which</span> <span class="pre">conda</span></code> and delete the containing directory to uninstall your existing conda. To install the correct Miniconda, just run:</p>
+<li><p>Install the <strong>Apple Silicon Mac version of Miniconda</strong> – this is important, so make sure you don’t have the regular Mac version! If you’re not sure, type <code class="docutils literal notranslate"><span class="pre">which</span> <span class="pre">conda</span></code> and delete the containing directory to uninstall your existing conda. To install the correct Miniconda, just run:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>-nc<span class="w"> </span>https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>bash<span class="w"> </span>Miniconda3-latest-MacOSX-arm64.sh<span class="w"> </span>-b<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span>Miniconda3-latest-MacOSX-arm64.sh<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>~/miniconda3/bin/conda<span class="w"> </span>init<span class="w"> </span>zsh
 </pre></div>
 </div>
@@ -768,7 +768,7 @@ These will make sure that Anaconda is easily accessible from most places on your
 </div>
 </li>
 <li><p><strong>Install SLEAP in a conda environment</strong>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_m1.yml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_apple_silicon.yml
 </pre></div>
 </div>
 <p>Your Mac will then automatically sign a devil’s pact with Apple to install the correct versions of everything on your system. Once the blood sacrifice/installation process completes, SLEAP will be available in an environment called <code class="docutils literal notranslate"><span class="pre">sleap</span></code>.</p>
