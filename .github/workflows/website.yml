@@ -5,9 +5,10 @@ name: Build website
 on:
   push:
     branches:
-      # 'main' triggers updates to 'sleap.ai', 'develop' to 'sleap.ai/develop'
+      # 'main' triggers updates to 'sleap.ai', all others to 'sleap.ai/develop'
       - main
       - develop
+      - liezl/docs-apple-silicon
     paths:
       - "docs/**"
       - "README.rst"

@@ -1,6 +1,6 @@
 # Installation
 
-SLEAP can be installed as a Python package on Windows, Linux and Mac OS X. We currently provide {ref}`experimental support for M1 Macs <m1mac>`.
+SLEAP can be installed as a Python package on Windows, Linux and Mac OS X. We currently provide {ref}`experimental support for Apple Silicon Macs <apple-silicon>`.
 
 SLEAP requires many complex dependencies, so we **strongly** recommend using [Miniconda](https://docs.conda.io/en/latest/miniconda.html) to install it in its own isolated environment. See {ref}`Installing Miniconda<miniconda>` below for more instructions.
 
@@ -103,7 +103,7 @@ conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap=1.2.9
    conda env create -f environment_no_cuda.yml -n sleap
    ```
 
-   This works on **Windows**, **Linux** and **Mac OS X** (pre-M1). This is the **recommended method for development**.
+   This works on **Windows**, **Linux** and **Mac OS X** (pre Apple Silicon). This is the **recommended method for development**.
 
 ```{note}
 - This installs SLEAP in development mode, which means that edits to the source code will be applied the next time you run SLEAP.
@@ -116,7 +116,7 @@ conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap=1.2.9
 pip install sleap==1.2.9
 ```
 
-This works on **any OS except M1** and on **Google Colab**.
+This works on **any OS except Apple silicon** and on **Google Colab**.
 
 ```{note}
 - Requires Python 3.7 or 3.8.
@@ -129,13 +129,13 @@ This will uninstall existing libraries and potentially install conflicting ones.
 We strongly recommend that you **only use this method if you know what you're doing**!
 ```
 
-(m1mac)=
+(apple-silicon)=
 
-### M1 Macs
+### Apple Silicon Macs
 
-SLEAP can be installed on newer M1 Macs by following these instructions:
+SLEAP can be installed on newer Apple Silicon Macs by following these instructions:
 
-1. In addition to being on an M1 Mac, make sure you're on **macOS Monterey**, i.e., version 12+. We've tested this on a MacBook Pro (14-inch, 2021) running macOS version 12.0.1.
+1. In addition to being on an Apple Silicon Mac, make sure you're on **macOS Monterey**, i.e., version 12+. We've tested this on a MacBook Pro (14-inch, 2021) running macOS version 12.0.1.
 
 2. If you don't have it yet, install **homebrew**, a convenient package manager for Macs (skip this if you can run `brew` from the terminal):
 
@@ -155,7 +155,7 @@ SLEAP can be installed on newer M1 Macs by following these instructions:
    brew install wget
    ```
 
-4. Install the **M1 Mac version of Miniconda** -- this is important, so make sure you don't have the regular Mac version! If you're not sure, type `which conda` and delete the containing directory to uninstall your existing conda. To install the correct Miniconda, just run:
+4. Install the **Apple Silicon Mac version of Miniconda** -- this is important, so make sure you don't have the regular Mac version! If you're not sure, type `which conda` and delete the containing directory to uninstall your existing conda. To install the correct Miniconda, just run:
 
    ```bash
    wget -nc https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh && bash Miniconda3-latest-MacOSX-arm64.sh -b && rm Miniconda3-latest-MacOSX-arm64.sh && ~/miniconda3/bin/conda init zsh
@@ -172,7 +172,7 @@ SLEAP can be installed on newer M1 Macs by following these instructions:
 6. **Install SLEAP in a conda environment**:
 
    ```bash
-   conda env create -f environment_m1.yml
+   conda env create -f environment_apple_silicon.yml
    ```
 
    Your Mac will then automatically sign a devil's pact with Apple to install the correct versions of everything on your system. Once the blood sacrifice/installation process completes, SLEAP will be available in an environment called `sleap`.
