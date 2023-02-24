@@ -33,7 +33,7 @@ Please include information about how you installed.
   - [ ] [Conda from package](https://sleap.ai/installation.html#conda-package)
   - [ ] [Conda from source](https://sleap.ai/installation.html#conda-from-source)
   - [ ] [pip package](https://sleap.ai/installation.html#pip-package)
-  - [ ] [M1 Macs](https://sleap.ai/installation.html#m1-macs)
+  - [ ] [Apple Silicon Macs](https://sleap.ai/installation.html#apple-silicon-macs)
 
 <details><summary>Environment packages</summary>
 <!-- For reproduction, it's useful to have the full environment. For example, the output of `pip freeze` or `conda list` --->
