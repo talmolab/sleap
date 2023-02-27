@@ -197,7 +197,7 @@ inference:
   label: Training/Inference Pipeline Type
   type: stacked
   default: "multi-animal bottom-up "
-  options: "multi-animal bottom-up,multi-animal top-down,single animal,movenet-lightning,movenet-thunder,none"
+  options: "multi-animal bottom-up,multi-animal top-down,multi-animal bottom-up-id,multi-animal top-down-id,single animal,movenet-lightning,movenet-thunder,none"
 
   multi-animal bottom-up:
   - type: text
@@ -214,6 +214,23 @@ inference:
     locate and crop around each animal in the frame, and a
     "<u>centered-instance confidence map</u>" model for predicted node locations
     for each individual animal predicted by the centroid model.'
+
+  multi-animal bottom-up-id:
+  - type: text
+    text: '<b>Multi-Animal Bottom-Up-Id Pipeline</b>:<br />
+      This pipeline uses single model with two output heads: a "<u>confidence
+      map</u>" head to predicts the nodes for an entire image and a "<u>part
+      affinity field</u>" head to group the nodes into distinct animal
+      instances. It also handles classification and tracking.'
+
+  multi-animal top-down-id:
+  - type: text
+    text: '<b>Multi-Animal Top-Down-Id Pipeline</b>:<br />
+    This pipeline uses two models: a "<u>centroid</u>" model to locate and crop
+    around each animal in the frame, and a "<u>centered-instance confidence
+    map</u>" model for predicted node locations for each individual animal
+    predicted by the centroid model. It also handles classification and
+    tracking.'
 
   single animal:
   - type: text

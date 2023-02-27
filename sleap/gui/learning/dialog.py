@@ -279,7 +279,13 @@ class LearningDialog(QtWidgets.QDialog):
             tab.valueChanged.disconnect()
 
     def make_tabs(self):
-        heads = ("single_instance", "centroid", "centered_instance", "multi_instance")
+        heads = (
+            "single_instance",
+            "centroid",
+            "centered_instance",
+            "multi_instance",
+            "multi_class_topdown",
+        )
 
         video = self.labels.videos[0] if self.labels else None
 
@@ -376,6 +382,7 @@ class LearningDialog(QtWidgets.QDialog):
             "centroid": "Centroid Model Configuration",
             "centered_instance": "Centered Instance Model Configuration",
             "multi_instance": "Bottom-Up Model Configuration",
+            "multi_class_topdown": "Top-Down-Id Model Configuration",
         }
         self.tab_widget.addTab(self.tabs[tab_name], tab_labels[tab_name])
         self.shown_tab_names.append(tab_name)
@@ -393,6 +400,9 @@ class LearningDialog(QtWidgets.QDialog):
                 self.add_tab("centered_instance")
             elif pipeline == "bottom-up":
                 self.add_tab("multi_instance")
+            elif pipeline == "top-down-id":
+                self.add_tab("centroid")
+                self.add_tab("multi_class_topdown")
             elif pipeline == "single":
                 self.add_tab("single_instance")
         self.current_pipeline = pipeline
@@ -843,9 +853,15 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
     def current_pipeline(self):
         pipeline_selected_label = self.pipeline_field.value()
         if "top-down" in pipeline_selected_label:
-            return "top-down"
+            if "id" not in pipeline_selected_label:
+                return "top-down"
+            else:
+                return "top-down-id"
         if "bottom-up" in pipeline_selected_label:
-            return "bottom-up"
+            if "id" not in pipeline_selected_label:
+                return "bottom-up"
+            else:
+                return "bottom-up-id"
         if "single" in pipeline_selected_label:
             return "single"
         return ""
