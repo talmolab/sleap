@@ -37,6 +37,7 @@ from sleap.gui.dialogs.filedialog import FileDialog
 
 import h5py
 import qimage2ndarray
+import cv2
 
 from typing import Any, Dict, List, Optional
 
@@ -567,18 +568,19 @@ class MessageWidget(QWidget):
 class VideoPreviewWidget(QWidget):
     """Widget to show video preview. Based on :class:`Video` class.
 
-    Args:
+    Attributes:
         video: the video to show
-
-    Returns:
-        None.
+        max_preview_size: Maximum size of the preview images.
 
     Note:
         This widget is used by ImportItemWidget.
     """
 
-    def __init__(self, video: Video = None, *args, **kwargs):
+    def __init__(
+        self, video: Video = None, max_preview_size: int = 256, *args, **kwargs
+    ):
         super(VideoPreviewWidget, self).__init__(*args, **kwargs)
+        self.max_preview_size = max_preview_size
         # widgets to include
         self.view = GraphicsView()
         self.video_label = QLabel()
@@ -617,13 +619,20 @@ class VideoPreviewWidget(QWidget):
 
         # Get image data
         frame = self.video.get_frame(idx)
+
+        # Re-size the preview image
+        height, width = frame.shape[:2]
+        img_length = max(height, width)
+        if img_length > self.max_preview_size:
+            ratio = self.max_preview_size / img_length
+            frame = cv2.resize(frame, None, fx=ratio, fy=ratio)
+
         # Clear existing objects
         self.view.clear()
-        # Re-size the preview image
-        decimate = 10
-        frame_resized = frame[::decimate, ::decimate]
+
         # Convert ndarray to QImage
-        image = qimage2ndarray.array2qimage(frame_resized)
+        image = qimage2ndarray.array2qimage(frame)
+
         # Display image
         self.view.setImage(image)
 
