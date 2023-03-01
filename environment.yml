@@ -7,7 +7,7 @@ dependencies:
   - conda-forge::pyside2>=5.13.2,<=5.14.1
   - conda-forge::h5py=3.1.0
   - conda-forge::scipy>=1.4.1,<=1.7.3
-  - pillow=8.4.0
+  - conda-forge::pillow=8.4.0
   - shapely=1.7.1
   - conda-forge::pandas
   - ffmpeg
@@ -17,7 +17,7 @@ dependencies:
   # - sleap::tensorflow=2.7.0
   # - sleap::pyside2=5.14.1
   - qtpy>=2.0.1
-  - conda-forge::pip!=22.0.4
+  - conda-forge::pip
   - pip:
       - "--editable=."
       - "--requirement=./dev_requirements.txt"

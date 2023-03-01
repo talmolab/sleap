@@ -72,7 +72,7 @@ Quick install
     conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap
 
 
-`pip` **(any OS except M1)**:
+`pip` **(any OS except Apple silicon)**:
 
 .. code-block:: bash
 

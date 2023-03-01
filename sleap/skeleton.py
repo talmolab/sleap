@@ -86,17 +86,22 @@ class Node:
 
 
 class Skeleton:
-    """
-    The main object for representing animal skeletons.
+    """The main object for representing animal skeletons.
 
     The skeleton represents the constituent parts of the animal whose
     pose is being estimated.
 
-    An index variable used to give skeletons a default name that should
-    be unique across all skeletons.
+    Attributes:
+        _skeleton_idx: An index variable used to give skeletons a default name that
+            should be unique across all skeletons.
+        preview_image: A byte string containing an encoded preview image for the
+            skeleton.
+        description: A text description of the skeleton. Used mostly for presets.
     """
 
     _skeleton_idx = count(0)
+    preview_image: Optional[bytes] = None
+    description: Optional[str] = None
 
     def __init__(self, name: str = None):
         """Initialize an empty skeleton object.
@@ -120,20 +125,23 @@ class Skeleton:
     def __repr__(self) -> str:
         """Return full description of the skeleton."""
         return (
-            f"Skeleton(name='{self.name}', "
+            f"Skeleton(name='{self.name}', ",
+            f"description='{self.description}', ",
             f"nodes={self.node_names}, "
             f"edges={self.edge_names}, "
             f"symmetries={self.symmetry_names}"
-            ")"
+            ")",
         )
 
     def __str__(self) -> str:
         """Return short readable description of the skeleton."""
+        description = self.description
         nodes = ", ".join(self.node_names)
         edges = ", ".join([f"{s}->{d}" for (s, d) in self.edge_names])
         symm = ", ".join([f"{s}<->{d}" for (s, d) in self.symmetry_names])
         return (
             "Skeleton("
+            f"description={description}, "
             f"nodes=[{nodes}], "
             f"edges=[{edges}], "
             f"symmetries=[{symm}]"
@@ -797,8 +805,7 @@ class Skeleton:
         return len(self.nodes)
 
     def relabel_node(self, old_name: str, new_name: str):
-        """
-        Relabel a single node to a new name.
+        """Relabel a single node to a new name.
 
         Args:
             old_name: The old name of the node.
@@ -810,8 +817,7 @@ class Skeleton:
         self.relabel_nodes({old_name: new_name})
 
     def relabel_nodes(self, mapping: Dict[str, str]):
-        """
-        Relabel the nodes of the skeleton.
+        """Relabel the nodes of the skeleton.
 
         Args:
             mapping: A dictionary with the old labels as keys and new
@@ -975,7 +981,12 @@ class Skeleton:
             indexed_node_graph = self._graph
 
         # Encode to JSON
-        json_str = jsonpickle.encode(json_graph.node_link_data(indexed_node_graph))
+        dicts = {
+            "nx_graph": json_graph.node_link_data(indexed_node_graph),
+            "description": self.description,
+            "preview_image": self.preview_image,
+        }
+        json_str = jsonpickle.encode(dicts)
 
         return json_str
 
@@ -1024,7 +1035,10 @@ class Skeleton:
         Returns:
             An instance of the `Skeleton` object decoded from the JSON.
         """
-        graph = json_graph.node_link_graph(jsonpickle.decode(json_str))
+        dicts = jsonpickle.decode(json_str)
+        if "nx_graph" not in dicts:
+            dicts = {"nx_graph": dicts, "description": None, "preview_image": None}
+        graph = json_graph.node_link_graph(dicts["nx_graph"])
 
         # Replace graph node indices with corresponding nodes from node_map
         if idx_to_node is not None:
@@ -1032,6 +1046,8 @@ class Skeleton:
 
         skeleton = Skeleton()
         skeleton._graph = graph
+        skeleton.description = dicts["description"]
+        skeleton.preview_image = dicts["preview_image"]
 
         return skeleton
 
