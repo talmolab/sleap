@@ -285,6 +285,7 @@ class LearningDialog(QtWidgets.QDialog):
             "centered_instance",
             "multi_instance",
             "multi_class_topdown",
+            "multi_class_bottomup",
         )
 
         video = self.labels.videos[0] if self.labels else None
@@ -383,6 +384,7 @@ class LearningDialog(QtWidgets.QDialog):
             "centered_instance": "Centered Instance Model Configuration",
             "multi_instance": "Bottom-Up Model Configuration",
             "multi_class_topdown": "Top-Down-Id Model Configuration",
+            "multi_class_bottomup": "Bottom-Up-Id Model Configuration",
         }
         self.tab_widget.addTab(self.tabs[tab_name], tab_labels[tab_name])
         self.shown_tab_names.append(tab_name)
@@ -403,6 +405,8 @@ class LearningDialog(QtWidgets.QDialog):
             elif pipeline == "top-down-id":
                 self.add_tab("centroid")
                 self.add_tab("multi_class_topdown")
+            elif pipeline == "bottom-up-id":
+                self.add_tab("multi_class_bottomup")
             elif pipeline == "single":
                 self.add_tab("single_instance")
         self.current_pipeline = pipeline
@@ -868,7 +872,13 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
 
     @current_pipeline.setter
     def current_pipeline(self, val):
-        if val not in ("top-down", "bottom-up", "single"):
+        if val not in (
+            "top-down",
+            "bottom-up",
+            "single",
+            "top-down-id",
+            "bottom-up-id",
+        ):
             raise ValueError(f"Cannot set pipeline to {val}")
 
         # Match short name to full pipeline name shown in menu
