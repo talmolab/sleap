@@ -268,7 +268,7 @@ class LabelsDeepLabCutYamlAdaptor(Adaptor):
 
         # Create skeleton which we'll use for each video
         skeleton = Skeleton()
-        if project_data.get("multianimalproject", False):
+        if project_data.get("multianimalbodyparts", False):
             skeleton.add_nodes(project_data["multianimalbodyparts"])
         else:
             skeleton.add_nodes(project_data["bodyparts"])
