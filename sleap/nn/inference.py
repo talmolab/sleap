@@ -1573,10 +1573,12 @@ class SingleInstancePredictor(Predictor):
         object_builder.start()
 
         # Loop over batches.
-        for ex in generator:
-            prediction_queue.put(ex)
-        prediction_queue.put(None)
-        object_builder.join()
+        try:
+            for ex in generator:
+                prediction_queue.put(ex)
+        finally:
+            prediction_queue.put(None)
+            object_builder.join()
 
         return predicted_frames
 
@@ -2600,10 +2602,12 @@ class TopDownPredictor(Predictor):
         object_builder.start()
 
         # Loop over batches.
-        for ex in generator:
-            prediction_queue.put(ex)
-        prediction_queue.put(None)
-        object_builder.join()
+        try:
+            for ex in generator:
+                prediction_queue.put(ex)
+        finally:
+            prediction_queue.put(None)
+            object_builder.join()
 
         if self.tracker:
             self.tracker.final_pass(predicted_frames)
@@ -3193,10 +3197,12 @@ class BottomUpPredictor(Predictor):
         object_builder.start()
 
         # Loop over batches.
-        for ex in generator:
-            prediction_queue.put(ex)
-        prediction_queue.put(None)
-        object_builder.join()
+        try:
+            for ex in generator:
+                prediction_queue.put(ex)
+        finally:
+            prediction_queue.put(None)
+            object_builder.join()
 
         if self.tracker:
             self.tracker.final_pass(predicted_frames)
@@ -3697,10 +3703,12 @@ class BottomUpMultiClassPredictor(Predictor):
         object_builder.start()
 
         # Loop over batches.
-        for ex in generator:
-            prediction_queue.put(ex)
-        prediction_queue.put(None)
-        object_builder.join()
+        try:
+            for ex in generator:
+                prediction_queue.put(ex)
+        finally:
+            prediction_queue.put(None)
+            object_builder.join()
 
         return predicted_frames
 
@@ -4384,10 +4392,12 @@ class TopDownMultiClassPredictor(Predictor):
         object_builder.start()
 
         # Loop over batches.
-        for ex in generator:
-            prediction_queue.put(ex)
-        prediction_queue.put(None)
-        object_builder.join()
+        try:
+            for ex in generator:
+                prediction_queue.put(ex)
+        finally:
+            prediction_queue.put(None)
+            object_builder.join()
 
         return predicted_frames
 
@@ -4662,10 +4672,12 @@ class MoveNetPredictor(Predictor):
         object_builder.start()
 
         # Loop over batches.
-        for ex in generator:
-            prediction_queue.put(ex)
-        prediction_queue.put(None)
-        object_builder.join()
+        try:
+            for ex in generator:
+                prediction_queue.put(ex)
+        finally:
+            prediction_queue.put(None)
+            object_builder.join()
 
         return predicted_frames
 
