@@ -22,7 +22,7 @@ from sleap.nn.training import (
     TopdownConfmapsModelTrainer,
     TopDownMultiClassModelTrainer,
     Trainer,
-    main as sleap_train,
+    create_trainer_using_cli as sleap_train,
 )
 
 sleap.use_cpu_only()
