@@ -408,9 +408,18 @@ model:
     label: Loss Weight
     name: model.heads.multi_instance.pafs.loss_weight
     type: double
-
   multi_class_topdown:
-  - default: 5.0
+  - default: null
+    help: Text name of a body part (node) to use as the anchor point. If None, the
+      midpoint of the bounding box of all visible instance points will be used as
+      the anchor. The bounding box midpoint will also be used if the anchor part is
+      specified but not visible in the instance. Setting a reliable anchor point can
+      significantly improve topdown model accuracy as they benefit from a consistent
+      geometry of the body parts relative to the center of the image.
+    label: Anchor Part
+    name: model.heads.multi_class_topdown.confmaps.anchor_part
+    type: optional_list
+  - default: 1.5
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
       Smaller values are more precise but may be difficult to learn as they have a
       lower density within the image space. Larger values are easier to learn but
@@ -420,7 +429,7 @@ model:
     label: Sigma
     name: model.heads.multi_class_topdown.confmaps.sigma
     type: double
-  - default: 1
+  - default: 2
     help: The stride of the output confidence maps relative to the input image. This
       is the reciprocal of the resolution, e.g., an output stride of 2 results in
       confidence maps that are 0.5x the size of the input. Increasing this value can
@@ -437,7 +446,41 @@ model:
     label: Loss Weight
     name: model.heads.multi_class_topdown.confmaps.loss_weight
     type: double
-
+  - default: 3
+    help: Number of fully-connected layers before the classification output
+      layer. These can help in transforming general image features into
+      classification-specific features.
+    label: Fully Connected Layers
+    name: model.heads.multi_class_topdown.class_vectors.num_fc_layers
+    type: integer
+  - default: 64
+    help: Number of units (dimensions) in the fully-connected layers before
+      classification. Increasing this can improve the representational capacity in
+      the pre-classification layers.
+    label: Fully Connected Units
+    name: model.heads.multi_class_topdown.class_vectors.num_fc_units
+    type: integer
+  - default: true
+    help: Whether to use global max pooling prior to flattening.
+    label: Global Pool
+    name: model.heads.multi_class_topdown.class_vectors.global_pool
+    type: bool
+  - default: 16
+    help: The stride of the output class maps relative to the input image. This
+      is the reciprocal of the resolution, e.g., an output stride of 2 results in
+      maps that are 0.5x the size of the input. This should be the same size as
+      the confidence maps they are associated with.
+    label: Output Stride
+    name: model.heads.multi_class_topdown.class_vectors.output_stride
+    type: list
+    options: 1,2,4,8,16,32,64
+  - default: 1.0
+    help: Scalar float used to weigh the loss term for this head during
+      training. Increase this to encourage the optimization to focus on improving
+      this specific output in multi-head models.
+    label: Loss Weight
+    name: model.heads.multi_class_topdown.class_vectors.loss_weight
+    type: double
   multi_class_bottomup:
   - default: 5.0
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
@@ -449,7 +492,7 @@ model:
     label: Sigma
     name: model.heads.multi_class_bottomup.confmaps.sigma
     type: double
-  - default: 1
+  - default: 2
     help: The stride of the output confidence maps relative to the input image. This
       is the reciprocal of the resolution, e.g., an output stride of 2 results in
       confidence maps that are 0.5x the size of the input. Increasing this value can
@@ -466,8 +509,33 @@ model:
     label: Loss Weight
     name: model.heads.multi_class_bottomup.confmaps.loss_weight
     type: double
-
-
+  - default: 5.0
+    help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
+      Smaller values are more precise but may be difficult to learn as they have a
+      lower density within the image space. Larger values are easier to learn but
+      are less precise with respect to the peak coordinate. This spread is in units
+      of pixels of the model input image, i.e., the image resolution after any input
+      scaling is applied.
+    label: Sigma
+    name: model.heads.multi_class_bottomup.class_maps.sigma
+    type: double
+  - default: 2
+    help: The stride of the output confidence maps relative to the input image. This
+      is the reciprocal of the resolution, e.g., an output stride of 2 results in
+      confidence maps that are 0.5x the size of the input. Increasing this value can
+      considerably speed up model performance and decrease memory requirements, at
+      the cost of decreased spatial resolution.
+    label: Output Stride
+    name: model.heads.multi_class_bottomup.class_maps.output_stride
+    type: list
+    options: 1,2,4,8,16,32,64
+  - default: 2.0
+    help: Scalar float used to weigh the loss term for this head during training.
+      Increase this to encourage the optimization to focus on improving this specific
+      output in multi-head models.
+    label: Loss Weight
+    name: model.heads.multi_class_bottomup.class_maps.loss_weight
+    type: double
   name: _heads_name
   options: single_instance,centroid,centered_instance,multi_instance,multi_class_topdown,multi_class_bottomup
   single_instance:
