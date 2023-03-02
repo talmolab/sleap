@@ -4,6 +4,7 @@ import sys
 from typing import List
 
 import pytest
+from qtpy.QtWidgets import QComboBox
 
 from sleap import Skeleton, Track
 from sleap.gui.commands import (
@@ -22,6 +23,7 @@ from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.pathutils import fix_path_separator
 from sleap.io.video import Video
+from sleap.util import get_package_file
 
 # These imports cause trouble when running `pytest.main()` from within the file
 # Comment out to debug tests file via VSCode's "Debug Python File"
@@ -382,9 +384,7 @@ def test_OpenSkeleton(
 ):
     def assert_skeletons_match(new_skeleton: Skeleton, skeleton: Skeleton):
         # Node names match
-        for new_node, node in zip(new_skeleton.nodes, skeleton.nodes):
-            assert new_node.name == node.name
-
+        assert len(set(new_skeleton.nodes) - set(skeleton.nodes))
         # Edges match
         for (new_src, new_dst), (src, dst) in zip(new_skeleton.edges, skeleton.edges):
             assert new_src.name == src.name
@@ -399,10 +399,14 @@ def test_OpenSkeleton(
 
     def OpenSkeleton_ask(context: CommandContext, params: dict) -> bool:
         """Implement `OpenSkeleton.ask` without GUI elements."""
-
-        # Original function opens FileDialog here
-        filename = params["filename_in"]
-
+        template = (
+            context.app.currentText
+        )  # Original function uses `QComboBox.currentText()`
+        if template == "Custom":
+            # Original function opens FileDialog here
+            filename = params["filename_in"]
+        else:
+            filename = get_package_file(f"sleap/skeletons/{template}.json")
         if len(filename) == 0:
             return False
 
@@ -414,14 +418,20 @@ def test_OpenSkeleton(
 
             # Load new skeleton and compare
             new_skeleton = OpenSkeleton.load_skeleton(filename)
-            (delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
+            (rename_nodes, delete_nodes, add_nodes) = OpenSkeleton.compare_skeletons(
                 skeleton, new_skeleton
             )
 
             # Original function shows pop-up warning here
             if (len(delete_nodes) > 0) or (len(add_nodes) > 0):
-                # Warn about mismatching skeletons
-                pass
+                linked_nodes = {
+                    "abdomen": "body",
+                    "wingL": "left-arm",
+                    "wingR": "right-arm",
+                }
+                delete_nodes = list(set(delete_nodes) - set(linked_nodes.values()))
+                add_nodes = list(set(add_nodes) - set(linked_nodes.keys()))
+                params["linked_nodes"] = linked_nodes
 
             params["delete_nodes"] = delete_nodes
             params["add_nodes"] = add_nodes
@@ -433,7 +443,7 @@ def test_OpenSkeleton(
     skeleton = labels.skeleton
     skeleton.add_symmetry(skeleton.nodes[0].name, skeleton.nodes[1].name)
     context = CommandContext.from_labels(labels)
-
+    context.app.__setattr__("currentText", "Custom")
     # Add multiple skeletons to and ensure the unused skeleton is removed
     labels.skeletons.append(stickman)
 
@@ -455,8 +465,19 @@ def test_OpenSkeleton(
     params = {"filename_in": fly_legs_skeleton_json}
     OpenSkeleton_ask(context, params)
     assert params["filename"] == fly_legs_skeleton_json
+    assert len(set(params["delete_nodes"]) & set(params["linked_nodes"])) == 0
+    assert len(set(params["add_nodes"]) & set(params["linked_nodes"])) == 0
     OpenSkeleton.do_action(context, params)
     assert_skeletons_match(new_skeleton, stickman)
+
+    # Run again with template set
+    context.app.currentText = "fly32"
+    fly32_json = get_package_file(f"sleap/skeletons/fly32.json")
+    OpenSkeleton_ask(context, params)
+    assert params["filename"] == fly32_json
+    fly32_skeleton = Skeleton.load_json(fly32_json)
+    OpenSkeleton.do_action(context, params)
+    assert_skeletons_match(labels.skeleton, fly32_skeleton)
 
 
 def test_SaveProjectAs(centered_pair_predictions: Labels, tmpdir):

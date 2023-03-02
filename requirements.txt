@@ -4,7 +4,7 @@ cattrs==1.1.1
 jsonpickle==1.2
 networkx
 tensorflow>=2.6.3,<2.9.0; platform_machine != 'arm64'
-tensorflow_hub
+tensorflow-hub
 tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
 tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64'
 h5py>=3.1.0,<=3.7.0

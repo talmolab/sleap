@@ -2618,6 +2618,7 @@ class Labels(MutableSequence):
                         for i, filename in enumerate(filenames):
                             if missing[i]:
                                 filenames[i] = new_paths[i]
+                                missing[i] = False
 
                         # Solely for testing since only gui will have a `CommandContext`
                         context["changed_on_load"] = True

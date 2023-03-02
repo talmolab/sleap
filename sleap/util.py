@@ -1,35 +1,34 @@
-"""
-A miscellaneous set of utility functions. Try not to put things in here
-unless they really have no other place.
+"""A miscellaneous set of utility functions. 
+
+Try not to put things in here unless they really have no other place.
 """
 
+import base64
+from collections import defaultdict
+from io import BytesIO
+import json
 import os
+from pathlib import Path
 import re
 import shutil
-
-from collections import defaultdict
-from pkg_resources import Requirement, resource_filename
-
-from pathlib import Path
-from urllib.parse import unquote, urlparse
+from typing import Any, Dict, Hashable, Iterable, List, Optional
 from urllib.request import url2pathname
+from urllib.parse import unquote, urlparse
 
+import attr
 import h5py as h5
 import numpy as np
-import attr
+from PIL import Image
+from pkg_resources import Requirement, resource_filename
 import psutil
-import json
 import rapidjson
 import yaml
-
-from typing import Any, Dict, Hashable, Iterable, List, Optional
 
 import sleap.version as sleap_version
 
 
 def json_loads(json_str: str) -> Dict:
-    """
-    A simple wrapper around the JSON decoder we are using.
+    """A simple wrapper around the JSON decoder we are using.
 
     Args:
         json_str: JSON string to decode.
@@ -44,8 +43,7 @@ def json_loads(json_str: str) -> Dict:
 
 
 def json_dumps(d: Dict, filename: str = None):
-    """
-    A simple wrapper around the JSON encoder we are using.
+    """A simple wrapper around the JSON encoder we are using.
 
     Args:
         d: The dict to write.
@@ -65,8 +63,7 @@ def json_dumps(d: Dict, filename: str = None):
 
 
 def attr_to_dtype(cls: Any):
-    """
-    Converts classes with basic types to numpy composite dtypes.
+    """Converts classes with basic types to numpy composite dtypes.
 
     Arguments:
         cls: class to convert
@@ -95,8 +92,7 @@ def attr_to_dtype(cls: Any):
 
 
 def usable_cpu_count() -> int:
-    """
-    Gets number of CPUs usable by the current process.
+    """Gets number of CPUs usable by the current process.
 
     Takes into consideration cpusets restrictions.
 
@@ -114,8 +110,7 @@ def usable_cpu_count() -> int:
 
 
 def save_dict_to_hdf5(h5file: h5.File, path: str, dic: dict):
-    """
-    Saves dictionary to an HDF5 file.
+    """Saves dictionary to an HDF5 file.
 
     Calls itself recursively if items in dictionary are not
     `np.ndarray`, `np.int64`, `np.float64`, `str`, or bytes.
@@ -162,8 +157,7 @@ def save_dict_to_hdf5(h5file: h5.File, path: str, dic: dict):
 
 
 def frame_list(frame_str: str) -> Optional[List[int]]:
-    """
-    Converts 'n-m' string to list of ints.
+    """Converts 'n-m' string to list of ints.
 
     Args:
         frame_str: string representing range
@@ -183,8 +177,7 @@ def frame_list(frame_str: str) -> Optional[List[int]]:
 
 
 def uniquify(seq: Iterable[Hashable]) -> List:
-    """
-    Returns unique elements from list, preserving order.
+    """Returns unique elements from list, preserving order.
 
     Note: This will not work on Python 3.5 or lower since dicts don't
     preserve order.
@@ -203,8 +196,7 @@ def uniquify(seq: Iterable[Hashable]) -> List:
 
 
 def weak_filename_match(filename_a: str, filename_b: str) -> bool:
-    """
-    Check if paths probably point to same file.
+    """Check if paths probably point to same file.
 
     Compares the filename and names of two directories up.
 
@@ -228,8 +220,7 @@ def weak_filename_match(filename_a: str, filename_b: str) -> bool:
 
 
 def dict_cut(d: Dict, a: int, b: int) -> Dict:
-    """
-    Helper function for creating subdictionary by numeric indexing of items.
+    """Helper function for creating subdictionary by numeric indexing of items.
 
     Assumes that `dict.items()` will have a fixed order.
 
@@ -254,8 +245,7 @@ def get_package_file(filename: str) -> str:
 def get_config_file(
     shortname: str, ignore_file_not_found: bool = False, get_defaults: bool = False
 ) -> str:
-    """
-    Returns the full path to the specified config file.
+    """Returns the full path to the specified config file.
 
     The config file will be at ~/.sleap/<version>/<shortname>
 
@@ -352,8 +342,7 @@ def make_scoped_dictionary(
 def find_files_by_suffix(
     root_dir: str, suffix: str, prefix: str = "", depth: int = 0
 ) -> List[os.DirEntry]:
-    """
-    Returns list of files matching suffix, optionally searching in subdirs.
+    """Returns list of files matching suffix, optionally searching in subdirs.
 
     Args:
         root_dir: Path to directory where we start searching
@@ -389,3 +378,18 @@ def find_files_by_suffix(
 def parse_uri_path(uri: str) -> str:
     """Parse a URI starting with 'file:///' to a posix path."""
     return Path(url2pathname(urlparse(unquote(uri)).path)).as_posix()
+
+
+def decode_preview_image(img_b64: bytes) -> Image:
+    """Decode a skeleton preview image byte string representation to a `PIL.Image`
+
+    Args:
+        img_b64: a byte string representation of a skeleton preview image
+
+    Returns:
+        A PIL.Image of the skeleton preview
+    """
+    bytes = base64.b64decode(img_b64)
+    buffer = BytesIO(bytes)
+    img = Image.open(buffer)
+    return img
