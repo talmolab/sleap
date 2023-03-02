@@ -563,9 +563,9 @@ class CommandContext:
         """Delete a track and remove from all instances."""
         self.execute(DeleteTrack, track=track)
 
-    def deleteAllTracks(self):
+    def deleteMultipleTracks(self, delete_all: bool = False):
         """Delete all tracks."""
-        self.execute(DeleteAllTracks)
+        self.execute(DeleteMultipleTracks, delete_all=delete_all)
 
     def setTrackName(self, track: "Track", name: str):
         """Sets name for track."""
@@ -2561,12 +2561,24 @@ class DeleteTrack(EditCommand):
         context.labels.remove_track(track)
 
 
-class DeleteAllTracks(EditCommand):
+class DeleteMultipleTracks(EditCommand):
     topics = [UpdateTopic.tracks]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        context.labels.remove_all_tracks()
+        """Delete either all tracks or just unused tracks.
+
+        Args:
+            context: The command context.
+            params: The command parameters.
+                delete_all: If True, delete all tracks. If False, delete only
+                    unused tracks.
+        """
+        delete_all: bool = params["delete_all"]
+        if delete_all:
+            context.labels.remove_all_tracks()
+        else:
+            context.labels.remove_unused_tracks()
 
 
 class SetTrackName(EditCommand):
