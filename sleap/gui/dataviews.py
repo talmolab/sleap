@@ -88,7 +88,9 @@ class GenericTableModel(QtCore.QAbstractTableModel):
     @items.setter
     def items(self, obj):
         if not obj:
+            self.beginResetModel()
             self._data = []
+            self.endResetModel()
             return
 
         self.obj = obj
