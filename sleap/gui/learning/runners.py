@@ -543,23 +543,29 @@ def run_learning_pipeline(
 
     save_viz = inference_params.get("_save_viz", False)
 
-    # Train the TrainingJobs
-    trained_job_paths = run_gui_training(
-        labels_filename=labels_filename,
-        labels=labels,
-        config_info_list=config_info_list,
-        gui=True,
-        save_viz=save_viz,
-    )
+    if "movenet" in inference_params["_pipeline"]:
+        trained_job_paths = [inference_params["_pipeline"]]
 
-    # Check that all the models were trained
-    if None in trained_job_paths.values():
-        return -1
+    else:
+        # Train the TrainingJobs
+        trained_job_paths = run_gui_training(
+            labels_filename=labels_filename,
+            labels=labels,
+            config_info_list=config_info_list,
+            gui=True,
+            save_viz=save_viz,
+        )
+
+        # Check that all the models were trained
+        if None in trained_job_paths.values():
+            return -1
+
+        trained_job_paths = list(trained_job_paths.values())
 
     inference_task = InferenceTask(
         labels=labels,
         labels_filename=labels_filename,
-        trained_job_paths=list(trained_job_paths.values()),
+        trained_job_paths=trained_job_paths,
         inference_params=inference_params,
     )
 

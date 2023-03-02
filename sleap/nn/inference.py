@@ -42,6 +42,8 @@ from pathlib import Path
 import tensorflow_hub as hub
 from abc import ABC, abstractmethod
 from typing import Text, Optional, List, Dict, Union, Iterator, Tuple
+from threading import Thread
+from queue import Queue
 
 import tensorflow as tf
 import numpy as np
@@ -67,6 +69,7 @@ from sleap.nn.data.pipelines import (
 from sleap.nn.utils import reset_input_layer
 from sleap.io.dataset import Labels
 from sleap.util import frame_list
+from sleap.instance import PredictedInstance, LabeledFrame
 
 from tensorflow.python.framework.convert_to_constants import (
     convert_variables_to_constants_v2,
@@ -1528,38 +1531,54 @@ class SingleInstancePredictor(Predictor):
             arrays returned from the inference result generator.
         """
         skeleton = self.confmap_config.data.labels.skeletons[0]
+        predicted_frames = []
+
+        def _object_builder():
+            while True:
+                ex = prediction_queue.get()
+                if ex is None:
+                    break
+
+                # Loop over frames.
+                for video_ind, frame_ind, points, confidences in zip(
+                    ex["video_ind"],
+                    ex["frame_ind"],
+                    ex["instance_peaks"],
+                    ex["instance_peak_vals"],
+                ):
+                    # Loop over instances.
+                    if np.isnan(points[0]).all():
+                        predicted_instances = []
+                    else:
+                        predicted_instances = [
+                            PredictedInstance.from_numpy(
+                                points=points[0],
+                                point_confidences=confidences[0],
+                                instance_score=np.nansum(confidences[0]),
+                                skeleton=skeleton,
+                            )
+                        ]
+
+                    predicted_frames.append(
+                        LabeledFrame(
+                            video=data_provider.videos[video_ind],
+                            frame_idx=frame_ind,
+                            instances=predicted_instances,
+                        )
+                    )
+
+        # Set up threaded object builder.
+        prediction_queue = Queue()
+        object_builder = Thread(target=_object_builder)
+        object_builder.start()
 
         # Loop over batches.
-        predicted_frames = []
-        for ex in generator:
-
-            # Loop over frames.
-            for video_ind, frame_ind, points, confidences in zip(
-                ex["video_ind"],
-                ex["frame_ind"],
-                ex["instance_peaks"],
-                ex["instance_peak_vals"],
-            ):
-                # Loop over instances.
-                if np.isnan(points[0]).all():
-                    predicted_instances = []
-                else:
-                    predicted_instances = [
-                        sleap.instance.PredictedInstance.from_arrays(
-                            points=points[0],
-                            point_confidences=confidences[0],
-                            instance_score=np.nansum(confidences[0]),
-                            skeleton=skeleton,
-                        )
-                    ]
-
-                predicted_frames.append(
-                    sleap.LabeledFrame(
-                        video=data_provider.videos[video_ind],
-                        frame_idx=frame_ind,
-                        instances=predicted_instances,
-                    )
-                )
+        try:
+            for ex in generator:
+                prediction_queue.put(ex)
+        finally:
+            prediction_queue.put(None)
+            object_builder.join()
 
         return predicted_frames
 
@@ -2514,62 +2533,81 @@ class TopDownPredictor(Predictor):
         else:
             skeleton = self.centroid_config.data.labels.skeletons[0]
 
-        # Loop over batches.
         predicted_frames = []
-        for ex in generator:
 
-            if "n_valid" in ex:
-                ex["instance_peaks"] = [
-                    x[:n] for x, n in zip(ex["instance_peaks"], ex["n_valid"])
-                ]
-                ex["instance_peak_vals"] = [
-                    x[:n] for x, n in zip(ex["instance_peak_vals"], ex["n_valid"])
-                ]
-                ex["centroids"] = [
-                    x[:n] for x, n in zip(ex["centroids"], ex["n_valid"])
-                ]
-                ex["centroid_vals"] = [
-                    x[:n] for x, n in zip(ex["centroid_vals"], ex["n_valid"])
-                ]
+        def _object_builder():
+            while True:
+                ex = prediction_queue.get()
+                if ex is None:
+                    break
 
-            # Loop over frames.
-            for image, video_ind, frame_ind, points, confidences, scores in zip(
-                ex["image"],
-                ex["video_ind"],
-                ex["frame_ind"],
-                ex["instance_peaks"],
-                ex["instance_peak_vals"],
-                ex["centroid_vals"],
-            ):
+                if "n_valid" in ex:
+                    ex["instance_peaks"] = [
+                        x[:n] for x, n in zip(ex["instance_peaks"], ex["n_valid"])
+                    ]
+                    ex["instance_peak_vals"] = [
+                        x[:n] for x, n in zip(ex["instance_peak_vals"], ex["n_valid"])
+                    ]
+                    ex["centroids"] = [
+                        x[:n] for x, n in zip(ex["centroids"], ex["n_valid"])
+                    ]
+                    ex["centroid_vals"] = [
+                        x[:n] for x, n in zip(ex["centroid_vals"], ex["n_valid"])
+                    ]
 
-                # Loop over instances.
-                predicted_instances = []
-                for pts, confs, score in zip(points, confidences, scores):
-                    if np.isnan(pts).all():
-                        continue
+                # Loop over frames.
+                for image, video_ind, frame_ind, points, confidences, scores in zip(
+                    ex["image"],
+                    ex["video_ind"],
+                    ex["frame_ind"],
+                    ex["instance_peaks"],
+                    ex["instance_peak_vals"],
+                    ex["centroid_vals"],
+                ):
 
-                    predicted_instances.append(
-                        sleap.instance.PredictedInstance.from_arrays(
-                            points=pts,
-                            point_confidences=confs,
-                            instance_score=score,
-                            skeleton=skeleton,
+                    # Loop over instances.
+                    predicted_instances = []
+                    for pts, confs, score in zip(points, confidences, scores):
+                        if np.isnan(pts).all():
+                            continue
+
+                        predicted_instances.append(
+                            PredictedInstance.from_numpy(
+                                points=pts,
+                                point_confidences=confs,
+                                instance_score=score,
+                                skeleton=skeleton,
+                            )
+                        )
+
+                    if self.tracker:
+                        # Set tracks for predicted instances in this frame.
+                        predicted_instances = self.tracker.track(
+                            untracked_instances=predicted_instances,
+                            img=image,
+                            t=frame_ind,
+                        )
+
+                    predicted_frames.append(
+                        LabeledFrame(
+                            video=data_provider.videos[video_ind],
+                            frame_idx=frame_ind,
+                            instances=predicted_instances,
                         )
                     )
 
-                if self.tracker:
-                    # Set tracks for predicted instances in this frame.
-                    predicted_instances = self.tracker.track(
-                        untracked_instances=predicted_instances, img=image, t=frame_ind
-                    )
+        # Set up threaded object builder.
+        prediction_queue = Queue()
+        object_builder = Thread(target=_object_builder)
+        object_builder.start()
 
-                predicted_frames.append(
-                    sleap.LabeledFrame(
-                        video=data_provider.videos[video_ind],
-                        frame_idx=frame_ind,
-                        instances=predicted_instances,
-                    )
-                )
+        # Loop over batches.
+        try:
+            for ex in generator:
+                prediction_queue.put(ex)
+        finally:
+            prediction_queue.put(None)
+            object_builder.join()
 
         if self.tracker:
             self.tracker.final_pass(predicted_frames)
@@ -3092,61 +3130,79 @@ class BottomUpPredictor(Predictor):
             arrays returned from the inference result generator.
         """
         skeleton = self.bottomup_config.data.labels.skeletons[0]
-
-        # Loop over batches.
         predicted_frames = []
-        for ex in generator:
 
-            if "n_valid" in ex:
-                # Crop possibly variable length results.
-                ex["instance_peaks"] = [
-                    x[:n] for x, n in zip(ex["instance_peaks"], ex["n_valid"])
-                ]
-                ex["instance_peak_vals"] = [
-                    x[:n] for x, n in zip(ex["instance_peak_vals"], ex["n_valid"])
-                ]
-                ex["instance_scores"] = [
-                    x[:n] for x, n in zip(ex["instance_scores"], ex["n_valid"])
-                ]
+        def _object_builder():
+            while True:
+                ex = prediction_queue.get()
+                if ex is None:
+                    break
 
-            # Loop over frames.
-            for image, video_ind, frame_ind, points, confidences, scores in zip(
-                ex["image"],
-                ex["video_ind"],
-                ex["frame_ind"],
-                ex["instance_peaks"],
-                ex["instance_peak_vals"],
-                ex["instance_scores"],
-            ):
+                if "n_valid" in ex:
+                    # Crop possibly variable length results.
+                    ex["instance_peaks"] = [
+                        x[:n] for x, n in zip(ex["instance_peaks"], ex["n_valid"])
+                    ]
+                    ex["instance_peak_vals"] = [
+                        x[:n] for x, n in zip(ex["instance_peak_vals"], ex["n_valid"])
+                    ]
+                    ex["instance_scores"] = [
+                        x[:n] for x, n in zip(ex["instance_scores"], ex["n_valid"])
+                    ]
 
-                # Loop over instances.
-                predicted_instances = []
-                for pts, confs, score in zip(points, confidences, scores):
-                    if np.isnan(pts).all():
-                        continue
+                # Loop over frames.
+                for image, video_ind, frame_ind, points, confidences, scores in zip(
+                    ex["image"],
+                    ex["video_ind"],
+                    ex["frame_ind"],
+                    ex["instance_peaks"],
+                    ex["instance_peak_vals"],
+                    ex["instance_scores"],
+                ):
 
-                    predicted_instances.append(
-                        sleap.instance.PredictedInstance.from_arrays(
-                            points=pts,
-                            point_confidences=confs,
-                            instance_score=score,
-                            skeleton=skeleton,
+                    # Loop over instances.
+                    predicted_instances = []
+                    for pts, confs, score in zip(points, confidences, scores):
+                        if np.isnan(pts).all():
+                            continue
+
+                        predicted_instances.append(
+                            PredictedInstance.from_numpy(
+                                points=pts,
+                                point_confidences=confs,
+                                instance_score=score,
+                                skeleton=skeleton,
+                            )
+                        )
+
+                    if self.tracker:
+                        # Set tracks for predicted instances in this frame.
+                        predicted_instances = self.tracker.track(
+                            untracked_instances=predicted_instances,
+                            img=image,
+                            t=frame_ind,
+                        )
+
+                    predicted_frames.append(
+                        LabeledFrame(
+                            video=data_provider.videos[video_ind],
+                            frame_idx=frame_ind,
+                            instances=predicted_instances,
                         )
                     )
 
-                if self.tracker:
-                    # Set tracks for predicted instances in this frame.
-                    predicted_instances = self.tracker.track(
-                        untracked_instances=predicted_instances, img=image, t=frame_ind
-                    )
+        # Set up threaded object builder.
+        prediction_queue = Queue()
+        object_builder = Thread(target=_object_builder)
+        object_builder.start()
 
-                predicted_frames.append(
-                    sleap.LabeledFrame(
-                        video=data_provider.videos[video_ind],
-                        frame_idx=frame_ind,
-                        instances=predicted_instances,
-                    )
-                )
+        # Loop over batches.
+        try:
+            for ex in generator:
+                prediction_queue.put(ex)
+        finally:
+            prediction_queue.put(None)
+            object_builder.join()
 
         if self.tracker:
             self.tracker.final_pass(predicted_frames)
@@ -3595,47 +3651,64 @@ class BottomUpMultiClassPredictor(Predictor):
                 names = self.config.model.heads.multi_class_bottomup.class_maps.classes
                 tracks = [sleap.Track(name=n, spawned_on=0) for n in names]
 
-        # Loop over batches.
         predicted_frames = []
-        for ex in generator:
 
-            # Loop over frames.
-            for image, video_ind, frame_ind, points, confidences, scores in zip(
-                ex["image"],
-                ex["video_ind"],
-                ex["frame_ind"],
-                ex["instance_peaks"],
-                ex["instance_peak_vals"],
-                ex["instance_scores"],
-            ):
+        def _object_builder():
+            while True:
+                ex = prediction_queue.get()
+                if ex is None:
+                    return
 
-                # Loop over instances.
-                predicted_instances = []
-                for i, (pts, confs, score) in enumerate(
-                    zip(points, confidences, scores)
+                # Loop over frames.
+                for image, video_ind, frame_ind, points, confidences, scores in zip(
+                    ex["image"],
+                    ex["video_ind"],
+                    ex["frame_ind"],
+                    ex["instance_peaks"],
+                    ex["instance_peak_vals"],
+                    ex["instance_scores"],
                 ):
-                    if np.isnan(pts).all():
-                        continue
-                    track = None
-                    if tracks is not None and len(tracks) >= (i - 1):
-                        track = tracks[i]
-                    predicted_instances.append(
-                        sleap.instance.PredictedInstance.from_arrays(
-                            points=pts,
-                            point_confidences=confs,
-                            instance_score=np.nanmean(score),
-                            skeleton=skeleton,
-                            track=track,
+
+                    # Loop over instances.
+                    predicted_instances = []
+                    for i, (pts, confs, score) in enumerate(
+                        zip(points, confidences, scores)
+                    ):
+                        if np.isnan(pts).all():
+                            continue
+                        track = None
+                        if tracks is not None and len(tracks) >= (i - 1):
+                            track = tracks[i]
+                        predicted_instances.append(
+                            PredictedInstance.from_numpy(
+                                points=pts,
+                                point_confidences=confs,
+                                instance_score=np.nanmean(score),
+                                skeleton=skeleton,
+                                track=track,
+                            )
+                        )
+
+                    predicted_frames.append(
+                        LabeledFrame(
+                            video=data_provider.videos[video_ind],
+                            frame_idx=frame_ind,
+                            instances=predicted_instances,
                         )
                     )
 
-                predicted_frames.append(
-                    sleap.LabeledFrame(
-                        video=data_provider.videos[video_ind],
-                        frame_idx=frame_ind,
-                        instances=predicted_instances,
-                    )
-                )
+        # Set up threaded object builder.
+        prediction_queue = Queue()
+        object_builder = Thread(target=_object_builder)
+        object_builder.start()
+
+        # Loop over batches.
+        try:
+            for ex in generator:
+                prediction_queue.put(ex)
+        finally:
+            prediction_queue.put(None)
+            object_builder.join()
 
         return predicted_frames
 
@@ -4267,47 +4340,64 @@ class TopDownMultiClassPredictor(Predictor):
                 )
                 tracks = [sleap.Track(name=n, spawned_on=0) for n in names]
 
-        # Loop over batches.
         predicted_frames = []
-        for ex in generator:
 
-            # Loop over frames.
-            for image, video_ind, frame_ind, points, confidences, scores in zip(
-                ex["image"],
-                ex["video_ind"],
-                ex["frame_ind"],
-                ex["instance_peaks"],
-                ex["instance_peak_vals"],
-                ex["instance_scores"],
-            ):
+        def _object_builder():
+            while True:
+                ex = prediction_queue.get()
+                if ex is None:
+                    break
 
-                # Loop over instances.
-                predicted_instances = []
-                for i, (pts, confs, score) in enumerate(
-                    zip(points, confidences, scores)
+                # Loop over frames.
+                for image, video_ind, frame_ind, points, confidences, scores in zip(
+                    ex["image"],
+                    ex["video_ind"],
+                    ex["frame_ind"],
+                    ex["instance_peaks"],
+                    ex["instance_peak_vals"],
+                    ex["instance_scores"],
                 ):
-                    if np.isnan(pts).all():
-                        continue
-                    track = None
-                    if tracks is not None and len(tracks) >= (i - 1):
-                        track = tracks[i]
-                    predicted_instances.append(
-                        sleap.instance.PredictedInstance.from_arrays(
-                            points=pts,
-                            point_confidences=confs,
-                            instance_score=np.nanmean(score),
-                            skeleton=skeleton,
-                            track=track,
+
+                    # Loop over instances.
+                    predicted_instances = []
+                    for i, (pts, confs, score) in enumerate(
+                        zip(points, confidences, scores)
+                    ):
+                        if np.isnan(pts).all():
+                            continue
+                        track = None
+                        if tracks is not None and len(tracks) >= (i - 1):
+                            track = tracks[i]
+                        predicted_instances.append(
+                            PredictedInstance.from_numpy(
+                                points=pts,
+                                point_confidences=confs,
+                                instance_score=np.nanmean(score),
+                                skeleton=skeleton,
+                                track=track,
+                            )
+                        )
+
+                    predicted_frames.append(
+                        LabeledFrame(
+                            video=data_provider.videos[video_ind],
+                            frame_idx=frame_ind,
+                            instances=predicted_instances,
                         )
                     )
 
-                predicted_frames.append(
-                    sleap.LabeledFrame(
-                        video=data_provider.videos[video_ind],
-                        frame_idx=frame_ind,
-                        instances=predicted_instances,
-                    )
-                )
+        # Set up threaded object builder.
+        prediction_queue = Queue()
+        object_builder = Thread(target=_object_builder)
+        object_builder.start()
+
+        # Loop over batches.
+        try:
+            for ex in generator:
+                prediction_queue.put(ex)
+        finally:
+            prediction_queue.put(None)
+            object_builder.join()
 
         return predicted_frames
 
@@ -4537,41 +4627,57 @@ class MoveNetPredictor(Predictor):
     ) -> List[sleap.LabeledFrame]:
 
         skeleton = MOVENET_SKELETON
+        predicted_frames = []
+
+        def _object_builder():
+            while True:
+                ex = prediction_queue.get()
+                if ex is None:
+                    break
+
+                # Loop over frames.
+                for video_ind, frame_ind, points, confidences in zip(
+                    ex["video_ind"],
+                    ex["frame_ind"],
+                    ex["instance_peaks"],
+                    ex["confidences"],
+                ):
+                    # Filter out points with low confidences
+                    points[confidences < self.peak_threshold] = np.nan
+
+                    # Create predicted instances from MoveNet predictions
+                    if np.isnan(points).all():
+                        predicted_instances = []
+                    else:
+                        predicted_instances = [
+                            PredictedInstance.from_numpy(
+                                points=points[0],  # (nodes, 2)
+                                point_confidences=confidences[0],  # (nodes,)
+                                instance_score=np.nansum(confidences[0]),  # ()
+                                skeleton=skeleton,
+                            )
+                        ]
+
+                    predicted_frames.append(
+                        LabeledFrame(
+                            video=data_provider.videos[video_ind],
+                            frame_idx=frame_ind,
+                            instances=predicted_instances,
+                        )
+                    )
+
+        # Set up threaded object builder.
+        prediction_queue = Queue()
+        object_builder = Thread(target=_object_builder)
+        object_builder.start()
 
         # Loop over batches.
-        predicted_frames = []
-        for ex in generator:
-
-            # Loop over frames.
-            for video_ind, frame_ind, points, confidences in zip(
-                ex["video_ind"],
-                ex["frame_ind"],
-                ex["instance_peaks"],
-                ex["confidences"],
-            ):
-                # Filter out points with low confidences
-                points[confidences < self.peak_threshold] = np.nan
-
-                # Create predicted instances from MoveNet predictions
-                if np.isnan(points).all():
-                    predicted_instances = []
-                else:
-                    predicted_instances = [
-                        sleap.instance.PredictedInstance.from_arrays(
-                            points=points[0],  # (nodes, 2)
-                            point_confidences=confidences[0],  # (nodes,)
-                            instance_score=np.nansum(confidences[0]),  # ()
-                            skeleton=skeleton,
-                        )
-                    ]
-
-                predicted_frames.append(
-                    sleap.LabeledFrame(
-                        video=data_provider.videos[video_ind],
-                        frame_idx=frame_ind,
-                        instances=predicted_instances,
-                    )
-                )
+        try:
+            for ex in generator:
+                prediction_queue.put(ex)
+        finally:
+            prediction_queue.put(None)
+            object_builder.join()
 
         return predicted_frames
 
@@ -5217,6 +5323,9 @@ def main(args: Optional[list] = None):
 
     # Setup tracker.
     tracker = _make_tracker_from_cli(args)
+
+    if args.models is not None and "movenet" in args.models[0]:
+        args.models = args.models[0]
 
     # Either run inference (and tracking) or just run tracking
     if args.models is not None:

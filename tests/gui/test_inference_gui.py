@@ -153,3 +153,27 @@ def test_inference_merging():
     assert len(labels[2].user_instances) == 1
     # Only predicted instances with graphable points should be merged
     assert len(labels[2].predicted_instances) == 2
+
+
+def test_inference_movenet_cli(movenet_video):
+
+    models = ["movenet-lightning", "movenet-thunder"]
+
+    for model in models:
+
+        inference_task = runners.InferenceTask(
+            trained_job_paths=[model],
+            inference_params={"tracking.tracker": None},
+        )
+
+        item_for_inference = runners.VideoItemForInference(
+            video=movenet_video, frames=[1, 2, 3]
+        )
+
+        cli_args, output_path = inference_task.make_predict_cli_call(item_for_inference)
+
+        # make sure cli call contains model
+        assert cli_args[0] == "sleap-track"
+        assert model in cli_args
+        assert "--frames" in cli_args
+        assert "--tracking.tracker" in cli_args
