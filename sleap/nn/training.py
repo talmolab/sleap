@@ -1799,8 +1799,8 @@ class TopDownMultiClassModelTrainer(Trainer):
         )
 
 
-def main(args: Optional[List] = None):
-    """Create CLI for training and run."""
+def create_trainer_using_cli(args: Optional[List] = None):
+    """Create CLI for training."""
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -2004,9 +2004,14 @@ def main(args: Optional[List] = None):
         test_labels=args.test_labels,
         video_search_paths=args.video_paths,
     )
-    trainer.train()
 
     return trainer
+
+
+def main(args: Optional[List] = None):
+    """Create CLI for training and run."""
+    trainer = create_trainer_using_cli(args=args)
+    trainer.train()
 
 
 if __name__ == "__main__":
