@@ -1253,6 +1253,8 @@ class Video:
             kwargs["dataset"] = ""  # prevent serialization from breaking
         elif os.path.isdir(filename) or "metadata.yaml" in filename:
             backend_class = ImgStoreVideo
+        elif filename.lower().endswith(("jpg", "jpeg", "png", "tif", "tiff")):
+            backend_class = SingleImageVideo
         else:
             raise ValueError("Could not detect backend for specified filename.")
 
