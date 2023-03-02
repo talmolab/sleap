@@ -62,9 +62,3 @@ def test_video_import_detect_h5_shape():
     assert importer.import_widgets[0].video.height == 512
     assert importer.import_widgets[0].video.width == 512
     assert importer.import_widgets[0].video.channels == 1
-
-
-if __name__ == "__main__":
-    import pytest
-
-    pytest.main([r"tests\gui\test_import.py::test_gui_import"])
