@@ -32,6 +32,10 @@ from typing import List
 def test_from_filename(hdf5_file_path, small_robot_mp4_path):
     assert type(Video.from_filename(hdf5_file_path).backend) == HDF5Video
     assert type(Video.from_filename(small_robot_mp4_path).backend) == MediaVideo
+    assert (
+        type(Video.from_filename(TEST_SMALL_ROBOT_SIV_FILE0).backend)
+        == SingleImageVideo
+    )
 
 
 def test_backend_extra_kwargs(hdf5_file_path, small_robot_mp4_path):
