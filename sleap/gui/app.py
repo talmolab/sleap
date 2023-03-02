@@ -630,7 +630,7 @@ class MainWindow(QMainWindow):
         add_submenu_choices(
             menu=viewMenu,
             title="Node Marker Size",
-            options=(1, 4, 6, 8, 12),
+            options=(1, 2, 4, 6, 8, 12),
             key="marker size",
         )
 
