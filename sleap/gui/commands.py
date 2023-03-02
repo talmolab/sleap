@@ -3121,7 +3121,6 @@ class PasteInstance(EditCommand):
         if base_instance is None or current_frame is None:
             return
 
-
         # Create a new instance copy.
         new_instance = Instance.from_numpy(
             base_instance.numpy(), skeleton=base_instance.skeleton
