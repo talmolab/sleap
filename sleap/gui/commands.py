@@ -3109,7 +3109,6 @@ class CopyInstance(EditCommand):
         if current_instance is None:
             return
         context.state["clipboard_instance"] = current_instance
-        print(f"Copied instance from frame {current_instance.frame.frame_idx}")
 
 
 class PasteInstance(EditCommand):
@@ -3122,9 +3121,6 @@ class PasteInstance(EditCommand):
         if base_instance is None or current_frame is None:
             return
 
-        print(
-            f"Pasting instance from frame {base_instance.frame.frame_idx} to frame {current_frame.frame_idx}"
-        )
 
         # Create a new instance copy.
         new_instance = Instance.from_numpy(
