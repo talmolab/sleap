@@ -349,3 +349,32 @@ def test_training_editor_checkbox_states(
     assert ted._use_trained_model is None
     assert ted.use_trained
     assert not ted.resume_training
+
+
+def test_movenet_selection(qtbot, min_dance_labels):
+
+    app = MainWindow(no_usage_data=True)
+
+    # learning dialog expects path to video
+    video_path = Path(min_dance_labels.video.backend.filename)
+
+    ld = LearningDialog(
+        mode="inference", labels_filename=video_path, labels=min_dance_labels
+    )
+
+    # to make sure combo box has movenet options
+    combo_box = ld.pipeline_form_widget.pipeline_field.combo_box
+    model_options = [combo_box.itemText(i) for i in range(combo_box.count())]
+
+    models = ["movenet-lightning", "movenet-thunder"]
+
+    for model in models:
+        assert model in model_options
+
+        # change model type
+        combo_box.setCurrentText(model)
+
+        pipeline_form_data = ld.pipeline_form_widget.get_form_data()
+
+        # ensure pipeline version matches model type
+        assert pipeline_form_data["_pipeline"] == model
