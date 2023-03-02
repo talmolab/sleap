@@ -537,7 +537,16 @@ class CommandContext:
         )
 
     def addUserInstancesFromPredictions(self):
+        """Create user instance from a predicted instance."""
         self.execute(AddUserInstancesFromPredictions)
+
+    def copyInstance(self):
+        """Copy the selected instance to the instance clipboard."""
+        self.execute(CopyInstance)
+
+    def pasteInstance(self):
+        """Paste the instance from the clipboard as a new copy."""
+        self.execute(PasteInstance)
 
     def deleteSelectedInstance(self):
         """Deletes currently selected instance."""
@@ -566,6 +575,14 @@ class CommandContext:
     def deleteAllTracks(self):
         """Delete all tracks."""
         self.execute(DeleteAllTracks)
+
+    def copyInstanceTrack(self):
+        """Copies the selected instance's track to the track clipboard."""
+        self.execute(CopyInstanceTrack)
+
+    def pasteInstanceTrack(self):
+        """Pastes the track in the clipboard to the selected instance."""
+        self.execute(PasteInstanceTrack)
 
     def setTrackName(self, track: "Track", name: str):
         """Sets name for track."""
@@ -2569,6 +2586,37 @@ class DeleteAllTracks(EditCommand):
         context.labels.remove_all_tracks()
 
 
+class CopyInstanceTrack(EditCommand):
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        selected_instance: Instance = context.state["instance"]
+        if selected_instance is None or selected_instance.track is None:
+            return
+        context.state["clipboard_track"] = selected_instance.track
+
+
+class PasteInstanceTrack(EditCommand):
+    topics = [UpdateTopic.tracks]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        selected_instance: Instance = context.state["instance"]
+        track_to_paste = context.state["clipboard_track"]
+        if selected_instance is None or track_to_paste is None:
+            return
+
+        # Ensure mutual exclusivity of tracks within a frame.
+        for inst in selected_instance.frame.instances_to_show:
+            if inst == selected_instance:
+                continue
+            if inst.track is not None and inst.track == track_to_paste:
+                # Unset track for other instances that have the same track.
+                inst.track = None
+
+        # Set the track on the selected instance.
+        selected_instance.track = context.state["clipboard_track"]
+
+
 class SetTrackName(EditCommand):
     topics = [UpdateTopic.tracks, UpdateTopic.frame]
 
@@ -3052,6 +3100,53 @@ class AddUserInstancesFromPredictions(EditCommand):
         # Add the instances
         for new_instance in new_instances:
             context.labels.add_instance(context.state["labeled_frame"], new_instance)
+
+
+class CopyInstance(EditCommand):
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        current_instance: Instance = context.state["instance"]
+        if current_instance is None:
+            return
+        context.state["clipboard_instance"] = current_instance
+        print(f"Copied instance from frame {current_instance.frame.frame_idx}")
+
+
+class PasteInstance(EditCommand):
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances]
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        base_instance: Instance = context.state["clipboard_instance"]
+        current_frame: LabeledFrame = context.state["labeled_frame"]
+        if base_instance is None or current_frame is None:
+            return
+
+        print(
+            f"Pasting instance from frame {base_instance.frame.frame_idx} to frame {current_frame.frame_idx}"
+        )
+
+        # Create a new instance copy.
+        new_instance = Instance.from_numpy(
+            base_instance.numpy(), skeleton=base_instance.skeleton
+        )
+
+        if base_instance.frame != current_frame:
+            # Only copy the track if we're not on the same frame and the track doesn't
+            # exist on the current frame.
+            current_frame_tracks = [
+                inst.track for inst in current_frame if inst.track is not None
+            ]
+            if base_instance.track not in current_frame_tracks:
+                new_instance.track = base_instance.track
+
+        # Add to the current frame.
+        context.labels.add_instance(current_frame, new_instance)
+
+        if current_frame not in context.labels.labels:
+            # Add current frame to labels if it wasn't already there. This happens when
+            # adding an instance to an empty labeled frame that isn't in the labels.
+            context.labels.append(current_frame)
 
 
 def open_website(url: str):
