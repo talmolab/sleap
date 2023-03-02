@@ -176,8 +176,9 @@ def test_matching_adaptor(centered_pair_predictions_hdf5_path):
 @pytest.mark.parametrize(
     "test_data",
     [
-        "tests/data/dlc/madlc_testdata.csv",
-        "tests/data/dlc/madlc_testdata_v2.csv",
+        "tests/data/dlc/labeled-data/video/madlc_testdata.csv",
+        "tests/data/dlc/labeled-data/video/madlc_testdata_v2.csv",
+        "tests/data/dlc/madlc_230_config.yaml",
     ],
 )
 def test_madlc(test_data):
@@ -213,7 +214,10 @@ def test_madlc(test_data):
 
 @pytest.mark.parametrize(
     "test_data",
-    ["tests/data/dlc/dlc_testdata.csv", "tests/data/dlc/dlc_testdata_v2.csv"],
+    [
+        "tests/data/dlc/labeled-data/video/dlc_testdata.csv",
+        "tests/data/dlc/labeled-data/video/dlc_testdata_v2.csv",
+    ],
 )
 def test_sadlc(test_data):
     labels = read(
