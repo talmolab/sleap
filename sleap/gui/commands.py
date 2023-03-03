@@ -2602,7 +2602,7 @@ class CopyInstanceTrack(EditCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         selected_instance: Instance = context.state["instance"]
-        if selected_instance is None or selected_instance.track is None:
+        if selected_instance is None:
             return
         context.state["clipboard_track"] = selected_instance.track
 
