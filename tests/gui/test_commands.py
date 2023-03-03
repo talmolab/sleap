@@ -548,6 +548,200 @@ def test_DeleteMultipleTracks(min_tracks_2node_labels: Labels):
     assert len(labels.tracks) == 0
 
 
+def test_CopyInstance(min_tracks_2node_labels: Labels):
+    """Test that copying an instance works as expected."""
+    labels = min_tracks_2node_labels
+    instance = labels[0].instances[0]
+
+    # Set-up command context
+    context: CommandContext = CommandContext.from_labels(labels)
+
+    # Copy instance
+    assert context.state["instance"] is None
+    context.copyInstance()
+    assert context.state["clipboard_instance"] is None
+
+    # Copy instance
+    context.state["instance"] = instance
+    context.copyInstance()
+    assert context.state["clipboard_instance"] == instance
+
+
+def test_PasteInstance(min_tracks_2node_labels: Labels):
+    """Test that pasting an instance works as expected."""
+    labels = min_tracks_2node_labels
+    lf_to_copy: LabeledFrame = labels.labeled_frames[0]
+    instance: Instance = lf_to_copy.instances[0]
+
+    # Set-up command context
+    context: CommandContext = CommandContext.from_labels(labels)
+
+    def paste_instance(
+        lf_to_paste: LabeledFrame, assertions_pre_paste, assertions_post_paste
+    ):
+        """Helper function to test pasting an instance."""
+        instances_checkpoint = list(lf_to_paste.instances)
+        assertions_pre_paste(instance, lf_to_copy)
+
+        context.pasteInstance()
+        assertions_post_paste(instances_checkpoint, lf_to_copy, lf_to_paste)
+
+    # Case 1: No instance copied, but frame selected
+
+    def assertions_prior(*args):
+        assert context.state["clipboard_instance"] is None
+
+    def assertions_post(instances_checkpoint, lf_to_copy, *args):
+        assert instances_checkpoint == lf_to_copy.instances
+
+    context.state["labeled_frame"] = lf_to_copy
+    paste_instance(lf_to_copy, assertions_prior, assertions_post)
+
+    # Case 2: No frame selected, but instance copied
+
+    def assertions_prior(*args):
+        assert context.state["labeled_frame"] is None
+
+    context.state["labeled_frame"] = None
+    context.state["clipboard_instance"] = instance
+    paste_instance(lf_to_copy, assertions_prior, assertions_post)
+
+    # Case 3: Instance copied and current frame selected
+
+    def assertions_prior(instance, lf_to_copy, *args):
+        assert context.state["clipboard_instance"] == instance
+        assert context.state["labeled_frame"] == lf_to_copy
+
+    def assertions_post(instances_checkpoint, lf_to_copy, lf_to_paste, *args):
+        lf_checkpoint_tracks = [
+            inst.track for inst in instances_checkpoint if inst.track is not None
+        ]
+        lf_to_copy_tracks = [
+            inst.track for inst in lf_to_copy.instances if inst.track is not None
+        ]
+        assert len(lf_checkpoint_tracks) == len(lf_to_copy_tracks)
+        assert len(lf_to_paste.instances) == len(instances_checkpoint) + 1
+        assert lf_to_paste.instances[-1].points == instance.points
+
+    context.state["labeled_frame"] = lf_to_copy
+    context.state["clipboard_instance"] = instance
+    paste_instance(lf_to_copy, assertions_prior, assertions_post)
+
+    # Case 4: Instance copied and different frame selected, but new frame has same track
+
+    def assertions_prior(instance, lf_to_copy, *args):
+        assert context.state["clipboard_instance"] == instance
+        assert context.state["labeled_frame"] != lf_to_copy
+        lf_to_paste = context.state["labeled_frame"]
+        tracks_in_lf_to_paste = [
+            inst.track for inst in lf_to_paste.instances if inst.track is not None
+        ]
+        assert instance.track in tracks_in_lf_to_paste
+
+    lf_to_paste = labels.labeled_frames[1]
+    context.state["labeled_frame"] = lf_to_paste
+    paste_instance(lf_to_paste, assertions_prior, assertions_post)
+
+    # Case 5: Instance copied and different frame selected, and track not in new frame
+
+    def assertions_prior(instance, lf_to_copy, *args):
+        assert context.state["clipboard_instance"] == instance
+        assert context.state["labeled_frame"] != lf_to_copy
+        lf_to_paste = context.state["labeled_frame"]
+        tracks_in_lf_to_paste = [
+            inst.track for inst in lf_to_paste.instances if inst.track is not None
+        ]
+        assert instance.track not in tracks_in_lf_to_paste
+
+    def assertions_post(instances_checkpoint, lf_to_copy, lf_to_paste, *args):
+        assert len(lf_to_paste.instances) == len(instances_checkpoint) + 1
+        assert lf_to_paste.instances[-1].points == instance.points
+        assert lf_to_paste.instances[-1].track == instance.track
+
+    lf_to_paste = labels.labeled_frames[2]
+    context.state["labeled_frame"] = lf_to_paste
+    for inst in lf_to_paste.instances:
+        inst.track = None
+    paste_instance(lf_to_paste, assertions_prior, assertions_post)
+
+    # Case 6: Instance copied, different frame selected, and frame not in Labels
+
+    def assertions_prior(instance, lf_to_copy, *args):
+        assert context.state["clipboard_instance"] == instance
+        assert context.state["labeled_frame"] != lf_to_copy
+        assert context.state["labeled_frame"] not in labels.labeled_frames
+
+    def assertions_post(instances_checkpoint, lf_to_copy, lf_to_paste, *args):
+        assert len(lf_to_paste.instances) == len(instances_checkpoint) + 1
+        assert lf_to_paste.instances[-1].points == instance.points
+        assert lf_to_paste.instances[-1].track == instance.track
+        assert lf_to_paste in labels.labeled_frames
+
+    lf_to_paste = labels.get((labels.video, 3))
+    labels.labeled_frames.remove(lf_to_paste)
+    lf_to_paste.instances = []
+    context.state["labeled_frame"] = lf_to_paste
+    paste_instance(lf_to_paste, assertions_prior, assertions_post)
+
+
+def test_CopyInstanceTrack(min_tracks_2node_labels: Labels):
+    """Test that copying a track from one instance to another works."""
+    labels = min_tracks_2node_labels
+    instance = labels.labeled_frames[0].instances[0]
+
+    # Set-up CommandContext
+    context: CommandContext = CommandContext.from_labels(labels)
+
+    # Case 1: No instance selected
+    context.copyInstanceTrack()
+    assert context.state["clipboard_track"] is None
+
+    # Case 2: Instance selected and track
+    context.state["instance"] = instance
+    context.copyInstanceTrack()
+    assert context.state["clipboard_track"] == instance.track
+
+    # Case 3: Instance selected and no track
+    instance.track = None
+    context.copyInstanceTrack()
+    assert context.state["clipboard_track"] is None
+
+
+def test_PasteInstanceTrack(min_tracks_2node_labels: Labels):
+    """Test that pasting a track from one instance to another works."""
+    labels = min_tracks_2node_labels
+    instance = labels.labeled_frames[0].instances[0]
+
+    # Set-up CommandContext
+    context: CommandContext = CommandContext.from_labels(labels)
+
+    # Case 1: No instance selected
+    context.state["clipboard_track"] = instance.track
+
+    context.pasteInstanceTrack()
+    assert context.state["instance"] is None
+
+    # Case 2: Instance selected and track
+    lf_to_paste = labels.labeled_frames[1]
+    instance_with_same_track = lf_to_paste.instances[0]
+    instance_to_paste = lf_to_paste.instances[1]
+    context.state["instance"] = instance_to_paste
+    assert instance_to_paste.track != instance.track
+    assert instance_with_same_track.track == instance.track
+
+    context.pasteInstanceTrack()
+    assert instance_to_paste.track == instance.track
+    assert instance_with_same_track.track != instance.track
+
+    # Case 3: Instance selected and no track
+    lf_to_paste = labels.labeled_frames[2]
+    instance_to_paste = lf_to_paste.instances[0]
+    instance.track = None
+
+    context.pasteInstanceTrack()
+    assert isinstance(instance_to_paste.track, Track)
+
+
 @pytest.mark.skipif(
     sys.platform.startswith("win"),
     reason="Files being using in parallel by linux CI tests via Github Actions "
