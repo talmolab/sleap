@@ -526,6 +526,28 @@ def test_SetSelectedInstanceTrack(centered_pair_predictions: Labels):
     assert pred_inst.track == new_instance.track
 
 
+def test_DeleteMultipleTracks(min_tracks_2node_labels: Labels):
+    """Test that deleting multiple tracks works as expected."""
+    labels = min_tracks_2node_labels
+    tracks = labels.tracks
+    tracks.append(Track(name="unused", spawned_on=0))
+    assert len(tracks) == 3
+
+    # Set-up command context
+    context: CommandContext = CommandContext.from_labels(labels)
+    context.state["labels"] = labels
+
+    # Delete unused tracks
+    context.deleteMultipleTracks(delete_all=False)
+    assert len(labels.tracks) == 2
+
+    # Add back an unused track and delete all tracks
+    tracks.append(Track(name="unused", spawned_on=0))
+    assert len(tracks) == 3
+    context.deleteMultipleTracks(delete_all=True)
+    assert len(labels.tracks) == 0
+
+
 @pytest.mark.skipif(
     sys.platform.startswith("win"),
     reason="Files being using in parallel by linux CI tests via Github Actions "

@@ -786,13 +786,24 @@ class MainWindow(QMainWindow):
         )
         self.delete_tracks_menu = tracksMenu.addMenu("Delete Track")
         self.delete_tracks_menu.setEnabled(False)
+
+        self.delete_multiple_tracks_menu = tracksMenu.addMenu("Delete Multiple Tracks")
+        self.delete_multiple_tracks_menu.setToolTip(
+            "Delete either only 'Unused' tracks or 'All' tracks, and update instances. Instances are not removed."
+        )
+
         add_menu_item(
-            tracksMenu,
+            self.delete_multiple_tracks_menu,
+            "delete unused tracks",
+            "Unused",
+            lambda: self.commands.deleteMultipleTracks(delete_all=False),
+        )
+
+        add_menu_item(
+            self.delete_multiple_tracks_menu,
             "delete all tracks",
-            "Delete All Tracks",
-            self.commands.deleteAllTracks,
-        ).setToolTip(
-            "Delete all tracks and update instances. Instances are not removed."
+            "All",
+            lambda: self.commands.deleteMultipleTracks(delete_all=True),
         )
 
         tracksMenu.addSeparator()

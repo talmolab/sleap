@@ -1245,6 +1245,22 @@ class Labels(MutableSequence):
             inst.track = None
         self.tracks = []
 
+    def remove_unused_tracks(self):
+        """Remove tracks that are not used by any instances."""
+        if len(self.tracks) == 0:
+            return
+
+        # Check which tracks are used by instances
+        all_tracks = set(self.tracks)
+        used_tracks = set()
+        for inst in self.instances():
+            used_tracks.add(inst.track)
+
+        # Remove set difference from tracks in Labels
+        tracks_to_remove = all_tracks - used_tracks
+        for track in tracks_to_remove:
+            self.tracks.remove(track)
+
     def track_set_instance(
         self, frame: LabeledFrame, instance: Instance, new_track: Track
     ):
