@@ -11,7 +11,7 @@
    :alt: Coverage
 
 .. |Documentation| image:: 
-   https://img.shields.io/github/workflow/status/talmolab/sleap/Build%20website?label=Documentation
+   https://img.shields.io/badge/Documentation-sleap.ai-lightgrey
    :target: https://sleap.ai
    :alt: Documentation
   
