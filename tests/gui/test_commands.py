@@ -684,6 +684,64 @@ def test_PasteInstance(min_tracks_2node_labels: Labels):
     paste_instance(lf_to_paste, assertions_prior, assertions_post)
 
 
+def test_CopyInstanceTrack(min_tracks_2node_labels: Labels):
+    """Test that copying a track from one instance to another works."""
+    labels = min_tracks_2node_labels
+    instance = labels.labeled_frames[0].instances[0]
+
+    # Set-up CommandContext
+    context: CommandContext = CommandContext.from_labels(labels)
+
+    # Case 1: No instance selected
+    context.copyInstanceTrack()
+    assert context.state["clipboard_track"] is None
+
+    # Case 2: Instance selected and track
+    context.state["instance"] = instance
+    context.copyInstanceTrack()
+    assert context.state["clipboard_track"] == instance.track
+
+    # Case 3: Instance selected and no track
+    instance.track = None
+    context.copyInstanceTrack()
+    assert context.state["clipboard_track"] is None
+
+
+def test_PasteInstanceTrack(min_tracks_2node_labels: Labels):
+    """Test that pasting a track from one instance to another works."""
+    labels = min_tracks_2node_labels
+    instance = labels.labeled_frames[0].instances[0]
+
+    # Set-up CommandContext
+    context: CommandContext = CommandContext.from_labels(labels)
+
+    # Case 1: No instance selected
+    context.state["clipboard_track"] = instance.track
+
+    context.pasteInstanceTrack()
+    assert context.state["instance"] is None
+
+    # Case 2: Instance selected and track
+    lf_to_paste = labels.labeled_frames[1]
+    instance_with_same_track = lf_to_paste.instances[0]
+    instance_to_paste = lf_to_paste.instances[1]
+    context.state["instance"] = instance_to_paste
+    assert instance_to_paste.track != instance.track
+    assert instance_with_same_track.track == instance.track
+
+    context.pasteInstanceTrack()
+    assert instance_to_paste.track == instance.track
+    assert instance_with_same_track.track != instance.track
+
+    # Case 3: Instance selected and no track
+    lf_to_paste = labels.labeled_frames[2]
+    instance_to_paste = lf_to_paste.instances[0]
+    instance.track = None
+
+    context.pasteInstanceTrack()
+    assert isinstance(instance_to_paste.track, Track)
+
+
 @pytest.mark.skipif(
     sys.platform.startswith("win"),
     reason="Files being using in parallel by linux CI tests via Github Actions "
