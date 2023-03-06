@@ -1400,6 +1400,17 @@ def test_remove_all_tracks(centered_pair_predictions):
     assert all(inst.track is None for inst in labels.instances())
 
 
+def test_remove_unused_tracks(min_tracks_2node_labels: Labels):
+    labels = min_tracks_2node_labels
+    assert len(labels.tracks) == 2
+
+    labels.tracks.append(Track(name="unused", spawned_on=0))
+    assert len(labels.tracks) == 3
+
+    labels.remove_unused_tracks()
+    assert len(labels.tracks) == 2
+
+
 def test_remove_empty_frames(min_labels):
     min_labels.append(sleap.LabeledFrame(video=min_labels.video, frame_idx=2))
     assert len(min_labels) == 2
