@@ -357,13 +357,18 @@ class LearningDialog(QtWidgets.QDialog):
 
     def get_most_recent_pipeline_trained(self) -> Text:
         recent_cfg_info = self._cfg_getter.get_first()
+
         if recent_cfg_info and recent_cfg_info.head_name:
+            if recent_cfg_info.head_name in ("multi_class_topdown"):
+                return "top-down-id"
             if recent_cfg_info.head_name in ("centroid", "centered_instance"):
                 return "top-down"
             if recent_cfg_info.head_name in ("multi_instance"):
                 return "bottom-up"
             if recent_cfg_info.head_name in ("single_instance"):
                 return "single"
+            if recent_cfg_info.head_name in ("multi_class_bottomup"):
+                return "bottom-up-id"
         return ""
 
     def set_default_pipeline_tab(self):
@@ -1060,6 +1065,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
     def update_receptive_field(self):
         data_form_data = self.form_widgets["data"].get_form_data()
+
         model_cfg = scopedkeydict.make_model_config_from_key_val_dict(
             key_val_dict=self.form_widgets["model"].get_form_data()
         )
