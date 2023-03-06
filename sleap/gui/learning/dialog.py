@@ -504,6 +504,16 @@ class LearningDialog(QtWidgets.QDialog):
                 cfg = scopedkeydict.make_training_config_from_key_val_dict(
                     loaded_cfg_scoped
                 )
+                if len(self.labels.tracks) > 0:
+                    if cfg.model.heads.multi_class_bottomup is not None:
+                        cfg.model.heads.multi_class_bottomup.class_maps.classes = [
+                            t.name for t in self.labels.tracks
+                        ]
+                    elif cfg.model.heads.multi_class_topdown is not None:
+                        cfg.model.heads.multi_class_topdown.class_vectors.classes = [
+                            t.name for t in self.labels.tracks
+                        ]
+
                 cfg_info = configs.ConfigFileInfo(config=cfg, head_name=tab_name)
 
                 cfg_info_list.append(cfg_info)
