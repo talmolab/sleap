@@ -504,7 +504,20 @@ class LearningDialog(QtWidgets.QDialog):
                 cfg = scopedkeydict.make_training_config_from_key_val_dict(
                     loaded_cfg_scoped
                 )
+
                 if len(self.labels.tracks) > 0:
+
+                    # for multiclass topdown the class vectors output stride
+                    # should be the max stride
+                    backbone_name = scopedkeydict.find_backbone_name_from_key_val_dict(
+                        tab_cfg_key_val_dict
+                    )
+                    max_stride = tab_cfg_key_val_dict[
+                        f"model.backbone.{backbone_name}.max_stride"
+                    ]
+
+                    # classes should be added here to prevent value error in
+                    # model since we don't add them in the training config yaml
                     if cfg.model.heads.multi_class_bottomup is not None:
                         cfg.model.heads.multi_class_bottomup.class_maps.classes = [
                             t.name for t in self.labels.tracks
@@ -513,6 +526,9 @@ class LearningDialog(QtWidgets.QDialog):
                         cfg.model.heads.multi_class_topdown.class_vectors.classes = [
                             t.name for t in self.labels.tracks
                         ]
+                        cfg.model.heads.multi_class_topdown.class_vectors.output_stride = (
+                            max_stride
+                        )
 
                 cfg_info = configs.ConfigFileInfo(config=cfg, head_name=tab_name)
 

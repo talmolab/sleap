@@ -455,16 +455,6 @@ model:
     label: Global Pool
     name: model.heads.multi_class_topdown.class_vectors.global_pool
     type: bool
-  - default: 16
-    help: The stride of the output class vectors relative to the input image. This
-      is the reciprocal of the resolution, e.g., an output stride of 2 results in
-      confidence maps that are 0.5x the size of the input. Increasing this value can
-      considerably speed up model performance and decrease memory requirements, at
-      the cost of decreased spatial resolution.
-    label: Output Stride
-    name: model.heads.multi_class_topdown.class_vectors.output_stride
-    type: list
-    options: 1,2,4,8,16,32,64
   - default: 1.0
     help: Scalar float used to weigh the loss term for this head during
       training. Increase this to encourage the optimization to focus on improving
