@@ -1655,22 +1655,36 @@ class ToggleGrayscale(EditCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         """Reset the video backend."""
-        for video in context.labels.videos:
+
+        def try_to_read_grayscale(video: Video):
             try:
-                grayscale = video.backend.grayscale
+                return video.backend.grayscale
+            except:
+                return None
+
+        # Check that current video is set
+        if len(context.labels.videos) == 0:
+            raise ValueError("No videos detected in `Labels`.")
+
+        # Intuitively find the "first" video that supports grayscale
+        grayscale = try_to_read_grayscale(context.state["video"])
+        if grayscale is None:
+            for video in context.labels.videos:
+                grayscale = try_to_read_grayscale(video)
+                if grayscale is not None:
+                    break
+
+        if grayscale is None:
+            raise ValueError("No videos support grayscale.")
+
+        for idx, video in enumerate(context.labels.videos):
+            try:
                 video.backend.reset(grayscale=(not grayscale))
             except:
                 print(
-                    f"This video type {type(video.backend)} does not support grayscale yet."
+                    f"This video type {type(video.backend)} for video at index {idx} "
+                    f"does not support grayscale yet."
                 )
-
-    @staticmethod
-    def ask(context: CommandContext, params: dict) -> bool:
-        """Check that video can be reset."""
-        # Check that current video is set
-        if context.state["video"] is None:
-            return False
-        return True
 
 
 class AddVideo(EditCommand):
