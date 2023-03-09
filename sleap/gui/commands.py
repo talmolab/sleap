@@ -1655,14 +1655,14 @@ class ToggleGrayscale(EditCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         """Reset the video backend."""
-        video: Video = context.state["video"]
-        try:
-            grayscale = video.backend.grayscale
-            video.backend.reset(grayscale=(not grayscale))
-        except:
-            print(
-                f"This video type {type(video.backend)} does not support grayscale yet."
-            )
+        for video in context.labels.videos:
+            try:
+                grayscale = video.backend.grayscale
+                video.backend.reset(grayscale=(not grayscale))
+            except:
+                print(
+                    f"This video type {type(video.backend)} does not support grayscale yet."
+                )
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
