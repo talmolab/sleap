@@ -368,15 +368,15 @@ class LearningDialog(QtWidgets.QDialog):
         recent_cfg_info = self._cfg_getter.get_first()
 
         if recent_cfg_info and recent_cfg_info.head_name:
-            if recent_cfg_info.head_name in ("multi_class_topdown"):
+            if recent_cfg_info.head_name in ("multi_class_topdown",):
                 return "top-down-id"
             if recent_cfg_info.head_name in ("centroid", "centered_instance"):
                 return "top-down"
-            if recent_cfg_info.head_name in ("multi_instance"):
+            if recent_cfg_info.head_name in ("multi_instance",):
                 return "bottom-up"
-            if recent_cfg_info.head_name in ("single_instance"):
+            if recent_cfg_info.head_name in ("single_instance",):
                 return "single"
-            if recent_cfg_info.head_name in ("multi_class_bottomup"):
+            if recent_cfg_info.head_name in ("multi_class_bottomup",):
                 return "bottom-up-id"
         return ""
 
