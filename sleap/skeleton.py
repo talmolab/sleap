@@ -201,7 +201,7 @@ class Skeleton:
                 "and description. Checkout `generate_skeleton_preview_image` to "
                 "generate a preview image."
             )
-            
+
         self._is_template = value
 
     @property
