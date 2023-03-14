@@ -24,6 +24,7 @@ NODE_LIST_FIELDS = [
     "data.instance_cropping.center_on_part",
     "model.heads.centered_instance.anchor_part",
     "model.heads.centroid.anchor_part",
+    "model.heads.multi_class_topdown.confmaps.anchor_part",
 ]
 
 
@@ -312,6 +313,11 @@ class LearningDialog(QtWidgets.QDialog):
         elif "model.heads.centered_instance.anchor_part" in source_data:
             anchor_part = source_data["model.heads.centered_instance.anchor_part"]
             set_anchor = True
+        elif "model.heads.multi_class_topdown.confmaps.anchor_part" in source_data:
+            anchor_part = source_data[
+                "model.heads.multi_class_topdown.confmaps.anchor_part"
+            ]
+            set_anchor = True
 
         # Use None instead of empty string/list
         anchor_part = anchor_part or None
@@ -319,6 +325,9 @@ class LearningDialog(QtWidgets.QDialog):
         if set_anchor:
             updated_data["model.heads.centroid.anchor_part"] = anchor_part
             updated_data["model.heads.centered_instance.anchor_part"] = anchor_part
+            updated_data[
+                "model.heads.multi_class_topdown.confmaps.anchor_part"
+            ] = anchor_part
             updated_data["data.instance_cropping.center_on_part"] = anchor_part
 
     def update_tabs_from_pipeline(self, source_data):
