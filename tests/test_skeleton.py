@@ -200,6 +200,20 @@ def test_json(skeleton: Skeleton, tmpdir):
     assert "preview_image" not in json_dict_keys
     assert "description" not in json_dict_keys
 
+    # Test that `is_template` can only be set to True
+    # when has both `description` and `preview_image`
+    with pytest.raises(ValueError):
+        skeleton.is_template = True
+    assert skeleton.is_template == False
+
+    skeleton._is_template = True
+    json_str = skeleton.to_json()
+    json_dict = jsonpickle.decode(json_str)
+    json_dict_keys = list(json_dict.keys())
+    assert "nx_graph" in json_dict_keys
+    assert "preview_image" in json_dict_keys
+    assert "description" in json_dict_keys
+
     # Save it to a JSON filename
     skeleton.save_json(JSON_TEST_FILENAME)
 

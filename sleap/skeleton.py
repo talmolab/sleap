@@ -97,11 +97,13 @@ class Skeleton:
         preview_image: A byte string containing an encoded preview image for the
             skeleton. Used only for templates.
         description: A text description of the skeleton. Used only for templates.
+        _is_template: Whether this skeleton is a template. Used only for templates.
     """
 
     _skeleton_idx = count(0)
     preview_image: Optional[bytes] = None
     description: Optional[str] = None
+    _is_template: bool = False
 
     def __init__(self, name: str = None):
         """Initialize an empty skeleton object.
@@ -183,12 +185,24 @@ class Skeleton:
         If is_template is True, then the preview image and description are saved.
         If is_template is False, then the preview image and description are not saved.
 
-        Only provided template skeletons are considered templates.
-
-        Note to developers: To save a new template skeleton, change this to True before
-        saving.
+        Only provided template skeletons are considered templates. To save a new
+        template skeleton, change this to True before saving.
         """
-        return False
+        return self._is_template
+
+    @is_template.setter
+    def is_template(self, value: bool):
+        """Set whether this skeleton is a template."""
+
+        self._is_template = False
+        if value and ((self.preview_image is None) or (self.description is None)):
+            raise ValueError(
+                "For a skeleton to be a template, it must have both a preview image "
+                "and description. Checkout `generate_skeleton_preview_image` to "
+                "generate a preview image."
+            )
+            
+        self._is_template = value
 
     @property
     def is_arborescence(self) -> bool:
