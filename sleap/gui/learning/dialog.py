@@ -24,6 +24,7 @@ NODE_LIST_FIELDS = [
     "data.instance_cropping.center_on_part",
     "model.heads.centered_instance.anchor_part",
     "model.heads.centroid.anchor_part",
+    "model.heads.multi_class_topdown.confmaps.anchor_part",
 ]
 
 
@@ -279,7 +280,14 @@ class LearningDialog(QtWidgets.QDialog):
             tab.valueChanged.disconnect()
 
     def make_tabs(self):
-        heads = ("single_instance", "centroid", "centered_instance", "multi_instance")
+        heads = (
+            "single_instance",
+            "centroid",
+            "centered_instance",
+            "multi_instance",
+            "multi_class_topdown",
+            "multi_class_bottomup",
+        )
 
         video = self.labels.videos[0] if self.labels else None
 
@@ -305,6 +313,11 @@ class LearningDialog(QtWidgets.QDialog):
         elif "model.heads.centered_instance.anchor_part" in source_data:
             anchor_part = source_data["model.heads.centered_instance.anchor_part"]
             set_anchor = True
+        elif "model.heads.multi_class_topdown.confmaps.anchor_part" in source_data:
+            anchor_part = source_data[
+                "model.heads.multi_class_topdown.confmaps.anchor_part"
+            ]
+            set_anchor = True
 
         # Use None instead of empty string/list
         anchor_part = anchor_part or None
@@ -312,6 +325,9 @@ class LearningDialog(QtWidgets.QDialog):
         if set_anchor:
             updated_data["model.heads.centroid.anchor_part"] = anchor_part
             updated_data["model.heads.centered_instance.anchor_part"] = anchor_part
+            updated_data[
+                "model.heads.multi_class_topdown.confmaps.anchor_part"
+            ] = anchor_part
             updated_data["data.instance_cropping.center_on_part"] = anchor_part
 
     def update_tabs_from_pipeline(self, source_data):
@@ -350,13 +366,18 @@ class LearningDialog(QtWidgets.QDialog):
 
     def get_most_recent_pipeline_trained(self) -> Text:
         recent_cfg_info = self._cfg_getter.get_first()
+
         if recent_cfg_info and recent_cfg_info.head_name:
+            if recent_cfg_info.head_name in ("multi_class_topdown",):
+                return "top-down-id"
             if recent_cfg_info.head_name in ("centroid", "centered_instance"):
                 return "top-down"
-            if recent_cfg_info.head_name in ("multi_instance"):
+            if recent_cfg_info.head_name in ("multi_instance",):
                 return "bottom-up"
-            if recent_cfg_info.head_name in ("single_instance"):
+            if recent_cfg_info.head_name in ("single_instance",):
                 return "single"
+            if recent_cfg_info.head_name in ("multi_class_bottomup",):
+                return "bottom-up-id"
         return ""
 
     def set_default_pipeline_tab(self):
@@ -376,6 +397,8 @@ class LearningDialog(QtWidgets.QDialog):
             "centroid": "Centroid Model Configuration",
             "centered_instance": "Centered Instance Model Configuration",
             "multi_instance": "Bottom-Up Model Configuration",
+            "multi_class_topdown": "Top-Down-Id Model Configuration",
+            "multi_class_bottomup": "Bottom-Up-Id Model Configuration",
         }
         self.tab_widget.addTab(self.tabs[tab_name], tab_labels[tab_name])
         self.shown_tab_names.append(tab_name)
@@ -393,6 +416,11 @@ class LearningDialog(QtWidgets.QDialog):
                 self.add_tab("centered_instance")
             elif pipeline == "bottom-up":
                 self.add_tab("multi_instance")
+            elif pipeline == "top-down-id":
+                self.add_tab("centroid")
+                self.add_tab("multi_class_topdown")
+            elif pipeline == "bottom-up-id":
+                self.add_tab("multi_class_bottomup")
             elif pipeline == "single":
                 self.add_tab("single_instance")
         self.current_pipeline = pipeline
@@ -485,6 +513,32 @@ class LearningDialog(QtWidgets.QDialog):
                 cfg = scopedkeydict.make_training_config_from_key_val_dict(
                     loaded_cfg_scoped
                 )
+
+                if len(self.labels.tracks) > 0:
+
+                    # For multiclass topdown, the class vectors output stride
+                    # should be the max stride.
+                    backbone_name = scopedkeydict.find_backbone_name_from_key_val_dict(
+                        tab_cfg_key_val_dict
+                    )
+                    max_stride = tab_cfg_key_val_dict[
+                        f"model.backbone.{backbone_name}.max_stride"
+                    ]
+
+                    # Classes should be added here to prevent value error in
+                    # model since we don't add them in the training config yaml.
+                    if cfg.model.heads.multi_class_bottomup is not None:
+                        cfg.model.heads.multi_class_bottomup.class_maps.classes = [
+                            t.name for t in self.labels.tracks
+                        ]
+                    elif cfg.model.heads.multi_class_topdown is not None:
+                        cfg.model.heads.multi_class_topdown.class_vectors.classes = [
+                            t.name for t in self.labels.tracks
+                        ]
+                        cfg.model.heads.multi_class_topdown.class_vectors.output_stride = (
+                            max_stride
+                        )
+
                 cfg_info = configs.ConfigFileInfo(config=cfg, head_name=tab_name)
 
                 cfg_info_list.append(cfg_info)
@@ -843,16 +897,28 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
     def current_pipeline(self):
         pipeline_selected_label = self.pipeline_field.value()
         if "top-down" in pipeline_selected_label:
-            return "top-down"
+            if "id" not in pipeline_selected_label:
+                return "top-down"
+            else:
+                return "top-down-id"
         if "bottom-up" in pipeline_selected_label:
-            return "bottom-up"
+            if "id" not in pipeline_selected_label:
+                return "bottom-up"
+            else:
+                return "bottom-up-id"
         if "single" in pipeline_selected_label:
             return "single"
         return ""
 
     @current_pipeline.setter
     def current_pipeline(self, val):
-        if val not in ("top-down", "bottom-up", "single"):
+        if val not in (
+            "top-down",
+            "bottom-up",
+            "single",
+            "top-down-id",
+            "bottom-up-id",
+        ):
             raise ValueError(f"Cannot set pipeline to {val}")
 
         # Match short name to full pipeline name shown in menu
@@ -1034,6 +1100,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
     def update_receptive_field(self):
         data_form_data = self.form_widgets["data"].get_form_data()
+
         model_cfg = scopedkeydict.make_model_config_from_key_val_dict(
             key_val_dict=self.form_widgets["model"].get_form_data()
         )

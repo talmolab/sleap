@@ -157,8 +157,12 @@ def resolve_strides_from_key_val_dict(
         "model.heads.centroid.output_stride",
         "model.heads.multi_instance.confmaps.output_stride",
         "model.heads.multi_instance.pafs.output_stride",
+        "model.heads.multi_class_topdown.confmaps.output_stride",
+        "model.heads.multi_class_bottomup.confmaps.output_stride",
+        "model.heads.multi_class_bottomup.class_maps.output_stride",
     ]:
         stride = key_val_dict.get(key, None)
+
         if stride is not None:
             stride = int(stride)
             max_stride = (
