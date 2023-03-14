@@ -2009,8 +2009,10 @@ class OpenSkeleton(EditCommand):
         # Load new skeleton
         filename = params["filename"]
         new_skeleton = OpenSkeleton.load_skeleton(filename)
-        if new_skeleton.description == None:
-            new_skeleton.description = f"Custom Skeleton loaded from {filename}"
+
+        # Description and preview image only used for template skeletons
+        new_skeleton.description = None
+        new_skeleton.preview_image = None
         context.state["skeleton_description"] = new_skeleton.description
         context.state["skeleton_preview_image"] = new_skeleton.preview_image
 

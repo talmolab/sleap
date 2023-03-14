@@ -1,6 +1,7 @@
 import os
 import copy
 
+import jsonpickle
 import pytest
 
 from sleap.skeleton import Skeleton
@@ -182,11 +183,22 @@ def test_symmetry():
     ]
 
 
-def test_json(skeleton, tmpdir):
-    """
-    Test saving and loading a Skeleton object in JSON.
-    """
+def test_json(skeleton: Skeleton, tmpdir):
+    """Test saving and loading a Skeleton object in JSON."""
     JSON_TEST_FILENAME = os.path.join(tmpdir, "skeleton.json")
+
+    # Test that `to_json` does not save unused `None` fields (to ensure backwards data
+    # format compatibility)
+    skeleton.description = (
+        "Test that description is not saved when given (if is_template is False)."
+    )
+    assert skeleton.is_template == False
+    json_str = skeleton.to_json()
+    json_dict = jsonpickle.decode(json_str)
+    json_dict_keys = list(json_dict.keys())
+    assert "nx_graph" not in json_dict_keys
+    assert "preview_image" not in json_dict_keys
+    assert "description" not in json_dict_keys
 
     # Save it to a JSON filename
     skeleton.save_json(JSON_TEST_FILENAME)
