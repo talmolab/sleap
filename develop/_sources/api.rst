@@ -64,12 +64,6 @@ Developer API
    sleap.nn.training
    sleap.nn.utils
    sleap.nn.viz
-   sleap.nn.config.data
-   sleap.nn.config.model
-   sleap.nn.config.optimization
-   sleap.nn.config.outputs
-   sleap.nn.config.training_job
-   sleap.nn.config.utils
    sleap.nn.architectures.common
    sleap.nn.architectures.encoder_decoder
    sleap.nn.architectures.hourglass
@@ -79,6 +73,12 @@ Developer API
    sleap.nn.architectures.resnet
    sleap.nn.architectures.unet
    sleap.nn.architectures.upsampling
+   sleap.nn.config.data
+   sleap.nn.config.model
+   sleap.nn.config.optimization
+   sleap.nn.config.outputs
+   sleap.nn.config.training_job
+   sleap.nn.config.utils
    sleap.nn.data.augmentation
    sleap.nn.data.confidence_maps
    sleap.nn.data.dataset_ops
