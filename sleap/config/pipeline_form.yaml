@@ -4,7 +4,7 @@ training:
   label: Training/Inference Pipeline Type
   type: stacked
   default: "multi-animal bottom-up "
-  options: "multi-animal bottom-up,multi-animal top-down,single animal"
+  options: "multi-animal bottom-up,multi-animal top-down,multi-animal bottom-up-id,multi-animal top-down-id,single animal"
 
   multi-animal bottom-up:
   - type: text
@@ -77,6 +77,80 @@ training:
       scaling is applied.
     label: Sigma for Nodes
     name: model.heads.centered_instance.sigma
+    type: double
+
+  multi-animal bottom-up-id:
+  - type: text
+    text: '<b>Multi-Animal Bottom-Up-Id Pipeline</b>:<br />
+      This pipeline uses single model with two output heads: a "<u>confidence
+      map</u>" head to predicts the nodes for an entire image and a "<u>part
+      affinity field</u>" head to group the nodes into distinct animal
+      instances. It also handles classification and tracking.'
+
+  - name: model.heads.multi_class_bottomup.confmaps.sigma
+    label: Sigma for Nodes
+    type: double
+    default: 5.0
+    help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
+      Smaller values are more precise but may be difficult to learn as they have a
+      lower density within the image space. Larger values are easier to learn but
+      are less precise with respect to the peak coordinate. This spread is in units
+      of pixels of the model input image, i.e., the image resolution after any input
+      scaling is applied.
+
+  - name: model.heads.multi_class_bottomup.class_maps.sigma
+    label: Sigma for Edges
+    type: double
+    default: 15.0
+    help: Spread of the Gaussian distribution that weigh the part affinity fields
+      as a function of their distance from the edge they represent. Smaller values
+      are more precise but may be difficult to learn as they have a lower density
+      within the image space. Larger values are easier to learn but are less precise
+      with respect to the edge distance, so can be less useful in disambiguating between
+      edges that are nearby and parallel in direction. This spread is in units of
+      pixels of the model input image, i.e., the image resolution after any input
+      scaling is applied.
+
+  multi-animal top-down-id:
+  - type: text
+    text: '<b>Multi-Animal Top-Down-Id Pipeline</b>:<br />
+    This pipeline uses two models: a "<u>centroid</u>" model to locate and crop
+    around each animal in the frame, and a "<u>centered-instance confidence
+    map</u>" model for predicted node locations for each individual animal
+    predicted by the centroid model. It also handles classification and
+    tracking.'
+
+  - default: 5.0
+    help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
+      Smaller values are more precise but may be difficult to learn as they have a
+      lower density within the image space. Larger values are easier to learn but
+      are less precise with respect to the peak coordinate. This spread is in units
+      of pixels of the model input image, i.e., the image resolution after any input
+      scaling is applied.
+    label: Sigma for Centroids
+    name: model.heads.centroid.sigma
+    type: double
+
+  - default: null
+    help: Text name of a body part (node) to use as the anchor point. If None, the
+      midpoint of the bounding box of all visible instance points will be used as
+      the anchor. The bounding box midpoint will also be used if the anchor part is
+      specified but not visible in the instance. Setting a reliable anchor point can
+      significantly improve topdown model accuracy as they benefit from a consistent
+      geometry of the body parts relative to the center of the image.
+    label: Anchor Part
+    name: model.heads.multi_class_topdown.confmaps.anchor_part
+    type: optional_list
+
+  - default: 5.0
+    help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
+      Smaller values are more precise but may be difficult to learn as they have a
+      lower density within the image space. Larger values are easier to learn but
+      are less precise with respect to the peak coordinate. This spread is in units
+      of pixels of the model input image, i.e., the image resolution after any input
+      scaling is applied.
+    label: Sigma for Nodes
+    name: model.heads.multi_class_topdown.confmaps.sigma
     type: double
 
   single animal:
@@ -197,7 +271,7 @@ inference:
   label: Training/Inference Pipeline Type
   type: stacked
   default: "multi-animal bottom-up "
-  options: "multi-animal bottom-up,multi-animal top-down,single animal,none"
+  options: "multi-animal bottom-up,multi-animal top-down,multi-animal bottom-up-id,multi-animal top-down-id,single animal,movenet-lightning,movenet-thunder,none"
 
   multi-animal bottom-up:
   - type: text
@@ -215,6 +289,23 @@ inference:
     "<u>centered-instance confidence map</u>" model for predicted node locations
     for each individual animal predicted by the centroid model.'
 
+  multi-animal bottom-up-id:
+  - type: text
+    text: '<b>Multi-Animal Bottom-Up-Id Pipeline</b>:<br />
+      This pipeline uses single model with two output heads: a "<u>confidence
+      map</u>" head to predicts the nodes for an entire image and a "<u>part
+      affinity field</u>" head to group the nodes into distinct animal
+      instances. It also handles classification and tracking.'
+
+  multi-animal top-down-id:
+  - type: text
+    text: '<b>Multi-Animal Top-Down-Id Pipeline</b>:<br />
+    This pipeline uses two models: a "<u>centroid</u>" model to locate and crop
+    around each animal in the frame, and a "<u>centered-instance confidence
+    map</u>" model for predicted node locations for each individual animal
+    predicted by the centroid model. It also handles classification and
+    tracking.'
+
   single animal:
   - type: text
     text: '<b>Single Animal Pipeline</b>:<br />
@@ -223,6 +314,24 @@ inference:
       these nodes into a single animal instance.<br /><br />
       For predicting on videos with more than one animal per frame, use a
       multi-animal pipeline (even if your training data has one instance per frame).'
+
+  movenet-lightning:
+  - type: text
+    text: '<b>MoveNet Lightning Pipeline</b>:<br />
+      This pipeline uses a pretrained MoveNet Lightning model to predict the
+      nodes for an entire image and then groups all of these nodes into a single
+      instance. Lightning is intended for latency-critical applications. Note
+      that this model is intended for human pose estimation. There is no support
+      for videos containing more than one instance'
+
+  movenet-thunder:
+  - type: text
+    text: '<b>MoveNet Thunder Pipeline</b>:<br />
+      This pipeline uses a pretrained MoveNet Thunder model to predict the nodes
+      for an entire image and then groups all of these nodes into a single
+      instance. Thunder is intended for applications that require high accuracy.
+      Note that this model is intended for human pose estimation. There is no
+      support for videos containing more than one instance'
 
   none:
 

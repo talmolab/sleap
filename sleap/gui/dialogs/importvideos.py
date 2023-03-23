@@ -37,6 +37,7 @@ from sleap.gui.dialogs.filedialog import FileDialog
 
 import h5py
 import qimage2ndarray
+import cv2
 
 from typing import Any, Dict, List, Optional
 
@@ -141,6 +142,12 @@ class ImportParamDialog(QDialog):
                 "video_class": Video.from_filename,
                 "params": [],
             },
+            {
+                "video_type": "single_image",
+                "match": "jpg,png,tif,jpeg,tiff",
+                "video_class": Video.from_filename,
+                "params": [{"name": "grayscale", "type": "check"}],
+            },
         ]
 
         outer_layout = QVBoxLayout()
@@ -200,6 +207,18 @@ class ImportParamDialog(QDialog):
             button_layout.addWidget(all_channels_first_button)
             all_channels_last_button.clicked.connect(self.set_all_channels_last)
             all_channels_first_button.clicked.connect(self.set_all_channels_first)
+        if any(
+            [
+                widget.import_type["video_type"] == "single_image"
+                for widget in self.import_widgets
+            ]
+        ):
+            all_grayscale_button = QPushButton("All grayscale")
+            all_rgb_button = QPushButton("All RGB")
+            button_layout.addWidget(all_grayscale_button)
+            button_layout.addWidget(all_rgb_button)
+            all_grayscale_button.clicked.connect(self.set_all_grayscale)
+            all_rgb_button.clicked.connect(self.set_all_rgb)
 
         cancel_button = QPushButton("Cancel")
         import_button = QPushButton("Import")
@@ -549,18 +568,19 @@ class MessageWidget(QWidget):
 class VideoPreviewWidget(QWidget):
     """Widget to show video preview. Based on :class:`Video` class.
 
-    Args:
+    Attributes:
         video: the video to show
-
-    Returns:
-        None.
+        max_preview_size: Maximum size of the preview images.
 
     Note:
         This widget is used by ImportItemWidget.
     """
 
-    def __init__(self, video: Video = None, *args, **kwargs):
+    def __init__(
+        self, video: Video = None, max_preview_size: int = 256, *args, **kwargs
+    ):
         super(VideoPreviewWidget, self).__init__(*args, **kwargs)
+        self.max_preview_size = max_preview_size
         # widgets to include
         self.view = GraphicsView()
         self.video_label = QLabel()
@@ -599,10 +619,20 @@ class VideoPreviewWidget(QWidget):
 
         # Get image data
         frame = self.video.get_frame(idx)
+
+        # Re-size the preview image
+        height, width = frame.shape[:2]
+        img_length = max(height, width)
+        if img_length > self.max_preview_size:
+            ratio = self.max_preview_size / img_length
+            frame = cv2.resize(frame, None, fx=ratio, fy=ratio)
+
         # Clear existing objects
         self.view.clear()
+
         # Convert ndarray to QImage
         image = qimage2ndarray.array2qimage(frame)
+
         # Display image
         self.view.setImage(image)
 

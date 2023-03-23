@@ -1,18 +1,15 @@
 """
 Widget for previewing receptive field on sample image using model hyperparams.
 """
-from sleap import Video
-from sleap.nn.config import ModelConfig
-from sleap.gui.widgets.video import GraphicsView
-
-import numpy as np
-
-from sleap import Skeleton
-from sleap.nn.model import Model
-
 from typing import Optional, Text
 
+import numpy as np
 from qtpy import QtWidgets, QtGui, QtCore
+
+from sleap import Video, Track, Skeleton
+from sleap.nn.config import ModelConfig
+from sleap.gui.widgets.video import GraphicsView
+from sleap.nn.model import Model
 
 
 def compute_rf(down_blocks: int, convs_per_block: int = 2, kernel_size: int = 3) -> int:
@@ -54,7 +51,9 @@ def receptive_field_info_from_model_cfg(model_cfg: ModelConfig) -> dict:
     )
 
     try:
-        model = Model.from_config(model_cfg, Skeleton())
+        # `Skeleton` and `Tracks` not important for receptive field computation, but
+        # required as check in `Model.from_config`
+        model = Model.from_config(model_cfg, skeleton=Skeleton(), tracks=[Track()])
     except ZeroDivisionError:
         # Unable to create model from these config parameters
         return rf_info

@@ -7,6 +7,7 @@ def test_gui_import(qtbot):
     file_names = [
         "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5",
         "tests/data/videos/small_robot.mp4",
+        "tests/data/videos/robot0.jpg",
     ]
 
     importer = ImportParamDialog(file_names)
@@ -15,24 +16,24 @@ def test_gui_import(qtbot):
     qtbot.addWidget(importer)
 
     data = importer.get_data()
-    assert len(data) == 2
+    assert len(data) == len(file_names)
     assert len(data[0]["params"]) > 1
 
-    for import_item in importer.import_widgets:
+    for import_item in importer.import_widgets[:2]:
         btn = import_item.enabled_checkbox_widget
-        with qtbot.waitSignal(btn.stateChanged, timeout=10):
+        with qtbot.waitSignal(btn.stateChanged, timeout=100):
             qtbot.mouseClick(btn, QtCore.Qt.LeftButton)
             assert not import_item.is_enabled()
 
-    assert len(importer.get_data()) == 0
+    assert len(importer.get_data()) == 1
 
-    for import_item in importer.import_widgets:
+    for import_item in importer.import_widgets[:2]:
         btn = import_item.enabled_checkbox_widget
         with qtbot.waitSignal(btn.stateChanged, timeout=10):
             qtbot.mouseClick(btn, QtCore.Qt.LeftButton)
             assert import_item.is_enabled()
 
-    assert len(importer.get_data()) == 2
+    assert len(importer.get_data()) == len(file_names)
 
 
 def test_video_import_detect_grayscale():

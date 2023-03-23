@@ -268,7 +268,10 @@ class LabelsDeepLabCutYamlAdaptor(Adaptor):
 
         # Create skeleton which we'll use for each video
         skeleton = Skeleton()
-        skeleton.add_nodes(project_data["bodyparts"])
+        if project_data.get("multianimalbodyparts", False):
+            skeleton.add_nodes(project_data["multianimalbodyparts"])
+        else:
+            skeleton.add_nodes(project_data["bodyparts"])
 
         # Get subdirectories of videos and labeled data
         root_dir = os.path.dirname(filename)

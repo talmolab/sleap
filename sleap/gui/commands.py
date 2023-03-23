@@ -537,7 +537,16 @@ class CommandContext:
         )
 
     def addUserInstancesFromPredictions(self):
+        """Create user instance from a predicted instance."""
         self.execute(AddUserInstancesFromPredictions)
+
+    def copyInstance(self):
+        """Copy the selected instance to the instance clipboard."""
+        self.execute(CopyInstance)
+
+    def pasteInstance(self):
+        """Paste the instance from the clipboard as a new copy."""
+        self.execute(PasteInstance)
 
     def deleteSelectedInstance(self):
         """Deletes currently selected instance."""
@@ -563,9 +572,17 @@ class CommandContext:
         """Delete a track and remove from all instances."""
         self.execute(DeleteTrack, track=track)
 
-    def deleteAllTracks(self):
+    def deleteMultipleTracks(self, delete_all: bool = False):
         """Delete all tracks."""
-        self.execute(DeleteAllTracks)
+        self.execute(DeleteMultipleTracks, delete_all=delete_all)
+
+    def copyInstanceTrack(self):
+        """Copies the selected instance's track to the track clipboard."""
+        self.execute(CopyInstanceTrack)
+
+    def pasteInstanceTrack(self):
+        """Pastes the track in the clipboard to the selected instance."""
+        self.execute(PasteInstanceTrack)
 
     def setTrackName(self, track: "Track", name: str):
         """Sets name for track."""
@@ -1638,22 +1655,36 @@ class ToggleGrayscale(EditCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         """Reset the video backend."""
-        video: Video = context.state["video"]
-        try:
-            grayscale = video.backend.grayscale
-            video.backend.reset(grayscale=(not grayscale))
-        except:
-            print(
-                f"This video type {type(video.backend)} does not support grayscale yet."
-            )
 
-    @staticmethod
-    def ask(context: CommandContext, params: dict) -> bool:
-        """Check that video can be reset."""
+        def try_to_read_grayscale(video: Video):
+            try:
+                return video.backend.grayscale
+            except:
+                return None
+
         # Check that current video is set
-        if context.state["video"] is None:
-            return False
-        return True
+        if len(context.labels.videos) == 0:
+            raise ValueError("No videos detected in `Labels`.")
+
+        # Intuitively find the "first" video that supports grayscale
+        grayscale = try_to_read_grayscale(context.state["video"])
+        if grayscale is None:
+            for video in context.labels.videos:
+                grayscale = try_to_read_grayscale(video)
+                if grayscale is not None:
+                    break
+
+        if grayscale is None:
+            raise ValueError("No videos support grayscale.")
+
+        for idx, video in enumerate(context.labels.videos):
+            try:
+                video.backend.reset(grayscale=(not grayscale))
+            except:
+                print(
+                    f"This video type {type(video.backend)} for video at index {idx} "
+                    f"does not support grayscale yet."
+                )
 
 
 class AddVideo(EditCommand):
@@ -1992,8 +2023,10 @@ class OpenSkeleton(EditCommand):
         # Load new skeleton
         filename = params["filename"]
         new_skeleton = OpenSkeleton.load_skeleton(filename)
-        if new_skeleton.description == None:
-            new_skeleton.description = f"Custom Skeleton loaded from {filename}"
+
+        # Description and preview image only used for template skeletons
+        new_skeleton.description = None
+        new_skeleton.preview_image = None
         context.state["skeleton_description"] = new_skeleton.description
         context.state["skeleton_preview_image"] = new_skeleton.preview_image
 
@@ -2561,12 +2594,55 @@ class DeleteTrack(EditCommand):
         context.labels.remove_track(track)
 
 
-class DeleteAllTracks(EditCommand):
+class DeleteMultipleTracks(EditCommand):
     topics = [UpdateTopic.tracks]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        context.labels.remove_all_tracks()
+        """Delete either all tracks or just unused tracks.
+
+        Args:
+            context: The command context.
+            params: The command parameters.
+                delete_all: If True, delete all tracks. If False, delete only
+                    unused tracks.
+        """
+        delete_all: bool = params["delete_all"]
+        if delete_all:
+            context.labels.remove_all_tracks()
+        else:
+            context.labels.remove_unused_tracks()
+
+
+class CopyInstanceTrack(EditCommand):
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        selected_instance: Instance = context.state["instance"]
+        if selected_instance is None:
+            return
+        context.state["clipboard_track"] = selected_instance.track
+
+
+class PasteInstanceTrack(EditCommand):
+    topics = [UpdateTopic.tracks]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        selected_instance: Instance = context.state["instance"]
+        track_to_paste = context.state["clipboard_track"]
+        if selected_instance is None or track_to_paste is None:
+            return
+
+        # Ensure mutual exclusivity of tracks within a frame.
+        for inst in selected_instance.frame.instances_to_show:
+            if inst == selected_instance:
+                continue
+            if inst.track is not None and inst.track == track_to_paste:
+                # Unset track for other instances that have the same track.
+                inst.track = None
+
+        # Set the track on the selected instance.
+        selected_instance.track = context.state["clipboard_track"]
 
 
 class SetTrackName(EditCommand):
@@ -3052,6 +3128,48 @@ class AddUserInstancesFromPredictions(EditCommand):
         # Add the instances
         for new_instance in new_instances:
             context.labels.add_instance(context.state["labeled_frame"], new_instance)
+
+
+class CopyInstance(EditCommand):
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        current_instance: Instance = context.state["instance"]
+        if current_instance is None:
+            return
+        context.state["clipboard_instance"] = current_instance
+
+
+class PasteInstance(EditCommand):
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances]
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        base_instance: Instance = context.state["clipboard_instance"]
+        current_frame: LabeledFrame = context.state["labeled_frame"]
+        if base_instance is None or current_frame is None:
+            return
+
+        # Create a new instance copy.
+        new_instance = Instance.from_numpy(
+            base_instance.numpy(), skeleton=base_instance.skeleton
+        )
+
+        if base_instance.frame != current_frame:
+            # Only copy the track if we're not on the same frame and the track doesn't
+            # exist on the current frame.
+            current_frame_tracks = [
+                inst.track for inst in current_frame if inst.track is not None
+            ]
+            if base_instance.track not in current_frame_tracks:
+                new_instance.track = base_instance.track
+
+        # Add to the current frame.
+        context.labels.add_instance(current_frame, new_instance)
+
+        if current_frame not in context.labels.labels:
+            # Add current frame to labels if it wasn't already there. This happens when
+            # adding an instance to an empty labeled frame that isn't in the labels.
+            context.labels.append(current_frame)
 
 
 def open_website(url: str):
