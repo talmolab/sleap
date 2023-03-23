@@ -8,7 +8,7 @@ on:
       # 'main' triggers updates to 'sleap.ai', all others to 'sleap.ai/develop'
       - main
       - develop
-      - liezl/docs-apple-silicon
+      - liezl/1.3.0-build-cleanup
     paths:
       - "docs/**"
       - "README.rst"

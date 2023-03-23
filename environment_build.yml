@@ -14,6 +14,7 @@ dependencies:
     # - cudatoolkit=11.3.1
     # - cudnn=8.2.1
     # - nvidia::cuda-nvcc=11.3
+    - protobuf=3.20.*  # https://developers.google.com/protocol-buffers/docs/news/2022-05-06#python-updates
     - qtpy>=2.0.1
     - conda-build=3.21.7
     - anaconda-client
