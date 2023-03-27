@@ -227,20 +227,3 @@ class ReceptiveFieldImageWidget(GraphicsView):
         self.box.setRect(
             scene_center.x(), scene_center.y(), scaled_box_size, scaled_box_size
         )
-
-
-def demo_receptive_field():
-    app = QtWidgets.QApplication([])
-
-    video = Video.from_filename("tests/data/videos/centered_pair_small.mp4")
-
-    win = ReceptiveFieldImageWidget()
-    win.setImage(video.get_frame(0))
-    win._set_field_size(50)
-
-    win.show()
-    app.exec_()
-
-
-if __name__ == "__main__":
-    demo_receptive_field()
