@@ -32,7 +32,15 @@ from qtpy.QtWidgets import (
 )
 
 from sleap.gui.widgets.video import GraphicsView
-from sleap.io.video import Video
+from sleap.io.video import (
+    Video,
+    MediaVideo,
+    HDF5Video,
+    NumpyVideo,
+    ImgStoreVideo,
+    SingleImageVideo,
+    available_video_exts,
+)
 from sleap.gui.dialogs.filedialog import FileDialog
 
 import h5py
@@ -67,11 +75,25 @@ class ImportVideos:
         messages = dict() if messages is None else messages
 
         if filenames is None:
+
+            any_video_exts = " ".join(["*." + ext for ext in available_video_exts()])
+            media_video_exts = " ".join(["*." + ext for ext in MediaVideo.EXTS])
+            hdf5_video_exts = " ".join(["*." + ext for ext in HDF5Video.EXTS])
+            numpy_video_exts = " ".join(["*." + ext for ext in NumpyVideo.EXTS])
+            imgstore_video_exts = " ".join(["*." + ext for ext in ImgStoreVideo.EXTS])
+            siv_video_exts = " ".join(["*." + ext for ext in SingleImageVideo.EXTS])
+
             filenames, filter = FileDialog.openMultiple(
                 None,
                 "Select videos to import...",  # dialogue title
                 ".",  # initial path
-                "Any Video (*.h5 *.hd5v *.mp4 *.avi *.json);;HDF5 (*.h5 *.hd5v);;ImgStore (*.json);;Media Video (*.mp4 *.avi);;Any File (*.*)",
+                f"Any Video ({any_video_exts});;"
+                f"Media ({media_video_exts});;"
+                f"HDF5 ({hdf5_video_exts});;"
+                f"Numpy ({numpy_video_exts});;"
+                f"ImgStore ({imgstore_video_exts});;"
+                f"Single image ({siv_video_exts});;"
+                "Any File (*.*)",
             )
 
         if len(filenames) > 0:
@@ -113,7 +135,7 @@ class ImportParamDialog(QDialog):
         self.import_types = [
             {
                 "video_type": "hdf5",
-                "match": "h5,hdf5",
+                "match": ",".join(HDF5Video.EXTS),
                 "video_class": Video.from_hdf5,
                 "params": [
                     {
@@ -132,19 +154,19 @@ class ImportParamDialog(QDialog):
             },
             {
                 "video_type": "mp4",
-                "match": "mp4,avi",
+                "match": ",".join(MediaVideo.EXTS),
                 "video_class": Video.from_media,
                 "params": [{"name": "grayscale", "type": "check"}],
             },
             {
                 "video_type": "imgstore",
-                "match": "json",
+                "match": ",".join(ImgStoreVideo.EXTS),
                 "video_class": Video.from_filename,
                 "params": [],
             },
             {
                 "video_type": "single_image",
-                "match": "jpg,png,tif,jpeg,tiff",
+                "match": ",".join(SingleImageVideo.EXTS),
                 "video_class": Video.from_filename,
                 "params": [{"name": "grayscale", "type": "check"}],
             },
@@ -635,29 +657,3 @@ class VideoPreviewWidget(QWidget):
 
         # Display image
         self.view.setImage(image)
-
-
-# if __name__ == "__main__":
-
-#     app = QApplication([])
-
-#     # import_list = ImportVideos().ask()
-
-#     filenames = [
-#         "tests/data/videos/centered_pair_small.mp4",
-#         "tests/data/videos/small_robot.mp4",
-#     ]
-
-#     messages = {"tests/data/videos/small_robot.mp4": "Testing messages"}
-
-#     import_list = []
-#     importer = ImportParamDialog(filenames, messages=messages)
-#     importer.accepted.connect(lambda: importer.get_data(import_list))
-#     importer.exec_()
-
-#     for import_item in import_list:
-#         vid = import_item["video_class"](**import_item["params"])
-#         print(
-#             "Imported video data: (%d, %d), %d f, %d c"
-#             % (vid.width, vid.height, vid.frames, vid.channels)
-#         )
