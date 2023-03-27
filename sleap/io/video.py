@@ -816,7 +816,6 @@ class SingleImageVideo:
         elif self.filename and not self.filenames:
             self.filenames = [self.filename]
 
-        print("post init")
         self.cache_ = dict()
         self.test_frame_ = None
 
@@ -1256,7 +1255,7 @@ class Video:
             backend_class = HDF5Video
         elif filename.endswith(("npy")):
             backend_class = NumpyVideo
-        elif filename.lower().endswith(("mp4", "avi", "mov", "mj2")):
+        elif filename.lower().endswith(("mp4", "avi", "mov")):
             backend_class = MediaVideo
             kwargs["dataset"] = ""  # prevent serialization from breaking
         elif os.path.isdir(filename) or "metadata.yaml" in filename:
