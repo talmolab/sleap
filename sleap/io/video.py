@@ -63,6 +63,8 @@ class HDF5Video:
         convert_range: Whether we should convert data to [0, 255]-range
     """
 
+    EXTS = ("h5", "hdf5", "slp")
+
     filename: str = attr.ib(default=None)
     dataset: str = attr.ib(default=None)
     input_format: str = attr.ib(default="channels_last")
@@ -349,6 +351,8 @@ class MediaVideo:
         bgr: Whether color channels ordered as (blue, green, red).
     """
 
+    EXTS = ("mp4", "avi", "mov", "mj2", "mkv")
+
     filename: str = attr.ib()
     grayscale: bool = attr.ib()
     bgr: bool = attr.ib(default=True)
@@ -514,6 +518,8 @@ class NumpyVideo:
         * numpy data shape: (frames, height, width, channels)
     """
 
+    EXTS = ("npy", "npz")
+
     filename: Union[str, np.ndarray] = attr.ib()
 
     def __attrs_post_init__(self):
@@ -620,6 +626,8 @@ class ImgStoreVideo:
             to replace another video without having to update all the frame
             indices on :class:`LabeledFrame` objects in the dataset.
     """
+
+    EXTS = ("json", "yaml")
 
     filename: str = attr.ib(default=None)
     index_by_original: bool = attr.ib(default=True)
@@ -799,6 +807,8 @@ class SingleImageVideo:
     Args:
         filenames: Files to load as video.
     """
+
+    EXTS = ("jpg", "jpeg", "png", "tif", "tiff")
 
     filename: Optional[str] = attr.ib(default=None)
     filenames: Optional[List[str]] = attr.ib(factory=list)
@@ -1244,16 +1254,16 @@ class Video:
         """
         filename = Video.fixup_path(filename)
 
-        if filename.lower().endswith(("h5", "hdf5", "slp")):
+        if filename.lower().endswith(HDF5Video.EXTS):
             backend_class = HDF5Video
-        elif filename.endswith(("npy")):
+        elif filename.endswith(NumpyVideo.EXTS):
             backend_class = NumpyVideo
-        elif filename.lower().endswith(("mp4", "avi", "mov")):
+        elif filename.lower().endswith(MediaVideo.EXTS):
             backend_class = MediaVideo
             kwargs["dataset"] = ""  # prevent serialization from breaking
         elif os.path.isdir(filename) or "metadata.yaml" in filename:
             backend_class = ImgStoreVideo
-        elif filename.lower().endswith(("jpg", "jpeg", "png", "tif", "tiff")):
+        elif filename.lower().endswith(SingleImageVideo.EXTS):
             backend_class = SingleImageVideo
         else:
             raise ValueError("Could not detect backend for specified filename.")
@@ -1591,6 +1601,21 @@ class Video:
             if raise_warning:
                 logger.warning(f"Cannot find a video file: {path}")
             return path
+
+
+def available_video_exts() -> Tuple[str]:
+    """Return tuple of supported video extensions.
+
+    Returns:
+        Tuple of supported video extensions.
+    """
+    return (
+        MediaVideo.EXTS
+        + HDF5Video.EXTS
+        + NumpyVideo.EXTS
+        + SingleImageVideo.EXTS
+        + ImgStoreVideo.EXTS
+    )
 
 
 def load_video(
