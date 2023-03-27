@@ -847,19 +847,21 @@ class SingleImageVideo:
 
     def _load_test_frame(self):
         if self.test_frame_ is None:
-            self.test_frame_ = self._load_idx(0)
+            test_frame = self._load_idx(0)
 
             if self._detect_grayscale is True:
                 self.grayscale = bool(
-                    np.alltrue(self.test_frame_[..., 0] == self.test_frame_[..., -1])
+                    np.alltrue(test_frame[..., 0] == test_frame[..., -1])
                 )
 
             if self.height_ is None:
-                self.height_ = self.test_frame.shape[0]
+                self.height_ = test_frame.shape[0]
             if self.width_ is None:
-                self.width_ = self.test_frame.shape[1]
+                self.width_ = test_frame.shape[1]
             if self.channels_ is None:
-                self.channels_ = self.test_frame.shape[2]
+                self.channels_ = test_frame.shape[2]
+
+            return test_frame
 
     def get_idx_from_filename(self, filename: str) -> int:
         try:
@@ -872,8 +874,8 @@ class SingleImageVideo:
 
     @property
     def test_frame(self) -> np.ndarray:
-        self._load_test_frame()
-        return self.test_frame_
+        test_frame = self._load_test_frame()
+        return test_frame
 
     def matches(self, other: "SingleImageVideo") -> bool:
         """
@@ -967,10 +969,11 @@ class SingleImageVideo:
 
     def get_frame(self, idx: int, grayscale: bool = None) -> np.ndarray:
         """See :class:`Video`."""
-        if idx not in self.__data:
-            self.__data[idx] = self._load_idx(idx)
+        #if idx not in self.__data:
+        #    self.__data[idx] = self._load_idx(idx)
 
-        frame = self.__data[idx]  # Manipulate a copy of self.__data[idx]
+        #frame = self.__data[idx]  # Manipulate a copy of self.__data[idx]
+        frame = self._load_idx(idx)
 
         if grayscale is None:
             grayscale = self.grayscale
