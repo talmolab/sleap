@@ -16,6 +16,7 @@ dependencies:
   - nvidia::cuda-nvcc=11.3
   # - sleap::tensorflow=2.7.0
   # - sleap::pyside2=5.14.1
+  - ipywidgets==7.7.3  # seaborn dependency. 7.7.4 -> AttributeError: 'TerminalInteractiveShell' object has no attribute 'kernel'.
   - qtpy>=2.0.1
   - conda-forge::pip
   - pip:
