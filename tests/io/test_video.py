@@ -553,3 +553,36 @@ def test_reset_video_siv(small_robot_single_image_vid: Video, siv_robot: Labels)
     filename = labels.video.backend.filename
     labels.video.backend.reset(filename=filename, grayscale=True)
     assert_video_params(video=video, filenames=filenames, grayscale=True, reset=True)
+
+
+def test_singleimagevideo_caching():
+    # With caching
+    video = Video.from_filename(TEST_SMALL_ROBOT_SIV_FILE0, caching=True)
+    assert video.backend.test_frame_ is None
+    assert len(video.backend.cache_) == 0
+    assert video.backend.channels_ is None
+
+    assert video.backend.test_frame.shape == (320, 560, 3)
+    assert video.backend.test_frame_ is not None  # Test frame stored!
+    assert len(video.backend.cache_) == 0
+    assert video.backend.channels_ == 3
+
+    assert video[0].shape == (1, 320, 560, 3)
+    assert len(video.backend.cache_) == 1  # Loaded frame stored!
+
+    # No caching
+    video = Video.from_filename(TEST_SMALL_ROBOT_SIV_FILE0, caching=False)
+    assert video.backend.test_frame_ is None
+    assert len(video.backend.cache_) == 0
+    assert video.backend.channels_ is None
+
+    assert video.backend.test_frame.shape == (320, 560, 3)
+    assert video.backend.test_frame_ is None  # Test frame not stored!
+    assert len(video.backend.cache_) == 0
+    assert video.backend.channels_ == 3
+
+    assert video.shape == (1, 320, 560, 3)
+    assert video.backend.test_frame_ is None  # Test frame not stored!
+
+    assert video[0].shape == (1, 320, 560, 3)
+    assert len(video.backend.cache_) == 0  # Loaded frame not stored!
