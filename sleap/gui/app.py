@@ -64,8 +64,9 @@ from qtpy.QtWidgets import QMessageBox
 import sleap
 from sleap.gui.dialogs.metrics import MetricsTableDialog
 from sleap.skeleton import Skeleton
-from sleap.instance import Instance, LabeledFrame
+from sleap.instance import Instance
 from sleap.io.dataset import Labels
+from sleap.io.video import available_video_exts
 from sleap.info.summary import StatisticSeries
 from sleap.gui.commands import CommandContext, UpdateTopic
 from sleap.gui.widgets.views import CollapsibleWidget
@@ -275,8 +276,6 @@ class MainWindow(QMainWindow):
 
         exts = [Path(f).suffix for f in filenames]
 
-        VIDEO_EXTS = (".mp4", ".avi", ".h5")  # TODO: make this list global
-
         if len(exts) == 1 and exts[0].lower() == ".slp":
             if self.state["project_loaded"]:
                 # Merge
@@ -285,7 +284,7 @@ class MainWindow(QMainWindow):
                 # Load
                 self.commands.openProject(filename=filenames[0], first_open=True)
 
-        elif all([ext.lower() in VIDEO_EXTS for ext in exts]):
+        elif all([ext.lower() in available_video_exts() for ext in exts]):
             # Import videos
             self.commands.showImportVideos(filenames=filenames)
 
