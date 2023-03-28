@@ -816,6 +816,7 @@ class SingleImageVideo:
     width_: Optional[int] = attr.ib(default=None)
     channels_: Optional[int] = attr.ib(default=None)
     grayscale: Optional[bool] = attr.ib()
+    caching: bool = attr.ib(default=False)
 
     _detect_grayscale = False
 
@@ -825,7 +826,7 @@ class SingleImageVideo:
         elif self.filename and not self.filenames:
             self.filenames = [self.filename]
 
-        self.__data = dict()
+        self.cache_ = dict()
         self.test_frame_ = None
 
     @grayscale.default
@@ -855,20 +856,24 @@ class SingleImageVideo:
         raise FileNotFoundError(f"Unable to locate file {idx}: {self.filenames[idx]}")
 
     def _load_test_frame(self):
-        if self.test_frame_ is None:
-            self.test_frame_ = self._load_idx(0)
+        test_frame_ = self.test_frame_
+        if test_frame_ is None:
+            test_frame_ = self._load_idx(0)
 
             if self._detect_grayscale is True:
                 self.grayscale = bool(
-                    np.alltrue(self.test_frame_[..., 0] == self.test_frame_[..., -1])
+                    np.alltrue(test_frame_[..., 0] == test_frame_[..., -1])
                 )
 
             if self.height_ is None:
-                self.height_ = self.test_frame.shape[0]
+                self.height_ = test_frame_.shape[0]
             if self.width_ is None:
-                self.width_ = self.test_frame.shape[1]
+                self.width_ = test_frame_.shape[1]
             if self.channels_ is None:
-                self.channels_ = self.test_frame.shape[2]
+                self.channels_ = test_frame_.shape[2]
+        if self.caching:
+            self.test_frame_ = test_frame_
+        return test_frame_
 
     def get_idx_from_filename(self, filename: str) -> int:
         try:
@@ -881,8 +886,7 @@ class SingleImageVideo:
 
     @property
     def test_frame(self) -> np.ndarray:
-        self._load_test_frame()
-        return self.test_frame_
+        return self._load_test_frame()
 
     def matches(self, other: "SingleImageVideo") -> bool:
         """
@@ -938,7 +942,7 @@ class SingleImageVideo:
     @property
     def dtype(self):
         """See :class:`Video`."""
-        return self.__data.dtype
+        return self.cache_.dtype
 
     def reset(
         self,
@@ -955,7 +959,7 @@ class SingleImageVideo:
                 f"Cannot specify both filename and filenames for SingleImageVideo."
             )
         elif filename or filenames:
-            self.__data = dict()
+            self.cache_ = dict()
             self.test_frame_ = None
             self.height_ = height_
             self.width_ = width_
@@ -976,10 +980,13 @@ class SingleImageVideo:
 
     def get_frame(self, idx: int, grayscale: bool = None) -> np.ndarray:
         """See :class:`Video`."""
-        if idx not in self.__data:
-            self.__data[idx] = self._load_idx(idx)
+        if self.caching:
+            if idx not in self.cache_:
+                self.cache_[idx] = self._load_idx(idx)
 
-        frame = self.__data[idx]  # Manipulate a copy of self.__data[idx]
+            frame = self.cache_[idx]  # Manipulate a copy of self.__data[idx]
+        else:
+            frame = self._load_idx(idx)
 
         if grayscale is None:
             grayscale = self.grayscale
@@ -1623,6 +1630,7 @@ def load_video(
     grayscale: Optional[bool] = None,
     dataset=Optional[None],
     channels_first: bool = False,
+    **kwargs,
 ) -> Video:
     """Open a video from disk.
 
@@ -1658,7 +1666,6 @@ def load_video(
     See also:
         sleap.io.video.Video
     """
-    kwargs = {}
     if grayscale is not None:
         kwargs["grayscale"] = grayscale
     if dataset is not None:
