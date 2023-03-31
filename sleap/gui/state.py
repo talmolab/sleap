@@ -83,7 +83,9 @@ class GuiState(object):
         """Toggle boolean value for specified key."""
         self[key] = not self.get(key, default=default)
 
-    def increment(self, key: GSVarType, step: int = 1, mod: Optional[int] = None, default: int = 0):
+    def increment(
+        self, key: GSVarType, step: int = 1, mod: Optional[int] = None, default: int = 0
+    ):
         """Increment numeric value for specified key.
 
         Args:
@@ -98,7 +100,7 @@ class GuiState(object):
         if key not in self._state_vars:
             self[key] = default
             return
-        
+
         new_value = self.get(key) + step
 
         # Wrap the value if it's out of bounds.
