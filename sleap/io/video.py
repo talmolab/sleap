@@ -11,6 +11,7 @@ import attr
 import cattr
 import logging
 import multiprocessing
+from aniposelib import CameraGroup
 
 from typing import Iterable, List, Optional, Tuple, Union, Text
 
@@ -999,8 +1000,7 @@ class SingleImageVideo:
 
 @attr.s(auto_attribs=True, eq=False, order=False)
 class Video:
-    """
-    The top-level interface to any Video data used by SLEAP.
+    """The top-level interface to any Video data used by SLEAP.
 
     This class provides a common interface for various supported video data
     backends. It provides the bare minimum of properties and methods that
@@ -1040,10 +1040,30 @@ class Video:
     backend: Union[
         HDF5Video, NumpyVideo, MediaVideo, ImgStoreVideo, SingleImageVideo, DummyVideo
     ] = attr.ib()
+    _calibration: Optional[str] = attr.ib(default=None)
+    _camera_group: CameraGroup = attr.ib(default=None)
 
     # Delegate to the backend
     def __getattr__(self, item):
         return getattr(self.backend, item)
+
+    @property
+    def camera_group(self) -> CameraGroup:
+        """Camera group for this video."""
+        if (self._camera_group is None) and (self.calibration is not None):
+            self._camera_group = CameraGroup.load(self.calibration)
+        return self._camera_group
+    
+    @property
+    def calibration(self):
+        """Stores the path to the calibration file."""
+        return self._calibration
+
+    @calibration.setter
+    def calibration(self, val):
+        """Sets the calibration file."""
+        self._calibration = val
+        self._camera_group = None
 
     @property
     def num_frames(self) -> int:
