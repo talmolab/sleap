@@ -1049,19 +1049,81 @@ class Video:
 
     @property
     def camera_group(self) -> CameraGroup:
-        """Camera group for this video."""
+        """Camera group for this video.
+        
+        This is a convenience property that will load the camera group from the
+        calibration file if it is not already set.
+
+        Returns:
+            The camera group for this video.
+        """
         if (self._camera_group is None) and (self.calibration is not None):
             self._camera_group = CameraGroup.load(self.calibration)
         return self._camera_group
     
+    @camera_group.setter
+    def camera_group(self, val: Union[CameraGroup, Tuple[CameraGroup, str]]):
+        """Setter for setting the camera group directly.
+    
+        This is a convenience function, but it is recommended to "set" the camera group 
+        by setting `self.calibration` instead. This will ensure that the camera group is
+        loaded from the calibration file when it is needed.
+
+        If only a CameraGroup is provided, then the calibration file will be
+        set to None. If a tuple of (CameraGroup, str) is provided (recommended), then 
+        the calibration file will be set to the second element of the tuple.
+
+        Args:
+            val: Either a CameraGroup or a tuple of (CameraGroup, str).
+
+        Raises:
+            ValueError: If the type of val is not correct.
+        
+        Examples:
+            >>> video.camera_group = CameraGroup()
+            >>> video.camera_group = (CameraGroup(), "calibration.json")
+        """
+        if isinstance(val, Tuple):
+            # Swap ordering if accidentally mixed up.
+            v0, v1 = val
+            if isinstance(v0, str) and isinstance(v1, CameraGroup):
+                temp = v0
+                v0 = v1
+                v1 = temp
+            # Ensure the types are correct.
+            try:
+                assert isinstance(v0, CameraGroup)
+                assert isinstance(v1, str)
+            except AssertionError:
+                raise ValueError(
+                    "Expected types (CameraGroup, str) or (str, CameraGroup), but "
+                    f"recieved {type(v0), type(v1)}."
+                    )
+            self._camera_group = v0
+            self._calibration = v1
+        else:
+            # Ensure the type is correct.
+            try:
+                assert isinstance(val, CameraGroup)
+            except AssertionError:
+                raise ValueError(
+                    f"Expected type CameraGroup, but recieved {type(val)}."
+                    )
+            self._camera_group = val
+            self._calibration = None
+    
     @property
-    def calibration(self):
-        """Stores the path to the calibration file."""
+    def calibration(self) -> str:
+        """Returns the path to the calibration file."""
         return self._calibration
 
     @calibration.setter
     def calibration(self, val):
-        """Sets the calibration file."""
+        """Sets the calibration file.
+        
+        This will also set the camera group to None. The camera group will be loaded 
+        from the calibration file when it is accessed through `self.camera_group`.
+        """
         self._calibration = val
         self._camera_group = None
 
