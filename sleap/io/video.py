@@ -12,9 +12,9 @@ import cattr
 import logging
 import multiprocessing
 
-from aniposelib.cameras import CameraGroup
 from typing import Iterable, List, Optional, Tuple, Union, Text
 
+from sleap.io.cameras import Camcorder
 from sleap.util import json_loads, json_dumps
 
 logger = logging.getLogger(__name__)
@@ -1020,6 +1020,7 @@ class Video:
     Args:
         backend: A backend is an object that implements the following basic
             required methods and properties
+        camera: A Camcorder object that describes the camera used to capture.
 
         * Properties
 
@@ -1040,6 +1041,7 @@ class Video:
     backend: Union[
         HDF5Video, NumpyVideo, MediaVideo, ImgStoreVideo, SingleImageVideo, DummyVideo
     ] = attr.ib()
+    camera: Optional[Camcorder] = attr.ib(default=None)
 
     # Delegate to the backend
     def __getattr__(self, item):

@@ -1,12 +1,52 @@
 """Module for storing information for camera groups."""
 
-from typing import List
+from typing import List, Tuple, Optional
 
-import attrs
-from aniposelib.cameras import CameraGroup
+from attrs import define, field
 from aniposelib.cameras import Camera
+from aniposelib.cameras import CameraGroup
+import numpy as np
 
-@attrs.define
+@define
+class Camcorder(Camera):
+    """Class for storing information for camcorders.
+    
+    Attributes:
+        matrix: Camera matrix.
+        dist: Distortion coefficients.
+        size: Image size.
+        rvec: Rotation vector.
+        tvec: Translation vector.
+        name: Name of camera.
+        extra_dist: Whether to use extra distortion coefficients.
+    """
+
+    matrix: np.ndarray = field(default=np.eye(3), eq=np.array_equal)
+    dist: np.ndarray = field(default=np.eye(5), eq=np.array_equal)
+    size: Optional[Tuple[int, int]] = None
+    rvec: np.ndarray = field(default=np.eye(3), eq=np.array_equal)
+    tvec: np.ndarray = field(default=np.eye(3), eq=np.array_equal)
+    name: Optional[str] = None
+    extra_dist: bool = False
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(name={self.name}, size={self.size})"
+
+    @classmethod
+    def from_dict(cls, d):
+        """Creates a Camcorder object from a dictionary.
+        
+        Args:
+            d: Dictionary with keys for matrix, dist, size, rvec, tvec, and name.
+        
+        Returns:
+            Camcorder object.
+        """
+        cam = Camcorder()
+        cam.load_dict(d)
+        return cam
+
+@define
 class CameraCluster(CameraGroup):
     """Class for storing information for camera groups.
     
@@ -15,8 +55,8 @@ class CameraCluster(CameraGroup):
         metadata: Set of metadata.
     """
 
-    cameras: List[Camera] = attrs.field(factory=list)
-    metadata: set = attrs.field(factory=set)
+    cameras: List[Camera] = field(factory=list)
+    metadata: set = field(factory=set)
 
     def __attrs_post_init__(self):
         super().__init__(cameras=self.cameras, metadata=self.metadata)
@@ -50,5 +90,6 @@ class CameraCluster(CameraGroup):
             CameraCluster object.
         """
         cam_group: CameraGroup = super().load(filename)
-        return cls(cameras=cam_group.cameras, metadata=cam_group.metadata)
+        cameras = [Camcorder(**cam.__dict__) for cam in cam_group.cameras]
+        return cls(cameras=cameras, metadata=cam_group.metadata)
  
