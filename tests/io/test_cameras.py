@@ -4,16 +4,17 @@ import numpy as np
 import pytest
 from sleap.io.cameras import Camcorder, CameraCluster
 
+
 def test_camcorder(min_session_calibration_toml_path):
     """Test camcorder."""
     calibration = min_session_calibration_toml_path
     cameras = CameraCluster.load(calibration)
     cam: Camcorder = cameras[0]
-    
+
     # Test from_dict
     cam_dict = cam.get_dict()
     cam2 = Camcorder.from_dict(cam_dict)
-    
+
     # Test __repr__
     assert f"{cam.__class__.__name__}(" in repr(cam)
 
@@ -29,11 +30,12 @@ def test_camcorder(min_session_calibration_toml_path):
     # Test __eq__
     assert cam == cam2
 
+
 def test_camera_cluster(min_session_calibration_toml_path):
     """Test cameras."""
     calibration = min_session_calibration_toml_path
     cameras = CameraCluster.load(calibration)
-    
+
     # Test __len__
     assert len(cameras) == len(cameras.cameras)
     assert len(cameras) == 4
