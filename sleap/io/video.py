@@ -12,9 +12,8 @@ import cattr
 import logging
 import multiprocessing
 
-from typing import Iterable, List, Optional, Tuple, Union, Text
+from typing import Iterable, List, Optional, Tuple, Union
 
-from sleap.io.cameras import Camcorder
 from sleap.util import json_loads, json_dumps
 
 logger = logging.getLogger(__name__)
