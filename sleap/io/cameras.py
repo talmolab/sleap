@@ -8,10 +8,10 @@ import numpy as np
 
 @define
 class Camcorder:
-    """Wrapper for Camera and FishEyeCamera classes.
+    """Wrapper for `Camera` and `FishEyeCamera` classes.
     
     Attributes:
-        camera: Camera or FishEyeCamera object.
+        camera: `Camera` or `FishEyeCamera` object.
     """
 
     camera: Optional[Union[Camera, FisheyeCamera]] = field(factory=None)
