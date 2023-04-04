@@ -1,6 +1,6 @@
 """Module for storing information for camera groups."""
 
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Iterator
 
 from attrs import define, field
 from aniposelib.cameras import Camera, FisheyeCamera, CameraGroup
@@ -40,13 +40,13 @@ class Camcorder:
 
     @classmethod
     def from_dict(cls, d) -> "Camcorder":
-        """Creates a Camcorder object from a dictionary.
+        """Creates a `Camcorder` object from a dictionary.
 
         Args:
             d: Dictionary with keys for matrix, dist, size, rvec, tvec, and name.
 
         Returns:
-            Camcorder object.
+            `Camcorder` object.
         """
         if "fisheye" in d and d["fisheye"]:
             cam = FisheyeCamera.from_dict(d)
@@ -60,7 +60,7 @@ class CameraCluster(CameraGroup):
     """Class for storing information for camera groups.
 
     Attributes:
-        cameras: List of cameras.
+        cameras: List of `Camcorder`s.
         metadata: Set of metadata.
     """
 
@@ -76,7 +76,7 @@ class CameraCluster(CameraGroup):
     def __getitem__(self, idx):
         return self.cameras[idx]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[List[Camcorder]]:
         return iter(self.cameras)
 
     def __contains__(self, item):
@@ -90,13 +90,13 @@ class CameraCluster(CameraGroup):
 
     @classmethod
     def load(cls, filename) -> "CameraCluster":
-        """Loads cameras from a calibration.toml file.
+        """Loads cameras as `Camcorder`s from a calibration.toml file.
 
         Args:
             filename: Path to calibration.toml file.
 
         Returns:
-            CameraCluster object.
+            `CameraCluster` object.
         """
         cam_group: CameraGroup = super().load(filename)
         cameras = [Camcorder(cam) for cam in cam_group.cameras]
