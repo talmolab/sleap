@@ -50,9 +50,14 @@ def test_gui_state():
     assert times_x_changed == 4
     assert state["x"] == 2
 
+    # Test incrementing value with modulus of 1
+    state.increment("x", mod=1)
+    assert times_x_changed == 5
+    assert state["x"] == 0
+
     # test emitting callbacks without changing value
     state.emit("x")
-    assert times_x_changed == 5
+    assert times_x_changed == 6
 
 
 def test_gui_state_bool():
