@@ -26,7 +26,7 @@ def test_camcorder(min_session_calibration_toml_path):
     assert cam == cam2
 
 def test_camera_cluster(min_session_calibration_toml_path):
-     """Test cameras."""
+    """Test cameras."""
     calibration = min_session_calibration_toml_path
     cameras = CameraCluster.load(calibration)
     

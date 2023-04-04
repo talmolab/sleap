@@ -2,7 +2,7 @@
 
 from typing import List, Tuple, Optional
 
-from attrs import define, field
+from attrs import define, field, cmp_using
 from aniposelib.cameras import Camera
 from aniposelib.cameras import CameraGroup
 import numpy as np
@@ -21,11 +21,11 @@ class Camcorder(Camera):
         extra_dist: Whether to use extra distortion coefficients.
     """
 
-    matrix: np.ndarray = field(default=np.eye(3), eq=np.array_equal)
-    dist: np.ndarray = field(default=np.eye(5), eq=np.array_equal)
-    size: Optional[Tuple[int, int]] = None
-    rvec: np.ndarray = field(default=np.eye(3), eq=np.array_equal)
-    tvec: np.ndarray = field(default=np.eye(3), eq=np.array_equal)
+    matrix: np.ndarray = field(default=np.eye(3), eq=cmp_using(np.array_equal))
+    dist: np.ndarray = field(default=np.eye(5), eq=cmp_using(np.array_equal))
+    size: Optional[Tuple[int, int]] = field(default=None, eq=cmp_using(np.array_equal))
+    rvec: np.ndarray = field(default=np.eye(3), eq=cmp_using(np.array_equal))
+    tvec: np.ndarray = field(default=np.eye(3), eq=cmp_using(np.array_equal))
     name: Optional[str] = None
     extra_dist: bool = False
 
