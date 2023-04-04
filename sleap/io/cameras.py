@@ -1,8 +1,8 @@
 """Module for storing information for camera groups."""
 
-from typing import List, Tuple, Optional, Union
+from typing import List, Optional, Union
 
-from attrs import define, field, cmp_using
+from attrs import define, field
 from aniposelib.cameras import Camera, FisheyeCamera, CameraGroup
 import numpy as np
 
@@ -17,16 +17,18 @@ class Camcorder:
     camera: Optional[Union[Camera, FisheyeCamera]] = field(factory=None)
 
     def __eq__(self, other):
-        if isinstance(other, Camcorder):
-            for attr in vars(self):
-                other_attr = getattr(other, attr)
-                if isinstance(other_attr, np.ndarray):
-                    if not np.array_equal(getattr(self, attr), other_attr):
-                        return False
-                elif getattr(self, attr) != other_attr:
+        if not isinstance(other, Camcorder):
+            return NotImplemented
+    
+        for attr in vars(self):
+            other_attr = getattr(other, attr)
+            if isinstance(other_attr, np.ndarray):
+                if not np.array_equal(getattr(self, attr), other_attr):
                     return False
-            return True
-        return NotImplemented
+            elif getattr(self, attr) != other_attr:
+                return False
+            
+        return True
 
     def __getattr__(self, attr):
         """Used to grab methods from `Camera` or `FishEyeCamera` objects."""
