@@ -6,7 +6,7 @@ from sleap.io.cameras import Camcorder, CameraCluster
 
 
 def test_camcorder(min_session_calibration_toml_path):
-    """Test camcorder."""
+    """Test `Camcorder` data structure."""
     calibration = min_session_calibration_toml_path
     cameras = CameraCluster.load(calibration)
     cam: Camcorder = cameras[0]
@@ -32,7 +32,7 @@ def test_camcorder(min_session_calibration_toml_path):
 
 
 def test_camera_cluster(min_session_calibration_toml_path):
-    """Test cameras."""
+    """Test `CameraCluster` data structure."""
     calibration = min_session_calibration_toml_path
     cameras = CameraCluster.load(calibration)
 
@@ -40,14 +40,10 @@ def test_camera_cluster(min_session_calibration_toml_path):
     assert len(cameras) == len(cameras.cameras)
     assert len(cameras) == 4
 
-    # Test __getitem__, __iter__, and __contains
+    # Test __getitem__, __iter__, and __contains__
     for idx, cam in enumerate(cameras):
         assert cam == cameras[idx]
         assert cam in cameras
 
     # Test __repr__
     assert f"{cameras.__class__.__name__}(" in repr(cameras)
-
-
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_camcorder"])

@@ -1020,7 +1020,6 @@ class Video:
     Args:
         backend: A backend is an object that implements the following basic
             required methods and properties
-        camera: A Camcorder object that describes the camera used to capture.
 
         * Properties
 
@@ -1041,7 +1040,6 @@ class Video:
     backend: Union[
         HDF5Video, NumpyVideo, MediaVideo, ImgStoreVideo, SingleImageVideo, DummyVideo
     ] = attr.ib()
-    camera: Optional[Camcorder] = attr.ib(default=None)
 
     # Delegate to the backend
     def __getattr__(self, item):
