@@ -1,33 +1,36 @@
 """Module for storing information for camera groups."""
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 
 from attrs import define, field, cmp_using
-from aniposelib.cameras import Camera
-from aniposelib.cameras import CameraGroup
+from aniposelib.cameras import Camera, FisheyeCamera, CameraGroup
 import numpy as np
 
 @define
-class Camcorder(Camera):
-    """Class for storing information for camcorders.
+class Camcorder:
+    """Wrapper for Camera and FishEyeCamera classes.
     
     Attributes:
-        matrix: Camera matrix.
-        dist: Distortion coefficients.
-        size: Image size.
-        rvec: Rotation vector.
-        tvec: Translation vector.
-        name: Name of camera.
-        extra_dist: Whether to use extra distortion coefficients.
+        camera: Camera or FishEyeCamera object.
     """
 
-    matrix: np.ndarray = field(default=np.eye(3), eq=cmp_using(np.array_equal))
-    dist: np.ndarray = field(default=np.eye(5), eq=cmp_using(np.array_equal))
-    size: Optional[Tuple[int, int]] = field(default=None, eq=cmp_using(np.array_equal))
-    rvec: np.ndarray = field(default=np.eye(3), eq=cmp_using(np.array_equal))
-    tvec: np.ndarray = field(default=np.eye(3), eq=cmp_using(np.array_equal))
-    name: Optional[str] = None
-    extra_dist: bool = False
+    camera: Optional[Union[Camera, FisheyeCamera]] = field(factory=None)
+
+    def __eq__(self, other):
+        if isinstance(other, Camcorder):
+            for attr in vars(self):
+                other_attr = getattr(other, attr)
+                if isinstance(other_attr, np.ndarray):
+                    if not np.array_equal(getattr(self, attr), other_attr):
+                        return False
+                elif getattr(self, attr) != other_attr:
+                    return False
+            return True
+        return NotImplemented
+
+    def __getattr__(self, attr):
+        """Used to grab methods from `Camera` or `FishEyeCamera` objects."""
+        return getattr(self.camera, attr)
 
     def __repr__(self):
         return f"{self.__class__.__name__}(name={self.name}, size={self.size})"
@@ -42,9 +45,11 @@ class Camcorder(Camera):
         Returns:
             Camcorder object.
         """
-        cam = Camcorder()
-        cam.load_dict(d)
-        return cam
+        if 'fisheye' in d and d['fisheye']:
+            cam = FisheyeCamera.from_dict(d)
+        else:
+            cam = Camera.from_dict(d)
+        return Camcorder(cam)
 
 @define
 class CameraCluster(CameraGroup):
@@ -90,6 +95,6 @@ class CameraCluster(CameraGroup):
             CameraCluster object.
         """
         cam_group: CameraGroup = super().load(filename)
-        cameras = [Camcorder(**cam.__dict__) for cam in cam_group.cameras]
+        cameras = [Camcorder(cam) for cam in cam_group.cameras]
         return cls(cameras=cameras, metadata=cam_group.metadata)
  
