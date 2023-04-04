@@ -2,14 +2,12 @@
 
 import numpy as np
 import pytest
-from sleap.io.cameras import Camcorder, CameraCluster
+from sleap.io.cameras import Camcorder, CameraCluster, RecordingSession
 
 
-def test_camcorder(min_session_calibration_toml_path):
+def test_camcorder(min_session_camcorder_0):
     """Test `Camcorder` data structure."""
-    calibration = min_session_calibration_toml_path
-    cameras = CameraCluster.load(calibration)
-    cam: Camcorder = cameras[0]
+    cam: Camcorder = min_session_camcorder_0
 
     # Test from_dict
     cam_dict = cam.get_dict()
@@ -34,16 +32,54 @@ def test_camcorder(min_session_calibration_toml_path):
 def test_camera_cluster(min_session_calibration_toml_path):
     """Test `CameraCluster` data structure."""
     calibration = min_session_calibration_toml_path
-    cameras = CameraCluster.load(calibration)
+    camera_cluster = CameraCluster.load(calibration)
 
     # Test __len__
-    assert len(cameras) == len(cameras.cameras)
-    assert len(cameras) == 4
+    assert len(camera_cluster) == len(camera_cluster.cameras)
+    assert len(camera_cluster) == 4
 
     # Test __getitem__, __iter__, and __contains__
-    for idx, cam in enumerate(cameras):
-        assert cam == cameras[idx]
-        assert cam in cameras
+    for idx, cam in enumerate(camera_cluster):
+        assert cam == camera_cluster[idx]
+        assert cam in camera_cluster
 
     # Test __repr__
-    assert f"{cameras.__class__.__name__}(" in repr(cameras)
+    assert f"{camera_cluster.__class__.__name__}(" in repr(camera_cluster)
+
+
+def test_recording_session(
+    min_session_calibration_toml_path: str, min_session_camera_cluster: CameraCluster
+):
+    """Test `RecordingSession` data structure."""
+    calibration: str = min_session_calibration_toml_path
+    camera_cluster: CameraCluster = min_session_camera_cluster
+
+    # Test load
+    session = RecordingSession.load(calibration)
+    session.metadata = {"test": "we can access this information!"}
+    session.camera_cluster.metadata = {
+        "another_test": "we can even access this information!"
+    }
+
+    # Test __repr__
+    assert f"{session.__class__.__name__}(" in repr(session)
+
+    # Test __iter__, __contains__, and __getitem__ (with int key)
+    for idx, cam in enumerate(session):
+        assert isinstance(cam, Camcorder)
+        assert cam in camera_cluster
+        assert cam == camera_cluster[idx]
+
+    # Test __len__
+    assert len(session) == len(camera_cluster)
+
+    # Test __getitem__ with string key
+    assert session["test"] == "we can access this information!"
+    assert session["another_test"] == "we can even access this information!"
+
+    # Test __getattr__
+    assert session.cameras == camera_cluster.cameras
+
+
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::test_recording_session"])

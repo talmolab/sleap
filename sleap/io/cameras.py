@@ -1,6 +1,6 @@
 """Module for storing information for camera groups."""
 
-from typing import List, Optional, Union, Iterator
+from typing import List, Optional, Union, Iterator, Any
 
 from attrs import define, field
 from aniposelib.cameras import Camera, FisheyeCamera, CameraGroup
@@ -61,11 +61,11 @@ class CameraCluster(CameraGroup):
 
     Attributes:
         cameras: List of `Camcorder`s.
-        metadata: Set of metadata.
+        metadata: Dictionary of metadata.
     """
 
     cameras: List[Camcorder] = field(factory=list)
-    metadata: set = field(factory=set)
+    metadata: dict = field(factory=dict)
 
     def __attrs_post_init__(self):
         super().__init__(cameras=self.cameras, metadata=self.metadata)
@@ -101,3 +101,66 @@ class CameraCluster(CameraGroup):
         cam_group: CameraGroup = super().load(filename)
         cameras = [Camcorder(cam) for cam in cam_group.cameras]
         return cls(cameras=cameras, metadata=cam_group.metadata)
+
+
+@define
+class RecordingSession:
+    """Class for storing information for a recording session.
+
+    Attributes:
+        cameras: `CameraCluster` object.
+        metadata: Dictionary of metadata.
+    """
+
+    camera_cluster: CameraCluster = field(factory=CameraCluster)
+    metadata: dict = field(factory=dict)
+
+    def __iter__(self) -> Iterator[List[Camcorder]]:
+        return iter(self.camera_cluster)
+
+    def __len__(self):
+        return len(self.camera_cluster)
+
+    def __getitem__(self, idx_or_key: Union[int, str]):
+        """Try to find item in `camera_cluster.cameras` first, then in `metadata`s."""
+        # Try to find in `self.camera_cluster.cameras`
+        if isinstance(idx_or_key, int):
+            try:
+                return self.camera_cluster[idx_or_key]
+            except IndexError:
+                pass  # Try to find in metadata
+
+        # Try to find in `self.metadata`
+        if idx_or_key in self.metadata:
+            return self.metadata[idx_or_key]
+
+        # Try to find in `self.camera_cluster.metadata`
+        elif idx_or_key in self.camera_cluster.metadata:
+            return self.camera_cluster.metadata[idx_or_key]
+
+        # Raise error if not found
+        else:
+            raise KeyError(
+                f"Key {idx_or_key} not found in {self.__class__.__name__} or "
+                "associated metadata."
+            )
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(camera_cluster={self.camera_cluster})"
+
+    def __getattr__(self, attr: str) -> Any:
+        """Try to find the attribute in the camera_cluster next."""
+        return getattr(self.camera_cluster, attr)
+
+    @classmethod
+    def load(cls, filename) -> "RecordingSession":
+        """Loads cameras as `Camcorder`s from a calibration.toml file.
+
+        Args:
+            filename: Path to calibration.toml file.
+
+        Returns:
+            `RecordingSession` object.
+        """
+        camera_cluster: CameraCluster = CameraCluster.load(filename)
+        return cls(camera_cluster=camera_cluster)
