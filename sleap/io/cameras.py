@@ -39,7 +39,7 @@ class Camcorder:
         return f"{self.__class__.__name__}(name={self.name}, size={self.size})"
 
     @classmethod
-    def from_dict(cls, d):
+    def from_dict(cls, d) -> "Camcorder":
         """Creates a Camcorder object from a dictionary.
 
         Args:
@@ -64,7 +64,7 @@ class CameraCluster(CameraGroup):
         metadata: Set of metadata.
     """
 
-    cameras: List[Camera] = field(factory=list)
+    cameras: List[Camcorder] = field(factory=list)
     metadata: set = field(factory=set)
 
     def __attrs_post_init__(self):
