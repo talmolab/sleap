@@ -145,7 +145,7 @@ class RecordingSession:
     """Class for storing information for a recording session.
 
     Attributes:
-        cameras: `CameraCluster` object.
+        camera_cluster: `CameraCluster` object.
         metadata: Dictionary of metadata.
     """
 

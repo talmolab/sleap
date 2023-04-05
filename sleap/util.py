@@ -69,7 +69,7 @@ def deep_iterable_converter(member_converter, iterable_converter=None):
     :param iterable_converter: Converter to apply to iterable itself
         (optional)
 
-    .. versionadded:: 19.1.0
+    .. versionadded:: not added to attrs yet
 
     :raises TypeError: if any sub-converters fail
     """
