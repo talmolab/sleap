@@ -46,6 +46,13 @@ def test_camera_cluster(min_session_calibration_toml_path):
     # Test __repr__
     assert f"{camera_cluster.__class__.__name__}(" in repr(camera_cluster)
 
+    # Test validator
+    with pytest.raises(TypeError):
+        camera_cluster.cameras = [1, 2, 3]
+
+    # Test converter
+    assert isinstance(camera_cluster.cameras[0], Camcorder)
+
 
 def test_recording_session(
     min_session_calibration_toml_path: str, min_session_camera_cluster: CameraCluster
@@ -82,4 +89,4 @@ def test_recording_session(
 
 
 if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_recording_session"])
+    pytest.main([f"{__file__}::test_camera_cluster"])

@@ -2,9 +2,12 @@
 
 from typing import List, Optional, Union, Iterator, Any
 
-from attrs import define, field
 from aniposelib.cameras import Camera, FisheyeCamera, CameraGroup
+from attrs import define, field
+from attrs.validators import deep_iterable, instance_of
 import numpy as np
+
+from sleap.util import deep_iterable_converter
 
 
 @define
@@ -54,6 +57,31 @@ class Camcorder:
             cam = Camera.from_dict(d)
         return Camcorder(cam)
 
+    @classmethod
+    def from_camera(
+        cls, cam: Union[Camera, FisheyeCamera], *args, **kwargs
+    ) -> "Camcorder":
+        """Creates a `Camcorder` object from a `Camera` or `FishEyeCamera` object.
+
+        Args:
+            cam: `Camera` or `FishEyeCamera` object.
+
+        Returns:
+            `Camcorder` object.
+        """
+        # Do not convert if already a Camcorder
+        if isinstance(cam, Camcorder):
+            return cam
+
+        # Do not convert if not a `Camera` or `FishEyeCamera`
+        if not isinstance(cam, Camera):
+            raise TypeError(
+                f"Expected `Camera` or `FishEyeCamera` object, got {type(cam)}"
+            )
+
+        # Convert!
+        return Camcorder(cam)
+
 
 @define
 class CameraCluster(CameraGroup):
@@ -64,7 +92,17 @@ class CameraCluster(CameraGroup):
         metadata: Dictionary of metadata.
     """
 
-    cameras: List[Camcorder] = field(factory=list)
+    cameras: List[Camcorder] = field(
+        factory=list,
+        validator=deep_iterable(
+            member_validator=instance_of(Camcorder),
+            iterable_validator=instance_of(list),
+        ),
+        converter=deep_iterable_converter(
+            member_converter=Camcorder.from_camera,
+            iterable_converter=list,
+        ),
+    )
     metadata: dict = field(factory=dict)
 
     def __attrs_post_init__(self):
@@ -99,8 +137,7 @@ class CameraCluster(CameraGroup):
             `CameraCluster` object.
         """
         cam_group: CameraGroup = super().load(filename)
-        cameras = [Camcorder(cam) for cam in cam_group.cameras]
-        return cls(cameras=cameras, metadata=cam_group.metadata)
+        return cls(cameras=cam_group.cameras, metadata=cam_group.metadata)
 
 
 @define

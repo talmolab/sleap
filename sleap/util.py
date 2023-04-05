@@ -11,11 +11,13 @@ import os
 from pathlib import Path
 import re
 import shutil
-from typing import Any, Dict, Hashable, Iterable, List, Optional
+from typing import Any, Dict, Hashable, Iterable, List, Optional, Callable
 from urllib.request import url2pathname
 from urllib.parse import unquote, urlparse
 
 import attr
+from attrs import field
+from attrs.validators import is_callable, optional, and_
 import h5py as h5
 import numpy as np
 from PIL import Image
@@ -25,6 +27,55 @@ import rapidjson
 import yaml
 
 import sleap.version as sleap_version
+
+# TODO(LM): Open a PR to attrs to add this to the library, then remove once we upgrade.
+@attr.s(repr=False, slots=True, hash=True)
+class _DeepIterableConverter:
+    member_converter: Callable = field(validator=is_callable())
+    iterable_converter: Optional[Callable] = field(
+        default=None, validator=optional(is_callable())
+    )
+
+    def __call__(self, value):
+        """We use a callable class to be able to change the ``__repr__``."""
+
+        new_value = []
+        for member in value:
+            new_value.append(self.member_converter(member))
+
+        if self.iterable_converter is not None:
+            return self.iterable_converter(new_value)
+        else:
+            return type(value)(new_value)
+
+    def __repr__(self):
+        iterable_identifier = (
+            "" if self.iterable_converter is None else f" {self.iterable_converter!r}"
+        )
+        return (
+            "<deep_iterable converter for{iterable_identifier}"
+            " iterables of {member!r}>"
+        ).format(
+            iterable_identifier=iterable_identifier,
+            member=self.member_converter,
+        )
+
+
+# TODO(LM): Open a PR to attrs to add this to the library, then remove once we upgrade.
+def deep_iterable_converter(member_converter, iterable_converter=None):
+    """A converter that performs deep conversion of an iterable.
+
+    :param member_converter: Converter(s) to apply to iterable members
+    :param iterable_converter: Converter to apply to iterable itself
+        (optional)
+
+    .. versionadded:: 19.1.0
+
+    :raises TypeError: if any sub-converters fail
+    """
+    if isinstance(member_converter, (list, tuple)):
+        member_converter = and_(*member_converter)
+    return _DeepIterableConverter(member_converter, iterable_converter)
 
 
 def json_loads(json_str: str) -> Dict:
