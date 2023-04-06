@@ -60,7 +60,7 @@ def min_labels_robot():
 @pytest.fixture
 def siv_robot():
     """Created before grayscale attribute was added to SingleImageVideo backend."""
-    return Labels.load_file(TEST_SLP_SIV_ROBOT)
+    return Labels.load_file(TEST_SLP_SIV_ROBOT, video_search="tests/data/videos/")
 
 
 @pytest.fixture

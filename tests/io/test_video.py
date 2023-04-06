@@ -495,7 +495,7 @@ def test_reset_video_mp4(small_robot_mp4_vid: Video):
     assert_video_params(video=video, filename=filename, bgr=True, reset=True)
 
 
-def test_reset_video_siv(small_robot_single_image_vid: Video, siv_robot: Labels):
+def test_reset_video_siv(small_robot_single_image_vid: Video):
     video = small_robot_single_image_vid
     filename = video.backend.filename
 
@@ -548,7 +548,9 @@ def test_reset_video_siv(small_robot_single_image_vid: Video, siv_robot: Labels)
     assert_video_params(video=video, filenames=filenames, reset=True)
 
     # Test reset does not break deserialization of older slp
-    labels: Labels = Labels.load_file(TEST_SLP_SIV_ROBOT)
+    labels: Labels = Labels.load_file(
+        TEST_SLP_SIV_ROBOT, video_search="tests/data/videos/"
+    )
     video: Video = labels.video
     filename = labels.video.backend.filename
     labels.video.backend.reset(filename=filename, grayscale=True)
