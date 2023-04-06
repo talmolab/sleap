@@ -1,6 +1,6 @@
 """Module for storing information for camera groups."""
 
-from typing import List, Optional, Union, Iterator, Any
+from typing import List, Optional, Union, Iterator, Any, Dict
 
 from aniposelib.cameras import Camera, FisheyeCamera, CameraGroup
 from attrs import define, field
@@ -8,6 +8,7 @@ from attrs.validators import deep_iterable, instance_of
 import numpy as np
 
 from sleap.util import deep_iterable_converter
+from sleap.io.video import Video
 
 
 @define
@@ -16,9 +17,15 @@ class Camcorder:
 
     Attributes:
         camera: `Camera` or `FishEyeCamera` object.
+        videos: List of `Video` objects.
     """
 
     camera: Optional[Union[Camera, FisheyeCamera]] = field(factory=None)
+    _video_by_session: Dict["RecordingSession", Video] = field(factory=dict)
+
+    @property
+    def videos(self) -> List[Video]:
+        return list(set(self._video_by_session.values()))
 
     def __eq__(self, other):
         if not isinstance(other, Camcorder):
@@ -90,6 +97,8 @@ class CameraCluster(CameraGroup):
     Attributes:
         cameras: List of `Camcorder`s.
         metadata: Dictionary of metadata.
+        sessions: List of `RecordingSession`s.
+        videos: List of `Video`s.
     """
 
     cameras: List[Camcorder] = field(
@@ -104,6 +113,23 @@ class CameraCluster(CameraGroup):
         ),
     )
     metadata: dict = field(factory=dict)
+    _videos_by_session: Dict["RecordingSession", List[Video]] = field(factory=dict)
+    _session_by_video: Dict[Video, "RecordingSession"] = field(factory=dict)
+    _camcorder_by_video: Dict[Video, Camcorder] = field(factory=dict)
+
+    @property
+    def sessions(self) -> List["RecordingSession"]:
+        """List of `RecordingSession`s."""
+        return list(self._videos_by_session.keys())
+
+    @property
+    def videos(self) -> List[Video]:
+        """List of `Video`s."""
+        return list(self._session_by_video.keys())
+
+    def add_session(self, session: "RecordingSession"):
+        """Adds a `RecordingSession` to the cluster."""
+        self._videos_by_session[session] = []
 
     def __attrs_post_init__(self):
         super().__init__(cameras=self.cameras, metadata=self.metadata)
@@ -121,7 +147,10 @@ class CameraCluster(CameraGroup):
         return item in self.cameras
 
     def __repr__(self):
-        message = f"{self.__class__.__name__}(len={len(self)}: "
+        message = (
+            f"{self.__class__.__name__}(sessions={len(self.sessions)}, "
+            f"cameras={len(self)}: "
+        )
         for cam in self:
             message += f"{cam.name}, "
         return f"{message[:-2]})"
@@ -146,11 +175,73 @@ class RecordingSession:
 
     Attributes:
         camera_cluster: `CameraCluster` object.
+        videos: List of `Video`s.
         metadata: Dictionary of metadata.
     """
 
     camera_cluster: CameraCluster = field(factory=CameraCluster)
     metadata: dict = field(factory=dict)
+    
+    @property
+    def videos(self) -> List[Video]:
+        """List of `Video`s."""
+        return self.camera_cluster._videos_by_session[self]
+
+    def add_video(self, video: Video, camcorder: Camcorder):
+        """Adds a `Video` to the `RecordingSession`.
+        
+        Args:
+            video: `Video` object.
+            camcorder: `Camcorder` object.
+        """
+        # Ensure the `Camcorder` is in this `RecordingSession`'s `CameraCluster`
+        try:
+            assert camcorder in self.camera_cluster
+        except AssertionError:
+            raise ValueError(
+                f"Camcorder {camcorder.name} is not in this RecordingSession's "
+                f"{self.camera_cluster}."
+            )
+        
+        # Add session-to-videos (1-to-many) map to `CameraCluster`
+        if self not in self.camera_cluster._videos_by_session:
+            self.camera_cluster.add_session(self)
+        if video not in self.camera_cluster._videos_by_session[self]:
+            self.camera_cluster._videos_by_session[self].append(video)
+        
+        # Add session-to-video (1-to-1) map to `Camcorder`
+        if video not in camcorder._video_by_session:
+            camcorder._video_by_session[self] = video
+        
+        # Add video-to-session (1-to-1) map to `CameraCluster`
+        self.camera_cluster._session_by_video[video] = self
+
+        # Add video-to-camcorder (1-to-1) map to `CameraCluster`
+        if video not in self.camera_cluster._camcorder_by_video:
+            self.camera_cluster._camcorder_by_video[video] = []
+        self.camera_cluster._camcorder_by_video[video] = camcorder
+
+
+    def remove_video(self, video: Video):
+        """Removes a `Video` from the `RecordingSession`.
+
+        Args:
+            video: `Video` object.
+        """
+        # Remove video-to-camcorder map from `CameraCluster`
+        camcorder = self.camera_cluster._camcorder_by_video.pop(video)
+        
+        # Remove video-to-session map from `CameraCluster`
+        copy_of_self = self.camera_cluster._session_by_video.pop(video)
+        assert copy_of_self is self
+
+        # Remove session-to-video(s) maps from related `CameraCluster` and `Camcorder`
+        self.camera_cluster._videos_by_session[self].remove(video)
+        copy_of_video = camcorder._video_by_session.pop(self)
+        assert copy_of_video is video
+
+    def __attrs_post_init__(self):
+        self.camera_cluster.add_session(self)
 
     def __iter__(self) -> Iterator[List[Camcorder]]:
         return iter(self.camera_cluster)
@@ -190,14 +281,22 @@ class RecordingSession:
         return getattr(self.camera_cluster, attr)
 
     @classmethod
-    def load(cls, filename) -> "RecordingSession":
+    def load(
+        cls,
+        filename,
+        metadata: Optional[dict] = None,
+    ) -> "RecordingSession":
         """Loads cameras as `Camcorder`s from a calibration.toml file.
 
         Args:
             filename: Path to calibration.toml file.
+            metadata: Dictionary of metadata.
 
         Returns:
             `RecordingSession` object.
         """
         camera_cluster: CameraCluster = CameraCluster.load(filename)
-        return cls(camera_cluster=camera_cluster)
+        return cls(
+            camera_cluster=camera_cluster,
+            metadata=(metadata or {}),
+        )
