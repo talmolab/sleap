@@ -1,5 +1,5 @@
 """Module for storing information for camera groups."""
-
+import logging
 from typing import List, Optional, Union, Iterator, Any, Dict
 
 from aniposelib.cameras import Camera, FisheyeCamera, CameraGroup
@@ -9,6 +9,9 @@ import numpy as np
 
 from sleap.util import deep_iterable_converter
 from sleap.io.video import Video
+
+
+logger = logging.getLogger(__name__)
 
 
 @define
@@ -179,7 +182,12 @@ class RecordingSession:
     Attributes:
         camera_cluster: `CameraCluster` object.
         metadata: Dictionary of metadata.
-        videos: List of `Video`s.
+        videos: List of `Video`s that have been linked to a `Camcorder` in the
+            `self.camera_cluster`.
+        linked_cameras: List of `Camcorder`s in the `self.camera_cluster` that are
+            linked to a `Video`.
+        unlinked_cameras: List of `Camcorder`s in the `self.camera_cluster` that are
+            not linked to a `Video`.
     """
 
     camera_cluster: CameraCluster = field(factory=CameraCluster)
@@ -190,6 +198,63 @@ class RecordingSession:
     def videos(self) -> List[Video]:
         """List of `Video`s."""
         return self.camera_cluster._videos_by_session[self]
+
+    @property
+    def linked_cameras(self) -> List[Camcorder]:
+        """List of `Camcorder`s in `self.camera_cluster` that are linked to a video."""
+        return list(self._video_by_camcorder.keys())
+
+    @property
+    def unlinked_cameras(self) -> List[Camcorder]:
+        """List of `Camcorder`s in `self.camera_cluster` that are not linked to a video."""
+        return list(set(self.camera_cluster.cameras) - set(self.linked_cameras))
+
+    def get_video(self, camcorder: Camcorder) -> Optional[Video]:
+        """Retrieve `Video` linked to `Camcorder`.
+
+        Args:
+            camcorder: `Camcorder` object.
+
+        Returns:
+            If `Camcorder` in `self.camera_cluster`, then `Video` object if found, else
+            `None` if `Camcorder` has no linked `Video`.
+
+        Raises:
+            ValueError: If `Camcorder` is not in `self.camera_cluster`.
+        """
+        if camcorder not in self.camera_cluster:
+            raise ValueError(
+                f"Camcorder {camcorder.name} is not in this RecordingSession's "
+                f"{self.camera_cluster}."
+            )
+
+        if camcorder not in self._video_by_camcorder:
+            logger.warning(
+                f"Camcorder {camcorder.name} is not linked to a video in this "
+                f"RecordingSession."
+            )
+            return None
+
+        return self._video_by_camcorder[camcorder]
+
+    def get_camera(self, video: Video) -> Optional[Camcorder]:
+        """Retrieve `Camcorder` linked to `Video`.
+
+        Args:
+            video: `Video` object.
+
+        Returns:
+            `Camcorder` object if found, else `None`.
+        """
+
+        if video not in self.camera_cluster._camcorder_by_video:
+            logger.warning(
+                f"{video} is not linked to a Camcorder in this "
+                f"RecordingSession's {self.camera_cluster}."
+            )
+            return None
+
+        return self.camera_cluster._camcorder_by_video[video]
 
     def add_video(self, video: Video, camcorder: Camcorder):
         """Adds a `Video` to the `RecordingSession`.
@@ -260,8 +325,12 @@ class RecordingSession:
         """Try to find the attribute in the camera_cluster next."""
         return getattr(self.camera_cluster, attr)
 
-    def __getitem__(self, idx_or_key: Union[int, str]):
-        """Try to find item in `camera_cluster.cameras` first, then in `metadata`s."""
+    def __getitem__(self, idx_or_key: Union[int, Video, Camcorder, str]):
+        """Grab a `Camcorder`, `Video`, or metadata from the `RecordingSession`.
+
+        Try to index into `camera_cluster.cameras` first, then check
+        video-to-camera map and camera-to-video map. Lastly check in the `metadata`s.
+        """
         # Try to find in `self.camera_cluster.cameras`
         if isinstance(idx_or_key, int):
             try:
@@ -269,8 +338,16 @@ class RecordingSession:
             except IndexError:
                 pass  # Try to find in metadata
 
+        # Return a `Camcorder` if `idx_or_key` is a `Video
+        if isinstance(idx_or_key, Video):
+            return self.get_camera(idx_or_key)
+
+        # Return a `Video` if `idx_or_key` is a `Camcorder`
+        elif isinstance(idx_or_key, Camcorder):
+            return self.get_video(idx_or_key)
+
         # Try to find in `self.metadata`
-        if idx_or_key in self.metadata:
+        elif idx_or_key in self.metadata:
             return self.metadata[idx_or_key]
 
         # Try to find in `self.camera_cluster.metadata`

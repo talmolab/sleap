@@ -103,17 +103,35 @@ def test_recording_session(
     assert camcorder is session.camera_cluster._camcorder_by_video[centered_pair_vid]
     assert centered_pair_vid is session._video_by_camcorder[camcorder]
 
-    # Test video property
+    # Test videos property
     assert centered_pair_vid in session.videos
+
+    # Test linked_cameras property
+    assert camcorder in session.linked_cameras
+    assert camcorder not in session.unlinked_cameras
+
+    # Test __getitem__ with `Video` key
+    assert session[centered_pair_vid] is camcorder
+
+    # Test __getitem__ with `Camcorder` key
+    assert session[camcorder] is centered_pair_vid
 
     # Test remove_video
     session.remove_video(centered_pair_vid)
     assert centered_pair_vid not in session.videos
+    assert camcorder not in session.linked_cameras
+    assert camcorder in session.unlinked_cameras
     assert centered_pair_vid not in session.camera_cluster._videos_by_session[session]
     assert session not in camcorder._video_by_session
     assert centered_pair_vid not in session.camera_cluster._session_by_video
     assert centered_pair_vid not in session.camera_cluster._camcorder_by_video
     assert camcorder not in session._video_by_camcorder
+
+    # Test __getitem__ with `Video` key
+    assert session[centered_pair_vid] is None
+
+    # Test __getitem__ with `Camcorder` key
+    assert session[camcorder] is None
 
 
 if __name__ == "__main__":
