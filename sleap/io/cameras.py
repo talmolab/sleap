@@ -45,6 +45,9 @@ class Camcorder:
         """Used to grab methods from `Camera` or `FishEyeCamera` objects."""
         return getattr(self.camera, attr)
 
+    def __hash__(self) -> int:
+        return hash(self.camera)
+
     def __repr__(self):
         return f"{self.__class__.__name__}(name={self.name}, size={self.size})"
 
@@ -134,17 +137,17 @@ class CameraCluster(CameraGroup):
     def __attrs_post_init__(self):
         super().__init__(cameras=self.cameras, metadata=self.metadata)
 
+    def __contains__(self, item):
+        return item in self.cameras
+
+    def __iter__(self) -> Iterator[List[Camcorder]]:
+        return iter(self.cameras)
+
     def __len__(self):
         return len(self.cameras)
 
     def __getitem__(self, idx):
         return self.cameras[idx]
-
-    def __iter__(self) -> Iterator[List[Camcorder]]:
-        return iter(self.cameras)
-
-    def __contains__(self, item):
-        return item in self.cameras
 
     def __repr__(self):
         message = (
@@ -175,12 +178,13 @@ class RecordingSession:
 
     Attributes:
         camera_cluster: `CameraCluster` object.
-        videos: List of `Video`s.
         metadata: Dictionary of metadata.
+        videos: List of `Video`s.
     """
 
     camera_cluster: CameraCluster = field(factory=CameraCluster)
     metadata: dict = field(factory=dict)
+    _video_by_camcorder: Dict[Camcorder, Video] = field(factory=dict)
 
     @property
     def videos(self) -> List[Video]:
@@ -221,6 +225,9 @@ class RecordingSession:
             self.camera_cluster._camcorder_by_video[video] = []
         self.camera_cluster._camcorder_by_video[video] = camcorder
 
+        # Add camcorder-to-video (1-to-1) map to `RecordingSession`
+        self._video_by_camcorder[camcorder] = video
+
     def remove_video(self, video: Video):
         """Removes a `Video` from the `RecordingSession`.
 
@@ -231,13 +238,14 @@ class RecordingSession:
         camcorder = self.camera_cluster._camcorder_by_video.pop(video)
 
         # Remove video-to-session map from `CameraCluster`
-        copy_of_self = self.camera_cluster._session_by_video.pop(video)
-        assert copy_of_self is self
+        self.camera_cluster._session_by_video.pop(video)
 
         # Remove session-to-video(s) maps from related `CameraCluster` and `Camcorder`
         self.camera_cluster._videos_by_session[self].remove(video)
-        copy_of_video = camcorder._video_by_session.pop(self)
-        assert copy_of_video is video
+        camcorder._video_by_session.pop(self)
+
+        # Remove camcorder-to-video map from `RecordingSession`
+        self._video_by_camcorder.pop(camcorder)
 
     def __attrs_post_init__(self):
         self.camera_cluster.add_session(self)
@@ -246,7 +254,11 @@ class RecordingSession:
         return iter(self.camera_cluster)
 
     def __len__(self):
-        return len(self.camera_cluster)
+        return len(self.videos)
+
+    def __getattr__(self, attr: str) -> Any:
+        """Try to find the attribute in the camera_cluster next."""
+        return getattr(self.camera_cluster, attr)
 
     def __getitem__(self, idx_or_key: Union[int, str]):
         """Try to find item in `camera_cluster.cameras` first, then in `metadata`s."""
@@ -274,10 +286,6 @@ class RecordingSession:
 
     def __repr__(self):
         return f"{self.__class__.__name__}(camera_cluster={self.camera_cluster})"
-
-    def __getattr__(self, attr: str) -> Any:
-        """Try to find the attribute in the camera_cluster next."""
-        return getattr(self.camera_cluster, attr)
 
     @classmethod
     def load(
