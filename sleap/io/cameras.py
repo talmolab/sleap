@@ -169,7 +169,7 @@ class CameraCluster(CameraGroup):
         return cls(cameras=cam_group.cameras, metadata=cam_group.metadata)
 
 
-@define
+@define(eq=False)
 class RecordingSession:
     """Class for storing information for a recording session.
 
@@ -181,7 +181,7 @@ class RecordingSession:
 
     camera_cluster: CameraCluster = field(factory=CameraCluster)
     metadata: dict = field(factory=dict)
-    
+
     @property
     def videos(self) -> List[Video]:
         """List of `Video`s."""
@@ -189,7 +189,7 @@ class RecordingSession:
 
     def add_video(self, video: Video, camcorder: Camcorder):
         """Adds a `Video` to the `RecordingSession`.
-        
+
         Args:
             video: `Video` object.
             camcorder: `Camcorder` object.
@@ -202,17 +202,17 @@ class RecordingSession:
                 f"Camcorder {camcorder.name} is not in this RecordingSession's "
                 f"{self.camera_cluster}."
             )
-        
+
         # Add session-to-videos (1-to-many) map to `CameraCluster`
         if self not in self.camera_cluster._videos_by_session:
             self.camera_cluster.add_session(self)
         if video not in self.camera_cluster._videos_by_session[self]:
             self.camera_cluster._videos_by_session[self].append(video)
-        
+
         # Add session-to-video (1-to-1) map to `Camcorder`
         if video not in camcorder._video_by_session:
             camcorder._video_by_session[self] = video
-        
+
         # Add video-to-session (1-to-1) map to `CameraCluster`
         self.camera_cluster._session_by_video[video] = self
 
@@ -220,7 +220,6 @@ class RecordingSession:
         if video not in self.camera_cluster._camcorder_by_video:
             self.camera_cluster._camcorder_by_video[video] = []
         self.camera_cluster._camcorder_by_video[video] = camcorder
-
 
     def remove_video(self, video: Video):
         """Removes a `Video` from the `RecordingSession`.
@@ -230,7 +229,7 @@ class RecordingSession:
         """
         # Remove video-to-camcorder map from `CameraCluster`
         camcorder = self.camera_cluster._camcorder_by_video.pop(video)
-        
+
         # Remove video-to-session map from `CameraCluster`
         copy_of_self = self.camera_cluster._session_by_video.pop(video)
         assert copy_of_self is self
