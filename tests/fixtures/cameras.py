@@ -16,10 +16,5 @@ def min_session_camera_cluster(min_session_calibration_toml_path):
 
 
 @pytest.fixture
-def min_session_camcorder_0(min_session_camera_cluster):
-    return min_session_camera_cluster[0]
-
-
-@pytest.fixture
 def min_session_session(min_session_calibration_toml_path):
     return RecordingSession.load(min_session_calibration_toml_path)
