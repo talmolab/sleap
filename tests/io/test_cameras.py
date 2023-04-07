@@ -7,9 +7,14 @@ from sleap.io.cameras import Camcorder, CameraCluster, RecordingSession
 from sleap.io.video import Video
 
 
-def test_camcorder(min_session_camcorder_0):
+def test_camcorder(
+    min_session_session: RecordingSession,
+    centered_pair_vid: Video,
+):
     """Test `Camcorder` data structure."""
-    cam: Camcorder = min_session_camcorder_0
+    session: RecordingSession = min_session_session
+    cam: Camcorder = session.cameras[0]
+    video: Video = centered_pair_vid
 
     # Test from_dict
     cam_dict = cam.get_dict()
@@ -30,9 +35,28 @@ def test_camcorder(min_session_camcorder_0):
     # Test __eq__
     assert cam == cam2
 
+    # Test videos property
+    assert cam.videos == []
+    session.add_video(video, cam)
+    assert cam.videos == [video]
 
-def test_camera_cluster(min_session_calibration_toml_path):
+    # Test sessions property
+    assert cam.sessions == [session]
+
+    # Test __getitem__
+    assert cam[session] == video
+    assert cam[video] == session
+    with pytest.raises(KeyError):
+        cam["foo"]
+
+
+def test_camera_cluster(
+    min_session_calibration_toml_path: str,
+    min_session_session: RecordingSession,
+    centered_pair_vid: Video,
+):
     """Test `CameraCluster` data structure."""
+    # Test load
     calibration = min_session_calibration_toml_path
     camera_cluster = CameraCluster.load(calibration)
 
@@ -54,6 +78,25 @@ def test_camera_cluster(min_session_calibration_toml_path):
 
     # Test converter
     assert isinstance(camera_cluster.cameras[0], Camcorder)
+
+    # Test sessions property and add_session
+    assert camera_cluster.sessions == []
+    camera_cluster.add_session(min_session_session)
+    assert camera_cluster.sessions == [min_session_session]
+
+    # Test videos property
+    camera = camera_cluster.cameras[0]
+    min_session_session.add_video(centered_pair_vid, camera)
+    assert camera_cluster.videos == [centered_pair_vid]
+
+    # Test __getitem__
+    assert camera_cluster[centered_pair_vid] == (camera, min_session_session)
+    assert camera_cluster[camera] == [centered_pair_vid]
+    assert camera_cluster[min_session_session] == [centered_pair_vid]
+    min_session_session.remove_video(centered_pair_vid)
+    assert camera_cluster[centered_pair_vid] is None
+    assert camera_cluster[camera] == []
+    assert camera_cluster[min_session_session] == []
 
 
 def test_recording_session(
@@ -132,7 +175,3 @@ def test_recording_session(
 
     # Test __getitem__ with `Camcorder` key
     assert session[camcorder] is None
-
-
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_recording_session"])
