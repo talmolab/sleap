@@ -60,7 +60,7 @@ def test_app_workflow(
     assert app.state["skeleton"].get_symmetry("c") is None
 
     # Remove an edge
-    app.skeletonEdgesTable.selectRowItem(dict(source="b", destination="c"))
+    app.skeleton_dock.edges_table.selectRowItem(dict(source="b", destination="c"))
     app.commands.deleteEdge()
 
     assert len(app.state["skeleton"].edges) == 1
@@ -92,8 +92,8 @@ def test_app_workflow(
     assert_frame_chunk_suggestion_ui_updated(app, frame_to_spinbox, frame_from_spinbox)
 
     # Activate video using table
-    app.videosTable.selectRowItem(small_robot_mp4_vid)
-    app.videosTable.activateSelected()
+    app.videos_dock.table.selectRowItem(small_robot_mp4_vid)
+    app.videos_dock.table.activateSelected()
 
     assert app.state["video"] == small_robot_mp4_vid
 
@@ -101,7 +101,7 @@ def test_app_workflow(
     assert_frame_chunk_suggestion_ui_updated(app, frame_to_spinbox, frame_from_spinbox)
 
     # Select remaining video
-    app.videosTable.selectRowItem(small_robot_mp4_vid)
+    app.videos_dock.table.selectRowItem(small_robot_mp4_vid)
     assert app.state["selected_video"] == small_robot_mp4_vid
 
     # Verify the max of frame_to in frame_chunk is updated
@@ -307,7 +307,7 @@ def test_app_workflow(
     assert len(video_source) == 2
 
     # Remove video 1, keep video 0
-    app.videosTable.selectRowItem(small_robot_mp4_vid)
+    app.videos_dock.table.selectRowItem(small_robot_mp4_vid)
     assert app.state["selected_video"] == small_robot_mp4_vid
     app.commands.removeVideo()
     assert len(app.labels.videos) == 1
