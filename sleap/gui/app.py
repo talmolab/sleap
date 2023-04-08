@@ -56,9 +56,7 @@ from typing import Callable, List, Optional, Tuple
 from qtpy import QtCore, QtGui
 from qtpy.QtCore import Qt, QEvent
 
-from qtpy.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
-from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QTabWidget
-from qtpy.QtWidgets import QLabel, QPushButton, QComboBox
+from qtpy.QtWidgets import QApplication, QMainWindow
 from qtpy.QtWidgets import QMessageBox
 
 import sleap
@@ -75,27 +73,12 @@ from sleap.gui.widgets.docks import (
     SuggestionsDock,
     VideosDock,
 )
-from sleap.gui.widgets.views import CollapsibleWidget
 from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.gui.widgets.slider import set_slider_marks_from_labels
-from sleap.gui.dataviews import (
-    GenericTableView,
-    VideosTableModel,
-    SkeletonNodesTableModel,
-    SkeletonEdgesTableModel,
-    SuggestionsTableModel,
-    LabeledFrameTableModel,
-    SkeletonNodeModel,
-)
-from sleap.util import (
-    parse_uri_path,
-    decode_preview_image,
-    get_package_file,
-    find_files_by_suffix,
-)
+from sleap.util import parse_uri_path
 
 from sleap.gui.dialogs.filedialog import FileDialog
-from sleap.gui.dialogs.formbuilder import YamlFormWidget, FormBuilderModalDialog
+from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
 from sleap.gui.shortcuts import Shortcuts
 from sleap.gui.dialogs.shortcuts import ShortcutDialog
 from sleap.gui.state import GuiState
