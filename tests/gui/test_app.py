@@ -33,7 +33,7 @@ def test_app_workflow(
     assert app.state["skeleton"].nodes[2].name == "c"
 
     # Select and delete the third node
-    app.skeletonNodesTable.selectRowItem(app.state["skeleton"].nodes[2])
+    app.skeleton_dock.nodes_table.selectRowItem(app.state["skeleton"].nodes[2])
     app.commands.deleteNode()
 
     assert len(app.state["skeleton"].nodes) == 2
@@ -81,7 +81,9 @@ def test_app_workflow(
         assert frame_to_spinbox.maximum() == app.state["video"].num_frames
         assert frame_from_spinbox.maximum() == app.state["video"].num_frames
 
-    method_layout = app.suggestions_form_widget.form_layout.fields["method"]
+    method_layout = app.suggestions_dock.suggestions_form_widget.form_layout.fields[
+        "method"
+    ]
     frame_chunk_layout = method_layout.page_layouts["frame chunk"]
     frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
     frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
@@ -256,13 +258,16 @@ def test_app_workflow(
 
     # The on_data_update function uses labeled frames cache
     app.on_data_update([UpdateTopic.suggestions])
-    assert len(app.suggestionsTable.model().items) == num_samples
-    assert f"{num_samples}/{num_samples}" in app.suggested_count_label.text()
+    assert len(app.suggestions_dock.table.model().items) == num_samples
+    assert (
+        f"{num_samples}/{num_samples}"
+        in app.suggestions_dock.suggested_count_label.text()
+    )
 
     # Check that frames returned by labeled frames cache are correct
     prev_idx = -frame_delta
     for l_suggestion, st_suggestion in list(
-        zip(app.labels.get_suggestions(), app.suggestionsTable.model().items)
+        zip(app.labels.get_suggestions(), app.suggestions_dock.table.model().items)
     ):
         assert l_suggestion == st_suggestion["SuggestionFrame"]
         lf = app.labels.get(

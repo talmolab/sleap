@@ -2716,7 +2716,7 @@ class RemoveSuggestion(EditCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        selected_frame = context.app.suggestionsTable.getSelectedRowItem()
+        selected_frame = context.app.suggestions_dock.table.getSelectedRowItem()
         if selected_frame is not None:
             context.labels.remove_suggestion(
                 selected_frame.video, selected_frame.frame_idx
