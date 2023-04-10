@@ -56,9 +56,7 @@ from typing import Callable, List, Optional, Tuple
 from qtpy import QtCore, QtGui
 from qtpy.QtCore import Qt, QEvent
 
-from qtpy.QtWidgets import QApplication, QMainWindow, QWidget, QDockWidget
-from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QTabWidget
-from qtpy.QtWidgets import QLabel, QPushButton, QComboBox
+from qtpy.QtWidgets import QApplication, QMainWindow
 from qtpy.QtWidgets import QMessageBox
 
 import sleap
@@ -69,27 +67,18 @@ from sleap.io.dataset import Labels
 from sleap.io.video import available_video_exts
 from sleap.info.summary import StatisticSeries
 from sleap.gui.commands import CommandContext, UpdateTopic
-from sleap.gui.widgets.views import CollapsibleWidget
+from sleap.gui.widgets.docks import (
+    InstancesDock,
+    SkeletonDock,
+    SuggestionsDock,
+    VideosDock,
+)
 from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.gui.widgets.slider import set_slider_marks_from_labels
-from sleap.gui.dataviews import (
-    GenericTableView,
-    VideosTableModel,
-    SkeletonNodesTableModel,
-    SkeletonEdgesTableModel,
-    SuggestionsTableModel,
-    LabeledFrameTableModel,
-    SkeletonNodeModel,
-)
-from sleap.util import (
-    parse_uri_path,
-    decode_preview_image,
-    get_package_file,
-    find_files_by_suffix,
-)
+from sleap.util import parse_uri_path
 
 from sleap.gui.dialogs.filedialog import FileDialog
-from sleap.gui.dialogs.formbuilder import YamlFormWidget, FormBuilderModalDialog
+from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
 from sleap.gui.shortcuts import Shortcuts
 from sleap.gui.dialogs.shortcuts import ShortcutDialog
 from sleap.gui.state import GuiState
@@ -337,7 +326,11 @@ class MainWindow(QMainWindow):
 
         def update_frame_chunk_suggestions(video):
             """Set upper limit of frame_chunk spinbox to number frames in video."""
-            method_layout = self.suggestions_form_widget.form_layout.fields["method"]
+            method_layout = (
+                self.suggestions_dock.suggestions_form_widget.form_layout.fields[
+                    "method"
+                ]
+            )
             frame_chunk_layout = method_layout.page_layouts["frame chunk"]
             frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
             frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
@@ -992,317 +985,13 @@ class MainWindow(QMainWindow):
     def _create_dock_windows(self):
         """Create dock windows and connect them to GUI."""
 
-        def _make_dock(name, widgets=[], tab_with=None):
-            dock = QDockWidget(name)
-            dock.setObjectName(name + "Dock")
-
-            dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-
-            dock_widget = QWidget()
-            dock_widget.setObjectName(name + "Widget")
-            layout = QVBoxLayout()
-
-            for widget in widgets:
-                layout.addWidget(widget)
-
-            dock_widget.setLayout(layout)
-            dock.setWidget(dock_widget)
-
-            self.addDockWidget(Qt.RightDockWidgetArea, dock)
-            self.viewMenu.addAction(dock.toggleViewAction())
-
-            if tab_with is not None:
-                self.tabifyDockWidget(tab_with, dock)
-
-            return layout
-
-        def _add_button(to, label, action, key=None):
-            key = key or label.lower()
-            btn = QPushButton(label)
-            btn.clicked.connect(action)
-            to.addWidget(btn)
-            self._buttons[key] = btn
-            return btn
-
-        ####### Videos #######
-        videos_layout = _make_dock("Videos")
-        self.videosTable = GenericTableView(
-            state=self.state,
-            row_name="video",
-            is_activatable=True,
-            model=VideosTableModel(items=self.labels.videos, context=self.commands),
-            ellipsis_left=True,
-        )
-        videos_layout.addWidget(self.videosTable)
-
-        hb = QHBoxLayout()
-        _add_button(hb, "Toggle Grayscale", self.commands.toggleGrayscale)
-        _add_button(hb, "Show Video", self.videosTable.activateSelected)
-        _add_button(hb, "Add Videos", self.commands.addVideo)
-        _add_button(hb, "Remove Video", self.commands.removeVideo)
-
-        hbw = QWidget()
-        hbw.setLayout(hb)
-        videos_layout.addWidget(hbw)
-
-        ####### Skeleton #######
-        skeleton_layout = _make_dock(
-            "Skeleton", tab_with=videos_layout.parent().parent()
-        )
-
-        gb = CollapsibleWidget("Templates")
-        vb = QVBoxLayout()
-        hb = QHBoxLayout()
-
-        skeletons_folder = get_package_file("sleap/skeletons")
-        skeletons_json_files = find_files_by_suffix(
-            skeletons_folder, suffix=".json", depth=1
-        )
-        skeletons_names = [json.name.split(".")[0] for json in skeletons_json_files]
-        self.skeletonTemplates = QComboBox()
-        self.skeletonTemplates.addItems(skeletons_names)
-        self.skeletonTemplates.setEditable(False)
-        hb.addWidget(self.skeletonTemplates)
-        _add_button(hb, "Load", self.commands.openSkeletonTemplate)
-        hbw = QWidget()
-        hbw.setLayout(hb)
-        vb.addWidget(hbw)
-
-        hb = QHBoxLayout()
-        self.skeleton_preview_image = QLabel("Preview Skeleton")
-        hb.addWidget(self.skeleton_preview_image)
-        hb.setAlignment(self.skeleton_preview_image, Qt.AlignLeft)
-
-        self.skeleton_description = QLabel(
-            f'<strong>Description:</strong> {self.state["skeleton_description"]}'
-        )
-        self.skeleton_description.setWordWrap(True)
-        hb.addWidget(self.skeleton_description)
-        hb.setAlignment(self.skeleton_description, Qt.AlignLeft)
-
-        hbw = QWidget()
-        hbw.setLayout(hb)
-        vb.addWidget(hbw)
-
-        def updatePreviewImage(preview_image_bytes: bytes):
-
-            # Decode the preview image
-            preview_image = decode_preview_image(preview_image_bytes)
-
-            # Create a QImage from the Image
-            preview_image = QtGui.QImage(
-                preview_image.tobytes(),
-                preview_image.size[0],
-                preview_image.size[1],
-                QtGui.QImage.Format_RGBA8888,  # Format for RGBA images (see Image.mode)
-            )
-
-            preview_image = QtGui.QPixmap.fromImage(preview_image)
-
-            self.skeleton_preview_image.setPixmap(preview_image)
-
-        gb.set_content_layout(vb)
-        skeleton_layout.addWidget(gb)
-
-        def update_skeleton_preview(idx: int):
-            skel = Skeleton.load_json(skeletons_json_files[idx])
-            self.state["skeleton_description"] = (
-                f"<strong>Description:</strong> {skel.description}<br><br>"
-                f"<strong>Nodes ({len(skel)}):</strong> {', '.join(skel.node_names)}"
-            )
-            self.skeleton_description.setText(self.state["skeleton_description"])
-            updatePreviewImage(skel.preview_image)
-
-        self.skeletonTemplates.currentIndexChanged.connect(update_skeleton_preview)
-        update_skeleton_preview(idx=0)
-
-        gb = QGroupBox("Project Skeleton")
-        vgb = QVBoxLayout()
-
-        nodes_widget = QWidget()
-        vb = QVBoxLayout()
-        graph_tabs = QTabWidget()
-        self.skeletonNodesTable = GenericTableView(
-            state=self.state,
-            row_name="node",
-            model=SkeletonNodesTableModel(
-                items=self.state["skeleton"], context=self.commands
-            ),
-        )
-        vb.addWidget(self.skeletonNodesTable)
-        hb = QHBoxLayout()
-        _add_button(hb, "New Node", self.commands.newNode)
-        _add_button(hb, "Delete Node", self.commands.deleteNode)
-
-        hbw = QWidget()
-        hbw.setLayout(hb)
-        vb.addWidget(hbw)
-        nodes_widget.setLayout(vb)
-        graph_tabs.addTab(nodes_widget, "Nodes")
-
-        def _update_edge_src():
-            self.skeletonEdgesDst.model().skeleton = self.state["skeleton"]
-
-        edges_widget = QWidget()
-        vb = QVBoxLayout()
-        self.skeletonEdgesTable = GenericTableView(
-            state=self.state,
-            row_name="edge",
-            model=SkeletonEdgesTableModel(
-                items=self.state["skeleton"], context=self.commands
-            ),
-        )
-
-        vb.addWidget(self.skeletonEdgesTable)
-        hb = QHBoxLayout()
-        self.skeletonEdgesSrc = QComboBox()
-        self.skeletonEdgesSrc.setEditable(False)
-        self.skeletonEdgesSrc.currentIndexChanged.connect(_update_edge_src)
-        self.skeletonEdgesSrc.setModel(SkeletonNodeModel(self.state["skeleton"]))
-        hb.addWidget(self.skeletonEdgesSrc)
-        hb.addWidget(QLabel("to"))
-        self.skeletonEdgesDst = QComboBox()
-        self.skeletonEdgesDst.setEditable(False)
-        hb.addWidget(self.skeletonEdgesDst)
-        self.skeletonEdgesDst.setModel(
-            SkeletonNodeModel(
-                self.state["skeleton"], lambda: self.skeletonEdgesSrc.currentText()
-            )
-        )
-
-        def new_edge():
-            src_node = self.skeletonEdgesSrc.currentText()
-            dst_node = self.skeletonEdgesDst.currentText()
-            self.commands.newEdge(src_node, dst_node)
-
-        _add_button(hb, "Add Edge", new_edge)
-        _add_button(hb, "Delete Edge", self.commands.deleteEdge)
-        hbw = QWidget()
-        hbw.setLayout(hb)
-        vb.addWidget(hbw)
-        edges_widget.setLayout(vb)
-        graph_tabs.addTab(edges_widget, "Edges")
-        vgb.addWidget(graph_tabs)
-
-        hb = QHBoxLayout()
-        _add_button(hb, "Load From File...", self.commands.openSkeleton)
-        _add_button(hb, "Save As...", self.commands.saveSkeleton)
-
-        hbw = QWidget()
-        hbw.setLayout(hb)
-        vgb.addWidget(hbw)
-
-        # Add graph tabs to "Project Skeleton" group box
-        gb.setLayout(vgb)
-        skeleton_layout.addWidget(gb)
-
-        ####### Suggestions #######
-        suggestions_layout = _make_dock(
-            "Labeling Suggestions", tab_with=videos_layout.parent().parent()
-        )
-        self.suggestionsTable = GenericTableView(
-            state=self.state,
-            is_sortable=True,
-            model=SuggestionsTableModel(
-                items=self.labels.suggestions, context=self.commands
-            ),
-        )
-
-        suggestions_layout.addWidget(self.suggestionsTable)
-
-        hb = QHBoxLayout()
-
-        _add_button(
-            hb,
-            "Add current frame",
-            self.process_events_then(self.commands.addCurrentFrameAsSuggestion),
-            "add current frame as suggestion",
-        )
-
-        _add_button(
-            hb,
-            "Remove",
-            self.process_events_then(self.commands.removeSuggestion),
-            "remove suggestion",
-        )
-
-        _add_button(
-            hb,
-            "Clear all",
-            self.process_events_then(self.commands.clearSuggestions),
-            "clear suggestions",
-        )
-
-        hbw = QWidget()
-        hbw.setLayout(hb)
-        suggestions_layout.addWidget(hbw)
-
-        hb = QHBoxLayout()
-
-        _add_button(
-            hb,
-            "Previous",
-            self.process_events_then(self.commands.prevSuggestedFrame),
-            "goto previous suggestion",
-        )
-
-        self.suggested_count_label = QLabel()
-        hb.addWidget(self.suggested_count_label)
-
-        _add_button(
-            hb,
-            "Next",
-            self.process_events_then(self.commands.nextSuggestedFrame),
-            "goto next suggestion",
-        )
-
-        hbw = QWidget()
-        hbw.setLayout(hb)
-        suggestions_layout.addWidget(hbw)
-
-        self.suggestions_form_widget = YamlFormWidget.from_name(
-            "suggestions",
-            title="Generate Suggestions",
-        )
-        self.suggestions_form_widget.mainAction.connect(
-            self.process_events_then(self.commands.generateSuggestions)
-        )
-        suggestions_layout.addWidget(self.suggestions_form_widget)
-
-        def goto_suggestion(*args):
-            selected_frame = self.suggestionsTable.getSelectedRowItem()
-            self.commands.gotoVideoAndFrame(
-                selected_frame.video, selected_frame.frame_idx
-            )
-
-        self.suggestionsTable.doubleClicked.connect(goto_suggestion)
-
-        self.state.connect("suggestion_idx", self.suggestionsTable.selectRow)
-
-        ####### Instances #######
-        instances_layout = _make_dock(
-            "Instances", tab_with=videos_layout.parent().parent()
-        )
-        self.instancesTable = GenericTableView(
-            state=self.state,
-            row_name="instance",
-            name_prefix="",
-            model=LabeledFrameTableModel(
-                items=self.state["labeled_frame"], context=self.commands
-            ),
-        )
-        instances_layout.addWidget(self.instancesTable)
-
-        hb = QHBoxLayout()
-        _add_button(hb, "New Instance", lambda x: self.commands.newInstance())
-        _add_button(hb, "Delete Instance", self.commands.deleteSelectedInstance)
-
-        hbw = QWidget()
-        hbw.setLayout(hb)
-        instances_layout.addWidget(hbw)
+        self.videos_dock = VideosDock(self)
+        self.skeleton_dock = SkeletonDock(self)
+        self.suggestions_dock = SuggestionsDock(self)
+        self.instances_dock = InstancesDock(self)
 
         # Bring videos tab forward.
-        videos_layout.parent().parent().raise_()
+        self.videos_dock.wgt_layout.parent().parent().raise_()
 
     def _load_overlays(self):
         """Load all standard video overlays."""
@@ -1376,8 +1065,8 @@ class MainWindow(QMainWindow):
         )
         # todo: exclude predicted instances from count
         has_nodes_selected = (
-            self.skeletonEdgesSrc.currentIndex() > -1
-            and self.skeletonEdgesDst.currentIndex() > -1
+            self.skeleton_dock.skeletonEdgesSrc.currentIndex() > -1
+            and self.skeleton_dock.skeletonEdgesDst.currentIndex() > -1
         )
         control_key_down = QApplication.queryKeyboardModifiers() == Qt.ControlModifier
 
@@ -1414,7 +1103,9 @@ class MainWindow(QMainWindow):
         self._buttons["show video"].setEnabled(has_selected_video)
         self._buttons["remove video"].setEnabled(has_selected_video)
         self._buttons["delete instance"].setEnabled(has_selected_instance)
-        self.suggestions_form_widget.buttons["generate_button"].setEnabled(has_videos)
+        self.suggestions_dock.suggestions_form_widget.buttons[
+            "generate_button"
+        ].setEnabled(has_videos)
 
         # Update overlays
         self.overlays["track_labels"].visible = (
@@ -1456,24 +1147,28 @@ class MainWindow(QMainWindow):
             self._update_track_menu()
 
         if _has_topic([UpdateTopic.video]):
-            self.videosTable.model().items = self.labels.videos
+            self.videos_dock.table.model().items = self.labels.videos
 
         if _has_topic([UpdateTopic.skeleton]):
-            self.skeletonNodesTable.model().items = self.state["skeleton"]
-            self.skeletonEdgesTable.model().items = self.state["skeleton"]
-            self.skeletonEdgesSrc.model().skeleton = self.state["skeleton"]
-            self.skeletonEdgesDst.model().skeleton = self.state["skeleton"]
+            self.skeleton_dock.nodes_table.model().items = self.state["skeleton"]
+            self.skeleton_dock.edges_table.model().items = self.state["skeleton"]
+            self.skeleton_dock.skeletonEdgesSrc.model().skeleton = self.state[
+                "skeleton"
+            ]
+            self.skeleton_dock.skeletonEdgesDst.model().skeleton = self.state[
+                "skeleton"
+            ]
 
             if self.labels.skeletons:
-                self.suggestions_form_widget.set_field_options(
+                self.suggestions_dock.suggestions_form_widget.set_field_options(
                     "node", self.labels.skeletons[0].node_names
                 )
 
         if _has_topic([UpdateTopic.project, UpdateTopic.on_frame]):
-            self.instancesTable.model().items = self.state["labeled_frame"]
+            self.instances_dock.table.model().items = self.state["labeled_frame"]
 
         if _has_topic([UpdateTopic.suggestions]):
-            self.suggestionsTable.model().items = self.labels.suggestions
+            self.suggestions_dock.table.model().items = self.labels.suggestions
 
         if _has_topic([UpdateTopic.project_instances, UpdateTopic.suggestions]):
             # update count of suggested frames w/ labeled instances
@@ -1491,7 +1186,7 @@ class MainWindow(QMainWindow):
                 suggestion_status_text = (
                     f"{labeled_count}/{len(suggestion_list)} labeled ({prc:.1f}%)"
                 )
-            self.suggested_count_label.setText(suggestion_status_text)
+            self.suggestions_dock.suggested_count_label.setText(suggestion_status_text)
 
         if _has_topic([UpdateTopic.frame, UpdateTopic.project_instances]):
             self.state["last_interacted_frame"] = self.state["labeled_frame"]
