@@ -43,6 +43,7 @@ import cv2
 import attr
 from qtpy import QtCore, QtWidgets, QtGui
 from qtpy.QtWidgets import QMessageBox, QProgressDialog
+from sleap.io.cameras import RecordingSession
 
 from sleap.util import get_package_file
 from sleap.skeleton import Node, Skeleton
@@ -427,6 +428,10 @@ class CommandContext:
     def removeVideo(self):
         """Removes selected video from project."""
         self.execute(RemoveVideo)
+
+    def addSession(self):
+        """Shows gui for adding `RecordingSession`s to the project."""
+        self.execute(AddSession)
 
     def openSkeletonTemplate(self):
         """Shows gui for loading saved skeleton into project."""
@@ -1876,6 +1881,38 @@ class RemoveVideo(EditCommand):
 
         params["video"] = video
         return True
+
+
+class AddSession(EditCommand):
+    # topics = [UpdateTopic.session]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+
+        camera_calibration = params["camera_calibration"]
+        session = RecordingSession.load(filename=camera_calibration)
+
+        # Add session
+        context.labels.add_session(session)
+
+        # Load if no video currently loaded
+        if context.state["session"] is None:
+            context.state["session"] = session
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        """Shows gui for adding video to project."""
+        filters = ["Camera calibration (*.toml)"]
+        filename, selected_filter = FileDialog.open(
+            context.app,
+            dir=None,
+            caption="Select camera calibration...",
+            filter=";;".join(filters),
+        )
+
+        params["camera_calibration"] = filename
+
+        return len(filename) > 0
 
 
 class OpenSkeleton(EditCommand):

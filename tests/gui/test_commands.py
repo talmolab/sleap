@@ -8,6 +8,7 @@ from qtpy.QtWidgets import QComboBox
 
 from sleap import Skeleton, Track
 from sleap.gui.commands import (
+    AddSession,
     CommandContext,
     ImportDeepLabCutFolder,
     ExportAnalysisFile,
@@ -17,6 +18,7 @@ from sleap.gui.commands import (
     get_new_version_filename,
 )
 from sleap.instance import Instance, LabeledFrame
+from sleap.io.cameras import RecordingSession
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
@@ -795,3 +797,32 @@ def test_LoadProjectFile(
         load_and_assert_changes(search_path)
     finally:  # Move video back to original location - for ease of re-testing
         shutil.move(new_video_path, expected_video_path)
+
+
+def test_AddSession(
+    min_tracks_2node_labels: Labels,
+    min_session_calibration_toml_path: str,
+):
+    """Test that adding a session works."""
+    labels = min_tracks_2node_labels
+    camera_calibration = min_session_calibration_toml_path
+
+    # Set-up CommandContext
+    context: CommandContext = CommandContext.from_labels(labels)
+
+    # Case 1: No session selected
+    assert context.state["session"] is None
+    assert labels.sessions == []
+
+    params = {"camera_calibration": camera_calibration}
+    AddSession.do_action(context, params)
+    assert len(labels.sessions) == 1
+    session = labels.sessions[0]
+    assert context.state["session"] is session
+
+    # Case 2: Session selected
+    params = {"camera_calibration": camera_calibration}
+    AddSession.do_action(context, params)
+    assert len(labels.sessions) == 2
+    assert context.state["session"] is session
+    assert labels.sessions[1] is not session

@@ -61,6 +61,7 @@ import h5py as h5
 import numpy as np
 import datetime
 from sklearn.model_selection import train_test_split
+from sleap.io.cameras import RecordingSession
 
 try:
     from typing import ForwardRef
@@ -420,6 +421,7 @@ class Labels(MutableSequence):
     nodes: List[Node] = attr.ib(default=attr.Factory(list))
     tracks: List[Track] = attr.ib(default=attr.Factory(list))
     suggestions: List[SuggestionFrame] = attr.ib(default=attr.Factory(list))
+    sessions: List[RecordingSession] = attr.ib(default=attr.Factory(list))
     negative_anchors: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
     provenance: Dict[Text, Union[str, int, float, bool]] = attr.ib(
         default=attr.Factory(dict)
@@ -1580,6 +1582,14 @@ class Labels(MutableSequence):
         # Delete video
         self.videos.remove(video)
         self._cache.remove_video(video)
+
+    def add_session(self, session: RecordingSession):
+        """Add a recording session to the labels.
+        Args:
+            session: `RecordingSession` instance
+        """
+        if session not in self.sessions:
+            self.sessions.append(session)
 
     @classmethod
     def from_json(cls, *args, **kwargs):

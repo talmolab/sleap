@@ -466,6 +466,14 @@ class MainWindow(QMainWindow):
         )
 
         fileMenu.addSeparator()
+        add_menu_item(
+            fileMenu,
+            "add session",
+            "Add Recording Session...",
+            self.commands.addSession,
+        )
+
+        fileMenu.addSeparator()
         add_menu_item(fileMenu, "save", "Save", self.commands.saveProject)
         add_menu_item(fileMenu, "save as", "Save As...", self.commands.saveProjectAs)
 
