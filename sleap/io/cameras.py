@@ -1,5 +1,6 @@
 """Module for storing information for camera groups."""
 import logging
+import toml
 from typing import List, Optional, Union, Iterator, Any, Dict, Tuple
 
 from aniposelib.cameras import Camera, FisheyeCamera, CameraGroup
@@ -329,6 +330,9 @@ class CameraCluster(CameraGroup):
             `CameraCluster` object.
         """
         cam_group: CameraGroup = super().load(filename)
+        metadata = cam_group.metadata
+        metadata["calibration_path"] = filename
+        metadata["calibration"] = toml.load(filename)
         return cls(cameras=cam_group.cameras, metadata=cam_group.metadata)
 
 

@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+import toml
 
 from sleap.io.cameras import Camcorder, CameraCluster, RecordingSession
 from sleap.io.video import Video
@@ -59,6 +60,8 @@ def test_camera_cluster(
     # Test load
     calibration = min_session_calibration_toml_path
     camera_cluster = CameraCluster.load(calibration)
+    assert camera_cluster.metadata["calibration_path"] == calibration
+    assert camera_cluster.metadata["calibration"] == toml.load(calibration)
 
     # Test __len__
     assert len(camera_cluster) == len(camera_cluster.cameras)

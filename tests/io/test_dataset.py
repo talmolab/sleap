@@ -4,6 +4,7 @@ import numpy as np
 from pathlib import Path, PurePath
 
 import sleap
+from sleap.io.cameras import RecordingSession
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Track
 from sleap.io.video import Video, MediaVideo
@@ -965,6 +966,52 @@ def test_save_labels_with_images(min_labels_slp, tmpdir):
         embed_suggested=True,
     )
     assert Labels.load_file(fn).video.embedded_frame_inds == [0, 1, 2]
+
+
+def test_save_labels_with_sessions(
+    min_labels_slp: Labels, min_session_session: RecordingSession, tmpdir
+):
+    """Test that we can save labels with sessions attribute.
+
+    Spoiler: we can't... yet. TODO(LM)
+    """
+    labels = min_labels_slp
+    session = min_session_session
+
+    labels.add_session(session)
+    assert labels.sessions == [session]
+
+    new_path = str(Path(tmpdir, "test.slp"))
+    labels.save(new_path)
+
+    loaded_labels: Labels = Labels.load_file(new_path)
+    assert loaded_labels.sessions == [session]
+
+
+def test_add_session(min_labels_slp: Labels, min_session_session: RecordingSession):
+    """Test that we can add a `RecordingSession` to a `Labels` object
+
+    ...and relative paths are saved.
+
+    Spoiler: they are not... yet. TODO(LM)
+    """
+    labels = min_labels_slp
+    session = min_session_session
+
+    labels.add_session(session)
+    assert labels.sessions == [session]
+
+    labels_path = labels.provenance.get("filename", False)
+    assert labels_path  # TODO(LM): Merge PR where filename is saved on load.
+
+    # Set calibration path relative to labels path
+    calibration_path = PurePath(session.camera_cluster.metadata["calibration_path"])
+    labels_path = PurePath(labels_path)
+    relative_calibration = calibration_path.relative_to(labels_path)
+
+    assert session.camera_cluster.metadata["calibration_path"] == str(
+        relative_calibration
+    )
 
 
 def test_labels_hdf5(multi_skel_vid_labels, tmpdir):
