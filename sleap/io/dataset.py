@@ -1567,10 +1567,13 @@ class Labels(MutableSequence):
         if video not in self.videos:
             raise KeyError("Video is not in labels.")
 
+        video_index = self.videos.index(video)
+
         # Delete all associated labeled frames
         for label in reversed(self.labeled_frames):
             if label.video == video:
                 self.labeled_frames.remove(label)
+                self._cache.update_counts_for_frame(label)
 
         # Delete data that's indexed by video
         self.delete_suggestions(video)
@@ -1580,6 +1583,18 @@ class Labels(MutableSequence):
         # Delete video
         self.videos.remove(video)
         self._cache.remove_video(video)
+
+        # Update the frame count cache for all videos combined
+        for type_key in self._cache._frame_count_cache[None]:
+            updated_cache = set()
+            for idx_pair in self._cache._frame_count_cache[None][type_key]:
+                if idx_pair[0] == video_index:
+                    continue  # Skip the removed video
+                updated_video_index = (
+                    idx_pair[0] - 1 if idx_pair[0] > video_index else idx_pair[0]
+                )
+                updated_cache.add((updated_video_index, idx_pair[1]))
+            self._cache._frame_count_cache[None][type_key] = updated_cache
 
     @classmethod
     def from_json(cls, *args, **kwargs):

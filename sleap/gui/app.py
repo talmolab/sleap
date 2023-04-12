@@ -161,6 +161,7 @@ class MainWindow(QMainWindow):
             self.state["share usage data"] = False
         self.state["clipboard_track"] = None
         self.state["clipboard_instance"] = None
+        self.state["video_removed"]: False
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
         self.state.connect("show non-visible nodes", self.plotFrame)
