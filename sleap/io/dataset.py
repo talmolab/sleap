@@ -1947,6 +1947,7 @@ class Labels(MutableSequence):
             "videos": Video.cattr().unstructure(self.videos),
             "tracks": track_cattr.unstructure(self.tracks),
             "suggestions": label_cattr.unstructure(self.suggestions),
+            "sessions": RecordingSession.to_session_dict(self.sessions),
             "negative_anchors": label_cattr.unstructure(self.negative_anchors),
             "provenance": label_cattr.unstructure(self.provenance),
         }

@@ -209,13 +209,16 @@ def test_recording_session(
     }
 
     # Test from_session_dict
+    def compare_sessions(session_1: RecordingSession, session_2: RecordingSession):
+        assert isinstance(session_2, RecordingSession)
+        assert not (session_2 == session)  # Not the same object in memory
+        assert len(session_2.camera_cluster) == len(session_1.camera_cluster)
+        compare_cameras(session_1, session_2)
+        assert len(session_2.videos) == len(session_1.videos)
+        assert np.array_equal(session_2.videos, session_1.videos)
+
     session_2 = RecordingSession.from_session_dict(session_dict, videos_list)
-    assert isinstance(session_2, RecordingSession)
-    assert not (session_2 == session)  # Not the same object in memory
-    assert len(session_2.camera_cluster) == len(session.camera_cluster)
-    compare_cameras(session, session_2)
-    assert len(session_2.videos) == len(session.videos)
-    assert np.array_equal(session_2.videos, session.videos)
+    compare_sessions(session, session_2)
 
     # Test remove_video
     session.remove_video(centered_pair_vid)
@@ -233,3 +236,10 @@ def test_recording_session(
 
     # Test __getitem__ with `Camcorder` key
     assert session[camcorder] is None
+
+    # Test make_cattr
+    sessions_cattr = RecordingSession.make_cattr(videos_list)
+    session_dict_2 = sessions_cattr.unstructure(session_2)
+    assert session_dict_2 == session_dict
+    session_3 = sessions_cattr.structure(session_dict_2, RecordingSession)
+    compare_sessions(session_2, session_3)

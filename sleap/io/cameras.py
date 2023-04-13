@@ -2,6 +2,7 @@
 import logging
 from pathlib import Path
 import tempfile
+import cattr
 import toml
 from typing import List, Optional, Union, Iterator, Any, Dict, Tuple
 
@@ -670,7 +671,7 @@ class RecordingSession:
             `RecordingSession` object.
         """
 
-        # Restructure `CameraCluster`
+        # Restructure `RecordingSession` without `Video` to `Camcorder` mapping
         calibration_dict = session_dict["calibration"]
         session: RecordingSession = RecordingSession.from_calibration_dict(
             calibration_dict
@@ -684,3 +685,25 @@ class RecordingSession:
             session.add_video(video, camcorder)
 
         return session
+
+    @staticmethod
+    def make_cattr(videos_list: List[Video]):
+        """Make a `cattr.Converter` for `RecordingSession` serialization.
+
+        Args:
+            videos_list: List containing `Video` objects (expected `Labels.videos`).
+
+        Returns:
+            `cattr.Converter` object.
+        """
+        sessions_cattr = cattr.Converter()
+        sessions_cattr.register_structure_hook(
+            RecordingSession,
+            lambda x, cls: RecordingSession.from_session_dict(x, videos_list),
+        )
+
+        video_to_idx = {video: i for i, video in enumerate(videos_list)}
+        sessions_cattr.register_unstructure_hook(
+            RecordingSession, lambda x: x.to_session_dict(video_to_idx)
+        )
+        return sessions_cattr
