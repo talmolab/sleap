@@ -7,6 +7,8 @@ environment by wrapping `tf.config` module functions.
 import tensorflow as tf
 from typing import List, Optional, Text
 import subprocess
+import shutil
+import os
 
 
 def get_all_gpus() -> List[tf.config.PhysicalDevice]:
@@ -196,11 +198,18 @@ def get_gpu_memory() -> List[int]:
         This function depends on the `nvidia-smi` system utility. If it cannot be found
         in the `PATH`, this function returns an empty list.
     """
+    if shutil.which("nvidia-smi") is None:
+        return []
+
     command = [
         "nvidia-smi",
         "--query-gpu=memory.free",
         "--format=csv",
     ]
+
+    if "CUDA_VISIBLE_DEVICES" in os.environ.keys():
+        command.append("-i")
+        command.append(os.environ["CUDA_VISIBLE_DEVICES"])
 
     try:
         memory_poll = subprocess.run(command, capture_output=True)
