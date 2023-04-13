@@ -1589,23 +1589,9 @@ class Labels(MutableSequence):
         Args:
             session: `RecordingSession` instance
         """
+
         if session not in self.sessions:
             self.sessions.append(session)
-
-            labels_path = self.provenance.get("filename", False)
-            if labels_path:
-                # Set calibration path relative to labels path
-                calibration_path = PurePath(
-                    session.camera_cluster.metadata["calibration_path"]
-                )
-                labels_path = PurePath(labels_path)
-                try:
-                    relative_calibration = calibration_path.relative_to(labels_path)
-                    session.camera_cluster.metadata["calibration_path"] = str(
-                        relative_calibration
-                    )
-                except ValueError:
-                    pass
 
     @classmethod
     def from_json(cls, *args, **kwargs):
@@ -1941,10 +1927,12 @@ class Labels(MutableSequence):
         label_cattr.register_unstructure_hook(
             Track, lambda x: str(self.tracks.index(x))
         )
+        label_cattr.register_unstructure_hook(
+            RecordingSession, lambda x: str(self.sessions.index(x))
+        )
 
         # Make a converter for the top level skeletons list.
         idx_to_node = {i: self.nodes[i] for i in range(len(self.nodes))}
-
         skeleton_cattr = Skeleton.make_cattr(idx_to_node)
 
         # Make attr for tracks so that we save as tuples rather than dicts;

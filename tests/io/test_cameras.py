@@ -60,8 +60,6 @@ def test_camera_cluster(
     # Test load
     calibration = min_session_calibration_toml_path
     camera_cluster = CameraCluster.load(calibration)
-    assert camera_cluster.metadata["calibration_path"] == calibration
-    assert camera_cluster.metadata["calibration"] == toml.load(calibration)
 
     # Test __len__
     assert len(camera_cluster) == len(camera_cluster.cameras)
@@ -100,6 +98,28 @@ def test_camera_cluster(
     assert camera_cluster[centered_pair_vid] is None
     assert camera_cluster[camera] == []
     assert camera_cluster[min_session_session] == []
+
+    # Test to_calibration_dict
+    calibration_dict = camera_cluster.to_calibration_dict()
+    assert isinstance(calibration_dict, dict)
+    for cam_idx, cam in enumerate(camera_cluster):
+        cam_key = f"cam_{cam_idx}"
+        cam_value = calibration_dict[cam_key]
+
+        assert calibration_dict[cam_key]["name"] == cam.name
+        assert np.array_equal(cam_value["matrix"], cam.matrix)
+        assert np.array_equal(cam_value["distortions"], cam.dist)
+        assert np.array_equal(cam_value["size"], cam.size)
+        assert np.array_equal(cam_value["rotation"], cam.rvec)
+        assert np.array_equal(cam_value["translation"], cam.tvec)
+
+    # Test from_calibration_dict
+    camera_cluster2 = CameraCluster.from_calibration_dict(calibration_dict)
+    assert isinstance(camera_cluster2, CameraCluster)
+    assert len(camera_cluster2) == len(camera_cluster)
+    for cam_1, cam_2 in zip(camera_cluster, camera_cluster2):
+        assert cam_1 == cam_2
+    assert camera_cluster2.sessions == []
 
 
 def test_recording_session(
@@ -178,3 +198,7 @@ def test_recording_session(
 
     # Test __getitem__ with `Camcorder` key
     assert session[camcorder] is None
+
+
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::test_camera_cluster"])

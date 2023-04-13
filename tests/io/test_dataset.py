@@ -975,6 +975,7 @@ def test_save_labels_with_sessions(
 
     Spoiler: we can't... yet. TODO(LM)
     """
+
     labels = min_labels_slp
     session = min_session_session
 
@@ -989,29 +990,13 @@ def test_save_labels_with_sessions(
 
 
 def test_add_session(min_labels_slp: Labels, min_session_session: RecordingSession):
-    """Test that we can add a `RecordingSession` to a `Labels` object
+    """Test that we can add a `RecordingSession` to a `Labels` object."""
 
-    ...and relative paths are saved.
-
-    Spoiler: they are not... yet. TODO(LM)
-    """
     labels = min_labels_slp
     session = min_session_session
 
     labels.add_session(session)
     assert labels.sessions == [session]
-
-    labels_path = labels.provenance.get("filename", False)
-    assert labels_path  # TODO(LM): Merge PR where filename is saved on load.
-
-    # Set calibration path relative to labels path
-    calibration_path = PurePath(session.camera_cluster.metadata["calibration_path"])
-    labels_path = PurePath(labels_path)
-    relative_calibration = calibration_path.relative_to(labels_path)
-
-    assert session.camera_cluster.metadata["calibration_path"] == str(
-        relative_calibration
-    )
 
 
 def test_labels_hdf5(multi_skel_vid_labels, tmpdir):
