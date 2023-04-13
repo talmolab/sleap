@@ -126,6 +126,7 @@ def test_recording_session(
     min_session_calibration_toml_path: str,
     min_session_camera_cluster: CameraCluster,
     centered_pair_vid: Video,
+    hdf5_vid: Video,
 ):
     """Test `RecordingSession` data structure."""
     calibration: str = min_session_calibration_toml_path
@@ -182,6 +183,40 @@ def test_recording_session(
     # Test __getitem__ with `Camcorder` key
     assert session[camcorder] is centered_pair_vid
 
+    # Test from_calibration_dict
+    def compare_cameras(session_1: RecordingSession, session_2: RecordingSession):
+        assert len(session_2.camera_cluster) == len(session.camera_cluster)
+        for cam_1, cam_2 in zip(session, session_2):
+            assert cam_1 == cam_2
+
+    calibration_dict = session.camera_cluster.to_calibration_dict()
+    session_2 = RecordingSession.from_calibration_dict(calibration_dict)
+    assert isinstance(session_2, RecordingSession)
+    assert len(session_2.videos) == 0
+    compare_cameras(session, session_2)
+
+    # Test to_session_dict
+    camcorder_2 = session.camera_cluster.cameras[2]
+    session.add_video(hdf5_vid, camcorder_2)
+    videos_list = [centered_pair_vid, hdf5_vid]
+    video_to_idx = {video: idx for idx, video in enumerate(videos_list)}
+    session_dict = session.to_session_dict(video_to_idx)
+    assert isinstance(session_dict, dict)
+    assert session_dict["calibration"] == calibration_dict
+    assert session_dict["camcorder_to_video_idx_map"] == {
+        0: video_to_idx[centered_pair_vid],
+        2: video_to_idx[hdf5_vid],
+    }
+
+    # Test from_session_dict
+    session_2 = RecordingSession.from_session_dict(session_dict, videos_list)
+    assert isinstance(session_2, RecordingSession)
+    assert not (session_2 == session)  # Not the same object in memory
+    assert len(session_2.camera_cluster) == len(session.camera_cluster)
+    compare_cameras(session, session_2)
+    assert len(session_2.videos) == len(session.videos)
+    assert np.array_equal(session_2.videos, session.videos)
+
     # Test remove_video
     session.remove_video(centered_pair_vid)
     assert centered_pair_vid not in session.videos
@@ -198,7 +233,3 @@ def test_recording_session(
 
     # Test __getitem__ with `Camcorder` key
     assert session[camcorder] is None
-
-
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_camera_cluster"])
