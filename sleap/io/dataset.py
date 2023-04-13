@@ -1939,6 +1939,9 @@ class Labels(MutableSequence):
         # this can save a lot of space when there are lots of tracks.
         track_cattr = cattr.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
 
+        # Make converter for recording sessions
+        sessions_cattr = RecordingSession.make_cattr(videos_list=self.videos)
+
         # Serialize the skeletons, videos, and labels
         dicts = {
             "version": LABELS_JSON_FILE_VERSION,
@@ -1947,7 +1950,7 @@ class Labels(MutableSequence):
             "videos": Video.cattr().unstructure(self.videos),
             "tracks": track_cattr.unstructure(self.tracks),
             "suggestions": label_cattr.unstructure(self.suggestions),
-            "sessions": RecordingSession.to_session_dict(self.sessions),
+            "sessions": sessions_cattr.unstructure(self.sessions),
             "negative_anchors": label_cattr.unstructure(self.negative_anchors),
             "provenance": label_cattr.unstructure(self.provenance),
         }

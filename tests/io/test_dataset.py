@@ -971,22 +971,30 @@ def test_save_labels_with_images(min_labels_slp, tmpdir):
 def test_save_labels_with_sessions(
     min_labels_slp: Labels, min_session_session: RecordingSession, tmpdir
 ):
-    """Test that we can save labels with sessions attribute.
-
-    Spoiler: we can't... yet. TODO(LM)
-    """
+    """Test that we can save labels with sessions attribute."""
 
     labels = min_labels_slp
     session = min_session_session
 
+    assert labels.sessions == []
     labels.add_session(session)
-    assert labels.sessions == [session]
+    assert len(labels.sessions) == 1
 
     new_path = str(Path(tmpdir, "test.slp"))
     labels.save(new_path)
 
     loaded_labels: Labels = Labels.load_file(new_path)
-    assert loaded_labels.sessions == [session]
+    loaded_session = loaded_labels.sessions[0]
+
+    assert len(loaded_labels.sessions) == 1
+    assert isinstance(loaded_session, RecordingSession)
+    assert not (loaded_session == session)  # Not the same object in memory
+    assert len(loaded_session.camera_cluster) == len(session.camera_cluster)
+    assert len(loaded_session.videos) == len(session.videos)
+    assert np.array_equal(loaded_session.videos, session.videos)
+    assert len(loaded_session.camera_cluster) == len(session.camera_cluster)
+    for cam_1, cam_2 in zip(session, loaded_session):
+        assert cam_1 == cam_2
 
 
 def test_add_session(min_labels_slp: Labels, min_session_session: RecordingSession):
