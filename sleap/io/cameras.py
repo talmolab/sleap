@@ -1,5 +1,9 @@
 """Module for storing information for camera groups."""
 import logging
+from pathlib import Path
+import tempfile
+import cattr
+import toml
 from typing import List, Optional, Union, Iterator, Any, Dict, Tuple
 
 from aniposelib.cameras import Camera, FisheyeCamera, CameraGroup
@@ -252,7 +256,7 @@ class CameraCluster(CameraGroup):
     def __contains__(self, item):
         return item in self.cameras
 
-    def __iter__(self) -> Iterator[List[Camcorder]]:
+    def __iter__(self) -> Iterator[Camcorder]:
         return iter(self.cameras)
 
     def __len__(self):
@@ -328,8 +332,54 @@ class CameraCluster(CameraGroup):
         Returns:
             `CameraCluster` object.
         """
-        cam_group: CameraGroup = super().load(filename)
-        return cls(cameras=cam_group.cameras, metadata=cam_group.metadata)
+        cgroup: CameraGroup = super().load(filename)
+        return cls(cameras=cgroup.cameras, metadata=cgroup.metadata)
+
+    @classmethod
+    def from_calibration_dict(cls, calibration_dict: Dict[str, str]) -> "CameraCluster":
+        """Structure a cluster dictionary to a `CameraCluster`.
+
+        This method is intended to be used for restructuring a `CameraCluster` object
+        (that was previously unstructured to a serializable format). Note: this method
+        does not handle any mapping between `Video`s, `RecordingSession`s, and
+        `Camcorder`s.
+
+        Args:
+            calibration_dict: A dictionary containing just the calibration info needed
+                to partially restructure a `CameraCluster` (no mapping between `Video`s,
+                `RecordingSession`s, and `Camcorder`s).
+
+        Returns:
+            `CameraCluster` object.
+        """
+
+        # Save the calibration dictionary to a temp file and load as `CameraGroup`
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_file = str(Path(temp_dir, "calibration.toml"))
+            with open(temp_file, "w") as f:
+                toml.dump(calibration_dict, f)
+            cgroup: CameraGroup = super().load(temp_file)
+
+        return cls(cameras=cgroup.cameras, metadata=cgroup.metadata)
+
+    def to_calibration_dict(self) -> Dict[str, str]:
+        """Unstructure the `CameraCluster` object to a dictionary.
+
+        This method is intended to be used for unstructuring a `CameraCluster` object
+        to a serializable format. Note: this method does not save any mapping between
+        `Video`s, `RecordingSession`s, and `Camcorders`.
+
+        Returns:
+            Dictionary of `CameraCluster` object.
+        """
+
+        # Use existing `CameraGroup.dump` method to get the calibration dictionary
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_file = str(Path(temp_dir, "calibration.toml"))
+            self.dump(fname=temp_file)
+            calibration_dict = toml.load(temp_file)
+
+        return calibration_dict
 
 
 @define(eq=False)
@@ -354,16 +404,19 @@ class RecordingSession:
     @property
     def videos(self) -> List[Video]:
         """List of `Video`s."""
+
         return self.camera_cluster._videos_by_session[self]
 
     @property
     def linked_cameras(self) -> List[Camcorder]:
         """List of `Camcorder`s in `self.camera_cluster` that are linked to a video."""
+
         return list(self._video_by_camcorder.keys())
 
     @property
     def unlinked_cameras(self) -> List[Camcorder]:
         """List of `Camcorder`s in `self.camera_cluster` that are not linked to a video."""
+
         return list(set(self.camera_cluster.cameras) - set(self.linked_cameras))
 
     def get_video(self, camcorder: Camcorder) -> Optional[Video]:
@@ -379,6 +432,7 @@ class RecordingSession:
         Raises:
             ValueError: If `Camcorder` is not in `self.camera_cluster`.
         """
+
         if camcorder not in self.camera_cluster:
             raise ValueError(
                 f"Camcorder {camcorder.name} is not in this RecordingSession's "
@@ -420,6 +474,7 @@ class RecordingSession:
             video: `Video` object.
             camcorder: `Camcorder` object.
         """
+
         # Ensure the `Camcorder` is in this `RecordingSession`'s `CameraCluster`
         try:
             assert camcorder in self.camera_cluster
@@ -456,6 +511,7 @@ class RecordingSession:
         Args:
             video: `Video` object.
         """
+
         # Remove video-to-camcorder map from `CameraCluster`
         camcorder = self.camera_cluster._camcorder_by_video.pop(video)
 
@@ -479,6 +535,7 @@ class RecordingSession:
         return len(self.videos)
 
     def __getattr__(self, attr: str) -> Any:
+
         """Try to find the attribute in the camera_cluster next."""
         return getattr(self.camera_cluster, attr)
 
@@ -490,6 +547,7 @@ class RecordingSession:
         Try to index into `camera_cluster.cameras` first, then check
         video-to-camera map and camera-to-video map. Lastly check in the `metadata`s.
         """
+
         # Try to find in `self.camera_cluster.cameras`
         if isinstance(idx_or_key, int):
             try:
@@ -538,8 +596,114 @@ class RecordingSession:
         Returns:
             `RecordingSession` object.
         """
+
         camera_cluster: CameraCluster = CameraCluster.load(filename)
         return cls(
             camera_cluster=camera_cluster,
             metadata=(metadata or {}),
         )
+
+    @classmethod
+    def from_calibration_dict(cls, calibration_dict: dict) -> "RecordingSession":
+        """Loads cameras as `Camcorder`s from a calibration dictionary.
+
+        Args:
+            calibration_dict: Dictionary of calibration data.
+
+        Returns:
+            `RecordingSession` object.
+        """
+
+        camera_cluster: CameraCluster = CameraCluster.from_calibration_dict(
+            calibration_dict
+        )
+        return cls(camera_cluster=camera_cluster)
+
+    def to_session_dict(self, video_to_idx: Dict[Video, int]) -> dict:
+        """Unstructure `RecordingSession` to an invertible dictionary.
+
+        Returns:
+            Dictionary of "calibration" and "camcorder_to_video_idx_map" needed to
+            restructure a `RecordingSession`.
+        """
+
+        # Unstructure `CameraCluster` and `metadata`
+        calibration_dict = self.camera_cluster.to_calibration_dict()
+
+        # Store camcorder-to-video indices map where key is camcorder index
+        # and value is video index from `Labels.videos`
+        camcorder_to_video_idx_map = {}
+        for cam_idx, camcorder in enumerate(self.camera_cluster):
+
+            # Skip if Camcorder is not linked to any Video
+            if camcorder not in self._video_by_camcorder:
+                continue
+
+            # Get video index from `Labels.videos`
+            video = self._video_by_camcorder[camcorder]
+            video_idx = video_to_idx.get(video, None)
+
+            if video_idx is not None:
+                camcorder_to_video_idx_map[cam_idx] = video_idx
+            else:
+                logger.warning(
+                    f"Video {video} not found in `Labels.videos`. "
+                    "Not saving to `RecordingSession` serialization."
+                )
+
+        return {
+            "calibration": calibration_dict,
+            "camcorder_to_video_idx_map": camcorder_to_video_idx_map,
+        }
+
+    @classmethod
+    def from_session_dict(
+        cls, session_dict, videos_list: List[Video]
+    ) -> "RecordingSession":
+        """Restructure `RecordingSession` from an invertible dictionary.
+
+        Args:
+            session_dict: Dictionary of "calibration" and "camcorder_to_video_idx_map"
+                needed to fully restructure a `RecordingSession`.
+            videos_list: List containing `Video` objects (expected `Labels.videos`).
+
+        Returns:
+            `RecordingSession` object.
+        """
+
+        # Restructure `RecordingSession` without `Video` to `Camcorder` mapping
+        calibration_dict = session_dict["calibration"]
+        session: RecordingSession = RecordingSession.from_calibration_dict(
+            calibration_dict
+        )
+
+        # Retrieve all `Camcorder` and `Video` objects, then add to `RecordingSession`
+        camcorder_to_video_idx_map = session_dict["camcorder_to_video_idx_map"]
+        for cam_idx, video_idx in camcorder_to_video_idx_map.items():
+            camcorder = session.camera_cluster.cameras[cam_idx]
+            video = videos_list[video_idx]
+            session.add_video(video, camcorder)
+
+        return session
+
+    @staticmethod
+    def make_cattr(videos_list: List[Video]):
+        """Make a `cattr.Converter` for `RecordingSession` serialization.
+
+        Args:
+            videos_list: List containing `Video` objects (expected `Labels.videos`).
+
+        Returns:
+            `cattr.Converter` object.
+        """
+        sessions_cattr = cattr.Converter()
+        sessions_cattr.register_structure_hook(
+            RecordingSession,
+            lambda x, cls: RecordingSession.from_session_dict(x, videos_list),
+        )
+
+        video_to_idx = {video: i for i, video in enumerate(videos_list)}
+        sessions_cattr.register_unstructure_hook(
+            RecordingSession, lambda x: x.to_session_dict(video_to_idx)
+        )
+        return sessions_cattr
