@@ -12,12 +12,11 @@ from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Track
 from sleap.io.video import Video, MediaVideo
 from sleap.io.dataset import Labels, load_file
-from sleap.io.legacy import load_labels_json_old
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.format import filehandle
 from sleap.gui.suggestions import VideoFrameSuggestions, SuggestionFrame
 
-# from tests.io.test_formats import assert_read_labels_match
+from tests.io.test_formats import assert_read_labels_match
 
 TEST_H5_DATASET = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
 
