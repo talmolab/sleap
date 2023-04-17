@@ -1654,6 +1654,17 @@ class Labels(MutableSequence):
             new_item = (session, video)
         self._cache.update(new_item)
 
+    def get_session(self, video: Video) -> Optional[RecordingSession]:
+        """Get the recording session associated with a video.
+
+        Args:
+            video: `Video` instance
+
+        Returns:
+            `RecordingSession` instance
+        """
+        return self._cache._session_by_video.get(video, None)
+
     @classmethod
     def from_json(cls, *args, **kwargs):
         from sleap.io.format.labels_json import LabelsJsonAdaptor
