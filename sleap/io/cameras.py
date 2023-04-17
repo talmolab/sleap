@@ -534,6 +534,10 @@ class RecordingSession:
         # Remove camcorder-to-video map from `RecordingSession`
         self._video_by_camcorder.pop(camcorder)
 
+        # Update labels cache
+        if self.labels is not None and self.labels.get_session(video) is not None:
+            self.labels.remove_session_video(self, video)
+
     def __attrs_post_init__(self):
         self.camera_cluster.add_session(self)
 

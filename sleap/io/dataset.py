@@ -1665,6 +1665,18 @@ class Labels(MutableSequence):
         """
         return self._cache._session_by_video.get(video, None)
 
+    def remove_session_video(self, session: RecordingSession, video: Video):
+        """Remove a video from a recording session.
+
+        Args:
+            session: `RecordingSession` instance
+            video: `Video` instance
+        """
+
+        self._cache._session_by_video.pop(video, None)
+        if video in session.videos:
+            session.remove_video(video)
+
     @classmethod
     def from_json(cls, *args, **kwargs):
         from sleap.io.format.labels_json import LabelsJsonAdaptor

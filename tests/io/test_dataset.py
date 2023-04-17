@@ -1019,6 +1019,10 @@ def test_add_session_and_update_session(
     assert labels._cache._session_by_video == {video: session}
     assert labels.get_session(video) == session
 
+    labels.remove_session_video(session, video)
+    assert video not in session.videos
+    assert video not in labels._cache._session_by_video
+
     with pytest.raises(ValueError):
         labels.sessions = [session]
 
