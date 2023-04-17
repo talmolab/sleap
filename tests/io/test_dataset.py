@@ -996,6 +996,8 @@ def test_save_labels_with_sessions(
     for cam_1, cam_2 in zip(session, loaded_session):
         assert cam_1 == cam_2
 
+    assert loaded_session.labels == loaded_labels
+
 
 def test_add_session(min_labels_slp: Labels, min_session_session: RecordingSession):
     """Test that we can add a `RecordingSession` to a `Labels` object."""
@@ -1005,6 +1007,12 @@ def test_add_session(min_labels_slp: Labels, min_session_session: RecordingSessi
 
     labels.add_session(session)
     assert labels.sessions == [session]
+
+    # Warning: we would like to prevent the following, but would require custom class
+    labels.sessions.append(session)
+
+    with pytest.raises(ValueError):
+        labels.sessions = [session]
 
 
 def test_labels_hdf5(multi_skel_vid_labels, tmpdir):

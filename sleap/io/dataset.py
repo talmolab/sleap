@@ -103,14 +103,20 @@ class LabelsDataCache:
     def __attrs_post_init__(self):
         self.update()
 
-    def update(self, new_frame: Optional[LabeledFrame] = None):
+    def update(
+        self,
+        new_item: Optional[
+            Union[LabeledFrame, RecordingSession, Tuple[RecordingSession, Video]]
+        ] = None,
+    ):
         """Build (or rebuilds) various caches."""
         # Data structures for caching
-        if new_frame is None:
+        if new_item is None:
             self._lf_by_video = {video: [] for video in self.labels.videos}
             self._frame_idx_map = dict()
             self._track_occupancy = dict()
             self._frame_count_cache = dict()
+            self._session_by_video: Dict[Video, RecordingSession] = dict()
 
             # Loop through labeled frames only once
             for lf in self.labels:
@@ -122,7 +128,14 @@ class LabelsDataCache:
                     lf.frame_idx: lf for lf in self._lf_by_video[video]
                 }
                 self._track_occupancy[video] = self._make_track_occupancy(video)
-        else:
+
+            # Loop S X V times to build session-by-video map
+            for session in self.labels.sessions:
+                for video in session.videos:
+                    self._session_by_video[video] = session
+
+        elif isinstance(new_item, LabeledFrame):
+            new_frame = new_item
             new_vid = new_frame.video
 
             if new_vid not in self._lf_by_video:
@@ -131,6 +144,15 @@ class LabelsDataCache:
                 self._frame_idx_map[new_vid] = dict()
             self._lf_by_video[new_vid].append(new_frame)
             self._frame_idx_map[new_vid][new_frame.frame_idx] = new_frame
+
+        elif isinstance(new_item, RecordingSession):
+            new_session = new_item
+            for video in new_session.videos:
+                self._session_by_video[video] = new_session
+
+        elif isinstance(new_item, tuple):
+            session, new_video = new_item
+            self._session_by_video[new_video] = session
 
     def find_frames(
         self, video: Video, frame_idx: Optional[Union[int, Iterable[int]]] = None
@@ -221,10 +243,13 @@ class LabelsDataCache:
 
     def remove_video(self, video: Video):
         """Remove video and update cache as needed."""
+
         if video in self._lf_by_video:
             del self._lf_by_video[video]
         if video in self._frame_idx_map:
             del self._frame_idx_map[video]
+        if video in self._session_by_video:
+            del self._session_by_video[video]
 
     def track_swap(
         self,
@@ -422,7 +447,7 @@ class Labels(MutableSequence):
     nodes: List[Node] = attr.ib(default=attr.Factory(list))
     tracks: List[Track] = attr.ib(default=attr.Factory(list))
     suggestions: List[SuggestionFrame] = attr.ib(default=attr.Factory(list))
-    sessions: List[RecordingSession] = attr.ib(default=attr.Factory(list))
+    _sessions: List[RecordingSession] = attr.ib(default=attr.Factory(list))
     negative_anchors: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
     provenance: Dict[Text, Union[str, int, float, bool]] = attr.ib(
         default=attr.Factory(dict)
@@ -440,12 +465,17 @@ class Labels(MutableSequence):
         # frames but not in the lists on our object
         self._update_from_labels()
 
-        # Update caches used to find frames by frame index
+        # Create cache to find frames by frame index and `RecordingSession`s by `Video`s
         self._cache = LabelsDataCache(self)
 
         # Create a variable to store a temporary storage directory
         # used when we unzip
         self.__temp_dir = None
+
+        # TODO(LM): Add Observer pattern between `Labels`, `RecordingSession`s,
+        # `LabelsDataCache`, `MainWindow`, and others.
+        for session in self.sessions:
+            session.labels = self
 
     def _update_from_labels(self, merge: bool = False):
         """Updates top level attributes with data from labeled frames.
@@ -586,6 +616,18 @@ class Labels(MutableSequence):
     def has_missing_videos(self) -> bool:
         """Return True if any of the video files in the labels are missing."""
         return any(video.is_missing for video in self.videos)
+
+    @property
+    def sessions(self) -> List[RecordingSession]:
+        """Return a list of sessions in the labels."""
+        return self._sessions
+
+    @sessions.setter
+    def sessions(self, value: RecordingSession):
+        """Set the sessions in the labels."""
+        raise ValueError(
+            "Setting sessions should be done through `Labels.add_session`."
+        )
 
     def __len__(self) -> int:
         """Return number of labeled frames."""
@@ -1591,7 +1633,26 @@ class Labels(MutableSequence):
         """
 
         if session not in self.sessions:
-            self.sessions.append(session)
+            self._sessions.append(session)
+            session.labels = self
+
+        self._cache.update(session)
+
+    def update_session(self, session: RecordingSession, video: Video = None):
+        """Update `Video` to `RecordingSession` map in the `LabelsDataCache`.
+
+        Args:
+            session: `RecordingSession` instance
+            video: `Video` instance linked to a `RecordingSession`
+        """
+
+        if session not in self.sessions:
+            raise KeyError("Session is not in labels.")
+        if video is None:
+            new_item = session
+        else:
+            new_item = (session, video)
+        self._cache.update(new_item)
 
     @classmethod
     def from_json(cls, *args, **kwargs):
