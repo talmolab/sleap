@@ -972,7 +972,10 @@ def test_save_labels_with_images(min_labels_slp, tmpdir):
 
 
 def test_save_labels_with_sessions(
-    min_labels_slp: Labels, min_session_session: RecordingSession, tmpdir
+    min_labels_slp: Labels,
+    min_session_session: RecordingSession,
+    multiview_min_session_labels: Labels,
+    tmpdir,
 ):
     """Test that we can save labels with sessions attribute."""
 
@@ -1000,6 +1003,14 @@ def test_save_labels_with_sessions(
         assert cam_1 == cam_2
 
     assert loaded_session.labels == loaded_labels
+
+    labels = multiview_min_session_labels
+    session = labels.sessions[0]
+    for vid, cam in zip(labels.videos, session.camera_cluster.cameras):
+        session.add_video(vid, cam)
+
+    new_path = str(Path(tmpdir, "test.slp"))
+    labels.save(new_path)
 
 
 def test_add_session_and_update_session(

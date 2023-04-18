@@ -643,7 +643,10 @@ class RecordingSession:
             )
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(camera_cluster={self.camera_cluster})"
+        return (
+            f"{self.__class__.__name__}(videos:{len(self.videos)},"
+            f"camera_cluster={self.camera_cluster})"
+        )
 
     @classmethod
     def load(
@@ -708,7 +711,7 @@ class RecordingSession:
             video_idx = video_to_idx.get(video, None)
 
             if video_idx is not None:
-                camcorder_to_video_idx_map[cam_idx] = video_idx
+                camcorder_to_video_idx_map[str(cam_idx)] = str(video_idx)
             else:
                 logger.warning(
                     f"Video {video} not found in `Labels.videos`. "
@@ -744,8 +747,8 @@ class RecordingSession:
         # Retrieve all `Camcorder` and `Video` objects, then add to `RecordingSession`
         camcorder_to_video_idx_map = session_dict["camcorder_to_video_idx_map"]
         for cam_idx, video_idx in camcorder_to_video_idx_map.items():
-            camcorder = session.camera_cluster.cameras[cam_idx]
-            video = videos_list[video_idx]
+            camcorder = session.camera_cluster.cameras[int(cam_idx)]
+            video = videos_list[int(video_idx)]
             session.add_video(video, camcorder)
 
         return session
