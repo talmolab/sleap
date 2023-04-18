@@ -1851,7 +1851,7 @@ class RemoveVideo(EditCommand):
                 context.state["video"] = context.labels.videos[0]
             else:
                 context.state["video"] = None
-        # Update view if it weas not the current video
+        # Update view if it was not the current video
         elif context.state["video"] is not video:
             context.state.emit("video")
 
