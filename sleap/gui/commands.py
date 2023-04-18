@@ -1848,9 +1848,12 @@ class RemoveVideo(EditCommand):
         # Update view if this was the current video
         if context.state["video"] == video:
             if len(context.labels.videos) > 0:
-                context.state["video"] = context.labels.videos[-1]
+                context.state["video"] = context.labels.videos[0]
             else:
                 context.state["video"] = None
+        # Update view if it weas not the current video
+        elif context.state["video"] is not video:
+            context.state.emit("video")
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
