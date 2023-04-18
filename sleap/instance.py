@@ -720,6 +720,20 @@ class Instance:
         self._fix_array()
         return tuple(point for point in self._points if not point.isnan())
 
+    def update_points(self, points: np.ndarray):
+        """Update the points in this instance from a numpy.
+
+        Args:
+            points: The new points to update to.
+        """
+        points_dict = dict()
+        for point, node_name in zip(points, self.skeleton.node_names):
+            if np.isnan(point).any():
+                continue
+
+            points_dict[node_name] = Point(x=point[0], y=point[1])
+        Instance._points_dict_to_array(points_dict, self._points, self.skeleton)
+
     def _fix_array(self):
         """Fix PointArray after nodes have been added or removed.
 

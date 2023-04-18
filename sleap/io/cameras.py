@@ -1,21 +1,22 @@
 """Module for storing information for camera groups."""
 import logging
-from pathlib import Path
 import tempfile
-import cattr
 import toml
+
+import cattr
+import numpy as np
+
+from pathlib import Path
 from typing import List, Optional, Union, Iterator, Any, Dict, Tuple
 
 from aniposelib.cameras import Camera, FisheyeCamera, CameraGroup
 from attrs import define, field
 from attrs.validators import deep_iterable, instance_of
-import numpy as np
-
-
-from sleap.util import deep_iterable_converter
+from sleap_anipose import triangulate, reproject
 
 # from sleap.io.dataset import Labels  # TODO(LM): Circular import, implement Observer
 from sleap.io.video import Video
+from sleap.util import deep_iterable_converter
 
 
 logger = logging.getLogger(__name__)
@@ -537,6 +538,56 @@ class RecordingSession:
         # Update labels cache
         if self.labels is not None and self.labels.get_session(video) is not None:
             self.labels.remove_session_video(self, video)
+
+    def update_views(
+        self,
+        frame_idx: int,
+        track: Optional["Track"] = None,
+        cams_to_include: Optional[List[int]] = None,
+    ):
+        """Update the views of the `RecordingSession`.
+
+        Args:
+            frame_idx: Frame index to update (0-indexed).
+            track: `Track` object used to find instances accross views for updating.
+            cams_to_include: List of views by indices in `self.camera_cluster.cameras` (0-indexed).
+        """
+
+        # TODO(LM): Add support for taking in `cams_to_include` to use for triangulation
+
+        # Get all views at this frame index
+        views: List["LabeledFrame"] = []
+        for video in self.videos:
+            lfs = self.labels.get((video, [frame_idx]))
+            if len(lfs) > 0:
+                views.append(lfs[0])
+
+        # If no views, then return
+        if len(views) <= 1:
+            logger.warning(
+                "One or less views found for frame "
+                f"{frame_idx} in {self.camera_cluster}."
+            )
+            return
+
+        # Find all instance accross all views
+        instances: List["Instances"] = []
+        for lf in views:
+            insts = lf.find(track=track, user=True)
+            if len(insts) > 0:
+                instances.append(insts[0])
+
+        # Gather instances into M x N x 2 arrays (M = # views, N = # nodes, 2 = x, y)
+        inst_coords = np.concatenate([inst.numpy() for inst in instances], axis=0)
+        points_3d = triangulate(p2d=inst_coords, calib=self.camera_cluster)
+
+        # Update the views with the new 3D points
+        inst_coords_reprojected = reproject(points_3d, calib=self.camera_cluster)
+        inst_coords_reprojected = np.split(
+            inst_coords_reprojected, inst_coords_reprojected.shape[0], axis=0
+        )
+        for inst, inst_coord in zip(instances, inst_coords_reprojected):
+            inst.update_points(inst_coord)
 
     def __attrs_post_init__(self):
         self.camera_cluster.add_session(self)
