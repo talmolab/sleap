@@ -728,7 +728,9 @@ class Instance:
             exclude_complete: Whether to update points where Point.complete is True
         """
         points_dict = dict()
-        for point_new, points_old, node_name in zip(points, self._points, self.skeleton.node_names):
+        for point_new, points_old, node_name in zip(
+            points, self._points, self.skeleton.node_names
+        ):
             if np.isnan(point_new).any() or (exclude_complete and points_old.complete):
                 continue
             points_dict[node_name] = Point(x=point_new[0], y=point_new[1])
