@@ -610,6 +610,10 @@ class CommandContext:
         """Generates suggestions using given params dictionary."""
         self.execute(GenerateSuggestions, **params)
 
+    def triangulateSessions(self):
+        """Triangulates `Instance`s for selected views in a `RecordingSession`."""
+        self.execute(TriangulateSession)
+
     def openWebsite(self, url):
         """Open a website from URL using the native system browser."""
         self.execute(OpenWebsite, url=url)
@@ -3209,9 +3213,18 @@ class PasteInstance(EditCommand):
             context.labels.append(current_frame)
 
 
+class TriangulateSession(EditCommand):
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances]
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        # TODO(LM): Write this function
+        ...
+
+
 def open_website(url: str):
     """Open website in default browser.
-
+    
     Args:
         url: URL to open.
     """

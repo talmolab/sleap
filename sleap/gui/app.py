@@ -69,6 +69,7 @@ from sleap.info.summary import StatisticSeries
 from sleap.gui.commands import CommandContext, UpdateTopic
 from sleap.gui.widgets.docks import (
     InstancesDock,
+    SessionsDock,
     SkeletonDock,
     SuggestionsDock,
     VideosDock,
@@ -994,6 +995,7 @@ class MainWindow(QMainWindow):
         """Create dock windows and connect them to GUI."""
 
         self.videos_dock = VideosDock(self)
+        self.sessions_dock = SessionsDock(self)
         self.skeleton_dock = SkeletonDock(self)
         self.suggestions_dock = SuggestionsDock(self)
         self.instances_dock = InstancesDock(self)

@@ -539,6 +539,8 @@ class RecordingSession:
         if self.labels is not None and self.labels.get_session(video) is not None:
             self.labels.remove_session_video(self, video)
 
+    
+    # TODO(LM): Move this whole function to `CommandContext`
     def update_views(
         self,
         frame_idx: int,
@@ -552,7 +554,6 @@ class RecordingSession:
             track: `Track` object used to find instances accross views for updating.
             cams_to_include: List of views by indices in `self.camera_cluster.cameras` (0-indexed).
         """
-
         # TODO(LM): Add support for taking in `cams_to_include` to use for triangulation
 
         # Get all views at this frame index

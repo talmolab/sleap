@@ -9,6 +9,7 @@ from qtpy.QtWidgets import (
     QMainWindow,
     QLabel,
     QComboBox,
+    QCheckBox,
     QGroupBox,
     QPushButton,
     QTabWidget,
@@ -572,3 +573,33 @@ class InstancesDock(DockWidget):
         hbw = QWidget()
         hbw.setLayout(hb)
         return hbw
+
+
+class SessionsDock(DockWidget):
+    def __init__(self, main_window: Optional[QMainWindow]):
+        super().__init__(name="Sessions", main_window=main_window, model_type=None)
+
+    def lay_everything_out(self) -> None:
+        triangulation_options = self.create_triangulation_options()
+        self.wgt_layout.addWidget(triangulation_options)
+
+    def create_triangulation_options(self) -> QWidget:
+        main_window = self.main_window
+        vb = QVBoxLayout()
+
+        # Add checkbox and button for "Auto-align"
+        self.auto_align_checkbox = QCheckBox("Auto-Triangulate")
+        self.auto_align_checkbox.stateChanged.connect(
+            lambda x: main_window.state.set("auto_triangulate", x == Qt.Checked)
+        )
+
+        vb.addWidget(self.auto_align_checkbox)
+        self.add_button(
+            vb,
+            "Triangulate",
+            main_window.process_events_then(main_window.commands.triangulateSessions),
+        )
+
+        vbw = QWidget()
+        vbw.setLayout(vb)
+        return vbw
