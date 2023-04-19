@@ -539,66 +539,6 @@ class RecordingSession:
         if self.labels is not None and self.labels.get_session(video) is not None:
             self.labels.remove_session_video(self, video)
 
-    
-    # TODO(LM): Move this whole function to `CommandContext`
-    def update_views(
-        self,
-        frame_idx: int,
-        track: Optional["Track"] = None,
-        cams_to_include: Optional[List[int]] = None,
-    ):
-        """Update the views of the `RecordingSession`.
-
-        Args:
-            frame_idx: Frame index to update (0-indexed).
-            track: `Track` object used to find instances accross views for updating.
-            cams_to_include: List of views by indices in `self.camera_cluster.cameras` (0-indexed).
-        """
-        # TODO(LM): Add support for taking in `cams_to_include` to use for triangulation
-
-        # Get all views at this frame index
-        views: List["LabeledFrame"] = []
-        for video in self.videos:
-            lfs: List["LabeledFrame"] = self.labels.get((video, [frame_idx]))
-            if len(lfs) == 0:
-                continue
-
-            lf = lfs[0]
-            if len(lf.instances) > 0:
-                views.append(lf)
-
-        # If no views, then return
-        if len(views) <= 1:
-            logger.warning(
-                "One or less views found for frame "
-                f"{frame_idx} in {self.camera_cluster}."
-            )
-            return
-
-        # Find all instance accross all views
-        instances: List["Instances"] = []
-        for lf in views:
-            insts = lf.find(track=track)
-            if len(insts) > 0:
-                instances.append(insts[0])
-
-        # Gather instances into M x F x T x N x 2 arrays
-        # (M = # views, F = # frames = 1, T = # tracks = 1, N = # nodes, 2 = x, y)
-        inst_coords = np.stack([inst.numpy() for inst in instances], axis=0)
-        inst_coords = np.expand_dims(inst_coords, axis=1)
-        inst_coords = np.expand_dims(inst_coords, axis=1)
-        points_3d = triangulate(p2d=inst_coords, calib=self.camera_cluster)
-
-        # Update the views with the new 3D points
-        inst_coords_reprojected = reproject(points_3d, calib=self.camera_cluster)
-        insts_coords_list: List[np.ndarray] = np.split(
-            inst_coords_reprojected.squeeze(), inst_coords_reprojected.shape[0], axis=0
-        )
-        for inst, inst_coord in zip(instances, insts_coords_list):
-            inst.update_points(
-                inst_coord[0], exclude_complete=True
-            )  # inst_coord is (1, N, 2)
-
     def __attrs_post_init__(self):
         self.camera_cluster.add_session(self)
 

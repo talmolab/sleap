@@ -32,27 +32,30 @@ import os
 import re
 import sys
 import subprocess
-from enum import Enum
-from glob import glob
-from pathlib import PurePath, Path
 import traceback
-from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
 
 import numpy as np
 import cv2
 import attr
+
+from enum import Enum
+from glob import glob
+from pathlib import PurePath, Path
+from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
+
+from sleap_anipose import triangulate, reproject
 from qtpy import QtCore, QtWidgets, QtGui
 from qtpy.QtWidgets import QMessageBox, QProgressDialog
-from sleap.io.cameras import RecordingSession
 
 from sleap.util import get_package_file
 from sleap.skeleton import Node, Skeleton
 from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
-from sleap.io.video import Video
+from sleap.io.cameras import RecordingSession
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
+from sleap.io.video import Video
 from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.gui.dialogs.importvideos import ImportVideos
 from sleap.gui.dialogs.filedialog import FileDialog
@@ -3218,17 +3221,114 @@ class TriangulateSession(EditCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
+
+        # TODO(LM): Add support for excluding `Camcorder`s in triangulation
+
         frame_idx = context.app.state["frame_idx"]
         video = context.app.state["video"]
         instance = context.app.state["instance"]
         session = context.labels.get_session(video)
 
-        if session is not None and instance is not None:
-            track = instance.track
-            session.update_views(
-                frame_idx,
-                track,
+        # Return if we don't have a session for video or an instance selected.
+        if session is None or instance is None:
+            return
+
+        track = instance.track
+
+        # Get all views at this frame index
+        views = TriangulateSession.get_all_views(frame_idx, session)
+        if len(views) <= 1:
+            logger.warning(
+                "One or less views found for frame "
+                f"{frame_idx} in {session.camera_cluster}."
             )
+            return
+
+        # Gather instances from views into M x F x T x N x 2 an array.
+        instances = TriangulateSession.gather_instances(views, track)
+        instances_matrix = TriangulateSession.get_instances_matrices(instances)
+
+        # Triangulate and reproject
+        points_3d = triangulate(p2d=instances_matrix, calib=session.camera_cluster)
+        instances_matrix_reprojected = reproject(
+            points_3d, calib=session.camera_cluster
+        )
+
+        # Update instances
+        TriangulateSession.update_instances(
+            instances,
+            instances_matrix_reprojected,
+        )
+
+    @staticmethod
+    def get_all_views(frame_idx: int, session: RecordingSession) -> List[LabeledFrame]:
+        """Get all vioews at this frame index."""
+
+        views: List[LabeledFrame] = []
+        for video in session.videos:
+            lfs: List["LabeledFrame"] = session.labels.get((video, [frame_idx]))
+            if len(lfs) == 0:
+                continue
+
+            lf = lfs[0]
+            if len(lf.instances) > 0:
+                views.append(lf)
+
+        return views
+
+    @staticmethod
+    def gather_instances(
+        views: List[LabeledFrame], track: Optional[Track] = None
+    ) -> List[Instance]:
+        """Find all instance accross provided views."""
+
+        instances: List[Instance] = []
+        for lf in views:
+            insts = lf.find(track=track)
+            if len(insts) > 0:
+                instances.append(insts[0])
+
+        return instances
+
+    @staticmethod
+    def get_instances_matrices(instances: List[Instance]) -> np.ndarray:
+        """Gather instances from views into M x F x T x N x 2 an array.
+
+        M: # views, F: # frames = 1, T: # tracks = 1, N: # nodes, 2: x, y
+
+        Args:
+            views: List of views to gather instances from.
+
+        Returns:
+            M x F x T x N x 2 array of instances coordinates.
+        """
+
+        inst_coords = np.stack([inst.numpy() for inst in instances], axis=0)
+        inst_coords = np.expand_dims(inst_coords, axis=1)
+        inst_coords = np.expand_dims(inst_coords, axis=1)
+
+        return inst_coords
+
+    @staticmethod
+    def update_instances(
+        instances: List[Instance],
+        inst_coords_reprojected: np.ndarray,
+    ):
+        """Update instances with reprojected coordinates.
+
+        Args:
+            instances: List of instances to update.
+            inst_coords_reprojected: M x F x T x N x 2 array of instances
+                coordinates.
+        """
+
+        insts_coords_list: List[np.ndarray] = np.split(
+            inst_coords_reprojected.squeeze(), inst_coords_reprojected.shape[0], axis=0
+        )
+        for inst, inst_coord in zip(instances, insts_coords_list):
+            inst.update_points(
+                inst_coord[0], exclude_complete=True
+            )  # inst_coord is (1, N, 2)
 
 
 def open_website(url: str):

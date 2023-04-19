@@ -585,21 +585,22 @@ class SessionsDock(DockWidget):
 
     def create_triangulation_options(self) -> QWidget:
         main_window = self.main_window
-        vb = QVBoxLayout()
+        hb = QHBoxLayout()
 
-        # Add checkbox and button for "Auto-align"
-        self.auto_align_checkbox = QCheckBox("Auto-Triangulate")
-        self.auto_align_checkbox.stateChanged.connect(
-            lambda x: main_window.state.set("auto_triangulate", x == Qt.Checked)
-        )
-
-        vb.addWidget(self.auto_align_checkbox)
+        # Add button to triangulate on demand
         self.add_button(
-            vb,
+            hb,
             "Triangulate",
             main_window.process_events_then(main_window.commands.triangulateSession),
         )
 
-        vbw = QWidget()
-        vbw.setLayout(vb)
-        return vbw
+        # Add checkbox and button for "Auto-triangulate"
+        self.auto_align_checkbox = QCheckBox("Auto-Triangulate")
+        self.auto_align_checkbox.stateChanged.connect(
+            lambda x: main_window.state.set("auto_triangulate", x == Qt.Checked)
+        )
+        hb.addWidget(self.auto_align_checkbox)
+
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        return hbw
