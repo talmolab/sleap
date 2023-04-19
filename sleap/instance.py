@@ -1394,7 +1394,9 @@ class LabeledFrame:
         Returns:
             List of instances.
         """
-        instances = self.instances
+        instances = sorted(
+            self.instances, key=lambda inst: isinstance(inst, PredictedInstance)
+        )  # Sort with PredictedInstances last
         if user:
             instances = list(filter(lambda inst: type(inst) == Instance, instances))
         if track != -1:  # use -1 since we want to accept None as possible value

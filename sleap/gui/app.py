@@ -1210,7 +1210,7 @@ class MainWindow(QMainWindow):
         """Run after plot is updated, but stay on same frame."""
 
         video = self.state["video"]
-        instance = self.state["selected_instance"]
+        instance = self.state["instance"]
 
         # Redraw trails
         overlay: TrackTrailOverlay = self.overlays["trails"]
@@ -1218,7 +1218,7 @@ class MainWindow(QMainWindow):
 
         # Replot connected views for multi-camera projects
         session = self.labels.get_session(video)
-        if session is not None:
+        if session is not None and instance is not None:
             track = instance.track
             session.update_views(
                 frame_idx,
