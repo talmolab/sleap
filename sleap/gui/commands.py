@@ -613,9 +613,21 @@ class CommandContext:
         """Generates suggestions using given params dictionary."""
         self.execute(GenerateSuggestions, **params)
 
-    def triangulateSession(self):
+    def triangulateSession(
+        self,
+        frame_idx: Optional[int] = None,
+        video: Optional[Video] = None,
+        instance: Optional[Instance] = None,
+        session: Optional[RecordingSession] = None,
+    ):
         """Triangulates `Instance`s for selected views in a `RecordingSession`."""
-        self.execute(TriangulateSession)
+        self.execute(
+            TriangulateSession,
+            frame_idx=frame_idx,
+            video=video,
+            isntance=instance,
+            session=session,
+        )
 
     def openWebsite(self, url):
         """Open a website from URL using the native system browser."""
@@ -3224,10 +3236,10 @@ class TriangulateSession(EditCommand):
 
         # TODO(LM): Add support for excluding `Camcorder`s in triangulation
 
-        frame_idx = context.app.state["frame_idx"]
-        video = context.app.state["video"]
-        instance = context.app.state["instance"]
-        session = context.labels.get_session(video)
+        frame_idx = params.get("frame_idx", None) or context.app.state["frame_idx"]
+        video = params.get("video", None) or context.app.state["video"]
+        instance = params.get("instance", None) or context.app.state["instance"]
+        session = params.get("session", None) or context.labels.get_session(video)
 
         # Return if we don't have a session for video or an instance selected.
         if session is None or instance is None:
