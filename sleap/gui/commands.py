@@ -610,7 +610,7 @@ class CommandContext:
         """Generates suggestions using given params dictionary."""
         self.execute(GenerateSuggestions, **params)
 
-    def triangulateSessions(self):
+    def triangulateSession(self):
         """Triangulates `Instance`s for selected views in a `RecordingSession`."""
         self.execute(TriangulateSession)
 
@@ -3218,13 +3218,22 @@ class TriangulateSession(EditCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        # TODO(LM): Write this function
-        ...
+        frame_idx = context.app.state["frame_idx"]
+        video = context.app.state["video"]
+        instance = context.app.state["instance"]
+        session = context.labels.get_session(video)
+
+        if session is not None and instance is not None:
+            track = instance.track
+            session.update_views(
+                frame_idx,
+                track,
+            )
 
 
 def open_website(url: str):
     """Open website in default browser.
-    
+
     Args:
         url: URL to open.
     """

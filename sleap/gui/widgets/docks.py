@@ -597,7 +597,7 @@ class SessionsDock(DockWidget):
         self.add_button(
             vb,
             "Triangulate",
-            main_window.process_events_then(main_window.commands.triangulateSessions),
+            main_window.process_events_then(main_window.commands.triangulateSession),
         )
 
         vbw = QWidget()

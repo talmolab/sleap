@@ -1219,18 +1219,8 @@ class MainWindow(QMainWindow):
         overlay.redraw(video, frame_idx)
 
         # Replot connected views for multi-camera projects
-        session = self.labels.get_session(video)
-        if session is not None and instance is not None:
-            track = instance.track
-            session.update_views(
-                frame_idx,
-                track,
-            )
-
-            # TODO(LM): Move this to a dock for replotting on demand
-            # Replot instance nodes (but keep same QtInstance)
-            for inst in self.player.view.instances:
-                inst.updatePoints(complete=False, user_change=False)
+        if self.state.get("auto_triangulate", False):
+            self.commands.triangulateSession()
 
     def _after_plot_change(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
