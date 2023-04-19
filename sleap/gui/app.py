@@ -1225,6 +1225,11 @@ class MainWindow(QMainWindow):
                 track,
             )
 
+            # TODO(LM): Move this to a dock for replotting on demand
+            # Replot instance nodes (but keep same QtInstance)
+            for inst in self.player.view.instances:
+                inst.updatePoints(complete=False, user_change=False)
+
     def _after_plot_change(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
 

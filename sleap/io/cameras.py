@@ -594,7 +594,7 @@ class RecordingSession:
             inst_coords_reprojected.squeeze(), inst_coords_reprojected.shape[0], axis=0
         )
         for inst, inst_coord in zip(instances, insts_coords_list):
-            inst.update_points(inst_coord[0])  # inst_coord is (1, N, 2)
+            inst.update_points(inst_coord[0], exclude_complete=True)  # inst_coord is (1, N, 2)
 
     def __attrs_post_init__(self):
         self.camera_cluster.add_session(self)
