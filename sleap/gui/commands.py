@@ -410,6 +410,14 @@ class CommandContext:
         """Activates video and goes to frame."""
         NavCommand.go_to(self, frame_idx, video)
 
+    def nextView(self):
+        """Goes to next view."""
+        self.execute(GoAdjacentView, prev_or_next="next")
+
+    def prevView(self):
+        """Goes to previous view."""
+        self.execute(GoAdjacentView, prev_or_next="prev")
+
     # Editing Commands
 
     def toggleGrayscale(self):
@@ -1662,6 +1670,26 @@ class SelectToFrameGui(NavCommand):
         params["to_frame_idx"] = frame_number - 1
 
         return okay
+
+
+class GoAdjacentView(NavCommand):
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+
+        operator = -1 if params["prev_or_next"] == "prev" else 1
+
+        labels = context.labels
+        frame_idx = context.state["frame_idx"]
+        video = context.state["video"]
+        session = labels.get_session(video)
+
+        # Get the next view
+        current_video_idx = session.videos.index(video)
+        new_video_idx = (current_video_idx + operator) % len(session.videos)
+        new_video = session.videos[new_video_idx]
+
+        context.state["video"] = new_video
+        context.state["frame_idx"] = frame_idx
 
 
 # Editing Commands

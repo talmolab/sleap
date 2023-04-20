@@ -548,6 +548,18 @@ class MainWindow(QMainWindow):
             "Next Track Spawn Frame",
             self.commands.nextTrackFrame,
         )
+        add_menu_item(
+            goMenu,
+            "goto next view",
+            "Next View",
+            self.commands.nextView,
+        )
+        add_menu_item(
+            goMenu,
+            "goto prev view",
+            "Prev View",
+            self.commands.prevView,
+        )
 
         goMenu.addSeparator()
 
