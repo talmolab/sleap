@@ -64,7 +64,7 @@ def test_camera_cluster(
 
     # Test __len__
     assert len(camera_cluster) == len(camera_cluster.cameras)
-    assert len(camera_cluster) == 4
+    assert len(camera_cluster) == 8
 
     # Test __getitem__, __iter__, and __contains__
     for idx, cam in enumerate(camera_cluster):
