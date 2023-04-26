@@ -163,7 +163,7 @@ class VideosDock(DockWidget):
         )
 
     def create_models(self) -> VideosTableModel:
-        self.model = VideosTableModel(
+        self.model = self.model_type(
             items=self.main_window.labels.videos, context=self.main_window.commands
         )
         return self.model
@@ -414,7 +414,7 @@ class SuggestionsDock(DockWidget):
         )
 
     def create_models(self) -> SuggestionsTableModel:
-        self.model = SuggestionsTableModel(
+        self.model = self.model_type(
             items=self.main_window.labels.suggestions, context=self.main_window.commands
         )
         return self.model
@@ -530,7 +530,7 @@ class InstancesDock(DockWidget):
         )
 
     def create_models(self) -> LabeledFrameTableModel:
-        self.model = LabeledFrameTableModel(
+        self.model = self.model_type(
             items=self.main_window.state["labeled_frame"],
             context=self.main_window.commands,
         )
