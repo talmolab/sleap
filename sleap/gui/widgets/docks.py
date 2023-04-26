@@ -177,9 +177,7 @@ class VideosDock(DockWidget):
             state=main_window.state,
             row_name="video",
             is_activatable=True,
-            model=VideosTableModel(
-                items=main_window.labels.videos, context=main_window.commands
-            ),
+            model=self.model,
             ellipsis_left=True,
         )
 
@@ -407,11 +405,12 @@ class SkeletonDock(DockWidget):
 class SuggestionsDock(DockWidget):
     """Dock widget for displaying suggestions."""
 
-    def __init__(self, main_window: QMainWindow):
+    def __init__(self, main_window: QMainWindow, tab_with: Optional[QLayout] = None):
         super().__init__(
             name="Labeling Suggestions",
             main_window=main_window,
             model_type=SuggestionsTableModel,
+            tab_with=tab_with,
         )
 
     def create_models(self) -> SuggestionsTableModel:
@@ -424,10 +423,7 @@ class SuggestionsDock(DockWidget):
         self.table = GenericTableView(
             state=self.main_window.state,
             is_sortable=True,
-            model=SuggestionsTableModel(
-                items=self.main_window.labels.suggestions,
-                context=self.main_window.commands,
-            ),
+            model=self.model,
         )
 
         # Connect some actions to the table
@@ -525,12 +521,12 @@ class SuggestionsDock(DockWidget):
 class InstancesDock(DockWidget):
     """Dock widget for displaying instances."""
 
-    def __init__(
-        self,
-        main_window: QMainWindow,
-    ):
+    def __init__(self, main_window: QMainWindow, tab_with: Optional[QLayout] = None):
         super().__init__(
-            name="Instances", main_window=main_window, model_type=LabeledFrameTableModel
+            name="Instances",
+            main_window=main_window,
+            model_type=LabeledFrameTableModel,
+            tab_with=tab_with,
         )
 
     def create_models(self) -> LabeledFrameTableModel:
@@ -545,10 +541,7 @@ class InstancesDock(DockWidget):
             state=self.main_window.state,
             row_name="instance",
             name_prefix="",
-            model=LabeledFrameTableModel(
-                items=self.main_window.state["labeled_frame"],
-                context=self.main_window.commands,
-            ),
+            model=self.model,
         )
         return self.table
 
