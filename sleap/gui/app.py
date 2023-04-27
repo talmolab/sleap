@@ -986,9 +986,9 @@ class MainWindow(QMainWindow):
         """Create dock windows and connect them to GUI."""
 
         self.videos_dock = VideosDock(self)
-        self.skeleton_dock = SkeletonDock(self)
-        self.suggestions_dock = SuggestionsDock(self)
-        self.instances_dock = InstancesDock(self)
+        self.skeleton_dock = SkeletonDock(self, tab_with=self.videos_dock)
+        self.suggestions_dock = SuggestionsDock(self, tab_with=self.videos_dock)
+        self.instances_dock = InstancesDock(self, tab_with=self.videos_dock)
 
         # Bring videos tab forward.
         self.videos_dock.wgt_layout.parent().parent().raise_()
