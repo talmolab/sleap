@@ -109,9 +109,9 @@ class VideoItemForInference(ItemForInference):
 
         # -Y represents endpoint of [X, Y) range but inference cli expects
         # [X, Y-1] range (so add 1 since negative).
-        frame_int_list = [i + 1 if i < 0 else i for i in self.frames]
+        frame_int_set = set([i + 1 if i < 0 else i for i in self.frames])
 
-        arg_list.extend(("--frames", ",".join(map(str, frame_int_list))))
+        arg_list.extend(("--frames", ",".join(map(str, frame_int_set))))
 
         return arg_list
 

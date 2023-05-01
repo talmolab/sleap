@@ -41,9 +41,10 @@ def test_scoped_key_dict():
 
 
 @pytest.mark.parametrize(
-    "labels_path, video_path", [("labels.slp", "video.mp4"), (None, "video.mp4")]
+    "labels_path, video_path, frames",
+    [("labels.slp", "video.mp4", [0, 1, 2]), (None, "video.mp4", [0, -1])],
 )
-def test_inference_cli_builder(labels_path, video_path):
+def test_inference_cli_builder(labels_path, video_path, frames):
 
     inference_task = runners.InferenceTask(
         trained_job_paths=["model1", "model2"],
@@ -51,7 +52,7 @@ def test_inference_cli_builder(labels_path, video_path):
     )
 
     item_for_inference = runners.VideoItemForInference(
-        video=Video.from_filename(video_path), frames=[1, 2, 3], labels_path=labels_path
+        video=Video.from_filename(video_path), frames=frames, labels_path=labels_path
     )
 
     cli_args, output_path = inference_task.make_predict_cli_call(item_for_inference)
@@ -62,6 +63,12 @@ def test_inference_cli_builder(labels_path, video_path):
     assert "model1" in cli_args
     assert "model2" in cli_args
     assert "--frames" in cli_args
+
+    frames_idx = cli_args.index("--frames")
+    if -1 in frames:
+        assert cli_args[frames_idx + 1] == "0"  # No redundant frames
+    else:
+        assert cli_args[frames_idx + 1] == ",".join([str(f) for f in frames])
     assert "--tracking.tracker" in cli_args
 
     assert output_path.startswith(data_path)
