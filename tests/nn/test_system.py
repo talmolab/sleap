@@ -18,7 +18,7 @@ def test_get_gpu_memory_visible():
 
     cuda_visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES", None)
 
-    if cuda_visible_devices is None:
+    if cuda_visible_devices is None or cuda_visible_devices is []:
         pytest.skip("CUDA_VISIBLE_DEVICES not set.")
 
     elif cuda_visible_devices == "0":
