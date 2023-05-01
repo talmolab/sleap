@@ -188,56 +188,6 @@ def best_logical_device_name() -> Text:
     return device_name
 
 
-# def get_gpu_memory() -> List[int]:
-#     """Return list of available GPU memory.
-
-#     Returns:
-#         List of available GPU memory (in MiB) with indices corresponding to GPU indices.
-
-#     Notes:
-#         This function depends on the `nvidia-smi` system utility. If it cannot be found
-#         in the `PATH`, this function returns an empty list.
-#     """
-#     if shutil.which("nvidia-smi") is None:
-#         return []
-
-#     command = [
-#         "nvidia-smi",
-#         "--query-gpu=memory.free",
-#         "--format=csv",
-#     ]
-
-#     if "CUDA_VISIBLE_DEVICES" in os.environ.keys():
-#         command.append("-i")
-#         command.append(os.environ["CUDA_VISIBLE_DEVICES"])
-#         command.extend(["-i", os.environ["CUDA_VISIBLE_DEVICES"]])
-
-#         # nvidia-smi --query-gpu=memory.free --format=csv | awk -F"," 'BEGIN{OFS=","} {if ($1 in ENVIRON["CUDA_VISIBLE_DEVICES"]) print $2}'
-
-#     try:
-#         memory_poll = subprocess.run(command, capture_output=True)
-#     except (subprocess.SubprocessError, FileNotFoundError):
-#         return []
-
-#     # Capture subprocess standard output
-#     subprocess_result = memory_poll.stdout
-
-#     # nvidia-smi returns an ascii encoded byte string separated by newlines (\n)
-#     # Splitting gives a list where the final entry is an empty string. Slice it off
-#     # and finally slice off the csv header in the 0th element.
-#     memory_string = subprocess_result.decode("ascii").split("\n")[1:-1]
-
-#     memory_list = []
-#     for row in memory_string:
-#         # Removing megabyte text returned by nvidia-smi
-#         available_memory = row.split(" MiB")[0]
-
-#         # Append percent of GPU available to GPU ID, assume GPUs returned in index order
-#         memory_list.append(int(available_memory))
-
-#     return memory_list
-
-
 def get_gpu_memory() -> List[int]:
     if shutil.which("nvidia-smi") is None:
         return []

@@ -15,16 +15,29 @@ def test_get_gpu_memory():
 
 
 def test_get_gpu_memory_visible():
+
     cuda_visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES", None)
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+    if cuda_visible_devices is None:
+        pytest.skip("CUDA_VISIBLE_DEVICES not set.")
 
-    gpu_memory = get_gpu_memory()
+    elif cuda_visible_devices == "0":
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-    assert len(gpu_memory) > 0
-    assert len(gpu_memory) == 2
+        gpu_memory = get_gpu_memory()
 
-    os.environ.pop("CUDA_VISIBLE_DEVICES", None)
+        assert len(gpu_memory) > 0
+        assert len(gpu_memory) == 1
 
-    # if cuda_visible_devices is None:
-    #     pytest.skip("CUDA_VISIBLE_DEVICES not set.")
+        os.environ.pop("CUDA_VISIBLE_DEVICES", None)
+
+    elif cuda_visible_devices == "0,1":
+
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+
+        gpu_memory = get_gpu_memory()
+
+        assert len(gpu_memory) > 0
+        assert len(gpu_memory) == 2
+
+        os.environ.pop("CUDA_VISIBLE_DEVICES", None)
