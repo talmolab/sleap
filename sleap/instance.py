@@ -369,6 +369,10 @@ class Instance:
     # The underlying Point array type that this instances point array should be.
     _point_array_type = PointArray
 
+    tracking_score: Optional[float] = attr.ib(
+        default=None, converter=lambda x: None if x is None else float(x)
+    )
+
     @from_predicted.validator
     def _validate_from_predicted_(
         self, attribute, from_predicted: Optional["PredictedInstance"]
@@ -1013,6 +1017,9 @@ class PredictedInstance(Instance):
         if self.from_predicted is not None:
             raise ValueError("PredictedInstance should not have from_predicted.")
 
+        # TODO(LM): Remove
+        assert self.score is not None
+
     def __repr__(self) -> str:
         """Return string representation of this object."""
         pts = []
@@ -1309,7 +1316,7 @@ class LabeledFrame:
         """Return number of instances associated with frame."""
         return len(self.instances)
 
-    def __getitem__(self, index) -> Instance:
+    def __getitem__(self, index) -> Union[Instance, PredictedInstance]:
         """Return instance (retrieved by index)."""
         return self.instances.__getitem__(index)
 

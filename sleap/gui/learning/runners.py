@@ -141,7 +141,7 @@ class DatasetItemForInference(ItemForInference):
 
     @property
     def cli_args(self):
-        args_list = ["--labels", self.path]
+        args_list = [self.path]
         if self.frame_filter == "user":
             args_list.append("--only-labeled-frames")
         elif self.frame_filter == "suggested":
@@ -207,9 +207,10 @@ class InferenceTask:
             not self.trained_job_paths
             and "tracking.tracker" in self.inference_params
             and self.labels_filename
+            and self.labels_filename not in cli_args
         ):
             # No models so we must want to re-track previous predictions
-            cli_args.extend(("--labels", self.labels_filename))
+            cli_args.insert(0, self.labels_filename)
 
         # Make path where we'll save predictions (if not specified)
         if output_path is None:

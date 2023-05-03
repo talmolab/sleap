@@ -5318,9 +5318,6 @@ def main(args: Optional[list] = None):
     sleap.nn.system.summary()
     print()
 
-    # Setup data loader.
-    provider, data_path = _make_provider_from_cli(args)
-
     # Setup tracker.
     tracker = _make_tracker_from_cli(args)
 
@@ -5330,11 +5327,15 @@ def main(args: Optional[list] = None):
     # Either run inference (and tracking) or just run tracking
     if args.models is not None:
 
+        # Setup data loader.
+        provider, data_path = _make_provider_from_cli(args)
+
         # Setup models.
         predictor = _make_predictor_from_cli(args)
         predictor.tracker = tracker
 
         # Run inference!
+        num_frames_to_predict = len(provider)
         labels_pr = predictor.predict(provider)
 
         if output_path is None:
@@ -5344,12 +5345,14 @@ def main(args: Optional[list] = None):
         labels_pr.provenance["predictor"] = type(predictor).__name__
 
     elif getattr(args, "tracking.tracker") is not None:
+
         # Load predictions
         print("Loading predictions...")
         labels_pr = sleap.load_file(args.data_path)
         frames = sorted(labels_pr.labeled_frames, key=lambda lf: lf.frame_idx)
 
         print("Starting tracker...")
+        num_frames_to_predict = len(frames)
         frames = run_tracker(frames=frames, tracker=tracker)
         tracker.final_pass(frames)
 
@@ -5374,7 +5377,7 @@ def main(args: Optional[list] = None):
     total_elapsed = time() - t0
     print("Finished inference at:", finish_timestamp)
     print(f"Total runtime: {total_elapsed} secs")
-    print(f"Predicted frames: {len(labels_pr)}/{len(provider)}")
+    print(f"Predicted frames: {len(labels_pr)}/{num_frames_to_predict}")
 
     # Add provenance metadata to predictions.
     labels_pr.provenance["sleap_version"] = sleap.__version__

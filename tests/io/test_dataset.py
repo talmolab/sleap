@@ -746,6 +746,36 @@ def test_dont_unify_skeletons():
     labels.to_dict()
 
 
+def test_instance_cattr(centered_pair_predictions: Labels, tmpdir: str):
+    labels = centered_pair_predictions
+    lf = labels.labeled_frames[0]
+    pred_inst: PredictedInstance = lf[0]
+    skeleton = pred_inst.skeleton
+    track = pred_inst.track
+
+    # Initialize Instance
+    instance = Instance.from_pointsarray(
+        points=pred_inst.numpy(), skeleton=skeleton, track=track
+    )
+    instance.from_predicted = pred_inst
+    assert instance.tracking_score is None
+    labels.add_instance(lf, instance)
+
+    pred_tracking_score = pred_inst.tracking_score
+    inst_tracking_score = instance.tracking_score
+
+    filename = str(PurePath(tmpdir, "labels.slp"))
+    labels.save(filename)
+
+    labels_loaded = sleap.load_file(filename)
+    lf_loaded = labels_loaded.labeled_frames[0]
+    pred_inst_loaded = lf_loaded.predicted_instances[0]
+    instance_loaded = lf_loaded.user_instances[0]
+
+    assert pred_inst_loaded.tracking_score == pred_tracking_score
+    assert instance_loaded.tracking_score == inst_tracking_score
+
+
 def test_instance_access():
     labels = Labels()
 
