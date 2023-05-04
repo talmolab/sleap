@@ -1654,4 +1654,24 @@ def main(args: Optional[list] = None):
 
 if __name__ == "__main__":
     ds = os.environ["ds-dmc"]
-    main([ds])
+    # main([ds])
+
+    app = QApplication([])
+    app.setApplicationName(f"SLEAP v{sleap.version.__version__}")
+    app.setWindowIcon(QtGui.QIcon(sleap.util.get_package_file("sleap/gui/icon.png")))
+
+    window = MainWindow(labels_path=ds)
+    window.showMinimized()
+    window._show_learning_dialog("training")
+
+    # Disable GPU in GUI process. This does not affect subprocesses.
+    sleap.use_cpu_only()
+
+    # Print versions.
+    print()
+    print("Software versions:")
+    sleap.versions()
+    print()
+    print("Happy SLEAPing! :)")
+
+    app.exec_()

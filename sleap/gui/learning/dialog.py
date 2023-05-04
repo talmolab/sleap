@@ -84,6 +84,7 @@ class LearningDialog(QtWidgets.QDialog):
         self.skeleton = skeleton
 
         self._frame_selection = None
+        self._frame_selection_descriptions = None
 
         self.current_pipeline = ""
 
@@ -186,174 +187,154 @@ class LearningDialog(QtWidgets.QDialog):
 
     @property
     def frame_selection(self) -> Dict[str, Dict[Video, List[int]]]:
-        """
-        Returns dictionary with frames that user has selected for learning.
-        """
+        """Returns dictionary with frames that user has selected for learning."""
+
         return self._frame_selection
+
+    @property
+    def frame_selection_descriptions(self):
+        return self._frame_selection_descriptions
+
+    @property
+    def default_frame_selection_ranking(self):
+        """Returns list of options for frame selection, in order of preference."""
+
+        return ["clip", "suggestions", "current_frame", "nothing"]
+
+    @property
+    def non_sequential_frame_selections(self) -> List[str]:
+        """Returns list of options for frame selection that are not sequential."""
+
+        return [
+            "frame",
+            "suggestions",
+            "random",
+            "random_video",
+            "user",
+        ]
+
+    @property
+    def sequential_frame_selections(self) -> List[str]:
+        """Returns list of options for frame selection that are sequential."""
+
+        return ["clip", "video", "all_videos"]
+
+    @frame_selection_descriptions.setter
+    def frame_selection_descriptions(self, frame_count_dict: Dict[str, int]):
+        """Sets descriptions of options of frames on which to run inference.
+
+        Args:
+            frame_count_dict: dictionary with number of frames for each option
+                (e.g. {"frame": 1, "clip": 10, "video": 100, "all_videos": 1000})
+        """
+
+        self._frame_selection_descriptions = {
+            "frame": "current frame",
+            "clip": f"selected clip ({frame_count_dict.get('clip', None)} frames)",
+            "video": f"entire current video ({frame_count_dict.get('video', None)} frames)",
+            "all_videos": f"all videos ({frame_count_dict.get('all_videos', None)} frames)",
+            "suggestions": f"suggested frames ({frame_count_dict.get('suggestions', None)} total frames)",
+            "random": f"random frames ({frame_count_dict.get('random', None)} total frames)",
+            "random_video": f"random frames in current video ({frame_count_dict.get('random_video', None)} frames",
+            "user": f"user labeled frames ({frame_count_dict.get('user', None)} total frames)",
+        }
 
     @frame_selection.setter
     def frame_selection(self, frame_selection: Dict[str, Dict[Video, List[int]]]):
         """Sets options of frames on which to run learning."""
         self._frame_selection = frame_selection
 
-        if "_predict_frames" in self.pipeline_form_widget.fields.keys():
-            frame_count_dict = {
-                "total_random": 0,
-                "total_suggestions": 0,
-                "total_user": 0,
-                "random_video": 0,
-                "clip_length": 0,
-                "video_length": 0,
-                "all_videos_length": 0,
-            }
+        # Return if predict frames field is not in pipeline form
+        if "_predict_frames" not in self.pipeline_form_widget.fields.keys():
+            return
 
-            # Determine which options are available given _frame_selection
-            if "random" in self._frame_selection:
-                frame_count_dict[
-                    "total_random"
-                ] = self.count_total_frames_for_selection_option(
-                    self._frame_selection["random"]
-                )
-            if "random_video" in self._frame_selection:
-                frame_count_dict[
-                    "random_video"
-                ] = self.count_total_frames_for_selection_option(
-                    self._frame_selection["random_video"]
-                )
-            if "suggestions" in self._frame_selection:
-                frame_count_dict[
-                    "total_suggestions"
-                ] = self.count_total_frames_for_selection_option(
-                    self._frame_selection["suggestions"]
-                )
-            if "user" in self._frame_selection:
-                frame_count_dict[
-                    "total_user"
-                ] = self.count_total_frames_for_selection_option(
-                    self._frame_selection["user"]
-                )
-            if "clip" in self._frame_selection:
-                frame_count_dict[
-                    "clip_length"
-                ] = self.count_total_frames_for_selection_option(
-                    self._frame_selection["clip"]
-                )
-            if "video" in self._frame_selection:
-                frame_count_dict[
-                    "video_length"
-                ] = self.count_total_frames_for_selection_option(
-                    self._frame_selection["video"]
-                )
-            if "all_videos" in self._frame_selection:
-                frame_count_dict[
-                    "all_videos_length"
-                ] = self.count_total_frames_for_selection_option(
-                    self._frame_selection["all_videos"]
-                )
+        # Count total frames for each option
+        frame_count_dict = self.count_frames_for_prediction_options()
 
-            # Build list of options
-            self.populate_predict_frames_options(frame_count_dict)
+        # Populate list of options
+        self.populate_predict_frames_options(frame_count_dict)
+
+    @property
+    def frame_count_dict(self):
+        """Returns dictionary with number of frames for each option."""
+
+        return self._frame_count_dict
+
+    @frame_count_dict.setter
+    def frame_count_dict(self, frame_count_dict: Dict[str, int]):
+        """Sets dictionary with number of frames for each option."""
+
+        self._frame_count_dict = frame_count_dict
+        self._frame_selection_descriptions = {
+            "frame": "current frame",
+            "clip": f"selected clip ({frame_count_dict.get('clip', None)} frames)",
+            "video": f"entire current video ({frame_count_dict.get('video', None)} frames)",
+            "all_videos": f"all videos ({frame_count_dict.get('all_videos', None)} frames)",
+            "suggestions": f"suggested frames ({frame_count_dict.get('suggestions', None)} total frames)",
+            "random": f"random frames ({frame_count_dict.get('random', None)} total frames)",
+            "random_video": f"random frames in current video ({frame_count_dict.get('random_video', None)} frames",
+            "user": f"user labeled frames ({frame_count_dict.get('user', None)} total frames)",
+        }
+
+    def count_frames_for_prediction_options(self):
+        frame_count_dict = {}
+        for option_name, video_and_frame_range in self.frame_selection.items():
+            f_count = self.count_total_frames_for_selection_option(
+                video_and_frame_range
+            )
+            if f_count > 0:
+                frame_count_dict[option_name] = f_count
+
+        # Custom logic to remove options that don't make sense for the current dialog
+        if (len(self.labels.videos) < 2) and ("all_videos" in frame_count_dict):
+            frame_count_dict.pop("all_videos")
+
+        # Use setter method to map option names to option descriptions using counts
+        self.frame_count_dict = frame_count_dict
+
+        return frame_count_dict
 
     def populate_predict_frames_options(self, frame_counts: Dict[str, int]):
         """Populates the options for the predict frames field.
 
-        Priority for default (lowest to highest):
-          "nothing" (if training)
-          "current frame" (if inference)
-          "suggested frames" (if available)
-          "selected clip" (if available)
+        Options (stored in ) are generated once when opening the dialog, and then
 
         Args:
             frame_counts: Dictionary of frame counts for each option.
         """
+
+        # Return if predict frames field is not in pipeline form
+        if "_predict_frames" not in self.pipeline_form_widget.fields.keys():
+            return
+
         prediction_options: List[str] = []
-        default_option_cache: list = [
-            None,  # Default option
-            -1,  # Default option rank
-        ]
 
-        def append_option(
-            option: str,
-            default_rank: int,
-        ):
-            """Appends option to list and sets as default if high default rank."""
-
-            prediction_options.append(option)
-
-            # Set new default if higher rank
-            current_default, current_default_rank = default_option_cache
-            if (default_rank > current_default_rank) or (current_default is None):
-                default_option_cache[0] = option
-                default_option_cache[1] = default_rank
-            return
-
-        def append_options(
-            options_list: List[Tuple[str, int]],
-        ):
-            """Appends all options to list and sets current_default as default."""
-            for option, default_rank in options_list:
-                append_option(option, default_rank)
-            return
-
-        def append_positive_frame_count_options(
-            options_list: Dict[int, Tuple[str, bool]]
-        ):
-            """Appends options to list if condition is True and sets current_default as default."""
-            for frame_count, (option, default_rank) in options_list.items():
-                if frame_count > 0:
-                    append_option(option, default_rank)
-            return
-
-        total_random = frame_counts["total_random"]
-        random_video = frame_counts["random_video"]
-        total_suggestions = frame_counts["total_suggestions"]
-        total_user = frame_counts["total_user"]
-        clip_length = frame_counts["clip_length"]
-        video_length = frame_counts["video_length"]
-        all_videos_length = frame_counts["all_videos_length"]
-
-        # Group all options by condition
-        positive_intermittent_options: Dict[int, Tuple[str, int]] = {
-            random_video: (
-                f"random frames in current video ({random_video} frames)",
-                -1,
-            ),
-            total_suggestions: (
-                f"suggested frames ({total_suggestions} total frames)",
-                2,
-            ),
-        }
-        positive_continuous_options: Dict[int, Tuple[str, int]] = {
-            total_user: (f"user labeled frames ({total_user} total frames)", -1),
-            clip_length: (f"selected clip ({clip_length} frames)", 3),
-            len(self.labels.videos): (f"all videos ({all_videos_length} frames)", -1),
-        }
-
-        # Group by condition (continuous vs intermittent and inference vs training)
-        always_intermittent_options: List[Tuple[str, int]] = [
-            (f"random frames ({total_random} total frames)", -1),
-            ("current frame", 1),
-        ]
-        always_continuous_options: List[Tuple[str, int]] = [
-            (f"entire current video ({video_length} frames)", -1)
-        ]
-
-        # Add training options
+        # Add training-only option(s)
         if self.mode != "inference":
-            append_option("nothing", 0)
+            prediction_options.append("nothing")
 
-        # Add intermittent options
+        # Add non-sequential options
         if self.current_pipeline != "none":
-            append_options(always_intermittent_options)
-            append_positive_frame_count_options(positive_intermittent_options)
+            for option in self.non_sequential_frame_selections:
+                if option in frame_counts:
+                    prediction_options.append(self.frame_selection_descriptions[option])
 
-        # Add continuous options
-        append_options(always_continuous_options)
-        append_positive_frame_count_options(positive_continuous_options)
+        # Add sequential options (for retracking, i.e. current pipeline is "none")
+        for option in self.sequential_frame_selections:
+            if option in frame_counts:
+                prediction_options.append(self.frame_selection_descriptions[option])
 
-        default_option = default_option_cache[0]
+        # Choose default option
+        default_option = None
+        for option in self.default_frame_selection_ranking:
+            description = self.frame_selection_descriptions.get(option, None)
+            if description in prediction_options:
+                default_option = description
+                break
+
+        # Set options
         self.pipeline_form_widget.fields["_predict_frames"].set_options(
-            prediction_options, default_option
+            prediction_options, default_option or prediction_options[0]
         )
 
     def connect_signals(self):
