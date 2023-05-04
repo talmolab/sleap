@@ -205,39 +205,13 @@ class LearningDialog(QtWidgets.QDialog):
     def non_sequential_frame_selections(self) -> List[str]:
         """Returns list of options for frame selection that are not sequential."""
 
-        return [
-            "frame",
-            "suggestions",
-            "random",
-            "random_video",
-            "user",
-        ]
+        return ["frame", "suggestions", "random", "random_video", "user"]
 
     @property
     def sequential_frame_selections(self) -> List[str]:
         """Returns list of options for frame selection that are sequential."""
 
         return ["clip", "video", "all_videos"]
-
-    @frame_selection_descriptions.setter
-    def frame_selection_descriptions(self, frame_count_dict: Dict[str, int]):
-        """Sets descriptions of options of frames on which to run inference.
-
-        Args:
-            frame_count_dict: dictionary with number of frames for each option
-                (e.g. {"frame": 1, "clip": 10, "video": 100, "all_videos": 1000})
-        """
-
-        self._frame_selection_descriptions = {
-            "frame": "current frame",
-            "clip": f"selected clip ({frame_count_dict.get('clip', None)} frames)",
-            "video": f"entire current video ({frame_count_dict.get('video', None)} frames)",
-            "all_videos": f"all videos ({frame_count_dict.get('all_videos', None)} frames)",
-            "suggestions": f"suggested frames ({frame_count_dict.get('suggestions', None)} total frames)",
-            "random": f"random frames ({frame_count_dict.get('random', None)} total frames)",
-            "random_video": f"random frames in current video ({frame_count_dict.get('random_video', None)} frames",
-            "user": f"user labeled frames ({frame_count_dict.get('user', None)} total frames)",
-        }
 
     @frame_selection.setter
     def frame_selection(self, frame_selection: Dict[str, Dict[Video, List[int]]]):
