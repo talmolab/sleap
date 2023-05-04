@@ -8,6 +8,7 @@ import cv2
 from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple
 
 from sleap import Track, LabeledFrame, Skeleton
+from sleap.instance import PredictedInstance
 
 from sleap.nn.tracker.components import (
     instance_similarity,
@@ -491,7 +492,7 @@ class Tracker(BaseTracker):
                 t = 0
 
         # Initialize containers for tracked instances at the current timestep.
-        tracked_instances = []
+        tracked_instances: List[InstanceType] = []
 
         # Make cache so similarity function doesn't have to recompute everything.
         # similarity_cache = dict()
@@ -544,16 +545,13 @@ class Tracker(BaseTracker):
 
     @staticmethod
     def update_matched_instance_tracks(matches: List[Match]) -> List[InstanceType]:
-        inst_list = []
+        inst_list: List[InstanceType] = []
         for match in matches:
             # Assign to track and save.
-            inst_list.append(
-                attr.evolve(
-                    match.instance,
-                    track=match.track,
-                    tracking_score=match.score,
-                )
-            )
+            inst = attr.evolve(match.instance, track=match.track)
+            if isinstance(inst, PredictedInstance):
+                inst.tracking_score = match.score
+            inst_list.append(inst)
         return inst_list
 
     def spawn_for_untracked_instances(

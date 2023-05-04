@@ -362,7 +362,7 @@ class Match:
     """Stores a match between a specific instance and specific track."""
 
     track: Track
-    instance: Instance
+    instance: InstanceType
     score: Optional[float] = None
     is_first_choice: bool = False
 

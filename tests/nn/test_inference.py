@@ -3,6 +3,7 @@ from typing import cast
 import pytest
 import numpy as np
 import json
+from sleap.instance import Instance, PredictedInstance
 from sleap.io.dataset import Labels
 from sleap.nn.tracking import FlowCandidateMaker, Tracker
 import tensorflow as tf
@@ -1289,8 +1290,18 @@ def test_topdown_id_predictor_save(
 def test_retracking(
     centered_pair_predictions: Labels, tmpdir, output_path, tracker_method
 ):
-    slp_path = Path(tmpdir, "old_slp.slp")
-    labels: Labels = Labels.save(centered_pair_predictions, slp_path)
+
+    # Add a user-instance to the labels (https://github.com/talmolab/sleap/issues/1296)
+    labels: Labels = centered_pair_predictions
+    lf = labels.get(1)
+    pred_inst = lf.instances[0]
+    user_inst = Instance.from_numpy(pred_inst.numpy(), skeleton=pred_inst.skeleton)
+    labels.add_instance(lf, user_inst)
+    labels.remove_instance(lf, pred_inst)
+    assert len(labels.user_instances) > 0
+
+    slp_path = str(Path(tmpdir, "old_slp.slp"))
+    Labels.save(labels, slp_path)
 
     # Create sleap-track command
     cmd = (
@@ -1335,7 +1346,7 @@ def test_sleap_track(
     tmpdir,
 ):
     slp_path = str(Path(tmpdir, "old_slp.slp"))
-    labels: Labels = Labels.save(centered_pair_predictions, slp_path)
+    Labels.save(centered_pair_predictions, slp_path)
 
     # Create sleap-track command
     args = f"{slp_path} --model {min_centered_instance_model_path} --frames 1-3 --cpu".split()
