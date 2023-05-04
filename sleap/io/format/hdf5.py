@@ -438,11 +438,9 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                     if instance_type is PredictedInstance:
                         score = instance.score
                         pid = pred_point_id + pred_point_id_offset
-                        tracking_score = instance.tracking_score
                     else:
                         score = np.nan
                         pid = point_id + point_id_offset
-                        tracking_score = np.nan
 
                         # Keep track of any from_predicted instance links, we will
                         # insert the correct instance_id in the dataset after we are
@@ -450,6 +448,8 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                         if instance.from_predicted:
                             instances_with_from_predicted.append(instance_id)
                             instances_from_predicted.append(instance.from_predicted)
+
+                    tracking_score = instance.tracking_score or np.nan
 
                     # Copy all the data
                     instances[instance_id] = (
