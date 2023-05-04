@@ -1662,7 +1662,7 @@ if __name__ == "__main__":
 
     window = MainWindow(labels_path=ds)
     window.showMinimized()
-    window._show_learning_dialog("training")
+    window._show_learning_dialog("inference")
 
     # Disable GPU in GUI process. This does not affect subprocesses.
     sleap.use_cpu_only()

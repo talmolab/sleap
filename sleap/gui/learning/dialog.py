@@ -83,10 +83,14 @@ class LearningDialog(QtWidgets.QDialog):
         self.labels = labels
         self.skeleton = skeleton
 
+        # Attributes for seslecting which frames to run infernce on
         self._frame_selection = None
         self._frame_selection_descriptions = None
+        self._frame_count_dict = None
 
+        # Attributes for selecting the model type
         self.current_pipeline = ""
+        self.previous_pipeline = None  # Also used as a flag for first initialization
 
         self.tabs: Dict[str, TrainingEditorWidget] = dict()
         self.shown_tab_names = []
@@ -148,6 +152,9 @@ class LearningDialog(QtWidgets.QDialog):
         # Connect functions to update pipeline tabs and Predict On when pipeline changes
         self.pipeline_form_widget.updatePipeline.connect(self.set_pipeline)
         self.pipeline_form_widget.emitPipeline()
+        self.pipeline_form_widget.updatePipeline.connect(
+            self.populate_predict_frames_options
+        )  # Connect this after setting and emmitting pipeline (to avoid double update)
 
         self.connect_signals()
 
@@ -223,10 +230,10 @@ class LearningDialog(QtWidgets.QDialog):
             return
 
         # Count total frames for each option
-        frame_count_dict = self.count_frames_for_prediction_options()
+        self.count_frames_for_prediction_options()
 
         # Populate list of options
-        self.populate_predict_frames_options(frame_count_dict)
+        self.populate_predict_frames_options(self.current_pipeline)
 
     @property
     def frame_count_dict(self):
@@ -268,10 +275,8 @@ class LearningDialog(QtWidgets.QDialog):
 
         return frame_count_dict
 
-    def populate_predict_frames_options(self, frame_counts: Dict[str, int]):
+    def populate_predict_frames_options(self, current_pipeline: str):
         """Populates the options for the predict frames field.
-
-        Options (stored in ) are generated once when opening the dialog, and then
 
         Args:
             frame_counts: Dictionary of frame counts for each option.
@@ -281,6 +286,15 @@ class LearningDialog(QtWidgets.QDialog):
         if "_predict_frames" not in self.pipeline_form_widget.fields.keys():
             return
 
+        # Update options if pipeline has changed between training and retracking
+        if (
+            self.previous_pipeline is not None
+            and self.previous_pipeline != "none"
+            and current_pipeline != "none"
+        ):
+            self.previous_pipeline = current_pipeline
+            return
+
         prediction_options: List[str] = []
 
         # Add training-only option(s)
@@ -288,28 +302,37 @@ class LearningDialog(QtWidgets.QDialog):
             prediction_options.append("nothing")
 
         # Add non-sequential options
-        if self.current_pipeline != "none":
+        if current_pipeline != "none":
             for option in self.non_sequential_frame_selections:
-                if option in frame_counts:
+                if option in self.frame_count_dict:
                     prediction_options.append(self.frame_selection_descriptions[option])
 
         # Add sequential options (for retracking, i.e. current pipeline is "none")
         for option in self.sequential_frame_selections:
-            if option in frame_counts:
+            if option in self.frame_count_dict:
                 prediction_options.append(self.frame_selection_descriptions[option])
 
         # Choose default option
         default_option = None
-        for option in self.default_frame_selection_ranking:
-            description = self.frame_selection_descriptions.get(option, None)
-            if description in prediction_options:
-                default_option = description
-                break
+        if self.previous_pipeline is None:
+            # If no previous pipeline, choose first option that is in the default list
+            for option in self.default_frame_selection_ranking:
+                description = self.frame_selection_descriptions.get(option, None)
+                if description in prediction_options:
+                    default_option = description
+                    break
+        else:
+            # If previous pipeline, choose option that is closest to previous option
+            current_option = self.pipeline_form_widget.fields["_predict_frames"].value()
+            if current_option in prediction_options:
+                default_option = current_option
+        default_option = default_option or prediction_options[0]
 
         # Set options
         self.pipeline_form_widget.fields["_predict_frames"].set_options(
-            prediction_options, default_option or prediction_options[0]
+            prediction_options, default_option
         )
+        self.previous_pipeline = current_pipeline
 
     def connect_signals(self):
         self.pipeline_form_widget.valueChanged.connect(self.on_tab_data_change)
@@ -468,13 +491,6 @@ class LearningDialog(QtWidgets.QDialog):
             elif pipeline == "single":
                 self.add_tab("single_instance")
 
-            print(pipeline)
-            if pipeline == "none":
-                # TODO(LM): Change options for Predict On to only continuous frames
-                print("None!")
-            else:
-                # TODO(LM): Change options for Predict On to all options again
-                pass
         self.current_pipeline = pipeline
 
         self._validate_pipeline()
@@ -942,7 +958,6 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         self.form_widget.set_form_data(data)
 
     def emitPipeline(self):
-        # TODO(LM): Update "Predict On" based on pipeline (for retracking)
         val = self.current_pipeline
         self.updatePipeline.emit(val)
 

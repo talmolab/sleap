@@ -546,6 +546,7 @@ class Tracker(BaseTracker):
     def update_matched_instance_tracks(matches: List[Match]) -> List[InstanceType]:
         inst_list = []
         for match in matches:
+            # TODO(LM): Test if we can just assign track to instances.
             # Assign to track and save.
             inst_list.append(
                 attr.evolve(
