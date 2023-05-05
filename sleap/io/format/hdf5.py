@@ -28,11 +28,12 @@ from typing import Optional, Callable, List, Text, Union
 
 
 class LabelsV1Adaptor(format.adaptor.Adaptor):
-    FORMAT_ID = 1.2
+    FORMAT_ID = 1.3
 
     # 1.0 points with gridline coordinates, top left corner at (0, 0)
     # 1.1 points with midpixel coordinates, top left corner at (-0.5, -0.5)
-    # 1.2 adds track score to read and write functions
+    # 1.2 adds tracking score for PredictedInstance to read and write functions
+    # 1.3 adds tracking score for Instance to read and write functions
 
     @property
     def handles(self):
@@ -180,6 +181,9 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                     skeleton=skeleton,
                     track=track,
                     points=points[i["point_id_start"] : i["point_id_end"]],
+                    tracking_score=i["tracking_score"]
+                    if (format_id is not None and format_id >= 1.3)
+                    else 0.0,
                 )
             else:  # PredictedInstance
                 instance = PredictedInstance(

@@ -758,8 +758,10 @@ def test_instance_cattr(centered_pair_predictions: Labels, tmpdir: str):
     )
     instance.from_predicted = pred_inst
     assert instance.tracking_score == 0.0
-    instance.tracking_score = 0.5
     labels.add_instance(lf, instance)
+
+    instance.tracking_score = 0.5
+    pred_inst.tracking_score = 0.7
 
     filename = str(PurePath(tmpdir, "labels.slp"))
     labels.save(filename)
@@ -769,8 +771,8 @@ def test_instance_cattr(centered_pair_predictions: Labels, tmpdir: str):
     pred_inst_loaded = lf_loaded.predicted_instances[0]
     instance_loaded = lf_loaded.user_instances[0]
 
-    assert pred_inst_loaded.tracking_score == pred_inst.tracking_score
-    assert instance_loaded.tracking_score == instance.tracking_score
+    assert round(pred_inst_loaded.tracking_score, 1) == pred_inst.tracking_score
+    assert round(instance_loaded.tracking_score, 1) == instance.tracking_score
 
 
 def test_instance_access():
@@ -1555,7 +1557,3 @@ def test_export_nwb(centered_pair_predictions: Labels, tmpdir):
     # Read from NWB file
     read_labels = NDXPoseAdaptor.read(NDXPoseAdaptor, filehandle.FileHandle(filename))
     assert_read_labels_match(centered_pair_predictions, read_labels)
-
-
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_instance_cattr"])
