@@ -239,7 +239,7 @@ class NixAdaptor(Adaptor):
                         positions[index, :, node_map[m]] = np.array([np.nan, np.nan])
 
                     centroids[index, :] = inst.centroid
-                    trackscore[index] = inst.tracking_score or 0.0
+                    trackscore[index] = inst.tracking_score
                     if hasattr(inst, "score"):
                         instscore[index] = inst.score
                         pointscore[index, :] = inst.scores

@@ -449,7 +449,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                             instances_with_from_predicted.append(instance_id)
                             instances_from_predicted.append(instance.from_predicted)
 
-                    tracking_score = instance.tracking_score or np.nan
+                    tracking_score = instance.tracking_score
 
                     # Copy all the data
                     instances[instance_id] = (

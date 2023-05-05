@@ -176,7 +176,7 @@ def get_occupancy_and_points_matrices(
         occupancy_matrix[track_i, frame_i] = 1
 
         locations_matrix[frame_i, ..., track_i] = inst.numpy()
-        tracking_scores[frame_i, ..., track_i] = inst.tracking_score or np.nan
+        tracking_scores[frame_i, ..., track_i] = inst.tracking_score
         if type(inst) == PredictedInstance:
             point_scores[frame_i, ..., track_i] = inst.scores
             instance_scores[frame_i, ..., track_i] = inst.score
