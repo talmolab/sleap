@@ -208,7 +208,8 @@ class Predictor(ABC):
             A subclass of `Predictor`.
 
         See also: `SingleInstancePredictor`, `TopDownPredictor`, `BottomUpPredictor`,
-            `MoveNetPredictor`
+            `MoveNetPredictor`, `TopDownMultiClassPredictor`,
+            `BottomUpMultiClassPredictor`.
         """
         # Read configs and find model types.
         if isinstance(model_paths, str):
@@ -3210,7 +3211,7 @@ class BottomUpPredictor(Predictor):
                         predicted_instances = sorted(
                             predicted_instances, key=lambda x: x.score, reverse=True
                         )
-                        predicted_instances = predicted_instances[:self.max_instances]
+                        predicted_instances = predicted_instances[: self.max_instances]
 
                     if self.tracker:
                         # Set tracks for predicted instances in this frame.
@@ -5291,10 +5292,6 @@ def _make_predictor_from_cli(args: argparse.Namespace) -> Predictor:
             predictor.inference_model.bottomup_layer.paf_scorer.dist_penalty_weight = (
                 args.dist_penalty_weight
             )
-        elif (type(predictor) == TopDownPredictor) and (
-            args.max_instances is not None
-        ):  # XXX
-            predictor.inference_model.centroid_crop.max_instances = args.max_instances
     else:
         # TODO(LM): create predictor that only uses tracker - based off load_model
         pass
