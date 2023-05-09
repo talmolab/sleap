@@ -3211,7 +3211,9 @@ class BottomUpPredictor(Predictor):
                         predicted_instances = sorted(
                             predicted_instances, key=lambda x: x.score, reverse=True
                         )
-                        predicted_instances = predicted_instances[: self.max_instances]
+                        predicted_instances = predicted_instances[
+                            : min(self.max_instances, len(predicted_instances))
+                        ]
 
                     if self.tracker:
                         # Set tracks for predicted instances in this frame.
