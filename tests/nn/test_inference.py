@@ -1328,6 +1328,14 @@ def test_retracking(
     assert new_inst.track != old_inst.track
 
 
+@pytest.mark.parametrize("cmd", ["--max_instances 1", "-i 1"])
+def test_valid_cli_command(cmd):
+    """Test that sleap-track CLI command is valid."""
+    parser = _make_cli_parser()
+    args = parser.parse_args(cmd.split())
+    assert args.max_instances == 1
+
+
 def test_sleap_track(
     centered_pair_predictions: Labels,
     min_centroid_model_path: str,

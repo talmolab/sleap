@@ -4908,8 +4908,8 @@ def _make_export_cli_parser() -> argparse.ArgumentParser:
         "--max_instances",
         type=int,
         help=(
-            "Limit maximum number of instances in multi-instance models"
-            "Defaults to None"
+            "Limit maximum number of instances in multi-instance models. "
+            "Defaults to None."
         ),
     )
 
@@ -5085,6 +5085,15 @@ def _make_cli_parser() -> argparse.ArgumentParser:
         default=0.2,
         help="Minimum confidence map value to consider a peak as valid.",
     )
+    parser.add_argument(
+        "-i",
+        "--max_instances",
+        type=int,
+        help=(
+            "Limit maximum number of instances in multi-instance models. "
+            "Defaults to None."
+        ),
+    )
 
     # Deprecated legacy args. These will still be parsed for backward compatibility but
     # are hidden from the CLI help.
@@ -5230,7 +5239,7 @@ def _make_predictor_from_cli(args: argparse.Namespace) -> Predictor:
             refinement="integral",
             progress_reporting=args.verbosity,
         )
-
+        
         if type(predictor) == BottomUpPredictor:
             predictor.inference_model.bottomup_layer.paf_scorer.max_edge_length_ratio = (
                 args.max_edge_length_ratio
@@ -5238,6 +5247,8 @@ def _make_predictor_from_cli(args: argparse.Namespace) -> Predictor:
             predictor.inference_model.bottomup_layer.paf_scorer.dist_penalty_weight = (
                 args.dist_penalty_weight
             )
+        elif (type(predictor) == TopDownPredictor) and (args.max_instances is not None):
+            predictor.inference_model.centroid_crop.max_instances = args.max_instances
     else:
         # TODO(LM): create predictor that only uses tracker - based off load_model
         pass

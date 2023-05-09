@@ -44,7 +44,15 @@ training:
     This pipeline uses two models: a "<u>centroid</u>" model to
     locate and crop around each animal in the frame, and a
     "<u>centered-instance confidence map</u>" model for predicted node locations
-    for each individual animal predicted by the centroid model.'
+    for each individual animal predicted by the centroid model.' 
+  - label: Max Instances
+    name: max_instances
+    type: optional_int
+    help: Maximum number of instances per frame.
+    none_label: No max
+    default_disabled: true
+    range: 1,100
+    default: 1
 
   - default: 5.0
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
@@ -288,6 +296,14 @@ inference:
     locate and crop around each animal in the frame, and a
     "<u>centered-instance confidence map</u>" model for predicted node locations
     for each individual animal predicted by the centroid model.'
+  - label: Max Instances
+    name: max_instances
+    type: optional_int
+    help: Maximum number of instances per frame.
+    none_label: No max
+    default_disabled: true
+    range: 1,100
+    default: 1
 
   multi-animal bottom-up-id:
   - type: text

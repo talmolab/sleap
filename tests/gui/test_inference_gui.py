@@ -41,13 +41,14 @@ def test_scoped_key_dict():
 
 
 @pytest.mark.parametrize(
-    "labels_path, video_path", [("labels.slp", "video.mp4"), (None, "video.mp4")]
+    "labels_path, video_path, max_instances",
+    [("labels.slp", "video.mp4", None), (None, "video.mp4", 2)],
 )
-def test_inference_cli_builder(labels_path, video_path):
+def test_inference_cli_builder(labels_path, video_path, max_instances):
 
     inference_task = runners.InferenceTask(
         trained_job_paths=["model1", "model2"],
-        inference_params={"tracking.tracker": "simple"},
+        inference_params={"tracking.tracker": "simple", "max_instances": max_instances},
     )
 
     item_for_inference = runners.VideoItemForInference(
@@ -63,6 +64,11 @@ def test_inference_cli_builder(labels_path, video_path):
     assert "model2" in cli_args
     assert "--frames" in cli_args
     assert "--tracking.tracker" in cli_args
+    assert (
+        "--max_instances" in cli_args
+        if max_instances is not None
+        else max_instances is None
+    )
 
     assert output_path.startswith(data_path)
     assert output_path.endswith("predictions.slp")
