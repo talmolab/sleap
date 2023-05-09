@@ -5239,7 +5239,7 @@ def _make_predictor_from_cli(args: argparse.Namespace) -> Predictor:
             refinement="integral",
             progress_reporting=args.verbosity,
         )
-        
+
         if type(predictor) == BottomUpPredictor:
             predictor.inference_model.bottomup_layer.paf_scorer.max_edge_length_ratio = (
                 args.max_edge_length_ratio
