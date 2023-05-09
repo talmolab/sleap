@@ -1328,7 +1328,7 @@ def test_retracking(
     assert new_inst.track != old_inst.track
 
 
-@pytest.mark.parametrize("cmd", ["--max_instances 1", "-i 1"])
+@pytest.mark.parametrize("cmd", ["--max_instances 1", "-n 1"])
 def test_valid_cli_command(cmd):
     """Test that sleap-track CLI command is valid."""
     parser = _make_cli_parser()

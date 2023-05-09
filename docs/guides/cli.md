@@ -102,7 +102,7 @@ optional arguments:
   -u, --unrag UNRAG
                         Convert ragged tensors into regular tensors with NaN padding.
                         Defaults to True.
-  -i, --max_instances MAX_INSTANCES
+  -n, --max_instances MAX_INSTANCES
                         Limit maximum number of instances in multi-instance models.
                         Defaults to None.
 ```
@@ -178,7 +178,7 @@ optional arguments:
                         if retracking predictions.
   --no-empty-frames     Clear any empty frames that did not have any detected
                         instances before saving to output.
-  -i, --max_instances MAX_INSTANCES
+  -n, --max_instances MAX_INSTANCES
                         Limit maximum number of instances in multi-instance models.
                         Defaults to None.
   --verbosity {none,rich,json}

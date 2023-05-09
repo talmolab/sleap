@@ -4904,7 +4904,7 @@ def _make_export_cli_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
-        "-i",
+        "-n",
         "--max_instances",
         type=int,
         help=(
@@ -5086,7 +5086,7 @@ def _make_cli_parser() -> argparse.ArgumentParser:
         help="Minimum confidence map value to consider a peak as valid.",
     )
     parser.add_argument(
-        "-i",
+        "-n",
         "--max_instances",
         type=int,
         help=(
