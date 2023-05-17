@@ -42,7 +42,11 @@ def test_scoped_key_dict():
 
 @pytest.mark.parametrize(
     "labels_path, video_path, frames",
-    [("labels.slp", "video.mp4", [0, 1, 2]), (None, "video.mp4", [0, -1])],
+    [
+        ("labels.slp", "video.mp4", [0, 1, 2]),
+        (None, "video.mp4", [0, -1]),
+        (None, "video.mp4", [1, -4]),
+    ],
 )
 def test_inference_cli_builder(labels_path, video_path, frames):
 
@@ -67,6 +71,8 @@ def test_inference_cli_builder(labels_path, video_path, frames):
     frames_idx = cli_args.index("--frames")
     if -1 in frames:
         assert cli_args[frames_idx + 1] == "0"  # No redundant frames
+    elif -4 in frames:
+        assert cli_args[frames_idx + 1] == "1,-3"  # Ordered correctly
     else:
         assert cli_args[frames_idx + 1] == ",".join([str(f) for f in frames])
     assert "--tracking.tracker" in cli_args
