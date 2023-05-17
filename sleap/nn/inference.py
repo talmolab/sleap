@@ -1838,9 +1838,11 @@ class CentroidCrop(InferenceLayer):
                 )
 
                 for sample in range(samples):
-
                     top_points = tf.math.top_k(
-                        centroid_vals[sample], k=self.max_instances
+                        centroid_vals[sample],
+                        k=tf.minimum(
+                            self.max_instances, tf.shape(centroid_vals[sample])[0]
+                        ),
                     )
                     top_inds = top_points.indices
 
