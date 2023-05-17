@@ -104,7 +104,7 @@ optional arguments:
                         Defaults to True.
   -n, --max_instances MAX_INSTANCES
                         Limit maximum number of instances in multi-instance models.
-                        Defaults to None.
+                        Not available for ID models. Defaults to None.
 ```
 
 ## Inference and Tracking
@@ -180,7 +180,7 @@ optional arguments:
                         instances before saving to output.
   -n, --max_instances MAX_INSTANCES
                         Limit maximum number of instances in multi-instance models.
-                        Defaults to None.
+                        Not available for ID models. Defaults to None.
   --verbosity {none,rich,json}
                         Verbosity of inference progress reporting. 'none' does
                         not output anything during inference, 'rich' displays

@@ -4955,7 +4955,7 @@ def _make_export_cli_parser() -> argparse.ArgumentParser:
         type=int,
         help=(
             "Limit maximum number of instances in multi-instance models. "
-            "Defaults to None."
+            "Not available for ID models. Defaults to None."
         ),
     )
 
@@ -5137,7 +5137,7 @@ def _make_cli_parser() -> argparse.ArgumentParser:
         type=int,
         help=(
             "Limit maximum number of instances in multi-instance models. "
-            "Defaults to None."
+            "Not available for ID models. Defaults to None."
         ),
     )
 
