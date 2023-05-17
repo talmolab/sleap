@@ -643,12 +643,19 @@ def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
     inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
 
-    # test max_instances (>2 will fail)
-    predictor.inference_model.centroid_crop.max_instances = 2
-    labels_pr = predictor.predict(min_labels)
 
-    assert len(labels_pr) == 1
-    assert len(labels_pr[0].instances) == 2
+def test_topdown_predictor_centroid_max_instances(min_labels, min_centroid_model_path):
+    predictor = TopDownPredictor.from_trained_models(
+        centroid_model_path=min_centroid_model_path
+    )
+
+    # Test max_instances <, =, and > than number of expected instances
+    for i in [1, 2, 3]:
+        predictor.inference_model.centroid_crop.max_instances = i
+        labels_pr = predictor.predict(min_labels)
+
+        assert len(labels_pr) == 1
+        assert len(labels_pr[0].instances) == i
 
 
 def test_topdown_predictor_centroid_high_threshold(min_labels, min_centroid_model_path):
