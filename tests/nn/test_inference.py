@@ -651,11 +651,12 @@ def test_topdown_predictor_centroid_max_instances(min_labels, min_centroid_model
 
     # Test max_instances <, =, and > than number of expected instances
     for i in [1, 2, 3]:
+        predictor._initialize_inference_model()
         predictor.inference_model.centroid_crop.max_instances = i
         labels_pr = predictor.predict(min_labels)
 
         assert len(labels_pr) == 1
-        assert len(labels_pr[0].instances) == i
+        assert len(labels_pr[0].instances) == min(i, 2)
 
 
 def test_topdown_predictor_centroid_high_threshold(min_labels, min_centroid_model_path):
