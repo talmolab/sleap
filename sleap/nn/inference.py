@@ -1838,23 +1838,35 @@ class CentroidCrop(InferenceLayer):
                 )
 
                 for sample in range(samples):
-                    top_points = tf.math.top_k(
-                        centroid_vals[sample],
-                        k=tf.minimum(
-                            self.max_instances, tf.shape(centroid_vals[sample])[0]
-                        ),
-                    )
-                    top_inds = top_points.indices
+                    n_centroids = tf.shape(centroid_vals[sample])[0]
+                    if self.max_instances < n_centroids:
+                        top_points = tf.math.top_k(
+                            centroid_vals[sample],
+                            k=self.max_instances,
+                        )
+                        top_inds = top_points.indices
 
-                    _centroid_vals = _centroid_vals.write(
-                        sample, tf.gather(centroid_vals[sample], top_inds)
-                    )
+                        _centroid_vals = _centroid_vals.write(
+                            sample, tf.gather(centroid_vals[sample], top_inds)
+                        )
 
-                    _centroid_points = _centroid_points.write(
-                        sample, tf.gather(centroid_points[sample], top_inds)
-                    )
+                        _centroid_points = _centroid_points.write(
+                            sample, tf.gather(centroid_points[sample], top_inds)
+                        )
 
-                    _row_ids = _row_ids.write(sample, tf.fill([len(top_inds)], sample))
+                        _row_ids = _row_ids.write(
+                            sample, tf.fill([len(top_inds)], sample)
+                        )
+                    else:
+                        _centroid_vals = _centroid_vals.write(
+                            sample, centroid_vals[sample]
+                        )
+                        _centroid_points = _centroid_points.write(
+                            sample, centroid_points[sample]
+                        )
+                        _row_ids = _row_ids.write(
+                            sample, tf.fill([n_centroids], sample)
+                        )
 
                 centroid_vals = _centroid_vals.concat()
                 centroid_points = _centroid_points.concat()
