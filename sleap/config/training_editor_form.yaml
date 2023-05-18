@@ -20,7 +20,7 @@ data:
   name: data.instance_cropping.crop_size
   type: optional_int
   none_label: Auto
-  range: 0,512
+  range: 0,832
 
 model:
 - default: unet
