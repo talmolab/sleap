@@ -1341,23 +1341,31 @@ def test_make_predictor_from_cli(
     centered_pair_predictions: Labels,
     min_centroid_model_path: str,
     min_centered_instance_model_path: str,
+    min_bottomup_model_path: str,
     tmpdir,
 ):
     slp_path = str(Path(tmpdir, "old_slp.slp"))
     Labels.save(centered_pair_predictions, slp_path)
 
     # Create sleap-track command
-    args = (
-        f"{slp_path} --model {min_centroid_model_path} "
-        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 "
-        "--cpu --max_instances 5"
-    ).split()
-    parser = _make_cli_parser()
-    args, _ = parser.parse_known_args(args=args)
+    model_args = [
+        f"--model {min_centroid_model_path} --model {min_centered_instance_model_path}",
+        f"--model {min_bottomup_model_path}",
+    ]
+    for model_arg in model_args:
+        args = (
+            f"{slp_path} {model_arg} --video.index 0 --frames 1-3 "
+            "--cpu --max_instances 5"
+        ).split()
+        parser = _make_cli_parser()
+        args, _ = parser.parse_known_args(args=args)
 
-    # Create predictor
-    predictor = _make_predictor_from_cli(args=args)
-    assert predictor.inference_model.centroid_crop.max_instances == 5
+        # Create predictor
+        predictor = _make_predictor_from_cli(args=args)
+        if isinstance(predictor, TopDownPredictor):
+            assert predictor.inference_model.centroid_crop.max_instances == 5
+        elif isinstance(predictor, BottomUpPredictor):
+            assert predictor.max_instances == 5
 
 
 def test_sleap_track(
