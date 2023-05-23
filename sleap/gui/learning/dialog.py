@@ -1209,6 +1209,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         # If user wants to use trained model, then reset entire form to match config
         if use_trained_params:
             self._load_config(cfg_info)
+        self._validation_fraction.check_widget.setChecked(use_trained_params)
 
         self._set_head()
 
