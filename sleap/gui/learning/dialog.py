@@ -456,6 +456,13 @@ class LearningDialog(QtWidgets.QDialog):
             A `ScopedKeyDict` with the loaded config values overriden by the corresponding
             ones from the `tab_cfg_key_val_dict`.
         """
+        # Correct tab_cfg_key_val_dict keys to match the config structure
+        if tab_cfg_key_val_dict["data.labels.validation_fraction"] is None:
+            tab_cfg_key_val_dict["data.labels.validation_fraction"] = 0.1
+            tab_cfg_key_val_dict["data.labels.split_by_inds"] = True
+        else:
+            tab_cfg_key_val_dict["data.labels.split_by_inds"] = False
+
         # Serialize training config
         loaded_cfg_hierarchical: dict = cattr.unstructure(loaded_cfg)
 
@@ -984,6 +991,10 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self.form_widgets["model"].valueChanged.connect(self.update_receptive_field)
         self.form_widgets["data"].valueChanged.connect(self.update_receptive_field)
 
+        self._validation_fraction = self.form_widgets["data"].fields[
+            "data.labels.validation_fraction"
+        ]
+
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
                 form_name = field_name.split(".")[0]
@@ -1057,6 +1068,8 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
             layout.addWidget(self._use_trained_model)
             layout.addWidget(self._resume_training)
+        else:
+            self._validation_fraction.check_widget.setEnabled(False)
 
         layout.addWidget(self._layout_widget(col_layout))
         self.setLayout(layout)
@@ -1096,6 +1109,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             self._resume_training.setVisible(has_trained_model)
             self._resume_training.setEnabled(has_trained_model)
 
+        self._validation_fraction.check_widget.setEnabled(has_trained_model)
         self.update_receptive_field()
 
     def update_receptive_field(self):
@@ -1256,10 +1270,14 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         else:
             # Set certain parameters to defaults
             trained_config = trained_config_info.config
-            trained_config.data.labels.skeletons = []
-            trained_config.outputs.run_name = None
-            trained_config.outputs.run_name_prefix = ""
-            trained_config.outputs.run_name_suffix = None
+
+            output_config = trained_config.outputs
+            output_config.run_name = None
+            output_config.run_name_prefix = ""
+            output_config.run_name_suffix = None
+
+            labels_config = trained_config.data.labels
+            labels_config.skeletons = []
 
         if self.resume_training:
             # Get the folder path of trained config and set it as the output folder

@@ -1,14 +1,18 @@
 data:
 - default: 0.1
-  help: Fraction of labeled frames to use as a validation set.
+  help: Fraction of labeled frames to use as a validation set. If "Split by indices", 
+    then uses the training, validation, and test indices specified in the loaded config.
   label: Validation fraction
   name: data.labels.validation_fraction
-  type: double
+  type: optional_double
+  default_disabled: true
+  none_label: Split by indices
 - default: 1.0
   help: ''
   label: Input Scaling
   name: data.preprocessing.input_scaling
   type: double
+  range: 0,1
 - default: null
   help: Integer size of bounding box height and width to crop out of the full image.
     This should be greater than the largest size of the instances in pixels. The crop

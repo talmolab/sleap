@@ -23,19 +23,36 @@ from sleap.nn.config import TrainingJobConfig, UNetConfig
 from sleap.util import get_package_file
 
 
+@pytest.mark.parametrize("optional_validation_fraction", [None, 0.2])
 def test_use_hidden_params_from_loaded_config(
-    qtbot, min_labels_slp, min_bottomup_model_path
+    qtbot, min_labels_slp, min_bottomup_model_path, tmpdir, optional_validation_fraction
 ):
+    model_type = Path(min_bottomup_model_path).name
+    model_path = Path(tmpdir, "models")
+    model_path.mkdir()
+    model_path = Path(model_path, model_type)
+    model_path.mkdir()
 
-    model_path = Path(min_bottomup_model_path)
+    model_dir = str(model_path)
+
+    best_model_path = str(Path(min_bottomup_model_path, "best_model.h5"))
+    shutil.copy(best_model_path, model_dir)
+
+    cfg_path = str(Path(model_dir, "training_config.json"))
+    cfg = TrainingJobConfig.load_json(min_bottomup_model_path)
+    cfg.data.labels.split_by_inds = True
+    cfg.data.labels.training_inds = [0, 1, 2]
+    cfg.data.labels.validation_inds = [3, 4, 5]
+    cfg.data.labels.test_inds = [6, 7, 8]
+    cfg.filename = cfg_path
+
+    TrainingJobConfig.save_json(cfg, cfg_path)
 
     # Create a learning dialog
     app = MainWindow(no_usage_data=True)
     ld = LearningDialog(
         mode="training",
-        labels_filename=Path(
-            model_path
-        ).parent.absolute(),  # Hack to get correct config
+        labels_filename=model_path.parent.absolute(),  # Hack to get correct config
         labels=min_labels_slp,
     )
 
@@ -49,7 +66,7 @@ def test_use_hidden_params_from_loaded_config(
     cfg_list_widget.update()
     training_cfg_info: ConfigFileInfo = list(
         filter(
-            lambda cfg: model_path.name in cfg.path,
+            lambda cfg: model_type in cfg.path,
             cfg_list_widget._cfg_list,
         )
     )[0]
@@ -62,7 +79,10 @@ def test_use_hidden_params_from_loaded_config(
     # Make some changes to pipeline form data
     training_cfg_setting = training_cfg_info.config.data.preprocessing.input_scaling
     bottom_up_tab.set_fields_from_key_val_dict(
-        {"data.preprocessing.input_scaling": training_cfg_setting - 0.1}
+        {
+            "data.preprocessing.input_scaling": training_cfg_setting - 0.1,
+            "data.labels.validation_fraction": optional_validation_fraction,
+        }
     )
 
     # Create config to use in new round of training
@@ -75,8 +95,12 @@ def test_use_hidden_params_from_loaded_config(
     # Load pipeline form data
     tab_cfg_key_val_dict = bottom_up_tab.get_all_form_data()
     apply_cfg_transforms_to_key_val_dict(tab_cfg_key_val_dict)
+    ld.update_loaded_config(training_cfg_info.config, tab_cfg_key_val_dict)
     assert (
         tab_cfg_key_val_dict["data.preprocessing.input_scaling"] != training_cfg_setting
+    )
+    assert config_info_dict["config.data.labels.split_by_inds"] == (
+        optional_validation_fraction is None
     )
 
     # Assert that config info list:
@@ -89,6 +113,15 @@ def test_use_hidden_params_from_loaded_config(
         "path",
         "filename",
     ]
+    if config_info_dict["config.data.labels.split_by_inds"] is False:
+        assert (
+            config_info_dict["config.data.labels.validation_fraction"]
+            == optional_validation_fraction
+            or 0.1
+        )
+    else:
+        assert config_info_dict["config.data.labels.validation_fraction"] == 0.1
+
     for k, _ in config_info_dict.items():
         if k in params_set_in_tab:
             # 1. Prefers data from widget over loaded config
@@ -378,3 +411,7 @@ def test_movenet_selection(qtbot, min_dance_labels):
 
         # ensure pipeline version matches model type
         assert pipeline_form_data["_pipeline"] == model
+
+
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::test_use_hidden_params_from_loaded_config"])
