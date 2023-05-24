@@ -1,6 +1,4 @@
-"""
-Run training/inference in background process via CLI.
-"""
+"""Run training/inference in background process via CLI."""
 import abc
 import attr
 import os
@@ -41,8 +39,7 @@ def kill_process(pid: int):
 
 @attr.s(auto_attribs=True)
 class ItemForInference(abc.ABC):
-    """
-    Abstract base class for item on which we can run inference via CLI.
+    """Abstract base class for item on which we can run inference via CLI.
 
     Must have `path` and `cli_args` properties, used to build CLI call.
     """
@@ -60,8 +57,7 @@ class ItemForInference(abc.ABC):
 
 @attr.s(auto_attribs=True)
 class VideoItemForInference(ItemForInference):
-    """
-    Encapsulate data about video on which inference should run.
+    """Encapsulate data about video on which inference should run.
 
     This allows for inference on an arbitrary list of frames from video.
 
@@ -119,8 +115,7 @@ class VideoItemForInference(ItemForInference):
 
 @attr.s(auto_attribs=True)
 class DatasetItemForInference(ItemForInference):
-    """
-    Encapsulate data about frame selection based on dataset data.
+    """Encapsulate data about frame selection based on dataset data.
 
     Attributes:
         labels_path: path to the saved :py:class:`Labels` dataset.
@@ -142,7 +137,7 @@ class DatasetItemForInference(ItemForInference):
 
     @property
     def cli_args(self):
-        args_list = ["--labels", self.path]
+        args_list = [self.path]
         if self.frame_filter == "user":
             args_list.append("--only-labeled-frames")
         elif self.frame_filter == "suggested":
@@ -200,17 +195,7 @@ class InferenceTask:
     ) -> List[Text]:
         """Makes list of CLI arguments needed for running inference."""
         cli_args = ["sleap-track"]
-
         cli_args.extend(item_for_inference.cli_args)
-
-        # TODO: encapsulate in inference item class
-        if (
-            not self.trained_job_paths
-            and "tracking.tracker" in self.inference_params
-            and self.labels_filename
-        ):
-            # No models so we must want to re-track previous predictions
-            cli_args.extend(("--labels", self.labels_filename))
 
         # Make path where we'll save predictions (if not specified)
         if output_path is None:
