@@ -114,12 +114,13 @@ def test_use_hidden_params_from_loaded_config(
         "filename",
     ]
     if config_info_dict["config.data.labels.split_by_inds"] is False:
+        assert optional_validation_fraction == 0.2
         assert (
             config_info_dict["config.data.labels.validation_fraction"]
             == optional_validation_fraction
-            or 0.1
         )
     else:
+        assert optional_validation_fraction is None
         assert config_info_dict["config.data.labels.validation_fraction"] == 0.1
 
     for k, _ in config_info_dict.items():
@@ -411,7 +412,3 @@ def test_movenet_selection(qtbot, min_dance_labels):
 
         # ensure pipeline version matches model type
         assert pipeline_form_data["_pipeline"] == model
-
-
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_use_hidden_params_from_loaded_config"])

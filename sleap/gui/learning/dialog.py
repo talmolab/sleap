@@ -991,9 +991,11 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self.form_widgets["model"].valueChanged.connect(self.update_receptive_field)
         self.form_widgets["data"].valueChanged.connect(self.update_receptive_field)
 
-        self._validation_fraction = self.form_widgets["data"].fields[
-            "data.labels.validation_fraction"
-        ]
+        self._split_by_inds = (
+            self.form_widgets["data"]
+            .fields["data.labels.validation_fraction"]
+            .check_widget
+        )
 
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
@@ -1069,7 +1071,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             layout.addWidget(self._use_trained_model)
             layout.addWidget(self._resume_training)
         else:
-            self._validation_fraction.check_widget.setEnabled(False)
+            self._split_by_inds.setEnabled(False)
 
         layout.addWidget(self._layout_widget(col_layout))
         self.setLayout(layout)
@@ -1109,7 +1111,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             self._resume_training.setVisible(has_trained_model)
             self._resume_training.setEnabled(has_trained_model)
 
-        self._validation_fraction.check_widget.setEnabled(has_trained_model)
+        self._split_by_inds.setEnabled(has_trained_model)
         self.update_receptive_field()
 
     def update_receptive_field(self):
@@ -1206,10 +1208,14 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             ).key_val_dict
             self.set_fields_from_key_val_dict(key_val_dict)
 
+            # Disable and uncheck split by indices if resuming training
+            self._split_by_inds.setChecked(False)
+
+        self._split_by_inds.setEnabled(not use_model_params)
+
         # If user wants to use trained model, then reset entire form to match config
         if use_trained_params:
             self._load_config(cfg_info)
-        self._validation_fraction.check_widget.setChecked(use_trained_params)
 
         self._set_head()
 
