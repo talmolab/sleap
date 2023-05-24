@@ -1189,7 +1189,12 @@ def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker) -> List[Labele
         for inst in lf.instances:
             inst.track = None
 
-        track_args = dict(untracked_instances=lf.instances)
+        # Prefer user instances over predicted instances
+        untracked_instances = (
+            lf.user_instances if lf.has_user_instances else lf.predicted_instances
+        )
+        track_args = {"untracked_instances": untracked_instances}
+
         if tracker.uses_image:
             track_args["img"] = lf.video[lf.frame_idx]
         else:
