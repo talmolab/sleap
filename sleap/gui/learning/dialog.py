@@ -1245,12 +1245,17 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         if self._cfg_list_widget is None:
             return None
 
-        trained_config_info: Optional[
+        selected_config_info: Optional[
             configs.ConfigFileInfo
         ] = self._cfg_list_widget.getSelectedConfigInfo()
-        if (trained_config_info is None) or (not trained_config_info.has_trained_model):
+        if (selected_config_info is None) or (
+            not selected_config_info.has_trained_model
+        ):
             return None
 
+        trained_config_info = configs.ConfigFileInfo.from_config_file(
+            selected_config_info.path
+        )
         if self.use_trained:
             trained_config_info.dont_retrain = True
         else:
