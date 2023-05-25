@@ -18,6 +18,14 @@ main:
     label: Use GUI Visual Settings (colors, line widths)
     type: bool
     default: true
+  - name: show_og_video
+    label: Show Original Video in Background
+    type: bool
+    default: true
+  - name: background_color
+    label: Background Color
+    type: list
+    options: Black,White,Grey
   - name: open_when_done
     label: Open When Done Saving
     type: bool
