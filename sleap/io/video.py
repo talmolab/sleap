@@ -1533,19 +1533,29 @@ class Video:
         # When we are structuring video backends, try to fixup the video file paths
         # in case they are coming from a different computer or the file has been moved.
         def fixup_video(x, cl):
-            if "filename" in x:
-                x["filename"] = Video.fixup_path(x["filename"])
-            if "file" in x:
-                x["file"] = Video.fixup_path(x["file"])
+            """Fixup video paths when structuring."""
 
-            return Video.make_specific_backend(cl, x)
+            filename_key = "could not find filename key"
+            backend = x["backend"]
+            if "filename" in backend:
+                backend["filename"] = Video.fixup_path(backend["filename"])
+                filename_key = "filename"
+            if "file" in backend:
+                backend["file"] = Video.fixup_path(backend["file"])
+                filename_key = "file"
+
+            filename = backend.pop(filename_key)
+            return Video.from_filename(filename, **backend)
 
         vid_cattr = cattr.Converter()
 
         # Check the type hint for backend and register the video path
         # fixup hook for each type in the Union.
-        for t in attr.fields(Video).backend.type.__args__:
-            vid_cattr.register_structure_hook(t, fixup_video)
+        if len(attr.fields(Video).backend.type.__args__) < 6:
+            logger.warn("Less than 6 types in Video.backend type hint.")
+        # for t in attr.fields(Video).backend.type.__args__:
+        #     vid_cattr.register_structure_hook(t, fixup_video)
+        vid_cattr.register_structure_hook(Video, fixup_video)
 
         return vid_cattr
 
