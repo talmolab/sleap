@@ -19,18 +19,22 @@ def test_get_gpu_memory():
 @pytest.mark.parametrize("cuda_visible_devices", ["0", "1", "0,1"])
 def test_get_gpu_memory_visible(cuda_visible_devices):
 
+    # Get GPU indices from nvidia-smi
+    command = ["nvidia-smi", "--query-gpu=index", "--format=csv,noheader"]
+    nvidia_indices = subprocess.check_output(command).decode('utf-8').strip().split('\n')
+
     os.environ["CUDA_VISIBLE_DEVICES"] = cuda_visible_devices
 
     gpu_memory = get_gpu_memory()
 
-    if cuda_visible_devices is None or cuda_visible_devices is []:
+    if nvidia_indices is None or nvidia_indices is []:
         pytest.skip("CUDA_VISIBLE_DEVICES not set.")
 
-    elif cuda_visible_devices == "0" or cuda_visible_devices == "1":
+    elif nvidia_indices == "0" or nvidia_indices == "1":
         assert len(gpu_memory) > 0
         assert len(gpu_memory) == 1
 
-    elif cuda_visible_devices == "0,1":
+    elif nvidia_indices == "0,1":
         assert len(gpu_memory) > 0
         assert len(gpu_memory) == 2
 
