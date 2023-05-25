@@ -1091,26 +1091,17 @@ class Video:
         else:
             return not os.path.exists(self.backend.filename)
 
-    def get_frame(self, idx: int, og_video=True, background_color="Black") -> np.ndarray:
+    def get_frame(self, idx: int) -> np.ndarray:
         """
         Return a single frame of video from the underlying video data.
 
         Args:
             idx: The index of the video frame
-            og_video: whether to include og_video in the background
-            background_color: if not showing the original video, setting background color
 
         Returns:
             The video frame with shape (height, width, channels)
         """
-        if og_video:
-            return self.backend.get_frame(idx)
-        if background_color == "Black":
-            return self.backend.get_frame(idx) * 0
-        if background_color == "White":
-            return self.backend.get_frame(idx) * 0 + 255
-        if background_color == "Grey":
-            return self.backend.get_frame(idx) * 0 + 127
+        return self.backend.get_frame(idx)
 
     def get_frames(self, idxs: Union[int, Iterable[int]]) -> np.ndarray:
         """Return a collection of video frames from the underlying video data.
@@ -1125,12 +1116,11 @@ class Video:
             idxs = [idxs]
         return np.stack([self.get_frame(idx) for idx in idxs], axis=0)
 
-    def get_frames_safely(self, idxs: Iterable[int], og_video=True, background_color="Black") -> Tuple[List[int], np.ndarray]:
+    def get_frames_safely(self, idxs: Iterable[int]) -> Tuple[List[int], np.ndarray]:
         """Return list of frame indices and frames which were successfully loaded.
         Args:
             idxs: An iterable object that contains the indices of frames.
-            og_video: whether to show the original video in the background
-            background_color: if not showing the original video, setting background color
+
 
         Returns: A tuple of (frame indices, frames), where
             * frame indices is a subset of the specified idxs, and
@@ -1142,7 +1132,7 @@ class Video:
 
         for idx in idxs:
             try:
-                frame = self.get_frame(idx, og_video=og_video, background_color=background_color)
+                frame = self.get_frame(idx)
             except Exception as e:
                 print(e)
                 # ignore frames which we couldn't load

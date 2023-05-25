@@ -27,7 +27,13 @@ logger = logging.getLogger(__name__)
 _sentinel = object()
 
 
-def reader(out_q: Queue, video: Video, frames: List[int], scale: float = 1.0, og_video=True, background_color="Black"):
+def reader(
+    out_q: Queue,
+    video: Video,
+    frames: List[int],
+    scale: float = 1.0,
+    background="Original",
+):
     """Read frame images from video and send them into queue.
 
     Args:
@@ -36,8 +42,7 @@ def reader(out_q: Queue, video: Video, frames: List[int], scale: float = 1.0, og
         video: The `Video` object to read.
         frames: Full list frame indexes we want to read.
         scale: Output scale for frame images.
-        og_video: Whether to include the original video in the background
-        background_color: if not include og_video, the background color set.
+        background: output video background. Either Original, Black, White, Grey
 
     Returns:
         None.
@@ -64,10 +69,18 @@ def reader(out_q: Queue, video: Video, frames: List[int], scale: float = 1.0, og
 
             # Safely load frames from video, skipping frames we can't load
             loaded_chunk_idxs, video_frame_images = video.get_frames_safely(
-                frames_idx_chunk,
-                og_video=og_video,
-                background_color=background_color
+                frames_idx_chunk
             )
+            if background != "Original":
+                # fill the frame with the color
+                if background == "Black":
+                    fill = 0
+                elif background == "Grey":
+                    fill = 127
+                else:
+                    # background == White
+                    fill = 255
+                video_frame_images = video_frame_images * 0 + fill
 
             if not loaded_chunk_idxs:
                 print(f"No frames could be loaded from chunk {chunk_i}")
@@ -501,8 +514,7 @@ def save_labeled_video(
     fps: int = 15,
     scale: float = 1.0,
     crop_size_xy: Optional[Tuple[int, int]] = None,
-    show_og_video: bool = True,
-    background_color: str = "Black",
+    background: str = "Original",
     show_edges: bool = True,
     edge_is_wedge: bool = False,
     marker_size: int = 4,
@@ -521,8 +533,7 @@ def save_labeled_video(
         fps: Frames per second for output video.
         scale: scale of image (so we can scale point locations to match)
         crop_size_xy: size of crop around instances, or None for full images
-        show_og_video: whether to show the original video in the background
-        background_color: if not showing the original video, setting background color
+        background: output video background. Either Original, Black, White, Grey
         show_edges: whether to draw lines between nodes
         edge_is_wedge: whether to draw edges as wedges (draw as line if False)
         marker_size: Size of marker in pixels before scaling by `scale`
@@ -545,7 +556,7 @@ def save_labeled_video(
     q2 = Queue(maxsize=10)
     progress_queue = Queue()
 
-    thread_read = Thread(target=reader, args=(q1, video, frames, scale, show_og_video, background_color))
+    thread_read = Thread(target=reader, args=(q1, video, frames, scale, background))
     thread_mark = VideoMarkerThread(
         in_q=q1,
         out_q=q2,

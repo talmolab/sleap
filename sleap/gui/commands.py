@@ -1271,8 +1271,7 @@ class ExportLabeledClip(AppCommand):
             frames=list(params["frames"]),
             fps=params["fps"],
             color_manager=params["color_manager"],
-            show_og_video=params["show_og_video"],
-            background_color=params["background_color"],
+            background=params["background"],
             show_edges=params["show edges"],
             edge_is_wedge=params["edge_is_wedge"],
             marker_size=params["marker size"],
@@ -1332,8 +1331,7 @@ class ExportLabeledClip(AppCommand):
         params["fps"] = export_options["fps"]
         params["scale"] = export_options["scale"]
         params["open_when_done"] = export_options["open_when_done"]
-        params["show_og_video"] = export_options["show_og_video"]
-        params["background_color"] = export_options["background_color"]
+        params["background"] = export_options["background"]
 
         params["crop"] = None
 
