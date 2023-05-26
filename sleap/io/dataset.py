@@ -1560,7 +1560,6 @@ class Labels(MutableSequence):
 
     def remove_video(self, video: Video):
         """Remove a video from the labels and all associated labeled frames.
-
         Args:
             video: `Video` instance to be removed.
         """
@@ -1573,7 +1572,6 @@ class Labels(MutableSequence):
         for label in reversed(self.labeled_frames):
             if label.video == video:
                 self.labeled_frames.remove(label)
-                self._cache.update_counts_for_frame(label)
 
         # Delete data that's indexed by video
         self.delete_suggestions(video)
@@ -1582,21 +1580,22 @@ class Labels(MutableSequence):
 
         # Delete video
         self.videos.remove(video)
-        self._cache.remove_video(video)
 
-        cache_items = self._cache._frame_count_cache[None].items()
-        new_cache_items = []
-        for type_key, idx_pairs in cache_items:
-            new_idx_pairs = [
-                (
-                    idx_pair[0] - 1 if idx_pair[0] > video_index else idx_pair[0],
-                    idx_pair[1],
-                )
-                for idx_pair in idx_pairs
-                if idx_pair[0] != video_index
-            ]
-            new_cache_items.append((type_key, set(new_idx_pairs)))
-        self._cache._frame_count_cache[None] = dict(new_cache_items)
+        # Update the frame count cache for the removed video
+        if video in self._cache._frame_count_cache:
+            del self._cache._frame_count_cache[video]
+
+        # Update the frame count cache for all videos
+        if None in self._cache._frame_count_cache:
+            for type_key in self._cache._frame_count_cache[None]:
+                self._cache._frame_count_cache[None][type_key] = {
+                    idx_pair
+                    for idx_pair in self._cache._frame_count_cache[None][type_key]
+                    if idx_pair[0] != video_index
+                }
+
+        # Remove video from the cache
+        self._cache.remove_video(video)
 
     @classmethod
     def from_json(cls, *args, **kwargs):
@@ -2692,7 +2691,6 @@ def find_path_using_paths(missing_path: Text, search_paths: List[Text]) -> Text:
 
     # Look for file with that name in each of the search path directories
     for search_path in search_paths:
-
         if os.path.isfile(search_path):
             path_dir = os.path.dirname(search_path)
         else:
