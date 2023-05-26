@@ -1585,6 +1585,9 @@ class Labels(MutableSequence):
         if video in self._cache._frame_count_cache:
             del self._cache._frame_count_cache[video]
 
+        # Remove video from the cache
+        self._cache.remove_video(video)
+
         # Update the frame count cache for all videos
         if None in self._cache._frame_count_cache:
             for type_key in self._cache._frame_count_cache[None]:
@@ -1593,9 +1596,6 @@ class Labels(MutableSequence):
                     for idx_pair in self._cache._frame_count_cache[None][type_key]
                     if idx_pair[0] != video_index
                 }
-
-        # Remove video from the cache
-        self._cache.remove_video(video)
 
     @classmethod
     def from_json(cls, *args, **kwargs):
