@@ -32,7 +32,6 @@ def _check_labels_match(expected_labels, other_labels, format="png"):
 
     # Check the top level objects
     for x, y in zip(expected_labels.skeletons, other_labels.skeletons):
-
         # Inline the skeleton matches check to see if we can get a better
         # idea of why this test fails non-deterministically. The callstack
         # doesn't go deeper than the method call in pytest for some reason.
@@ -69,7 +68,6 @@ def _check_labels_match(expected_labels, other_labels, format="png"):
 
     # Check that we have the same thing
     for expected_label, label in zip(expected_labels.labels, other_labels.labels):
-
         assert expected_label.frame_idx == label.frame_idx
 
         frame_idx = label.frame_idx
@@ -398,6 +396,34 @@ def test_label_mutability():
 
     labels.remove_video(dummy_video)
     assert len(labels.find(dummy_video)) == 0
+
+
+def test_remove_video():
+    # Create dummy video, skeleton, instance, and labeled frame
+    dummy_video = Video(backend=MediaVideo)
+    dummy_skeleton = Skeleton()
+    dummy_instance = Instance(dummy_skeleton)
+    dummy_frame = LabeledFrame(dummy_video, frame_idx=0, instances=[dummy_instance])
+
+    # Create Labels object and append the dummy frame
+    labels = Labels()
+    labels.append(dummy_frame)
+
+    # Create dummy video, skeleton, instance, and labeled frame
+    dummy_video2 = Video(backend=MediaVideo)
+    dummy_skeleton2 = Skeleton()
+    dummy_instance2 = Instance(dummy_skeleton2)
+    dummy_frame2 = LabeledFrame(dummy_video2, frame_idx=0, instances=[dummy_instance2])
+
+    # Append the dummy frame 2
+    labels.append(dummy_frame2)
+
+    # Remove the dummy video
+    labels.remove_video(dummy_video)
+
+    # Assert that the video is no longer found in the labels
+    assert len(labels.find(dummy_video)) == 0
+    assert len(labels.find(dummy_video2)) == 1
 
 
 def test_labels_merge():
@@ -1019,7 +1045,6 @@ def test_labels_append_hdf5(multi_skel_vid_labels, tmpdir):
     # Save each frame of the Labels dataset one by one in append
     # mode
     for label in labels:
-
         # Just do the first 20 to speed things up
         if label.frame_idx > 20:
             break
@@ -1181,7 +1206,6 @@ def test_load_file(tmpdir):
 
 
 def test_local_path_save(tmpdir, monkeypatch):
-
     filename = "test.h5"
 
     # Set current working directory (monkeypatch isolates other tests)
