@@ -15,7 +15,7 @@ def get_all_gpus() -> List[tf.config.PhysicalDevice]:
     """Return a list of GPUs including unavailable devices."""
 
     # Set CUDA device order according to PCI bus ID
-    os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     return tf.config.list_physical_devices("GPU")
 
 
@@ -27,6 +27,7 @@ def is_gpu_system() -> bool:
 def get_available_gpus() -> List[tf.config.PhysicalDevice]:
     """Return a list of available GPUs."""
     return tf.config.get_visible_devices("GPU")
+
 
 def get_current_gpu() -> tf.config.PhysicalDevice:
     """Return the current (single) GPU device.
