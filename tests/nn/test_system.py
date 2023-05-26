@@ -29,6 +29,7 @@ def test_get_gpu_memory_visible(cuda_visible_devices):
         subprocess.check_output(command).decode("utf-8").strip().split("\n")
     )
 
+    # Set parameterized CUDA visible devices
     os.environ["CUDA_VISIBLE_DEVICES"] = cuda_visible_devices
 
     gpu_memory = get_gpu_memory()
@@ -41,6 +42,31 @@ def test_get_gpu_memory_visible(cuda_visible_devices):
         assert len(gpu_memory) > 0
         assert len(gpu_memory) == 2
 
+def test_get_gpu_memory_no_nvidia_smi():
+    # Backup current PATH
+    old_path = os.environ["PATH"]
+
+    # Set PATH to an empty string to simulate that nvidia-smi is not available
+    os.environ["PATH"] = ""
+
+    memory = get_gpu_memory()
+
+    # Restore the original PATH
+    os.environ["PATH"] = old_path
+
+    assert memory == []
+
+@pytest.mark.parametrize("cuda_visible_devices", ["invalid", "3,5", "-1"])
+def test_get_gpu_memory_invalid_cuda_visible_devices(cuda_visible_devices):
+    for value in cuda_visible_devices:
+        os.environ["CUDA_VISIBLE_DEVICES"] = value
+
+        memory = get_gpu_memory()
+
+        # Cleanup CUDA_VISIBLE_DEVICES variable after the test
+        os.environ.pop("CUDA_VISIBLE_DEVICES", None)
+
+        assert len(memory) == 0
 
 def test_gpu_order_and_length():
     if shutil.which("nvidia-smi") is None:
@@ -58,3 +84,4 @@ def test_gpu_order_and_length():
 
     # Assert that the order and length of GPU indices match
     assert sleap_indices == nvidia_indices
+
