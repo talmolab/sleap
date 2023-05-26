@@ -2716,6 +2716,10 @@ class BottomUpInferenceLayer(InferenceLayer):
             the predicted instances. This will result in slower inference times since
             the data must be copied off of the GPU, but is useful for visualizing the
             raw output of the model.
+        return_paf_graph: If `True`, the part affinity field graph will be returned
+            together with the predicted instances. The graph is obtained by parsing the
+            part affinity fields with the `paf_scorer` instance and is an intermediate
+            representation used during instance grouping.
         confmaps_ind: Index of the output tensor of the model corresponding to
             confidence maps. If `None` (the default), this will be detected
             automatically by searching for the first tensor that contains
@@ -2744,6 +2748,7 @@ class BottomUpInferenceLayer(InferenceLayer):
         integral_patch_size: int = 5,
         return_confmaps: bool = False,
         return_pafs: bool = False,
+        return_paf_graph: bool = False,
         confmaps_ind: Optional[int] = None,
         pafs_ind: Optional[int] = None,
         offsets_ind: Optional[int] = None,
@@ -2799,6 +2804,7 @@ class BottomUpInferenceLayer(InferenceLayer):
         self.integral_patch_size = integral_patch_size
         self.return_confmaps = return_confmaps
         self.return_pafs = return_pafs
+        self.return_paf_graph = return_paf_graph
 
     def forward_pass(self, data):
         """Run preprocessing and model inference on a batch."""
@@ -2899,6 +2905,10 @@ class BottomUpInferenceLayer(InferenceLayer):
 
             If `BottomUpInferenceLayer.return_pafs` is `True`, the predicted PAFs will
             be returned in the `"part_affinity_fields"` key.
+
+            If `BottomUpInferenceLayer.return_paf_graph` is `True`, the predicted PAF
+            graph will be returned in the `"peaks"`, `"peak_vals"`, `"peak_channel_inds"`,
+            `"edge_inds"`, `"edge_peak_inds"` and `"line_scores"` keys.
         """
         cms, pafs, offsets = self.forward_pass(data)
         peaks, peak_vals, peak_channel_inds = self.find_peaks(cms, offsets)
@@ -2906,6 +2916,7 @@ class BottomUpInferenceLayer(InferenceLayer):
             predicted_instances,
             predicted_peak_scores,
             predicted_instance_scores,
+            edge_inds, edge_peak_inds, line_scores
         ) = self.paf_scorer.predict(pafs, peaks, peak_vals, peak_channel_inds)
 
         # Adjust for input scaling.
@@ -2925,6 +2936,13 @@ class BottomUpInferenceLayer(InferenceLayer):
             out["confmaps"] = cms
         if self.return_pafs:
             out["part_affinity_fields"] = pafs
+        if self.return_paf_graph:
+            out["peaks"] = peaks
+            out["peak_vals"] = peak_vals
+            out["peak_channel_inds"] = peak_channel_inds
+            out["edge_inds"] = edge_inds
+            out["edge_peak_inds"] = edge_peak_inds
+            out["line_scores"] = line_scores
         return out
 
 

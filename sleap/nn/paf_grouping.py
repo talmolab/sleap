@@ -1700,4 +1700,8 @@ class PAFScorer:
             match_dst_peak_inds,
             match_line_scores,
         )
-        return predicted_instances, predicted_peak_scores, predicted_instance_scores
+        return (
+            predicted_instances, 
+            predicted_peak_scores, 
+            predicted_instance_scores,
+            edge_inds, edge_peak_inds, line_scores)
