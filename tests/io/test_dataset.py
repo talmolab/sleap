@@ -409,6 +409,15 @@ def test_remove_video():
     labels = Labels()
     labels.append(dummy_frame)
 
+    # Create a dummy frame index cache
+    dummy_cache = {
+        "type_key": {(0, 0), (1, 0)},  # Add some dummy frame index pairs
+        "other_key": {(0, 1), (1, 1)},
+    }
+
+    # Set the dummy frame index cache for the labels
+    labels._cache._frame_count_cache[None] = dummy_cache
+
     # Create dummy video, skeleton, instance, and labeled frame
     dummy_video2 = Video(backend=MediaVideo)
     dummy_skeleton2 = Skeleton()
@@ -424,6 +433,13 @@ def test_remove_video():
     # Assert that the video is no longer found in the labels
     assert len(labels.find(dummy_video)) == 0
     assert len(labels.find(dummy_video2)) == 1
+
+    # Assert that the frame index cache has been updated correctly
+    expected_cache = {
+        "type_key": {(1, 0)},  # The frame index pair (2, 0) should be removed
+        "other_key": {(1, 1)},
+    }
+    assert labels._cache._frame_count_cache[None] == expected_cache
 
 
 def test_labels_merge():
