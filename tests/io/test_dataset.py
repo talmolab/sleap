@@ -442,6 +442,37 @@ def test_remove_video():
     assert labels._cache._frame_count_cache[None] == expected_cache
 
 
+def test_remove_video_multiple():
+    # Create dummy videos, skeletons, instances, and labeled frames
+    dummy_videos = [
+        Video(backend=MediaVideo(filename=f"dummy_video_{i}.mp4")) for i in range(5)
+    ]
+    dummy_skeletons = [Skeleton() for _ in range(5)]
+    dummy_instances = [Instance(dummy_skeletons[i % 5]) for i in range(10)]
+    dummy_frames = [
+        LabeledFrame(
+            dummy_videos[i % 5], frame_idx=i % 5, instances=[dummy_instances[i]]
+        )
+        for i in range(10)
+    ]
+
+    # Create Labels object and append the dummy frames
+    labels = Labels()
+    labels.videos.extend(dummy_videos)  # Add dummy videos to labels
+    labels.extend(dummy_frames)
+
+    # Remove multiple videos by Video instances
+    for video in dummy_videos:
+        labels.remove_video(video)
+
+    # Assert that all videos are removed from the labels
+    for video in dummy_videos:
+        assert len(labels.find(video)) == 0
+
+    # Assert that the frame count cache is empty for all videos
+    assert labels._cache.get_frame_count() is 0
+
+
 def test_labels_merge():
     dummy_video = Video(backend=MediaVideo)
     dummy_skeleton = Skeleton()
