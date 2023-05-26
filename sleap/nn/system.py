@@ -189,6 +189,12 @@ def best_logical_device_name() -> Text:
 
 
 def get_gpu_memory() -> List[int]:
+    """Get the available memory on each GPU.
+
+    Returns:
+        A list of the available memory on each GPU in MiB.
+
+    """
     if shutil.which("nvidia-smi") is None:
         return []
 
