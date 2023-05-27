@@ -539,7 +539,6 @@ class Predictor(ABC):
         unrag_outputs: bool = True,
         max_instances: Optional[int] = None,
     ):
-
         """Export a trained SLEAP model as a frozen graph. Initializes model,
         creates a dummy tracing batch and passes it through the model. The
         frozen graph is saved along with training meta info.
@@ -1112,7 +1111,6 @@ class InferenceModel(tf.keras.Model):
         os.makedirs(save_path, exist_ok=True)
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-
             self.save(tmp_dir, save_format="tf", save_traces=save_traces)
 
             imported = tf.saved_model.load(tmp_dir)
@@ -1600,7 +1598,6 @@ class SingleInstancePredictor(Predictor):
         unrag_outputs: bool = True,
         max_instances: Optional[int] = None,
     ):
-
         super().export_model(
             save_path,
             signatures,
@@ -1814,9 +1811,7 @@ class CentroidCrop(InferenceLayer):
         n_peaks = tf.shape(centroid_points)[0]
 
         if n_peaks > 0:
-
             if self.max_instances is not None:
-
                 centroid_points = tf.RaggedTensor.from_value_rowids(
                     centroid_points, crop_sample_inds, nrows=samples
                 )
@@ -2259,7 +2254,6 @@ class TopDownInferenceModel(InferenceModel):
         crop_output = self.centroid_crop(example)
 
         if isinstance(self.instance_peaks, FindInstancePeaksGroundTruth):
-
             if "instances" in example:
                 peaks_output = self.instance_peaks(example, crop_output)
             else:
@@ -2598,7 +2592,6 @@ class TopDownPredictor(Predictor):
                     ex["instance_peak_vals"],
                     ex["centroid_vals"],
                 ):
-
                     # Loop over instances.
                     predicted_instances = []
                     for pts, confs, score in zip(points, confidences, scores):
@@ -2658,7 +2651,6 @@ class TopDownPredictor(Predictor):
         unrag_outputs: bool = True,
         max_instances: Optional[int] = None,
     ):
-
         super().export_model(
             save_path,
             signatures,
@@ -2916,7 +2908,9 @@ class BottomUpInferenceLayer(InferenceLayer):
             predicted_instances,
             predicted_peak_scores,
             predicted_instance_scores,
-            edge_inds, edge_peak_inds, line_scores
+            edge_inds,
+            edge_peak_inds,
+            line_scores,
         ) = self.paf_scorer.predict(pafs, peaks, peak_vals, peak_channel_inds)
 
         # Adjust for input scaling.
@@ -3222,7 +3216,6 @@ class BottomUpPredictor(Predictor):
                     ex["instance_peak_vals"],
                     ex["instance_scores"],
                 ):
-
                     # Loop over instances.
                     predicted_instances = []
                     for pts, confs, score in zip(points, confidences, scores):
@@ -3740,7 +3733,6 @@ class BottomUpMultiClassPredictor(Predictor):
                     ex["instance_peak_vals"],
                     ex["instance_scores"],
                 ):
-
                     # Loop over instances.
                     predicted_instances = []
                     for i, (pts, confs, score) in enumerate(
@@ -4120,7 +4112,6 @@ class TopDownMultiClassInferenceModel(InferenceModel):
         tensors: Optional[Dict[str, str]] = None,
         unrag_outputs: bool = True,
     ):
-
         self.instance_peaks.optimal_grouping = False
 
         super().export_model(
@@ -4429,7 +4420,6 @@ class TopDownMultiClassPredictor(Predictor):
                     ex["instance_peak_vals"],
                     ex["instance_scores"],
                 ):
-
                     # Loop over instances.
                     predicted_instances = []
                     for i, (pts, confs, score) in enumerate(
@@ -4483,7 +4473,6 @@ class TopDownMultiClassPredictor(Predictor):
         unrag_outputs: bool = True,
         max_instances: Optional[int] = None,
     ):
-
         super().export_model(
             save_path,
             signatures,
@@ -4655,7 +4644,6 @@ class MoveNetPredictor(Predictor):
 
     @property
     def data_config(self) -> DataConfig:
-
         if self.inference_model is None:
             self._initialize_inference_model()
 
@@ -4697,7 +4685,6 @@ class MoveNetPredictor(Predictor):
     def _make_labeled_frames_from_generator(
         self, generator: Iterator[Dict[str, np.ndarray]], data_provider: Provider
     ) -> List[sleap.LabeledFrame]:
-
         skeleton = MOVENET_SKELETON
         predicted_frames = []
 
@@ -5417,7 +5404,6 @@ def main(args: Optional[list] = None):
 
     # Either run inference (and tracking) or just run tracking
     if args.models is not None:
-
         # Setup models.
         predictor = _make_predictor_from_cli(args)
         predictor.tracker = tracker
