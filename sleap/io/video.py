@@ -816,7 +816,7 @@ class SingleImageVideo:
     width_: Optional[int] = attr.ib(default=None)
     channels_: Optional[int] = attr.ib(default=None)
     grayscale: Optional[bool] = attr.ib()
-    caching: bool = attr.ib(default=False)
+    caching = False
 
     _detect_grayscale = False
 
@@ -986,7 +986,8 @@ class SingleImageVideo:
 
             frame = self.cache_[idx]  # Manipulate a copy of self.__data[idx]
         else:
-            frame = self._load_idx(idx)
+            # It is possible caching was on for a bit then disabled
+            frame = self.cache_.get(idx, self._load_idx(idx))
 
         if grayscale is None:
             grayscale = self.grayscale
@@ -995,6 +996,11 @@ class SingleImageVideo:
             frame = frame[..., 0][..., None]
 
         return frame
+
+    @classmethod
+    def toggle_caching(cls):
+        """Toggles the `SingleImageVideo.caching` variable."""
+        cls.caching = not cls.caching
 
 
 @attr.s(auto_attribs=True, eq=False, order=False)
