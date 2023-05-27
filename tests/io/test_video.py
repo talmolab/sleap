@@ -592,3 +592,6 @@ def test_singleimagevideo_caching(siv_robot_caching):
 
     assert video[0].shape == (1, 320, 560, 3)
     assert len(video.backend.cache_) == 0  # Loaded frame not stored!
+
+    SingleImageVideo.toggle_caching()
+    assert SingleImageVideo.caching is True
