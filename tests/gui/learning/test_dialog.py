@@ -24,10 +24,28 @@ from sleap.util import get_package_file
 
 
 def test_use_hidden_params_from_loaded_config(
-    qtbot, min_labels_slp, min_bottomup_model_path
+    qtbot, min_labels_slp, min_bottomup_model_path, tmpdir
 ):
+    model_type = Path(min_bottomup_model_path).name
+    model_path = Path(tmpdir, "models")
+    model_path.mkdir()
+    model_path = Path(model_path, model_type)
+    model_path.mkdir()
 
-    model_path = Path(min_bottomup_model_path)
+    model_dir = str(model_path)
+
+    best_model_path = str(Path(min_bottomup_model_path, "best_model.h5"))
+    shutil.copy(best_model_path, model_dir)
+
+    cfg_path = str(Path(model_dir, "training_config.json"))
+    cfg = TrainingJobConfig.load_json(min_bottomup_model_path)
+    cfg.data.labels.split_by_inds = True
+    cfg.data.labels.training_inds = [0, 1, 2]
+    cfg.data.labels.validation_inds = [3, 4, 5]
+    cfg.data.labels.test_inds = [6, 7, 8]
+    cfg.filename = cfg_path
+
+    TrainingJobConfig.save_json(cfg, cfg_path)
 
     # Create a learning dialog
     app = MainWindow(no_usage_data=True)
@@ -80,6 +98,9 @@ def test_use_hidden_params_from_loaded_config(
     # Assert that config info list:
     params_set_in_tab = [f"config.{k}" for k in tab_cfg_key_val_dict.keys()]
     params_reset = [
+        "config.data.labels.validation_labels",
+        "config.data.labels.test_labels",
+        "config.data.labels.split_by_inds",
         "config.data.labels.skeletons",
         "config.outputs.run_name",
         "config.outputs.run_name_suffix",
