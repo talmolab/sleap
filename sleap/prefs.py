@@ -15,6 +15,7 @@ class Preferences(object):
         "medium step size": 10,
         "large step size": 100,
         "color predicted": False,
+        "cache singleimagevideos": False,
         "propagate track labels": True,
         "palette": "standard",
         "bold lines": False,
