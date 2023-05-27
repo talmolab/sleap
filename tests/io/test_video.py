@@ -12,7 +12,7 @@ from sleap.io.video import (
     DummyVideo,
     load_video,
 )
-from tests.fixtures.datasets import TEST_SLP_SIV_ROBOT
+
 from tests.fixtures.videos import (
     TEST_H5_DSET,
     TEST_H5_INPUT_FORMAT,
@@ -495,7 +495,7 @@ def test_reset_video_mp4(small_robot_mp4_vid: Video):
     assert_video_params(video=video, filename=filename, bgr=True, reset=True)
 
 
-def test_reset_video_siv(small_robot_single_image_vid: Video):
+def test_reset_video_siv(small_robot_single_image_vid: Video, siv_robot):
     video = small_robot_single_image_vid
     filename = video.backend.filename
 
@@ -547,19 +547,22 @@ def test_reset_video_siv(small_robot_single_image_vid: Video):
         video.backend.reset(filename=filename, filenames=filenames)
     assert_video_params(video=video, filenames=filenames, reset=True)
 
-    # Test reset does not break deserialization of older slp
-    labels: Labels = Labels.load_file(
-        TEST_SLP_SIV_ROBOT, video_search="tests/data/videos/"
-    )
+    # Test reset does not break deserialization of older slp.
+    labels = siv_robot  # This is actually tested upon passing in the fixture.
     video: Video = labels.video
     filename = labels.video.backend.filename
     labels.video.backend.reset(filename=filename, grayscale=True)
     assert_video_params(video=video, filenames=filenames, grayscale=True, reset=True)
 
 
-def test_singleimagevideo_caching():
+def test_singleimagevideo_caching(siv_robot_caching):
+    # Test that older `SingleImageVideo` with type-hinted `caching` can be read in.
+    siv_robot_caching  # This is actually tested upon passing in the fixture.
+
     # With caching
-    video = Video.from_filename(TEST_SMALL_ROBOT_SIV_FILE0, caching=True)
+    filename = siv_robot_caching.video.backend.filename
+    video = Video.from_filename(filename)
+    SingleImageVideo.caching = True
     assert video.backend.test_frame_ is None
     assert len(video.backend.cache_) == 0
     assert video.backend.channels_ is None
@@ -573,7 +576,8 @@ def test_singleimagevideo_caching():
     assert len(video.backend.cache_) == 1  # Loaded frame stored!
 
     # No caching
-    video = Video.from_filename(TEST_SMALL_ROBOT_SIV_FILE0, caching=False)
+    video = Video.from_filename(filename)
+    SingleImageVideo.caching = False
     assert video.backend.test_frame_ is None
     assert len(video.backend.cache_) == 0
     assert video.backend.channels_ is None
