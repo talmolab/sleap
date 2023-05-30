@@ -1261,6 +1261,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         else:
             # Set certain parameters to defaults
             trained_config = trained_config_info.config
+            trained_config.data.labels.validation_labels = None
+            trained_config.data.labels.test_labels = None
+            trained_config.data.labels.split_by_inds = False
             trained_config.data.labels.skeletons = []
             trained_config.outputs.run_name = None
             trained_config.outputs.run_name_prefix = ""
