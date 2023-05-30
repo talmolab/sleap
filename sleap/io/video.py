@@ -809,7 +809,7 @@ class SingleImageVideo:
     """
 
     EXTS = ("jpg", "jpeg", "png", "tif", "tiff")
-    CACHING = False
+    CACHING = False  # Depreciated, but keeping functionality for now.
 
     filename: Optional[str] = attr.ib(default=None)
     filenames: Optional[List[str]] = attr.ib(factory=list)
