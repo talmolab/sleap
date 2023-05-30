@@ -809,6 +809,7 @@ class SingleImageVideo:
     """
 
     EXTS = ("jpg", "jpeg", "png", "tif", "tiff")
+    CACHING = False
 
     filename: Optional[str] = attr.ib(default=None)
     filenames: Optional[List[str]] = attr.ib(factory=list)
@@ -816,7 +817,6 @@ class SingleImageVideo:
     width_: Optional[int] = attr.ib(default=None)
     channels_: Optional[int] = attr.ib(default=None)
     grayscale: Optional[bool] = attr.ib()
-    caching = False
 
     _detect_grayscale = False
 
@@ -871,7 +871,7 @@ class SingleImageVideo:
                 self.width_ = test_frame_.shape[1]
             if self.channels_ is None:
                 self.channels_ = test_frame_.shape[2]
-        if self.caching:
+        if SingleImageVideo.CACHING:  # Depreciated, but keeping functionality for now.
             self.test_frame_ = test_frame_
         return test_frame_
 
@@ -980,14 +980,13 @@ class SingleImageVideo:
 
     def get_frame(self, idx: int, grayscale: bool = None) -> np.ndarray:
         """See :class:`Video`."""
-        if self.caching:
+        if SingleImageVideo.CACHING:  # Depreciated, but keeping functionality for now.
             if idx not in self.cache_:
                 self.cache_[idx] = self._load_idx(idx)
 
             frame = self.cache_[idx]  # Manipulate a copy of self.__data[idx]
         else:
-            # It is possible caching was on for a bit then disabled
-            frame = self.cache_.get(idx, self._load_idx(idx))
+            frame = self._load_idx(idx)
 
         if grayscale is None:
             grayscale = self.grayscale
@@ -996,11 +995,6 @@ class SingleImageVideo:
             frame = frame[..., 0][..., None]
 
         return frame
-
-    @classmethod
-    def toggle_caching(cls):
-        """Toggles the `SingleImageVideo.caching` variable."""
-        cls.caching = not cls.caching
 
 
 @attr.s(auto_attribs=True, eq=False, order=False)

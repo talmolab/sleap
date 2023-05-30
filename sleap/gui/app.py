@@ -64,7 +64,7 @@ from sleap.gui.dialogs.metrics import MetricsTableDialog
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance
 from sleap.io.dataset import Labels
-from sleap.io.video import available_video_exts, SingleImageVideo
+from sleap.io.video import available_video_exts
 from sleap.info.summary import StatisticSeries
 from sleap.gui.commands import CommandContext, UpdateTopic
 from sleap.gui.widgets.docks import (
@@ -163,10 +163,6 @@ class MainWindow(QMainWindow):
         self.state["clipboard_track"] = None
         self.state["clipboard_instance"] = None
 
-        if self.state["cache singleimagevideos"]:
-            SingleImageVideo.caching = True
-
-        self.state.connect("cache singleimagevideos", SingleImageVideo.toggle_caching)
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
         self.state.connect("show non-visible nodes", self.plotFrame)
@@ -223,7 +219,6 @@ class MainWindow(QMainWindow):
         prefs["edge style"] = self.state["edge style"]
         prefs["propagate track labels"] = self.state["propagate track labels"]
         prefs["color predicted"] = self.state["color predicted"]
-        prefs["cache singleimagevideos"] = self.state["cache singleimagevideos"]
         prefs["trail shade"] = self.state["trail_shade"]
         prefs["share usage data"] = self.state["share usage data"]
 
@@ -470,9 +465,6 @@ class MainWindow(QMainWindow):
         add_menu_item(fileMenu, "add videos", "Add Videos...", self.commands.addVideo)
         add_menu_item(
             fileMenu, "replace videos", "Replace Videos...", self.commands.replaceVideo
-        )
-        add_menu_check_item(
-            fileMenu, "cache singleimagevideos", "Cache Frames in Video"
         )
 
         fileMenu.addSeparator()

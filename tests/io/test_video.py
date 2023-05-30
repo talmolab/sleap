@@ -559,10 +559,12 @@ def test_singleimagevideo_caching(siv_robot_caching):
     # Test that older `SingleImageVideo` with type-hinted `caching` can be read in.
     siv_robot_caching  # This is actually tested upon passing in the fixture.
 
+    # The below tests are for depreciated `SingleImageVideo.CACHING` functionality.
+
     # With caching
     filename = siv_robot_caching.video.backend.filename
     video = Video.from_filename(filename)
-    SingleImageVideo.caching = True
+    SingleImageVideo.CACHING = True
     assert video.backend.test_frame_ is None
     assert len(video.backend.cache_) == 0
     assert video.backend.channels_ is None
@@ -577,7 +579,7 @@ def test_singleimagevideo_caching(siv_robot_caching):
 
     # No caching
     video = Video.from_filename(filename)
-    SingleImageVideo.caching = False
+    SingleImageVideo.CACHING = False
     assert video.backend.test_frame_ is None
     assert len(video.backend.cache_) == 0
     assert video.backend.channels_ is None
@@ -592,6 +594,3 @@ def test_singleimagevideo_caching(siv_robot_caching):
 
     assert video[0].shape == (1, 320, 560, 3)
     assert len(video.backend.cache_) == 0  # Loaded frame not stored!
-
-    SingleImageVideo.toggle_caching()
-    assert SingleImageVideo.caching is True
