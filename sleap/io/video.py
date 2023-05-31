@@ -871,7 +871,7 @@ class SingleImageVideo:
                 self.width_ = test_frame_.shape[1]
             if self.channels_ is None:
                 self.channels_ = test_frame_.shape[2]
-        if SingleImageVideo.CACHING:  # Depreciated, but keeping functionality for now.
+        if self.CACHING:  # Depreciated, but keeping functionality for now.
             self.test_frame_ = test_frame_
         return test_frame_
 
@@ -980,7 +980,7 @@ class SingleImageVideo:
 
     def get_frame(self, idx: int, grayscale: bool = None) -> np.ndarray:
         """See :class:`Video`."""
-        if SingleImageVideo.CACHING:  # Depreciated, but keeping functionality for now.
+        if self.CACHING:  # Depreciated, but keeping functionality for now.
             if idx not in self.cache_:
                 self.cache_[idx] = self._load_idx(idx)
 
