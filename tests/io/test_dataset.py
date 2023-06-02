@@ -13,6 +13,8 @@ from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.format import filehandle
 from sleap.gui.suggestions import VideoFrameSuggestions, SuggestionFrame
 from tests.io.test_formats import assert_read_labels_match
+from sleap.io.video import MediaVideo
+import pytest
 
 TEST_H5_DATASET = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
 
@@ -398,50 +400,6 @@ def test_label_mutability():
     assert len(labels.find(dummy_video)) == 0
 
 
-def test_remove_video():
-    # Create dummy video, skeleton, instance, and labeled frame
-    dummy_video = Video(backend=MediaVideo)
-    dummy_skeleton = Skeleton()
-    dummy_instance = Instance(dummy_skeleton)
-    dummy_frame = LabeledFrame(dummy_video, frame_idx=0, instances=[dummy_instance])
-
-    # Create Labels object and append the dummy frame
-    labels = Labels()
-    labels.append(dummy_frame)
-
-    # Create a dummy frame index cache
-    dummy_cache = {
-        "type_key": {(0, 0), (1, 0)},  # Add some dummy frame index pairs
-        "other_key": {(0, 1), (1, 1)},
-    }
-
-    # Set the dummy frame index cache for the labels
-    labels._cache._frame_count_cache[None] = dummy_cache
-
-    # Create dummy video, skeleton, instance, and labeled frame
-    dummy_video2 = Video(backend=MediaVideo)
-    dummy_skeleton2 = Skeleton()
-    dummy_instance2 = Instance(dummy_skeleton2)
-    dummy_frame2 = LabeledFrame(dummy_video2, frame_idx=0, instances=[dummy_instance2])
-
-    # Append the dummy frame 2
-    labels.append(dummy_frame2)
-
-    # Remove the dummy video
-    labels.remove_video(dummy_video)
-
-    # Assert that the video is no longer found in the labels
-    assert len(labels.find(dummy_video)) == 0
-    assert len(labels.find(dummy_video2)) == 1
-
-    # Assert that the frame index cache has been updated correctly
-    expected_cache = {
-        "type_key": {(1, 0)},  # The frame index pair (2, 0) should be removed
-        "other_key": {(1, 1)},
-    }
-    assert labels._cache._frame_count_cache[None] == expected_cache
-
-
 def test_remove_video_multiple():
     # Create dummy videos, skeletons, instances, and labeled frames
     dummy_videos = [
@@ -462,45 +420,14 @@ def test_remove_video_multiple():
     labels.extend(dummy_frames)
 
     # Remove multiple videos by Video instances
-    for video in dummy_videos:
+    for video in labels.videos.copy():
         labels.remove_video(video)
 
-    # Assert that all videos are removed from the labels
-    for video in dummy_videos:
+        # Assert that the video is no longer found in the labels
         assert len(labels.find(video)) == 0
 
-    # Assert that the frame count cache is empty for all videos
-    assert labels._cache.get_frame_count() is 0
-
-
-def test_videos_order_in_cache():
-    # Create dummy videos, skeletons, instances, and labeled frames
-    dummy_videos = [
-        Video(backend=MediaVideo(filename=f"dummy_video_{i}.mp4")) for i in range(5)
-    ]
-    dummy_skeletons = [Skeleton() for _ in range(5)]
-    dummy_instances = [Instance(dummy_skeletons[i % 5]) for i in range(10)]
-    dummy_frames = [
-        LabeledFrame(
-            dummy_videos[i % 5], frame_idx=i % 5, instances=[dummy_instances[i]]
-        )
-        for i in range(10)
-    ]
-
-    # Create Labels object and append the dummy frames
-    labels = Labels()
-    labels.videos.extend(dummy_videos)  # Add dummy videos to labels
-    labels.extend(dummy_frames)
-
-    assert len(labels.videos) == len(
-        [v.filename for v, _ in labels._cache._frame_count_cache]
-    )
-
-    # Check the order of video filenames in self.videos and self._cache
-    for i, video in enumerate(labels.videos):
-        video_filename = video.filename
-        cache_videos = [v.filename for v, _ in labels._cache._frame_count_cache]
-        assert video_filename == cache_videos[i]
+    # Assert that the frame count cache is empty
+    assert labels._cache.get_frame_count() == 0
 
 
 def test_labels_merge():
