@@ -1590,40 +1590,50 @@ class Labels(MutableSequence):
 
         # Update the frame count cache for all videos
         if None in self._cache._frame_count_cache:
+            # Iterate over the type keys in the frame count cache
             for type_key in self._cache._frame_count_cache[None]:
+                # Get the (video_idx, frame_idx) pairs filtered by the type key
                 video_idx_pairs = self._cache.get_filtered_frame_idxs(filter=type_key)
 
-                for video_idx in range(len(self.videos)):
-                    video = self.videos[video_idx]
-                    video_frame_count = self._cache.get_frame_count(
-                        video, filter=type_key
-                    )
+                # Get the frame counts for each video filtered by the type key
+                video_frame_counts = [
+                    self._cache.get_frame_count(video, filter=type_key)
+                    for video in self.videos
+                ]
 
-                    # Remove the frames associated with the specific video from the frame count cache
-                    self._cache._frame_count_cache[None][type_key] = {
-                        idx_pair
-                        for idx_pair in video_idx_pairs
-                        if idx_pair[0] != video_idx
+                # Remove (video_idx, frame_idx) pairs where video_idx is out of range
+                self._cache._frame_count_cache[None][type_key] = {
+                    idx_pair
+                    for idx_pair in video_idx_pairs
+                    if idx_pair[0] not in range(len(self.videos))
+                }
+
+                # Update the frame count cache for each video
+                self._cache._frame_count_cache.update(
+                    {
+                        video: {
+                            type_key: {
+                                idx_pair
+                                for idx_pair in video_idx_pairs
+                                if idx_pair[0] == video_idx
+                            },
+                            "": {
+                                idx_pair
+                                for idx_pair in video_idx_pairs
+                                if idx_pair[0] == video_idx
+                            },
+                        }
+                        for video_idx, video in enumerate(self.videos)
                     }
+                )
 
-                    # Update the frame count cache for the specific video
-                    self._cache._frame_count_cache[video] = {
-                        type_key: {
-                            idx_pair
-                            for idx_pair in video_idx_pairs
-                            if idx_pair[0] == video_idx
-                        },
-                        "": {
-                            idx_pair
-                            for idx_pair in video_idx_pairs
-                            if idx_pair[0] == video_idx
-                        },
-                    }
-
-                    # Update the frame count cache for all videos
-                    self._cache._frame_count_cache[None][type_key].update(
+                # Update the frame count cache for all videos
+                self._cache._frame_count_cache[None][type_key].update(
+                    *[
                         self._cache._frame_count_cache[video][type_key]
-                    )
+                        for video in self.videos
+                    ]
+                )
 
     @classmethod
     def from_json(cls, *args, **kwargs):
