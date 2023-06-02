@@ -1589,13 +1589,6 @@ class Labels(MutableSequence):
         self._cache.remove_video(video)
 
         # Update the frame count cache for all videos
-        # if None in self._cache._frame_count_cache:
-        #     for type_key in self._cache._frame_count_cache[None]:
-        #         self._cache._frame_count_cache[None][type_key] = {
-        #             idx_pair
-        #             for idx_pair in self._cache._frame_count_cache[None][type_key]
-        #             if idx_pair[0] != video_index
-        #         }
         if None in self._cache._frame_count_cache:
             for type_key in self._cache._frame_count_cache[None]:
                 video_idx_pairs = self._cache.get_filtered_frame_idxs(filter=type_key)
