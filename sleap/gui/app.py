@@ -161,7 +161,6 @@ class MainWindow(QMainWindow):
             self.state["share usage data"] = False
         self.state["clipboard_track"] = None
         self.state["clipboard_instance"] = None
-        self.state["video_removed"]: False
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
         self.state.connect("show non-visible nodes", self.plotFrame)
@@ -259,7 +258,6 @@ class MainWindow(QMainWindow):
             event.acceptProposedAction()
 
     def dropEvent(self, event):
-
         # Parse filenames
         filenames = event.mimeData().data("text/uri-list").data().decode()
         filenames = [parse_uri_path(f.strip()) for f in filenames.strip().split("\n")]
