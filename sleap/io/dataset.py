@@ -385,6 +385,52 @@ class LabelsDataCache:
             if type_key in self._frame_count_cache[None]:
                 self._frame_count_cache[None][type_key].discard(idx_pair)
 
+    def update_frame_count_cache(self, videos: List[Video]):
+        """Update the frame count cache for all videos. Clean up out-of-range pairs of indices."""
+        self.videos = videos
+        if None in self._frame_count_cache:
+            # Iterate over the type keys in the frame count cache
+            for type_key in self._frame_count_cache[None]:
+                # Get the (video_idx, frame_idx) pairs filtered by the type key
+                video_idx_pairs = self.get_filtered_frame_idxs(filter=type_key)
+
+                # Get the frame counts for each video filtered by the type key
+                video_frame_counts = [
+                    self.get_frame_count(video, filter=type_key)
+                    for video in self.videos
+                ]
+
+                # Remove (video_idx, frame_idx) pairs where video_idx is out of range
+                self._frame_count_cache[None][type_key] = {
+                    idx_pair
+                    for idx_pair in video_idx_pairs
+                    if idx_pair[0] not in range(len(self.videos))
+                }
+
+                # Update the frame count cache for each video
+                self._frame_count_cache.update(
+                    {
+                        video: {
+                            type_key: {
+                                idx_pair
+                                for idx_pair in video_idx_pairs
+                                if idx_pair[0] == video_idx
+                            },
+                            "": {
+                                idx_pair
+                                for idx_pair in video_idx_pairs
+                                if idx_pair[0] == video_idx
+                            },
+                        }
+                        for video_idx, video in enumerate(self.videos)
+                    }
+                )
+
+                # Update the frame count cache for all videos
+                self._frame_count_cache[None][type_key].update(
+                    *[self._frame_count_cache[video][type_key] for video in self.videos]
+                )
+
 
 @attr.s(auto_attribs=True, repr=False, str=False)
 class Labels(MutableSequence):
@@ -1566,74 +1612,21 @@ class Labels(MutableSequence):
         if video not in self.videos:
             raise KeyError("Video is not in labels.")
 
-        video_index = self.videos.index(video)
-
         # Delete all associated labeled frames
-        for label in reversed(self.labeled_frames):
-            if label.video == video:
-                self.labeled_frames.remove(label)
+        self.labeled_frames = [
+            label for label in self.labeled_frames if label.video != video
+        ]
 
         # Delete data that's indexed by video
         self.delete_suggestions(video)
-        if video in self.negative_anchors:
-            del self.negative_anchors[video]
+        self.negative_anchors.pop(video, None)
 
         # Delete video
         self.videos.remove(video)
 
-        # Update the frame count cache for the removed video
-        if video in self._cache._frame_count_cache:
-            del self._cache._frame_count_cache[video]
-
-        # Remove video from the cache
-        self._cache.remove_video(video)
-
         # Update the frame count cache for all videos
-        if None in self._cache._frame_count_cache:
-            # Iterate over the type keys in the frame count cache
-            for type_key in self._cache._frame_count_cache[None]:
-                # Get the (video_idx, frame_idx) pairs filtered by the type key
-                video_idx_pairs = self._cache.get_filtered_frame_idxs(filter=type_key)
-
-                # Get the frame counts for each video filtered by the type key
-                video_frame_counts = [
-                    self._cache.get_frame_count(video, filter=type_key)
-                    for video in self.videos
-                ]
-
-                # Remove (video_idx, frame_idx) pairs where video_idx is out of range
-                self._cache._frame_count_cache[None][type_key] = {
-                    idx_pair
-                    for idx_pair in video_idx_pairs
-                    if idx_pair[0] not in range(len(self.videos))
-                }
-
-                # Update the frame count cache for each video
-                self._cache._frame_count_cache.update(
-                    {
-                        video: {
-                            type_key: {
-                                idx_pair
-                                for idx_pair in video_idx_pairs
-                                if idx_pair[0] == video_idx
-                            },
-                            "": {
-                                idx_pair
-                                for idx_pair in video_idx_pairs
-                                if idx_pair[0] == video_idx
-                            },
-                        }
-                        for video_idx, video in enumerate(self.videos)
-                    }
-                )
-
-                # Update the frame count cache for all videos
-                self._cache._frame_count_cache[None][type_key].update(
-                    *[
-                        self._cache._frame_count_cache[video][type_key]
-                        for video in self.videos
-                    ]
-                )
+        self._cache.remove_video(video)
+        self._cache.update_frame_count_cache(self.videos)
 
     @classmethod
     def from_json(cls, *args, **kwargs):
