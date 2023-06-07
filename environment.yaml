@@ -1,0 +1,36 @@
+name: new_env
+
+dependencies:
+    - attrs >=21.2.0,<=21.4.0
+    - cattrs ==1.1.1
+    - certifi
+    - cudatoolkit ==11.3.1
+    - cudnn ==8.2.1
+    - nvidia::cuda-nvcc ==11.3
+    - imgaug ==0.4.0
+    - conda-forge::jsmin
+    - jsonpickle ==1.2
+    - networkx
+    - numpy >=1.19.5,<1.23.0
+    - opencv
+    - pandas
+    - pip
+    - pillow >=8.3.1,<=8.4.0
+    - psutil
+    - conda-forge::pykalman
+    - pyside2
+    - python ==3.7
+    - python-rapidjson
+    - pyyaml
+    - pyzmq
+    - qtpy >=2.0.1
+    - rich
+    - scipy >=1.4.1,<=1.9.0
+    - scikit-image
+    - scikit-learn ==1.0.*
+    - conda-forge::scikit-video
+    - seaborn
+    - sleap::tensorflow >=2.6.3,<2.9.0
+    - tensorflow-hub
+    - pip:      
+        - "--editable=."

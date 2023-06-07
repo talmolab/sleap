@@ -1,7 +1,10 @@
+# No conda packages for these
 imgstore
-h5py==3.1.0
 ndx-pose
 nixio>=1.5.3
-pynwb>2.0.0  # Conda installing results in https://github.com/h5py/h5py/issues/2037
 qimage2ndarray==1.9.0
 segmentation-models==1.0.1
+
+# Conda installing results in https://github.com/h5py/h5py/issues/2037
+h5py==3.1.0
+pynwb>2.0.0
