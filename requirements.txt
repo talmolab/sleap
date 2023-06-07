@@ -1,10 +1,10 @@
 # No conda packages for these
-imgstore
+imgstore<0.3.0  # 0.3.3 results in https://github.com/O365/python-o365/issues/591
 ndx-pose
-nixio>=1.5.3
+nixio>=1.5.3  # Constrain put on by @jgrewe from G-Node
 qimage2ndarray==1.9.0
 segmentation-models==1.0.1
 
 # Conda installing results in https://github.com/h5py/h5py/issues/2037
-h5py==3.1.0
-pynwb>2.0.0
+h5py<3.2  # Newer versions result in error above
+pynwb>2.0.0  # Less than 2.0 not supported by ndx-pose
