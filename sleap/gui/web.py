@@ -3,6 +3,7 @@
 import attr
 import pandas as pd
 import requests
+import datetime
 from typing import List, Dict, Any
 
 
@@ -144,6 +145,35 @@ class ReleaseChecker:
             "Check the page online for a full listing: "
             f"https://github.com/{self.repo_id}"
         )
+
+class AnnouncementChecker:
+    def __init__(self):
+        self.prefs = {
+            "last seen announcement": None
+        }
+
+    def check_for_new_announcement(self):
+        """Check if there is a new announcement since the last seen announcement."""
+        last_seen = self.prefs["last seen announcement"]
+        current_date = datetime.datetime.now().strftime("%Y%m%d")
+
+        if last_seen is None or current_date > last_seen:
+            self.fetch_announcement()
+
+    def fetch_announcement(self):
+        """Fetch the announcement and update the last seen date."""
+        announcement_url = "https://github.com/talmolab/sleap/releases"  # Replace with the actual URL to fetch the announcement
+
+        try:
+            response = requests.get(announcement_url)
+            if response.status_code == 200:
+                announcement = response.text
+                # Update the app's state or perform any other necessary operations with the fetched announcement
+                self.prefs["last seen announcement"] = datetime.datetime.now().strftime("%Y%m%d")
+            else:
+                print("Failed to fetch the announcement.")
+        except requests.RequestException as e:
+            print("Error occurred while fetching the announcement:", str(e))
 
 
 def get_analytics_data() -> Dict[str, Any]:

@@ -161,7 +161,7 @@ class MainWindow(QMainWindow):
             self.state["share usage data"] = False
         self.state["clipboard_track"] = None
         self.state["clipboard_instance"] = None
-
+        self.state["last_seen_announcement"] = prefs["last seen announcement"]
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
         self.state.connect("show non-visible nodes", self.plotFrame)
@@ -220,6 +220,7 @@ class MainWindow(QMainWindow):
         prefs["color predicted"] = self.state["color predicted"]
         prefs["trail shade"] = self.state["trail_shade"]
         prefs["share usage data"] = self.state["share usage data"]
+        prefs["last seen announcement"] = self.state["last_seen_announcement"]
 
         # Save preferences.
         prefs.save()
