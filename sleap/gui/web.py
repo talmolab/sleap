@@ -162,7 +162,7 @@ class AnnouncementChecker:
 
     def fetch_announcement(self):
         """Fetch the announcement and update the last seen date."""
-        announcement_url = "https://github.com/talmolab/sleap/releases"  # Replace with the actual URL to fetch the announcement
+        announcement_url = "https://github.com/talmolab/sleap/releases"
 
         try:
             response = requests.get(announcement_url)
