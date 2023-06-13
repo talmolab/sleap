@@ -463,9 +463,7 @@ def test_update_frame_count_cache():
         # Predictions for frame count cache
         frame_count_cache_predictions = {
             video: {
-                "": set(),
-                "user": set(),
-                "predicted": set(),
+                "": set(frame_indices),
             }
         }
 
