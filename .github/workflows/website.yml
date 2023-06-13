@@ -8,6 +8,7 @@ on:
       # 'main' triggers updates to 'sleap.ai', all others to 'sleap.ai/develop'
       - main
       - develop
+      - zaher/changelog
     paths:
       - "docs/**"
       - "README.rst"
