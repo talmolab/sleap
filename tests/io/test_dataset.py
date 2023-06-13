@@ -433,45 +433,6 @@ def test_remove_video_multiple():
     assert len(labels.find(dummy_videos[0])) == 0
 
 
-# def test_update_frame_count_cache():
-#     # Create dummy videos, skeletons, instances, and labeled frames
-#     dummy_videos = [
-#         Video(backend=MediaVideo(filename=f"dummy_video_{i}.mp4")) for i in range(5)
-#     ]
-#     dummy_skeletons = [Skeleton() for _ in range(5)]
-#     dummy_instances = [Instance(dummy_skeletons[i % 5]) for i in range(10)]
-#     dummy_frames = [
-#         LabeledFrame(
-#             dummy_videos[i % 5], frame_idx=i % 5, instances=[dummy_instances[i]]
-#         )
-#         for i in range(10)
-#     ]
-
-#     # Create Labels object and append the dummy frames
-#     labels = Labels()
-#     labels.videos.extend(dummy_videos)  # Add dummy videos to labels
-#     labels.extend(dummy_frames)
-
-#     total_frame_count = labels._cache.get_frame_count()
-#     expected_frame_count = total_frame_count
-
-#     # Remove multiple videos by Video instances
-#     for video in labels.videos.copy():
-#         vid_frame_count = labels._cache.get_frame_count(video)
-#         labels.remove_video(video)  # expand this
-
-#         # Calculate expected frame count after removing video
-#         expected_frame_count -= vid_frame_count
-
-#         # Pull current total frame count after removal
-#         total_frame_count = labels._cache.get_frame_count()
-
-#         # Assert that the total frame count matches the expected frame count
-#         assert total_frame_count == expected_frame_count
-
-#     # Assert that the frame count cache is empty
-#     assert labels._cache.get_frame_count() == 0
-
 def test_update_frame_count_cache():
     # Create dummy videos, skeletons, instances, and labeled frames
     dummy_videos = [
@@ -520,7 +481,9 @@ def test_update_frame_count_cache():
         assert total_frame_count == expected_frame_count
 
         # Assert frame count cache predictions for the removed video
-        assert labels._cache._frame_count_cache.get(video, {}) == frame_count_cache_predictions.get(video, {})
+        assert labels._cache._frame_count_cache.get(
+            video, {}
+        ) == frame_count_cache_predictions.get(video, {})
 
         # Assert that all frame indices associated with the removed video have been deleted
         for frame_idx in frame_indices:
