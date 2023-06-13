@@ -7,7 +7,7 @@ import sleap
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Track
 from sleap.io.video import Video, MediaVideo
-from sleap.io.dataset import Labels, load_file
+from sleap.io.dataset import Labels, LabelsDataCache, load_file
 from sleap.io.legacy import load_labels_json_old
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.format import filehandle
@@ -420,7 +420,6 @@ def test_remove_video_multiple():
     labels.extend(dummy_frames)
 
     total_frame_count = labels._cache.get_frame_count()
-    expected_frame_count = total_frame_count
 
     # Remove multiple videos by Video instances
     for video in labels.videos.copy():
@@ -430,17 +429,108 @@ def test_remove_video_multiple():
         # Assert that the video is no longer found in the labels
         assert len(labels.find(video)) == 0
 
-        # calculate expected frame count after removing video
-        expected_frame_count = total_frame_count - vid_frame_count
+    # Assert that the video is no longer found in the labels
+    assert len(labels.find(dummy_videos[0])) == 0
+
+
+# def test_update_frame_count_cache():
+#     # Create dummy videos, skeletons, instances, and labeled frames
+#     dummy_videos = [
+#         Video(backend=MediaVideo(filename=f"dummy_video_{i}.mp4")) for i in range(5)
+#     ]
+#     dummy_skeletons = [Skeleton() for _ in range(5)]
+#     dummy_instances = [Instance(dummy_skeletons[i % 5]) for i in range(10)]
+#     dummy_frames = [
+#         LabeledFrame(
+#             dummy_videos[i % 5], frame_idx=i % 5, instances=[dummy_instances[i]]
+#         )
+#         for i in range(10)
+#     ]
+
+#     # Create Labels object and append the dummy frames
+#     labels = Labels()
+#     labels.videos.extend(dummy_videos)  # Add dummy videos to labels
+#     labels.extend(dummy_frames)
+
+#     total_frame_count = labels._cache.get_frame_count()
+#     expected_frame_count = total_frame_count
+
+#     # Remove multiple videos by Video instances
+#     for video in labels.videos.copy():
+#         vid_frame_count = labels._cache.get_frame_count(video)
+#         labels.remove_video(video)  # expand this
+
+#         # Calculate expected frame count after removing video
+#         expected_frame_count -= vid_frame_count
+
+#         # Pull current total frame count after removal
+#         total_frame_count = labels._cache.get_frame_count()
+
+#         # Assert that the total frame count matches the expected frame count
+#         assert total_frame_count == expected_frame_count
+
+#     # Assert that the frame count cache is empty
+#     assert labels._cache.get_frame_count() == 0
+
+def test_update_frame_count_cache():
+    # Create dummy videos, skeletons, instances, and labeled frames
+    dummy_videos = [
+        Video(backend=MediaVideo(filename=f"dummy_video_{i}.mp4")) for i in range(5)
+    ]
+    dummy_skeletons = [Skeleton() for _ in range(5)]
+    dummy_instances = [Instance(dummy_skeletons[i % 5]) for i in range(10)]
+    dummy_frames = [
+        LabeledFrame(
+            dummy_videos[i % 5], frame_idx=i % 5, instances=[dummy_instances[i]]
+        )
+        for i in range(10)
+    ]
+
+    # Create Labels object and append the dummy frames
+    labels = Labels()
+    labels.videos.extend(dummy_videos)  # Add dummy videos to labels
+    labels.extend(dummy_frames)
+
+    total_frame_count = labels._cache.get_frame_count()
+    expected_frame_count = total_frame_count
+
+    # Remove multiple videos by Video instances
+    for video in labels.videos.copy():
+        vid_frame_count = labels._cache.get_frame_count(video)
+        frame_indices = labels._cache.get_filtered_frame_idxs(video)
+
+        # Predictions for frame count cache
+        frame_count_cache_predictions = {
+            video: {
+                "": set(),
+                "user": set(),
+                "predicted": set(),
+            }
+        }
+
+        labels.remove_video(video)
+
+        # Calculate expected frame count after removing video
+        expected_frame_count -= vid_frame_count
 
         # Pull current total frame count after removal
         total_frame_count = labels._cache.get_frame_count()
 
-        # Assert that the total frame count matches the total minus the current video
+        # Assert that the total frame count matches the expected frame count
         assert total_frame_count == expected_frame_count
+
+        # Assert frame count cache predictions for the removed video
+        assert labels._cache._frame_count_cache.get(video, {}) == frame_count_cache_predictions.get(video, {})
+
+        # Assert that all frame indices associated with the removed video have been deleted
+        for frame_idx in frame_indices:
+            assert labels._cache.find_frames(video, frame_idx) is None
 
     # Assert that the frame count cache is empty
     assert labels._cache.get_frame_count() == 0
+
+    # Assert that there are no videos left in the labels list
+    assert len(labels.find(dummy_videos[0])) == 0
 
 
 def test_labels_merge():
