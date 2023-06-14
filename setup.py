@@ -7,6 +7,7 @@ from codecs import open
 from os import path
 
 import re
+import sys
 
 here = path.abspath(path.dirname(__file__))
 
@@ -26,11 +27,21 @@ def get_requirements(require_name=None):
         return f.read().strip().split("\n")
 
 
+print(f"commands: {sys.argv}")
+if "--wheel" in sys.argv:
+    # We're building a pip package, so we need to include conda dependencies only.
+    install_requires = get_requirements("pip")
+    sys.argv.remove("--wheel")
+else:
+    # We're using a conda package, so we need to include non-conda dependencies only.
+    install_requires = get_requirements()
+print(f"commands: {sys.argv}")
+
 setup(
     name="sleap",
     version=sleap_version,
     setup_requires=["setuptools_scm"],
-    install_requires=get_requirements(),
+    install_requires=install_requires,
     extras_require={
         "dev": get_requirements("dev"),
     },
@@ -49,7 +60,7 @@ setup(
     license="BSD 3-Clause License",
     packages=find_packages(exclude=["tensorflow"]),
     include_package_data=True,
-    entry_points={ 
+    entry_points={
         "console_scripts": [
             "sleap-convert=sleap.io.convert:main",
             "sleap-render=sleap.io.visuals:main",

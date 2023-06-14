@@ -1,4 +1,4 @@
-name: new_env
+name: sleap
 
 dependencies:
     # Packages SLEAP uses directly
@@ -38,3 +38,4 @@ dependencies:
 
     - pip:      
         - "--editable=."
+        - "--requirement=./dev_requirements.txt"
