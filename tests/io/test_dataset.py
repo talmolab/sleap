@@ -419,15 +419,25 @@ def test_remove_video_multiple():
     labels.videos.extend(dummy_videos)  # Add dummy videos to labels
     labels.extend(dummy_frames)
 
+    # Set video counter to 5 videos
+    i = 5
+
     # Remove multiple videos by Video instances
     for video in labels.videos.copy():
+        # Assert that the there are i videos in the labels
+        assert len(labels.videos) == i
+
         labels.remove_video(video)
+
+        # Subtract video counter
+        i -= 1
 
         # Assert that the video is no longer found in the labels
         assert len(labels.find(video)) == 0
 
-    # Assert that the video is no longer found in the labels
+    # Assert that there are no videos in the labels
     assert len(labels.find(dummy_videos[0])) == 0
+    assert len(labels.videos) == 0
 
 
 def test_update_frame_count_cache():
