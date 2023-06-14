@@ -15,7 +15,7 @@ dependencies:
     - pillow >=8.3.1,<=8.4.0
     - psutil
     - conda-forge::pykalman
-    - pyside2
+    - pyside2 >=5.12  # To ensure application works correctly with QtPy.
     - python ==3.7
     - python-rapidjson
     - pyyaml
@@ -27,7 +27,7 @@ dependencies:
     - scikit-learn ==1.0
     - conda-forge::scikit-video
     - seaborn
-    - tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
+    # - tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
     - tensorflow-hub
 
     # Packages required by tensorflow to find/use GPUs
@@ -38,4 +38,5 @@ dependencies:
 
     - pip:      
         - "--editable=."
+        - "--requirement=./conda_requirements.txt"
         - "--requirement=./dev_requirements.txt"

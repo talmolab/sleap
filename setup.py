@@ -28,14 +28,13 @@ def get_requirements(require_name=None):
 
 
 print(f"commands: {sys.argv}")
-if "--wheel" in sys.argv:
-    # We're building a pip package, so we need to include conda dependencies only.
-    install_requires = get_requirements("pip")
-    sys.argv.remove("--wheel")
+if "bdist_wheel" in sys.argv:
+    # We're building a pip package, so we need to include all dependencies.
+    install_requires = get_requirements("conda") + get_requirements()
 else:
-    # We're using a conda package, so we need to include non-conda dependencies only.
-    install_requires = get_requirements()
-print(f"commands: {sys.argv}")
+    # We're using conda, so we only need to include non-conda dependencies.
+    install_requires = get_requirements("conda")
+print(f"install_requires: {install_requires}")
 
 setup(
     name="sleap",

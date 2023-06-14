@@ -62,15 +62,15 @@ rem # NOTE: This is the recommended way to install packages
 @REM python setup.py install --single-version-externally-managed --record=record.txt
 
 echo "Running bld.bat"
-@REM pip install imgstore<0.3.0  # 0.3.3 results in https://github.com/O365/python-o365/issues/591
+@REM pip install imgstore<=0.2.9  # 0.3.3 results in https://github.com/O365/python-o365/issues/591
 @REM pip install ndx-pose
 @REM pip install nixio>=1.5.3  # Constrain put on by @jgrewe from G-Node
 @REM pip install qimage2ndarray  #==1.9.0
 @REM pip install segmentation-models
 
-@REM @REM # Conda installing results in https://github.com/h5py/h5py/issues/2037
+@REM @REM @REM # Conda installing results in https://github.com/h5py/h5py/issues/2037
 @REM pip install h5py<3.2  # Newer versions result in error above
 @REM pip install pynwb>2.0.0  # Required by ndx-pose
-pip install -r requirements.txt
+pip install -r conda_requirements.txt
 
 python setup.py install --single-version-externally-managed --record=record.txt

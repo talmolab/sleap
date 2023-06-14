@@ -47,7 +47,7 @@ requirements:
     - pillow >=8.3.1,<=8.4.0
     - psutil
     - pykalman
-    - pyside2
+    - pyside2 >=5.12
     - python-rapidjson
     - pyyaml
     - pyzmq
@@ -64,6 +64,9 @@ requirements:
     - python {{ python }}
     - attrs >=21.2.0,<=21.4.0
     - cattrs ==1.1.1
+    - cudatoolkit ==11.3.1
+    - cudnn=8.2.1
+    - nvidia::cuda-nvcc=11.3
     - imgaug ==0.4.0
     - imgstore <0.3
     - jsmin
@@ -75,7 +78,7 @@ requirements:
     - pillow >=8.3.1,<=8.4.0
     - psutil
     - pykalman
-    - pyside2
+    - pyside2 >=5.12  # To ensure application works correctly with QtPy.
     - python-rapidjson
     - pyyaml
     - pyzmq
