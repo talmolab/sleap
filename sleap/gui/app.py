@@ -220,6 +220,8 @@ class MainWindow(QMainWindow):
         prefs["color predicted"] = self.state["color predicted"]
         prefs["trail shade"] = self.state["trail_shade"]
         prefs["share usage data"] = self.state["share usage data"]
+        prefs["last seen announcement"] = self.state["last_seen_announcement"]
+        
         # Save preferences.
         prefs.save()
 
