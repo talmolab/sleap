@@ -1,7 +1,8 @@
 import pandas as pd
-from sleap.gui.web import ReleaseChecker, Release, get_analytics_data, ping_analytics
+from sleap.gui.web import ReleaseChecker, Release, AnnouncementChecker, get_analytics_data, ping_analytics
 import pytest
-
+from datetime import datetime, timedelta
+from unittest.mock import patch
 
 def test_release_from_json():
     rls = Release.from_json(
@@ -75,3 +76,21 @@ def test_release_checker():
 def test_get_analytics_data():
     analytics_data = get_analytics_data()
     assert "platform" in analytics_data
+
+@pytest.mark.parametrize(
+    "status_code, expected_date",
+    [
+        (200, "20230614"),  # Successful fetch
+        (404, None),  # Failed fetch
+    ],
+)
+@patch("requests.get")
+def test_fetch_announcement(mock_get, status_code, expected_date):
+    mock_response = mock_get.return_value
+    mock_response.status_code = status_code
+    mock_response.text = "This is a test announcement."
+
+    checker = AnnouncementChecker()
+    checker.fetch_announcement()
+
+    assert checker.prefs["last seen announcement"] == expected_date
