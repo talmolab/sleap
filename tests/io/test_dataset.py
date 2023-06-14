@@ -462,6 +462,9 @@ def test_update_frame_count_cache():
     total_frame_count = labels._cache.get_frame_count()
     expected_frame_count = total_frame_count
 
+    # Set up video counter
+    i = 5
+
     # Remove multiple videos by Video instances
     for video in labels.videos.copy():
         vid_frame_count = labels._cache.get_frame_count(video)
@@ -473,6 +476,9 @@ def test_update_frame_count_cache():
                 "": set(frame_indices),
             }
         }
+
+        # Assert that the dummy video i deleft in the labels list
+        assert len(labels._cache.labels.videos) == i
 
         labels.remove_video(video)
 
@@ -494,11 +500,11 @@ def test_update_frame_count_cache():
         for frame_idx in frame_indices:
             assert labels._cache.find_frames(video, frame_idx) is None
 
+        # Increment video counter
+        i -= 1
+
     # Assert that the frame count cache is empty
     assert labels._cache.get_frame_count() == 0
-
-    # Assert that there are no videos left in the labels list
-    assert len(labels.find(dummy_videos[0])) == 0
 
 
 def test_labels_merge():
