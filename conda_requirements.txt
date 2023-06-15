@@ -6,7 +6,8 @@ ndx-pose
 nixio>=1.5.3  # Constrain put on by @jgrewe from G-Node
 qimage2ndarray  #==1.9.0
 segmentation-models
-tensorflow >=2.0,<2.11  # Anything above 2.10 is not supported on the GPU on Windows Native
+# tensorflow >=2.0,<2.11  # Anything above 2.10 is not supported on the GPU on Windows Native
+# tensorflow-hub
 
 # Conda installing results in https://github.com/h5py/h5py/issues/2037
 h5py<3.2  # Newer versions result in error above

@@ -17,10 +17,6 @@ source:
 
 build:
   number: 0
-  # script:
-  #   - {{ PYTHON }} -m pip install -vv --ignore-installed .
-  #   - {{ PYTHON }} setup.py install --single-version-externally-managed --record=record.txt
-  #   - bld.bat  # [win]
 
 requirements:
   host:
@@ -38,7 +34,6 @@ requirements:
     - attrs >=21.2.0,<=21.4.0
     - cattrs ==1.1.1
     - imgaug ==0.4.0
-    - imgstore <0.3
     - jsmin
     - jsonpickle ==1.2
     - networkx
@@ -58,8 +53,6 @@ requirements:
     - scikit-learn ==1.0
     - scikit-video
     - seaborn
-    - tensorflow >=2.6.3,<2.11
-    - tensorflow-hub
   run:
     - python {{ python }}
     - attrs >=21.2.0,<=21.4.0
@@ -68,7 +61,6 @@ requirements:
     - cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
     - imgaug ==0.4.0
-    - imgstore <0.3
     - jsmin
     - jsonpickle ==1.2
     - networkx
@@ -89,8 +81,11 @@ requirements:
     - scikit-learn ==1.0
     - scikit-video
     - seaborn
-    - tensorflow >=2.6.3,<2.11
+    - tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
     - tensorflow-hub
+
+  run_constrained:
+    - tensorflow >=2.0,<2.11
 
 tests:
   imports:

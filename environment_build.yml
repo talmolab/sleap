@@ -1,8 +1,10 @@
 name: sleap
 
 dependencies:
-    - pip
+    # Needed for the build
     - conda-build
     - anaconda-client
     - conda-verify
+    - pip
+
     

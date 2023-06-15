@@ -32,7 +32,7 @@ scikit-learn ==1.0.*
 scikit-video
 seaborn
 # tensorflow <2.11; platform_machine != 'arm64'  # Anything above 2.10 is not supported.
-tensorflow-hub
+# tensorflow-hub
 tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
 tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64'
 
@@ -43,6 +43,7 @@ tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64
 # nixio>=1.5.3
 # qimage2ndarray>=1.9.0
 # segmentation-models==1.0.1
+# tensorflow >=2.0,<2.11  # Anything above 2.10 is not supported on the GPU on Windows Native
 # # Conda installing results in https://github.com/h5py/h5py/issues/2037
 # h5py<3.2  # Newer versions result in error above
 # pynwb>2.0.0  # Required by ndx-pose

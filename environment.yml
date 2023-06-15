@@ -36,7 +36,9 @@ dependencies:
     - cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
 
-    - pip:      
+    - pip:
+        - "--single-version-externally-managed"      
         - "--editable=."
         - "--requirement=./conda_requirements.txt"
         - "--requirement=./dev_requirements.txt"
+        - "--record=record.txt"
