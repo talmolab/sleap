@@ -146,11 +146,10 @@ class ReleaseChecker:
             f"https://github.com/{self.repo_id}"
         )
 
+
 class AnnouncementChecker:
     def __init__(self):
-        self.prefs = {
-            "last seen announcement": None
-        }
+        self.prefs = {"last seen announcement": None}
 
     def check_for_new_announcement(self):
         """Check if there is a new announcement since the last seen announcement."""
@@ -169,7 +168,9 @@ class AnnouncementChecker:
             if response.status_code == 200:
                 announcement = response.text
                 # Update the app's state or perform any other necessary operations with the fetched announcement
-                self.prefs["last seen announcement"] = datetime.datetime.now().strftime("%Y%m%d")
+                self.prefs["last seen announcement"] = datetime.datetime.now().strftime(
+                    "%Y%m%d"
+                )
             else:
                 print("Failed to fetch the announcement.")
         except requests.RequestException as e:

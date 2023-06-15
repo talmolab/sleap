@@ -1,8 +1,15 @@
 import pandas as pd
-from sleap.gui.web import ReleaseChecker, Release, AnnouncementChecker, get_analytics_data, ping_analytics
+from sleap.gui.web import (
+    ReleaseChecker,
+    Release,
+    AnnouncementChecker,
+    get_analytics_data,
+    ping_analytics,
+)
 import pytest
 from datetime import datetime, timedelta
 from unittest.mock import patch
+
 
 def test_release_from_json():
     rls = Release.from_json(
@@ -76,6 +83,7 @@ def test_release_checker():
 def test_get_analytics_data():
     analytics_data = get_analytics_data()
     assert "platform" in analytics_data
+
 
 @pytest.mark.parametrize(
     "status_code, expected_date",

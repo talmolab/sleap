@@ -30,8 +30,6 @@ class Preferences(object):
         "show non-visible nodes": True,
         "share usage data": True,
         "last seen announcement": date.today().strftime("%Y%m%d"),
-
-
     }
     _filename = "preferences.yaml"
 
