@@ -86,6 +86,7 @@ requirements:
 
   run_constrained:
     - tensorflow >=2.0,<2.11
+    - wheel ~= 0.35
 
 tests:
   imports:
