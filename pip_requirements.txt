@@ -1,0 +1,37 @@
+# This file contains the full list of dependencies to be installed when only using pypi.
+# This file should look very similar to the environment.yml file. Based on the logic in 
+# setup.py, the packages in requirements.txt will also be installed when running 
+# pip install sleap[pip].
+
+# Packages that are also distrubuted through conda.
+attrs>=21.2.0,<=21.4.0
+cattrs==1.1.1
+# certifi>=2017.4.17,<=2021.10.8
+jsmin
+jsonpickle==1.2
+networkx
+numpy>=1.19.5,<1.23.0
+opencv-python>=4.2.0,<=4.6.0
+# opencv-python-headless>=4.2.0.34,<=4.5.5.62
+pandas
+pillow>=8.3.1,<=8.4.0
+psutil
+pykalman==0.9.5
+PySide2>=5.13.2,<=5.14.1; platform_machine != 'arm64'
+PySide2>=5.13.2,<=5.15.5; sys_platform == 'darwin' and platform_machine == 'arm64'
+python-rapidjson
+pyyaml
+pyzmq
+qtpy>=2.0.1
+rich==10.16.1
+imageio<=2.15.0
+imgaug==0.4.0
+scipy>=1.4.1,<=1.9.0
+scikit-image
+scikit-learn ==1.0.*
+scikit-video
+seaborn
+# tensorflow <2.11; platform_machine != 'arm64'  # Anything above 2.10 is not supported.
+# tensorflow-hub
+tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
+tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64'

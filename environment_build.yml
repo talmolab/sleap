@@ -5,6 +5,6 @@ dependencies:
     - conda-build
     - anaconda-client
     - conda-verify
-    - pip
+    - pip  # Maybe not needed?
 
     

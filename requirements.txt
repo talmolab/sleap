@@ -1,49 +1,14 @@
-# This file contains the full list of dependencies to be installed when only using pypi.
-# This file should look very similar to the environment.yml file. Based on the logic in 
-# setup.py, the packages in conda_requirements.txt will also be installed when running 
-# python setup.py install bdist_wheel.
+# This file contains the minimal requirements to be installed by conda.
 
-# Packages that are also distrubuted through conda.
-attrs>=21.2.0,<=21.4.0
-cattrs==1.1.1
-# certifi>=2017.4.17,<=2021.10.8
-jsmin
-jsonpickle==1.2
-networkx
-numpy>=1.19.5,<1.23.0
-opencv-python>=4.2.0,<=4.6.0
-# opencv-python-headless>=4.2.0.34,<=4.5.5.62
-pandas
-pillow>=8.3.1,<=8.4.0
-psutil
-pykalman==0.9.5
-PySide2>=5.13.2,<=5.14.1; platform_machine != 'arm64'
-PySide2>=5.13.2,<=5.15.5; sys_platform == 'darwin' and platform_machine == 'arm64'
-python-rapidjson
-pyyaml
-pyzmq
-qtpy>=2.0.1
-rich==10.16.1
-imageio<=2.15.0
-imgaug==0.4.0
-scipy>=1.4.1,<=1.9.0
-scikit-image
-scikit-learn ==1.0.*
-scikit-video
-seaborn
-# tensorflow <2.11; platform_machine != 'arm64'  # Anything above 2.10 is not supported.
-# tensorflow-hub
-tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
-tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64'
-
-
-# # Packages that are not distributed through conda ( in conda_requirements.txt)
-# imgstore <=0.2.9  # 0.3.3 results in https://github.com/O365/python-o365/issues/591
-# ndx-pose
-# nixio>=1.5.3
-# qimage2ndarray>=1.9.0
-# segmentation-models==1.0.1
+# No conda packages for these
+imgstore<0.3.0  # 0.3.3 results in https://github.com/O365/python-o365/issues/591
+ndx-pose
+nixio>=1.5.3  # Constrain put on by @jgrewe from G-Node
+qimage2ndarray  # ==1.9.0
+segmentation-models
 # tensorflow >=2.0,<2.11  # Anything above 2.10 is not supported on the GPU on Windows Native
-# # Conda installing results in https://github.com/h5py/h5py/issues/2037
-# h5py<3.2  # Newer versions result in error above
-# pynwb>2.0.0  # Required by ndx-pose
+# tensorflow-hub
+
+# Conda installing results in https://github.com/h5py/h5py/issues/2037
+h5py<3.2  # Newer versions result in error above
+pynwb>2.0.0  # Required by ndx-pose

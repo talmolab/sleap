@@ -27,22 +27,14 @@ def get_requirements(require_name=None):
         return f.read().strip().split("\n")
 
 
-print(f"commands: {sys.argv}")
-if "bdist_wheel" in sys.argv:
-    # We're building a pip package, so we need to include all dependencies.
-    install_requires = get_requirements("conda") + get_requirements()
-else:
-    # We're using conda, so we only need to include non-conda dependencies.
-    install_requires = get_requirements("conda")
-print(f"install_requires: {install_requires}")
-
 setup(
     name="sleap",
     version=sleap_version,
     setup_requires=["setuptools_scm"],
-    install_requires=install_requires,
+    install_requires=get_requirements(),  # Minimal requirements if using conda.
     extras_require={
-        "dev": get_requirements("dev"),
+        "pip": get_requirements("pip"),  # For pip install
+        "dev": get_requirements("pip") + get_requirements("dev"),
     },
     description="SLEAP (Social LEAP Estimates Animal Poses) is a deep learning framework for animal pose tracking.",
     long_description=long_description,
@@ -57,7 +49,7 @@ setup(
     url="https://sleap.ai",
     keywords="deep learning, pose estimation, tracking, neuroscience",
     license="BSD 3-Clause License",
-    packages=find_packages(exclude=["tensorflow"]),
+    packages=find_packages(exclude=["tensorflow", "tests", "tests.*", "docs"]),
     include_package_data=True,
     entry_points={
         "console_scripts": [

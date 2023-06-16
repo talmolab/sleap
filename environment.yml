@@ -2,7 +2,7 @@ name: sleap
 
 dependencies:
     # Packages SLEAP uses directly
-    - attrs >=21.2.0,<=21.4.0
+    - attrs >=21.2.0  #,<=21.4.0
     - cattrs ==1.1.1
     - imgaug ==0.4.0
     - conda-forge::jsmin
@@ -36,9 +36,6 @@ dependencies:
     - cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
 
-    - pip:
-        - "--single-version-externally-managed"      
+    - pip:  
         - "--editable=."
-        - "--requirement=./conda_requirements.txt"
         - "--requirement=./dev_requirements.txt"
-        - "--record=record.txt"

@@ -16,7 +16,7 @@ source:
   path: ../
 
 build:
-  number: 0
+  number: 3
 
 requirements:
   host:
@@ -31,7 +31,7 @@ requirements:
 
     # Only the packages above are required to build, but listing them all ensures no 
     # unnecessary pypi packages are installed via the build script (bld.bat, build.sh)
-    - attrs ==21.4.0  # Attrs 21.2.0 is being pip installed and 23.X conda installed
+    - attrs ==21.4.0
     - cattrs ==1.1.1
     - imgaug ==0.4.0
     - jsmin
@@ -42,7 +42,7 @@ requirements:
     - pillow >=8.3.1,<=8.4.0
     - psutil
     - pykalman
-    - pyside2 >=5.12
+    - conda-forge::pyside2 >=5.12,<5.14
     - python-rapidjson
     - pyyaml
     - pyzmq
@@ -55,7 +55,7 @@ requirements:
     - seaborn
   run:
     - python {{ python }}
-    - attrs >=21.2.0,<=21.4.0
+    - attrs ==21.4.0
     - cattrs ==1.1.1
     - cudatoolkit ==11.3.1
     - cudnn=8.2.1
@@ -70,7 +70,7 @@ requirements:
     - pillow >=8.3.1,<=8.4.0
     - psutil
     - pykalman
-    - pyside2 >=5.12  # To ensure application works correctly with QtPy.
+    - conda-forge::pyside2 >=5.12,<5.14  # To ensure works correctly with QtPy.
     - python-rapidjson
     - pyyaml
     - pyzmq
@@ -81,43 +81,28 @@ requirements:
     - scikit-learn ==1.0
     - scikit-video
     - seaborn
-    - tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
+    - tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10, sleap channel has 2.6.3
     - tensorflow-hub
 
-  run_constrained:
-    - attrs >=21.2.0,<=21.4.0
-    - cattrs ==1.1.1
-    - cudatoolkit ==11.3.1
-    - cudnn=8.2.1
-    - nvidia::cuda-nvcc=11.3
-    - imgaug ==0.4.0
-    - jsmin
-    - jsonpickle ==1.2
-    - networkx
-    - {{ pin_compatible('numpy') }}
-    - opencv
-    - pandas
-    - pillow >=8.3.1,<=8.4.0
-    - psutil
-    - pykalman
-    - pyside2 >=5.12  # To ensure application works correctly with QtPy.
-    - python-rapidjson
-    - pyyaml
-    - pyzmq
-    - qtpy >=2.0.1
-    - rich
-    - scipy >=1.4.1,<=1.9.0
-    - scikit-image
-    - scikit-learn ==1.0
-    - scikit-video
-    - seaborn
-    - tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
-    - tensorflow-hub
+  # run_constrained:
+  #   # Found that we had double installed certain packages with pypi/conda which might be
+  #   # caused by dependencies installing different versions of a package, so let's be 
+  #   # explicit:
+  #   - attrs >=21.2.0,<=21.4.0
+  #   - cattrs ==1.1.1
+  #   - cudatoolkit ==11.3.1
+  #   - cudnn=8.2.1
+  #   - nvidia::cuda-nvcc=11.3
+  #   - imgaug ==0.4.0
+  #   - jsonpickle ==1.2
+  #   - {{ pin_compatible('numpy') }}
+  #   - pillow >=8.3.1,<=8.4.0
+  #   - pyside2 >=5.12  # To ensure application works correctly with QtPy.
+  #   - qtpy >=2.0.1
+  #   - scipy >=1.4.1,<=1.9.0
+  #   - scikit-learn ==1.0
+  #   - tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
 
-    # - attrs >=21.2.0,<=21.4.0
-    # - tensorflow >=2.0,<2.11
-    # - wheel ~= 0.35
-
-tests:
+test:
   imports:
     - sleap
