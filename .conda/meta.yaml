@@ -31,7 +31,7 @@ requirements:
 
     # Only the packages above are required to build, but listing them all ensures no 
     # unnecessary pypi packages are installed via the build script (bld.bat, build.sh)
-    - attrs >=21.2.0,<=21.4.0
+    - attrs ==21.4.0  # Attrs 21.2.0 is being pip installed and 23.X conda installed
     - cattrs ==1.1.1
     - imgaug ==0.4.0
     - jsmin
@@ -85,8 +85,38 @@ requirements:
     - tensorflow-hub
 
   run_constrained:
-    - tensorflow >=2.0,<2.11
-    - wheel ~= 0.35
+    - attrs >=21.2.0,<=21.4.0
+    - cattrs ==1.1.1
+    - cudatoolkit ==11.3.1
+    - cudnn=8.2.1
+    - nvidia::cuda-nvcc=11.3
+    - imgaug ==0.4.0
+    - jsmin
+    - jsonpickle ==1.2
+    - networkx
+    - {{ pin_compatible('numpy') }}
+    - opencv
+    - pandas
+    - pillow >=8.3.1,<=8.4.0
+    - psutil
+    - pykalman
+    - pyside2 >=5.12  # To ensure application works correctly with QtPy.
+    - python-rapidjson
+    - pyyaml
+    - pyzmq
+    - qtpy >=2.0.1
+    - rich
+    - scipy >=1.4.1,<=1.9.0
+    - scikit-image
+    - scikit-learn ==1.0
+    - scikit-video
+    - seaborn
+    - tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
+    - tensorflow-hub
+
+    # - attrs >=21.2.0,<=21.4.0
+    # - tensorflow >=2.0,<2.11
+    # - wheel ~= 0.35
 
 tests:
   imports:
