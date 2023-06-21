@@ -2,19 +2,36 @@ name: sleap
 
 channels:
     - conda-forge
-    - defaults
+    - anaconda
 
 dependencies:
-    - python=3.9
-    - shapely=1.7.1
-    - conda-forge::h5py=3.6.0
-    - conda-forge::numpy=1.22.3
-    - scipy=1.7.3
-    - apple::tensorflow-deps=2.9.0
-    - conda-forge::pyside2=5.15.5
-    - conda-forge::opencv=4.6.0
-    - qtpy>=2.0.1
-    - pip
+    # Packages SLEAP uses directly
+    - conda-forge::attrs >=21.2.0
+    - conda-forge::cattrs ==1.1.1
+    - conda-forge::imgaug ==0.4.0
+    - conda-forge::jsmin
+    - conda-forge::jsonpickle ==1.2
+    - conda-forge::networkx
+    - anaconda::numpy >=1.19.5,<1.23.0
+    - conda-forge::opencv
+    - conda-forge::pandas
+    - conda-forge::pip
+    - conda-forge::pillow
+    - conda-forge::psutil
+    - conda-forge::pykalman
+    - conda-forge::pyside2 >=5.12  # To ensure application works correctly with QtPy.
+    - conda-forge::python  ~=3.9
+    - conda-forge::python-rapidjson
+    - conda-forge::pyyaml
+    - conda-forge::pyzmq
+    - conda-forge::qtpy >=2.0.1
+    - conda-forge::rich
+    - conda-forge::scipy >=1.4.1,<=1.9.0
+    - conda-forge::scikit-image
+    - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-video
+    - conda-forge::seaborn
+    - conda-forge::tensorflow-hub
     - pip:
         - "--editable=./"
         - "--requirement=./dev_requirements.txt"
