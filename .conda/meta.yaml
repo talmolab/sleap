@@ -16,12 +16,12 @@ source:
   path: ../
 
 build:
-  number: 3
+  number: 0
 
 requirements:
   host:
     - conda-forge::python ==3.7
-    - anaconda::numpy >=1.19.5,<1.23.0
+    - numpy >=1.19.5,<1.23.0  # Linux likes anaconda, windows likes conda-forge
     - conda-forge::cudatoolkit ==11.3.1
     - conda-forge::cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
@@ -66,7 +66,7 @@ requirements:
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::networkx
-    - anaconda::numpy >=1.19.5,<1.23.0
+    - numpy >=1.19.5,<1.23.0  # Linux likes anaconda, windows likes conda-forge
     - conda-forge::opencv
     - conda-forge::pandas
     - conda-forge::pillow >=8.3.2
