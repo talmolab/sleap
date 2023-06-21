@@ -20,88 +20,71 @@ build:
 
 requirements:
   host:
-    - python {{ python }}
-    - cudatoolkit ==11.3.1
-    - cudnn=8.2.1
+    - conda-forge::python ==3.7
+    - anaconda::numpy >=1.19.5,<1.23.0
+    - conda-forge::cudatoolkit ==11.3.1
+    - conda-forge::cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
-    - setuptools
-    - packaging
-    - pip
-    - numpy >=1.19.5,<1.23.0
+    - conda-forge::setuptools
+    - conda-forge::packaging
+    - conda-forge::pip
 
     # Only the packages above are required to build, but listing them all ensures no 
     # unnecessary pypi packages are installed via the build script (bld.bat, build.sh)
-    - attrs ==21.4.0
-    - cattrs ==1.1.1
-    - imgaug ==0.4.0
-    - jsmin
-    - jsonpickle ==1.2
-    - networkx
-    - opencv
-    - pandas
-    - pillow >=8.3.1,<=8.4.0
-    - psutil
-    - pykalman
+    - conda-forge::attrs ==21.4.0
+    - conda-forge::cattrs ==1.1.1
+    - conda-forge::h5py ==3.1  # [not win]
+    - conda-forge::imgaug ==0.4.0
+    - conda-forge::jsmin
+    - conda-forge::jsonpickle ==1.2
+    - conda-forge::networkx
+    - conda-forge::opencv
+    - conda-forge::pandas
+    - conda-forge::pillow >=8.3.2
+    - conda-forge::psutil
+    - conda-forge::pykalman
     - conda-forge::pyside2 >=5.12,<5.14
-    - python-rapidjson
-    - pyyaml
-    - pyzmq
-    - qtpy >=2.0.1
-    - rich
-    - scipy >=1.4.1,<=1.9.0
-    - scikit-image
-    - scikit-learn ==1.0
-    - scikit-video
-    - seaborn
+    - conda-forge::python-rapidjson
+    - conda-forge::pyyaml
+    - conda-forge::pyzmq
+    - conda-forge::qtpy >=2.0.1
+    - conda-forge::rich
+    - conda-forge::scipy >=1.4.1,<=1.9.0
+    - conda-forge::scikit-image
+    - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-video
+    - conda-forge::seaborn
   run:
-    - python {{ python }}
-    - attrs ==21.4.0
-    - cattrs ==1.1.1
-    - cudatoolkit ==11.3.1
-    - cudnn=8.2.1
+    - conda-forge::python ==3.7
+    - conda-forge::attrs ==21.4.0
+    - conda-forge::cattrs ==1.1.1
+    - conda-forge::cudatoolkit ==11.3.1
+    - conda-forge::cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
-    - imgaug ==0.4.0
-    - jsmin
-    - jsonpickle ==1.2
-    - networkx
-    - {{ pin_compatible('numpy') }}
-    - opencv
-    - pandas
-    - pillow >=8.3.1,<=8.4.0
-    - psutil
-    - pykalman
+    - conda-forge::h5py ==3.1  # [not win]
+    - conda-forge::imgaug ==0.4.0
+    - conda-forge::jsmin
+    - conda-forge::jsonpickle ==1.2
+    - conda-forge::networkx
+    - anaconda::numpy >=1.19.5,<1.23.0
+    - conda-forge::opencv
+    - conda-forge::pandas
+    - conda-forge::pillow >=8.3.2
+    - conda-forge::psutil
+    - conda-forge::pykalman
     - conda-forge::pyside2 >=5.12,<5.14  # To ensure works correctly with QtPy.
-    - python-rapidjson
-    - pyyaml
-    - pyzmq
-    - qtpy >=2.0.1
-    - rich
-    - scipy >=1.4.1,<=1.9.0
-    - scikit-image
-    - scikit-learn ==1.0
-    - scikit-video
-    - seaborn
-    - tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10, sleap channel has 2.6.3
-    - tensorflow-hub
-
-  # run_constrained:
-  #   # Found that we had double installed certain packages with pypi/conda which might be
-  #   # caused by dependencies installing different versions of a package, so let's be 
-  #   # explicit:
-  #   - attrs >=21.2.0,<=21.4.0
-  #   - cattrs ==1.1.1
-  #   - cudatoolkit ==11.3.1
-  #   - cudnn=8.2.1
-  #   - nvidia::cuda-nvcc=11.3
-  #   - imgaug ==0.4.0
-  #   - jsonpickle ==1.2
-  #   - {{ pin_compatible('numpy') }}
-  #   - pillow >=8.3.1,<=8.4.0
-  #   - pyside2 >=5.12  # To ensure application works correctly with QtPy.
-  #   - qtpy >=2.0.1
-  #   - scipy >=1.4.1,<=1.9.0
-  #   - scikit-learn ==1.0
-  #   - tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
+    - conda-forge::python-rapidjson
+    - conda-forge::pyyaml
+    - conda-forge::pyzmq
+    - conda-forge::qtpy >=2.0.1
+    - conda-forge::rich
+    - conda-forge::scipy >=1.4.1,<=1.9.0
+    - conda-forge::scikit-image
+    - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-video
+    - conda-forge::seaborn
+    - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10, sleap channel has 2.6.3
+    - conda-forge::tensorflow-hub
 
 test:
   imports:

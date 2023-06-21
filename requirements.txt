@@ -6,9 +6,9 @@ ndx-pose
 nixio>=1.5.3  # Constrain put on by @jgrewe from G-Node
 qimage2ndarray  # ==1.9.0
 segmentation-models
-# tensorflow >=2.0,<2.11  # Anything above 2.10 is not supported on the GPU on Windows Native
-# tensorflow-hub
+tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
+tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64'
 
 # Conda installing results in https://github.com/h5py/h5py/issues/2037
-h5py<3.2  # Newer versions result in error above
+h5py<3.2; sys_platform == 'win32'  # Newer versions result in error above, linking issue in Linux
 pynwb>2.0.0  # Required by ndx-pose

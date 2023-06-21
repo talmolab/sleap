@@ -1,5 +1,9 @@
 name: sleap
 
+channels:
+    - conda-forge
+    - anaconda
+
 dependencies:
     # Needed for the build
     - conda-build

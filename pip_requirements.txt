@@ -31,7 +31,3 @@ scikit-image
 scikit-learn ==1.0.*
 scikit-video
 seaborn
-# tensorflow <2.11; platform_machine != 'arm64'  # Anything above 2.10 is not supported.
-# tensorflow-hub
-tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
-tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64'

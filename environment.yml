@@ -1,39 +1,47 @@
+# Use this environment file if your computer has a nvidia GPU.
+
 name: sleap
+
+channels:
+    - conda-forge
+    - nvidia
+    - sleap
+    - anaconda
 
 dependencies:
     # Packages SLEAP uses directly
-    - attrs >=21.2.0  #,<=21.4.0
-    - cattrs ==1.1.1
-    - imgaug ==0.4.0
+    - conda-forge::attrs >=21.2.0  #,<=21.4.0
+    - conda-forge::cattrs ==1.1.1
+    - conda-forge::imgaug ==0.4.0
     - conda-forge::jsmin
-    - jsonpickle ==1.2
-    - networkx
-    - numpy >=1.19.5,<1.23.0
-    - opencv
-    - pandas
-    - pip
-    - pillow >=8.3.1,<=8.4.0
-    - psutil
+    - conda-forge::jsonpickle ==1.2
+    - conda-forge::networkx
+    - anaconda::numpy >=1.19.5,<1.23.0
+    - conda-forge::opencv
+    - conda-forge::pandas
+    - conda-forge::pip
+    - conda-forge::pillow #>=8.3.1,<=8.4.0
+    - conda-forge::psutil
     - conda-forge::pykalman
-    - pyside2 >=5.12  # To ensure application works correctly with QtPy.
-    - python ==3.7
-    - python-rapidjson
-    - pyyaml
-    - pyzmq
-    - qtpy >=2.0.1
-    - rich
-    - scipy >=1.4.1,<=1.9.0
-    - scikit-image
-    - scikit-learn ==1.0
+    - conda-forge::pyside2 >=5.12  # To ensure application works correctly with QtPy.
+    - conda-forge::python ==3.7
+    - conda-forge::python-rapidjson
+    - conda-forge::pyyaml
+    - conda-forge::pyzmq
+    - conda-forge::qtpy >=2.0.1
+    - conda-forge::rich
+    - conda-forge::scipy >=1.4.1,<=1.9.0
+    - conda-forge::scikit-image
+    - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-video
-    - seaborn
-    # - tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
-    - tensorflow-hub
+    - conda-forge::seaborn
+    - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
+    - conda-forge::tensorflow-hub
 
     # Packages required by tensorflow to find/use GPUs
-    - cudatoolkit ==11.3.1
+    - conda-forge::cudatoolkit ==11.3.1
     # "==" results in package not found
-    - cudnn=8.2.1
+    - conda-forge::cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
 
     - pip:  

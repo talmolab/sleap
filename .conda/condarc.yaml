@@ -2,3 +2,4 @@ channels:
   - conda-forge
   - nvidia
   - sleap
+  - anaconda
