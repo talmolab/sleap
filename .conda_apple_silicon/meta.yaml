@@ -22,34 +22,68 @@ source:
   path: ../
 
 requirements:
-  host:
-    - python=3.9
-    - shapely=1.7.1
-    - conda-forge::h5py=3.6.0
-    - conda-forge::numpy=1.22.3
-    - scipy=1.7.3
-    - pillow=8.4.0
-    - apple::tensorflow-deps=2.9.0
-    - conda-forge::pyside2=5.15.5
-    - conda-forge::opencv=4.6.0
-    - qtpy=2.0.1
-    - conda-forge::pip!=22.0.4
+  host:  
+    - conda-forge::python ~=3.9
+    - anaconda::numpy >=1.19.5,<1.23.0
+    - conda-forge::setuptools
+    - conda-forge::packaging
+    - conda-forge::pip
+
+    # Only the packages above are required to build, but listing them all ensures no 
+    # unnecessary pypi packages are installed via the build script (bld.bat, build.sh)
+    - conda-forge::attrs >=21.2.0
+    - conda-forge::cattrs ==1.1.1
+    - conda-forge::h5py
+    - conda-forge::imgaug ==0.4.0
+    - conda-forge::jsmin
+    - conda-forge::jsonpickle ==1.2
+    - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
+    - conda-forge::networkx
+    - conda-forge::opencv
+    - conda-forge::pandas
+    - conda-forge::pillow
+    - conda-forge::psutil
+    - conda-forge::pykalman
+    - conda-forge::pyside2 >=5.12
+    - conda-forge::python-rapidjson
+    - conda-forge::pyyaml
+    - conda-forge::pyzmq
+    - conda-forge::qtpy >=2.0.1
+    - conda-forge::rich
+    - conda-forge::scipy >=1.4.1,<=1.9.0
+    - conda-forge::scikit-image
+    - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-video
+    - conda-forge::seaborn
 
   run:
-    - python=3.9
-    - shapely=1.7.1
-    - conda-forge::h5py=3.6.0
-    - conda-forge::numpy=1.22.3
-    - scipy=1.7.3
-    - pillow=8.4.0
-    - apple::tensorflow-deps=2.9.0
-    - conda-forge::pyside2=5.15.5
-    - conda-forge::opencv=4.6.0
-    - qtpy=2.0.1
-    - conda-forge::pip!=22.0.4
-
-  run_constrained:
-    - pyqt==9999999999
+    - conda-forge::python ~=3.9
+    - conda-forge::attrs >=21.2.0
+    - conda-forge::cattrs ==1.1.1
+    - conda-forge::h5py
+    - conda-forge::imgaug ==0.4.0
+    - conda-forge::jsmin
+    - conda-forge::jsonpickle ==1.2
+    - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
+    - conda-forge::networkx
+    - anaconda::numpy >=1.19.5,<1.23.0
+    - conda-forge::opencv
+    - conda-forge::pandas
+    - conda-forge::pillow
+    - conda-forge::psutil
+    - conda-forge::pykalman
+    - conda-forge::pyside2 >=5.12
+    - conda-forge::python-rapidjson
+    - conda-forge::pyyaml
+    - conda-forge::pyzmq
+    - conda-forge::qtpy >=2.0.1
+    - conda-forge::rich
+    - conda-forge::scipy >=1.4.1,<=1.9.0
+    - conda-forge::scikit-image
+    - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-video
+    - conda-forge::seaborn
+    - conda-forge::tensorflow-hub
 
 test:
   imports:
