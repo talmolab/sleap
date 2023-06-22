@@ -18,7 +18,7 @@ pillow>=8.3.1,<=8.4.0
 psutil
 pykalman==0.9.5
 PySide2>=5.13.2,<=5.14.1; platform_machine != 'arm64'
-PySide2>=5.13.2,<=5.15.5; sys_platform == 'darwin' and platform_machine == 'arm64'
+PySide6; sys_platform == 'darwin' and platform_machine == 'arm64'
 python-rapidjson
 pyyaml
 pyzmq
@@ -31,3 +31,4 @@ scikit-image
 scikit-learn ==1.0.*
 scikit-video
 seaborn
+tensorflow-hub
