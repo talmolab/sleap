@@ -1,4 +1,4 @@
-# This file contains the minimal requirements to be installed by conda.
+# This file contains the minimal requirements to be installed via pip when using conda.
 
 # No conda packages for these
 imgstore<0.3.0  # 0.3.3 results in https://github.com/O365/python-o365/issues/591
