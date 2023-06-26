@@ -75,11 +75,11 @@ jobs:
       #   shell: bash -l {0}
       #   run: |
       #     conda build .conda --output-folder build
-      - name: Build conda package (Windows)
-        if: matrix.os == 'windows-2022'
-        shell: powershell
-        run: |
-          conda build .conda --output-folder build
+      # - name: Build conda package (Windows)
+      #   if: matrix.os == 'windows-2022'
+      #   shell: powershell
+      #   run: |
+      #     conda build .conda --output-folder build
       - name: Build conda package (Mac)
         if: matrix.os == 'macos-latest'
         shell: bash -l {0}
@@ -111,17 +111,23 @@ jobs:
         run: |
           yes 2>/dev/null | anaconda login --username sleap --password "$ANACONDA_LOGIN" || true
       
-      - name: Upload conda package (Windows/dev)
-        if: matrix.os == 'windows-2022'
-        shell: powershell
-        run: |
-          anaconda -v upload "build\win-64\*.tar.bz2" --label dev
+      # - name: Upload conda package (Windows/dev)
+      #   if: matrix.os == 'windows-2022'
+      #   shell: powershell
+      #   run: |
+      #     anaconda -v upload "build\win-64\*.tar.bz2" --label dev
       
-      - name: Upload conda package (Ubuntu/dev)
-        if: matrix.os == 'ubuntu-22.04'
+      # - name: Upload conda package (Ubuntu/dev)
+      #   if: matrix.os == 'ubuntu-22.04'
+      #   shell: bash -l {0}
+      #   run: |
+      #     anaconda -v upload build/linux-64/*.tar.bz2 --label dev
+      
+      - name: Upload conda package (Mac/dev)
+        if: matrix.os == 'macos-latest'
         shell: bash -l {0}
         run: |
-          anaconda -v upload build/linux-64/*.tar.bz2 --label dev
+          anaconda -v upload build/osx-64/*.tar.bz2 --label dev
       
       - name: Logout from Anaconda
         shell: bash -l {0}
