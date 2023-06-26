@@ -16,7 +16,7 @@ source:
   path: ../
 
 build:
-  number: 4
+  number: 5
 
 requirements:
   host:
@@ -82,7 +82,6 @@ requirements:
     - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
-    - conda-forge::setuptools  # In case user's pc needs to build a pip package
     - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10, sleap channel has 2.6.3
     - conda-forge::tensorflow-hub
 
