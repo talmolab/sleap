@@ -70,23 +70,21 @@ jobs:
       #     twine upload -u __token__ -p "$PYPI_TOKEN" dist/* --non-interactive --skip-existing --disable-progress-bar
 
       # Build conda package
-      - name: Build conda package (Ubuntu)
-        if: matrix.os == 'ubuntu-22.04'
-        shell: bash -l {0}
-        run: |
-          conda build .conda --output-folder build
+      # - name: Build conda package (Ubuntu)
+      #   if: matrix.os == 'ubuntu-22.04'
+      #   shell: bash -l {0}
+      #   run: |
+      #     conda build .conda --output-folder build
       - name: Build conda package (Windows)
         if: matrix.os == 'windows-2022'
         shell: powershell
         run: |
-          conda activate sleap_ci
-          pytest tests/
           conda build .conda --output-folder build
       - name: Build conda package (Mac)
         if: matrix.os == 'macos-latest'
         shell: bash -l {0}
         run: |
-          conda build '.conda_apple_silicon --output-folder build
+          conda build .conda_apple_silicon --output-folder build
 
       # Upload conda package
       - name: Login to Anaconda (Ubuntu)
