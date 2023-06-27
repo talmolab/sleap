@@ -9,6 +9,4 @@ dependencies:
     - conda-build
     - anaconda-client
     - conda-verify
-    - pip  # Maybe not needed?
-
-    
+    - twine
