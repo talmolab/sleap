@@ -2,7 +2,7 @@
 
 SLEAP can be installed as a Python package on Windows, Linux, Mac OS X, and Mac OS Apple Silicon. We currently provide {ref}`experimental support for Apple Silicon Macs <apple-silicon>`.
 
-SLEAP requires many complex dependencies, so we **strongly** recommend using [Mambaforge](https://github.com/conda-forge/miniforge#mambaforge) to install it in its own isolated environment. See {ref}`Installing Mambaforge<mambaforge>` below for more instructions.
+SLEAP requires many complex dependencies, so we **strongly** recommend using [Mambaforge](https://mamba.readthedocs.io/en/latest/installation.html) to install it in its own isolated environment. See {ref}`Installing Mambaforge<mambaforge>` below for more instructions.
 
 The newest version of SLEAP can always be found in the [Releases page](https://github.com/talmolab/sleap/releases).
 
@@ -44,7 +44,7 @@ SLEAP can be installed on newer Apple Silicon Macs by following these instructio
 
 **Anaconda** is a Python environment manager that makes it easy to install SLEAP and its necessary dependencies without affecting other Python software on your computer.
 
-**Mambaforge** is a lightweight installer of Anaconda with speedy package resolution that we recommend. To install it:
+[**Mambaforge**](https://mamba.readthedocs.io/en/latest/installation.html) is a lightweight installer of Anaconda with speedy package resolution that we recommend. To install it:
 
 1. Go to: https://github.com/conda-forge/miniforge#mambaforge
 2. Download the latest version for your OS.
