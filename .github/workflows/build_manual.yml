@@ -53,8 +53,8 @@ jobs:
           which python
           conda info
 
-      # Build pip wheel (Ubuntu)
-      - name: Build pip wheel (Ubuntu)
+      # Build pip wheel (Not Windows)
+      - name: Build pip wheel (Not Windows)
         if: matrix.os != 'windows-2022'
         shell: bash -l {0}
         run: |
@@ -83,7 +83,7 @@ jobs:
         run: |
           conda build .conda --output-folder build
 
-      # Build conda package (Windows)
+      # Build conda package (Mac)
       - name: Build conda package (Mac)
         if: matrix.os == 'macos-latest'
         shell: bash -l {0}
