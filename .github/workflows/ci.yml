@@ -67,6 +67,12 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-22.04", "windows-2022", "macos-latest"]
+        include:
+          # Use this environment file as default
+          - env_file: environment_no_cuda.yml
+          # Use this environment file for mac
+          - os: macos-latest
+            env_file: environment_apple_silicon.yml
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -75,7 +81,7 @@ jobs:
         # https://github.com/mamba-org/setup-micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
-          environment-file: environment_no_cuda.yml
+          environment-file: ${{ env_file }}
           init-shell: >-
             bash
             powershell
@@ -91,13 +97,14 @@ jobs:
           pip freeze
       
       # Test environment
-      - name: Test with pytest (Windows)
+      - name: Test with pytest (Windows and Mac)
         run: |
           pytest  --durations=-1
-      # - name: Test with pytest (Ubuntu)
-      #   if: matrix.os == 'ubuntu-22.04'
-      #   run: |
-      #     pytest --cov=sleap --cov-report=xml --durations=-1 tests/
+      - name: Test with pytest (Ubuntu)
+        if: matrix.os == 'ubuntu-22.04'
+        shell: bash
+        run: |
+          pytest --cov=sleap --cov-report=xml --durations=-1 tests/
       # - name: Test with pytest (Mac)
       #   if: matrix.os == 'macos-latest'
       #   run: |
