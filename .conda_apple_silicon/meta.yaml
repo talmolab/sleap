@@ -16,7 +16,7 @@ about:
   summary: {{ data.get('description') }}
 
 build:
-  number: 0
+  number: 2
 
 source:
   path: ../
@@ -83,7 +83,6 @@ requirements:
     - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
-    - conda-forge::setuptools  # In case user's pc needs to build a pip package
     - conda-forge::tensorflow-hub
 
 test:
