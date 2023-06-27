@@ -70,12 +70,10 @@ jobs:
         include:
           # Default values
           - env_file: environment_no_cuda.yml
-          - env_hash: ${{ hashFiles('environment_no_cuda.yml') }}
           - test_args: --durations=-1 tests/
           # Mac specific values
           - os: macos-latest
             env_file: environment_apple_silicon.yml
-            env_hash: ${{ hashFiles('environment_apple_silicon.yml') }}
           # Ubuntu specific values
           - os: ubuntu-22.04
             test_args: --cov=sleap --cov-report=xml --durations=-1 tests/
@@ -93,7 +91,7 @@ jobs:
             bash
             powershell
           cache-environment: true
-          cache-environment-key: environment-${{ runner.os }}-${{ env_hash }}-${{ hashFiles('requirements.txt', 'dev_requirements.txt', 'setup.py') }}
+          cache-environment-key: environment-${{ runner.os }}--${{ hashFiles( f"{env_file}", 'requirements.txt', 'dev_requirements.txt', 'setup.py') }}
           post-cleanup: all
       
       # Print environment info
