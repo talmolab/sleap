@@ -20,7 +20,7 @@ jobs:
           - condarc: .conda/condarc.yaml
           # Use special condarc if macos
           - os: "macos-latest"
-            condarc: .conda_apple_silicon/condarc.yaml
+            condarc: .conda_mac/condarc.yaml
     steps:
       # Setup
       - uses: actions/checkout@v2
@@ -82,7 +82,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         shell: bash -l {0}
         run: |
-          conda build .conda_apple_silicon --output-folder build
+          conda build .conda_mac --output-folder build
 
       # Login to conda (Ubuntu)
       - name: Login to Anaconda (Ubuntu)
