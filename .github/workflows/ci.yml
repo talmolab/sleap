@@ -29,9 +29,10 @@ jobs:
     name: Type Check
     runs-on: "ubuntu-20.04"
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout repo
+        uses: actions/checkout@v3
       - name: Set up Python 3.7
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: 3.7
       - name: Install Dependencies
@@ -46,9 +47,10 @@ jobs:
     name: Lint
     runs-on: "ubuntu-20.04"
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout repo
+        uses: actions/checkout@v3
       - name: Set up Python 3.7
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: 3.7
       - name: Install Dependencies
@@ -82,26 +84,24 @@ jobs:
       
       # Print environment info
       - name: Print environment info
-        shell: bash -l {0}
         run: |
           which python
           micromamba info
-      - name: Micromamba list
-        run: micromamba list
+          micromamba list
+          pip freeze
       
       # Test environment
       - name: Test with pytest (Windows)
-        if: matrix.os == 'windows-2022'
         run: |
           pytest  --durations=-1
-      - name: Test with pytest (Ubuntu)
-        if: matrix.os == 'ubuntu-22.04'
-        run: |
-          pytest --cov=sleap --cov-report=xml --durations=-1 tests/
-      - name: Test with pytest (Mac)
-        if: matrix.os == 'macos-latest'
-        run: |
-          pytest --durations=-1 tests/
+      # - name: Test with pytest (Ubuntu)
+      #   if: matrix.os == 'ubuntu-22.04'
+      #   run: |
+      #     pytest --cov=sleap --cov-report=xml --durations=-1 tests/
+      # - name: Test with pytest (Mac)
+      #   if: matrix.os == 'macos-latest'
+      #   run: |
+      #     pytest --durations=-1 tests/
 
       # Upload coverage
       - name: Upload coverage
