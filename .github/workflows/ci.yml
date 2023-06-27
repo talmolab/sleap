@@ -81,7 +81,7 @@ jobs:
         # https://github.com/mamba-org/setup-micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
-          environment-file: ${{ env_file }}
+          environment-file: ${{ matrix.env_file }}
           init-shell: >-
             bash
             powershell
