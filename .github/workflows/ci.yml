@@ -65,13 +65,6 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-22.04", "windows-2022", "macos-latest"]
-        # We might not need this since the python version is listed in the environment.
-        include:
-          # Use 3.7 as default
-          - python_version: 3.7
-          # Use 3.9 for macos
-          - os: "macos-latest"
-            python_version: 3.9
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -87,7 +80,6 @@ jobs:
         # https://github.com/conda-incubator/setup-miniconda
         uses: conda-incubator/setup-miniconda@v2.0.1
         with:
-          python-version: ${{ matrix.python_version }}
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
           environment-file: environment_no_cuda.yml
           activate-environment: sleap_ci
