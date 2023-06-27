@@ -66,32 +66,25 @@ jobs:
       matrix:
         os: ["ubuntu-22.04", "windows-2022", "macos-latest"]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Cache conda
-        uses: actions/cache@v1
-        env:
-          # Increase this value to reset cache if environment_no_cuda.yml has not changed
-          CACHE_NUMBER: 0
+      - name: Setup Micromamba
+        # https://github.com/mamba-org/setup-micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
-          path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_no_cuda.yml', 'requirements.txt') }}
-      - name: Setup Miniconda
-        # https://github.com/conda-incubator/setup-miniconda
-        uses: conda-incubator/setup-miniconda@v2.0.1
-        with:
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
           environment-file: environment_no_cuda.yml
-          activate-environment: sleap_ci
+          init-shell: >-
+            bash
+            powershell
+          cache-environment: true
+          post-cleanup: 'all'
       
       # Print environment info
       - name: Print environment info
         shell: bash -l {0}
         run: |
           which python
-          conda info
-      - name: Conda list
-        run: conda list
+          micromamba info
+      - name: Micromamba list
+        run: micromamba list
       
       # Test environment
       - name: Test with pytest (Windows)
