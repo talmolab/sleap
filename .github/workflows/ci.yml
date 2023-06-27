@@ -15,6 +15,7 @@ on:
     branches:
       - master
       - develop
+      - liezl/update_ci_workflow
     paths:
       - "sleap/**"
       - "tests/**"
