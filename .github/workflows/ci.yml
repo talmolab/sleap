@@ -75,7 +75,7 @@ jobs:
           init-shell: >-
             bash
             powershell
-          cache-environment: true
+          cache-environment: false
           post-cleanup: 'all'
       
       # Print environment info
