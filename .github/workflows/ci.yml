@@ -63,7 +63,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-20.04", "windows-2019"]
+        os: ["ubuntu-22.04", "windows-2022", "macos-latest"]
+        # We might not need this since the python version is listed in the environment.
+        include:
+          # Use 3.7 as default
+          - python_version: 3.7
+          # Use 3.9 for macos
+          - os: "macos-latest"
+            python_version: 3.9
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -79,42 +86,38 @@ jobs:
         # https://github.com/conda-incubator/setup-miniconda
         uses: conda-incubator/setup-miniconda@v2.0.1
         with:
-          python-version: 3.7
+          python-version: ${{ matrix.python_version }}
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
           environment-file: environment_no_cuda.yml
           activate-environment: sleap_ci
+      
+      # Print environment info
       - name: Print environment info
         shell: bash -l {0}
         run: |
           which python
           conda info
       - name: Conda list
-        if: matrix.os != 'windows-2019'
-        shell: pwsh
         run: conda list
+      
+      # Test environment
       - name: Test with pytest (Windows)
-        if: matrix.os == 'windows-2019'
-        shell: bash -l {0}
+        if: matrix.os == 'windows-2022'
         run: |
           pytest  --durations=-1
       - name: Test with pytest (Ubuntu)
-        if: matrix.os == 'ubuntu-20.04'
-        shell:
-          bash -l {0}
-          # https://pytest-qt.readthedocs.io/en/latest/troubleshooting.html#github-actions
-          # sudo apt-get install xvfb libxkbcommon-x11-0
-          # sudo apt install libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
-          # export DISPLAY=":99.0"
-          # /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX
-          # xvfb-run pytest --cov=sleap --cov-report=xml tests/
+        if: matrix.os == 'ubuntu-22.04'
         run: |
-          sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
-          sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
-          export DISPLAY=":1"
-          xvfb-run pytest --cov=sleap --cov-report=xml --durations=-1 tests/
+          pytest --cov=sleap --cov-report=xml --durations=-1 tests/
+      - name: Test with pytest (Mac)
+        if: matrix.os == 'macos-latest'
+        run: |
+          pytest --durations=-1 tests/
+
+      # Upload coverage
       - name: Upload coverage
         uses: codecov/codecov-action@v1
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
