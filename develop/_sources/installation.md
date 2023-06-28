@@ -139,7 +139,7 @@ mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.1
 
 3. Finally, install from the environment file (differs based on OS and GPU):
 
-   **Windows**, **Linux**, and **Mac OS X**
+   **Windows** and **Linux**
 
    ```bash
    mamba env create -f environment.yml -n sleap
@@ -151,10 +151,10 @@ mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.1
    mamba env create -f environment_no_cuda.yml -n sleap
    ```
 
-   **Mac OS Apple Silicon**
+   **Mac OS X** and **Apple Silicon**
 
    ```bash
-   mamba env create -f environment_apple_silicon.yml -n sleap
+   mamba env create -f environment_mac.yml -n sleap
    ```
 
    This is the **recommended method for development**.
