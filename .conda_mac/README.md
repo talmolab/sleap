@@ -9,7 +9,7 @@ conda env create -f environment_build.yml -n sleap_build && conda activate sleap
 And finally, run the build command pointing to this directory:
 
 ```
-conda build .conda_apple_silicon --output-folder build -c conda-forge -c anaconda
+conda build .conda_mac --output-folder build -c conda-forge -c anaconda
 ```
 
 To install the local package:
