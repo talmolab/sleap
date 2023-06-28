@@ -1,6 +1,6 @@
-# Use this environment file if your computer does not have a nvidia GPU.
-# This environment file has exactly the same dependencies listed as environment.yaml, 
-# minus the packages required by tensorflow to find/use GPUs. 
+# Use this environment file if your computer does not have a nvidia GPU and runs Windows
+# or Linux. This environment file has exactly the same dependencies listed as 
+# environment.yaml, minus the packages required by tensorflow to find/use GPUs. 
 
 name: sleap_ci
 
