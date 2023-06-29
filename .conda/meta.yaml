@@ -16,11 +16,11 @@ source:
   path: ../
 
 build:
-  number: 7
+  number: 8
 
 requirements:
   host:
-    - conda-forge::python ==3.7
+    - conda-forge::python ~=3.7
     - numpy >=1.19.5,<1.23.0  # Linux likes anaconda, windows likes conda-forge
     - conda-forge::cudatoolkit ==11.3.1
     - conda-forge::cudnn=8.2.1
@@ -54,7 +54,7 @@ requirements:
     - conda-forge::scikit-video
     - conda-forge::seaborn
   run:
-    - conda-forge::python ==3.7
+    - conda-forge::python ~=3.7
     - conda-forge::attrs ==21.4.0
     - conda-forge::cattrs ==1.1.1
     - conda-forge::cudatoolkit ==11.3.1
