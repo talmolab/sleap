@@ -108,15 +108,6 @@ jobs:
         shell: bash -l {0}
         run: |
           pytest ${{ matrix.test_args }}
-      # - name: Test with pytest (Ubuntu)
-      #   if: matrix.os == 'ubuntu-22.04'
-      #   shell: bash
-      #   run: |
-      #     pytest ${{ matrix.test_args }}
-      # - name: Test with pytest (Mac)
-      #   if: matrix.os == 'macos-latest'
-      #   run: |
-      #     pytest --durations=-1 tests/
 
       # Upload coverage
       - name: Upload coverage
