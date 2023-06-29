@@ -15,7 +15,6 @@ on:
     branches:
       - master
       - develop
-      - liezl/update_ci_workflow
     paths:
       - "sleap/**"
       - "tests/**"
@@ -90,8 +89,6 @@ jobs:
           init-shell: >-
             bash
             powershell
-          cache-environment: true
-          cache-environment-key: environment-${{ runner.os }}-${{ hashFiles( format('{0}', matrix.env_file), 'requirements.txt', 'dev_requirements.txt', 'setup.py') }}
           post-cleanup: all
       
       # Print environment info
