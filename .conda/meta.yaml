@@ -20,7 +20,7 @@ build:
 
 requirements:
   host:
-    - conda-forge::python ~=3.7
+    - conda-forge::python ==3.7.12  # Run into _MAX_WINDOWS_WORKERS not found if <
     - numpy >=1.19.5,<1.23.0  # Linux likes anaconda, windows likes conda-forge
     - conda-forge::cudatoolkit ==11.3.1
     - conda-forge::cudnn=8.2.1
@@ -54,7 +54,7 @@ requirements:
     - conda-forge::scikit-video
     - conda-forge::seaborn
   run:
-    - conda-forge::python ~=3.7
+    - conda-forge::python ==3.7.12  # Run into _MAX_WINDOWS_WORKERS not found if <
     - conda-forge::attrs ==21.4.0
     - conda-forge::cattrs ==1.1.1
     - conda-forge::cudatoolkit ==11.3.1

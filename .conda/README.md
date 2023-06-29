@@ -9,13 +9,13 @@ conda env create -f environment_build.yml -n sleap_build && conda activate sleap
 And finally, run the build command pointing to this directory:
 
 ```
-conda build .conda --output-folder build -c conda-forge -c anaconda
+conda build .conda --output-folder build -c conda-forge -c nvidia -c https://conda.anaconda.org/sleap/ -c anaconda
 ```
 
 To install the local package:
 
 ```
-conda create -n sleap_0 -c conda-forge -c nvidia -c ./build -c sleap -c anaconda sleap=x.x.x
+conda create -n sleap_0 -c conda-forge -c nvidia -c ./build -c https://conda.anaconda.org/sleap/ -c anaconda sleap=x.x.x
 ```
 
 replacing x.x.x with the version of SLEAP that you just built.
