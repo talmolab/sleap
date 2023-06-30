@@ -25,7 +25,7 @@ dependencies:
     - conda-forge::psutil
     - conda-forge::pykalman
     - conda-forge::pyside2 >=5.12  # To ensure application works correctly with QtPy.
-    - conda-forge::python ~=3.7
+    - conda-forge::python ~=3.7    # Run into _MAX_WINDOWS_WORKERS not found if ==
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
