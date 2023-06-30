@@ -19,6 +19,13 @@ Developer API
    sleap.message
    sleap.skeleton
    sleap.util
+   sleap.info.align
+   sleap.info.feature_suggestions
+   sleap.info.labels
+   sleap.info.metrics
+   sleap.info.summary
+   sleap.info.trackcleaner
+   sleap.info.write_tracking_h5
    sleap.io.asyncvideo
    sleap.io.convert
    sleap.io.dataset
@@ -43,13 +50,6 @@ Developer API
    sleap.io.format.nix
    sleap.io.format.sleap_analysis
    sleap.io.format.text
-   sleap.info.align
-   sleap.info.feature_suggestions
-   sleap.info.labels
-   sleap.info.metrics
-   sleap.info.summary
-   sleap.info.trackcleaner
-   sleap.info.write_tracking_h5
    sleap.nn.callbacks
    sleap.nn.evals
    sleap.nn.heads
@@ -64,21 +64,6 @@ Developer API
    sleap.nn.training
    sleap.nn.utils
    sleap.nn.viz
-   sleap.nn.architectures.common
-   sleap.nn.architectures.encoder_decoder
-   sleap.nn.architectures.hourglass
-   sleap.nn.architectures.hrnet
-   sleap.nn.architectures.leap
-   sleap.nn.architectures.pretrained_encoders
-   sleap.nn.architectures.resnet
-   sleap.nn.architectures.unet
-   sleap.nn.architectures.upsampling
-   sleap.nn.config.data
-   sleap.nn.config.model
-   sleap.nn.config.optimization
-   sleap.nn.config.outputs
-   sleap.nn.config.training_job
-   sleap.nn.config.utils
    sleap.nn.data.augmentation
    sleap.nn.data.confidence_maps
    sleap.nn.data.dataset_ops
@@ -96,5 +81,20 @@ Developer API
    sleap.nn.data.resizing
    sleap.nn.data.training
    sleap.nn.data.utils
+   sleap.nn.architectures.common
+   sleap.nn.architectures.encoder_decoder
+   sleap.nn.architectures.hourglass
+   sleap.nn.architectures.hrnet
+   sleap.nn.architectures.leap
+   sleap.nn.architectures.pretrained_encoders
+   sleap.nn.architectures.resnet
+   sleap.nn.architectures.unet
+   sleap.nn.architectures.upsampling
+   sleap.nn.config.data
+   sleap.nn.config.model
+   sleap.nn.config.optimization
+   sleap.nn.config.outputs
+   sleap.nn.config.training_job
+   sleap.nn.config.utils
    sleap.nn.tracker.components
    sleap.nn.tracker.kalman
