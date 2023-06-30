@@ -12,25 +12,49 @@ local:
 ---
 ```
 
+````{hint}
+Installation requires entering commands in a terminal. To open one:
+
+**Windows:** Open the *Start menu* and search for the *Miniforge Prompt* (if using Mambaforge) or the *Command Prompt* if not.
+```{note}
+On Windows, our personal preference is to use alternative terminal apps like [Cmder](https://cmder.net) or [Windows Terminal](https://aka.ms/terminal).
+```
+
+**Linux:** Launch a new terminal by pressing <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>.
+
+**Mac:** Launch a new terminal by pressing <kbd>Cmd</kbd> + <kbd>Space</kbd> and searching for _Terminal_.
+
+````
+
 (apple-silicon)=
 
-### Apple Silicon Macs (Pre-Installation)
+### Macs (Pre-Installation)
 
-SLEAP can be installed on newer Apple Silicon Macs by following these instructions:
+SLEAP can be installed on Macs by following these instructions:
 
-1. In addition to being on an Apple Silicon Mac, make sure you're on **macOS Monterey**, i.e., version 12+. We've tested this on a MacBook Pro (14-inch, 2021) running macOS version 12.0.1.
+1. Make sure you're on **macOS Monterey** or later, i.e., version 12+.
 
-2. If you don't have it yet, install **homebrew**, a convenient package manager for Macs (skip this if you can run `brew` from the terminal):
+2. If you don't have it yet, [install **homebrew**](https://brew.sh/), a convenient package manager for Macs (skip this if you can run `brew` from the terminal):
 
    ```bash
    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
    ```
 
-   This might take a little while since it'll also install Xcode (which we'll need later). Once it's finished, run this to enable the `brew` command in your shell, then close and re-open the terminal for it to take effect:
+   This might take a little while since it'll also install Xcode (which we'll need later). Once it's finished, your terminal should give you two extra commands to run listed under **Next Steps**.
+
+   ````{note}
+   We recommend running the commands given in your terminal which will be similar to (but may differ slightly) from the commands below:
+   ```bash
+   echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+   ```
 
    ```bash
-   echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile && eval "$(/opt/homebrew/bin/brew shellenv)"
+   eval "$(/opt/homebrew/bin/brew shellenv)"
    ```
+
+   ````
+
+   Then, close and re-open the terminal for it to take effect.
 
 3. Install wget, a CLI downloading utility (also makes sure your homebrew setup worked):
 
@@ -46,11 +70,13 @@ SLEAP can be installed on newer Apple Silicon Macs by following these instructio
 
 [**Mambaforge**](https://mamba.readthedocs.io/en/latest/installation.html) is a lightweight installer of Anaconda with speedy package resolution that we recommend. To install it:
 
-1. Go to: https://github.com/conda-forge/miniforge#mambaforge
-2. Download the latest version for your OS.
-3. Follow the installer instructions.
+**On Windows**, just click through the installation steps.
 
-**On Windows**, just click through the installation steps. We recommend using the following settings:
+1.  Go to: https://github.com/conda-forge/miniforge#mambaforge
+2.  Download the latest version for your OS.
+3.  Follow the installer instructions.
+
+We recommend using the following settings:
 
 - Install for: All Users (requires admin privileges)
 - Destination folder: `C:\mambaforge`
@@ -85,19 +111,9 @@ wget -nc https://github.com/conda-forge/miniforge/releases/latest/download/Mamba
 
 ## Installation methods
 
-````{hint}
-Installation requires entering commands in a terminal. To open one:
+SLEAP can be installed three different ways: via {ref}`conda package<condapackage>`, {ref}`conda from source<condasource>`, or {ref}`pip package<pippackage>`. Select one of the methods below to install SLEAP. We recommend {ref}`conda package<condapackage>`.
 
-**Windows:** Open the *Start menu* and search for the *Miniforge Prompt* (if using Mambaforge) or the *Command Prompt* if not.
-```{note}
-On Windows, our personal preference is to use alternative terminal apps like [Cmder](https://cmder.net) or [Windows Terminal](https://aka.ms/terminal).
-```
-
-**Linux:** Launch a new terminal by pressing <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>.
-
-**Mac:** Launch a new terminal by pressing <kbd>Cmd</kbd> + <kbd>Space</kbd> and searching for _Terminal_.
-
-````
+(condapackage)=
 
 ### `conda` package
 
@@ -120,6 +136,8 @@ mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.1
 - If you already have CUDA installed on your system, this will not conflict with it.
 - This will also work in CPU mode if you don't have a GPU on your machine.
 ```
+
+(condasource)=
 
 ### `conda` from source
 
@@ -164,24 +182,54 @@ mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.1
 - Change the `-n sleap` in the command to create an environment with a different name (e.g., `-n sleap_develop`).
 ```
 
+(pippackage)=
+
 ### `pip` package
 
-```bash
-pip install sleap==1.3.1
-```
+Although you do not need Mambaforge installed to perform a `pip install`, we recommend {ref}`installing Mambaforge<mambaforge>` to create a new environment where we can isolate the `pip install`. If you are working on **Google Colab**, skip to step 3 to perform the `pip install` without using a conda environment.
 
-This works on **any OS except Apple silicon** and on **Google Colab**.
+1. Otherwise, create a new conda environment where we will `pip install sleap`:
 
-```{note}
-- Requires Python 3.7 or 3.8.
-- To enable GPU support, make sure that you have **CUDA Toolkit v11.3** and **cuDNN v8.2** installed.
-```
+   either without GPU support:
 
-```{warning}
-This will uninstall existing libraries and potentially install conflicting ones.
+   ```bash
+   mamba create --name sleap pip python=3.7.12
+   ```
 
-We strongly recommend that you **only use this method if you know what you're doing**!
-```
+   or with GPU support:
+
+   ```bash
+   mamba create --name sleap pip python=3.7.12 cudatoolkit=11.3 cudnn=8.2
+   ```
+
+2. Then activate the environment to isolate the `pip install` from other environments on your computer:
+
+   ```bash
+   mamba activate sleap
+   ```
+
+   ```{warning}
+   Refrain from installing anything into the `base` environment. Always create a new environment to install new packages.
+   ```
+
+3. Finally, we can perform the `pip install`:
+
+   ```bash
+   pip install sleap==1.3.1
+   ```
+
+   This works on **any OS except Apple silicon** and on **Google Colab**.
+
+   ```{note}
+   - Requires Python 3.7
+   - To enable GPU support, make sure that you have **CUDA Toolkit v11.3** and **cuDNN v8.2** installed.
+   ```
+
+   ```{warning}
+   This will uninstall existing libraries and potentially install conflicting ones.
+
+   We strongly recommend that you **only use this method if you know what you're doing**!
+   ```
 
 ## Testing that things are working
 
