@@ -173,10 +173,10 @@ def compute_oks(
         Ronch & Perona. "Benchmarking and Error Diagnosis in Multi-Instance Pose
         Estimation." ICCV (2017).
     """
-    if points_gt.ndim != 3 or points_pr.ndim != 3:
-        raise ValueError(
-            "Points must be rank-3 with shape (n_instances, n_nodes, n_ed)."
-        )
+    if points_gt.ndim == 2:
+        points_gt = np.expand_dims(points_gt, axis=0)
+    if points_pr.ndim == 2:
+        points_pr = np.expand_dims(points_pr, axis=0)
 
     if scale is None:
         scale = compute_instance_area(points_gt)

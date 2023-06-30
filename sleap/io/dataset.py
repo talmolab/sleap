@@ -2453,6 +2453,7 @@ class Labels(MutableSequence):
         frame_idxs = [lf.frame_idx for lf in lfs]
         frame_idxs.sort()
         first_frame = 0 if all_frames else frame_idxs[0]
+        last_frame = len(video) - 1 if all_frames else frame_idxs[-1]
 
         # Figure out the number of tracks based on number of instances in each frame.
         #
@@ -2476,7 +2477,7 @@ class Labels(MutableSequence):
             # Case 2: We're considering only tracked instances.
             n_tracks = len(self.tracks)
 
-        n_frames = frame_idxs[-1] - first_frame + 1
+        n_frames = last_frame - first_frame + 1
         n_nodes = len(self.skeleton.nodes)
 
         if return_confidence:

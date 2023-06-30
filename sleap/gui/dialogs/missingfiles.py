@@ -234,10 +234,3 @@ class MissingFileTableModel(QtCore.QAbstractTableModel):
             elif orientation == QtCore.Qt.Vertical:
                 return section
         return None
-
-
-# if __name__ == "__main__":
-#     app = QtWidgets.QApplication()
-#     win = MissingFilesDialog(["m:/centered_pair_small.mp4", "m:/small_robot.mp4"])
-#     result = win.exec_()
-#     print(result)

@@ -12,7 +12,7 @@ from sleap.io.video import (
     DummyVideo,
     load_video,
 )
-from tests.fixtures.datasets import TEST_SLP_SIV_ROBOT
+
 from tests.fixtures.videos import (
     TEST_H5_DSET,
     TEST_H5_INPUT_FORMAT,
@@ -495,7 +495,7 @@ def test_reset_video_mp4(small_robot_mp4_vid: Video):
     assert_video_params(video=video, filename=filename, bgr=True, reset=True)
 
 
-def test_reset_video_siv(small_robot_single_image_vid: Video, siv_robot: Labels):
+def test_reset_video_siv(small_robot_single_image_vid: Video, siv_robot):
     video = small_robot_single_image_vid
     filename = video.backend.filename
 
@@ -547,9 +547,50 @@ def test_reset_video_siv(small_robot_single_image_vid: Video, siv_robot: Labels)
         video.backend.reset(filename=filename, filenames=filenames)
     assert_video_params(video=video, filenames=filenames, reset=True)
 
-    # Test reset does not break deserialization of older slp
-    labels: Labels = Labels.load_file(TEST_SLP_SIV_ROBOT)
+    # Test reset does not break deserialization of older slp.
+    labels = siv_robot  # This is actually tested upon passing in the fixture.
     video: Video = labels.video
     filename = labels.video.backend.filename
     labels.video.backend.reset(filename=filename, grayscale=True)
     assert_video_params(video=video, filenames=filenames, grayscale=True, reset=True)
+
+
+def test_singleimagevideo_caching(siv_robot_caching):
+    # Test that older `SingleImageVideo` with type-hinted `caching` can be read in.
+    siv_robot_caching  # This is actually tested upon passing in the fixture.
+
+    # The below tests are for depreciated `SingleImageVideo.CACHING` functionality.
+
+    # With caching
+    filename = siv_robot_caching.video.backend.filename
+    video = Video.from_filename(filename)
+    SingleImageVideo.CACHING = True
+    assert video.backend.test_frame_ is None
+    assert len(video.backend.cache_) == 0
+    assert video.backend.channels_ is None
+
+    assert video.backend.test_frame.shape == (320, 560, 3)
+    assert video.backend.test_frame_ is not None  # Test frame stored!
+    assert len(video.backend.cache_) == 0
+    assert video.backend.channels_ == 3
+
+    assert video[0].shape == (1, 320, 560, 3)
+    assert len(video.backend.cache_) == 1  # Loaded frame stored!
+
+    # No caching
+    video = Video.from_filename(filename)
+    SingleImageVideo.CACHING = False
+    assert video.backend.test_frame_ is None
+    assert len(video.backend.cache_) == 0
+    assert video.backend.channels_ is None
+
+    assert video.backend.test_frame.shape == (320, 560, 3)
+    assert video.backend.test_frame_ is None  # Test frame not stored!
+    assert len(video.backend.cache_) == 0
+    assert video.backend.channels_ == 3
+
+    assert video.shape == (1, 320, 560, 3)
+    assert video.backend.test_frame_ is None  # Test frame not stored!
+
+    assert video[0].shape == (1, 320, 560, 3)
+    assert len(video.backend.cache_) == 0  # Loaded frame not stored!

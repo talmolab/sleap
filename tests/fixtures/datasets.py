@@ -19,7 +19,8 @@ TEST_JSON_MIN_LABELS = "tests/data/json_format_v2/minimal_instance.json"
 TEST_SLP_MIN_LABELS = "tests/data/slp_hdf5/minimal_instance.slp"
 TEST_MAT_LABELS = "tests/data/mat/labels.mat"
 TEST_SLP_MIN_LABELS_ROBOT = "tests/data/slp_hdf5/small_robot_minimal.slp"
-TEST_SLP_SIV_ROBOT = "tests/data/siv_format_v1/robot_siv.slp"
+TEST_SLP_SIV_ROBOT = "tests/data/siv_format_v1/small_robot_siv.slp"
+TEST_SLP_SIV_ROBOT_CACHING = "tests/data/siv_format_v2/small_robot_siv_caching.slp"
 TEST_MIN_TRACKS_2NODE_LABELS = "tests/data/tracks/clip.2node.slp"
 TEST_MIN_TRACKS_13NODE_LABELS = "tests/data/tracks/clip.slp"
 TEST_HDF5_PREDICTIONS = "tests/data/hdf5_format_v1/centered_pair_predictions.h5"
@@ -60,7 +61,23 @@ def min_labels_robot():
 @pytest.fixture
 def siv_robot():
     """Created before grayscale attribute was added to SingleImageVideo backend."""
-    return Labels.load_file(TEST_SLP_SIV_ROBOT)
+    return Labels.load_file(TEST_SLP_SIV_ROBOT, video_search="tests/data/videos/")
+
+
+@pytest.fixture
+def siv_robot_caching():
+    """Created after caching attribute was added to `SingleImageVideo` backend.
+
+    The typehinting of the `caching` attribute (#1243) caused it to be used by cattrs to
+    determine which type of dataclass to use. However, the older datasets containing
+    `SingleImageVideo`s were now being read in as `NumpyVideo`s. Although removing the
+    typehinting from `caching` seems to do the trick (and never made it into an official
+    release), this is a fixture to test that datasets created while `caching` was added
+    into the serialization are read in correctly.
+    """
+    return Labels.load_file(
+        TEST_SLP_SIV_ROBOT_CACHING, video_search="tests/data/videos/"
+    )
 
 
 @pytest.fixture

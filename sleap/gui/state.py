@@ -21,7 +21,7 @@ some specific type.
 """
 
 import inspect
-from typing import Any, Callable, List, Union
+from typing import Any, Callable, List, Union, Optional
 
 
 GSVarType = str
@@ -83,13 +83,15 @@ class GuiState(object):
         """Toggle boolean value for specified key."""
         self[key] = not self.get(key, default=default)
 
-    def increment(self, key: GSVarType, step: int = 1, mod: int = 1, default: int = 0):
+    def increment(
+        self, key: GSVarType, step: int = 1, mod: Optional[int] = None, default: int = 0
+    ):
         """Increment numeric value for specified key.
 
         Args:
             key: The key.
             step: What to add to current value.
-            mod: Wrap value (i.e., apply modulus) if not 1.
+            mod: Wrap value (i.e., apply modulus) if not None.
             default: Set value to this if there's no current value for key.
 
         Returns:
@@ -97,14 +99,15 @@ class GuiState(object):
         """
         if key not in self._state_vars:
             self[key] = default
-        else:
-            new_value = self.get(key) + step
+            return
 
-            # take modulo of value if mod arg is not 1
-            if mod != 1:
-                new_value %= mod
+        new_value = self.get(key) + step
 
-            self[key] = new_value
+        # Wrap the value if it's out of bounds.
+        if mod is not None:
+            new_value %= mod
+
+        self[key] = new_value
 
     def increment_in_list(
         self, key: GSVarType, value_list: list, reverse: bool = False
