@@ -10,7 +10,6 @@ on:
       - '.conda_mac/meta.yaml'
     branches:
       - develop
-      - liezl/update_environment_creation
 
 jobs:
   build:
