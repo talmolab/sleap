@@ -1,0 +1,6 @@
+# This file is not used at the moment, but when github actions can be used to build the package, it needs to be listed.
+# https://github.com/github/roadmap/issues/528
+
+channels:
+  - conda-forge
+  - anaconda
