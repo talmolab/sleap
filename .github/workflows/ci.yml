@@ -84,7 +84,7 @@ jobs:
         # https://github.com/mamba-org/setup-micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
-          micromamba-version: '1.4.6'
+          micromamba-version: '1.4.6-0'
           environment-file: ${{ matrix.env_file }}
           environment-name: sleap_ci
           init-shell: >-
