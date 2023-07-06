@@ -20,6 +20,7 @@ from sleap.nn.inference import (
     InferenceLayer,
     InferenceModel,
     Predictor,
+    _make_predictor_from_cli,
     get_model_output_stride,
     find_head,
     SingleInstanceInferenceLayer,
@@ -643,12 +644,20 @@ def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
     inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
 
-    # test max_instances (>2 will fail)
-    predictor.inference_model.centroid_crop.max_instances = 2
-    labels_pr = predictor.predict(min_labels)
 
-    assert len(labels_pr) == 1
-    assert len(labels_pr[0].instances) == 2
+def test_topdown_predictor_centroid_max_instances(min_labels, min_centroid_model_path):
+    predictor = TopDownPredictor.from_trained_models(
+        centroid_model_path=min_centroid_model_path
+    )
+
+    # Test max_instances <, =, and > than number of expected instances
+    for i in [1, 2, 3]:
+        predictor._initialize_inference_model()
+        predictor.inference_model.centroid_crop.max_instances = i
+        labels_pr = predictor.predict(min_labels)
+
+        assert len(labels_pr) == 1
+        assert len(labels_pr[0].instances) == min(i, 2)
 
 
 def test_topdown_predictor_centroid_high_threshold(min_labels, min_centroid_model_path):
@@ -1328,6 +1337,45 @@ def test_retracking(
     assert new_inst.track != old_inst.track
 
 
+@pytest.mark.parametrize("cmd", ["--max_instances 1", "-n 1"])
+def test_valid_cli_command(cmd):
+    """Test that sleap-track CLI command is valid."""
+    parser = _make_cli_parser()
+    args = parser.parse_args(cmd.split())
+    assert args.max_instances == 1
+
+
+def test_make_predictor_from_cli(
+    centered_pair_predictions: Labels,
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    min_bottomup_model_path: str,
+    tmpdir,
+):
+    slp_path = str(Path(tmpdir, "old_slp.slp"))
+    Labels.save(centered_pair_predictions, slp_path)
+
+    # Create sleap-track command
+    model_args = [
+        f"--model {min_centroid_model_path} --model {min_centered_instance_model_path}",
+        f"--model {min_bottomup_model_path}",
+    ]
+    for model_arg in model_args:
+        args = (
+            f"{slp_path} {model_arg} --video.index 0 --frames 1-3 "
+            "--cpu --max_instances 5"
+        ).split()
+        parser = _make_cli_parser()
+        args, _ = parser.parse_known_args(args=args)
+
+        # Create predictor
+        predictor = _make_predictor_from_cli(args=args)
+        if isinstance(predictor, TopDownPredictor):
+            assert predictor.inference_model.centroid_crop.max_instances == 5
+        elif isinstance(predictor, BottomUpPredictor):
+            assert predictor.max_instances == 5
+
+
 def test_sleap_track(
     centered_pair_predictions: Labels,
     min_centroid_model_path: str,
@@ -1335,10 +1383,9 @@ def test_sleap_track(
     tmpdir,
 ):
     slp_path = str(Path(tmpdir, "old_slp.slp"))
-    labels: Labels = Labels.save(centered_pair_predictions, slp_path)
+    Labels.save(centered_pair_predictions, slp_path)
 
     # Create sleap-track command
-    args = f"{slp_path} --model {min_centered_instance_model_path} --frames 1-3 --cpu".split()
     args = (
         f"{slp_path} --model {min_centroid_model_path} "
         f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"

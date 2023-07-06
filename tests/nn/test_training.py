@@ -316,43 +316,47 @@ def test_train_cropping(
     )
 
 
+@pytest.mark.parametrize("base_checkpoint_path", [None, ""])
 def test_resume_training_cli(
-    min_single_instance_robot_model_path: str, small_robot_mp4_path: str, tmp_path: str
+    base_checkpoint_path,
+    min_single_instance_robot_model_path: str,
+    small_robot_mp4_path: str,
+    tmp_path: str,
 ):
     """Test CLI to resume training."""
-
-    base_checkpoint_path = min_single_instance_robot_model_path
-    cfg = TrainingJobConfig.load_json(
-        str(Path(base_checkpoint_path, "training_config.json"))
+    cfg_dir = min_single_instance_robot_model_path
+    base_checkpoint_path = (
+        min_single_instance_robot_model_path
+        if base_checkpoint_path is not None
+        else base_checkpoint_path
     )
+
+    cfg = TrainingJobConfig.load_json(str(Path(cfg_dir, "training_config.json")))
     cfg.optimization.preload_data = False
     cfg.optimization.batch_size = 1
     cfg.optimization.batches_per_epoch = 2
     cfg.optimization.epochs = 1
     cfg.outputs.save_outputs = False
+    cfg.model.base_checkpoint = base_checkpoint_path
 
     # Save training config to tmp folder
     cfg_path = str(Path(tmp_path, "training_config.json"))
     cfg.save_json(cfg_path)
 
-    # TODO (LM): Stop saving absolute paths in labels files!
     # We need to do this reload because we save absolute paths (for the video).
-    labels_path = str(Path(base_checkpoint_path, "labels_gt.train.slp"))
+    labels_path = str(Path(cfg_dir, "labels_gt.train.slp"))
     labels: Labels = sleap.load_file(labels_path, search_paths=[small_robot_mp4_path])
     labels_path = str(Path(tmp_path, "labels_gt.train.slp"))
     labels.save_file(labels, labels_path)
 
-    # Run CLI to resume training
-    trainer = sleap_train(
-        [
-            cfg_path,
-            labels_path,
-            "--base_checkpoint",
-            base_checkpoint_path,
-        ]
-    )
+    # Check that base_checkpoint is set correctly (not overridden by CLI)
+    cli_args = [cfg_path, labels_path]
+    trainer = sleap_train(cli_args)
     assert trainer.config.model.base_checkpoint == base_checkpoint_path
 
-    # Run CLI without base checkpoint
-    trainer = sleap_train([cfg_path, labels_path])
-    assert trainer.config.model.base_checkpoint is None
+    # Check that base_checkpoint is set correctly (overridden by CLI)
+    if base_checkpoint_path is not None:
+        cli_args = [cfg_path, labels_path, "--base_checkpoint", base_checkpoint_path]
+
+        trainer = sleap_train(cli_args)
+        assert trainer.config.model.base_checkpoint == base_checkpoint_path
