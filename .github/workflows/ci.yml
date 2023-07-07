@@ -92,15 +92,6 @@ jobs:
             powershell
           post-cleanup: all
       
-      # Terrible hack to install correct version of opencv 
-      # imgaug: opencv-python
-      # sleap-anipose: opencv-contrib-python
-      - name: Hack to install correct opencv
-        shell: bash -l {0}
-        run: |
-          conda list | grep opencv | awk '{system("conda uninstall " $1 " -y")}'
-          pip install "opencv-contrib-python<4.7.0"
-      
       # Print environment info
       - name: Print environment info
         shell: bash -l {0}
@@ -110,10 +101,12 @@ jobs:
           micromamba list
           pip freeze
       
-      # Test environment
+      # Test environment after performing hack to install correct version of opencv
       - name: Test with pytest
         shell: bash -l {0}
         run: |
+          conda list | grep opencv | awk '{system("conda uninstall " $1 " -y")}'
+          pip install "opencv-contrib-python<4.7.0"
           pytest ${{ matrix.test_args }}
 
       # Upload coverage
