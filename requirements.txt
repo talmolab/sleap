@@ -6,9 +6,27 @@ ndx-pose
 nixio>=1.5.3  # Constrain put on by @jgrewe from G-Node
 qimage2ndarray  # ==1.9.0
 segmentation-models
+sleap-anipose
 tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
 tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64'
 
 # Conda installing results in https://github.com/h5py/h5py/issues/2037
 h5py<3.2; sys_platform == 'win32'  # Newer versions result in error above, linking issue in Linux
 pynwb>=2.3.3  # 2.0.0 required by ndx-pose, 2.3.3 fixes importlib-metadata incompatibility
+
+# Pip and conda installing installs the wrong opencv package (need contrib for aniposelib)
+# But opt to pip install s.t. we can pip uninstall
+imgaug==0.4.0
+
+# HACK(LM): Uninstall all opencv packages and install opencv-contrib-python
+# Run after installing conda environment
+#
+# conda activate sleap
+#
+# if on Windows, then
+#   for /f "tokens=1" %a in ('conda list ^| findstr opencv') do pip uninstall %a -y
+# otherwise, run
+#   conda list | grep opencv | awk '{system("pip uninstall " $1 " -y")}'
+#
+# everybody, run
+#   pip install "opencv-contrib-python<4.7.0"

@@ -9,4 +9,8 @@ export PIP_IGNORE_INSTALLED=False
 
 pip install -r requirements.txt
 
+# HACK(LM): (untested) Uninstall all opencv packages and install opencv-contrib-python
+conda list | grep opencv | awk '{system("pip uninstall " $1 " -y")}'
+pip install "opencv-contrib-python<4.7.0"
+
 python setup.py install --single-version-externally-managed --record=record.txt

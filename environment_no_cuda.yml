@@ -42,3 +42,7 @@ dependencies:
     - pip:  
         - "--editable=."
         - "--requirement=./dev_requirements.txt"
+
+# HACK(LM): Uninstall all opencv packages and install opencv-contrib-python
+# conda activate sleap && conda list | grep opencv | awk '{system("conda uninstall " $1 " -y")} && pip install "opencv-contrib-python<4.7.0"
+

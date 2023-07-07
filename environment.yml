@@ -12,12 +12,12 @@ dependencies:
     # Packages SLEAP uses directly
     - conda-forge::attrs >=21.2.0  #,<=21.4.0
     - conda-forge::cattrs ==1.1.1
-    - conda-forge::imgaug ==0.4.0
+    # - conda-forge::imgaug ==0.4.0  # Uses opencv-python, but sleap-anipose needs contrib
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::networkx
     - anaconda::numpy >=1.19.5,<1.23.0
-    - conda-forge::opencv
+    # - conda-forge::opencv  # Uses opencv-python, but sleap-anipose needs contrib
     - conda-forge::pandas
     - conda-forge::pip
     - conda-forge::pillow #>=8.3.1,<=8.4.0
@@ -47,3 +47,6 @@ dependencies:
     - pip:  
         - "--editable=."
         - "--requirement=./dev_requirements.txt"
+
+# HACK(LM): Uninstall all opencv packages and install opencv-contrib-python
+# conda activate sleap && conda list | grep opencv | awk '{system("conda uninstall " $1 " -y")}' && pip install "opencv-contrib-python<4.7.0"

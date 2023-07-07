@@ -175,6 +175,12 @@ mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.1
    mamba env create -f environment_mac.yml -n sleap
    ```
 
+   Followed by a terrible hack that should never reach the real docs:
+
+   ```bash
+   conda activate sleap && conda list | grep opencv | awk '{system("conda uninstall " $1 " -y")}' && pip install "opencv-contrib-python<4.7.0"
+   ```
+
    This is the **recommended method for development**.
 
 ```{note}
