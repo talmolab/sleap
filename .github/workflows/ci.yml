@@ -98,7 +98,7 @@ jobs:
       - name: Hack to install correct opencv
         shell: bash -l {0}
         run: |
-          conda list | grep opencv | awk '{system("conda uninstall " $1 " -y")}
+          conda list | grep opencv | awk '{system("conda uninstall " $1 " -y")}'
           pip install "opencv-contrib-python<4.7.0"
       
       # Print environment info
