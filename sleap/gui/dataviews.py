@@ -317,7 +317,7 @@ class GenericTableView(QtWidgets.QTableView):
             self.setWordWrap(False)
         self.horizontalHeader().setStretchLastSection(True)
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.setSortingEnabled(self.is_sortable)
 
         self.doubleClicked.connect(self.activateSelected)
@@ -370,6 +370,9 @@ class GenericTableView(QtWidgets.QTableView):
         not the converted dict.
         """
         idx = self.currentIndex()
+        idx_temp = set([x.row() for x in self.selectedIndexes()])
+        self.state["selected_row_indices"] = idx_temp
+        
         if not idx.isValid():
             return None
         return self.model().original_items[idx.row()]
