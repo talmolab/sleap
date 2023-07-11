@@ -89,6 +89,28 @@ def test_get_new_version_filename():
         PurePath("/a/b/labels.v02.slp")
     )
 
+def test_remove_videos_batch(
+        centered_pair_predictions: Labels,
+        small_robot_mp4_vid: Video,
+        centered_pair_vid: Video,
+        small_robot_3_frame_vid: Video,
+):
+    labels = centered_pair_predictions.copy()
+    labels.add_video(small_robot_mp4_vid)
+    labels.add_video(centered_pair_vid)
+    labels.add_video(small_robot_3_frame_vid)
+
+    all_videos = list(labels.videos)
+    assert len(all_videos) == 3
+
+    #Remove selected videos
+    idxs = [0,2]
+    for idx in idxs:
+        labels.remove_video(all_videos[idx])
+
+    assert len(list(labels.videos)) == 1
+
+
 
 @pytest.mark.parametrize("out_suffix", ["h5", "nix"])
 def test_ExportAnalysisFile(

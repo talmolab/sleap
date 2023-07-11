@@ -428,10 +428,6 @@ class CommandContext:
         """Removes selected video from project."""
         self.execute(RemoveVideo)
 
-    def removeAllVideos(self):
-        '''Removes All Videos from project'''
-        self.execute(RemoveAllVideos)
-
     def openSkeletonTemplate(self):
         """Shows gui for loading saved skeleton into project."""
         self.execute(OpenSkeleton, template=True)
@@ -1840,56 +1836,13 @@ class ReplaceVideo(EditCommand):
         return len(import_list) > 0
 
 
-
-class RemoveAllVideos(EditCommand):
-    topics = [UpdateTopic.video, UpdateTopic.suggestions]
-
-    @staticmethod
-    def do_action(context: CommandContext, params: dict):
-        videos = context.labels.videos.copy()
-        for i in range(len(videos)):
-            context.labels.remove_video(videos[i])
-
-        if len(context.labels.videos):
-            context.state["video"] = context.labels.videos[-1]
-        else:
-            context.state["video"] = None
-
-    @staticmethod
-    def ask(context: CommandContext, params: dict) -> bool:
-        videos = context.labels.videos.copy()
-        
-        for video in videos:        
-            if video is None:
-                return False
-
-            # Count labeled frames for this video
-            n = len(context.labels.find(video))
-
-            # Warn if there are labels that will be deleted
-            if n > 0:
-                video_file_name = f"{video}".split(", shape")[0].split("filename=")[-1]
-                response = QtWidgets.QMessageBox.critical(
-                    context.app,
-                    "Removing video with labels",
-                    f"{n} labeled frames in {video_file_name} video will be deleted, "
-                    "are you sure you want to remove this video?",
-                    QtWidgets.QMessageBox.Yes,
-                    QtWidgets.QMessageBox.No,
-                )
-                if response == QtWidgets.QMessageBox.No:
-                    return False
-
-        return True
-
-
 class RemoveVideo(EditCommand):
     topics = [UpdateTopic.video, UpdateTopic.suggestions]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         videos = context.labels.videos.copy()
-        row_idxs = context.state["selected_row_indices"]
+        row_idxs = context.state["selected_batch_video"]
         # Remove selected videos in the project
         for idx in row_idxs:
             context.labels.remove_video(videos[idx])
@@ -1902,7 +1855,8 @@ class RemoveVideo(EditCommand):
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         videos = context.labels.videos.copy()
-        row_idxs = context.state["selected_row_indices"]
+        row_idxs = context.state["selected_batch_video"]
+        video_file_names=[]
         for idx in row_idxs:
         
             video = videos[idx]
@@ -1912,19 +1866,21 @@ class RemoveVideo(EditCommand):
             # Count labeled frames for this video
             n = len(context.labels.find(video))
 
-            # Warn if there are labels that will be deleted
             if n > 0:
-                video_file_name = f"{video}".split(", shape")[0].split("filename=")[-1]
-                response = QtWidgets.QMessageBox.critical(
-                    context.app,
-                    "Removing video with labels",
-                    f"{n} labeled frames in {video_file_name} video will be deleted, "
-                    "are you sure you want to remove this video?",
-                    QtWidgets.QMessageBox.Yes,
-                    QtWidgets.QMessageBox.No,
-                )
-                if response == QtWidgets.QMessageBox.No:
-                    return False
+                video_file_names.append(f"{video}".split(", shape")[0].split("filename=")[-1].split("/")[-1])
+
+        # Warn if there are labels that will be deleted
+        if len(video_file_names)>=1:
+            response = QtWidgets.QMessageBox.critical(
+                context.app,
+                "Removing video with labels",
+                f"Labeled frames in {', '.join(video_file_names)} will be deleted, "
+                "are you sure you want to remove the videos?",
+                QtWidgets.QMessageBox.Yes,
+                QtWidgets.QMessageBox.No,
+            )
+            if response == QtWidgets.QMessageBox.No:
+                return False
         return True
 
 

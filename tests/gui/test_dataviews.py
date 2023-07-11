@@ -20,7 +20,7 @@ def test_skeleton_nodes(qtbot, centered_pair_predictions):
     assert table.model().data(table.currentIndex()) == "thorax"
 
     table = GenericTableView(
-        row_name="video", model=VideosTableModel(items=centered_pair_predictions.videos)
+        row_name="video", model=VideosTableModel(items=centered_pair_predictions.videos),multiple_selection=True
     )
     table.selectRow(0)
     assert (
