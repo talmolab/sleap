@@ -101,14 +101,14 @@ def test_remove_videos_batch(
     labels.add_video(small_robot_3_frame_vid)
 
     all_videos = list(labels.videos)
-    assert len(all_videos) == 3
+    assert len(all_videos) == 4
 
     #Remove selected videos
     idxs = [0,2]
     for idx in idxs:
         labels.remove_video(all_videos[idx])
 
-    assert len(list(labels.videos)) == 1
+    assert len(list(labels.videos)) == 2
 
 
 

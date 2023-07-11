@@ -301,7 +301,7 @@ class GenericTableView(QtWidgets.QTableView):
         is_sortable: bool = False,
         is_activatable: bool = False,
         ellipsis_left: bool = False,
-        multiple_selection = False,
+        multiple_selection=False,
     ):
         super(GenericTableView, self).__init__()
 
@@ -378,8 +378,8 @@ class GenericTableView(QtWidgets.QTableView):
 
         if self.multiple_selection:
             idx_temp = set([x.row() for x in self.selectedIndexes()])
-            self.state[f"selected_batch_"+self.row_name] = idx_temp
-        
+            self.state[f"selected_batch_{self.row_name}"] = idx_temp
+
         if not idx.isValid():
             return None
         return self.model().original_items[idx.row()]
@@ -390,7 +390,7 @@ class VideosTableModel(GenericTableModel):
 
     def item_to_data(self, obj, item):
         return {key: getattr(item, key) for key in self.properties}
-    
+
 
 class SkeletonNodesTableModel(GenericTableModel):
     properties = ("name", "symmetry")
