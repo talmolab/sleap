@@ -179,7 +179,7 @@ class VideosDock(DockWidget):
             is_activatable=True,
             model=self.model,
             ellipsis_left=True,
-            multiple_selection=True
+            multiple_selection=True,
         )
 
         return self.table
