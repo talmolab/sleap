@@ -203,7 +203,7 @@ def compute_oks(
     assert distance.shape == (n_gt, n_pr, n_nodes)
 
     # Compute the normalization factor per keypoint.
-    spread_factor = (stddev) ** 2
+    spread_factor = stddev ** 2
     scale_factor = 2 * (scale + np.spacing(1))
     normalization_factor = np.reshape(spread_factor, (1, 1, n_nodes)) * np.reshape(
         scale_factor, (n_gt, 1, 1)
@@ -212,12 +212,12 @@ def compute_oks(
 
     # Since a "miss" is considered as KS < 0.5, we'll set the
     # distances for predicted points that are missing to inf.
-    missing_pr = np.any(np.isnan(points_pr), axis=-1) # (n_pr, n_nodes)
+    missing_pr = np.any(np.isnan(points_pr), axis=-1)  # (n_pr, n_nodes)
     assert missing_pr.shape == (n_pr, n_nodes)
     distance[:, missing_pr] = np.inf
 
     # Compute the keypoint similarity as per the top of Eq. 1.
-    ks = np.exp(-(distance / normalization_factor)) # (n_gt, n_pr, n_nodes)
+    ks = np.exp(-(distance / normalization_factor))  # (n_gt, n_pr, n_nodes)
     assert ks.shape == (n_gt, n_pr, n_nodes)
 
     # Set the KS for missing ground truth points to 0.
