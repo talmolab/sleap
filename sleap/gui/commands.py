@@ -1843,20 +1843,23 @@ class RemoveVideo(EditCommand):
     def do_action(context: CommandContext, params: dict):
         videos = context.labels.videos.copy()
         row_idxs = context.state["selected_batch_video"]
+        videos_to_be_removed = [videos[i] for i in row_idxs]
 
         # Remove selected videos in the project
         for idx in row_idxs:
+            context.labels.remove_video(videos[idx])
 
-            # check if video to be deleted is the current state video
-            if videos[idx] == context.state["video"]:
-                if len(context.labels.videos):
+        # check if video to be deleted is the current state video
+        if context.state["video"] in videos_to_be_removed:
+            if len(context.labels.videos):
+                try:
                     context.state["video"] = context.labels.videos[
                         list(set(range(len(videos))) - set(row_idxs))[-1]
                     ]
-                else:
+                except:
                     context.state["video"] = None
-
-            context.labels.remove_video(videos[idx])
+            else:
+                context.state["video"] = None
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:

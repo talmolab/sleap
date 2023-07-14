@@ -90,6 +90,7 @@ def test_get_new_version_filename():
         PurePath("/a/b/labels.v02.slp")
     )
 
+
 def test_RemoveVideo(
     centered_pair_predictions: Labels,
     small_robot_mp4_vid: Video,
@@ -98,25 +99,27 @@ def test_RemoveVideo(
 ):
     def ask(obj: RemoveVideo, context: CommandContext, params: dict) -> bool:
         return True
+
     RemoveVideo.ask = ask
 
     labels = centered_pair_predictions.copy()
     labels.add_video(small_robot_mp4_vid)
     labels.add_video(centered_pair_vid)
-    labels.add_video(small_robot_3_frame_vid)
+    # labels.add_video(small_robot_3_frame_vid)
 
     all_videos = labels.videos
-    assert len(all_videos) == 4
+    assert len(all_videos) == 3
 
-    video_idxs = [0, 2]
+    video_idxs = [1, 2]
     videos_to_remove = [labels.videos[i] for i in video_idxs]
-    context.state["selected_batch_video"] = video_idxs
+
     context = CommandContext.from_labels(labels)
-    context.state["video"] = labels.videos[0]
+    context.state["selected_batch_video"] = video_idxs
+    context.state["video"] = labels.videos[1]
 
     context.removeVideo()
 
-    assert len(labels.videos) == 2
+    assert len(labels.videos) == 1
     assert context.state["video"] not in videos_to_remove
 
 

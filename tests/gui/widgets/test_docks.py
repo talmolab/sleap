@@ -11,22 +11,25 @@ from sleap.gui.widgets.docks import (
 )
 
 
-def test_videos_dock(qtbot, centered_pair_predictions: Labels,
+def test_videos_dock(
+    qtbot,
+    centered_pair_predictions: Labels,
     small_robot_mp4_vid: Video,
     centered_pair_vid: Video,
-    small_robot_3_frame_vid: Video,):
+    small_robot_3_frame_vid: Video,
+):
     """Test the `DockWidget` class."""
 
     # Add some extra videos to the labels
     labels = centered_pair_predictions
-    labels.add_video(small_robot_mp4_vid)
-    labels.add_video(centered_pair_vid)
     labels.add_video(small_robot_3_frame_vid)
+    labels.add_video(centered_pair_vid)
+    labels.add_video(small_robot_mp4_vid)
     assert len(labels.videos) == 4
 
     # Create the dock
     main_window = MainWindow()
-    main_window.labels = labels
+    main_window.commands.loadLabelsObject(labels)
     video_state = labels.videos[-1]
     main_window.state["video"] = video_state
     dock = VideosDock(main_window)
@@ -42,23 +45,24 @@ def test_videos_dock(qtbot, centered_pair_predictions: Labels,
     dock.main_window._buttons["remove video"].click()
     assert len(labels.videos) == 4
 
-    # TODO(LM): Select the last video, should remove that one and update state
+    # Select the last video, should remove that one and update state
 
-
-    dock.main_window.videos_dock.table.selectRowItem(small_robot_3_frame_vid)
+    dock.main_window.videos_dock.table.selectRowItem(small_robot_mp4_vid)
     dock.main_window._buttons["remove video"].click()
     assert len(labels.videos) == 3
     assert video_state not in labels.videos
     assert main_window.state["video"] == labels.videos[-1]
 
-    # TODO(LM): Select the last two videos, should remove those two and update state
-
-    dock.main_window.videos_dock.table.clicked(1)
-    dock.main_window.videos_dock.table.clicked(2)
-    _ = dock.main_window.videos_dock.table.getSelectedRowItem()
+    # Select the last two videos, should remove those two and update state
+    idxs = [1, 2]
+    videos_to_be_removed = [labels.videos[i] for i in idxs]
+    main_window.state["selected_batch_video"] = idxs
     dock.main_window._buttons["remove video"].click()
     assert len(labels.videos) == 1
-    assert video_state not in labels.videos
+    assert (
+        videos_to_be_removed[0] not in labels.videos
+        and videos_to_be_removed[1] not in labels.videos
+    )
     assert main_window.state["video"] == labels.videos[-1]
 
 
