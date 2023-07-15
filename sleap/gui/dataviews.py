@@ -301,7 +301,7 @@ class GenericTableView(QtWidgets.QTableView):
         is_sortable: bool = False,
         is_activatable: bool = False,
         ellipsis_left: bool = False,
-        multiple_selection=False,
+        multiple_selection: bool = False,
     ):
         super(GenericTableView, self).__init__()
 

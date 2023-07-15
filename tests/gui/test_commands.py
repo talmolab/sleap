@@ -95,7 +95,6 @@ def test_RemoveVideo(
     centered_pair_predictions: Labels,
     small_robot_mp4_vid: Video,
     centered_pair_vid: Video,
-    small_robot_3_frame_vid: Video,
 ):
     def ask(obj: RemoveVideo, context: CommandContext, params: dict) -> bool:
         return True
@@ -105,7 +104,6 @@ def test_RemoveVideo(
     labels = centered_pair_predictions.copy()
     labels.add_video(small_robot_mp4_vid)
     labels.add_video(centered_pair_vid)
-    # labels.add_video(small_robot_3_frame_vid)
 
     all_videos = labels.videos
     assert len(all_videos) == 3

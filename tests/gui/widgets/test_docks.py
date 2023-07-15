@@ -31,7 +31,7 @@ def test_videos_dock(
     main_window = MainWindow()
 
     # Use commands to set the labels instead of setting it directly
-    # To make sure other dependent instances like color_manager are also set 
+    # To make sure other dependent instances like color_manager are also set
     main_window.commands.loadLabelsObject(labels)
 
     video_state = labels.videos[-1]

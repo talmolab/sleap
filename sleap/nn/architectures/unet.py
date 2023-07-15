@@ -109,7 +109,7 @@ class UNet(encoder_decoder.EncoderDecoder):
 
         blocks = []
         for block in range(self.stem_blocks):
-            block_filters = int(self.filters * (self.filters_rate ** block))
+            block_filters = int(self.filters * (self.filters_rate**block))
             blocks.append(
                 encoder_decoder.SimpleConvBlock(
                     pool=(block > 0),

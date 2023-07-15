@@ -166,7 +166,7 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
             # Determine vector endpoint
             x2 = delta_x * self.decimation + loc_x
             y2 = delta_y * self.decimation + loc_y
-            line_length = (delta_x ** 2 + delta_y ** 2) ** 0.5
+            line_length = (delta_x**2 + delta_y**2) ** 0.5
 
             # Determine points for arrow
             arrow_head_size = line_length / 4

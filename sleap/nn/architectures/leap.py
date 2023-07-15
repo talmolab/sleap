@@ -70,7 +70,7 @@ class LeapCNN(encoder_decoder.EncoderDecoder):
             blocks.append(
                 encoder_decoder.SimpleConvBlock(
                     num_convs=self.down_convs_per_block,
-                    filters=self.filters * (self.filters_rate ** i),
+                    filters=self.filters * (self.filters_rate**i),
                     kernel_size=self.kernel_size,
                     use_bias=True,
                     batch_norm=False,
@@ -85,7 +85,7 @@ class LeapCNN(encoder_decoder.EncoderDecoder):
         """Return the decoder block configuration."""
         blocks = []
         for i in range(self.up_blocks, 0, -1):
-            block_filters = self.filters * (self.filters_rate ** i)
+            block_filters = self.filters * (self.filters_rate**i)
             blocks.append(
                 encoder_decoder.SimpleUpsamplingBlock(
                     upsampling_stride=2,

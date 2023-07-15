@@ -152,7 +152,7 @@ class UnetPretrainedEncoder:
         """
         up_blocks = int(np.log2(32 // config.output_stride))
         decoder_filters = [
-            int(config.decoder_filters * (config.decoder_filters_rate ** i))
+            int(config.decoder_filters * (config.decoder_filters_rate**i))
             for i in range(up_blocks)
         ]
 
