@@ -46,7 +46,7 @@ def make_confmaps(
     y = tf.reshape(tf.gather(points, [1], axis=1), [1, 1, -1])
     cm = tf.exp(
         -((tf.reshape(xv, [1, -1, 1]) - x) ** 2 + (tf.reshape(yv, [-1, 1, 1]) - y) ** 2)
-        / (2 * sigma**2)
+        / (2 * sigma ** 2)
     )
 
     # Replace NaNs with 0.

@@ -176,7 +176,7 @@ class UpsamplingStack:
                 # Upsample via strided transposed convolution.
                 block_trans_conv_filters = int(
                     self.transposed_conv_filters
-                    * self.transposed_conv_filters_rate**block
+                    * self.transposed_conv_filters_rate ** block
                 )
                 x = tf.keras.layers.Conv2DTranspose(
                     filters=block_trans_conv_filters,
@@ -234,7 +234,7 @@ class UpsamplingStack:
 
             # Add further convolutions to refine after upsampling and/or skip.
             block_refine_filters = int(
-                self.refine_convs_filters * self.refine_convs_filters_rate**block
+                self.refine_convs_filters * self.refine_convs_filters_rate ** block
             )
             for i in range(self.refine_convs):
                 x = tf.keras.layers.Conv2D(

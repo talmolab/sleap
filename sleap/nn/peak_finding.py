@@ -40,7 +40,7 @@ def make_gaussian_kernel(size: int, sigma: float) -> tf.Tensor:
     # Generate kernel and broadcast to 2D.
     kernel = tf.exp(
         -(tf.reshape(gv, (1, -1)) ** 2 + tf.reshape(gv, (-1, 1)) ** 2)
-        / (2 * sigma**2)
+        / (2 * sigma ** 2)
     )
 
     return kernel
@@ -69,7 +69,7 @@ def smooth_imgs(imgs: tf.Tensor, kernel_size: int = 5, sigma: float = 1.0) -> tf
     )
 
     # Normalize kernel weights to keep output in the same range as the input.
-    kernel /= 2 * np.pi * sigma**2
+    kernel /= 2 * np.pi * sigma ** 2
 
     # Convolve with padding to keep the shape fixed.
     return tf.nn.depthwise_conv2d(imgs, kernel, strides=[1, 1, 1, 1], padding="SAME")

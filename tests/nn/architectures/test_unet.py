@@ -199,7 +199,7 @@ class UnetTests(tf.test.TestCase):
         arch = unet.UNet.from_config(
             UNetConfig(
                 stem_stride=None,
-                max_stride=2**4,
+                max_stride=2 ** 4,
                 output_stride=1,
                 filters=64,
                 filters_rate=2,

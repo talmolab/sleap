@@ -185,7 +185,7 @@ def upsampling_block(
         name_prefix=f"{name_prefix}up{up_steps}",
     )
     x = tf.keras.layers.UpSampling2D(
-        size=2**up_steps,
+        size=2 ** up_steps,
         interpolation=interp_method,
         name=f"{name_prefix}up{up_steps}.{interp_method}",
     )(x)
