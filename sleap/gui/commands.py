@@ -1841,40 +1841,56 @@ class RemoveVideo(EditCommand):
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        video = params["video"]
-        # Remove video
-        context.labels.remove_video(video)
+        videos = context.labels.videos.copy()
+        row_idxs = context.state["selected_batch_video"]
+        videos_to_be_removed = [videos[i] for i in row_idxs]
 
-        # Update view if this was the current video
-        if context.state["video"] == video:
-            if len(context.labels.videos) > 0:
-                context.state["video"] = context.labels.videos[-1]
+        # Remove selected videos in the project
+        for idx in row_idxs:
+            context.labels.remove_video(videos[idx])
+
+        # check if video to be deleted is the current state video
+        if context.state["video"] in videos_to_be_removed:
+            if len(context.labels.videos):
+                context.state["video"] = context.labels.videos[
+                    list(set(range(len(videos))) - set(row_idxs))[-1]
+                ]
             else:
                 context.state["video"] = None
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        video = context.state["selected_video"]
-        if video is None:
-            return False
+        videos = context.labels.videos.copy()
+        row_idxs = context.state["selected_batch_video"]
+        video_file_names = []
+        total_num_labeled_frames = 0
+        for idx in row_idxs:
 
-        # Count labeled frames for this video
-        n = len(context.labels.find(video))
+            video = videos[idx]
+            if video is None:
+                return False
+
+            # Count labeled frames for this video
+            n = len(context.labels.find(video))
+
+            if n > 0:
+                total_num_labeled_frames += n
+                video_file_names.append(
+                    f"{video}".split(", shape")[0].split("filename=")[-1].split("/")[-1]
+                )
 
         # Warn if there are labels that will be deleted
-        if n > 0:
+        if len(video_file_names) >= 1:
             response = QtWidgets.QMessageBox.critical(
                 context.app,
                 "Removing video with labels",
-                f"{n} labeled frames in this video will be deleted, "
-                "are you sure you want to remove this video?",
+                f"{total_num_labeled_frames} labeled frames in {', '.join(video_file_names)} will be deleted, "
+                "are you sure you want to remove the videos?",
                 QtWidgets.QMessageBox.Yes,
                 QtWidgets.QMessageBox.No,
             )
             if response == QtWidgets.QMessageBox.No:
                 return False
-
-        params["video"] = video
         return True
 
 

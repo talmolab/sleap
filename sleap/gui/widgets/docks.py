@@ -179,6 +179,7 @@ class VideosDock(DockWidget):
             is_activatable=True,
             model=self.model,
             ellipsis_left=True,
+            multiple_selection=True,
         )
 
         return self.table
@@ -192,7 +193,6 @@ class VideosDock(DockWidget):
         self.add_button(hb, "Show Video", self.table.activateSelected)
         self.add_button(hb, "Add Videos", main_window.commands.addVideo)
         self.add_button(hb, "Remove Video", main_window.commands.removeVideo)
-
         hbw = QWidget()
         hbw.setLayout(hb)
         return hbw
