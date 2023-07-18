@@ -725,7 +725,9 @@ class LearningDialog(QtWidgets.QDialog):
             labels_fn = Path(self.labels_filename)
             models_dir = Path(labels_fn.parent, "models")
             output_dir = FileDialog.openDir(
-                None, dir=models_dir.as_posix(), caption="Select directory to save scripts"
+                None,
+                dir=models_dir.as_posix(),
+                caption="Select directory to save scripts",
             )
 
             if not output_dir:

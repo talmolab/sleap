@@ -16,8 +16,8 @@ from qtpy import QtWidgets
 
 def os_specific_method(func) -> Callable:
     """Check if native dialog should be used and update kwargs based on OS.
-    
-    Native Mac/Win file dialogs add file extension based on selected file type but 
+
+    Native Mac/Win file dialogs add file extension based on selected file type but
     non-native dialog (used for Linux) does not do this by default.
     """
 
@@ -34,10 +34,11 @@ def os_specific_method(func) -> Callable:
         # Make sure we don't send empty options argument
         if "options" in kwargs and not kwargs["options"]:
             del kwargs["options"]
-        
+
         return func(cls, *args, **kwargs)
 
     return set_dialog_type
+
 
 class FileDialog:
     """Substitute for QFileDialog; see class methods for details."""
@@ -56,7 +57,6 @@ class FileDialog:
         """
         return QtWidgets.QFileDialog.getOpenFileName(*args, **kwargs)
 
-
     @classmethod
     @os_specific_method
     def openMultiple(cls, *args, **kwargs):
@@ -68,7 +68,6 @@ class FileDialog:
         Passes along everything except empty "options" arg.
         """
         return QtWidgets.QFileDialog.getOpenFileNames(*args, **kwargs)
-
 
     @classmethod
     @os_specific_method
@@ -117,4 +116,3 @@ class FileDialog:
         Passes along everything except empty "options" arg.
         """
         return QtWidgets.QFileDialog.getExistingDirectory(*args, **kwargs)
-
