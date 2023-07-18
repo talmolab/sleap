@@ -15,28 +15,21 @@ from qtpy import QtWidgets
 
 
 def os_specific_method(func) -> Callable:
-    """Check if native dialog should be used and update kwargs based on OS."""
+    """Check if native dialog should be used and update kwargs based on OS.
+    
+    Native Mac/Win file dialogs add file extension based on selected file type but 
+    non-native dialog (used for Linux) does not do this by default.
+    """
 
     @wraps(func)
-    def modify_kwargs_then_call(cls, *args, **kwargs):
-        is_win = sys.platform.startswith("win")
+    def set_dialog_type(cls, *args, **kwargs):
+        is_linux = sys.platform.startswith("linux")
         env_var_set = os.environ.get("USE_NON_NATIVE_FILE", False)
-        cls.is_non_native = not is_win or env_var_set
+        cls.is_non_native = is_linux or env_var_set
 
         if cls.is_non_native:
             kwargs["options"] = kwargs.get("options", 0)
             kwargs["options"] |= QtWidgets.QFileDialog.DontUseNativeDialog
-
-            if "directory" in kwargs:
-                kwargs["dir"] = kwargs["directory"]
-                del kwargs["directory"]
-            
-            if "filter" in kwargs:
-                filters = kwargs["filter"].split(";;")
-                if filters and "dir" in kwargs:
-                    filename = kwargs["dir"]
-                    if ".slp" in filters[0] and not filename.endswith(".slp"):
-                        kwargs["dir"] = f"{filename}.slp"
 
         # Make sure we don't send empty options argument
         if "options" in kwargs and not kwargs["options"]:
@@ -44,7 +37,7 @@ def os_specific_method(func) -> Callable:
         
         return func(cls, *args, **kwargs)
 
-    return modify_kwargs_then_call
+    return set_dialog_type
 
 class FileDialog:
     """Substitute for QFileDialog; see class methods for details."""
