@@ -3,7 +3,7 @@
 pytest
 pytest-qt>=4.0.0
 pytest-cov<=3.0.0
-pytest-xvfb
+pytest-xvfb  # For running tests without UI
 ipython
 sphinx
 # furo
