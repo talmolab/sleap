@@ -12,7 +12,7 @@ dependencies:
     # Packages SLEAP uses directly
     - conda-forge::attrs >=21.2.0  #,<=21.4.0
     - conda-forge::cattrs ==1.1.1
-    # - conda-forge::imgaug ==0.4.0  # Uses opencv-python, but sleap-anipose needs contrib
+    - conda-forge::imgaug ==0.4.0  # Uses opencv-python, but sleap-anipose needs contrib
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::networkx
