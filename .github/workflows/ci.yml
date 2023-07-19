@@ -70,12 +70,15 @@ jobs:
           # Default values
           - env_file: environment_no_cuda.yml
           - test_args: --durations=-1 tests/
+          - uninstall_opencv: conda list | grep opencv | awk '{system("pip uninstall " $1 " -y")}'
           # Mac specific values
           - os: macos-latest
             env_file: environment_mac.yml
           # Ubuntu specific values
           - os: ubuntu-22.04
             test_args: --cov=sleap --cov-report=xml --durations=-1 tests/
+          # Windows specific values
+          - uninstall_opencv: for /f "tokens=1" %a in ('conda list ^| findstr opencv') do pip uninstall %a -y
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -105,7 +108,7 @@ jobs:
       - name: Test with pytest
         shell: bash -l {0}
         run: |
-          conda list | grep opencv | awk '{system("pip uninstall " $1 " -y")}'
+          ${{ matrix.uninstall_opencv }}
           pip install "opencv-contrib-python<4.7.0"
           pytest ${{ matrix.test_args }}
 
