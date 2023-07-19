@@ -78,7 +78,8 @@ jobs:
           - os: ubuntu-22.04
             test_args: --cov=sleap --cov-report=xml --durations=-1 tests/
           # Windows specific values
-          - uninstall_opencv: for /f "tokens=1" %a in ('conda list ^| findstr opencv') do pip uninstall %a -y
+          - os: windows-2022
+            uninstall_opencv: for /f "tokens=1" %a in ('conda list ^| findstr opencv') do pip uninstall %a -y
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
