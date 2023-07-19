@@ -91,6 +91,14 @@ jobs:
             bash
             powershell
           post-cleanup: all
+
+      # Install correct version of opencv
+      - name: Reinstall opencv
+        shell: bash -l {0}
+        run: |
+          pip freeze | grep opencv | awk '{system("pip uninstall " $1 " -y")}'
+          pip install "opencv-contrib-python<4.7.0"
+
       
       # Print environment info
       - name: Print environment info
@@ -107,8 +115,6 @@ jobs:
         with:
           shell: bash -l {0}
           run: |
-            pip freeze | grep opencv | awk '{system("pip uninstall " $1 " -y")}'
-            pip install "opencv-contrib-python<4.7.0"
             pytest ${{ matrix.test_args }}
 
       # Upload coverage
