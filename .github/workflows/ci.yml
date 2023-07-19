@@ -92,7 +92,7 @@ jobs:
             powershell
           post-cleanup: all
 
-      # Install correct version of opencv
+      # HACK(LM): Install correct version of opencv
       - name: Reinstall opencv
         shell: bash -l {0}
         run: |
@@ -109,13 +109,11 @@ jobs:
           micromamba list
           pip freeze
       
-      # Test environment after performing hack to install correct version of opencv
+      # Test the code and the environment
       - name: Test with pytest
-        uses: coactions/setup-xvfb@v1
-        with:
-          shell: bash -l {0}
-          run: |
-            pytest ${{ matrix.test_args }}
+        shell: bash -l {0}
+        run: |
+          pytest ${{ matrix.test_args }}
 
       # Upload coverage
       - name: Upload coverage
