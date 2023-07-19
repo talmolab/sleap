@@ -9,7 +9,7 @@ set PIP_IGNORE_INSTALLED=False
 @REM https://docs.conda.io/projects/conda-build/en/stable/user-guide/wheel-files.html)
 pip install -r .\requirements.txt
 
-# HACK(LM): (untested) Uninstall all opencv packages and install opencv-contrib-python
+@REM HACK(LM): (untested) Uninstall all opencv packages and install opencv-contrib-python
 for /f "tokens=1" %%a in ('conda list ^| findstr opencv') do pip uninstall %%a -y
 pip install "opencv-contrib-python<4.7.0"
 
