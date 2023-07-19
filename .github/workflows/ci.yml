@@ -75,7 +75,7 @@ jobs:
             env_file: environment_mac.yml
           # Ubuntu specific values
           - os: ubuntu-22.04
-            test_args: --xvfb-backend=xvfb --cov=sleap --cov-report=xml --durations=-1 tests/
+            test_args: --cov=sleap --cov-report=xml --durations=-1 tests/
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -103,11 +103,13 @@ jobs:
       
       # Test environment after performing hack to install correct version of opencv
       - name: Test with pytest
-        shell: bash -l {0}
-        run: |
-          pip freeze | grep opencv | awk '{system("pip uninstall " $1 " -y")}'
-          pip install "opencv-contrib-python<4.7.0"
-          pytest ${{ matrix.test_args }}
+        uses: coactions/setup-xvfb@v1
+        with:
+          shell: bash -l {0}
+          run: |
+            pip freeze | grep opencv | awk '{system("pip uninstall " $1 " -y")}'
+            pip install "opencv-contrib-python<4.7.0"
+            pytest ${{ matrix.test_args }}
 
       # Upload coverage
       - name: Upload coverage
