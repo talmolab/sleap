@@ -75,7 +75,7 @@ jobs:
             env_file: environment_mac.yml
           # Ubuntu specific values
           - os: ubuntu-22.04
-            test_args: --cov=sleap --cov-report=xml --durations=-1 tests/
+            test_args: --xvfb-backend=xvfb --cov=sleap --cov-report=xml --durations=-1 tests/
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
