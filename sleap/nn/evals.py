@@ -216,7 +216,7 @@ def compute_oks(
         normalization_factor = np.reshape(spread_factor, (1, 1, n_nodes)) * np.reshape(
             scale_factor, (n_gt, 1, 1)
         )
-    # If use_cocoeval is True, then compute normalization factor according to C.
+    # If use_cocoeval is True, then compute normalization factor according to cocoeval.
     else:
         spread_factor = (2 * stddev) ** 2
         scale_factor = 2 * (scale + np.spacing(1))
