@@ -1,3 +1,6 @@
+# Ref: https://docs.conda.io/projects/conda-build/en/latest/resources/define-metadata.html
+
+# Jinja template: Process setup.py to obtain version and metadata
 {% set data = load_setup_py_data() %}
 
 
@@ -12,37 +15,36 @@ about:
   license: {{ data.get('license') }}
   summary: {{ data.get('description') }}
 
+build:
+  number: 5
+
 source:
   path: ../
 
-build:
-  number: 9
-
 requirements:
-  host:
-    - conda-forge::python ==3.7.12  # Run into _MAX_WINDOWS_WORKERS not found if <
-    - numpy >=1.19.5,<1.23.0  # Linux likes anaconda, windows likes conda-forge
-    - conda-forge::cudatoolkit ==11.3.1
-    - conda-forge::cudnn=8.2.1
-    - nvidia::cuda-nvcc=11.3
+  host:  
+    - conda-forge::python ~=3.9
+    - anaconda::numpy >=1.19.5,<1.23.0
     - conda-forge::setuptools
+    - conda-forge::packaging
     - conda-forge::pip
 
     # Only the packages above are required to build, but listing them all ensures no 
     # unnecessary pypi packages are installed via the build script (bld.bat, build.sh)
-    - conda-forge::attrs ==21.4.0
+    - conda-forge::attrs >=21.2.0
     - conda-forge::cattrs ==1.1.1
-    - conda-forge::h5py ==3.1  # [not win]
+    - conda-forge::h5py
     - conda-forge::imgaug ==0.4.0
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
+    - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
     - conda-forge::networkx
     - conda-forge::opencv
     - conda-forge::pandas
-    - conda-forge::pillow >=8.3.2
+    - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside2 >=5.12,<5.14
+    - conda-forge::pyside2 >=5.12
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
@@ -53,25 +55,24 @@ requirements:
     - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
+
   run:
-    - conda-forge::python ==3.7.12  # Run into _MAX_WINDOWS_WORKERS not found if <
-    - conda-forge::attrs ==21.4.0
+    - conda-forge::python ~=3.9
+    - conda-forge::attrs >=21.2.0
     - conda-forge::cattrs ==1.1.1
-    - conda-forge::cudatoolkit ==11.3.1
-    - conda-forge::cudnn=8.2.1
-    - nvidia::cuda-nvcc=11.3
-    - conda-forge::h5py ==3.1  # [not win]
+    - conda-forge::h5py
     - conda-forge::imgaug ==0.4.0
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
+    - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
     - conda-forge::networkx
-    - numpy >=1.19.5,<1.23.0  # Linux likes anaconda, windows likes conda-forge
+    - anaconda::numpy >=1.19.5,<1.23.0
     - conda-forge::opencv
     - conda-forge::pandas
-    - conda-forge::pillow >=8.3.2
+    - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside2 >=5.12,<5.14  # To ensure works correctly with QtPy.
+    - conda-forge::pyside2 >=5.12
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
@@ -82,7 +83,6 @@ requirements:
     - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
-    - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10, sleap channel has 2.6.3
     - conda-forge::tensorflow-hub
 
 test:
