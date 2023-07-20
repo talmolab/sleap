@@ -7,6 +7,7 @@ sleap.use_cpu_only()
 
 
 def test_compute_oks():
+    #test compute_oks function with the cocoutils implementation
     inst_gt = np.array([[0, 0], [1, 1], [2, 2]]).astype("float32")
     inst_pr = np.array([[0, 0], [1, 1], [2, 2]]).astype("float32")
     oks = compute_oks(inst_gt, inst_pr)
@@ -26,6 +27,26 @@ def test_compute_oks():
     oks = compute_oks(inst_gt, inst_pr)
     np.testing.assert_allclose(oks, 1)
 
+
+    #test compute_oks function with the implementation from the paper
+    inst_gt = np.array([[0, 0], [1, 1], [2, 2]]).astype("float32")
+    inst_pr = np.array([[0, 0], [1, 1], [2, 2]]).astype("float32")
+    oks = compute_oks(inst_gt, inst_pr, False)
+    np.testing.assert_allclose(oks, 1)
+
+    inst_pr = np.array([[0, 0], [1, 1], [np.nan, np.nan]]).astype("float32")
+    oks = compute_oks(inst_gt, inst_pr, False)
+    np.testing.assert_allclose(oks, 2 / 3)
+
+    inst_gt = np.array([[0, 0], [1, 1], [np.nan, np.nan]]).astype("float32")
+    inst_pr = np.array([[0, 0], [1, 1], [2, 2]]).astype("float32")
+    oks = compute_oks(inst_gt, inst_pr, False)
+    np.testing.assert_allclose(oks, 1)
+
+    inst_gt = np.array([[0, 0], [1, 1], [np.nan, np.nan]]).astype("float32")
+    inst_pr = np.array([[0, 0], [1, 1], [np.nan, np.nan]]).astype("float32")
+    oks = compute_oks(inst_gt, inst_pr, False)
+    np.testing.assert_allclose(oks, 1)
 
 def test_load_metrics(min_centered_instance_model_path):
     model_path = min_centered_instance_model_path
