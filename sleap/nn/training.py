@@ -1844,9 +1844,10 @@ def create_trainer_using_cli(args: Optional[List] = None):
     parser.add_argument(
         "--base_checkpoint",
         type=str,
+        default=None,
         help=(
             "Path to base checkpoint (directory containing best_model.h5) to resume "
-            "training from."
+            "training from. Default is None."
         ),
     )
     parser.add_argument(
@@ -1940,7 +1941,8 @@ def create_trainer_using_cli(args: Optional[List] = None):
     if len(args.video_paths) == 0:
         args.video_paths = None
 
-    job_config.model.base_checkpoint = args.base_checkpoint
+    if args.base_checkpoint is not None:
+        job_config.model.base_checkpoint = args.base_checkpoint
 
     logger.info("Versions:")
     sleap.versions()

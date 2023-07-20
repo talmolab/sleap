@@ -180,6 +180,7 @@ class Predictor(ABC):
         integral_patch_size: int = 5,
         batch_size: int = 4,
         resize_input_layer: bool = True,
+        max_instances: Optional[int] = None,
     ) -> "Predictor":
         """Create the appropriate `Predictor` subclass from a list of model paths.
 
@@ -198,12 +199,17 @@ class Predictor(ABC):
                 usage.
             resize_input_layer: If True, the the input layer of the `tf.Keras.model` is
                 resized to (None, None, None, num_color_channels).
+            max_instances: If not `None`, discard instances beyond this count when
+                predicting, regardless of whether filtering is done at the tracking
+                stage. This is useful for preventing extraneous instances from being
+                created when tracking is not being applied.
 
         Returns:
             A subclass of `Predictor`.
 
         See also: `SingleInstancePredictor`, `TopDownPredictor`, `BottomUpPredictor`,
-            `MoveNetPredictor`
+            `MoveNetPredictor`, `TopDownMultiClassPredictor`,
+            `BottomUpMultiClassPredictor`.
         """
         # Read configs and find model types.
         if isinstance(model_paths, str):
@@ -272,6 +278,7 @@ class Predictor(ABC):
                     integral_refinement=integral_refinement,
                     integral_patch_size=integral_patch_size,
                     resize_input_layer=resize_input_layer,
+                    max_instances=max_instances,
                 )
 
         elif "multi_instance" in model_types:
@@ -282,6 +289,7 @@ class Predictor(ABC):
                 integral_patch_size=integral_patch_size,
                 batch_size=batch_size,
                 resize_input_layer=resize_input_layer,
+                max_instances=max_instances,
             )
 
         elif "multi_class_bottomup" in model_types:
@@ -531,7 +539,6 @@ class Predictor(ABC):
         unrag_outputs: bool = True,
         max_instances: Optional[int] = None,
     ):
-
         """Export a trained SLEAP model as a frozen graph. Initializes model,
         creates a dummy tracing batch and passes it through the model. The
         frozen graph is saved along with training meta info.
@@ -1104,7 +1111,6 @@ class InferenceModel(tf.keras.Model):
         os.makedirs(save_path, exist_ok=True)
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-
             self.save(tmp_dir, save_format="tf", save_traces=save_traces)
 
             imported = tf.saved_model.load(tmp_dir)
@@ -1592,7 +1598,6 @@ class SingleInstancePredictor(Predictor):
         unrag_outputs: bool = True,
         max_instances: Optional[int] = None,
     ):
-
         super().export_model(
             save_path,
             signatures,
@@ -1806,9 +1811,7 @@ class CentroidCrop(InferenceLayer):
         n_peaks = tf.shape(centroid_points)[0]
 
         if n_peaks > 0:
-
             if self.max_instances is not None:
-
                 centroid_points = tf.RaggedTensor.from_value_rowids(
                     centroid_points, crop_sample_inds, nrows=samples
                 )
@@ -1838,21 +1841,35 @@ class CentroidCrop(InferenceLayer):
                 )
 
                 for sample in range(samples):
+                    n_centroids = tf.shape(centroid_vals[sample])[0]
+                    if self.max_instances < n_centroids:
+                        top_points = tf.math.top_k(
+                            centroid_vals[sample],
+                            k=self.max_instances,
+                        )
+                        top_inds = top_points.indices
 
-                    top_points = tf.math.top_k(
-                        centroid_vals[sample], k=self.max_instances
-                    )
-                    top_inds = top_points.indices
+                        _centroid_vals = _centroid_vals.write(
+                            sample, tf.gather(centroid_vals[sample], top_inds)
+                        )
 
-                    _centroid_vals = _centroid_vals.write(
-                        sample, tf.gather(centroid_vals[sample], top_inds)
-                    )
+                        _centroid_points = _centroid_points.write(
+                            sample, tf.gather(centroid_points[sample], top_inds)
+                        )
 
-                    _centroid_points = _centroid_points.write(
-                        sample, tf.gather(centroid_points[sample], top_inds)
-                    )
-
-                    _row_ids = _row_ids.write(sample, tf.fill([len(top_inds)], sample))
+                        _row_ids = _row_ids.write(
+                            sample, tf.fill([len(top_inds)], sample)
+                        )
+                    else:
+                        _centroid_vals = _centroid_vals.write(
+                            sample, centroid_vals[sample]
+                        )
+                        _centroid_points = _centroid_points.write(
+                            sample, centroid_points[sample]
+                        )
+                        _row_ids = _row_ids.write(
+                            sample, tf.fill([n_centroids], sample)
+                        )
 
                 centroid_vals = _centroid_vals.concat()
                 centroid_points = _centroid_points.concat()
@@ -2237,7 +2254,6 @@ class TopDownInferenceModel(InferenceModel):
         crop_output = self.centroid_crop(example)
 
         if isinstance(self.instance_peaks, FindInstancePeaksGroundTruth):
-
             if "instances" in example:
                 peaks_output = self.instance_peaks(example, crop_output)
             else:
@@ -2290,6 +2306,10 @@ class TopDownPredictor(Predictor):
             head.
         integral_patch_size: Size of patches to crop around each rough peak for integral
             refinement as an integer scalar.
+        max_instances: If not `None`, discard instances beyond this count when
+            predicting, regardless of whether filtering is done at the tracking stage.
+            This is useful for preventing extraneous instances from being created when
+            tracking is not being applied.
     """
 
     centroid_config: Optional[TrainingJobConfig] = attr.ib(default=None)
@@ -2303,6 +2323,7 @@ class TopDownPredictor(Predictor):
     peak_threshold: float = 0.2
     integral_refinement: bool = True
     integral_patch_size: int = 5
+    max_instances: Optional[int] = None
 
     def _initialize_inference_model(self):
         """Initialize the inference model from the trained models and configuration."""
@@ -2328,6 +2349,7 @@ class TopDownPredictor(Predictor):
                 refinement="integral" if self.integral_refinement else "local",
                 integral_patch_size=self.integral_patch_size,
                 return_confmaps=False,
+                max_instances=self.max_instances,
             )
 
         if use_gt_confmap:
@@ -2366,6 +2388,7 @@ class TopDownPredictor(Predictor):
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
         resize_input_layer: bool = True,
+        max_instances: Optional[int] = None,
     ) -> "TopDownPredictor":
         """Create predictor from saved models.
 
@@ -2389,6 +2412,10 @@ class TopDownPredictor(Predictor):
                 integral refinement as an integer scalar.
             resize_input_layer: If True, the the input layer of the `tf.Keras.model` is
                 resized to (None, None, None, num_color_channels).
+            max_instances: If not `None`, discard instances beyond this count when
+                predicting, regardless of whether filtering is done at the tracking
+                stage. This is useful for preventing extraneous instances from being
+                created when tracking is not being applied.
 
         Returns:
             An instance of `TopDownPredictor` with the loaded models.
@@ -2444,6 +2471,7 @@ class TopDownPredictor(Predictor):
             peak_threshold=peak_threshold,
             integral_refinement=integral_refinement,
             integral_patch_size=integral_patch_size,
+            max_instances=max_instances,
         )
         obj._initialize_inference_model()
         return obj
@@ -2564,7 +2592,6 @@ class TopDownPredictor(Predictor):
                     ex["instance_peak_vals"],
                     ex["centroid_vals"],
                 ):
-
                     # Loop over instances.
                     predicted_instances = []
                     for pts, confs, score in zip(points, confidences, scores):
@@ -2624,7 +2651,6 @@ class TopDownPredictor(Predictor):
         unrag_outputs: bool = True,
         max_instances: Optional[int] = None,
     ):
-
         super().export_model(
             save_path,
             signatures,
@@ -2682,6 +2708,10 @@ class BottomUpInferenceLayer(InferenceLayer):
             the predicted instances. This will result in slower inference times since
             the data must be copied off of the GPU, but is useful for visualizing the
             raw output of the model.
+        return_paf_graph: If `True`, the part affinity field graph will be returned
+            together with the predicted instances. The graph is obtained by parsing the
+            part affinity fields with the `paf_scorer` instance and is an intermediate
+            representation used during instance grouping.
         confmaps_ind: Index of the output tensor of the model corresponding to
             confidence maps. If `None` (the default), this will be detected
             automatically by searching for the first tensor that contains
@@ -2710,6 +2740,7 @@ class BottomUpInferenceLayer(InferenceLayer):
         integral_patch_size: int = 5,
         return_confmaps: bool = False,
         return_pafs: bool = False,
+        return_paf_graph: bool = False,
         confmaps_ind: Optional[int] = None,
         pafs_ind: Optional[int] = None,
         offsets_ind: Optional[int] = None,
@@ -2765,6 +2796,7 @@ class BottomUpInferenceLayer(InferenceLayer):
         self.integral_patch_size = integral_patch_size
         self.return_confmaps = return_confmaps
         self.return_pafs = return_pafs
+        self.return_paf_graph = return_paf_graph
 
     def forward_pass(self, data):
         """Run preprocessing and model inference on a batch."""
@@ -2865,6 +2897,10 @@ class BottomUpInferenceLayer(InferenceLayer):
 
             If `BottomUpInferenceLayer.return_pafs` is `True`, the predicted PAFs will
             be returned in the `"part_affinity_fields"` key.
+
+            If `BottomUpInferenceLayer.return_paf_graph` is `True`, the predicted PAF
+            graph will be returned in the `"peaks"`, `"peak_vals"`, `"peak_channel_inds"`,
+            `"edge_inds"`, `"edge_peak_inds"` and `"line_scores"` keys.
         """
         cms, pafs, offsets = self.forward_pass(data)
         peaks, peak_vals, peak_channel_inds = self.find_peaks(cms, offsets)
@@ -2872,6 +2908,9 @@ class BottomUpInferenceLayer(InferenceLayer):
             predicted_instances,
             predicted_peak_scores,
             predicted_instance_scores,
+            edge_inds,
+            edge_peak_inds,
+            line_scores,
         ) = self.paf_scorer.predict(pafs, peaks, peak_vals, peak_channel_inds)
 
         # Adjust for input scaling.
@@ -2891,6 +2930,13 @@ class BottomUpInferenceLayer(InferenceLayer):
             out["confmaps"] = cms
         if self.return_pafs:
             out["part_affinity_fields"] = pafs
+        if self.return_paf_graph:
+            out["peaks"] = peaks
+            out["peak_vals"] = peak_vals
+            out["peak_channel_inds"] = peak_channel_inds
+            out["edge_inds"] = edge_inds
+            out["edge_peak_inds"] = edge_peak_inds
+            out["line_scores"] = line_scores
         return out
 
 
@@ -2986,6 +3032,10 @@ class BottomUpPredictor(Predictor):
         min_line_scores: Minimum line score (between -1 and 1) required to form a match
             between candidate point pairs. Useful for rejecting spurious detections when
             there are no better ones.
+        max_instances: If not `None`, discard instances beyond this count when
+            predicting, regardless of whether filtering is done at the tracking stage.
+            This is useful for preventing extraneous instances from being created when
+            tracking is not being applied.
     """
 
     bottomup_config: TrainingJobConfig
@@ -3001,6 +3051,7 @@ class BottomUpPredictor(Predictor):
     dist_penalty_weight: float = 1.0
     paf_line_points: int = 10
     min_line_scores: float = 0.25
+    max_instances: Optional[int] = None
 
     def _initialize_inference_model(self):
         """Initialize the inference model from the trained model and configuration."""
@@ -3047,6 +3098,7 @@ class BottomUpPredictor(Predictor):
         paf_line_points: int = 10,
         min_line_scores: float = 0.25,
         resize_input_layer: bool = True,
+        max_instances: Optional[int] = None,
     ) -> "BottomUpPredictor":
         """Create predictor from a saved model.
 
@@ -3077,6 +3129,10 @@ class BottomUpPredictor(Predictor):
                 detections when there are no better ones.
             resize_input_layer: If True, the the input layer of the `tf.Keras.model` is
                 resized to (None, None, None, num_color_channels).
+            max_instances: If not `None`, discard instances beyond this count when
+                predicting, regardless of whether filtering is done at the tracking
+                stage. This is useful for preventing extraneous instances from being
+                created when tracking is not being applied.
 
         Returns:
             An instance of `BottomUpPredictor` with the loaded model.
@@ -3103,6 +3159,7 @@ class BottomUpPredictor(Predictor):
             dist_penalty_weight=dist_penalty_weight,
             paf_line_points=paf_line_points,
             min_line_scores=min_line_scores,
+            max_instances=max_instances,
         )
         obj._initialize_inference_model()
         return obj
@@ -3159,7 +3216,6 @@ class BottomUpPredictor(Predictor):
                     ex["instance_peak_vals"],
                     ex["instance_scores"],
                 ):
-
                     # Loop over instances.
                     predicted_instances = []
                     for pts, confs, score in zip(points, confidences, scores):
@@ -3174,6 +3230,15 @@ class BottomUpPredictor(Predictor):
                                 skeleton=skeleton,
                             )
                         )
+
+                    if self.max_instances is not None:
+                        # Filter by score.
+                        predicted_instances = sorted(
+                            predicted_instances, key=lambda x: x.score, reverse=True
+                        )
+                        predicted_instances = predicted_instances[
+                            : min(self.max_instances, len(predicted_instances))
+                        ]
 
                     if self.tracker:
                         # Set tracks for predicted instances in this frame.
@@ -3668,7 +3733,6 @@ class BottomUpMultiClassPredictor(Predictor):
                     ex["instance_peak_vals"],
                     ex["instance_scores"],
                 ):
-
                     # Loop over instances.
                     predicted_instances = []
                     for i, (pts, confs, score) in enumerate(
@@ -4048,7 +4112,6 @@ class TopDownMultiClassInferenceModel(InferenceModel):
         tensors: Optional[Dict[str, str]] = None,
         unrag_outputs: bool = True,
     ):
-
         self.instance_peaks.optimal_grouping = False
 
         super().export_model(
@@ -4191,7 +4254,7 @@ class TopDownMultiClassPredictor(Predictor):
                 resized to (None, None, None, num_color_channels).
 
         Returns:
-            An instance of `TopDownPredictor` with the loaded models.
+            An instance of `TopDownMultiClassPredictor` with the loaded models.
 
             One of the two models can be left as `None` to perform inference with ground
             truth data. This will only work with `LabelsReader` as the provider.
@@ -4357,7 +4420,6 @@ class TopDownMultiClassPredictor(Predictor):
                     ex["instance_peak_vals"],
                     ex["instance_scores"],
                 ):
-
                     # Loop over instances.
                     predicted_instances = []
                     for i, (pts, confs, score) in enumerate(
@@ -4411,7 +4473,6 @@ class TopDownMultiClassPredictor(Predictor):
         unrag_outputs: bool = True,
         max_instances: Optional[int] = None,
     ):
-
         super().export_model(
             save_path,
             signatures,
@@ -4583,7 +4644,6 @@ class MoveNetPredictor(Predictor):
 
     @property
     def data_config(self) -> DataConfig:
-
         if self.inference_model is None:
             self._initialize_inference_model()
 
@@ -4625,7 +4685,6 @@ class MoveNetPredictor(Predictor):
     def _make_labeled_frames_from_generator(
         self, generator: Iterator[Dict[str, np.ndarray]], data_provider: Provider
     ) -> List[sleap.LabeledFrame]:
-
         skeleton = MOVENET_SKELETON
         predicted_frames = []
 
@@ -4693,6 +4752,7 @@ def load_model(
     disable_gpu_preallocation: bool = True,
     progress_reporting: str = "rich",
     resize_input_layer: bool = True,
+    max_instances: Optional[int] = None,
 ) -> Predictor:
     """Load a trained SLEAP model.
 
@@ -4728,6 +4788,10 @@ def load_model(
             machines where the output is captured to a log file.
         resize_input_layer: If True, the the input layer of the `tf.Keras.model` is
             resized to (None, None, None, num_color_channels).
+        max_instances: If not `None`, discard instances beyond this count when
+            predicting, regardless of whether filtering is done at the tracking stage.
+            This is useful for preventing extraneous instances from being created when
+            tracking is not being applied.
 
     Returns:
         An instance of a `Predictor` based on which model type was detected.
@@ -4789,6 +4853,7 @@ def load_model(
         integral_refinement=refinement == "integral",
         batch_size=batch_size,
         resize_input_layer=resize_input_layer,
+        max_instances=max_instances,
     )
     predictor.verbosity = progress_reporting
     if tracker is not None:
@@ -4904,12 +4969,12 @@ def _make_export_cli_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
-        "-i",
+        "-n",
         "--max_instances",
         type=int,
         help=(
-            "Limit maximum number of instances in multi-instance models"
-            "Defaults to None"
+            "Limit maximum number of instances in multi-instance models. "
+            "Not available for ID models. Defaults to None."
         ),
     )
 
@@ -5085,6 +5150,15 @@ def _make_cli_parser() -> argparse.ArgumentParser:
         default=0.2,
         help="Minimum confidence map value to consider a peak as valid.",
     )
+    parser.add_argument(
+        "-n",
+        "--max_instances",
+        type=int,
+        help=(
+            "Limit maximum number of instances in multi-instance models. "
+            "Not available for ID models. Defaults to None."
+        ),
+    )
 
     # Deprecated legacy args. These will still be parsed for backward compatibility but
     # are hidden from the CLI help.
@@ -5229,6 +5303,7 @@ def _make_predictor_from_cli(args: argparse.Namespace) -> Predictor:
             batch_size=batch_size,
             refinement="integral",
             progress_reporting=args.verbosity,
+            max_instances=args.max_instances,
         )
 
         if type(predictor) == BottomUpPredictor:
@@ -5329,7 +5404,6 @@ def main(args: Optional[list] = None):
 
     # Either run inference (and tracking) or just run tracking
     if args.models is not None:
-
         # Setup models.
         predictor = _make_predictor_from_cli(args)
         predictor.tracker = tracker

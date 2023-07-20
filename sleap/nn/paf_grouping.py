@@ -613,7 +613,6 @@ def match_candidates_sample(
     )
 
     for k in range(n_edges):
-
         is_edge_k = tf.squeeze(tf.where(edge_inds_sample == k), axis=1)
         edge_peak_inds_k = tf.gather(edge_peak_inds_sample, is_edge_k, axis=0)
         line_scores_k = tf.gather(line_scores_sample, is_edge_k, axis=0)
@@ -836,10 +835,8 @@ def assign_connections_to_instances(
 
     # Loop through edge types.
     for edge_type, edge_connections in connections.items():
-
         # Loop through connections for the current edge.
         for connection in edge_connections:
-
             # Notation: specific peaks are identified by (node_ind, peak_ind).
             src_id = PeakID(edge_type.src_node_ind, connection.src_peak_ind)
             dst_id = PeakID(edge_type.dst_node_ind, connection.dst_peak_ind)
@@ -887,7 +884,6 @@ def assign_connections_to_instances(
 
     if min_instance_peaks > 0:
         if isinstance(min_instance_peaks, float):
-
             if n_nodes is None:
                 # Infer number of nodes if not specified.
                 all_node_types = set()
@@ -1240,7 +1236,6 @@ def group_instances_batch(
     )
 
     for sample in range(n_samples):
-
         # Call sample-wise function in Eager mode.
         (
             predicted_instances_sample,
@@ -1700,4 +1695,11 @@ class PAFScorer:
             match_dst_peak_inds,
             match_line_scores,
         )
-        return predicted_instances, predicted_peak_scores, predicted_instance_scores
+        return (
+            predicted_instances,
+            predicted_peak_scores,
+            predicted_instance_scores,
+            edge_inds,
+            edge_peak_inds,
+            line_scores,
+        )
