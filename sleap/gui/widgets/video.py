@@ -2159,7 +2159,7 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
                 self.origin = self.rect().topLeft()
             else:
                 # Pass event down the stack to continue panning
-                event.setAccepted(False)                
+                event.setAccepted(False)
 
             self.ref_width = self.rect().width()
             self.ref_height = self.rect().height()
@@ -2257,8 +2257,8 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
                 self.parent.nodes[node_key].setPos(new_x, new_y)
 
             # Update the instance
-            self.parent.updatePoints(complete=True, user_change=True)                
-            self.resizing = None            
+            self.parent.updatePoints(complete=True, user_change=True)
+            self.resizing = None
 
 
 class QtTextWithBackground(QGraphicsTextItem):
