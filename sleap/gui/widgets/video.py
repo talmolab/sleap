@@ -2104,7 +2104,6 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
         self.origin = rect.topLeft()
         self.ref_width = rect.width()
         self.ref_height = rect.height()
-        self.pan = False
 
         box_pen = QPen(Qt.black)
         box_pen.setCosmetic(True)
