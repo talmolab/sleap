@@ -722,9 +722,12 @@ class LearningDialog(QtWidgets.QDialog):
     ):
         """Save scripts and configs to run pipeline."""
         if output_dir is None:
-            models_dir = os.path.join(os.path.dirname(self.labels_filename), "/models")
+            labels_fn = Path(self.labels_filename)
+            models_dir = Path(labels_fn.parent, "models")
             output_dir = FileDialog.openDir(
-                None, directory=models_dir, caption="Select directory to save scripts"
+                None,
+                dir=models_dir.as_posix(),
+                caption="Select directory to save scripts",
             )
 
             if not output_dir:
