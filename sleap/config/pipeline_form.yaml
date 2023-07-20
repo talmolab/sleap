@@ -13,6 +13,14 @@ training:
       a "<u>confidence map</u>" head to predicts the
       nodes for an entire image and a "<u>part affinity field</u>" head to group
       the nodes into distinct animal instances.'
+  - label: Max Instances
+    name: max_instances
+    type: optional_int
+    help: Maximum number of instances per frame.
+    none_label: No max
+    default_disabled: true
+    range: 1,100
+    default: 1
 
   - name: model.heads.multi_instance.confmaps.sigma
     label: Sigma for Nodes
@@ -44,7 +52,15 @@ training:
     This pipeline uses two models: a "<u>centroid</u>" model to
     locate and crop around each animal in the frame, and a
     "<u>centered-instance confidence map</u>" model for predicted node locations
-    for each individual animal predicted by the centroid model.'
+    for each individual animal predicted by the centroid model.' 
+  - label: Max Instances
+    name: max_instances
+    type: optional_int
+    help: Maximum number of instances per frame.
+    none_label: No max
+    default_disabled: true
+    range: 1,100
+    default: 1
 
   - default: 5.0
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
@@ -280,6 +296,14 @@ inference:
       a "<u>confidence map</u>" head to predicts the
       nodes for an entire image and a "<u>part affinity field</u>" head to group
       the nodes into distinct animal instances.'
+  - label: Max Instances
+    name: max_instances
+    type: optional_int
+    help: Maximum number of instances per frame.
+    none_label: No max
+    default_disabled: true
+    range: 1,100
+    default: 1
 
   multi-animal top-down:
   - type: text
@@ -288,6 +312,14 @@ inference:
     locate and crop around each animal in the frame, and a
     "<u>centered-instance confidence map</u>" model for predicted node locations
     for each individual animal predicted by the centroid model.'
+  - label: Max Instances
+    name: max_instances
+    type: optional_int
+    help: Maximum number of instances per frame.
+    none_label: No max
+    default_disabled: true
+    range: 1,100
+    default: 1
 
   multi-animal bottom-up-id:
   - type: text

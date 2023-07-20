@@ -7,6 +7,7 @@ from codecs import open
 from os import path
 
 import re
+import sys
 
 here = path.abspath(path.dirname(__file__))
 
@@ -30,9 +31,10 @@ setup(
     name="sleap",
     version=sleap_version,
     setup_requires=["setuptools_scm"],
-    install_requires=get_requirements(),
+    install_requires=get_requirements(),  # Minimal requirements if using conda.
     extras_require={
-        "dev": get_requirements("dev"),
+        "pip": get_requirements("pip"),  # For pip install
+        "dev": get_requirements("pip") + get_requirements("dev"),
     },
     description="SLEAP (Social LEAP Estimates Animal Poses) is a deep learning framework for animal pose tracking.",
     long_description=long_description,
@@ -47,9 +49,9 @@ setup(
     url="https://sleap.ai",
     keywords="deep learning, pose estimation, tracking, neuroscience",
     license="BSD 3-Clause License",
-    packages=find_packages(exclude=["tensorflow"]),
+    packages=find_packages(exclude=["tensorflow", "tests", "tests.*", "docs"]),
     include_package_data=True,
-    entry_points={ 
+    entry_points={
         "console_scripts": [
             "sleap-convert=sleap.io.convert:main",
             "sleap-render=sleap.io.visuals:main",

@@ -1389,6 +1389,13 @@ def test_labels_numpy(centered_pair_predictions: Labels):
     trx = centered_pair_predictions.numpy(video=None, all_frames=True, untracked=False)
     assert trx.shape == (1100, 27, 24, 2)
 
+    centered_pair_predictions.remove_frame(centered_pair_predictions[-1])
+    trx = centered_pair_predictions.numpy(video=None, all_frames=False, untracked=False)
+    assert trx.shape == (1098, 27, 24, 2)
+
+    trx = centered_pair_predictions.numpy(video=None, all_frames=True, untracked=False)
+    assert trx.shape == (1100, 27, 24, 2)
+
     labels_single = Labels(
         [
             LabeledFrame(
@@ -1399,7 +1406,7 @@ def test_labels_numpy(centered_pair_predictions: Labels):
     )
     assert labels_single.numpy().shape == (1100, 1, 24, 2)
 
-    assert centered_pair_predictions.numpy(untracked=True).shape == (1100, 5, 24, 2)
+    assert centered_pair_predictions.numpy(untracked=True).shape == (1100, 4, 24, 2)
     for lf in centered_pair_predictions:
         for inst in lf:
             inst.track = None

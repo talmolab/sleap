@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 import pytest
-from PySide2.QtWidgets import QComboBox
+from qtpy.QtWidgets import QComboBox
 
 import sleap
 from sleap.skeleton import Skeleton
