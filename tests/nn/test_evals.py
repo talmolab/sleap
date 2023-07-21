@@ -1,3 +1,4 @@
+from pathlib import Path
 import numpy as np
 
 from typing import List, Tuple
@@ -6,12 +7,16 @@ import sleap
 
 from sleap import Instance, PredictedInstance
 from sleap.instance import Point
+from sleap.nn.config.training_job import TrainingJobConfig
+from sleap.nn.data.providers import LabelsReader
 from sleap.nn.evals import (
     compute_dists,
     compute_dist_metrics,
     compute_oks,
     load_metrics,
+    evaluate_model
 )
+from sleap.nn.model import Model
 
 
 sleap.use_cpu_only()
@@ -85,12 +90,30 @@ def test_compute_dists(instances, predicted_instances):
 
     # Check instances are as expected
     dists_metric = compute_dist_metrics(dists_dict)
-    for idx, zipped_insts in enumerate(
-        zip(dists_metric["dist.instances.gt"], dists_metric["dist.instances.pr"])
+    for idx, zipped_metrics in enumerate(
+        zip(dists_metric["dist.frame_idxs"], dists_metric["dist.video_paths"])
     ):
-        inst, pred_inst = zipped_insts
-        assert inst == instances[idx]
-        assert pred_inst == predicted_instances[idx]
+        frame_idx, video_path = zipped_metrics
+        assert frame_idx == instances[idx].frame.frame_idx
+        assert video_path == instances[idx].frame.video.backend.filename
+
+
+def test_evaluate_model(min_labels_slp, min_bottomup_model_path):
+
+    labels_reader = LabelsReader(labels=min_labels_slp, user_instances_only=True)
+    model_dir: str = min_bottomup_model_path
+    cfg = TrainingJobConfig.load_json(str(Path(model_dir, "training_config.json")))
+    model = Model.from_config(config=cfg.model, skeleton=labels_reader.labels.skeletons[0], tracks=labels_reader.labels.tracks, update_config=True)
+    model.make_model(input_shape=(None, None, 1))
+
+    labels_pr, metrics = evaluate_model(
+        cfg=cfg,
+        labels_gt=labels_reader,
+        model=model,
+        save = True,
+        split_name = "test",
+    )
+    assert metrics is not None  # If metrics is None, then the metrics were not saved
 
 
 def test_load_metrics(min_centered_instance_model_path):
@@ -104,3 +127,8 @@ def test_load_metrics(min_centered_instance_model_path):
 
     metrics = load_metrics(model_path, split="train")
     assert "oks_voc.mAP" in metrics
+
+
+if __name__ == "__main__":
+    import pytest
+    pytest.main([f"{__file__}::test_evaluate_model"])

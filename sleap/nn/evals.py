@@ -25,7 +25,7 @@ import os
 import numpy as np
 from typing import Any, Dict, List, Optional, Text, Tuple, Union
 import logging
-import sleap
+
 from sleap import Labels, LabeledFrame, Instance, PredictedInstance
 from sleap.nn.config import (
     TrainingJobConfig,
@@ -471,7 +471,7 @@ def compute_generalized_voc_metrics(
 
 def compute_dists(
     positive_pairs: List[Tuple[Instance, PredictedInstance, Any]]
-) -> np.ndarray:
+) -> Dict[str, Union[np.ndarray, List[int], List[str]]]:
     """Compute Euclidean distances between matched pairs of instances.
 
     Args:
@@ -481,27 +481,27 @@ def compute_dists(
     Returns:
         A dictionary with the following keys:
             dists: An array of pairwise distances of shape `(n_positive_pairs, n_nodes)`
-            instances_gt: A list of `Instance`s corresponding to the `dists`
-            instances_pr: A list of `PredictedInstance`s corresponding to the `dists`
+            frame_idxs: A list of frame indices corresponding to the `dists`
+            video_paths: A list of video paths corresponding to the `dists`
     """
     dists = []
-    instances_gt = []
-    instances_pr = []
+    frame_idxs = []
+    video_paths = []
     for instance_gt, instance_pr, _ in positive_pairs:
         points_gt = instance_gt.points_array
         points_pr = instance_pr.points_array
 
         dists.append(np.linalg.norm(points_pr - points_gt, axis=-1))
-        instances_gt.append(instance_gt)
-        instances_pr.append(instance_pr)
+        frame_idxs.append(instance_gt.frame.frame_idx)
+        video_paths.append(instance_gt.frame.video.backend.filename)
 
     dists = np.array(dists)
 
     # Bundle everything into a dictionary
     dists_dict = {
         "dists": dists,
-        "instances_gt": instances_gt,
-        "instances_pr": instances_pr,
+        "frame_idxs": frame_idxs,
+        "video_paths": video_paths,
     }
 
     return dists_dict
@@ -520,8 +520,8 @@ def compute_dist_metrics(
     """
     dists = dists_dict["dists"]
     results = {
-        "dist.instances.gt": dists_dict["instances_gt"],
-        "dist.instances.pr": dists_dict["instances_pr"],
+        "dist.frame_idxs": dists_dict["frame_idxs"],
+        "dist.video_paths": dists_dict["video_paths"],
         "dist.dists": dists,
         "dist.avg": np.nanmean(dists),
         "dist.p50": np.nan,
@@ -669,7 +669,7 @@ def evaluate(
 
 def evaluate_model(
     cfg: TrainingJobConfig,
-    labels_reader: LabelsReader,
+    labels_gt: Union[LabelsReader, Labels],
     model: Model,
     save: bool = True,
     split_name: Text = "test",
@@ -678,8 +678,8 @@ def evaluate_model(
 
     Args:
         cfg: The `TrainingJobConfig` associated with the model.
-        labels_reader: A `LabelsReader` pipeline generator that reads the ground truth
-            data to evaluate.
+        labels_gt: A `LabelsReader` pipeline generator that reads the ground truth
+            data to evaluate or a `Labels` object to be used as ground truth.
         model: The `sleap.nn.model.Model` instance to evaluate.
         save: If True, save the predictions and metrics to the model folder.
         split_name: String name to append to the saved filenames.
@@ -728,11 +728,13 @@ def evaluate_model(
         raise ValueError("Unrecognized model type:", head_config)
 
     # Predict.
-    labels_pr = predictor.predict(labels_reader, make_labels=True)
+    labels_pr: Labels = predictor.predict(labels_gt, make_labels=True)
 
     # Compute metrics.
     try:
-        metrics = evaluate(labels_reader.labels, labels_pr)
+        if isinstance(labels_gt, LabelsReader):
+            labels_gt = labels_gt.labels
+        metrics = evaluate(labels_gt, labels_pr)
     except:
         logger.warning("Failed to compute metrics.")
         metrics = None
@@ -783,8 +785,8 @@ def load_metrics(model_path: str, split: str = "val") -> Dict[str, Any]:
         - `"dist.p95"`: Distance for 95th percentile
         - `"dist.p99"`: Distance for 99th percentile
         - `"dist.dists"`: All distances
-        - `"dist.instances.gt"`: Ground truth `Instance`s corresponding to `"dist.dists"`
-        - `"dist.instances.pr"`: `PredictedInstance`s corresponding to `"dist.dists"`
+        - `"dist.frame_idxs"`: Frame indices corresponding to `"dist.dists"`
+        - `"dist.video_paths"`: Video paths corresponding to `"dist.dists"`
         - `"pck.mPCK"`: Mean Percentage of Correct Keypoints (PCK)
         - `"oks.mOKS"`: Mean Object Keypoint Similarity (OKS)
         - `"oks_voc.mAP"`: VOC with OKS scores - mean Average Precision (mAP)
