@@ -1,6 +1,7 @@
 """Module for testing dock widgets for the `MainWindow`."""
 
-import pytest
+from pathlib import Path
+
 from sleap import Labels, Video
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import OpenSkeleton
@@ -80,7 +81,13 @@ def test_skeleton_dock(qtbot):
     assert dock.main_window is main_window
     assert dock.wgt_layout is dock.widget().layout()
 
+    # This method should get called when we click the load button, but let's just call
+    # the non-gui parts directly
     assert dock.skeleton_templates.currentText() == "bees"
+    fn = Path(
+        OpenSkeleton.get_template_skeleton_filename(context=dock.main_window.commands)
+    )
+    assert fn.name == "bees.json"
 
 
 def test_suggestions_dock(qtbot):
@@ -101,7 +108,3 @@ def test_instances_dock(qtbot):
     assert dock.name == "Instances"
     assert dock.main_window is main_window
     assert dock.wgt_layout is dock.widget().layout()
-
-
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_skeleton_dock"])

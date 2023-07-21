@@ -1949,10 +1949,10 @@ class OpenSkeleton(EditCommand):
     @staticmethod
     def get_template_skeleton_filename(context: CommandContext) -> str:
         """Helper function to get the template skeleton filename from dropdown.
-        
+
         Args:
             context: The `CommandContext`.
-        
+
         Returns:
             Path to the template skeleton shipped with SLEAP.
         """
@@ -1967,7 +1967,7 @@ class OpenSkeleton(EditCommand):
         # Check whether to load from file or preset
         if params.get("template", False):
             # Get selected template from dropdown
-            filename = get_template_skeleton_filename(context)
+            filename = OpenSkeleton.get_template_skeleton_filename(context)
         else:
             filename, selected_filter = FileDialog.open(
                 context.app,
