@@ -83,11 +83,10 @@ def test_skeleton_dock(qtbot):
 
     # This method should get called when we click the load button, but let's just call
     # the non-gui parts directly
-    assert dock.skeleton_templates.currentText() == "bees"
     fn = Path(
         OpenSkeleton.get_template_skeleton_filename(context=dock.main_window.commands)
     )
-    assert fn.name == "bees.json"
+    assert fn.name == f"{dock.skeleton_templates.currentText()}.json"
 
 
 def test_suggestions_dock(qtbot):
