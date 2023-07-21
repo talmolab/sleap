@@ -1952,7 +1952,7 @@ class OpenSkeleton(EditCommand):
         # Check whether to load from file or preset
         if params.get("template", False):
             # Get selected template from dropdown
-            template = context.app.skeletonTemplates.currentText()
+            template = context.app.skeleton_dock.skeleton_templates.currentText()
             # Load from selected preset
             filename = get_package_file(f"sleap/skeletons/{template}.json")
         else:
