@@ -3,6 +3,7 @@
 import pytest
 from sleap import Labels, Video
 from sleap.gui.app import MainWindow
+from sleap.gui.commands import OpenSkeleton
 from sleap.gui.widgets.docks import (
     InstancesDock,
     SuggestionsDock,
@@ -79,6 +80,8 @@ def test_skeleton_dock(qtbot):
     assert dock.main_window is main_window
     assert dock.wgt_layout is dock.widget().layout()
 
+    assert dock.skeleton_templates.currentText() == "bees"
+
 
 def test_suggestions_dock(qtbot):
     """Test the `DockWidget` class."""
@@ -101,4 +104,4 @@ def test_instances_dock(qtbot):
 
 
 if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_instances_dock"])
+    pytest.main([f"{__file__}::test_skeleton_dock"])
