@@ -213,16 +213,13 @@ def compute_oks(
         # If use_cocoeval is True, then compute normalization factor according to cocoeval.
         spread_factor = (2 * stddev) ** 2
         scale_factor = 2 * (scale + np.spacing(1))
-        normalization_factor = np.reshape(spread_factor, (1, 1, n_nodes)) * np.reshape(
-            scale_factor, (n_gt, 1, 1)
-        )
     else:
         # If use_cocoeval is False, then compute normalization factor according to the paper.
         spread_factor = stddev ** 2
         scale_factor = 2 * ((scale + np.spacing(1)) ** 2)
-        normalization_factor = np.reshape(spread_factor, (1, 1, n_nodes)) * np.reshape(
-            scale_factor, (n_gt, 1, 1)
-        )
+    normalization_factor = np.reshape(spread_factor, (1, 1, n_nodes)) * np.reshape(
+        scale_factor, (n_gt, 1, 1)
+    )
     assert normalization_factor.shape == (n_gt, 1, n_nodes)
 
     # Since a "miss" is considered as KS < 0.5, we'll set the
