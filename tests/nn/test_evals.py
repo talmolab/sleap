@@ -1,5 +1,6 @@
 from pathlib import Path
 import numpy as np
+import tensorflow as tf
 
 from typing import List, Tuple
 
@@ -14,7 +15,7 @@ from sleap.nn.evals import (
     compute_dist_metrics,
     compute_oks,
     load_metrics,
-    evaluate_model
+    evaluate_model,
 )
 from sleap.nn.model import Model
 
@@ -103,15 +104,22 @@ def test_evaluate_model(min_labels_slp, min_bottomup_model_path):
     labels_reader = LabelsReader(labels=min_labels_slp, user_instances_only=True)
     model_dir: str = min_bottomup_model_path
     cfg = TrainingJobConfig.load_json(str(Path(model_dir, "training_config.json")))
-    model = Model.from_config(config=cfg.model, skeleton=labels_reader.labels.skeletons[0], tracks=labels_reader.labels.tracks, update_config=True)
-    model.make_model(input_shape=(None, None, 1))
+    model = Model.from_config(
+        config=cfg.model,
+        skeleton=labels_reader.labels.skeletons[0],
+        tracks=labels_reader.labels.tracks,
+        update_config=True,
+    )
+    model.keras_model = tf.keras.models.load_model(
+        Path(model_dir) / "best_model.h5", compile=False
+    )
 
     labels_pr, metrics = evaluate_model(
         cfg=cfg,
         labels_gt=labels_reader,
         model=model,
-        save = True,
-        split_name = "test",
+        save=True,
+        split_name="test",
     )
     assert metrics is not None  # If metrics is None, then the metrics were not saved
 
@@ -127,8 +135,3 @@ def test_load_metrics(min_centered_instance_model_path):
 
     metrics = load_metrics(model_path, split="train")
     assert "oks_voc.mAP" in metrics
-
-
-if __name__ == "__main__":
-    import pytest
-    pytest.main([f"{__file__}::test_evaluate_model"])
