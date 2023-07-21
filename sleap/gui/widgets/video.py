@@ -2156,6 +2156,9 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
             elif self.bottom_right_box.contains(event.pos()):
                 self.resizing = "bottom_right"
                 self.origin = self.rect().topLeft()
+            else:
+                # Pass event down the stack to continue panning
+                event.setAccepted(False)
 
             self.ref_width = self.rect().width()
             self.ref_height = self.rect().height()
@@ -2254,7 +2257,6 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
 
             # Update the instance
             self.parent.updatePoints(complete=True, user_change=True)
-
             self.resizing = None
 
 
