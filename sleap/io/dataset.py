@@ -194,8 +194,7 @@ class LabelsDataCache:
 
     def get_track_occupancy(self, video: Video, track: Track) -> RangeList:
         """Access track occupancy cache that adds video/track as needed."""
-        self.get_video_track_occupancy(video=video)
-        if track not in self._track_occupancy[video]:
+        if track not in self.get_video_track_occupancy(video=video):
             self._track_occupancy[video][track] = RangeList()
         return self._track_occupancy[video][track]
 

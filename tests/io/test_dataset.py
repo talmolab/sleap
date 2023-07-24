@@ -1392,6 +1392,7 @@ def test_add_track(centered_pair_labels: Labels, small_robot_mp4_vid: Video):
     labels.add_track(new_video, track)
     assert track in labels.tracks
     assert new_video in labels._cache._track_occupancy
+    assert track in labels._cache._track_occupancy[new_video]
 
 
 def test_remove_track(centered_pair_predictions):
