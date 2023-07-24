@@ -107,7 +107,3 @@ def test_instances_dock(qtbot):
     assert dock.name == "Instances"
     assert dock.main_window is main_window
     assert dock.wgt_layout is dock.widget().layout()
-
-
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_videos_dock"])

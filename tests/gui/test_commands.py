@@ -826,7 +826,3 @@ def test_LoadProjectFile(
         load_and_assert_changes(search_path)
     finally:  # Move video back to original location - for ease of re-testing
         shutil.move(new_video_path, expected_video_path)
-
-
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_RemoveVideo"])
