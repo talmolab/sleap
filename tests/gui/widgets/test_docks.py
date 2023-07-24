@@ -1,7 +1,7 @@
 """Module for testing dock widgets for the `MainWindow`."""
 
 from pathlib import Path
-
+import pytest
 from sleap import Labels, Video
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import OpenSkeleton
@@ -107,3 +107,7 @@ def test_instances_dock(qtbot):
     assert dock.name == "Instances"
     assert dock.main_window is main_window
     assert dock.wgt_layout is dock.widget().layout()
+
+
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::test_videos_dock"])

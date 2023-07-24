@@ -1849,12 +1849,10 @@ class RemoveVideo(EditCommand):
         for idx in row_idxs:
             context.labels.remove_video(videos[idx])
 
-        # check if video to be deleted is the current state video
+        # Update the view if state has the removed video
         if context.state["video"] in videos_to_be_removed:
             if len(context.labels.videos):
-                context.state["video"] = context.labels.videos[
-                    list(set(range(len(videos))) - set(row_idxs))[-1]
-                ]
+                context.state["video"] = context.labels.videos[-1]
             else:
                 context.state["video"] = None
 
