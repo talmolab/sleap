@@ -251,6 +251,8 @@ class LabelsDataCache:
 
     def add_track(self, video: Video, track: Track):
         """Add a track to the labels."""
+        if video not in self._track_occupancy:
+            self._track_occupancy[video] = dict()
         self._track_occupancy[video][track] = RangeList()
 
     def add_instance(self, frame: LabeledFrame, instance: Instance):
