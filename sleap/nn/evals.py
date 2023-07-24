@@ -148,9 +148,10 @@ def compute_oks(
         points_pr: Predicted instance of shape (n_pr, n_nodes, n_ed).
         use_cocoeval: Indicates whether the OKS score is calculated like cocoeval
             method or not. True indicating the score is calculated using the
-            cocoeval method (widely used and is default) and False indicating the
-            score is calculated using the method exactly as given in the paper referenced
-            in the Notes below.
+            cocoeval method (widely used and is default and the code can be found here
+            https://github.com/cocodataset/cocoapi/blob/8c9bcc3cf640524c4c20a9c40e89cb6a2f2fa0e9/PythonAPI/pycocotools/cocoeval.py#L192C5-L233C20)
+            and False indicating the score is calculated using the method exactly 
+            as given in the paper referenced in the Notes below.
         scale: Size scaling factor to use when weighing the scores, typically
             the area of the bounding box of the instance (in pixels). This
             should be of the length n_gt. If a scalar is provided, the same
