@@ -1837,7 +1837,7 @@ class ReplaceVideo(EditCommand):
 
 
 class RemoveVideo(EditCommand):
-    topics = [UpdateTopic.video, UpdateTopic.suggestions]
+    topics = [UpdateTopic.video, UpdateTopic.suggestions, UpdateTopic.frame]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
