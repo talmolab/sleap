@@ -252,16 +252,13 @@ class LabelsDataCache:
 
     def add_instance(self, frame: LabeledFrame, instance: Instance):
         """Add an instance to the labels."""
-        if frame.video not in self._track_occupancy:
-            self._track_occupancy[frame.video] = dict()
 
         # Add track in its not already present in labels
-        if instance.track not in self._track_occupancy[frame.video]:
-            self._track_occupancy[frame.video][instance.track] = RangeList()
-
-        self._track_occupancy[frame.video][instance.track].insert(
-            (frame.frame_idx, frame.frame_idx + 1)
+        track_occupancy = self.get_track_occupancy(
+            video=frame.video, track=instance.track
         )
+
+        track_occupancy.insert((frame.frame_idx, frame.frame_idx + 1))
 
         self.update_counts_for_frame(frame)
 
@@ -1332,8 +1329,12 @@ class Labels(MutableSequence):
         if instance.track in tracks_in_frame:
             instance.track = None
 
+        # Add instance and track to labels
         frame.instances.append(instance)
+        if (instance.track is not None) and (instance.track not in self.tracks):
+            self.add_track(video=frame.video, track=instance.track)
 
+        # Update cache
         self._cache.add_instance(frame, instance)
 
     def find_track_occupancy(

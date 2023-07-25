@@ -1947,14 +1947,27 @@ class OpenSkeleton(EditCommand):
             labels.skeletons = skeletons_used
 
     @staticmethod
+    def get_template_skeleton_filename(context: CommandContext) -> str:
+        """Helper function to get the template skeleton filename from dropdown.
+
+        Args:
+            context: The `CommandContext`.
+
+        Returns:
+            Path to the template skeleton shipped with SLEAP.
+        """
+
+        template = context.app.skeleton_dock.skeleton_templates.currentText()
+        filename = get_package_file(f"sleap/skeletons/{template}.json")
+        return filename
+
+    @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
         # Check whether to load from file or preset
         if params.get("template", False):
             # Get selected template from dropdown
-            template = context.app.skeletonTemplates.currentText()
-            # Load from selected preset
-            filename = get_package_file(f"sleap/skeletons/{template}.json")
+            filename = OpenSkeleton.get_template_skeleton_filename(context)
         else:
             filename, selected_filter = FileDialog.open(
                 context.app,
