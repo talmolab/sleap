@@ -58,6 +58,8 @@ class Shortcuts(object):
         "frame prev medium step",
         "frame next large step",
         "frame prev large step",
+        "export_analysis_current"
+
     )
 
     def __init__(self):
