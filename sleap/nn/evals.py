@@ -136,6 +136,7 @@ def compute_oks(
     points_pr: np.ndarray,
     scale: Optional[float] = None,
     stddev: float = 0.025,
+    use_cocoeval: bool = True,
 ) -> np.ndarray:
     """Compute the object keypoints similarity between sets of points.
 
@@ -145,6 +146,12 @@ def compute_oks(
             is the number of Euclidean dimensions (typically 2 or 3). Keypoints
             that are missing/not visible should be represented as NaNs.
         points_pr: Predicted instance of shape (n_pr, n_nodes, n_ed).
+        use_cocoeval: Indicates whether the OKS score is calculated like cocoeval
+            method or not. True indicating the score is calculated using the
+            cocoeval method (widely used and the code can be found here at
+            https://github.com/cocodataset/cocoapi/blob/8c9bcc3cf640524c4c20a9c40e89cb6a2f2fa0e9/PythonAPI/pycocotools/cocoeval.py#L192C5-L233C20)
+            and False indicating the score is calculated using the method exactly
+            as given in the paper referenced in the Notes below.
         scale: Size scaling factor to use when weighing the scores, typically
             the area of the bounding box of the instance (in pixels). This
             should be of the length n_gt. If a scalar is provided, the same
@@ -203,8 +210,14 @@ def compute_oks(
     assert distance.shape == (n_gt, n_pr, n_nodes)
 
     # Compute the normalization factor per keypoint.
-    spread_factor = stddev ** 2
-    scale_factor = 2 * (scale + np.spacing(1))
+    if use_cocoeval:
+        # If use_cocoeval is True, then compute normalization factor according to cocoeval.
+        spread_factor = (2 * stddev) ** 2
+        scale_factor = 2 * (scale + np.spacing(1))
+    else:
+        # If use_cocoeval is False, then compute normalization factor according to the paper.
+        spread_factor = stddev ** 2
+        scale_factor = 2 * ((scale + np.spacing(1)) ** 2)
     normalization_factor = np.reshape(spread_factor, (1, 1, n_nodes)) * np.reshape(
         scale_factor, (n_gt, 1, 1)
     )
