@@ -1384,6 +1384,19 @@ def test_labels_numpy(centered_pair_predictions: Labels):
     np.testing.assert_array_equal(labels_np[lf.frame_idx, 0, :, :-1], user_inst.numpy())
 
 
+def test_add_instance(centered_pair_labels: Labels):
+    labels = centered_pair_labels
+    lf = labels[0]
+    track = Track()
+    inst = Instance(skeleton=labels.skeleton, track=track, frame=lf)
+
+    labels.add_instance(lf, inst)
+    assert inst in labels.instances()
+    assert inst in lf.instances
+    assert track in labels.tracks
+    assert track in labels._cache._track_occupancy[lf.video]
+
+
 def test_remove_track(centered_pair_predictions):
     labels = centered_pair_predictions
 
