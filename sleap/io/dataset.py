@@ -194,10 +194,7 @@ class LabelsDataCache:
 
     def get_track_occupancy(self, video: Video, track: Track) -> RangeList:
         """Access track occupancy cache that adds video/track as needed."""
-        if video not in self._track_occupancy:
-            self._track_occupancy[video] = dict()
-
-        if track not in self._track_occupancy[video]:
+        if track not in self.get_video_track_occupancy(video=video):
             self._track_occupancy[video][track] = RangeList()
         return self._track_occupancy[video][track]
 
@@ -251,20 +248,17 @@ class LabelsDataCache:
 
     def add_track(self, video: Video, track: Track):
         """Add a track to the labels."""
-        self._track_occupancy[video][track] = RangeList()
+        self.get_track_occupancy(video=video, track=track)
 
     def add_instance(self, frame: LabeledFrame, instance: Instance):
         """Add an instance to the labels."""
-        if frame.video not in self._track_occupancy:
-            self._track_occupancy[frame.video] = dict()
 
         # Add track in its not already present in labels
-        if instance.track not in self._track_occupancy[frame.video]:
-            self._track_occupancy[frame.video][instance.track] = RangeList()
-
-        self._track_occupancy[frame.video][instance.track].insert(
-            (frame.frame_idx, frame.frame_idx + 1)
+        track_occupancy = self.get_track_occupancy(
+            video=frame.video, track=instance.track
         )
+
+        track_occupancy.insert((frame.frame_idx, frame.frame_idx + 1))
 
         self.update_counts_for_frame(frame)
 
@@ -1335,8 +1329,12 @@ class Labels(MutableSequence):
         if instance.track in tracks_in_frame:
             instance.track = None
 
+        # Add instance and track to labels
         frame.instances.append(instance)
+        if (instance.track is not None) and (instance.track not in self.tracks):
+            self.add_track(video=frame.video, track=instance.track)
 
+        # Update cache
         self._cache.add_instance(frame, instance)
 
     def find_track_occupancy(
