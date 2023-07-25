@@ -248,8 +248,10 @@ class VideoSlider(QtWidgets.QGraphicsView):
         """Returns value of slider."""
         return self._val_main
 
-    def setValue(self, val: float) -> float:
+    def setValue(self, val: Optional[float]) :
         """Sets value of slider."""
+        if val is None:
+            return     
         self._val_main = val
         x = self._toPos(val)
         self.handle.setPos(x, 0)

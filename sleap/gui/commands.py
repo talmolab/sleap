@@ -1848,6 +1848,7 @@ class RemoveVideo(EditCommand):
         # Remove selected videos in the project
         for idx in row_idxs:
             context.labels.remove_video(videos[idx])
+            # context.app.updateStatusMessage()
 
         # Update the view if state has the removed video
         if context.state["video"] in videos_to_be_removed:

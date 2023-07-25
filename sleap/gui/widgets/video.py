@@ -411,12 +411,15 @@ class QtVideoPlayer(QWidget):
         self.video = video
 
         # Is this necessary?
-        self.view.scene.setSceneRect(0, 0, video.width, video.height)
+        if self.video is None:
+            self.reset()
+        else:
+            self.view.scene.setSceneRect(0, 0, video.width, video.height)
 
-        self.seekbar.setMinimum(0)
-        self.seekbar.setMaximum(self.video.last_frame_idx)
-        self.seekbar.setEnabled(True)
-        self.seekbar.resizeEvent()
+            self.seekbar.setMinimum(0)
+            self.seekbar.setMaximum(self.video.last_frame_idx)
+            self.seekbar.setEnabled(True)
+            self.seekbar.resizeEvent()
 
         if plot:
             self.plot()
