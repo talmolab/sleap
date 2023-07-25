@@ -1364,7 +1364,11 @@ class ExportLabeledClip(AppCommand):
 
 
 def export_dataset_gui(
-    labels: Labels, filename: str, all_labeled: bool = False, suggested: bool = False
+    labels: Labels,
+    filename: str,
+    all_labeled: bool = False,
+    suggested: bool = False,
+    verbose: bool = True,
 ) -> str:
     """Export dataset with image data and display progress GUI dialog.
 
