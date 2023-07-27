@@ -201,6 +201,7 @@ class CommandContext:
     def from_labels(cls, labels: Labels) -> "CommandContext":
         """Creates a command context for use independently of GUI app."""
         state = GuiState()
+        state["labels"] = labels
         app = FakeApp(labels)
         return cls(state=state, app=app)
 
@@ -1376,12 +1377,15 @@ def export_dataset_gui(
         labels: `sleap.Labels` dataset to export.
         filename: Output filename. Should end in `.pkg.slp`.
         all_labeled: If `True`, export all labeled frames, including frames with no user
-            instances.
-        suggested: If `True`, include image data for suggested frames.
+            instances. Defaults to `False`.
+        suggested: If `True`, include image data for suggested frames. Defaults to
+            `False`.
+        verbose: If `True`, display progress dialog. Defaults to `True`.
     """
-    win = QtWidgets.QProgressDialog(
-        "Exporting dataset with frame images...", "Cancel", 0, 1
-    )
+    if verbose:
+        win = QtWidgets.QProgressDialog(
+            "Exporting dataset with frame images...", "Cancel", 0, 1
+        )
 
     def update_progress(n, n_total):
         if win.wasCanceled():
@@ -1402,15 +1406,16 @@ def export_dataset_gui(
         save_frame_data=True,
         all_labeled=all_labeled,
         suggested=suggested,
-        progress_callback=update_progress,
+        progress_callback=update_progress if verbose else None,
     )
 
-    if win.wasCanceled():
-        # Delete output if saving was canceled.
-        os.remove(filename)
-        return "canceled"
+    if verbose:
+        if win.wasCanceled():
+            # Delete output if saving was canceled.
+            os.remove(filename)
+            return "canceled"
 
-    win.hide()
+        win.hide()
 
     return filename
 
@@ -1426,6 +1431,7 @@ class ExportDatasetWithImages(AppCommand):
             filename=params["filename"],
             all_labeled=cls.all_labeled,
             suggested=cls.suggested,
+            verbose=params.get("verbose", True),
         )
 
     @staticmethod

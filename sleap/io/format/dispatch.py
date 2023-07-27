@@ -5,6 +5,7 @@ See `read()` and `write()` in `sleap.io.format` for usage.
 """
 
 import attr
+from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
 from sleap.io.format.adaptor import Adaptor, SleapObjectType
@@ -77,7 +78,10 @@ class Dispatch(object):
             if adaptor.can_write_filename(filename):
                 return adaptor.write(filename, source_object, *args, **kwargs)
 
-        raise TypeError("No file format adaptor could write this file.")
+        raise TypeError(
+            "No file format adaptor could write this file: "
+            f"{Path(filename).name}."
+        )
 
     def write_safely(self, *args, **kwargs) -> Optional[BaseException]:
         """Wrapper for writing file without throwing exception."""
