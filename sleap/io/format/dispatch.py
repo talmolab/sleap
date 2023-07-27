@@ -79,8 +79,7 @@ class Dispatch(object):
                 return adaptor.write(filename, source_object, *args, **kwargs)
 
         raise TypeError(
-            "No file format adaptor could write this file: "
-            f"{Path(filename).name}."
+            f"No file format adaptor could write this file: {Path(filename).name}."
         )
 
     def write_safely(self, *args, **kwargs) -> Optional[BaseException]:
