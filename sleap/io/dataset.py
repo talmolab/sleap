@@ -298,6 +298,10 @@ class LabelsDataCache:
         self, video: Optional[Video] = None, filter: Text = ""
     ) -> Set[Tuple[int, int]]:
         """Return list of (video_idx, frame_idx) tuples matching video/filter."""
+        if video not in self.labels.videos:
+            # Set value of video to None if not present in the videos list.
+            video = None
+
         if filter == "":
             filter_func = lambda lf: video is None or lf.video == video
         elif filter == "user":

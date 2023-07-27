@@ -1233,26 +1233,31 @@ class MainWindow(QMainWindow):
     def updateStatusMessage(self, message: Optional[str] = None):
         """Updates status bar."""
 
-        current_video = self.state["video"]
+        if self.state["video"] not in self.labels.videos:
+            current_video = None
+        else:
+            current_video = self.state["video"]
         frame_idx = self.state["frame_idx"] or 0
 
         spacer = "        "
 
         if message is None:
             message = ""
-            if len(self.labels.videos) > 1:
+            if len(self.labels.videos) > 0 and current_video is not None:
                 message += f"Video {self.labels.videos.index(current_video)+1}/"
                 message += f"{len(self.labels.videos)}"
                 message += spacer
 
-            message += f"Frame: {frame_idx+1:,}/{len(current_video):,}"
+            if current_video is not None:
+                message += f"Frame: {frame_idx+1:,}/{len(current_video):,}"
+
             if self.player.seekbar.hasSelection():
                 start, end = self.state["frame_range"]
                 message += spacer
                 message += f"Selection: {start+1:,}-{end:,} ({end-start+1:,} frames)"
 
             message += f"{spacer}Labeled Frames: "
-            if current_video is not None and current_video in self.labels.videos:
+            if current_video is not None:
                 message += str(
                     self.labels.get_labeled_frame_count(current_video, "user")
                 )
