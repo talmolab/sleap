@@ -962,14 +962,14 @@ class Trainer(ABC):
         logger.info("Saving evaluation metrics to model folder...")
         sleap.nn.evals.evaluate_model(
             cfg=self.config,
-            labels_reader=self.data_readers.training_labels_reader,
+            labels_gt=self.data_readers.training_labels_reader,
             model=self.model,
             save=True,
             split_name="train",
         )
         sleap.nn.evals.evaluate_model(
             cfg=self.config,
-            labels_reader=self.data_readers.validation_labels_reader,
+            labels_gt=self.data_readers.validation_labels_reader,
             model=self.model,
             save=True,
             split_name="val",
@@ -977,7 +977,7 @@ class Trainer(ABC):
         if self.data_readers.test_labels_reader is not None:
             sleap.nn.evals.evaluate_model(
                 cfg=self.config,
-                labels_reader=self.data_readers.test_labels_reader,
+                labels_gt=self.data_readers.test_labels_reader,
                 model=self.model,
                 save=True,
                 split_name="test",
