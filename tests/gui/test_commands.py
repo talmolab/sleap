@@ -1,10 +1,10 @@
-from pathlib import PurePath, Path
+import pytest
 import shutil
 import sys
-from typing import List
+import time
 
-import pytest
-from qtpy.QtWidgets import QComboBox
+from pathlib import PurePath, Path
+from typing import List
 
 from sleap import Skeleton, Track, PredictedInstance
 from sleap.gui.commands import (
@@ -829,10 +829,22 @@ def test_LoadProjectFile(
         shutil.move(new_video_path, expected_video_path)
 
 
-def test_exportLabelsPackage(centered_pair_labels: Labels, tmpdir):
-    def assert_loaded_package_similar(labels_reload, sugg=False, pred=False):
+@pytest.mark.parametrize("export_extension", [".json.zip", ".slp"])
+def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmpdir):
+    def assert_loaded_package_similar(path_to_pkg: Path, sugg=False, pred=False):
         """Assert that the loaded labels are similar to the original."""
-        assert len(labels_reload) == len(centered_pair_labels)
+
+        # Load the labels, but first copy file to a location (which pytest can and will
+        # keep in memory, but won't affect our re-use of the original file name)
+        filename_for_pytest_to_hoard: Path = path_to_pkg.with_name(
+            f"pytest_labels_{time.perf_counter_ns()}{export_extension}"
+        )
+        shutil.copyfile(path_to_pkg.as_posix(), filename_for_pytest_to_hoard.as_posix())
+        labels_reload: Labels = Labels.load_file(
+            filename_for_pytest_to_hoard.as_posix()
+        )
+
+        assert len(labels_reload.labeled_frames) == len(centered_pair_labels)
         assert len(labels_reload.videos) == len(centered_pair_labels.videos)
         assert len(labels_reload.suggestions) == len(centered_pair_labels.suggestions)
         assert len(labels_reload.tracks) == len(centered_pair_labels.tracks)
@@ -852,7 +864,8 @@ def test_exportLabelsPackage(centered_pair_labels: Labels, tmpdir):
         assert labels_reload.video.num_frames == num_images
 
     # Set-up CommandContext
-    path_to_pkg = Path(tmpdir, "test_exportLabelsPackage.json.zip")
+    path_to_pkg = Path(tmpdir, "test_exportLabelsPackage.ext")
+    path_to_pkg = path_to_pkg.with_suffix(export_extension)
 
     def no_gui_ask(cls, context, params):
         """No GUI version of `ExportDatasetWithImages.ask`."""
@@ -881,17 +894,13 @@ def test_exportLabelsPackage(centered_pair_labels: Labels, tmpdir):
 
     # Case 1: Export user-labeled frames with image data into a single SLP file.
     context.exportUserLabelsPackage()
-    assert Path(tmpdir, "test_exportLabelsPackage.json.zip").exists()
-
-    labels_reload: Labels = Labels.load_file(path_to_pkg.as_posix())
-    assert_loaded_package_similar(labels_reload)
+    assert path_to_pkg.exists()
+    assert_loaded_package_similar(path_to_pkg)
 
     # Case 2: Export user-labeled frames and suggested frames with image data.
     context.exportTrainingPackage()
-    labels_reload: Labels = Labels.load_file(path_to_pkg.as_posix())
-    assert_loaded_package_similar(labels_reload, sugg=True)
+    assert_loaded_package_similar(path_to_pkg, sugg=True)
 
     # Case 3: Export all frames and suggested frames with image data.
     context.exportFullPackage()
-    labels_reload: Labels = Labels.load_file(path_to_pkg.as_posix())
-    assert_loaded_package_similar(labels_reload, sugg=True, pred=True)
+    assert_loaded_package_similar(path_to_pkg, sugg=True, pred=True)
