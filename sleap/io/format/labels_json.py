@@ -241,9 +241,11 @@ class LabelsJsonAdaptor(Adaptor):
         compress: Optional[bool] = None,
         save_frame_data: bool = False,
         frame_data_format: str = "png",
+        all_labeled: bool = False,
+        suggested: bool = False,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
     ):
-        """
-        Save a Labels instance to a JSON format.
+        """Save a Labels instance to a JSON format.
 
         Args:
             filename: The filename to save the data to.
@@ -276,6 +278,11 @@ class LabelsJsonAdaptor(Adaptor):
                  Note: 'h264/mkv' and 'avc1/mp4' require separate installation
                  of these codecs on your system. They are excluded from SLEAP
                  because of their GPL license.
+            all_labeled: Whether to save all frames or just the labeled frames to use in
+                training.
+            suggested: Whether to save the suggested labels along with the training
+                labels.
+            progress_callback: A function that will be called with the current progress.
 
         Returns:
             None
@@ -299,7 +306,11 @@ class LabelsJsonAdaptor(Adaptor):
                 # of the videos. We will only include the labeled frames though. We will
                 # then replace each video with this new video
                 new_videos = labels.save_frame_data_imgstore(
-                    output_dir=tmp_dir, format=frame_data_format
+                    output_dir=tmp_dir,
+                    format=frame_data_format,
+                    all_labeled=all_labeled,
+                    suggested=suggested,
+                    progress_callback=progress_callback,
                 )
 
                 # Make video paths relative

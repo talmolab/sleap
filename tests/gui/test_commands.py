@@ -1,16 +1,17 @@
-from pathlib import PurePath, Path
+import pytest
 import shutil
 import sys
+import time
+
+from pathlib import PurePath, Path
 from typing import List
 
-import pytest
-from qtpy.QtWidgets import QComboBox
-
-from sleap import Skeleton, Track
+from sleap import Skeleton, Track, PredictedInstance
 from sleap.gui.commands import (
     CommandContext,
-    ImportDeepLabCutFolder,
     ExportAnalysisFile,
+    ExportDatasetWithImages,
+    ImportDeepLabCutFolder,
     RemoveVideo,
     ReplaceVideo,
     OpenSkeleton,
@@ -826,3 +827,80 @@ def test_LoadProjectFile(
         load_and_assert_changes(search_path)
     finally:  # Move video back to original location - for ease of re-testing
         shutil.move(new_video_path, expected_video_path)
+
+
+@pytest.mark.parametrize("export_extension", [".json.zip", ".slp"])
+def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmpdir):
+    def assert_loaded_package_similar(path_to_pkg: Path, sugg=False, pred=False):
+        """Assert that the loaded labels are similar to the original."""
+
+        # Load the labels, but first copy file to a location (which pytest can and will
+        # keep in memory, but won't affect our re-use of the original file name)
+        filename_for_pytest_to_hoard: Path = path_to_pkg.with_name(
+            f"pytest_labels_{time.perf_counter_ns()}{export_extension}"
+        )
+        shutil.copyfile(path_to_pkg.as_posix(), filename_for_pytest_to_hoard.as_posix())
+        labels_reload: Labels = Labels.load_file(
+            filename_for_pytest_to_hoard.as_posix()
+        )
+
+        assert len(labels_reload.labeled_frames) == len(centered_pair_labels)
+        assert len(labels_reload.videos) == len(centered_pair_labels.videos)
+        assert len(labels_reload.suggestions) == len(centered_pair_labels.suggestions)
+        assert len(labels_reload.tracks) == len(centered_pair_labels.tracks)
+        assert len(labels_reload.skeletons) == len(centered_pair_labels.skeletons)
+        assert (
+            len(
+                set(labels_reload.skeleton.node_names)
+                - set(centered_pair_labels.skeleton.node_names)
+            )
+            == 0
+        )
+        num_images = len(labels_reload)
+        if sugg:
+            num_images += len(lfs_sugg)
+        if not pred:
+            num_images -= len(lfs_pred)
+        assert labels_reload.video.num_frames == num_images
+
+    # Set-up CommandContext
+    path_to_pkg = Path(tmpdir, "test_exportLabelsPackage.ext")
+    path_to_pkg = path_to_pkg.with_suffix(export_extension)
+
+    def no_gui_ask(cls, context, params):
+        """No GUI version of `ExportDatasetWithImages.ask`."""
+        params["filename"] = path_to_pkg.as_posix()
+        params["verbose"] = False
+        return True
+
+    ExportDatasetWithImages.ask = no_gui_ask
+
+    # Remove frames we want to use for suggestions and predictions
+    lfs_sugg = [centered_pair_labels[idx] for idx in [-1, -2]]
+    lfs_pred = [centered_pair_labels[idx] for idx in [-3, -4]]
+    centered_pair_labels.remove_frames(lfs_sugg)
+
+    # Add suggestions
+    for lf in lfs_sugg:
+        centered_pair_labels.add_suggestion(centered_pair_labels.video, lf.frame_idx)
+
+    # Add predictions and remove user instances from those frames
+    for lf in lfs_pred:
+        predicted_inst = PredictedInstance.from_instance(lf.instances[0], score=0.5)
+        centered_pair_labels.add_instance(lf, predicted_inst)
+        for inst in lf.user_instances:
+            centered_pair_labels.remove_instance(lf, inst)
+    context = CommandContext.from_labels(centered_pair_labels)
+
+    # Case 1: Export user-labeled frames with image data into a single SLP file.
+    context.exportUserLabelsPackage()
+    assert path_to_pkg.exists()
+    assert_loaded_package_similar(path_to_pkg)
+
+    # Case 2: Export user-labeled frames and suggested frames with image data.
+    context.exportTrainingPackage()
+    assert_loaded_package_similar(path_to_pkg, sugg=True)
+
+    # Case 3: Export all frames and suggested frames with image data.
+    context.exportFullPackage()
+    assert_loaded_package_similar(path_to_pkg, sugg=True, pred=True)
