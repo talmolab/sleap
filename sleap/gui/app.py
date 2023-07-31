@@ -1233,10 +1233,7 @@ class MainWindow(QMainWindow):
     def updateStatusMessage(self, message: Optional[str] = None):
         """Updates status bar."""
 
-        if self.state["video"] not in self.labels.videos:
-            current_video = None
-        else:
-            current_video = self.state["video"]
+        current_video = self.state["video"]
         frame_idx = self.state["frame_idx"] or 0
 
         spacer = "        "
