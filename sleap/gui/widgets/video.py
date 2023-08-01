@@ -429,6 +429,7 @@ class QtVideoPlayer(QWidget):
         self.video = None
         self.state["frame_idx"] = None
         self.view.clear()
+        self.view.setImage(QImage(sleap.util.get_package_file("sleap/gui/background.png")))
         self.seekbar.setMaximum(0)
         self.seekbar.setEnabled(False)
 
