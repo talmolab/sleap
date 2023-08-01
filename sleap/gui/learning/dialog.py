@@ -19,6 +19,7 @@ from typing import Dict, List, Optional, Text, Optional, cast
 from qtpy import QtWidgets, QtCore
 
 import pyperclip
+import json
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
     "data.instance_cropping.center_on_part",
@@ -85,7 +86,6 @@ class LearningDialog(QtWidgets.QDialog):
 
         # Layout for buttons
         buttons = QtWidgets.QDialogButtonBox()
-        # add_copy_button
         self.copy_button = buttons.addButton(
             "Copy configuration files...", QtWidgets.QDialogButtonBox.ActionRole
         )
@@ -98,7 +98,6 @@ class LearningDialog(QtWidgets.QDialog):
         self.cancel_button = buttons.addButton(QtWidgets.QDialogButtonBox.Cancel)
         self.run_button = buttons.addButton("Run", QtWidgets.QDialogButtonBox.ApplyRole)
 
-        # add_copy_button
         self.copy_button.setToolTip("Copy configuration to the clipboard")
         self.save_button.setToolTip("Save scripts and configuration to run pipeline.")
         self.export_button.setToolTip(
@@ -146,7 +145,6 @@ class LearningDialog(QtWidgets.QDialog):
         self.connect_signals()
 
         # Connect actions for buttons
-        # add_copy_button
         self.copy_button.clicked.connect(self.copy)
         self.save_button.clicked.connect(self.save)
         self.export_button.clicked.connect(self.export_package)
@@ -728,65 +726,17 @@ class LearningDialog(QtWidgets.QDialog):
             win.exec_()
 
     def copy(self):
-        # """Save scripts and configs to run pipeline."""
-        # if output_dir is None:
-        #     labels_fn = Path(self.labels_filename)
-        #     models_dir = Path(labels_fn.parent, "models")
-        #     output_dir = FileDialog.openDir(
-        #         None,
-        #         dir=models_dir.as_posix(),
-        #         caption="Select directory to save scripts",
-        #     )
-        #
-        #     if not output_dir:
-        #         return
-        def format_data(data, indent=0):
-            """Recursive function to convert data to a formatted string."""
-            lines = []
-            pad = '  ' * indent  # Define your indentation here. I'm using two spaces.
-
-            if isinstance(data, dict):
-                for key, value in data.items():
-                    lines.append(f"{pad}{key}:")
-                    lines.extend(format_data(value, indent + 1))
-            elif isinstance(data, list):
-                for index, item in enumerate(data):
-                    lines.append(f"{pad}Item {index}:")
-                    lines.extend(format_data(item, indent + 1))
-            else:
-                try:
-                    object_dict = vars(data)  # Get attributes if it's an object
-                    lines.extend(format_data(object_dict, indent))
-                except TypeError:
-                    lines.append(f"{pad}{data}")
-
-            return lines
-
-
-
-
+        """Copy scripts and configs to clipboard"""
         pipeline_form_data = self.pipeline_form_widget.get_form_data()
         items_for_inference = self.get_items_for_inference(pipeline_form_data)
         config_info_list = self.get_every_head_config_data(pipeline_form_data)
-        print(type(pipeline_form_data))
-        print(pipeline_form_data)
-        print("item for inference:", items_for_inference)
-        print("config into list:", config_info_list)
-        formatted_pipeline_form_data = "pipeline_form_data" + '\n'.join(f"{key}:{value}" for key, value
-                                                                        in pipeline_form_data.items())
-        # formatted_items_for_inference = "items_for_inference" + '\n'.join(f"{key}:{value}" for key, value
-        #                                                                   in items_for_inference.items())
-        formatted_items_for_inference = '\n'.join(format_data(items_for_inference))
-
-        # formatted_config_info_list = "config_info_list" + '\n'.join(f"{key}:{value}" for key, value
-        #                                                             in config_info_list.items())
-        # Convert the data to a formatted string
-        formatted_config_info_list = '\n'.join(format_data(config_info_list))
-        # Print the formatted text
-
-        output_copy = '\n\n'.join([formatted_pipeline_form_data, formatted_items_for_inference,
-                                   formatted_config_info_list])
-        pyperclip.copy(output_copy)
+        output_json = pipeline_form_data
+        for config_info in config_info_list:
+            config_info = config_info.config.to_json()
+            dict_config = json.loads(config_info)
+            output_json.update(dict_config)
+        output_json = str(output_json)
+        pyperclip.copy(output_json)
 
     def save(
         self, output_dir: Optional[str] = None, labels_filename: Optional[str] = None
