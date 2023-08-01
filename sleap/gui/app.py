@@ -1102,7 +1102,7 @@ class MainWindow(QMainWindow):
         self._buttons["delete node"].setEnabled(has_selected_node)
         self._buttons["toggle grayscale"].setEnabled(has_video)
         self._buttons["show video"].setEnabled(has_selected_video)
-        self._buttons["remove video"].setEnabled(has_selected_video)
+        self._buttons["remove video"].setEnabled(has_video)
         self._buttons["delete instance"].setEnabled(has_selected_instance)
         self.suggestions_dock.suggestions_form_widget.buttons[
             "generate_button"
