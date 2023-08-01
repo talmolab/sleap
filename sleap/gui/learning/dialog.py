@@ -20,6 +20,7 @@ from qtpy import QtWidgets, QtCore
 
 import pyperclip
 import json
+
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
     "data.instance_cropping.center_on_part",
