@@ -435,8 +435,8 @@ class QtVideoPlayer(QWidget):
 
         # Handle overlays and gui state in callback
         frame_idx = None
-        selected_instances = None
-        self.changedPlot.emit(self, frame_idx, selected_instances)
+        selected_instance = None
+        self.changedPlot.emit(self, frame_idx, selected_instance)
 
         # Reset seekbar
         self.seekbar.setMaximum(0)

@@ -1222,6 +1222,8 @@ class MainWindow(QMainWindow):
         # Select instance if there was already selection
         if selected_inst is not None:
             player.view.selectInstance(selected_inst)
+        else:
+            self.state["instance"] = None
 
         if self.state["fit"]:
             player.zoomToFit()
