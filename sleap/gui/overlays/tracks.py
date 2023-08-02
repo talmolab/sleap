@@ -256,4 +256,4 @@ class TrackListOverlay(BaseOverlay):
                 self.text_box.setPos(pos)
             else:
                 self.text_box.setPos(10, 10)
-            self.text_box.setVisible(val)
+        self.text_box.setVisible(val)

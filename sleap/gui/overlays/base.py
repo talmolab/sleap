@@ -61,6 +61,8 @@ class BaseOverlay(abc.ABC):
 
         This method does not need to be called when changing the plot to a new frame.
         """
+        if self.items is None:
+            return
         for item in self.items:
             self.player.scene.removeItem(item)
 

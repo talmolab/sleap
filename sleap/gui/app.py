@@ -1207,18 +1207,23 @@ class MainWindow(QMainWindow):
     def _after_plot_change(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
 
-        # Store the current LabeledFrame (or make new, empty object)
-        self.state["labeled_frame"] = self.labels.find(
-            self.state["video"], frame_idx, return_new=True
-        )[0]
+        # Store the current frame_idx and LabeledFrame (or make new, empty object)
+        self.state["frame_idx"] = frame_idx
+        self.state["labeled_frame"] = (
+            self.labels.find(self.state["video"], frame_idx, return_new=True)[0]
+            if frame_idx is not None
+            else None
+        )
 
         # Show instances, etc, for this frame
         for overlay in self.overlays.values():
-            overlay.add_to_scene(self.state["video"], frame_idx)
+            overlay.redraw(self.state["video"], frame_idx)
 
         # Select instance if there was already selection
         if selected_inst is not None:
             player.view.selectInstance(selected_inst)
+        else:
+            self.state["instance"] = None
 
         if self.state["fit"]:
             player.zoomToFit()
