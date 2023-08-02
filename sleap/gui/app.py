@@ -1109,9 +1109,9 @@ class MainWindow(QMainWindow):
         ].setEnabled(has_videos)
 
         # Update overlays
-        # self.overlays["track_labels"].visible = (
-        #     control_key_down and has_selected_instance
-        # )
+        self.overlays["track_labels"].visible = (
+            control_key_down and has_selected_instance
+        )
 
     def on_data_update(self, what: List[UpdateTopic]):
         def _has_topic(topic_list):
