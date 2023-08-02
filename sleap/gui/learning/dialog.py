@@ -18,7 +18,6 @@ from typing import Dict, List, Optional, Text, Optional, cast
 
 from qtpy import QtWidgets, QtCore
 
-import pyperclip
 import json
 
 # List of fields which should show list of skeleton nodes
@@ -737,7 +736,8 @@ class LearningDialog(QtWidgets.QDialog):
             dict_config = json.loads(config_info)
             output_json.update(dict_config)
         output_json = str(output_json)
-        pyperclip.copy(output_json)
+        clipboard = QtWidgets.QApplication.clipboard()
+        clipboard.setText(output_json)
 
     def save(
         self, output_dir: Optional[str] = None, labels_filename: Optional[str] = None
