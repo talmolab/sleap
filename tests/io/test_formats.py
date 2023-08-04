@@ -2,6 +2,7 @@ import os
 from pathlib import Path, PurePath
 
 import numpy as np
+import pandas as pd
 from numpy.testing import assert_array_equal
 import pytest
 import nixio
@@ -124,6 +125,21 @@ def test_hdf5_v1_filehandle(centered_pair_predictions_hdf5_path):
         labels.videos[0].backend.filename
         == "tests/data/json_format_v1/centered_pair_low_quality.mp4"
     )
+
+def test_csv(tmpdir, centered_pair_predictions):
+    from sleap.info.write_tracking_h5 import main as write_analysis
+
+    filename = os.path.join(tmpdir, "analysis.csv")
+    video = centered_pair_predictions.videos[0]
+
+    write_analysis(centered_pair_predictions, output_path=filename, all_frames=True, csv=True)
+
+    labels = pd.read_csv(
+        filename, header=True
+    )
+
+    # TODO: assert 
+    
 
 
 def test_analysis_hdf5(tmpdir, centered_pair_predictions):
