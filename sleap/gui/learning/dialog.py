@@ -87,7 +87,7 @@ class LearningDialog(QtWidgets.QDialog):
         # Layout for buttons
         buttons = QtWidgets.QDialogButtonBox()
         self.copy_button = buttons.addButton(
-            "Copy configuration files...", QtWidgets.QDialogButtonBox.ActionRole
+            "Copy to clipboard", QtWidgets.QDialogButtonBox.ActionRole
         )
         self.save_button = buttons.addButton(
             "Save configuration files...", QtWidgets.QDialogButtonBox.ActionRole
@@ -735,7 +735,7 @@ class LearningDialog(QtWidgets.QDialog):
             config_info = config_info.config.to_json()
             dict_config = json.loads(config_info)
             output_json.update(dict_config)
-        output_json = str(output_json)
+        output_json = json.dumps(output_json, indent=2)
         clipboard = QtWidgets.QApplication.clipboard()
         clipboard.setText(output_json)
 
