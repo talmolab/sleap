@@ -334,12 +334,17 @@ class MultiClassBottomUpConfig:
             `MultiInstanceConfmapsHeadConfig`).
         class_maps: Class map configuration (see the description in
             `ClassMapsHeadConfig`).
+        pafs: If specified, this configuration will be used to add part affinity fields
+            as an additional target to the model (see the description in
+            `PartAffinityFieldsHeadConfig`). If specified, it will be used for part
+            grouping and class maps will only be used for identity classification.
     """
 
     confmaps: MultiInstanceConfmapsHeadConfig = attr.ib(
         factory=MultiInstanceConfmapsHeadConfig
     )
     class_maps: ClassMapsHeadConfig = attr.ib(factory=ClassMapsHeadConfig)
+    pafs: Optional[PartAffinityFieldsHeadConfig] = None
 
 
 @attr.s(auto_attribs=True)

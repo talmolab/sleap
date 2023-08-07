@@ -247,8 +247,26 @@ class Model:
                 ),
                 ClassMapsHead.from_config(head_config.class_maps, classes=classes),
             ]
-            output_stride = min(heads[0].output_stride, heads[1].output_stride)
-            output_stride = heads[0].output_stride
+
+            if head_config.pafs:
+                edges = head_config.pafs.edges
+                if edges is None:
+                    if skeleton is None:
+                        raise ValueError(
+                            "Skeleton must be provided when the head configuration is "
+                            "incomplete."
+                        )
+                    edges = skeleton.edge_names
+                    if update_config:
+                        head_config.pafs.edges = edges
+
+                heads.append(PartAffinityFieldsHead.from_config(
+                    head_config.pafs,
+                    edges=edges,
+                ))
+
+            output_stride = min([head.output_stride for head in heads])
+            
             if head_config.confmaps.offset_refinement:
                 heads.append(
                     OffsetRefinementHead.from_config(

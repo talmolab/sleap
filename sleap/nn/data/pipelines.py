@@ -959,6 +959,7 @@ class BottomUpMultiClassPipeline:
         confmaps_head: Instantiated head describing the output confidence maps tensor.
         class_maps_head: Instantiated head describing the output class maps tensor.
         offsets_head: Optional head describing the offset refinement maps.
+        pafs_head: Optional head describing the part affinity fields.
     """
 
     data_config: DataConfig
@@ -966,6 +967,7 @@ class BottomUpMultiClassPipeline:
     confmaps_head: MultiInstanceConfmapsHead
     class_maps_head: ClassMapsHead
     offsets_head: Optional[OffsetRefinementHead] = None
+    pafs_head: Optional[PartAffinityFieldsHead] = None
 
     def make_base_pipeline(self, data_provider: Provider) -> Pipeline:
         """Create base pipeline with input data only.
@@ -1051,6 +1053,14 @@ class BottomUpMultiClassPipeline:
             output_stride=self.class_maps_head.output_stride,
             centroids=False,
         )
+
+        if self.pafs_head is not None:
+            pipeline += PartAffinityFieldsGenerator(
+                sigma=self.pafs_head.sigma,
+                output_stride=self.pafs_head.output_stride,
+                skeletons=self.data_config.labels.skeletons,
+                flatten_channels=True,
+            )
 
         if len(data_provider) >= self.optimization_config.batch_size:
             # Batching before repeating is preferred since it preserves epoch boundaries

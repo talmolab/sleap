@@ -179,6 +179,31 @@ def classify_peaks_from_maps(
     return points, point_vals, class_probs
 
 
+def classify_instances_from_maps(
+        instances: tf.Tensor, class_maps: tf.Tensor
+) -> Tuple[tf.Tensor, tf.Tensor]:
+    """Classify instances from a class map.
+    
+    Args:
+        instances: Instance skeleton points as a `tf.Tensor` of dtype `tf.float32` and
+            shape `(batch_size, n_instances, n_nodes, 2)`.
+        class_maps: Class maps for a batch as a `tf.Tensor` of dtype `tf.float32` and
+            shape `(n_samples, height, width, n_classes)`.
+    
+    Returns:
+        A tuple of `(class_inds, class_probs)`.
+
+        `class_inds`: A set of indices of shape `(batch_size, n_instances)`.
+
+        `class_probs`: The aggregated class probabilities as a tensor of shape
+            `(batch_size, n_instances, n_classes)`.
+    """
+    # Get class probabilities at landmarks.
+    # Reduce across all instance points.
+    # Do assignments.
+    pass
+
+
 def classify_peaks_from_vectors(
     peak_points: tf.Tensor,
     peak_vals: tf.Tensor,

@@ -35,7 +35,7 @@ from sleap.nn.config import (
 )
 
 # Model
-from sleap.nn.model import Model
+from sleap.nn.model import Model, PartAffinityFieldsHead
 
 # Data
 from sleap.nn.config import LabelsConfig
@@ -1510,6 +1510,11 @@ class BottomUpMultiClassModelTrainer(Trainer):
     def has_offsets(self) -> bool:
         """Whether model is configured to output refinement offsets."""
         return self.config.model.heads.multi_class_bottomup.confmaps.offset_refinement
+    
+    @property
+    def has_pafs(self) -> bool:
+        """Whether model is configured to output part affinity fields."""
+        return self.config.model.heads.multi_class_bottomup.pafs is not None
 
     def _update_config(self):
         """Update the configuration with inferred values."""
@@ -1536,12 +1541,18 @@ class BottomUpMultiClassModelTrainer(Trainer):
 
     def _setup_pipeline_builder(self):
         """Initialize pipeline builder."""
+        pafs_head = None
+        for head in self.model.heads:
+            if isinstance(head, PartAffinityFieldsHead):
+                pafs_head = head
+                break
         self.pipeline_builder = BottomUpMultiClassPipeline(
             data_config=self.config.data,
             optimization_config=self.config.optimization,
             confmaps_head=self.model.heads[0],
             class_maps_head=self.model.heads[1],
-            offsets_head=self.model.heads[2] if self.has_offsets else None,
+            # offsets_head=self.model.heads[2] if self.has_offsets else None,
+            pafs_head=pafs_head,
         )
 
     @property
@@ -1555,6 +1566,8 @@ class BottomUpMultiClassModelTrainer(Trainer):
         output_keys = ["confidence_maps", "class_maps"]
         if self.has_offsets:
             output_keys.append("offsets")
+        if self.has_pafs:
+            output_keys.append("part_affinity_fields")
         return output_keys
 
     def _setup_visualization(self):

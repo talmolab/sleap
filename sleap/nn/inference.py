@@ -3322,6 +3322,9 @@ class BottomUpMultiClassInferenceLayer(InferenceLayer):
             automatically by searching for the first tensor that contains
             `"OffsetRefinementHead"` in its name. If the head is not present, the method
             specified in the `refinement` attribute will be used.
+        paf_scorer: A `sleap.nn.paf_grouping.PAFScorer` instance configured to group
+            instances based on peaks and PAFs produced by the model. Optional if not
+            using PAFs as an output head.
     """
 
     def __init__(
@@ -3339,6 +3342,10 @@ class BottomUpMultiClassInferenceLayer(InferenceLayer):
         confmaps_ind: Optional[int] = None,
         class_maps_ind: Optional[int] = None,
         offsets_ind: Optional[int] = None,
+        pafs_ind: Optional[int] = None,
+        paf_output_stride: Optional[int] = None,
+        paf_scorer: Optional[PAFScorer] = None,
+        return_pafs: bool = False,
         **kwargs,
     ):
         super().__init__(
@@ -3385,11 +3392,24 @@ class BottomUpMultiClassInferenceLayer(InferenceLayer):
             )
         self.class_maps_output_stride = class_maps_output_stride
 
+        self.pafs_ind = pafs_ind
+        if self.pafs_ind is None:
+            self.pafs_ind = find_head(self.keras_model, "PartAffinityFieldsHead")
+
+        if self.pafs_ind is not None and paf_output_stride is None:
+            # Attempt to automatically infer the output stride.
+            paf_output_stride = get_model_output_stride(
+                self.keras_model, output_ind=self.pafs_ind
+            )
+        self.paf_output_stride = paf_output_stride
+
         self.peak_threshold = peak_threshold
         self.refinement = refinement
         self.integral_patch_size = integral_patch_size
         self.return_confmaps = return_confmaps
         self.return_class_maps = return_class_maps
+        self.paf_scorer = paf_scorer
+        self.return_pafs = return_pafs
 
     def forward_pass(self, data):
         """Run preprocessing and model inference on a batch."""
@@ -3409,13 +3429,19 @@ class BottomUpMultiClassInferenceLayer(InferenceLayer):
             offsets = preds[self.offsets_ind]
         else:
             offsets = None
+        if self.pafs_ind is not None:
+            pafs = preds[self.pafs_ind]
+        else:
+            pafs = None
 
         if isinstance(cms, list):
             cms = cms[-1]
         if isinstance(class_maps, list):
             class_maps = class_maps[-1]
+        if isinstance(pafs, list):
+            pafs = pafs[-1]
 
-        return cms, class_maps, offsets
+        return cms, class_maps, offsets, pafs
 
     def find_peaks(self, cms, offsets):
         """Run peak finding on predicted confidence maps."""
@@ -3475,26 +3501,44 @@ class BottomUpMultiClassInferenceLayer(InferenceLayer):
             If `inference_layer.return_class_maps` is `True`, the predicted class maps
             will be returned in the `"class_maps"` key.
         """
-        cms, class_maps, offsets = self.forward_pass(data)
+        cms, class_maps, offsets, pafs = self.forward_pass(data)
         peaks, peak_vals, peak_sample_inds, peak_channel_inds = self.find_peaks(
             cms, offsets
         )
         peaks = peaks / tf.cast(self.class_maps_output_stride, tf.float32)
-        (
-            predicted_instances,
-            predicted_peak_scores,
-            predicted_instance_scores,
-        ) = sleap.nn.identity.classify_peaks_from_maps(
-            class_maps,
-            peaks,
-            peak_vals,
-            peak_sample_inds,
-            peak_channel_inds,
-            n_channels=tf.shape(cms)[3],
-        )
-        predicted_instances = predicted_instances * tf.cast(
-            self.class_maps_output_stride, tf.float32
-        )
+
+        if pafs is None:
+            (
+                predicted_instances,
+                predicted_peak_scores,
+                predicted_instance_scores,
+            ) = sleap.nn.identity.classify_peaks_from_maps(
+                class_maps,
+                peaks,
+                peak_vals,
+                peak_sample_inds,
+                peak_channel_inds,
+                n_channels=tf.shape(cms)[3],
+            )
+            predicted_instances = predicted_instances * tf.cast(
+                self.class_maps_output_stride, tf.float32
+            )
+        else:
+            (
+                predicted_instances,
+                predicted_peak_scores,
+                predicted_instance_scores,
+                edge_inds,
+                edge_peak_inds,
+                line_scores,
+            ) = self.paf_scorer.predict(pafs, peaks, peak_vals, peak_channel_inds)
+            class_inds, class_probs = sleap.nn.identity.classify_instances_from_maps(
+                predicted_instances,
+                class_maps,
+            )
+            predicted_instances = tf.gather(predicted_instances, class_inds)
+            predicted_peak_scores = tf.gather(predicted_peak_scores, class_inds)
+            predicted_instance_scores = tf.gather(predicted_instance_scores, class_inds)
 
         # Adjust for input scaling.
         if self.input_scale != 1.0:
@@ -3513,6 +3557,8 @@ class BottomUpMultiClassInferenceLayer(InferenceLayer):
             out["confmaps"] = cms
         if self.return_class_maps:
             out["class_maps"] = class_maps
+        if self.return_pafs:
+            out["pafs"] = pafs
         return out
 
 
