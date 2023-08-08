@@ -738,7 +738,6 @@ class LearningDialog(QtWidgets.QDialog):
             config_info = json.dumps(config_info, indent=2)
             output.append(config_info)
         output = "\n".join(output)
-        print(output)
         clipboard = QtWidgets.QApplication.clipboard()
         clipboard.setText(output)
 
