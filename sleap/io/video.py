@@ -1273,7 +1273,7 @@ class Video:
         elif filename.lower().endswith(SingleImageVideo.EXTS):
             backend_class = SingleImageVideo
         else:
-            raise ValueError("Could not detect backend for specified filename.")
+            raise ValueError(f"Could not detect backend for specified filename: {filename}")
 
         kwargs["filename"] = filename
 
