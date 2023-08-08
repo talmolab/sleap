@@ -730,14 +730,17 @@ class LearningDialog(QtWidgets.QDialog):
         pipeline_form_data = self.pipeline_form_widget.get_form_data()
         items_for_inference = self.get_items_for_inference(pipeline_form_data)
         config_info_list = self.get_every_head_config_data(pipeline_form_data)
-        output_json = pipeline_form_data
+        pipeline_form_data = json.dumps(pipeline_form_data, indent=2)
+        output = [pipeline_form_data]
         for config_info in config_info_list:
             config_info = config_info.config.to_json()
-            dict_config = json.loads(config_info)
-            output_json.update(dict_config)
-        output_json = json.dumps(output_json, indent=2)
+            config_info = json.loads(config_info)
+            config_info = json.dumps(config_info, indent=2)
+            output.append(config_info)
+        output = "\n".join(output)
+        print(output)
         clipboard = QtWidgets.QApplication.clipboard()
-        clipboard.setText(output_json)
+        clipboard.setText(output)
 
     def save(
         self, output_dir: Optional[str] = None, labels_filename: Optional[str] = None
