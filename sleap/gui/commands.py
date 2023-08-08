@@ -1847,17 +1847,17 @@ class ReplaceVideo(EditCommand):
 
 
 class RemoveVideo(EditCommand):
-    topics = [UpdateTopic.video, UpdateTopic.suggestions]
+    topics = [UpdateTopic.video, UpdateTopic.suggestions, UpdateTopic.frame]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        videos = context.labels.videos.copy()
+        videos = context.labels.videos
         row_idxs = context.state["selected_batch_video"]
         videos_to_be_removed = [videos[i] for i in row_idxs]
 
         # Remove selected videos in the project
-        for idx in row_idxs:
-            context.labels.remove_video(videos[idx])
+        for video in videos_to_be_removed:
+            context.labels.remove_video(video)
 
         # Update the view if state has the removed video
         if context.state["video"] in videos_to_be_removed:
@@ -1865,6 +1865,9 @@ class RemoveVideo(EditCommand):
                 context.state["video"] = context.labels.videos[-1]
             else:
                 context.state["video"] = None
+
+        if len(context.labels.videos) == 0:
+            context.app.updateStatusMessage(" ")
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:

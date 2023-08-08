@@ -1102,7 +1102,7 @@ class MainWindow(QMainWindow):
         self._buttons["delete node"].setEnabled(has_selected_node)
         self._buttons["toggle grayscale"].setEnabled(has_video)
         self._buttons["show video"].setEnabled(has_selected_video)
-        self._buttons["remove video"].setEnabled(has_selected_video)
+        self._buttons["remove video"].setEnabled(has_video)
         self._buttons["delete instance"].setEnabled(has_selected_instance)
         self.suggestions_dock.suggestions_form_widget.buttons[
             "generate_button"
@@ -1207,18 +1207,23 @@ class MainWindow(QMainWindow):
     def _after_plot_change(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
 
-        # Store the current LabeledFrame (or make new, empty object)
-        self.state["labeled_frame"] = self.labels.find(
-            self.state["video"], frame_idx, return_new=True
-        )[0]
+        # Store the current frame_idx and LabeledFrame (or make new, empty object)
+        self.state["frame_idx"] = frame_idx
+        self.state["labeled_frame"] = (
+            self.labels.find(self.state["video"], frame_idx, return_new=True)[0]
+            if frame_idx is not None
+            else None
+        )
 
         # Show instances, etc, for this frame
         for overlay in self.overlays.values():
-            overlay.add_to_scene(self.state["video"], frame_idx)
+            overlay.redraw(self.state["video"], frame_idx)
 
         # Select instance if there was already selection
         if selected_inst is not None:
             player.view.selectInstance(selected_inst)
+        else:
+            self.state["instance"] = None
 
         if self.state["fit"]:
             player.zoomToFit()
@@ -1240,19 +1245,21 @@ class MainWindow(QMainWindow):
 
         if message is None:
             message = ""
-            if len(self.labels.videos) > 1:
+            if len(self.labels.videos) > 0 and current_video is not None:
                 message += f"Video {self.labels.videos.index(current_video)+1}/"
                 message += f"{len(self.labels.videos)}"
                 message += spacer
 
-            message += f"Frame: {frame_idx+1:,}/{len(current_video):,}"
+            if current_video is not None:
+                message += f"Frame: {frame_idx+1:,}/{len(current_video):,}"
+
             if self.player.seekbar.hasSelection():
                 start, end = self.state["frame_range"]
                 message += spacer
                 message += f"Selection: {start+1:,}-{end:,} ({end-start+1:,} frames)"
 
             message += f"{spacer}Labeled Frames: "
-            if current_video is not None and current_video in self.labels.videos:
+            if current_video is not None:
                 message += str(
                     self.labels.get_labeled_frame_count(current_video, "user")
                 )
