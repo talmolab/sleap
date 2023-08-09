@@ -201,6 +201,7 @@ class CommandContext:
     def from_labels(cls, labels: Labels) -> "CommandContext":
         """Creates a command context for use independently of GUI app."""
         state = GuiState()
+        state["labels"] = labels
         app = FakeApp(labels)
         return cls(state=state, app=app)
 
@@ -1364,7 +1365,11 @@ class ExportLabeledClip(AppCommand):
 
 
 def export_dataset_gui(
-    labels: Labels, filename: str, all_labeled: bool = False, suggested: bool = False
+    labels: Labels,
+    filename: str,
+    all_labeled: bool = False,
+    suggested: bool = False,
+    verbose: bool = True,
 ) -> str:
     """Export dataset with image data and display progress GUI dialog.
 
@@ -1372,12 +1377,15 @@ def export_dataset_gui(
         labels: `sleap.Labels` dataset to export.
         filename: Output filename. Should end in `.pkg.slp`.
         all_labeled: If `True`, export all labeled frames, including frames with no user
-            instances.
-        suggested: If `True`, include image data for suggested frames.
+            instances. Defaults to `False`.
+        suggested: If `True`, include image data for suggested frames. Defaults to
+            `False`.
+        verbose: If `True`, display progress dialog. Defaults to `True`.
     """
-    win = QtWidgets.QProgressDialog(
-        "Exporting dataset with frame images...", "Cancel", 0, 1
-    )
+    if verbose:
+        win = QtWidgets.QProgressDialog(
+            "Exporting dataset with frame images...", "Cancel", 0, 1
+        )
 
     def update_progress(n, n_total):
         if win.wasCanceled():
@@ -1398,15 +1406,16 @@ def export_dataset_gui(
         save_frame_data=True,
         all_labeled=all_labeled,
         suggested=suggested,
-        progress_callback=update_progress,
+        progress_callback=update_progress if verbose else None,
     )
 
-    if win.wasCanceled():
-        # Delete output if saving was canceled.
-        os.remove(filename)
-        return "canceled"
+    if verbose:
+        if win.wasCanceled():
+            # Delete output if saving was canceled.
+            os.remove(filename)
+            return "canceled"
 
-    win.hide()
+        win.hide()
 
     return filename
 
@@ -1422,6 +1431,7 @@ class ExportDatasetWithImages(AppCommand):
             filename=params["filename"],
             all_labeled=cls.all_labeled,
             suggested=cls.suggested,
+            verbose=params.get("verbose", True),
         )
 
     @staticmethod
@@ -1837,17 +1847,17 @@ class ReplaceVideo(EditCommand):
 
 
 class RemoveVideo(EditCommand):
-    topics = [UpdateTopic.video, UpdateTopic.suggestions]
+    topics = [UpdateTopic.video, UpdateTopic.suggestions, UpdateTopic.frame]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        videos = context.labels.videos.copy()
+        videos = context.labels.videos
         row_idxs = context.state["selected_batch_video"]
         videos_to_be_removed = [videos[i] for i in row_idxs]
 
         # Remove selected videos in the project
-        for idx in row_idxs:
-            context.labels.remove_video(videos[idx])
+        for video in videos_to_be_removed:
+            context.labels.remove_video(video)
 
         # Update the view if state has the removed video
         if context.state["video"] in videos_to_be_removed:
@@ -1855,6 +1865,9 @@ class RemoveVideo(EditCommand):
                 context.state["video"] = context.labels.videos[-1]
             else:
                 context.state["video"] = None
+
+        if len(context.labels.videos) == 0:
+            context.app.updateStatusMessage(" ")
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:

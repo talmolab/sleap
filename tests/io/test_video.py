@@ -37,6 +37,9 @@ def test_from_filename(hdf5_file_path, small_robot_mp4_path):
         == SingleImageVideo
     )
 
+    with pytest.raises(ValueError):
+        Video.from_filename("this_has_no_video_extension")
+
 
 def test_backend_extra_kwargs(hdf5_file_path, small_robot_mp4_path):
     Video.from_filename(hdf5_file_path, grayscale=True, another_kwarg=False)

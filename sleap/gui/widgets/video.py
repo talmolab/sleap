@@ -410,22 +410,35 @@ class QtVideoPlayer(QWidget):
 
         self.video = video
 
-        # Is this necessary?
-        self.view.scene.setSceneRect(0, 0, video.width, video.height)
+        if self.video is None:
+            self.reset()
+        else:
+            # Is this necessary?
+            self.view.scene.setSceneRect(0, 0, video.width, video.height)
 
-        self.seekbar.setMinimum(0)
-        self.seekbar.setMaximum(self.video.last_frame_idx)
-        self.seekbar.setEnabled(True)
-        self.seekbar.resizeEvent()
+            self.seekbar.setMinimum(0)
+            self.seekbar.setMaximum(self.video.last_frame_idx)
+            self.seekbar.setEnabled(True)
+            self.seekbar.resizeEvent()
 
         if plot:
             self.plot()
 
     def reset(self):
         """Reset viewer by removing all video data."""
+        # Reset view and video
         self.video = None
-        self.state["frame_idx"] = None
         self.view.clear()
+        self.view.setImage(
+            QImage(sleap.util.get_package_file("sleap/gui/background.png"))
+        )
+
+        # Handle overlays and gui state in callback
+        frame_idx = None
+        selected_instance = None
+        self.changedPlot.emit(self, frame_idx, selected_instance)
+
+        # Reset seekbar
         self.seekbar.setMaximum(0)
         self.seekbar.setEnabled(False)
 
