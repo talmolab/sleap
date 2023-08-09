@@ -680,12 +680,6 @@ class LearningDialog(QtWidgets.QDialog):
         datagen.show_datagen_preview(self.labels, config_info_list)
         self.hide()
 
-    def on_button_click(self, button):
-        if button == self.save_button:
-            self.save()
-        if button == self.copy_button:
-            self.copy()
-
     def run(self):
         """Run with current dialog settings."""
 
@@ -727,10 +721,13 @@ class LearningDialog(QtWidgets.QDialog):
 
     def copy(self):
         """Copy scripts and configs to clipboard"""
+
+        # Get all info from dialog
         pipeline_form_data = self.pipeline_form_widget.get_form_data()
-        items_for_inference = self.get_items_for_inference(pipeline_form_data)
         config_info_list = self.get_every_head_config_data(pipeline_form_data)
         pipeline_form_data = json.dumps(pipeline_form_data, indent=2)
+
+        # Format information for each tab in dialog
         output = [pipeline_form_data]
         for config_info in config_info_list:
             config_info = config_info.config.to_json()
@@ -738,6 +735,8 @@ class LearningDialog(QtWidgets.QDialog):
             config_info = json.dumps(config_info, indent=2)
             output.append(config_info)
         output = "\n".join(output)
+
+        # Set the clipboard text
         clipboard = QtWidgets.QApplication.clipboard()
         clipboard.setText(output)
 
