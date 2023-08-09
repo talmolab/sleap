@@ -4824,6 +4824,7 @@ def load_model(
         # Uncompress ZIP packaged models.
         tmp_dirs = []
         for i, model_path in enumerate(model_paths):
+            mp = Path(model_path)
             if model_path.endswith(".zip"):
                 # Create temp dir on demand.
                 tmp_dir = tempfile.TemporaryDirectory()
@@ -4834,7 +4835,7 @@ def load_model(
 
                 # Extract and replace in the list.
                 shutil.unpack_archive(model_path, extract_dir=tmp_dir.name)
-                model_paths[i] = tmp_dir.name
+                model_paths[i] = str(Path(tmp_dir.name, mp.stem))
 
         return model_paths, tmp_dirs
 
