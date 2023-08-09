@@ -71,5 +71,5 @@ class CSVAdaptor(format.adaptor.Adaptor):
             labels_path=source_path,
             all_frames=True,
             video=video,
-            csv=True
+            csv=True,
         )
