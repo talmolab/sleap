@@ -1,4 +1,4 @@
-"""Generate an HDF5 file with track occupancy and point location data.
+"""Generate an HDF5/ CSV file with track occupancy and point location data.
 
 Ignores tracks that are entirely empty. By default will also ignore
 empty frames from the beginning and end of video, although
@@ -300,39 +300,50 @@ def write_csv_file(output_path, data_dict):
         None
     """
 
+    if data_dict["tracks"].shape[-1] == 0:
+        print(f"No tracks to export in {data_dict['video_path']}. Skipping the export")
+        return
+
     data_dict["node_names"] = [s.decode() for s in data_dict["node_names"]]
     data_dict["track_names"] = [s.decode() for s in data_dict["track_names"]]
-
-    data_dict["track_occupancy"] = np.array(data_dict["track_occupancy"]).astype(bool)
+    data_dict["track_occupancy"] = np.transpose(data_dict["track_occupancy"]).astype(
+        bool
+    )
 
     # find frames with at least one animal tracked
     valid_frame_idxs = np.argwhere(data_dict["track_occupancy"].any(axis=1)).flatten()
 
     tracks = []
     for frame_idx in valid_frame_idxs:
-    # Tracking data for the current frame.
         frame_tracks = data_dict["tracks"][frame_idx]
 
-        # Loop over the animals in the current frame.
         for i in range(frame_tracks.shape[-1]):
             pts = frame_tracks[..., i]
-            
+            conf_scores = data_dict["point_scores"][frame_idx][..., i]
+
             if np.isnan(pts).all():
-            # Skip this animal if all of its points are missing (i.e., it wasn't
-            # detected in the current frame).
+                # Skip if animal wasn't detected in the current frame.
                 continue
-            
-            # Initialize row with some metadata.
             if data_dict["track_names"]:
                 track = data_dict["track_names"][i]
             else:
                 track = None
-            detection = {"track": track, "frame_idx": frame_idx}
+
+            instance_score = data_dict["instance_scores"][frame_idx][i]
+
+            detection = {
+                "track": track,
+                "frame_idx": frame_idx,
+                "instance.score": instance_score,
+            }
 
             # Coordinates for each body part.
-            for node_name, (x, y) in zip(data_dict["node_names"], pts):
+            for node_name, score, (x, y) in zip(
+                data_dict["node_names"], conf_scores, pts
+            ):
                 detection[f"{node_name}.x"] = x
                 detection[f"{node_name}.y"] = y
+                detection[f"{node_name}.score"] = score
 
             tracks.append(detection)
 

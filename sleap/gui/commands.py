@@ -332,15 +332,15 @@ class CommandContext:
 
     def exportAnalysisFile(self, all_videos: bool = False):
         """Shows gui for exporting analysis h5 file."""
-        self.execute(ExportAnalysisFile, all_videos=all_videos)
+        self.execute(ExportAnalysisFile, all_videos=all_videos, csv=False)
+
+    def exportCSVFile(self, all_videos: bool = False):
+        """Shows gui for exporting analysis csv file."""
+        self.execute(ExportAnalysisFile, all_videos=all_videos, csv=True)
 
     def exportNWB(self):
         """Show gui for exporting nwb file."""
         self.execute(SaveProjectAs, adaptor=NDXPoseAdaptor())
-
-    def exportCSV(self, all_videos:bool = False):
-        """Show gui for exporting csv file."""
-        self.execute(ExportCSVFile, all_videos=all_videos)
 
     def exportLabeledClip(self):
         """Shows gui for exporting clip with visual annotations."""
@@ -1127,108 +1127,6 @@ class SaveProjectAs(AppCommand):
         params["filename"] = filename
         return True
 
-class ExportCSVFile(AppCommand):
-    export_formats = {
-        "CSV (*.csv)": "csv",
-        "Excel Worksheet (*.xlsx)": "xlsx"
-    }
-    export_filter = ";;".join(export_formats.keys())
-
-    @classmethod
-    def do_action(cls, context: CommandContext, params: dict):
-        for output_path, video in params["analysis_videos"]:
-            adaptor = CSVAdaptor
-            adaptor.write(
-                filename=output_path,
-                source_object=context.labels,
-                source_path=context.state["filename"],
-                video=video,
-            )
-
-    @staticmethod
-    def ask(context: CommandContext, params: dict) -> bool:
-        def ask_for_filename(default_name: str) -> str:
-            """Allow user to specify the filename"""
-            filename, selected_filter = FileDialog.save(
-                context.app,
-                caption="Export CSV File...",
-                dir=default_name,
-                filter=ExportCSVFile.export_filter,
-            )
-            return filename
-
-        # Ensure labels has labeled frames
-        labels = context.labels
-        if len(labels.labeled_frames) == 0:
-            raise ValueError("No labeled frames in project. Nothing to export.")
-
-        # Get a subset of videos
-        if params["all_videos"]:
-            all_videos = context.labels.videos
-        else:
-            all_videos = [context.state["video"] or context.labels.videos[0]]
-
-        # Only use videos with labeled frames
-        videos = [video for video in all_videos if len(labels.get(video)) != 0]
-        if len(videos) == 0:
-            raise ValueError("No labeled frames in video(s). Nothing to export.")
-
-        # Specify (how to get) the output filename
-        default_name = context.state["filename"] or "labels"
-        fn = PurePath(default_name)
-        file_extension = "csv"
-        if len(videos) == 1:
-            # Allow user to specify the filename
-            use_default = False
-            dirname = str(fn.parent)
-        else:
-            # Allow user to specify directory, but use default filenames
-            use_default = True
-            dirname = FileDialog.openDir(
-                context.app,
-                caption="Select Folder to Export csv Files...",
-                dir=str(fn.parent),
-            )
-            if len(ExportAnalysisFile.export_formats) > 1:
-                item, ok = QtWidgets.QInputDialog.getItem(
-                    context.app,
-                    "Select export format",
-                    "Available export formats",
-                    list(ExportCSVFile.export_formats.keys()),
-                    0,
-                    False,
-                )
-                if not ok:
-                    return False
-                file_extension = ExportCSVFile.export_formats[item]
-            if len(dirname) == 0:
-                return False
-
-        # Create list of video / output paths
-        output_paths = []
-        analysis_videos = []
-        for video in videos:
-            # Create the filename
-            default_name = default_analysis_filename(
-                labels=labels,
-                video=video,
-                output_path=dirname,
-                output_prefix=str(fn.stem),
-                format_suffix=file_extension,
-            )
-
-            filename = default_name if use_default else ask_for_filename(default_name)
-            # Check that filename is valid and create list of video / output paths
-            if len(filename) != 0:
-                analysis_videos.append(video)
-                output_paths.append(filename)
-
-        # Chack that output paths are valid
-        if len(output_paths) == 0:
-            return False
-
-        params["analysis_videos"] = zip(output_paths, videos)
-        return True
 
 class ExportAnalysisFile(AppCommand):
     export_formats = {
@@ -1237,13 +1135,20 @@ class ExportAnalysisFile(AppCommand):
     }
     export_filter = ";;".join(export_formats.keys())
 
+    export_formats_csv = {
+        "CSV (*.csv)": "csv",
+    }
+    export_filter_csv = ";;".join(export_formats_csv.keys())
+
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
         from sleap.io.format.nix import NixAdaptor
 
         for output_path, video in params["analysis_videos"]:
-            if Path(output_path).suffix[1:] == "nix":
+            if params["csv"]:
+                adaptor = CSVAdaptor
+            elif Path(output_path).suffix[1:] == "nix":
                 adaptor = NixAdaptor
             else:
                 adaptor = SleapAnalysisAdaptor
@@ -1256,18 +1161,24 @@ class ExportAnalysisFile(AppCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        def ask_for_filename(default_name: str) -> str:
+        def ask_for_filename(default_name: str, csv: bool) -> str:
             """Allow user to specify the filename"""
+            filter = (
+                ExportAnalysisFile.export_filter_csv
+                if csv
+                else ExportAnalysisFile.export_filter
+            )
             filename, selected_filter = FileDialog.save(
                 context.app,
                 caption="Export Analysis File...",
                 dir=default_name,
-                filter=ExportAnalysisFile.export_filter,
+                filter=filter,
             )
             return filename
 
         # Ensure labels has labeled frames
         labels = context.labels
+        is_csv = params["csv"]
         if len(labels.labeled_frames) == 0:
             raise ValueError("No labeled frames in project. Nothing to export.")
 
@@ -1285,7 +1196,7 @@ class ExportAnalysisFile(AppCommand):
         # Specify (how to get) the output filename
         default_name = context.state["filename"] or "labels"
         fn = PurePath(default_name)
-        file_extension = "h5"
+        file_extension = "csv" if is_csv else "h5"
         if len(videos) == 1:
             # Allow user to specify the filename
             use_default = False
@@ -1298,18 +1209,23 @@ class ExportAnalysisFile(AppCommand):
                 caption="Select Folder to Export Analysis Files...",
                 dir=str(fn.parent),
             )
-            if len(ExportAnalysisFile.export_formats) > 1:
+            export_format = (
+                ExportAnalysisFile.export_formats_csv
+                if is_csv
+                else ExportAnalysisFile.export_formats
+            )
+            if len(export_format) > 1:
                 item, ok = QtWidgets.QInputDialog.getItem(
                     context.app,
                     "Select export format",
                     "Available export formats",
-                    list(ExportAnalysisFile.export_formats.keys()),
+                    list(export_format.keys()),
                     0,
                     False,
                 )
                 if not ok:
                     return False
-                file_extension = ExportAnalysisFile.export_formats[item]
+                file_extension = export_format[item]
             if len(dirname) == 0:
                 return False
 
@@ -1326,7 +1242,9 @@ class ExportAnalysisFile(AppCommand):
                 format_suffix=file_extension,
             )
 
-            filename = default_name if use_default else ask_for_filename(default_name)
+            filename = (
+                default_name if use_default else ask_for_filename(default_name, is_csv)
+            )
             # Check that filename is valid and create list of video / output paths
             if len(filename) != 0:
                 analysis_videos.append(video)

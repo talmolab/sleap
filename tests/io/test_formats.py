@@ -18,6 +18,7 @@ from sleap.io.format.nix import NixAdaptor
 from sleap.gui.commands import ImportAlphaTracker
 from sleap.gui.app import MainWindow
 from sleap.gui.state import GuiState
+from sleap.info.write_tracking_h5 import get_nodes_as_np_strings
 
 
 def test_text_adaptor(tmpdir):
@@ -126,20 +127,23 @@ def test_hdf5_v1_filehandle(centered_pair_predictions_hdf5_path):
         == "tests/data/json_format_v1/centered_pair_low_quality.mp4"
     )
 
-def test_csv(tmpdir, centered_pair_predictions):
+
+def test_csv(tmpdir, min_labels_slp, minimal_instance_predictions_csv_path):
     from sleap.info.write_tracking_h5 import main as write_analysis
 
-    filename = os.path.join(tmpdir, "analysis.csv")
-    video = centered_pair_predictions.videos[0]
+    filename_csv = str(tmpdir + "\\analysis.csv")
+    write_analysis(min_labels_slp, output_path=filename_csv, all_frames=True, csv=True)
 
-    write_analysis(centered_pair_predictions, output_path=filename, all_frames=True, csv=True)
+    labels_csv = pd.read_csv(filename_csv)
 
-    labels = pd.read_csv(
-        filename, header=True
-    )
+    csv_predictions = pd.read_csv(minimal_instance_predictions_csv_path)
 
-    # TODO: assert 
-    
+    assert labels_csv.equals(csv_predictions)
+
+    labels = min_labels_slp
+
+    # check number of cols
+    assert len(labels_csv.columns) - 3 == len(get_nodes_as_np_strings(labels)) * 3
 
 
 def test_analysis_hdf5(tmpdir, centered_pair_predictions):
