@@ -470,7 +470,6 @@ def write_pipeline_files(
         )
         # And join them into a single call to inference
         inference_script += " ".join(cli_args) + "\n"
-
         # Setup job params
         only_suggested_frames = False
         if type(item_for_inference) == DatasetItemForInference:
