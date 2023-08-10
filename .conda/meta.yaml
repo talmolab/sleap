@@ -16,7 +16,7 @@ source:
   path: ../
 
 build:
-  number: 9
+  number: 11
 
 requirements:
   host:
@@ -83,7 +83,7 @@ requirements:
     - conda-forge::scikit-video
     - conda-forge::seaborn
     - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10, sleap channel has 2.6.3
-    - conda-forge::tensorflow-hub
+    - conda-forge::tensorflow-hub ==0.13.0
 
 test:
   imports:
