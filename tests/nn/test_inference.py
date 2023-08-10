@@ -1,21 +1,23 @@
 import ast
-from typing import cast
-import pytest
-import numpy as np
 import json
-from sleap.io.dataset import Labels
-from sleap.nn.tracking import FlowCandidateMaker, Tracker
-import tensorflow as tf
-import sleap
-from numpy.testing import assert_array_equal, assert_allclose
+import zipfile
 from pathlib import Path
+from typing import cast
+
+import numpy as np
+import pytest
+import tensorflow as tf
 import tensorflow_hub as hub
+from numpy.testing import assert_array_equal, assert_allclose
+
+import sleap
+from sleap.gui.learning import runners
+from sleap.io.dataset import Labels
 from sleap.nn.data.confidence_maps import (
     make_confmaps,
     make_grid_vectors,
     make_multi_confmaps,
 )
-
 from sleap.nn.inference import (
     InferenceLayer,
     InferenceModel,
@@ -49,9 +51,8 @@ from sleap.nn.inference import (
     main as sleap_track,
     export_cli as sleap_export,
 )
+from sleap.nn.tracking import FlowCandidateMaker, Tracker
 
-
-from sleap.gui.learning import runners
 
 sleap.nn.system.use_cpu_only()
 
@@ -830,6 +831,31 @@ def test_topdown_multiclass_predictor_high_threshold(
     labels_pr = predictor.predict(labels_gt)
     assert len(labels_pr) == 1
     assert len(labels_pr[0].instances) == 0
+
+    
+def zip_directory_with_itself(src_dir, output_path):
+    src_path = Path(src_dir)
+    with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for file_path in src_path.rglob('*'):
+            arcname = src_path.name / file_path.relative_to(src_path)
+            zipf.write(file_path, arcname)
+
+def zip_directory_contents(src_dir, output_path):
+    src_path = Path(src_dir)
+    with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for file_path in src_path.rglob('*'):
+            arcname = file_path.relative_to(src_path)
+            zipf.write(file_path, arcname)
+
+@pytest.mark.parametrize("zip_func", [zip_directory_with_itself, zip_directory_contents])
+def test_load_model_zipped(tmpdir, min_centroid_model_path, zip_func):
+
+    mp = Path(min_centroid_model_path)
+    zip_dir = Path(tmpdir, mp.name).with_suffix(".zip")
+    zip_func(mp, zip_dir)
+
+    predictor = load_model(str(zip_dir))
+
 
 
 @pytest.mark.parametrize("resize_input_shape", [True, False])
