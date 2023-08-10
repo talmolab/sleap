@@ -413,6 +413,7 @@ class Tracker(BaseTracker):
     similarity_function: Optional[Callable] = instance_similarity
     matching_function: Callable = greedy_matching
     candidate_maker: object = attr.ib(factory=FlowCandidateMaker)
+    tracks: dict() # Hold tracks, each as a deque with length as track_window
 
     cleaner: Optional[Callable] = None  # todo: deprecate
     target_instance_count: int = 0
