@@ -4835,7 +4835,7 @@ def load_model(
 
                 # Extract and replace in the list.
                 shutil.unpack_archive(model_path, extract_dir=tmp_dir.name)
-                unzipped_mp = Path(tmp_dir.name, mp.stem)
+                unzipped_mp = Path(tmp_dir.name, mp.name).with_suffix("")
                 if Path(unzipped_mp, "best_model.h5").exists():
                     unzipped_model_path = str(unzipped_mp)
                 else:
