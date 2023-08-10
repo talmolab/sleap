@@ -832,43 +832,46 @@ def test_topdown_multiclass_predictor_high_threshold(
     assert len(labels_pr) == 1
     assert len(labels_pr[0].instances) == 0
 
-    
+
 def zip_directory_with_itself(src_dir, output_path):
     """Zip a directory, including the directory itself.
-    
+
     Args:
         src_dir: Path to directory to zip.
         output_path: Path to output zip file.
     """
 
     src_path = Path(src_dir)
-    with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for file_path in src_path.rglob('*'):
+    with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for file_path in src_path.rglob("*"):
             arcname = src_path.name / file_path.relative_to(src_path)
             zipf.write(file_path, arcname)
 
+
 def zip_directory_contents(src_dir, output_path):
     """Zip the contents of a directory, not the directory itself.
-    
+
     Args:
         src_dir: Path to directory to zip.
         output_path: Path to output zip file.
     """
 
     src_path = Path(src_dir)
-    with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for file_path in src_path.rglob('*'):
+    with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for file_path in src_path.rglob("*"):
             arcname = file_path.relative_to(src_path)
             zipf.write(file_path, arcname)
 
-@pytest.mark.parametrize("zip_func", [zip_directory_with_itself, zip_directory_contents])
+
+@pytest.mark.parametrize(
+    "zip_func", [zip_directory_with_itself, zip_directory_contents]
+)
 def test_load_model_zipped(tmpdir, min_centroid_model_path, zip_func):
     mp = Path(min_centroid_model_path)
     zip_dir = Path(tmpdir, mp.name).with_name(mp.name + ".zip")
     zip_func(mp, zip_dir)
 
     predictor = load_model(str(zip_dir))
-
 
 
 @pytest.mark.parametrize("resize_input_shape", [True, False])
