@@ -26,6 +26,9 @@ TEST_MIN_TRACKS_13NODE_LABELS = "tests/data/tracks/clip.slp"
 TEST_HDF5_PREDICTIONS = "tests/data/hdf5_format_v1/centered_pair_predictions.h5"
 TEST_SLP_PREDICTIONS = "tests/data/hdf5_format_v1/centered_pair_predictions.slp"
 TEST_MIN_DANCE_LABELS = "tests/data/slp_hdf5/dance.mp4.labels.slp"
+TEST_CSV_PREDICTIONS = (
+    "tests/data/csv_format/minimal_instance.000_centered_pair_low_quality.analysis.csv"
+)
 
 
 @pytest.fixture
@@ -245,6 +248,11 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
 @pytest.fixture
 def centered_pair_predictions_hdf5_path():
     return TEST_HDF5_PREDICTIONS
+
+
+@pytest.fixture
+def minimal_instance_predictions_csv_path():
+    return TEST_CSV_PREDICTIONS
 
 
 @pytest.fixture

@@ -484,6 +484,20 @@ class MainWindow(QMainWindow):
             lambda: self.commands.exportAnalysisFile(all_videos=True),
         )
 
+        export_csv_menu = fileMenu.addMenu("Export Analysis CSV...")
+        add_menu_item(
+            export_csv_menu,
+            "export_csv_current",
+            "Current Video...",
+            self.commands.exportCSVFile,
+        )
+        add_menu_item(
+            export_csv_menu,
+            "export_csv_all",
+            "All Videos...",
+            lambda: self.commands.exportCSVFile(all_videos=True),
+        )
+
         add_menu_item(fileMenu, "export_nwb", "Export NWB...", self.commands.exportNWB)
 
         fileMenu.addSeparator()
