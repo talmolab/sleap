@@ -42,7 +42,6 @@ import numpy as np
 import cv2
 import attr
 from qtpy import QtCore, QtWidgets, QtGui
-from qtpy.QtWidgets import QMessageBox, QProgressDialog
 
 from sleap.util import get_package_file
 from sleap.skeleton import Node, Skeleton
@@ -51,8 +50,8 @@ from sleap.io.video import Video
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
-from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.format.csv import CSVAdaptor
+from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.gui.dialogs.importvideos import ImportVideos
 from sleap.gui.dialogs.filedialog import FileDialog

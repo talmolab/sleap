@@ -1,7 +1,4 @@
-"""
-Adaptor for writing SLEAP analysis as csv.
-
-"""
+"""Adaptor for writing SLEAP analysis as csv."""
 
 from sleap.io import format
 
@@ -10,11 +7,9 @@ from typing import Optional, Callable, List, Text, Union
 
 
 class CSVAdaptor(format.adaptor.Adaptor):
-    FORMAT_ID = 1.2
+    FORMAT_ID = 1.0
 
-    # 1.0 points with gridline coordinates, top left corner at (0, 0)
-    # 1.1 points with midpixel coordinates, top left corner at (-0.5, -0.5)
-    # 1.2 adds track score to read and write functions
+    # 1.0 initial implementation
 
     @property
     def handles(self):

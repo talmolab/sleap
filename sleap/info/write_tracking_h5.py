@@ -1,4 +1,4 @@
-"""Generate an HDF5/ CSV file with track occupancy and point location data.
+"""Generate an HDF5 or CSV file with track occupancy and point location data.
 
 Ignores tracks that are entirely empty. By default will also ignore
 empty frames from the beginning and end of video, although
@@ -310,7 +310,7 @@ def write_csv_file(output_path, data_dict):
         bool
     )
 
-    # find frames with at least one animal tracked
+    # Find frames with at least one animal tracked.
     valid_frame_idxs = np.argwhere(data_dict["track_occupancy"].any(axis=1)).flatten()
 
     tracks = []
