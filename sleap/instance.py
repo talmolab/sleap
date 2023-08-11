@@ -28,8 +28,9 @@ from typing import Dict, List, Optional, Union, Tuple, ForwardRef
 from numpy.lib.recfunctions import structured_to_unstructured
 
 import sleap
-from sleap.skeleton import Skeleton, Node
 from sleap.io.video import Video
+from sleap.nn.viz import plot_img, plot_instances
+from sleap.skeleton import Skeleton, Node
 
 import attr
 
@@ -1784,8 +1785,8 @@ class LabeledFrame:
             plotting options.
         """
         if image:
-            sleap.nn.viz.plot_img(self.image, scale=scale)
-        sleap.nn.viz.plot_instances(self.instances)
+            plot_img(self.image, scale=scale)
+        plot_instances(self.instances)
 
     def plot_predicted(self, image: bool = True, scale: float = 1.0):
         """Plot the frame with all predicted instances.
@@ -1800,8 +1801,8 @@ class LabeledFrame:
             plotting options.
         """
         if image:
-            sleap.nn.viz.plot_img(self.image, scale=scale)
-        sleap.nn.viz.plot_instances(
+            plot_img(self.image, scale=scale)
+        plot_instances(
             self.predicted_instances,
             color_by_track=(len(self.predicted_instances) > 0)
             and (self.predicted_instances[0].track is not None),
