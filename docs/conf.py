@@ -28,7 +28,7 @@ author = "SLEAP Developers"
 copyright = f"2019–{date.today().year}, Talmo Lab"
 
 # The short X.Y version
-version = "1.3.2"
+version = "1.3.1"
 
 # Get the sleap version
 # with open("../sleap/version.py") as f:
