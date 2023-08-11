@@ -281,7 +281,7 @@ class MainWindow(QMainWindow):
         else:
             raise TypeError(
                 f"Invalid file type(s) dropped: {', '.join(exts)} \n"
-                f"Expected formats: .slp, .{', .'.join(available_video_exts())}"
+                f"Supported formats: .slp, .{', .'.join(available_video_exts())}"
             )
 
     @property
