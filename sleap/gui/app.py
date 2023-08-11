@@ -274,9 +274,15 @@ class MainWindow(QMainWindow):
                 # Load
                 self.commands.openProject(filename=filenames[0], first_open=True)
 
-        elif all([ext.lower() in available_video_exts() for ext in exts]):
+        elif all([ext.lower()[1:] in available_video_exts() for ext in exts]):
             # Import videos
             self.commands.showImportVideos(filenames=filenames)
+
+        else:
+            raise TypeError(
+                f"Invalid file type(s) dropped: {', '.join(exts)} \n"
+                f"Supported formats: .slp, .{', .'.join(available_video_exts())}"
+            )
 
     @property
     def labels(self) -> Labels:
@@ -482,6 +488,20 @@ class MainWindow(QMainWindow):
             "export_analysis_video",
             "All Videos...",
             lambda: self.commands.exportAnalysisFile(all_videos=True),
+        )
+
+        export_csv_menu = fileMenu.addMenu("Export Analysis CSV...")
+        add_menu_item(
+            export_csv_menu,
+            "export_csv_current",
+            "Current Video...",
+            self.commands.exportCSVFile,
+        )
+        add_menu_item(
+            export_csv_menu,
+            "export_csv_all",
+            "All Videos...",
+            lambda: self.commands.exportCSVFile(all_videos=True),
         )
 
         add_menu_item(fileMenu, "export_nwb", "Export NWB...", self.commands.exportNWB)
