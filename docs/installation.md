@@ -215,7 +215,7 @@ Although you do not need Mambaforge installed to perform a `pip install`, we rec
 3. Finally, we can perform the `pip install`:
 
    ```bash
-   pip install sleap==1.3.2
+   pip install sleap==1.3.1
    ```
 
    This works on **any OS except Apple silicon** and on **Google Colab**.
