@@ -31,4 +31,5 @@ scikit-image
 scikit-learn ==1.0.*
 scikit-video
 seaborn
+tensorflow
 tensorflow-hub
