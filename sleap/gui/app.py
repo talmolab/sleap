@@ -274,7 +274,7 @@ class MainWindow(QMainWindow):
                 # Load
                 self.commands.openProject(filename=filenames[0], first_open=True)
 
-        elif all([ext.lower() in available_video_exts() for ext in exts]):
+        elif all([ext.lower()[1:] in available_video_exts() for ext in exts]):
             # Import videos
             self.commands.showImportVideos(filenames=filenames)
 
