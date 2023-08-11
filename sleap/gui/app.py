@@ -278,6 +278,12 @@ class MainWindow(QMainWindow):
             # Import videos
             self.commands.showImportVideos(filenames=filenames)
 
+        else:
+            raise TypeError(
+                f"Invalid file type(s) dropped: {', '.join(exts)} \n"
+                f"Expected formats: .slp, .{', .'.join(available_video_exts())}"
+            )
+
     @property
     def labels(self) -> Labels:
         return self.state["labels"]
