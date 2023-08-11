@@ -1,0 +1,6 @@
+# This file contains dependencies for working with jupyter notebooks. Based on the logic
+# in setup.py, the packages in requirements.txt and pip_requirements.txt will also be 
+# installed when running pip install sleap[jupyter].
+
+ipykernel
+jupyterlab
