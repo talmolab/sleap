@@ -23,7 +23,6 @@ import rapidjson
 import yaml
 from importlib_resources import files  # TODO(LM): Upgrade to importlib.resources.
 from PIL import Image
-from pkg_resources import Requirement, resource_filename
 
 import sleap.version as sleap_version
 
