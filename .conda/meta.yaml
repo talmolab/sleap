@@ -25,7 +25,7 @@ requirements:
     - conda-forge::cudatoolkit ==11.3.1
     - conda-forge::cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
-    - conda-forge::setuptools >= 61.0
+    - conda-forge::setuptools >=61.0  # Allows use of pyproject.toml.
     - conda-forge::pip
 
     # Only the packages above are required to build, but listing them all ensures no 

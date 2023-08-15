@@ -1,5 +1,9 @@
 [build-system]
-requires = ["setuptools>=61.0", "setuptools_scm", "wheel"]
+requires = [
+    "setuptools>=64.0",          # PEP 660: editable pyproject.toml builds
+    "setuptools_scm[toml]>=6.2",
+    "wheel",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -86,7 +90,9 @@ pypi = [
     "tensorflow",
     "tensorflow-hub",
 ]
+conda_jupyter = ["ipykernel", "jupyterlab"] # No pypi dependencies included.
 jupyter = [
+    # Include conda_jupyter dependencies.
     "ipykernel",
     "jupyterlab",
     # Also include all pypi dependencies.
@@ -121,7 +127,32 @@ jupyter = [
     "tensorflow",
     "tensorflow-hub",
 ]
+conda_dev = [ # No pypi dependencies included.
+    "pytest",
+    "pytest-qt>=4.0.0",
+    "pytest-cov<=3.0.0",
+    "pytest-xvfb",
+    "ipython",
+    "sphinx",
+    "sphinx-book-theme",
+    "sphinx-copybutton",
+    "nbformat==5.1.3",
+    "myst-nb==0.13.2",
+    "myst-parser==0.15.2",
+    "linkify-it-py",
+    "sphinx-autobuild",
+    "black==21.6b0",
+    "pre-commit",
+    "twine==3.3.0",
+    "PyGithub",
+    "jedi==0.17.2",
+    "click==8.0.4",
+    # Also include all jupyter dependencies.
+    "ipykernel",
+    "jupyterlab",
+]
 dev = [
+    # Include conda_dev dependencies.
     "pytest",
     "pytest-qt>=4.0.0",
     "pytest-cov<=3.0.0",
@@ -191,15 +222,6 @@ dev = [
 # jupyter = { file = ["pypi_requirements.txt", "jupyter_requirements.txt"] }
 # pypi = { file = ["pypi_requirements.txt"] }
 
-[tool.setuptools.packages.find]
-where = ["sleap"]
-include = ["sleap*"]
-exclude = ["tests*"]
-
-[tool.setuptools_scm]
-version_scheme = "post-release"
-local_scheme = "dirty-tag"
-
 [project.gui-scripts]
 sleap-label = "sleap.gui.app:main"
 
@@ -218,3 +240,15 @@ sleap-export = "sleap.nn.inference:export_cli"
 "Bug Tracker" = "https://github.com/talmolab/sleap/issues"
 "Discussion Forum" = "https://github.com/talmolab/sleap/discussions"
 "Lab Website" = "https://talmolab.org"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sleap*"]
+exclude = ["tests*", "docs*"]
+
+[tool.setuptools.package-data]
+sleap = ["config/*.yaml", "training_profiles/*.json"]
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
+local_scheme = "dirty-tag"

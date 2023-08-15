@@ -19,7 +19,7 @@ dependencies:
     - anaconda::numpy >=1.19.5,<1.23.0
     - conda-forge::opencv
     - conda-forge::pandas
-    - conda-forge::pip
+    - conda-forge::pip >=21.3  # PEP 660: editable pyproject.toml builds
     - conda-forge::pillow #>=8.3.1,<=8.4.0
     - conda-forge::psutil
     - conda-forge::pykalman
@@ -45,5 +45,5 @@ dependencies:
     - nvidia::cuda-nvcc=11.3
 
     - pip:  
-        - "--editable=."
-        - "--requirement=./dev_requirements.txt"
+        - "--editable=.[conda_dev] --config-settings editable_mode=strict"
+        # - "--requirement=./dev_requirements.txt"
