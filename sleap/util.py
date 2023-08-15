@@ -4,25 +4,26 @@ Try not to put things in here unless they really have no other place.
 """
 
 import base64
-from collections import defaultdict
-from io import BytesIO
 import json
 import os
-from pathlib import Path
 import re
 import shutil
+from collections import defaultdict
+from io import BytesIO
+from pathlib import Path
 from typing import Any, Dict, Hashable, Iterable, List, Optional
-from urllib.request import url2pathname
 from urllib.parse import unquote, urlparse
+from urllib.request import url2pathname
 
 import attr
 import h5py as h5
 import numpy as np
-from PIL import Image
-from pkg_resources import Requirement, resource_filename
 import psutil
 import rapidjson
 import yaml
+from importlib_resources import files  # TODO(LM): Upgrade to importlib.resources.
+from PIL import Image
+from pkg_resources import Requirement, resource_filename
 
 import sleap.version as sleap_version
 
@@ -237,9 +238,14 @@ def dict_cut(d: Dict, a: int, b: int) -> Dict:
 
 def get_package_file(filename: str) -> str:
     """Returns full path to specified file within sleap package."""
-    package_path = Requirement.parse("sleap")
-    result = resource_filename(package_path, filename)
-    return result
+
+    # package_path = Requirement.parse("sleap")
+    # result = resource_filename(package_path, filename)
+    # return result
+
+    data_path = files("sleap").joinpath(filename)
+
+    return str(data_path)
 
 
 def get_config_file(
@@ -288,7 +294,7 @@ def get_config_file(
     # config file if we can't find the user version.
 
     if get_defaults or not os.path.exists(desired_path):
-        package_path = get_package_file(f"sleap/config/{shortname}")
+        package_path = get_package_file(f"config/{shortname}")
         if not os.path.exists(package_path):
             raise FileNotFoundError(
                 f"Cannot locate {shortname} config file at {desired_path} or {package_path}."

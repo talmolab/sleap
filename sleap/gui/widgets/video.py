@@ -14,7 +14,6 @@ Example usage: ::
 """
 from collections import deque
 
-
 # FORCE_REQUESTS controls whether we emit a signal to process frame requests
 # if we haven't processed any for a certain amount of time.
 # Usually the processing gets triggered by a timer but if the user is (e.g.)
@@ -25,58 +24,33 @@ from collections import deque
 FORCE_REQUESTS = True
 
 
-from qtpy import QtWidgets, QtCore
-
-from qtpy.QtWidgets import (
-    QApplication,
-    QVBoxLayout,
-    QWidget,
-    QGraphicsView,
-    QGraphicsScene,
-    QShortcut,
-    QGraphicsItem,
-    QGraphicsObject,
-    QGraphicsEllipseItem,
-    QGraphicsTextItem,
-    QGraphicsRectItem,
-    QGraphicsPolygonItem,
-)
-from qtpy.QtGui import (
-    QImage,
-    QPixmap,
-    QPainter,
-    QPainterPath,
-    QTransform,
-    QPen,
-    QBrush,
-    QColor,
-    QCursor,
-    QFont,
-    QPolygonF,
-    QKeyEvent,
-    QMouseEvent,
-    QKeySequence,
-)
-from qtpy.QtCore import Qt, QRectF, QPointF, QMarginsF, QLineF
-
 import atexit
 import math
 import time
-import numpy as np
-
 from typing import Callable, List, Optional, Union
 
+import numpy as np
+import qimage2ndarray
+from qtpy import QtCore, QtWidgets
+from qtpy.QtCore import QLineF, QMarginsF, QPointF, QRectF, Qt
+from qtpy.QtGui import (QBrush, QColor, QCursor, QFont, QImage, QKeyEvent,
+                        QKeySequence, QMouseEvent, QPainter, QPainterPath,
+                        QPen, QPixmap, QPolygonF, QTransform)
+from qtpy.QtWidgets import (QApplication, QGraphicsEllipseItem, QGraphicsItem,
+                            QGraphicsObject, QGraphicsPolygonItem,
+                            QGraphicsRectItem, QGraphicsScene,
+                            QGraphicsTextItem, QGraphicsView, QShortcut,
+                            QVBoxLayout, QWidget)
+
 import sleap
-from sleap.prefs import prefs
-from sleap.skeleton import Node
-from sleap.instance import Instance, PredictedInstance, Point
-from sleap.io.video import Video
-from sleap.gui.widgets.slider import VideoSlider
-from sleap.gui.state import GuiState
 from sleap.gui.color import ColorManager
 from sleap.gui.shortcuts import Shortcuts
-
-import qimage2ndarray
+from sleap.gui.state import GuiState
+from sleap.gui.widgets.slider import VideoSlider
+from sleap.instance import Instance, Point, PredictedInstance
+from sleap.io.video import Video
+from sleap.prefs import prefs
+from sleap.skeleton import Node
 
 
 class LoadImageWorker(QtCore.QObject):
@@ -429,9 +403,7 @@ class QtVideoPlayer(QWidget):
         # Reset view and video
         self.video = None
         self.view.clear()
-        self.view.setImage(
-            QImage(sleap.util.get_package_file("sleap/gui/background.png"))
-        )
+        self.view.setImage(QImage(sleap.util.get_package_file("gui/background.png")))
 
         # Handle overlays and gui state in callback
         frame_idx = None
@@ -812,7 +784,7 @@ class GraphicsView(QGraphicsView):
         self.setTransformationAnchor(anchor_mode)
 
         # Set icon as default background.
-        self.setImage(QImage(sleap.util.get_package_file("sleap/gui/background.png")))
+        self.setImage(QImage(sleap.util.get_package_file("gui/background.png")))
 
     def dragEnterEvent(self, event):
         if self.parentWidget():
