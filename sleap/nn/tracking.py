@@ -409,14 +409,14 @@ class Tracker(BaseTracker):
             0.95 is a good value.
     """
 
+    track_map: Dict[
+        int, Deque[InstanceType]
+    ]  # Hold tracks, each as a deque with length as track_window
     track_window: int = 5
     similarity_function: Optional[Callable] = instance_similarity
     matching_function: Callable = greedy_matching
     candidate_maker: object = attr.ib(factory=FlowCandidateMaker)
     track_local_deque: bool = False
-    tracks: Dict[
-        int, Deque[Track]
-    ]  # Hold tracks, each as a deque with length as track_window
 
     cleaner: Optional[Callable] = None  # TODO: deprecate
     target_instance_count: int = 0
