@@ -33,14 +33,36 @@ import numpy as np
 import qimage2ndarray
 from qtpy import QtCore, QtWidgets
 from qtpy.QtCore import QLineF, QMarginsF, QPointF, QRectF, Qt
-from qtpy.QtGui import (QBrush, QColor, QCursor, QFont, QImage, QKeyEvent,
-                        QKeySequence, QMouseEvent, QPainter, QPainterPath,
-                        QPen, QPixmap, QPolygonF, QTransform)
-from qtpy.QtWidgets import (QApplication, QGraphicsEllipseItem, QGraphicsItem,
-                            QGraphicsObject, QGraphicsPolygonItem,
-                            QGraphicsRectItem, QGraphicsScene,
-                            QGraphicsTextItem, QGraphicsView, QShortcut,
-                            QVBoxLayout, QWidget)
+from qtpy.QtGui import (
+    QBrush,
+    QColor,
+    QCursor,
+    QFont,
+    QImage,
+    QKeyEvent,
+    QKeySequence,
+    QMouseEvent,
+    QPainter,
+    QPainterPath,
+    QPen,
+    QPixmap,
+    QPolygonF,
+    QTransform,
+)
+from qtpy.QtWidgets import (
+    QApplication,
+    QGraphicsEllipseItem,
+    QGraphicsItem,
+    QGraphicsObject,
+    QGraphicsPolygonItem,
+    QGraphicsRectItem,
+    QGraphicsScene,
+    QGraphicsTextItem,
+    QGraphicsView,
+    QShortcut,
+    QVBoxLayout,
+    QWidget,
+)
 
 import sleap
 from sleap.gui.color import ColorManager
