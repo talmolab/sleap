@@ -10,3 +10,6 @@ dependencies:
     - anaconda-client
     - conda-verify
     - twine
+    - pip
+    - pip:
+        - build

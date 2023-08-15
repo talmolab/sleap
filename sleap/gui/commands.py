@@ -1,5 +1,4 @@
-"""
-Module for gui command context and commands objects.
+"""Module for gui command context and commands objects.
 
 Each open project (i.e., `MainWindow`) will have its own `CommandContext`.
 The context enables commands to access and modify the `GuiState` and `Labels`,

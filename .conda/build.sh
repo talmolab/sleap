@@ -12,4 +12,5 @@ pip install -r ./requirements.txt
 
 # Install sleap itself. This does not install the requirements, but will list which 
 # requirements are missing (see "install_requires") when user attempts to install.
-python setup.py install --single-version-externally-managed --record=record.txt
+python -m build
+# python setup.py install --single-version-externally-managed --record=record.txt
