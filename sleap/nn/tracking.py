@@ -414,7 +414,9 @@ class Tracker(BaseTracker):
     matching_function: Callable = greedy_matching
     candidate_maker: object = attr.ib(factory=FlowCandidateMaker)
     track_local_deque: bool = False
-    tracks: Dict[int, Deque[Track]] # Hold tracks, each as a deque with length as track_window
+    tracks: Dict[
+        int, Deque[Track]
+    ]  # Hold tracks, each as a deque with length as track_window
 
     cleaner: Optional[Callable] = None  # TODO: deprecate
     target_instance_count: int = 0
@@ -607,7 +609,7 @@ class Tracker(BaseTracker):
         robust: float = 1.0,
         min_new_track_points: int = 0,
         min_match_points: int = 0,
-        track_loacl_deque: bool = False,
+        track_local_deque: bool = False,
         # Optical flow options
         img_scale: float = 1.0,
         of_window_size: int = 21,
