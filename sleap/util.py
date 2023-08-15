@@ -238,12 +238,7 @@ def dict_cut(d: Dict, a: int, b: int) -> Dict:
 def get_package_file(filename: str) -> str:
     """Returns full path to specified file within sleap package."""
 
-    # package_path = Requirement.parse("sleap")
-    # result = resource_filename(package_path, filename)
-    # return result
-
-    data_path = files("sleap").joinpath(filename)
-
+    data_path: Path = files("sleap").joinpath(filename)
     return str(data_path)
 
 
