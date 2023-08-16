@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    name: Build package from push (${{ matrix.os }})
+    name: Test wheel build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -22,9 +22,9 @@ jobs:
         include:
           # Use this condarc as default
           - condarc: .conda/condarc.yaml
-          # Use special condarc if macos
-          - os: "macos-latest"
-            condarc: .conda_mac/condarc.yaml
+          # # Use special condarc if macos
+          # - os: "macos-latest"
+          #   condarc: .conda_mac/condarc.yaml
     steps:
       # Setup
       - uses: actions/checkout@v2
