@@ -53,7 +53,7 @@ from pathlib import Path
 from typing import Callable, List, Optional, Tuple
 
 from qtpy import QtCore, QtGui
-from qtpy.QtCore import QEvent, Qt
+from qtpy.QtCore import QEvent, QLibraryInfo, Qt
 from qtpy.QtWidgets import QApplication, QMainWindow, QMessageBox
 
 import sleap
@@ -83,6 +83,11 @@ from sleap.io.video import available_video_exts
 from sleap.prefs import prefs
 from sleap.skeleton import Skeleton
 from sleap.util import parse_uri_path
+
+# https://stackoverflow.com/questions/68417682/qt-and-opencv-app-not-working-in-virtual-environment
+os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = QLibraryInfo.location(
+    QLibraryInfo.PluginsPath
+)
 
 
 class MainWindow(QMainWindow):
