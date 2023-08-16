@@ -58,16 +58,32 @@ jobs:
         run: |
           python -m build
       
-      # Deactivate Conda environment before creating and activating venv
-      - name: Deactivate Conda environment
-        run: micromamba deactivate
-
-      # Create and activate virtual environment
-      - name: Create and activate virtual environment
-        run: |
-          which python
-          python -m venv myenv
-          source myenv/bin/activate
+      # Upload artifact s.t. other jobs can use it
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: sleap-wheel
+          path: dist/*.whl
+  tests:
+    name: Test wheel build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-22.04"]  #, "windows-2022", "macos-latest"]
+        # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
+        include:
+          # Use this condarc as default
+          - condarc: .conda/condarc.yaml
+          # # Use special condarc if macos
+          # - os: "macos-latest"
+          #   condarc: .conda_mac/condarc.yaml
+    steps:
+      # Download wheel
+      - name: Download wheel artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: sleap-wheel
 
       # - name: Setup Miniconda for Tests
       #   # https://github.com/conda-incubator/setup-miniconda
