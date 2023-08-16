@@ -266,6 +266,8 @@ def get_config_file(
         The full path to the specified config file.
     """
 
+    desired_path = None  # Handle case where get_defaults, but cannot find package_path
+
     if not get_defaults:
         desired_path = os.path.expanduser(
             f"~/.sleap/{sleap_version.__version__}/{shortname}"
