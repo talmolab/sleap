@@ -1,4 +1,4 @@
-name: sleap_pypi
+name: sleap_pip
 
 channels:
   - conda-forge
