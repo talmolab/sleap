@@ -82,6 +82,12 @@ jobs:
           #   condarc: .conda_mac/condarc.yaml
     steps:
       # Download wheel
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
       - name: Download wheel artifact
         uses: actions/download-artifact@v3
         id: download
