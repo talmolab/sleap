@@ -28,13 +28,6 @@ jobs:
     name: Type Check
     runs-on: "ubuntu-22.04"
     steps:
-      - name: Check if branch is excluded
-        run: |
-          if [[ ${{ github.head_ref }} == "liezl/upgrade-pip-wheel" ]]; then
-            echo "Branch is excluded. Exiting..."
-            exit 0
-          fi
-
       - name: Checkout repo
         uses: actions/checkout@v3
       - name: Set up Python 3.7
@@ -67,6 +60,8 @@ jobs:
         run: |
           black --check sleap tests
   tests:
+    # TODO(LM): Remove when ready to merge into devlop
+    if: github.head_ref != 'liezl/upgrade-pip-wheel'
     name: Tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
