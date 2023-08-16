@@ -60,10 +60,11 @@ jobs:
       
       # Upload artifact s.t. other jobs can use it
       - name: Upload wheel artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: sleap-wheel
           path: dist/*.whl
+          retention-days: 1
   tests:
     name: Test wheel build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -82,9 +83,17 @@ jobs:
     steps:
       # Download wheel
       - name: Download wheel artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
+        id: download
         with:
           name: sleap-wheel
+          path: dist
+
+      - name: 'Echo download path'
+        run: echo ${{steps.download.outputs.download-path}}
+        
+      - name: Display structure of downloaded files
+        run: ls -R
 
       # - name: Setup Miniconda for Tests
       #   # https://github.com/conda-incubator/setup-miniconda
