@@ -49,7 +49,7 @@ jobs:
         shell: bash -l {0}
         run: |
           which python
-          conda info
+          conda list
           pip freeze
 
       # Build pip wheel
@@ -67,16 +67,20 @@ jobs:
           environment-file: environment_pypi.yml
           condarc-file: ${{ matrix.condarc }}
           activate-environment: sleap_ci
+
+      - name: Install the built wheel
+        run: |
+          wheel_path=$(find dist -name "*.whl")
+          pip install "$wheel_path"[dev]
+
       - name: Print test environment info
         shell: bash -l {0}
         run: |
           which python
-          conda info
+          conda list
           pip freeze
         
       # Install and test the wheel
-      - name: Install and test the built wheel
+      - name: Test the built wheel
         run: |
-          wheel_path=$(find dist -name "*.whl")
-          pip install "$wheel_path"[dev]
           pytest tests
