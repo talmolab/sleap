@@ -60,7 +60,7 @@ jobs:
       
       # Deactivate Conda environment before creating and activating venv
       - name: Deactivate Conda environment
-        run: conda deactivate
+        run: micromamba deactivate
 
       # Create and activate virtual environment
       - name: Create and activate virtual environment
