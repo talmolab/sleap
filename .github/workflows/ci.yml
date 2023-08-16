@@ -3,6 +3,8 @@ name: CI
 
 on:
   pull_request:
+    branches-ignore:
+      - "liezl/upgrade-pip-wheel"
     types: [opened, reopened, synchronize]
     paths:
       - "sleap/**"
