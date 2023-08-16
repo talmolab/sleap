@@ -57,25 +57,29 @@ jobs:
         shell: bash -l {0}
         run: |
           python -m build
+      
+      # Deactivate Conda environment before creating and activating venv
+      - name: Deactivate Conda environment
+        run: conda deactivate
 
-      - name: Setup Miniconda for Tests
-        # https://github.com/conda-incubator/setup-miniconda
-        uses: conda-incubator/setup-miniconda@v2.0.1
-        with:
-          python-version: 3.7
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-          environment-file: environment_pypi.yml
-          condarc-file: ${{ matrix.condarc }}
-          activate-environment: sleap_pypi
+      # Create and activate virtual environment
+      - name: Create and activate virtual environment
+        run: |
+          which python
+          python -m venv myenv
+          source myenv/bin/activate
+
+      # - name: Setup Miniconda for Tests
+      #   # https://github.com/conda-incubator/setup-miniconda
+      #   uses: conda-incubator/setup-miniconda@v2.0.1
+      #   with:
+      #     python-version: 3.7
+      #     use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+      #     environment-file: environment_pypi.yml
+      #     condarc-file: ${{ matrix.condarc }}
+      #     activate-environment: sleap_pypi
 
       - name: Install the built wheel
-        uses: conda-incubator/setup-miniconda@v2.0.1
-        with:
-          python-version: 3.7
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-          environment-file: environment_pypi.yml
-          condarc-file: ${{ matrix.condarc }}
-          activate-environment: sleap_pypi
         run: |
           wheel_path=$(find dist -name "*.whl")
           pip install "$wheel_path"[dev]
@@ -84,7 +88,6 @@ jobs:
         shell: bash -l {0}
         run: |
           which python
-          conda list
           pip freeze
         
       # Install and test the wheel
