@@ -1,0 +1,82 @@
+# Run tests using built conda packages and wheels.
+name: Build CI (no upload)
+
+# Run when changes to pyproject.toml - unfortunately no changes per section choices....
+on:
+  push:
+    paths:
+      - 'pyproject.toml'
+      - 'environment_pypi.yml'
+      - 'environment_build.yml'
+      - '.github/workflows/build_ci.yml'
+
+jobs:
+  build:
+    name: Build package from push (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-22.04"]  #, "windows-2022", "macos-latest"]
+        # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
+        include:
+          # Use this condarc as default
+          - condarc: .conda/condarc.yaml
+          # Use special condarc if macos
+          - os: "macos-latest"
+            condarc: .conda_mac/condarc.yaml
+    steps:
+      # Setup
+      - uses: actions/checkout@v2
+      - name: Cache conda
+        uses: actions/cache@v1
+        env:
+          # Increase this value to reset cache if environment_build.yml has not changed
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'pyproject.toml') }}
+      - name: Setup Miniconda for Build
+        # https://github.com/conda-incubator/setup-miniconda
+        uses: conda-incubator/setup-miniconda@v2.0.1
+        with:
+          python-version: 3.7
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+          environment-file: environment_build.yml
+          condarc-file: ${{ matrix.condarc }}
+          activate-environment: sleap_ci
+      - name: Print build environment info
+        shell: bash -l {0}
+        run: |
+          which python
+          conda info
+          pip freeze
+
+      # Build pip wheel
+      - name: Build pip wheel
+        shell: bash -l {0}
+        run: |
+          python -m build
+
+      - name: Setup Miniconda for Tests
+        # https://github.com/conda-incubator/setup-miniconda
+        uses: conda-incubator/setup-miniconda@v2.0.1
+        with:
+          python-version: 3.7
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+          environment-file: environment_pypi.yml
+          condarc-file: ${{ matrix.condarc }}
+          activate-environment: sleap_ci
+      - name: Print test environment info
+        shell: bash -l {0}
+        run: |
+          which python
+          conda info
+          pip freeze
+        
+      # Install and test the wheel
+      - name: Install and test the built wheel
+        run: |
+          wheel_path=$(find dist -name "*.whl")
+          pip install "$wheel_path"[dev]
+          pytest tests
