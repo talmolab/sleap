@@ -28,6 +28,7 @@ jobs:
     steps:
       # Setup
       - uses: actions/checkout@v2
+
       - name: Cache conda
         uses: actions/cache@v1
         env:
@@ -36,6 +37,7 @@ jobs:
         with:
           path: ~/conda_pkgs_dir
           key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'pyproject.toml') }}
+
       - name: Setup Miniconda for Build
         # https://github.com/conda-incubator/setup-miniconda
         uses: conda-incubator/setup-miniconda@v2.0.1
@@ -45,6 +47,7 @@ jobs:
           environment-file: environment_build.yml
           condarc-file: ${{ matrix.condarc }}
           activate-environment: sleap_ci
+
       - name: Print build environment info
         shell: bash -l {0}
         run: |
@@ -58,17 +61,18 @@ jobs:
         run: |
           python -m build
       
-      # Upload artifact s.t. other jobs can use it
+      # Upload artifact "tests" can use it
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v3
         with:
           name: sleap-wheel
           path: dist/*.whl
           retention-days: 1
+
   tests:
     name: Run tests using wheel (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    needs: build  # Ensure the build job has completed before starting this job
+    needs: build  # Ensure the build job has completed before starting this job.
     strategy:
       fail-fast: false
       matrix:
@@ -110,6 +114,12 @@ jobs:
       #     environment-file: environment_pypi.yml
       #     condarc-file: ${{ matrix.condarc }}
       #     activate-environment: sleap_pypi
+
+      - name: Create virtual environment
+        run: python -m venv venv
+
+      - name: Activate virtual environment
+        run: source venv/bin/activate
 
       - name: Install the built wheel
         run: |
