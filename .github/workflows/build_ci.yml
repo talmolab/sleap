@@ -67,6 +67,7 @@ jobs:
   tests:
     name: Test wheel build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    needs: build  # Ensure the build job has completed before starting this job
     strategy:
       fail-fast: false
       matrix:
