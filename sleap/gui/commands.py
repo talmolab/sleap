@@ -29,38 +29,37 @@ import logging
 import operator
 import os
 import re
-import sys
 import subprocess
+import sys
+import traceback
 from enum import Enum
 from glob import glob
-from pathlib import PurePath, Path
-import traceback
-from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
+from pathlib import Path, PurePath
+from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type
 
-import numpy as np
-import cv2
 import attr
-from qtpy import QtCore, QtWidgets, QtGui
+import cv2
+import numpy as np
+from qtpy import QtCore, QtGui, QtWidgets
 
-from sleap.util import get_package_file
-from sleap.skeleton import Node, Skeleton
-from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
-from sleap.io.video import Video
+from sleap.gui.dialogs.delete import DeleteDialog
+from sleap.gui.dialogs.filedialog import FileDialog
+from sleap.gui.dialogs.importvideos import ImportVideos
+from sleap.gui.dialogs.merge import MergeDialog, ReplaceSkeletonTableDialog
+from sleap.gui.dialogs.message import MessageDialog
+from sleap.gui.dialogs.missingfiles import MissingFilesDialog
+from sleap.gui.dialogs.query import QueryDialog
+from sleap.gui.state import GuiState
+from sleap.gui.suggestions import VideoFrameSuggestions
+from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
-from sleap.gui.dialogs.delete import DeleteDialog
-from sleap.gui.dialogs.importvideos import ImportVideos
-from sleap.gui.dialogs.filedialog import FileDialog
-from sleap.gui.dialogs.missingfiles import MissingFilesDialog
-from sleap.gui.dialogs.merge import MergeDialog, ReplaceSkeletonTableDialog
-from sleap.gui.dialogs.message import MessageDialog
-from sleap.gui.dialogs.query import QueryDialog
-from sleap.gui.suggestions import VideoFrameSuggestions
-from sleap.gui.state import GuiState
-
+from sleap.io.video import Video
+from sleap.skeleton import Node, Skeleton
+from sleap.util import get_package_file
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
@@ -1140,8 +1139,8 @@ class ExportAnalysisFile(AppCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
         from sleap.io.format.nix import NixAdaptor
+        from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 
         for output_path, video in params["analysis_videos"]:
             if params["csv"]:
@@ -1992,7 +1991,7 @@ class OpenSkeleton(EditCommand):
         """
 
         template = context.app.skeleton_dock.skeleton_templates.currentText()
-        filename = get_package_file(f"sleap/skeletons/{template}.json")
+        filename = get_package_file(f"skeletons/{template}.json")
         return filename
 
     @staticmethod
