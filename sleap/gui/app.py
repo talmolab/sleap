@@ -45,49 +45,49 @@ frame and instances listed in data view table.
 """
 
 
-import re
 import os
-import random
 import platform
+import random
+import re
 from pathlib import Path
-
 from typing import Callable, List, Optional, Tuple
 
 from qtpy import QtCore, QtGui
-from qtpy.QtCore import Qt, QEvent
-
-from qtpy.QtWidgets import QApplication, QMainWindow
-from qtpy.QtWidgets import QMessageBox
+from qtpy.QtCore import QEvent, QLibraryInfo, Qt
+from qtpy.QtWidgets import QApplication, QMainWindow, QMessageBox
 
 import sleap
-from sleap.gui.dialogs.metrics import MetricsTableDialog
-from sleap.skeleton import Skeleton
-from sleap.instance import Instance
-from sleap.io.dataset import Labels
-from sleap.io.video import available_video_exts
-from sleap.info.summary import StatisticSeries
+from sleap.gui.color import ColorManager
 from sleap.gui.commands import CommandContext, UpdateTopic
+from sleap.gui.dialogs.filedialog import FileDialog
+from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
+from sleap.gui.dialogs.metrics import MetricsTableDialog
+from sleap.gui.dialogs.shortcuts import ShortcutDialog
+from sleap.gui.overlays.instance import InstanceOverlay
+from sleap.gui.overlays.tracks import TrackListOverlay, TrackTrailOverlay
+from sleap.gui.shortcuts import Shortcuts
+from sleap.gui.state import GuiState
+from sleap.gui.web import ReleaseChecker, ping_analytics
 from sleap.gui.widgets.docks import (
     InstancesDock,
     SkeletonDock,
     SuggestionsDock,
     VideosDock,
 )
-from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.gui.widgets.slider import set_slider_marks_from_labels
+from sleap.gui.widgets.video import QtVideoPlayer
+from sleap.info.summary import StatisticSeries
+from sleap.instance import Instance
+from sleap.io.dataset import Labels
+from sleap.io.video import available_video_exts
+from sleap.prefs import prefs
+from sleap.skeleton import Skeleton
 from sleap.util import parse_uri_path
 
-from sleap.gui.dialogs.filedialog import FileDialog
-from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
-from sleap.gui.shortcuts import Shortcuts
-from sleap.gui.dialogs.shortcuts import ShortcutDialog
-from sleap.gui.state import GuiState
-from sleap.gui.overlays.tracks import TrackTrailOverlay, TrackListOverlay
-from sleap.gui.color import ColorManager
-from sleap.gui.overlays.instance import InstanceOverlay
-from sleap.gui.web import ReleaseChecker, ping_analytics
-
-from sleap.prefs import prefs
+# https://stackoverflow.com/questions/68417682/qt-and-opencv-app-not-working-in-virtual-environment
+os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = QLibraryInfo.location(
+    QLibraryInfo.PluginsPath
+)
 
 
 class MainWindow(QMainWindow):
