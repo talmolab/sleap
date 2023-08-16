@@ -3,8 +3,6 @@ name: CI
 
 on:
   pull_request:
-    branches-ignore:
-      - "liezl/upgrade-pip-wheel"
     types: [opened, reopened, synchronize]
     paths:
       - "sleap/**"
@@ -30,6 +28,13 @@ jobs:
     name: Type Check
     runs-on: "ubuntu-22.04"
     steps:
+      - name: Check if branch is excluded
+        run: |
+          if [[ ${{ github.head_ref }} == "liezl/upgrade-pip-wheel" ]]; then
+            echo "Branch is excluded. Exiting..."
+            exit 0
+          fi
+
       - name: Checkout repo
         uses: actions/checkout@v3
       - name: Set up Python 3.7
