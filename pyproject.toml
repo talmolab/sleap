@@ -9,11 +9,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sleap"
 version = "1.3.2"
-authors = [{ name = "Talmo Periera", email = "talmo@salk.edu" }]
+authors = [{ name = "Talmo Pereira", email = "talmo@salk.edu" }]
 maintainers = [
-    { name = "Liezl Maree", email = "talmo@salk.edu" },
+    { name = "Liezl Maree", email = "lmaree@salk.edu" },
     { name = "Shrivaths Shyam", email = "sshyam@salk.edu" },
-    { name = "Divya Muraly", email = "dimurali@salk.edu" },
+    { name = "Divya Murali", email = "dimurali@salk.edu" },
 ]
 description = "SLEAP (Social LEAP Estimates Animal Poses): a deep learning framework for animal pose tracking."
 readme = "README.md"
