@@ -99,12 +99,6 @@ jobs:
           name: sleap-wheel
           path: dist
 
-      - name: 'Echo download path'
-        run: echo ${{steps.download.outputs.download-path}}
-        
-      - name: Display structure of downloaded files
-        run: ls -R
-
       # - name: Setup Miniconda for Tests
       #   # https://github.com/conda-incubator/setup-miniconda
       #   uses: conda-incubator/setup-miniconda@v2.0.1
@@ -114,9 +108,6 @@ jobs:
       #     environment-file: environment_pypi.yml
       #     condarc-file: ${{ matrix.condarc }}
       #     activate-environment: sleap_pypi
-      - name: Install libxkbcommon-x11 for GUI tests
-        if: ${{ matrix.os }} == "ubuntu-22.04"
-        run: sudo apt-get update && sudo apt-get install -y libxkbcommon-x11-0
 
       - name: Create virtual environment
         run: python -m venv venv
@@ -137,5 +128,9 @@ jobs:
         
       # Install and test the wheel
       - name: Test the built wheel
+        # https://pytest-qt.readthedocs.io/en/latest/troubleshooting.html#github-actions
         run: |
+          sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
+          sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
+          export DISPLAY=":1"
           pytest tests
