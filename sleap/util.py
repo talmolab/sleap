@@ -239,7 +239,7 @@ def get_package_file(filename: str) -> str:
     """Returns full path to specified file within sleap package."""
 
     data_path: Path = files("sleap").joinpath(filename)
-    return str(data_path)
+    return data_path.as_posix()
 
 
 def get_config_file(
