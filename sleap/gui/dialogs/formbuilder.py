@@ -27,11 +27,10 @@ what's supported in the YAML file, what exactly each field type does, or if you
 want to add a new type of supported form field.
 """
 
-import yaml
-
 from typing import Any, Dict, List, Optional, Text
 
-from qtpy import QtWidgets, QtCore
+import yaml
+from qtpy import QtCore, QtWidgets
 
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.util import get_package_file
@@ -110,7 +109,7 @@ class YamlFormWidget(QtWidgets.QGroupBox):
         Returns:
             Instance of `YamlFormWidget` class.
         """
-        yaml_path = get_package_file(f"sleap/config/{form_name}.yaml")
+        yaml_path = get_package_file(f"config/{form_name}.yaml")
         return cls(yaml_path, *args, **kwargs)
 
     @property
