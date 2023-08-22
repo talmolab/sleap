@@ -747,6 +747,7 @@ class Tracker(BaseTracker):
             cleaner=cleaner,
             pre_cull_function=pre_cull_function,
             max_tracking=max_tracking,
+            max_tracks=max_tracks,
             target_instance_count=target_instance_count,
             post_connect_single_breaks=post_connect_single_breaks,
         )

@@ -14,7 +14,7 @@ from sleap.instance import PredictedInstance
 from sleap.skeleton import Skeleton
 
 
-@pytest.mark.parametrize("tracker", ["simple", "flow"])
+@pytest.mark.parametrize("tracker", ["simple", "flow", "simplemaxtracks"])
 @pytest.mark.parametrize("similarity", ["instance", "iou", "centroid"])
 @pytest.mark.parametrize("match", ["greedy", "hungarian"])
 @pytest.mark.parametrize("count", [0, 2])
