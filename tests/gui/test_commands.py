@@ -456,7 +456,7 @@ def test_OpenSkeleton(
             # Original function opens FileDialog here
             filename = params["filename_in"]
         else:
-            filename = get_package_file(f"sleap/skeletons/{template}.json")
+            filename = get_package_file(f"skeletons/{template}.json")
         if len(filename) == 0:
             return False
 
@@ -522,7 +522,7 @@ def test_OpenSkeleton(
 
     # Run again with template set
     context.app.currentText = "fly32"
-    fly32_json = get_package_file(f"sleap/skeletons/fly32.json")
+    fly32_json = get_package_file(f"skeletons/fly32.json")
     OpenSkeleton_ask(context, params)
     assert params["filename"] == fly32_json
     fly32_skeleton = Skeleton.load_json(fly32_json)
