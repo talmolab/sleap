@@ -333,9 +333,6 @@ class Track:
         """
         return attr.asdict(self) == attr.asdict(other)
 
-    def __hash__(self) -> int:
-        return hash(self.spawned_on, self.name)
-
 
 # NOTE:
 # Instance cannot be a slotted class at the moment. This is because it creates
