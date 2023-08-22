@@ -5,7 +5,7 @@ import abc
 import attr
 import numpy as np
 import cv2
-from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple
+from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple, TypeVar
 
 from sleap import Track, LabeledFrame, Skeleton
 
@@ -85,6 +85,13 @@ class ShiftedInstance:
 class MatchedFrameInstances:
     t: int
     instances_t: List[InstanceType]
+    img_t: Optional[np.ndarray] = None
+
+
+@attr.s(auto_attribs=True, slots=True)
+class MatchedFrameInstance:
+    t: int
+    instance_t: InstanceType
     img_t: Optional[np.ndarray] = None
 
 
@@ -334,9 +341,40 @@ class SimpleCandidateMaker:
         return candidate_instances
 
 
+@attr.s(auto_attribs=True)
+class SimpleMaxTracksCandidateMaker:
+    """Class to generate instances based on the maximum number of tracks from prior frames."""
+
+    min_points: int = 0
+
+    @property
+    def uses_image(self):
+        return False
+
+    def get_candidates(
+        self,
+        track_matching_queue_dict: dict(),
+        *args,
+        **kwargs,
+    ) -> List[InstanceType]:
+        # Create set of matchable candidate instances from each track for max number of tracks.
+        candidate_instances = []
+        number_of_tracks = 0
+        for track in track_matching_queue_dict.keys():
+            if track and number_of_tracks <= max_tracks:
+                number_of_tracks += 1
+                for matched_item in track:
+                    ref_t, ref_instances = matched_item.t, matched_item.instances_t
+                    for ref_instance in ref_instances:
+                        if ref_instance.n_visible_points >= self.min_points:
+                            candidate_instances.append(ref_instance)
+        return candidate_instances
+
+
 tracker_policies = dict(
     simple=SimpleCandidateMaker,
     flow=FlowCandidateMaker,
+    simplemaxtracks=SimpleMaxTracksCandidateMaker,
 )
 
 similarity_policies = dict(
@@ -409,14 +447,12 @@ class Tracker(BaseTracker):
             0.95 is a good value.
     """
 
-    track_map: Dict[
-        int, Deque[InstanceType]
-    ]  # Hold tracks, each as a deque with length as track_window
+    max_tracks: int
     track_window: int = 5
     similarity_function: Optional[Callable] = instance_similarity
     matching_function: Callable = greedy_matching
     candidate_maker: object = attr.ib(factory=FlowCandidateMaker)
-    track_local_deque: bool = False
+    max_tracking: bool = False  # To enable maximum tracking.
 
     cleaner: Optional[Callable] = None  # TODO: deprecate
     target_instance_count: int = 0
@@ -428,6 +464,10 @@ class Tracker(BaseTracker):
 
     track_matching_queue: Deque[MatchedFrameInstances] = attr.ib()
 
+    # Hold track, instances with each instances as a deque with length as track_window
+    track_matching_queue_dict: Dict[Track, Deque[MatchedFrameInstance]] = attr.ib(
+        factory=dict
+    )
     spawned_tracks: List[Track] = attr.ib(factory=list)
 
     save_tracked_instances: bool = False
@@ -447,7 +487,11 @@ class Tracker(BaseTracker):
         return deque(maxlen=self.track_window)
 
     def reset_candidates(self):
-        self.track_matching_queue = deque(maxlen=self.track_window)
+        if self.max_tracking and self.track_matching_queue_dict:
+            for track, candidates in self.track_matching_queue_dict:
+                candidates = deque(maxlen=self.track_window)
+        else:
+            self.track_matching_queue = deque(maxlen=self.track_window)
 
     @property
     def unique_tracks_in_queue(self) -> List[Track]:
@@ -457,6 +501,10 @@ class Tracker(BaseTracker):
         for match_item in self.track_matching_queue:
             for instance in match_item.instances_t:
                 unique_tracks.add(instance.track)
+
+        if self.max_tracking:
+            for track in self.track_matching_queue_dict.keys():
+                unique_tracks.add(track)
 
         return list(unique_tracks)
 
@@ -507,11 +555,19 @@ class Tracker(BaseTracker):
                 self.pre_cull_function(untracked_instances)
 
             # Build a pool of matchable candidate instances.
-            candidate_instances = self.candidate_maker.get_candidates(
-                track_matching_queue=self.track_matching_queue,
-                t=t,
-                img=img,
-            )
+            if self.max_tracking:
+                candidate_instances = self.candidate_maker.get_candidates(
+                    track_matching_queue_dict=self.track_matching_queue_dict,
+                    max_tracks=self.max_tracks,
+                    t=t,
+                    img=img,
+                )
+            else:
+                candidate_instances = self.candidate_maker.get_candidates(
+                    track_matching_queue=self.track_matching_queue,
+                    t=t,
+                    img=img,
+                )
 
             # Determine matches for untracked instances in current frame.
             frame_matches = FrameMatches.from_candidate_instances(
@@ -535,10 +591,18 @@ class Tracker(BaseTracker):
                 self.spawn_for_untracked_instances(frame_matches.unmatched_instances, t)
             )
 
-        # Add the tracked instances to the matching buffer.
-        self.track_matching_queue.append(
-            MatchedFrameInstances(t, tracked_instances, img)
-        )
+        # Add the tracked instances to the dictionary of matched instances.
+        if self.max_tracking:
+            for tracked_instance in tracked_instances:
+                if self.track_matching_queue_dict[tracked_instance]:
+                    self.track_matching_queue_dict[tracked_instance.track].append(
+                        MatchedFrameInstance(t, tracked_instance, img)
+                    )
+        else:
+            # Add the tracked instances to the matching buffer.
+            self.track_matching_queue.append(
+                MatchedFrameInstances(t, tracked_instances, img)
+            )
 
         # Save tracked instances internally.
         if self.save_tracked_instances:
@@ -609,7 +673,7 @@ class Tracker(BaseTracker):
         robust: float = 1.0,
         min_new_track_points: int = 0,
         min_match_points: int = 0,
-        track_local_deque: bool = False,
+        max_tracking: bool = False,
         # Optical flow options
         img_scale: float = 1.0,
         of_window_size: int = 21,
@@ -682,6 +746,7 @@ class Tracker(BaseTracker):
             candidate_maker=candidate_maker,
             cleaner=cleaner,
             pre_cull_function=pre_cull_function,
+            max_tracking=max_tracking,
             target_instance_count=target_instance_count,
             post_connect_single_breaks=post_connect_single_breaks,
         )
@@ -866,6 +931,17 @@ class SimpleTracker(Tracker):
     similarity_function: Callable = instance_iou
     matching_function: Callable = hungarian_matching
     candidate_maker: object = attr.ib(factory=SimpleCandidateMaker)
+
+
+@attr.s(auto_attribs=True)
+class SimpleMaxTracker(Tracker):
+    """A tracked pre-configured to use simple, non-image-based candidates but with a maximum number of tracks."""
+
+    max_tracks: int = attr.ib(kw_only=True)
+    similarity_function: Callable = instance_iou
+    matching_function: Callable = hungarian_matching
+    candidate_maker: object = attr.ib(factory=SimpleMaxTracksCandidateMaker)
+    max_tracking: bool = True
 
 
 @attr.s(auto_attribs=True)

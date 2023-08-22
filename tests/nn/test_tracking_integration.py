@@ -95,6 +95,7 @@ def main(f, dir):
     trackers = dict(
         simple=sleap.nn.tracker.simple.SimpleTracker,
         flow=sleap.nn.tracker.flow.FlowTracker,
+        simplemaxtracks=sleap.nn.tracker.SimpleMaxTracker,
     )
     matchers = dict(
         hungarian=sleap.nn.tracker.components.hungarian_matching,
@@ -110,11 +111,21 @@ def main(f, dir):
         0.25,
     )
 
-    def make_tracker(tracker_name, matcher_name, sim_name, scale=0):
-        tracker = trackers[tracker_name](
-            matching_function=matchers[matcher_name],
-            similarity_function=similarities[sim_name],
-        )
+    def make_tracker(
+        tracker_name, matcher_name, sim_name, max_tracks, max_tracking=False, scale=0
+    ):
+        if tracker_name == "simplemaxtracks":
+            tracker[tracker_name](
+                matching_function=matchers[matcher_name],
+                similarity_function=similarities[sim_name],
+                max_tracks=max_tracks,
+                max_tracking=max_tracking,
+            )
+        else:
+            tracker = trackers[tracker_name](
+                matching_function=matchers[matcher_name],
+                similarity_function=similarities[sim_name],
+            )
         if scale:
             tracker.candidate_maker.img_scale = scale
         return tracker
@@ -145,6 +156,16 @@ def main(f, dir):
                             scale=scale,
                         )
                         f(frames, tracker, gt_filename)
+                elif tracker_name == "simplemaxtracks":
+                    tracker, gt_filename = make_tracker_and_filename(
+                        tracker_name=tracker_name,
+                        matcher_name=matcher_name,
+                        sim_name=sim_name,
+                        max_tracks=5,
+                        max_tracking=True,
+                        scale=0,
+                    )
+                    f(frames, tracker, gt_filename)
                 else:
                     tracker, gt_filename = make_tracker_and_filename(
                         tracker_name=tracker_name,
