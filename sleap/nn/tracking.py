@@ -345,6 +345,7 @@ class SimpleCandidateMaker:
 class SimpleMaxTracksCandidateMaker:
     """Class to generate instances based on the maximum number of tracks from prior frames."""
 
+    max_tracks: int = None
     min_points: int = 0
 
     @property
@@ -361,7 +362,7 @@ class SimpleMaxTracksCandidateMaker:
         candidate_instances = []
         number_of_tracks = 0
         for track in track_matching_queue_dict.keys():
-            if track and number_of_tracks <= max_tracks:
+            if track and number_of_tracks <= self.max_tracks:
                 number_of_tracks += 1
                 for matched_item in track:
                     ref_t, ref_instances = matched_item.t, matched_item.instances_t
@@ -447,7 +448,7 @@ class Tracker(BaseTracker):
             0.95 is a good value.
     """
 
-    max_tracks: int
+    max_tracks: int = None
     track_window: int = 5
     similarity_function: Optional[Callable] = instance_similarity
     matching_function: Callable = greedy_matching
@@ -534,6 +535,22 @@ class Tracker(BaseTracker):
 
         # Infer timestep if not provided.
         if t is None:
+            if self.max_tracking:
+                if len(self.track_matching_queue_dict) > 0:
+
+                    # Default to last timestep + 1 if available. Here we find the track that has the most instances.
+                    track_with_max_instances = max(
+                        self.track_matching_queue_dict,
+                        track=lambda track: len(self.track_matching_queue_dict[track]),
+                    )
+                    t = (
+                        self.track_matching_queue_dict[track_with_max_instances][-1].t
+                        + 1
+                    )
+
+                else:
+                    t = 0
+
             if len(self.track_matching_queue) > 0:
 
                 # Default to last timestep + 1 if available.
@@ -594,7 +611,7 @@ class Tracker(BaseTracker):
         # Add the tracked instances to the dictionary of matched instances.
         if self.max_tracking:
             for tracked_instance in tracked_instances:
-                if self.track_matching_queue_dict[tracked_instance]:
+                if tracked_instance.track in self.track_matching_queue_dict:
                     self.track_matching_queue_dict[tracked_instance.track].append(
                         MatchedFrameInstance(t, tracked_instance, img)
                     )
@@ -666,6 +683,7 @@ class Tracker(BaseTracker):
     @classmethod
     def make_tracker_by_name(
         cls,
+        # Tracker options
         tracker: str = "flow",
         similarity: str = "instance",
         match: str = "greedy",
@@ -673,7 +691,6 @@ class Tracker(BaseTracker):
         robust: float = 1.0,
         min_new_track_points: int = 0,
         min_match_points: int = 0,
-        max_tracking: bool = False,
         # Optical flow options
         img_scale: float = 1.0,
         of_window_size: int = 21,
@@ -691,6 +708,9 @@ class Tracker(BaseTracker):
         # Kalman filter options
         kf_init_frame_count: int = 0,
         kf_node_indices: Optional[list] = None,
+        # Max tracking options
+        max_tracks: int = None,
+        max_tracking: bool = False,
         **kwargs,
     ) -> BaseTracker:
 
@@ -720,6 +740,9 @@ class Tracker(BaseTracker):
             candidate_maker.of_max_levels = of_max_levels
             candidate_maker.save_shifted_instances = save_shifted_instances
             candidate_maker.track_window = track_window
+
+        if tracker == "simplemaxtracks":
+            candidate_maker.max_tracks = max_tracks
 
         cleaner = None
         if clean_instance_count:
@@ -777,6 +800,18 @@ class Tracker(BaseTracker):
         option["options"] = list(tracker_policies.keys()) + [
             "None",
         ]
+        options.append(option)
+
+        option = dict(name="max_tracking", default=False)
+        option["type"] = bool
+        option[
+            "help"
+        ] = "If true then the tracker will cap the max number of tracks created or tracked."
+        options.append(option)
+
+        option = dict(name="max_tracks", default=0)
+        option["type"] = None
+        option["help"] = "Maximum number of tracks to be tracked by the tracker."
         options.append(option)
 
         option = dict(name="target_instance_count", default=0)
