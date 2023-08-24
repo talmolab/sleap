@@ -550,14 +550,14 @@ class Tracker(BaseTracker):
 
                 else:
                     t = 0
-
-            if len(self.track_matching_queue) > 0:
-
-                # Default to last timestep + 1 if available.
-                t = self.track_matching_queue[-1].t + 1
-
             else:
-                t = 0
+                if len(self.track_matching_queue) > 0:
+
+                    # Default to last timestep + 1 if available.
+                    t = self.track_matching_queue[-1].t + 1
+
+                else:
+                    t = 0
 
         # Initialize containers for tracked instances at the current timestep.
         tracked_instances = []
