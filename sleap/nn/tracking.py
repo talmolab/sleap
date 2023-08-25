@@ -361,14 +361,12 @@ class SimpleMaxTracksCandidateMaker:
         # Create set of matchable candidate instances from each track for max number of tracks.
         candidate_instances = []
         number_of_tracks = 0
-        for track in track_matching_queue_dict.keys():
+        for track, matched_instances in track_matching_queue_dict.items():
             if track and number_of_tracks <= self.max_tracks:
                 number_of_tracks += 1
-                for matched_item in track:
-                    ref_t, ref_instances = matched_item.t, matched_item.instances_t
-                    for ref_instance in ref_instances:
-                        if ref_instance.n_visible_points >= self.min_points:
-                            candidate_instances.append(ref_instance)
+                for ref_instance in matched_instances:
+                    if ref_instance.instance_t.n_visible_points >= self.min_points:
+                        candidate_instances.append(ref_instance.instance_t)
         return candidate_instances
 
 
@@ -489,7 +487,7 @@ class Tracker(BaseTracker):
 
     def reset_candidates(self):
         if self.max_tracking and self.track_matching_queue_dict:
-            for track, candidates in self.track_matching_queue_dict:
+            for track, candidates in self.track_matching_queue_dict.items():
                 candidates = deque(maxlen=self.track_window)
         else:
             self.track_matching_queue = deque(maxlen=self.track_window)
@@ -541,7 +539,7 @@ class Tracker(BaseTracker):
                     # Default to last timestep + 1 if available. Here we find the track that has the most instances.
                     track_with_max_instances = max(
                         self.track_matching_queue_dict,
-                        track=lambda track: len(self.track_matching_queue_dict[track]),
+                        key=lambda track: len(self.track_matching_queue_dict[track]),
                     )
                     t = (
                         self.track_matching_queue_dict[track_with_max_instances][-1].t
@@ -615,6 +613,14 @@ class Tracker(BaseTracker):
                     self.track_matching_queue_dict[tracked_instance.track].append(
                         MatchedFrameInstance(t, tracked_instance, img)
                     )
+                elif len(self.track_matching_queue_dict) < self.max_tracks:
+                    self.track_matching_queue_dict[tracked_instance.track] = deque(
+                        maxlen=self.track_window
+                    )
+                    self.track_matching_queue_dict[tracked_instance.track].append(
+                        MatchedFrameInstance(t, tracked_instance, img)
+                    )
+
         else:
             # Add the tracked instances to the matching buffer.
             self.track_matching_queue.append(
@@ -809,8 +815,8 @@ class Tracker(BaseTracker):
         ] = "If true then the tracker will cap the max number of tracks created or tracked."
         options.append(option)
 
-        option = dict(name="max_tracks", default=0)
-        option["type"] = None
+        option = dict(name="max_tracks", default=None)
+        option["type"] = int
         option["help"] = "Maximum number of tracks to be tracked by the tracker."
         options.append(option)
 
