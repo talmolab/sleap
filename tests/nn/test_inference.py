@@ -1336,7 +1336,12 @@ def test_topdown_id_predictor_save(
 
 @pytest.mark.parametrize(
     "output_path,tracker_method",
-    [("not_default", "flow"), (None, "simple"), (None, "simplemaxtracks")],
+    [
+        ("not_default", "flow"),
+        ("not_default", "flowmaxtracks"),
+        (None, "simple"),
+        (None, "simplemaxtracks"),
+    ],
 )
 def test_retracking(
     centered_pair_predictions: Labels, tmpdir, output_path, tracker_method
@@ -1351,7 +1356,7 @@ def test_retracking(
     )
     if tracker_method == "flow":
         cmd += " --tracking.save_shifted_instances 1"
-    elif tracker_method == "simplemaxtracks":
+    elif tracker_method == "simplemaxtracks" or tracker_method == "flowmaxtracks":
         cmd += " --tracking.max_tracking 1"
         cmd += " --tracking.max_tracks 2"
     if output_path == "not_default":

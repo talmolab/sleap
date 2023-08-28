@@ -319,6 +319,119 @@ class FlowCandidateMaker:
 
 
 @attr.s(auto_attribs=True)
+class FlowMaxTracksCandidateMaker(FlowCandidateMaker):
+    """Class for producing optical flow shift matching candidates with a maximum on the number of tracks.
+
+    Attributes:
+        min_points: Minimum number of points that must be detected in the new frame in
+            order to generate a new shifted instance.
+        img_scale: Factor to scale the images by when computing optical flow. Decrease
+            this to increase performance at the cost of finer accuracy. Sometimes
+            decreasing the image scale can improve performance with fast movements.
+        of_window_size: Optical flow window size to consider at each pyramid scale
+            level.
+        of_max_levels: Number of pyramid scale levels to consider. This is different
+            from the scale parameter, which determines the initial image scaling.
+        save_shifted_instances: If True, save the shifted instances between elapsed
+            frames.
+        track_window: How many frames back to look for candidate instances to match
+            instances in the current frame against.
+
+    """
+
+    max_tracks: int = None
+    min_points: int = 0
+    img_scale: float = 1.0
+    of_window_size: int = 21
+    of_max_levels: int = 3
+    save_shifted_instances: bool = False
+    track_window: int = 5
+
+    shifted_instances: Dict[
+        Tuple[int, int], List[ShiftedInstance]  # keyed by (src_t, dst_t)
+    ] = attr.ib(factory=dict)
+
+    @property
+    def uses_image(self):
+        return True
+
+    def get_candidates(
+        self,
+        track_matching_queue_dict: dict(),
+        t: int,
+        img: np.ndarray,
+        *args,
+        **kwargs,
+    ) -> List[ShiftedInstance]:
+        candidate_instances = []
+
+        # Prune old shifted instances to save time and memory
+        self.prune_shifted_instances(t)
+        number_of_tracks = 0
+        # -> List[ShiftedInstance]
+        def get_ref_instances(r_t, r_img) -> List[InstanceType]:
+            instances = []
+            for track, matched_items in track_matching_queue_dict.items():
+                instances + [
+                    item.instance_t
+                    for item in matched_items
+                    if item.t == r_t and np.all(item.img_t == r_img)
+                ]
+            return instances
+
+        for track, matched_items in track_matching_queue_dict.items():
+            if track and number_of_tracks <= self.max_tracks:
+                number_of_tracks += 1
+                for matched_item in matched_items:
+                    ref_t, ref_img = (
+                        matched_item.t,
+                        matched_item.img_t,
+                    )
+                    ref_instances = get_ref_instances(r_t=ref_t, r_img=ref_img)
+
+                    # Check if shifted instance was computed at earlier time
+                    if self.save_shifted_instances:
+                        for ti in reversed(range(ref_t, t)):
+                            if (ref_t, ti) in self.shifted_instances:
+                                ref_shifted_instances = self.shifted_instances[
+                                    (ref_t, ti)
+                                ]
+                                # Use shifted instance as a reference
+                                if len(ref_shifted_instances.instances_t) > 0:
+                                    ref_img = ref_shifted_instances.img_t
+                                    ref_instances = ref_shifted_instances.instances_t
+                                    break
+
+                    if len(ref_instances) > 0:
+                        # Flow shift reference instances to current frame.
+                        shifted_instances = self.flow_shift_instances(
+                            ref_instances,
+                            ref_img,
+                            img,
+                            min_shifted_points=self.min_points,
+                            scale=self.img_scale,
+                            window_size=self.of_window_size,
+                            max_levels=self.of_max_levels,
+                        )
+
+                        # Add to candidate pool.
+                        candidate_instances.extend(shifted_instances)
+
+                        # Save shifted instances.
+                        if self.save_shifted_instances:
+                            self.shifted_instances[
+                                (ref_t, t)
+                            ] = MatchedShiftedFrameInstances(
+                                ref_t,
+                                t,
+                                shifted_instances,
+                                img,
+                            )
+
+        return candidate_instances
+
+
+@attr.s(auto_attribs=True)
 class SimpleCandidateMaker:
     """Class for producing list of matching candidates from prior frames."""
 
@@ -374,6 +487,7 @@ tracker_policies = dict(
     simple=SimpleCandidateMaker,
     flow=FlowCandidateMaker,
     simplemaxtracks=SimpleMaxTracksCandidateMaker,
+    flowmaxtracks=FlowMaxTracksCandidateMaker,
 )
 
 similarity_policies = dict(
@@ -463,7 +577,7 @@ class Tracker(BaseTracker):
 
     track_matching_queue: Deque[MatchedFrameInstances] = attr.ib()
 
-    # Hold track, instances with each instances as a deque with length as track_window
+    # Hold track, instances with instances as a deque with length as track_window.
     track_matching_queue_dict: Dict[Track, Deque[MatchedFrameInstance]] = attr.ib(
         factory=dict
     )
@@ -747,7 +861,7 @@ class Tracker(BaseTracker):
             candidate_maker.save_shifted_instances = save_shifted_instances
             candidate_maker.track_window = track_window
 
-        if tracker == "simplemaxtracks":
+        if tracker == "simplemaxtracks" or tracker == "flowmaxtracks":
             candidate_maker.max_tracks = max_tracks
 
         cleaner = None
@@ -966,6 +1080,19 @@ class FlowTracker(Tracker):
     candidate_maker: object = attr.ib(factory=FlowCandidateMaker)
 
 
+attr.s(auto_attribs=True)
+
+
+class FlowMaxTracker(Tracker):
+    """A Tracker pre-configured to use optical flow shifted candidates with a maximum limit on tracks."""
+
+    max_tracks: int = attr.ib(kw_only=True)
+    similarity_function: Callable = instance_similarity
+    matching_function: Callable = greedy_matching
+    candidate_maker: object = attr.ib(factory=FlowMaxTracksCandidateMaker)
+    max_tracking: bool = True
+
+
 @attr.s(auto_attribs=True)
 class SimpleTracker(Tracker):
     """A Tracker pre-configured to use simple, non-image-based candidates."""
@@ -977,7 +1104,7 @@ class SimpleTracker(Tracker):
 
 @attr.s(auto_attribs=True)
 class SimpleMaxTracker(Tracker):
-    """A tracked pre-configured to use simple, non-image-based candidates but with a maximum number of tracks."""
+    """A tracked pre-configured to use simple, non-image-based candidates with a maximum number of tracks."""
 
     max_tracks: int = attr.ib(kw_only=True)
     similarity_function: Callable = instance_iou

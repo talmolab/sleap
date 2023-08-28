@@ -96,6 +96,7 @@ def main(f, dir):
         simple=sleap.nn.tracker.simple.SimpleTracker,
         flow=sleap.nn.tracker.flow.FlowTracker,
         simplemaxtracks=sleap.nn.tracker.SimpleMaxTracker,
+        flowmaxtracks=sleap.nn.tracker.FlowMaxTracker,
     )
     matchers = dict(
         hungarian=sleap.nn.tracker.components.hungarian_matching,
@@ -114,7 +115,7 @@ def main(f, dir):
     def make_tracker(
         tracker_name, matcher_name, sim_name, max_tracks, max_tracking=False, scale=0
     ):
-        if tracker_name == "simplemaxtracks":
+        if tracker_name == "simplemaxtracks" or tracker_name == "flowmaxtracks":
             tracker[tracker_name](
                 matching_function=matchers[matcher_name],
                 similarity_function=similarities[sim_name],
@@ -156,12 +157,24 @@ def main(f, dir):
                             scale=scale,
                         )
                         f(frames, tracker, gt_filename)
+                elif tracker_name == "flowmaxtracks":
+                    # If this tracker supports scale, try multiple scales
+                    for scale in scales:
+                        tracker, gt_filename = make_tracker_and_filename(
+                            tracker_name=tracker_name,
+                            matcher_name=matcher_name,
+                            sim_name=sim_name,
+                            max_tracks=2,
+                            max_tracking=True,
+                            scale=scale,
+                        )
+                        f(frames, tracker, gt_filename)
                 elif tracker_name == "simplemaxtracks":
                     tracker, gt_filename = make_tracker_and_filename(
                         tracker_name=tracker_name,
                         matcher_name=matcher_name,
                         sim_name=sim_name,
-                        max_tracks=5,
+                        max_tracks=2,
                         max_tracking=True,
                         scale=0,
                     )
