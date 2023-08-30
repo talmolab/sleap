@@ -267,7 +267,7 @@ def test_sadlc(test_data):
     assert_array_equal(labels[2][0].numpy(), [[22, 23], [24, 25], [26, 27]])
     assert labels[2].frame_idx == 3
 
-
+@pytest.mark.exclude_from_linux_pip_test
 def test_alphatracker(qtbot):
 
     # Checks on properties

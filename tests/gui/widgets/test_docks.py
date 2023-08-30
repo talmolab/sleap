@@ -13,6 +13,7 @@ from sleap.gui.widgets.docks import (
 )
 
 
+@pytest.mark.exclude_from_linux_pip_test
 def test_videos_dock(
     qtbot,
     centered_pair_predictions: Labels,
@@ -72,6 +73,7 @@ def test_videos_dock(
     assert main_window.state["video"] == labels.videos[-1]
 
 
+@pytest.mark.exclude_from_linux_pip_test
 def test_skeleton_dock(qtbot):
     """Test the `DockWidget` class."""
     main_window = MainWindow()
@@ -89,6 +91,7 @@ def test_skeleton_dock(qtbot):
     assert fn.name == f"{dock.skeleton_templates.currentText()}.json"
 
 
+@pytest.mark.exclude_from_linux_pip_test
 def test_suggestions_dock(qtbot):
     """Test the `DockWidget` class."""
     main_window = MainWindow()
@@ -99,6 +102,7 @@ def test_suggestions_dock(qtbot):
     assert dock.wgt_layout is dock.widget().layout()
 
 
+@pytest.mark.exclude_from_linux_pip_test
 def test_instances_dock(qtbot):
     """Test the `DockWidget` class."""
     main_window = MainWindow()

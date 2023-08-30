@@ -1,7 +1,10 @@
+import pytest
+
 from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.gui.overlays.confmaps import ConfMapsPlot
 
 
+@pytest.mark.exclude_from_linux_pip_test
 def test_gui_conf_maps(qtbot, hdf5_confmaps):
 
     vp = QtVideoPlayer()
