@@ -5,6 +5,7 @@ from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
 
 
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_app_workflow(
     qtbot, centered_pair_vid, small_robot_mp4_vid, min_tracks_2node_labels: Labels
 ):
