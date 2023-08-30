@@ -1,5 +1,6 @@
 import pytest
-from qtpy.QtWidgets import QApplication, QLibraryInfo
+from qtpy.QtCore import QLibraryInfo
+from qtpy.QtWidgets import QApplication
 
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
