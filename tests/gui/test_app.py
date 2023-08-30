@@ -1,15 +1,8 @@
 import pytest
-from qtpy.QtCore import QLibraryInfo
 from qtpy.QtWidgets import QApplication
 
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
-
-
-# https://stackoverflow.com/questions/68417682/qt-and-opencv-app-not-working-in-virtual-environment
-os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = QLibraryInfo.location(
-    QLibraryInfo.PluginsPath
-)
 
 
 def test_app_workflow(
