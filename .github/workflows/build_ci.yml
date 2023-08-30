@@ -81,6 +81,7 @@ jobs:
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Default values
+          - venv_cmd: source venv/bin/activate
           - test_args: pytest --durations=-1 tests/
           - condarc: .conda/condarc.yaml
           # Use special condarc if macos
@@ -93,6 +94,9 @@ jobs:
               sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
               export DISPLAY=":1"
               pytest tests
+          # Windows specific values
+          - os: windows-2022
+            venv_cmd: .\venv\Scripts\activate
     steps:
       # Download wheel
       - name: Checkout repo
@@ -112,7 +116,7 @@ jobs:
         run: python -m venv venv
 
       - name: Activate virtual environment
-        run: source venv/bin/activate
+        run: ${{ matrix.venv_cmd }}
 
       - name: Install the built wheel
         run: |
