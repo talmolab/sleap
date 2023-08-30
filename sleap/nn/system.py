@@ -195,6 +195,7 @@ def get_gpu_memory() -> List[int]:
         A list of the available memory on each GPU in MiB.
 
     """
+    os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
     if shutil.which("nvidia-smi") is None:
         return []
 
