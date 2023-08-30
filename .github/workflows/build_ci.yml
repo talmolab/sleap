@@ -17,14 +17,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04"]  #, "windows-2022", "macos-latest"]
+        os: ["ubuntu-22.04", "windows-2022", "macos-latest"]
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Use this condarc as default
           - condarc: .conda/condarc.yaml
-          # # Use special condarc if macos
-          # - os: "macos-latest"
-          #   condarc: .conda_mac/condarc.yaml
+          # Use special condarc if macos
+          - os: "macos-latest"
+            condarc: .conda_mac/condarc.yaml
     steps:
       # Setup
       - uses: actions/checkout@v2
@@ -76,14 +76,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04"]  #, "windows-2022", "macos-latest"]
+        os: ["ubuntu-22.04", "windows-2022", "macos-latest"]
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
-          # Use this condarc as default
+          # Default values
+          - test_args: pytest --durations=-1 tests/
           - condarc: .conda/condarc.yaml
-          # # Use special condarc if macos
-          # - os: "macos-latest"
-          #   condarc: .conda_mac/condarc.yaml
+          # Use special condarc if macos
+          - os: "macos-latest"
+            condarc: .conda_mac/condarc.yaml
+          # Ubuntu specific values
+          - os: ubuntu-22.04
+            test_args: |
+              sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
+              sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
+              export DISPLAY=":1"
+              pytest tests
     steps:
       # Download wheel
       - name: Checkout repo
@@ -98,16 +106,6 @@ jobs:
         with:
           name: sleap-wheel
           path: dist
-
-      # - name: Setup Miniconda for Tests
-      #   # https://github.com/conda-incubator/setup-miniconda
-      #   uses: conda-incubator/setup-miniconda@v2.0.1
-      #   with:
-      #     python-version: 3.7
-      #     use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-      #     environment-file: environment_pypi.yml
-      #     condarc-file: ${{ matrix.condarc }}
-      #     activate-environment: sleap_pypi
 
       - name: Create virtual environment
         run: python -m venv venv
@@ -130,7 +128,4 @@ jobs:
       - name: Test the built wheel
         # https://pytest-qt.readthedocs.io/en/latest/troubleshooting.html#github-actions
         run: |
-          sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
-          sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
-          export DISPLAY=":1"
-          pytest tests
+          ${{ matrix.test_args}}
