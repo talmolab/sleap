@@ -83,6 +83,9 @@ jobs:
           # Default values
           - venv_cmd: source venv/bin/activate
           - test_args: pytest --durations=-1 tests/
+          - pip_cmd: |
+              wheel_path=$(find dist -name "*.whl")
+              pip install "$wheel_path"[dev]
           - condarc: .conda/condarc.yaml
           # Use special condarc if macos
           - os: "macos-latest"
@@ -97,6 +100,9 @@ jobs:
           # Windows specific values
           - os: windows-2022
             venv_cmd: .\venv\Scripts\activate
+            pip_cmd: |
+              for /r %%i in (dist\*.whl) do set "wheel_path=%~fi"
+              pip install %wheel_path%[dev]
     steps:
       # Download wheel
       - name: Checkout repo
@@ -119,9 +125,7 @@ jobs:
         run: ${{ matrix.venv_cmd }}
 
       - name: Install the built wheel
-        run: |
-          wheel_path=$(find dist -name "*.whl")
-          pip install "$wheel_path"[dev]
+        run: ${{ matrix.pip_cmd }}
 
       - name: Print test environment info
         shell: bash -l {0}
