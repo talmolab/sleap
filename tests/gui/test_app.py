@@ -320,6 +320,7 @@ def test_app_workflow(
         assert sugg.video == video_clip
 
 
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_app_new_window(qtbot):
     app = QApplication.instance()
     app.closeAllWindows()

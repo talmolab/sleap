@@ -4,7 +4,6 @@ import re
 from sleap.version import __version__
 
 
-@pytest.mark.exclude_from_linux_pip_test
 def test_version():
     with open("sleap/version.py") as f:
         version_file = f.read()
