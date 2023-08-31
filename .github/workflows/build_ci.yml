@@ -83,7 +83,6 @@ jobs:
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Default values
-          - os_shell: bash -l {0}
           - wheel_name: sleap-wheel-linux
           - venv_cmd: source venv/bin/activate
           - pip_cmd: |
@@ -95,7 +94,6 @@ jobs:
           # Use special condarc if macos
           - os: "macos-latest"
             condarc: .conda_mac/condarc.yaml
-            os_shell: bash -e {0}
             wheel_name: sleap-wheel-macos
             pip_cmd: |
               wheel_path=$(find dist -name "*.whl")
@@ -117,13 +115,15 @@ jobs:
             #   pip install %wheel_path%[dev]
 
     steps:
-      # Download wheel
       - name: Checkout repo
         uses: actions/checkout@v3
+      
       - name: Set up Python 3.7
         uses: actions/setup-python@v4
         with:
           python-version: 3.7
+      
+      # Download wheel
       - name: Download wheel artifact
         uses: actions/download-artifact@v3
         id: download
@@ -137,14 +137,17 @@ jobs:
       - name: Activate virtual environment
         run: ${{ matrix.venv_cmd }}
 
-      - name: Install the built wheel
-        shell: |
-          if [ "$RUNNER_OS" == "Mac" ]; then
-                bash -e {0}
-          else
-                echo "$RUNNER_OS not supported"
-                bash -l {0}
-          fi
+      - name: Install the built wheel (not Mac)
+        if: runner.os != 'macOS'
+        shell: bash -l {0}
+        run: |
+          wheel_path=$(find dist -name "*.whl")
+          echo wheel_path
+          pip install "$wheel_path"[dev]
+
+      - name: Install the built wheel (Mac)
+        if: runner.os == 'macOS'
+        shell: bash -e {0}
         run: |
           wheel_path=$(find dist -name "*.whl")
           echo wheel_path
