@@ -15,7 +15,7 @@
 import os
 import sys
 import shutil
-import docs.utils
+from docs import utils
 from datetime import date
 
 sys.path.insert(0, os.path.abspath(".."))
@@ -97,7 +97,7 @@ def linkcode_resolve(domain, info):
         return None
 
     try:
-        filename = docs.utils.resolve(info["module"], info["fullname"])
+        filename = utils.resolve(info["module"], info["fullname"])
         if filename is None:
             return None
         return f"https://github.com/talmolab/sleap/blob/{release}/{filename}"

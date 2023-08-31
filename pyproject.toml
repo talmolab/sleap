@@ -90,7 +90,11 @@ pypi = [
     "tensorflow",
     "tensorflow-hub",
 ]
-conda_jupyter = ["ipywidgets", "ipykernel", "jupyterlab"] # No pypi dependencies included.
+conda_jupyter = [
+    "ipywidgets",
+    "ipykernel",
+    "jupyterlab",
+] # No pypi dependencies included.
 jupyter = [
     # Include conda_jupyter dependencies.
     "ipywidgets",
@@ -246,8 +250,11 @@ sleap-export = "sleap.nn.inference:export_cli"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["sleap*"]
-exclude = ["tests*", "docs*"]
+include = [
+    "sleap*",
+    "docs*",
+] # TODO(LM): exclude docs on release, required to build docs
+exclude = ["tests*"] # TODO(LM): exclude on release , "docs*"]
 
 [tool.setuptools.package-data]
 sleap = ["config/*.yaml", "training_profiles/*.json"]
