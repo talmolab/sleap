@@ -8,7 +8,7 @@ on:
       # 'main' triggers updates to 'sleap.ai', all others to 'sleap.ai/develop'
       - main
       - develop
-      - liezl/update_installation_docs
+      - liezl/upgrade-pip-wheel
     paths:
       - "docs/**"
       - "README.rst"
