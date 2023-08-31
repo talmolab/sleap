@@ -1,8 +1,10 @@
-from sleap.gui.widgets.multicheck import MultiCheckWidget
-
+import pytest
 from qtpy import QtCore
 
+from sleap.gui.widgets.multicheck import MultiCheckWidget
 
+
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_gui_video(qtbot):
     cs = MultiCheckWidget(count=10, title="Test", default=True)
 

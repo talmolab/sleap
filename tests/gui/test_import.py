@@ -1,8 +1,10 @@
-from sleap.gui.dialogs.importvideos import ImportParamDialog
-
+import pytest
 from qtpy import QtCore
 
+from sleap.gui.dialogs.importvideos import ImportParamDialog
 
+
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_gui_import(qtbot):
     file_names = [
         "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5",

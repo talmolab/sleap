@@ -1,18 +1,19 @@
 import numpy as np
-from sleap import Instance, Skeleton
-from sleap.gui.widgets.video import (
-    QtVideoPlayer,
-    GraphicsView,
-    QtInstance,
-    QtVideoPlayer,
-    QtTextWithBackground,
-    VisibleBoundingBox,
-)
-
+import pytest
 from qtpy import QtCore, QtWidgets
 from qtpy.QtGui import QColor
 
+from sleap import Instance, Skeleton
+from sleap.gui.widgets.video import (
+    GraphicsView,
+    QtInstance,
+    QtTextWithBackground,
+    QtVideoPlayer,
+    VisibleBoundingBox,
+)
 
+
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_gui_video(qtbot):
     vp = QtVideoPlayer()
     vp.show()
@@ -25,6 +26,7 @@ def test_gui_video(qtbot):
     #     qtbot.mouseClick(vp.btn, QtCore.Qt.LeftButton)
 
 
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
     vp = QtVideoPlayer(small_robot_mp4_vid)
     qtbot.addWidget(vp)
@@ -94,6 +96,7 @@ def test_getInstancesBoundingRect():
     assert rect.isNull()
 
 
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_QtTextWithBackground(qtbot):
     scene = QtWidgets.QGraphicsScene()
     view = QtWidgets.QGraphicsView()
@@ -113,6 +116,7 @@ def test_QtTextWithBackground(qtbot):
     qtbot.addWidget(view)
 
 
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_VisibleBoundingBox(qtbot, centered_pair_labels):
     vp = QtVideoPlayer(centered_pair_labels.video)
 

@@ -1,6 +1,9 @@
+import pytest
+
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 
 
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_missing_gui(qtbot):
 
     filenames = ["m:\\centered_pair_small.mp4", "m:\\small_robot.mp4"]

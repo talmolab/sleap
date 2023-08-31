@@ -1,9 +1,9 @@
 import pytest
-import pytestqt
 
 from sleap.gui.dataviews import *
 
 
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_skeleton_nodes(qtbot, centered_pair_predictions):
 
     table = GenericTableView(
@@ -40,6 +40,7 @@ def test_skeleton_nodes(qtbot, centered_pair_predictions):
     assert table.model().data(table.currentIndex()) == "21/24"
 
 
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_table_sort(qtbot, centered_pair_predictions):
     table = GenericTableView(
         row_name="instance",
@@ -74,6 +75,7 @@ def test_table_sort(qtbot, centered_pair_predictions):
     assert table.getSelectedRowItem().score == inst.score
 
 
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_table_sort_string(qtbot):
     table_model = GenericTableModel(
         items=[dict(a=1, b=2), dict(a=2, b="")], properties=["a", "b"]

@@ -1,8 +1,11 @@
 import yaml
 
+import pytest
+
 from sleap.gui.dialogs import formbuilder
 
 
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_formbuilder_dialog(qtbot):
     dialog = formbuilder.FormBuilderModalDialog(form_name="labeled_clip_form")
 
@@ -13,6 +16,7 @@ def test_formbuilder_dialog(qtbot):
     assert dialog.message_fields[0].text() == "bar"
 
 
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_formbuilder(qtbot):
     form_yaml = """
 - name: method
@@ -67,6 +71,7 @@ def test_formbuilder(qtbot):
     assert form_data["node"] == "new option"
 
 
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_optional_spin_widget(qtbot):
     widget = formbuilder.OptionalSpinWidget()
 
@@ -83,6 +88,7 @@ def test_optional_spin_widget(qtbot):
     assert widget.value() is None
 
 
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_auto_double_widget(qtbot):
     widget = formbuilder.OptionalSpinWidget(type="double", none_string="auto")
 
@@ -105,6 +111,7 @@ def test_auto_double_widget(qtbot):
     assert widget.value() == "auto"
 
 
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_text_or_list_widget(qtbot):
     widget = formbuilder.TextOrListWidget()
 
@@ -122,6 +129,7 @@ def test_text_or_list_widget(qtbot):
     assert widget.value() == "b"
 
 
+@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
 def test_string_list_widget(qtbot):
     widget = formbuilder.StringListWidget()
 
