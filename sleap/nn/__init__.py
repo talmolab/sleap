@@ -15,4 +15,5 @@ import sleap.nn.tracking
 import sleap.nn.viz
 import sleap.nn.identity
 import os
+
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
