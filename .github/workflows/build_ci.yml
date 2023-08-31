@@ -119,12 +119,15 @@ jobs:
           path: dist
 
       - name: Create virtual environment
+        shell: bash -l {0}
         run: python -m venv venv
 
       - name: Activate virtual environment
+        shell: bash -l {0}
         run: ${{ matrix.venv_cmd }}
 
       - name: Install the built wheel
+        shell: bash -l {0}
         run: ${{ matrix.pip_cmd }}
 
       - name: Print test environment info
@@ -135,6 +138,6 @@ jobs:
         
       # Install and test the wheel
       - name: Test the built wheel
-        # https://pytest-qt.readthedocs.io/en/latest/troubleshooting.html#github-actions
+        shell: bash -l {0}
         run: |
           ${{ matrix.test_args}}
