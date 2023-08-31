@@ -1,24 +1,25 @@
 import os
+import sys
 from pathlib import Path, PurePath
 
+import nixio
 import numpy as np
 import pandas as pd
-from numpy.testing import assert_array_equal
 import pytest
-import nixio
+from numpy.testing import assert_array_equal
 
-from sleap.io.video import Video
+from sleap.gui.app import MainWindow
+from sleap.gui.commands import ImportAlphaTracker
+from sleap.gui.state import GuiState
+from sleap.info.write_tracking_h5 import get_nodes_as_np_strings
 from sleap.instance import Instance, LabeledFrame, PredictedInstance, Track
 from sleap.io.dataset import Labels
-from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, filehandle
+from sleap.io.format import adaptor, dispatch, filehandle, genericjson, hdf5, read, text
 from sleap.io.format.adaptor import SleapObjectType
 from sleap.io.format.alphatracker import AlphaTrackerAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.format.nix import NixAdaptor
-from sleap.gui.commands import ImportAlphaTracker
-from sleap.gui.app import MainWindow
-from sleap.gui.state import GuiState
-from sleap.info.write_tracking_h5 import get_nodes_as_np_strings
+from sleap.io.video import Video
 
 
 def test_text_adaptor(tmpdir):

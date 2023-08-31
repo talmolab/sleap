@@ -1,23 +1,24 @@
 import shutil
-from typing import Optional, List, Callable, Set
-from pathlib import Path
+import sys
 import traceback
+from pathlib import Path
+from typing import Callable, List, Optional, Set
 
 import cattr
 import pytest
 from qtpy import QtWidgets
 
-from sleap.gui.learning.dialog import LearningDialog, TrainingEditorWidget
+from sleap.gui.app import MainWindow
 from sleap.gui.learning.configs import (
-    TrainingConfigFilesWidget,
     ConfigFileInfo,
+    TrainingConfigFilesWidget,
     TrainingConfigsGetter,
 )
+from sleap.gui.learning.dialog import LearningDialog, TrainingEditorWidget
 from sleap.gui.learning.scopedkeydict import (
     ScopedKeyDict,
     apply_cfg_transforms_to_key_val_dict,
 )
-from sleap.gui.app import MainWindow
 from sleap.io.dataset import Labels
 from sleap.nn.config import TrainingJobConfig, UNetConfig
 from sleap.util import get_package_file
