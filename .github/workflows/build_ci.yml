@@ -83,7 +83,7 @@ jobs:
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Default values
-          - shell: bash -l {0}
+          - os_shell: bash -l {0}
           - wheel_name: sleap-wheel-linux
           - venv_cmd: source venv/bin/activate
           - pip_cmd: |
