@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import pytest
@@ -22,8 +23,8 @@ from sleap.nn.training import (
     TopdownConfmapsModelTrainer,
     TopDownMultiClassModelTrainer,
     Trainer,
-    create_trainer_using_cli as sleap_train,
 )
+from sleap.nn.training import create_trainer_using_cli as sleap_train
 
 sleap.use_cpu_only()
 
@@ -54,6 +55,9 @@ def cfg():
     return cfg
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("li"), reason="exclude_from_linux_pip_test"
+)  # Fails with core dump on linux
 def test_data_reader(min_labels_slp_path):
     data_readers = DataReaders.from_config(
         labels_config=LabelsConfig(validation_fraction=0.1),
