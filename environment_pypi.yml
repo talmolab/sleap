@@ -1,0 +1,11 @@
+name: sleap_pypi
+
+channels:
+  - conda-forge
+  - anaconda
+
+dependencies:
+  - python ==3.7.12
+  - pip
+  - pip:
+    - 'sleap[jupyter] @  file:///D:/social-leap-estimates-animal-poses/pull-requests/sleap/dist/sleap-1.3.2-py3-none-any.whl' # file:///home/talmolab/sleap-estimates-animal-poses/pull-requests/sleap/dist/sleap-1.3.2-py3-none-any.whl'
