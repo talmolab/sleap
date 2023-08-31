@@ -115,6 +115,7 @@ jobs:
             #   for /r %%i in (dist\*linux*.whl) do set "wheel_path=%%~fi"
             #   echo %wheel_path%
             #   pip install %wheel_path%[dev]
+
     steps:
       # Download wheel
       - name: Checkout repo
@@ -137,7 +138,13 @@ jobs:
         run: ${{ matrix.venv_cmd }}
 
       - name: Install the built wheel
-        shell: ${{ matrix.os_shell }}
+        shell: |
+          if [ "$RUNNER_OS" == "Mac" ]; then
+                bash -e {0}
+          else
+                echo "$RUNNER_OS not supported"
+                bash -l {0}
+          fi
         run: |
           wheel_path=$(find dist -name "*.whl")
           echo wheel_path
