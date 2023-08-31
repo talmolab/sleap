@@ -4,7 +4,9 @@ from sleap.gui.commands import CommandContext
 from sleap.gui.dialogs.delete import DeleteDialog
 
 
-@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
+@pytest.mark.skipif(
+    sys.platform.startswith("li"), reason="exclude_from_linux_pip_test"
+)  # Fails with core dump on linux
 def test_delete_user_dialog(centered_pair_labels, qtbot):
     context = CommandContext.from_labels(centered_pair_labels)
     context.state["frame_idx"] = 123
@@ -25,7 +27,9 @@ def test_delete_user_dialog(centered_pair_labels, qtbot):
     assert len(lf_inst_list) == 138
 
 
-@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
+@pytest.mark.skipif(
+    sys.platform.startswith("li"), reason="exclude_from_linux_pip_test"
+)  # Fails with core dump on linux
 def test_delete_predictions_dialog(centered_pair_predictions, qtbot):
     context = CommandContext.from_labels(centered_pair_predictions)
     context.state["frame_idx"] = 123
@@ -51,7 +55,9 @@ def test_delete_predictions_dialog(centered_pair_predictions, qtbot):
     assert len(win.get_frames_instances("predicted", "selected clip", "no")) == 0
 
 
-@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
+@pytest.mark.skipif(
+    sys.platform.startswith("li"), reason="exclude_from_linux_pip_test"
+)  # Fails with core dump on linux
 def test_delete_all(centered_pair_predictions, qtbot):
     context = CommandContext.from_labels(centered_pair_predictions)
     context.state["frame_idx"] = 123

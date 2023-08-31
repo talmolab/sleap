@@ -4,7 +4,9 @@ from sleap import TrainingJobConfig
 from sleap.gui.widgets.monitor import LossViewer
 
 
-@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
+@pytest.mark.skipif(
+    sys.platform.startswith("li"), reason="exclude_from_linux_pip_test"
+)  # Fails with core dump on linux
 def test_monitor_release(qtbot, min_centroid_model_path):
     win = LossViewer()
     win.show()

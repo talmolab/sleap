@@ -23,7 +23,7 @@ from sleap.nn.config import TrainingJobConfig, UNetConfig
 from sleap.util import get_package_file
 
 
-@pytest.mark.exclude_from_linux_pip_test
+@pytest.mark.skipif(sys.platform.startswith("li"), reason="exclude_from_linux_pip_test")
 def test_use_hidden_params_from_loaded_config(
     qtbot, min_labels_slp, min_bottomup_model_path, tmpdir
 ):
@@ -149,7 +149,7 @@ def test_update_loaded_config():
     )
 
 
-@pytest.mark.exclude_from_linux_pip_test
+@pytest.mark.skipif(sys.platform.startswith("li"), reason="exclude_from_linux_pip_test")
 def test_training_editor_checkbox_states(
     qtbot, tmpdir, min_labels: Labels, min_centroid_model_path: str
 ):
@@ -372,7 +372,7 @@ def test_training_editor_checkbox_states(
     assert not ted.resume_training
 
 
-@pytest.mark.exclude_from_linux_pip_test
+@pytest.mark.skipif(sys.platform.startswith("li"), reason="exclude_from_linux_pip_test")
 def test_movenet_selection(qtbot, min_dance_labels):
 
     app = MainWindow(no_usage_data=True)
@@ -402,7 +402,7 @@ def test_movenet_selection(qtbot, min_dance_labels):
         assert pipeline_form_data["_pipeline"] == model
 
 
-@pytest.mark.exclude_from_linux_pip_test
+@pytest.mark.skipif(sys.platform.startswith("li"), reason="exclude_from_linux_pip_test")
 def test_immutablilty_of_trained_config_info(
     qtbot, min_labels_slp, min_bottomup_model_path, tmpdir
 ):

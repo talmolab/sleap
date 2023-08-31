@@ -4,7 +4,9 @@ from sleap.gui.overlays.pafs import MultiQuiverPlot
 from sleap.gui.widgets.video import QtVideoPlayer
 
 
-@pytest.mark.exclude_from_linux_pip_test  # Fails with core dump on linux
+@pytest.mark.skipif(
+    sys.platform.startswith("li"), reason="exclude_from_linux_pip_test"
+)  # Fails with core dump on linux
 def test_gui_quiver(qtbot, hdf5_affinity):
 
     vp = QtVideoPlayer()
