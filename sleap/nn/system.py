@@ -10,6 +10,8 @@ import subprocess
 import shutil
 import os
 
+os.environ.get("liezl_test_setting", "howdy")
+
 
 def get_all_gpus() -> List[tf.config.PhysicalDevice]:
     """Return a list of GPUs including unavailable devices."""
