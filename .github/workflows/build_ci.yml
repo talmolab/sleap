@@ -83,6 +83,7 @@ jobs:
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Default values
+          - shell: bash -l {0}
           - wheel_name: sleap-wheel-linux
           - venv_cmd: source venv/bin/activate
           - pip_cmd: |
@@ -94,6 +95,7 @@ jobs:
           # Use special condarc if macos
           - os: "macos-latest"
             condarc: .conda_mac/condarc.yaml
+            shell: bash -e {0}
             wheel_name: sleap-wheel-macos
             pip_cmd: |
               wheel_path=$(find dist -name "*.whl")
@@ -135,7 +137,7 @@ jobs:
         run: ${{ matrix.venv_cmd }}
 
       - name: Install the built wheel
-        shell: bash -l {0}
+        shell: ${{ matrix.shell }}
         run: |
           wheel_path=$(find dist -name "*.whl")
           echo wheel_path
