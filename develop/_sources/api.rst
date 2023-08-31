@@ -33,6 +33,23 @@ Developer API
    sleap.nn.training
    sleap.nn.utils
    sleap.nn.viz
+   sleap.nn.tracker.components
+   sleap.nn.tracker.kalman
+   sleap.nn.architectures.common
+   sleap.nn.architectures.encoder_decoder
+   sleap.nn.architectures.hourglass
+   sleap.nn.architectures.hrnet
+   sleap.nn.architectures.leap
+   sleap.nn.architectures.pretrained_encoders
+   sleap.nn.architectures.resnet
+   sleap.nn.architectures.unet
+   sleap.nn.architectures.upsampling
+   sleap.nn.config.data
+   sleap.nn.config.model
+   sleap.nn.config.optimization
+   sleap.nn.config.outputs
+   sleap.nn.config.training_job
+   sleap.nn.config.utils
    sleap.nn.data.augmentation
    sleap.nn.data.confidence_maps
    sleap.nn.data.dataset_ops
@@ -50,23 +67,6 @@ Developer API
    sleap.nn.data.resizing
    sleap.nn.data.training
    sleap.nn.data.utils
-   sleap.nn.architectures.common
-   sleap.nn.architectures.encoder_decoder
-   sleap.nn.architectures.hourglass
-   sleap.nn.architectures.hrnet
-   sleap.nn.architectures.leap
-   sleap.nn.architectures.pretrained_encoders
-   sleap.nn.architectures.resnet
-   sleap.nn.architectures.unet
-   sleap.nn.architectures.upsampling
-   sleap.nn.tracker.components
-   sleap.nn.tracker.kalman
-   sleap.nn.config.data
-   sleap.nn.config.model
-   sleap.nn.config.optimization
-   sleap.nn.config.outputs
-   sleap.nn.config.training_job
-   sleap.nn.config.utils
    sleap.info.align
    sleap.info.feature_suggestions
    sleap.info.labels
@@ -85,6 +85,7 @@ Developer API
    sleap.io.format.adaptor
    sleap.io.format.alphatracker
    sleap.io.format.coco
+   sleap.io.format.csv
    sleap.io.format.deeplabcut
    sleap.io.format.deepposekit
    sleap.io.format.dispatch

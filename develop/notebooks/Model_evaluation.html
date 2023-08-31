@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Model evaluation &#8212; SLEAP (v1.3.1)</title>
+    <title>Model evaluation &#8212; SLEAP (v1.3.2)</title>
   
   
   
@@ -326,11 +326,11 @@ document.write(`
 <p>Let’s start by installing SLEAP and downloading the trained model.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>!pip uninstall -y opencv-python opencv-contrib-python &gt; /dev/null 2&gt;&amp;1
-!pip install sleap &gt; /dev/null 2&gt;&amp;1
-!apt install tree &gt; /dev/null 2&gt;&amp;1
-!wget https://storage.googleapis.com/sleap-data/reference/flies13/td_fast.210505_012601.centered_instance.n%3D1800.zip &gt; /dev/null 2&gt;&amp;1
-!unzip -o -d &quot;td_fast.210505_012601.centered_instance.n=1800&quot; &quot;td_fast.210505_012601.centered_instance.n=1800.zip&quot; &gt; /dev/null 2&gt;&amp;1
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip uninstall -y opencv-python opencv-contrib-python &gt; /dev/null <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
+<span class="o">!</span>pip install sleap<span class="o">[</span>pypi<span class="o">]</span> &gt; /dev/null <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
+<span class="o">!</span>apt install tree &gt; /dev/null <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
+<span class="o">!</span>wget https://storage.googleapis.com/sleap-data/reference/flies13/td_fast.210505_012601.centered_instance.n%3D1800.zip &gt; /dev/null <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
+<span class="o">!</span>unzip -o -d <span class="s2">&quot;td_fast.210505_012601.centered_instance.n=1800&quot;</span> <span class="s2">&quot;td_fast.210505_012601.centered_instance.n=1800.zip&quot;</span> &gt; /dev/null <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
 </pre></div>
 </div>
 </div>
@@ -343,30 +343,12 @@ document.write(`
 <p><strong>Note:</strong> A test split will also be evaluated if it was provided during training and saved to <code class="docutils literal notranslate"><span class="pre">metrics.test.npz</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>!tree td_fast.210505_012601.centered_instance.n=1800
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>tree td_fast.210505_012601.centered_instance.n<span class="o">=</span><span class="m">1800</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>td_fast.210505_012601.centered_instance.n=1800
-├── best_model.h5
-├── initial_config.json
-├── labels_gt.test.slp
-├── labels_gt.train.slp
-├── labels_gt.val.slp
-├── labels_pr.test.slp
-├── labels_pr.train.slp
-├── labels_pr.val.slp
-├── labels_pr.with_centroid.test.slp
-├── metrics.test.npz
-├── metrics.train.npz
-├── metrics.val.npz
-├── metrics.with_centroid.test.npz
-├── model_info.json
-├── training_config.json
-└── training_log.csv
-
-0 directories, 16 files
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/bin/bash: line 1: tree: command not found
 </pre></div>
 </div>
 </div>
@@ -380,7 +362,7 @@ document.write(`
 </ul>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sleap</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sleap</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
@@ -393,11 +375,21 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>SLEAP: 1.1.5
-TensorFlow: 2.3.1
-Numpy: 1.19.5
-Python: 3.7.11
-OS: Linux-5.4.104+-x86_64-with-Ubuntu-18.04-bionic
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-08-31 12:34:05.323451: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F AVX512_VNNI FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-08-31 12:34:05.391531: I tensorflow/core/util/port.cc:104] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2023-08-31 12:34:05.393637: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcudart.so.11.0&#39;; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
+2023-08-31 12:34:05.393648: I tensorflow/compiler/xla/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+2023-08-31 12:34:05.775378: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libnvinfer.so.7&#39;; dlerror: libnvinfer.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
+2023-08-31 12:34:05.775422: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libnvinfer_plugin.so.7&#39;; dlerror: libnvinfer_plugin.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
+2023-08-31 12:34:05.775425: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Cannot dlopen some TensorRT libraries. If you would like to use Nvidia GPU with TensorRT, please make sure the missing libraries mentioned above are installed properly.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>SLEAP: 1.3.2
+TensorFlow: 2.11.0
+Numpy: 1.21.6
+Python: 3.7.12
+OS: Linux-5.15.0-78-generic-x86_64-with-debian-bookworm-sid
 </pre></div>
 </div>
 </div>
@@ -405,7 +397,7 @@ OS: Linux-5.4.104+-x86_64-with-Ubuntu-18.04-bionic
 <p>SLEAP metrics can be loaded using the <code class="docutils literal notranslate"><span class="pre">sleap.load_metrics()</span></code> API:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">help</span><span class="p">(</span><span class="n">sleap</span><span class="o">.</span><span class="n">load_metrics</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">help</span><span class="p">(</span><span class="n">sleap</span><span class="o">.</span><span class="n">load_metrics</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -437,6 +429,8 @@ load_metrics(model_path: str, split: str = &#39;val&#39;) -&gt; typing.Dict[str,
         - `&quot;dist.p95&quot;`: Distance for 95th percentile
         - `&quot;dist.p99&quot;`: Distance for 99th percentile
         - `&quot;dist.dists&quot;`: All distances
+        - `&quot;dist.frame_idxs&quot;`: Frame indices corresponding to `&quot;dist.dists&quot;`
+        - `&quot;dist.video_paths&quot;`: Video paths corresponding to `&quot;dist.dists&quot;`
         - `&quot;pck.mPCK&quot;`: Mean Percentage of Correct Keypoints (PCK)
         - `&quot;oks.mOKS&quot;`: Mean Object Keypoint Similarity (OKS)
         - `&quot;oks_voc.mAP&quot;`: VOC with OKS scores - mean Average Precision (mAP)
@@ -450,7 +444,7 @@ load_metrics(model_path: str, split: str = &#39;val&#39;) -&gt; typing.Dict[str,
 <p>Loading the metrics for the validation split of the model we can see all of the available keys:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">metrics</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_metrics</span><span class="p">(</span><span class="s2">&quot;td_fast.210505_012601.centered_instance.n=1800&quot;</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s2">&quot;val&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">metrics</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_metrics</span><span class="p">(</span><span class="s2">&quot;td_fast.210505_012601.centered_instance.n=1800&quot;</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s2">&quot;val&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">metrics</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
 </pre></div>
 </div>
@@ -499,7 +493,7 @@ pck_voc.mAR
 <p>To start, let’s look at the summary of the <strong>localization errors</strong>:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error distance (50%):&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;dist.p50&quot;</span><span class="p">])</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error distance (50%):&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;dist.p50&quot;</span><span class="p">])</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error distance (90%):&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;dist.p90&quot;</span><span class="p">])</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error distance (95%):&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;dist.p95&quot;</span><span class="p">])</span>
 </pre></div>
@@ -517,17 +511,14 @@ Error distance (95%): 3.0166608700891056
 <p>We can visualize the entire distribution like this:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
 <span class="n">sns</span><span class="o">.</span><span class="n">histplot</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;dist.dists&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">binrange</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">kde</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">kde_kws</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;clip&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">)},</span> <span class="n">stat</span><span class="o">=</span><span class="s2">&quot;probability&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Localization error (px)&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:numexpr.utils:NumExpr defaulting to 2 threads.
-</pre></div>
-</div>
-<img alt="../_images/Model_evaluation_14_1.png" src="../_images/Model_evaluation_14_1.png" />
+<img alt="../_images/Model_evaluation_14_0.png" src="../_images/Model_evaluation_14_0.png" />
 </div>
 </div>
 <p>This metric is intuitive, but it does not incorporate other sources of error like those stemming from poor instance detection and grouping, or missing points.</p>
@@ -535,7 +526,7 @@ Error distance (95%): 3.0166608700891056
 <p>First let’s plot the distribution of OKS scores:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
 <span class="n">sns</span><span class="o">.</span><span class="n">histplot</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;oks_voc.match_scores&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">binrange</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">kde</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">kde_kws</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;clip&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)},</span> <span class="n">stat</span><span class="o">=</span><span class="s2">&quot;probability&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Object Keypoint Similarity&quot;</span><span class="p">);</span>
 </pre></div>
@@ -550,7 +541,7 @@ Error distance (95%): 3.0166608700891056
 <p>Here we plot this at different thresholds:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">precision</span><span class="p">,</span> <span class="n">thresh</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;oks_voc.precisions&quot;</span><span class="p">][::</span><span class="mi">2</span><span class="p">],</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;oks_voc.match_score_thresholds&quot;</span><span class="p">][::</span><span class="mi">2</span><span class="p">]):</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;oks_voc.recall_thresholds&quot;</span><span class="p">],</span> <span class="n">precision</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;OKS @ </span><span class="si">{</span><span class="n">thresh</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Recall&quot;</span><span class="p">)</span>
@@ -567,7 +558,7 @@ Error distance (95%): 3.0166608700891056
 <p>Here are those values saved out:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mAP:&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;oks_voc.mAP&quot;</span><span class="p">])</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mAP:&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;oks_voc.mAP&quot;</span><span class="p">])</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mAR:&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;oks_voc.mAR&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -584,7 +575,7 @@ mAR: 0.8885
 <p>First, let’s download a new SLEAP labels package file (<code class="docutils literal notranslate"><span class="pre">.pkg.slp</span></code>). This is important since it denotes that the labels contain the images as well which we need for predicting.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>!wget https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/test.pkg.slp &gt; /dev/null 2&gt;&amp;1
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>wget https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/test.pkg.slp &gt; /dev/null <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
 </pre></div>
 </div>
 </div>
@@ -592,17 +583,43 @@ mAR: 0.8885
 <p>Next we can simply load the model, the ground truth (GT) labels, and generate the predictions (~1 min on CPU):</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">predictor</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;td_fast.210505_012601.centered_instance.n=1800&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">predictor</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="s2">&quot;td_fast.210505_012601.centered_instance.n=1800&quot;</span><span class="p">)</span>
 <span class="n">labels_gt</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="s2">&quot;test.pkg.slp&quot;</span><span class="p">)</span>
 <span class="n">labels_pr</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">labels_gt</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-08-31 12:34:11.754831: I tensorflow/compiler/xla/stream_executor/cuda/cuda_gpu_executor.cc:981] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2023-08-31 12:34:11.755699: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcudart.so.11.0&#39;; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
+2023-08-31 12:34:11.755737: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcublas.so.11&#39;; dlerror: libcublas.so.11: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
+2023-08-31 12:34:11.755767: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcublasLt.so.11&#39;; dlerror: libcublasLt.so.11: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
+2023-08-31 12:34:11.755793: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcufft.so.10&#39;; dlerror: libcufft.so.10: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
+2023-08-31 12:34:11.755818: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcurand.so.10&#39;; dlerror: libcurand.so.10: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
+2023-08-31 12:34:11.755843: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcusolver.so.11&#39;; dlerror: libcusolver.so.11: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
+2023-08-31 12:34:11.755867: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcusparse.so.11&#39;; dlerror: libcusparse.so.11: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
+2023-08-31 12:34:11.755903: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcudnn.so.8&#39;; dlerror: libcudnn.so.8: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
+2023-08-31 12:34:11.755907: W tensorflow/core/common_runtime/gpu/gpu_device.cc:1934] Cannot dlopen some GPU libraries. Please make sure the missing libraries mentioned above are installed properly if you would like to use GPU. Follow the guide at https://www.tensorflow.org/install/gpu for how to download and setup the required libraries for your platform.
+Skipping registering GPU devices...
+2023-08-31 12:34:11.792603: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F AVX512_VNNI FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+</pre></div>
+</div>
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id": "07f3bb31ee8f47f194dd5612e4704baf", "version_major": 2, "version_minor": 0}
+</script><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-08-31 12:34:14.981774: W tensorflow/core/grappler/costs/op_level_cost_estimator.cc:690] Error in PredictCost() for the op: op: &quot;CropAndResize&quot; attr { key: &quot;T&quot; value { type: DT_UINT8 } } attr { key: &quot;extrapolation_value&quot; value { f: 0 } } attr { key: &quot;method&quot; value { s: &quot;bilinear&quot; } } inputs { dtype: DT_UINT8 shape { dim { size: 4 } dim { size: 1024 } dim { size: 1024 } dim { size: 1 } } } inputs { dtype: DT_FLOAT shape { dim { size: -2 } dim { size: 4 } } } inputs { dtype: DT_INT32 shape { dim { size: -2 } } } inputs { dtype: DT_INT32 shape { dim { size: 2 } } } device { type: &quot;CPU&quot; vendor: &quot;GenuineIntel&quot; model: &quot;103&quot; frequency: 3600 num_cores: 16 environment { key: &quot;cpu_instruction_set&quot; value: &quot;AVX SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2&quot; } environment { key: &quot;eigen&quot; value: &quot;3.4.90&quot; } l1_cache_size: 49152 l2_cache_size: 524288 l3_cache_size: 16777216 memory_size: 268435456 } outputs { dtype: DT_FLOAT shape { dim { size: -2 } dim { size: -27 } dim { size: -28 } dim { size: 1 } } }
+2023-08-31 12:34:14.984921: W tensorflow/core/grappler/costs/op_level_cost_estimator.cc:690] Error in PredictCost() for the op: op: &quot;CropAndResize&quot; attr { key: &quot;T&quot; value { type: DT_FLOAT } } attr { key: &quot;extrapolation_value&quot; value { f: 0 } } attr { key: &quot;method&quot; value { s: &quot;bilinear&quot; } } inputs { dtype: DT_FLOAT shape { dim { size: -42 } dim { size: -43 } dim { size: -44 } dim { size: 1 } } } inputs { dtype: DT_FLOAT shape { dim { size: -10 } dim { size: 4 } } } inputs { dtype: DT_INT32 shape { dim { size: -10 } } } inputs { dtype: DT_INT32 shape { dim { size: 2 } } } device { type: &quot;CPU&quot; vendor: &quot;GenuineIntel&quot; model: &quot;103&quot; frequency: 3600 num_cores: 16 environment { key: &quot;cpu_instruction_set&quot; value: &quot;AVX SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2&quot; } environment { key: &quot;eigen&quot; value: &quot;3.4.90&quot; } l1_cache_size: 49152 l2_cache_size: 524288 l3_cache_size: 16777216 memory_size: 268435456 } outputs { dtype: DT_FLOAT shape { dim { size: -10 } dim { size: -48 } dim { size: -49 } dim { size: 1 } } }
+</pre></div>
+</div>
+<div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div></div>
 </div>
 <p>Generating another set of metrics can then be calculated with the pair of GT and predicted labels:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">metrics</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">evals</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">labels_gt</span><span class="p">,</span> <span class="n">labels_pr</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">metrics</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">evals</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">labels_gt</span><span class="p">,</span> <span class="n">labels_pr</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error distance (50%):&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;dist.p50&quot;</span><span class="p">])</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error distance (90%):&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;dist.p90&quot;</span><span class="p">])</span>
@@ -615,7 +632,7 @@ mAR: 0.8885
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Error distance (50%): 0.8984147543126978
 Error distance (90%): 2.197896466395166
-Error distance (95%): 3.148422807907632
+Error distance (95%): 3.1484228079076315
 mAP: 0.797836431061851
 mAR: 0.8782499999999999
 </pre></div>
