@@ -98,7 +98,7 @@ jobs:
             pip_cmd: |
               wheel_path=$(find dist -name "*.whl")
               echo wheel_path
-              pip install '$wheel_path'[dev]
+              pip install "$wheel_path"[dev]
           # Ubuntu specific values
           - os: ubuntu-22.04
             test_args: |
@@ -136,7 +136,10 @@ jobs:
 
       - name: Install the built wheel
         shell: bash -l {0}
-        run: ${{ matrix.pip_cmd }}
+        run: |
+          wheel_path=$(find dist -name "*.whl")
+          echo wheel_path
+          pip install "$wheel_path"[dev]
 
       - name: Print test environment info
         shell: bash -l {0}
