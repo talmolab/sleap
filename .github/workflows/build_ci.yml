@@ -95,7 +95,7 @@ jobs:
           # Use special condarc if macos
           - os: "macos-latest"
             condarc: .conda_mac/condarc.yaml
-            shell: bash -e {0}
+            os_shell: bash -e {0}
             wheel_name: sleap-wheel-macos
             pip_cmd: |
               wheel_path=$(find dist -name "*.whl")
@@ -137,7 +137,7 @@ jobs:
         run: ${{ matrix.venv_cmd }}
 
       - name: Install the built wheel
-        shell: ${{ matrix.shell }}
+        shell: ${{ matrix.os_shell }}
         run: |
           wheel_path=$(find dist -name "*.whl")
           echo wheel_path
