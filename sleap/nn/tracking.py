@@ -5,7 +5,7 @@ import abc
 import attr
 import numpy as np
 import cv2
-from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple, TypeVar
+from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple
 
 from sleap import Track, LabeledFrame, Skeleton
 
@@ -340,20 +340,22 @@ class FlowMaxTracksCandidateMaker(FlowCandidateMaker):
     """
 
     max_tracks: int = None
-    min_points: int = 0
-    img_scale: float = 1.0
-    of_window_size: int = 21
-    of_max_levels: int = 3
-    save_shifted_instances: bool = False
-    track_window: int = 5
 
-    shifted_instances: Dict[
-        Tuple[int, int], List[ShiftedInstance]  # keyed by (src_t, dst_t)
-    ] = attr.ib(factory=dict)
-
-    @property
-    def uses_image(self):
-        return True
+    @staticmethod
+    def get_ref_instances(
+        ref_t: int,
+        ref_img: np.ndarray,
+        track_matching_queue_dict: dict(),
+    ) -> List[InstanceType]:
+        """Generates a list of instances based on the reference time and reference image."""
+        instances = []
+        for track, matched_items in track_matching_queue_dict.items():
+            instances += [
+                item.instance_t
+                for item in matched_items
+                if item.t == ref_t and np.all(item.img_t == ref_img)
+            ]
+        return instances
 
     def get_candidates(
         self,
@@ -367,27 +369,19 @@ class FlowMaxTracksCandidateMaker(FlowCandidateMaker):
 
         # Prune old shifted instances to save time and memory
         self.prune_shifted_instances(t)
-        number_of_tracks = 0
-        # -> List[ShiftedInstance]
-        def get_ref_instances(r_t, r_img) -> List[InstanceType]:
-            instances = []
-            for track, matched_items in track_matching_queue_dict.items():
-                instances + [
-                    item.instance_t
-                    for item in matched_items
-                    if item.t == r_t and np.all(item.img_t == r_img)
-                ]
-            return instances
+        tracks = []
 
         for track, matched_items in track_matching_queue_dict.items():
-            if track and number_of_tracks <= self.max_tracks:
-                number_of_tracks += 1
+            if len(tracks) <= self.max_tracks:
+                tracks.append(track)
                 for matched_item in matched_items:
                     ref_t, ref_img = (
                         matched_item.t,
                         matched_item.img_t,
                     )
-                    ref_instances = get_ref_instances(r_t=ref_t, r_img=ref_img)
+                    ref_instances = self.get_ref_instances(
+                        ref_t, ref_img, track_matching_queue_dict
+                    )
 
                     # Check if shifted instance was computed at earlier time
                     if self.save_shifted_instances:
@@ -455,15 +449,10 @@ class SimpleCandidateMaker:
 
 
 @attr.s(auto_attribs=True)
-class SimpleMaxTracksCandidateMaker:
+class SimpleMaxTracksCandidateMaker(SimpleCandidateMaker):
     """Class to generate instances based on the maximum number of tracks from prior frames."""
 
     max_tracks: int = None
-    min_points: int = 0
-
-    @property
-    def uses_image(self):
-        return False
 
     def get_candidates(
         self,
@@ -473,10 +462,10 @@ class SimpleMaxTracksCandidateMaker:
     ) -> List[InstanceType]:
         # Create set of matchable candidate instances from each track for max number of tracks.
         candidate_instances = []
-        number_of_tracks = 0
+        tracks = []
         for track, matched_instances in track_matching_queue_dict.items():
-            if track and number_of_tracks <= self.max_tracks:
-                number_of_tracks += 1
+            if len(tracks) <= self.max_tracks:
+                tracks.append(track)
                 for ref_instance in matched_instances:
                     if ref_instance.instance_t.n_visible_points >= self.min_points:
                         candidate_instances.append(ref_instance.instance_t)
@@ -601,8 +590,8 @@ class Tracker(BaseTracker):
 
     def reset_candidates(self):
         if self.max_tracking and self.track_matching_queue_dict:
-            for track, candidates in self.track_matching_queue_dict.items():
-                candidates = deque(maxlen=self.track_window)
+            for track in self.track_matching_queue_dict:
+                self.track_matching_queue_dict[track] = deque(maxlen=self.track_window)
         else:
             self.track_matching_queue = deque(maxlen=self.track_window)
 
