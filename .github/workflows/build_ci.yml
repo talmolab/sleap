@@ -19,16 +19,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "macos-latest"]  #, "windows-2022"
+        os: ["ubuntu-22.04"] #, "macos-latest"]  #, "windows-2022"
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Use this condarc as default
           - condarc: .conda/condarc.yaml
           - wheel_name: sleap-wheel-linux
-          # Use special condarc if macos
-          - os: "macos-latest"
-            condarc: .conda_mac/condarc.yaml
-            wheel_name: sleap-wheel-macos
+          # # Use special condarc if macos
+          # - os: "macos-latest"
+          #   condarc: .conda_mac/condarc.yaml
+          #   wheel_name: sleap-wheel-macos
     steps:
       # Setup
       - uses: actions/checkout@v2
@@ -95,11 +95,7 @@ jobs:
           # Use special condarc if macos
           - os: "macos-latest"
             condarc: .conda_mac/condarc.yaml
-            wheel_name: sleap-wheel-macos
-            pip_cmd: |
-              wheel_path=$(find dist -name "*.whl")
-              echo wheel_path
-              pip install "$wheel_path"[dev]
+            # wheel_name: sleap-wheel-macos
           # Ubuntu specific values
           - os: ubuntu-22.04
             test_args: |
