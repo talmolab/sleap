@@ -93,12 +93,14 @@ jobs:
             wheel_name: sleap-wheel-macos
             pip_cmd: |
               wheel_path=$(find dist -name "*macos*.whl")
-              pip install "$wheel_path"[dev]
+              echo wheel_path
+              pip install $wheel_path[dev]
           # Ubuntu specific values
           - os: ubuntu-22.04
             pip_cmd: |
               wheel_path=$(find dist -name "*linux*.whl")
-              pip install "$wheel_path"[dev]
+              echo $wheel_path
+              pip install $wheel_path[dev]
             test_args: |
               sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
               sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
@@ -108,7 +110,8 @@ jobs:
           - os: windows-2022
             venv_cmd: .\venv\Scripts\activate
             pip_cmd: |
-              for /r %i in (dist\*linux*.whl) do set "wheel_path=%~fi"
+              for /r %%i in (dist\*linux*.whl) do set "wheel_path=%%~fi"
+              echo %wheel_path%
               pip install %wheel_path%[dev]
     steps:
       # Download wheel
