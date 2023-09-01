@@ -23,9 +23,11 @@ jobs:
         include:
           # Use this condarc as default
           - condarc: .conda/condarc.yaml
+          - wheel_name: sleap-wheel-linux
           # Use special condarc if macos
           - os: "macos-latest"
             condarc: .conda_mac/condarc.yaml
+            wheel_name: sleap-wheel-macos
     steps:
       # Setup
       - uses: actions/checkout@v2
@@ -66,7 +68,7 @@ jobs:
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v3
         with:
-          name: sleap-wheel-${{ matrix.os }}
+          name: ${{ matrix.wheel_name }}
           path: dist/*.whl
           retention-days: 1
 
@@ -81,14 +83,14 @@ jobs:
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Default values
-          - wheel_name: sleap-wheel-*linux*
+          - wheel_name: sleap-wheel-linux
           - venv_cmd: source venv/bin/activate
           - test_args: pytest --durations=-1 tests/
           - condarc: .conda/condarc.yaml
           # Use special condarc if macos
           - os: "macos-latest"
             condarc: .conda_mac/condarc.yaml
-            wheel_name: sleap-wheel-*macos*
+            wheel_name: sleap-wheel-macos
             pip_cmd: |
               wheel_path=$(find dist -name "*macos*.whl")
               pip install "$wheel_path"[dev]
