@@ -15,9 +15,6 @@ from sleap.gui.commands import OpenSkeleton
 from sleap.gui.dialogs.merge import ReplaceSkeletonTableDialog
 
 
-@pytest.mark.skipif(
-    sys.platform.startswith("li"), reason="exclude_from_linux_pip_test"
-)  # Fails with core dump on linux
 def test_ReplaceSkeletonTableDialog(
     qtbot, centered_pair_labels: Labels, flies13_skeleton: Skeleton
 ):

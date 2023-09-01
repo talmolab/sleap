@@ -55,9 +55,6 @@ def cfg():
     return cfg
 
 
-@pytest.mark.skipif(
-    sys.platform.startswith("li"), reason="exclude_from_linux_pip_test"
-)  # Fails with core dump on linux
 def test_data_reader(min_labels_slp_path):
     data_readers = DataReaders.from_config(
         labels_config=LabelsConfig(validation_fraction=0.1),

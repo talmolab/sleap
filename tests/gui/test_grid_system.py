@@ -7,7 +7,6 @@ from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
 
 
-@pytest.mark.skipif(sys.platform.startswith("li"), reason="exclude_from_linux_pip_test")
 def test_grid_system_midpoint_gui(qtbot, midpoint_grid_labels):
     app = MainWindow(no_usage_data=True)
     app.commands.loadLabelsObject(midpoint_grid_labels)
@@ -44,7 +43,6 @@ def test_grid_system_midpoint_gui(qtbot, midpoint_grid_labels):
     assert qt_node.scenePos().y() == 0.5
 
 
-@pytest.mark.skipif(sys.platform.startswith("li"), reason="exclude_from_linux_pip_test")
 def test_grid_system_legacy_gui(qtbot, legacy_grid_labels):
     app = MainWindow(no_usage_data=True)
     app.commands.loadLabelsObject(legacy_grid_labels)

@@ -5,9 +5,6 @@ import pytest
 from sleap.gui.widgets.slider import VideoSlider, set_slider_marks_from_labels
 
 
-@pytest.mark.skipif(
-    sys.platform.startswith("li"), reason="exclude_from_linux_pip_test"
-)  # Fails with core dump on linux
 def test_slider(qtbot, centered_pair_predictions):
 
     labels = centered_pair_predictions

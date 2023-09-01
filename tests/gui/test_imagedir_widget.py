@@ -5,9 +5,6 @@ import pytest
 from sleap.gui.widgets.imagedir import QtImageDirectoryWidget
 
 
-@pytest.mark.skipif(
-    sys.platform.startswith("li"), reason="exclude_from_linux_pip_test"
-)  # Fails with core dump on linux
 def test_imagedir_widget(qtbot):
     window = QtImageDirectoryWidget(
         directory="tests/data/videos/",
