@@ -86,7 +86,7 @@ jobs:
           - wheel_name: sleap-wheel-linux
           - venv_cmd: source venv/bin/activate
           - pip_cmd: |
-              wheel_path=$(find dist -name "*linux*.whl")
+              wheel_path=$(find dist -name "*.whl")
               echo $wheel_path
               pip install '$wheel_path'[dev]
           - test_args: pytest --durations=-1 tests/
@@ -96,7 +96,7 @@ jobs:
             condarc: .conda_mac/condarc.yaml
             wheel_name: sleap-wheel-macos
             pip_cmd: |
-              wheel_path=$(find dist -name "*macos*.whl")
+              wheel_path=$(find dist -name "*.whl")
               echo wheel_path
               pip install '$wheel_path'[dev]
           # Ubuntu specific values
