@@ -51,7 +51,12 @@ from sleap.nn.inference import (
     main as sleap_track,
     export_cli as sleap_export,
 )
-from sleap.nn.tracking import FlowCandidateMaker, FlowMaxTracksCandidateMaker, Tracker
+from sleap.nn.tracking import (
+    MatchedFrameInstance,
+    FlowCandidateMaker,
+    FlowMaxTracksCandidateMaker,
+    Tracker,
+)
 from sleap.instance import Track
 
 

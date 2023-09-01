@@ -139,6 +139,51 @@ class FlowCandidateMaker:
     def uses_image(self):
         return True
 
+    def get_shifted_instances_from_earlier_time(
+        self, ref_t: int, ref_img: np.ndarray, ref_instances: List[InstanceType], t: int
+    ) -> (np.ndarray, List[InstanceType]):
+        """Check if shifted instance was computed at earlier time and return instances and corresponding image."""
+        for ti in reversed(range(ref_t, t)):
+            if (ref_t, ti) in self.shifted_instances:
+                ref_shifted_instances = self.shifted_instances[(ref_t, ti)]
+                # Use shifted instance as a reference
+                if len(ref_shifted_instances.instances_t) > 0:
+                    ref_img = ref_shifted_instances.img_t
+                    ref_instances = ref_shifted_instances.instances_t
+                    break
+        return [ref_img, ref_instances]
+
+    def get_shifted_instances(
+        self,
+        ref_instances: List[InstanceType],
+        ref_img: np.ndarray,
+        ref_t: int,
+        img: np.ndarray,
+        t: int,
+    ) -> List[ShiftedInstance]:
+        """Returns a list of shifted instances and saves the shifted instances if necessary."""
+        # Flow shift reference instances to current frame.
+        shifted_instances = self.flow_shift_instances(
+            ref_instances,
+            ref_img,
+            img,
+            min_shifted_points=self.min_points,
+            scale=self.img_scale,
+            window_size=self.of_window_size,
+            max_levels=self.of_max_levels,
+        )
+
+        # Save shifted instances.
+        if self.save_shifted_instances:
+            self.shifted_instances[(ref_t, t)] = MatchedShiftedFrameInstances(
+                ref_t,
+                t,
+                shifted_instances,
+                img,
+            )
+
+        return shifted_instances
+
     def get_candidates(
         self,
         track_matching_queue: Deque[MatchedFrameInstances],
@@ -159,38 +204,14 @@ class FlowCandidateMaker:
 
             # Check if shifted instance was computed at earlier time
             if self.save_shifted_instances:
-                for ti in reversed(range(ref_t, t)):
-                    if (ref_t, ti) in self.shifted_instances:
-                        ref_shifted_instances = self.shifted_instances[(ref_t, ti)]
-                        # Use shifted instance as a reference
-                        if len(ref_shifted_instances.instances_t) > 0:
-                            ref_img = ref_shifted_instances.img_t
-                            ref_instances = ref_shifted_instances.instances_t
-                            break
-
-            if len(ref_instances) > 0:
-                # Flow shift reference instances to current frame.
-                shifted_instances = self.flow_shift_instances(
-                    ref_instances,
-                    ref_img,
-                    img,
-                    min_shifted_points=self.min_points,
-                    scale=self.img_scale,
-                    window_size=self.of_window_size,
-                    max_levels=self.of_max_levels,
+                ref_img, ref_instances = self.get_shifted_instances_from_earlier_time(
+                    ref_t, ref_img, ref_instances, t
                 )
 
-                # Add to candidate pool.
-                candidate_instances.extend(shifted_instances)
-
-                # Save shifted instances.
-                if self.save_shifted_instances:
-                    self.shifted_instances[(ref_t, t)] = MatchedShiftedFrameInstances(
-                        ref_t,
-                        t,
-                        shifted_instances,
-                        img,
-                    )
+            if len(ref_instances) > 0:
+                candidate_instances.extend(
+                    self.get_shifted_instances(ref_instances, ref_img, ref_t, img, t)
+                )
 
         return candidate_instances
 
@@ -320,22 +341,10 @@ class FlowCandidateMaker:
 
 @attr.s(auto_attribs=True)
 class FlowMaxTracksCandidateMaker(FlowCandidateMaker):
-    """Class for producing optical flow shift matching candidates with a maximum on the number of tracks.
+    """Class for producing optical flow shift matching candidates with cap on the number of tracks.
 
     Attributes:
-        min_points: Minimum number of points that must be detected in the new frame in
-            order to generate a new shifted instance.
-        img_scale: Factor to scale the images by when computing optical flow. Decrease
-            this to increase performance at the cost of finer accuracy. Sometimes
-            decreasing the image scale can improve performance with fast movements.
-        of_window_size: Optical flow window size to consider at each pyramid scale
-            level.
-        of_max_levels: Number of pyramid scale levels to consider. This is different
-            from the scale parameter, which determines the initial image scaling.
-        save_shifted_instances: If True, save the shifted instances between elapsed
-            frames.
-        track_window: How many frames back to look for candidate instances to match
-            instances in the current frame against.
+        max_tracks: The maximum number of tracks that needs to be maintained in order to avoid redundant/irrelevant tracks.
 
     """
 
@@ -345,7 +354,7 @@ class FlowMaxTracksCandidateMaker(FlowCandidateMaker):
     def get_ref_instances(
         ref_t: int,
         ref_img: np.ndarray,
-        track_matching_queue_dict: dict(),
+        track_matching_queue_dict: Dict[Track, Deque[MatchedFrameInstance]],
     ) -> List[InstanceType]:
         """Generates a list of instances based on the reference time and reference image."""
         instances = []
@@ -359,7 +368,7 @@ class FlowMaxTracksCandidateMaker(FlowCandidateMaker):
 
     def get_candidates(
         self,
-        track_matching_queue_dict: dict(),
+        track_matching_queue_dict: Dict[Track, Deque[MatchedFrameInstance]],
         t: int,
         img: np.ndarray,
         *args,
@@ -369,6 +378,7 @@ class FlowMaxTracksCandidateMaker(FlowCandidateMaker):
 
         # Prune old shifted instances to save time and memory
         self.prune_shifted_instances(t)
+        # Storing the tracks from the dictionary for counting purpose.
         tracks = []
 
         for track, matched_items in track_matching_queue_dict.items():
@@ -385,42 +395,19 @@ class FlowMaxTracksCandidateMaker(FlowCandidateMaker):
 
                     # Check if shifted instance was computed at earlier time
                     if self.save_shifted_instances:
-                        for ti in reversed(range(ref_t, t)):
-                            if (ref_t, ti) in self.shifted_instances:
-                                ref_shifted_instances = self.shifted_instances[
-                                    (ref_t, ti)
-                                ]
-                                # Use shifted instance as a reference
-                                if len(ref_shifted_instances.instances_t) > 0:
-                                    ref_img = ref_shifted_instances.img_t
-                                    ref_instances = ref_shifted_instances.instances_t
-                                    break
-
-                    if len(ref_instances) > 0:
-                        # Flow shift reference instances to current frame.
-                        shifted_instances = self.flow_shift_instances(
-                            ref_instances,
+                        (
                             ref_img,
-                            img,
-                            min_shifted_points=self.min_points,
-                            scale=self.img_scale,
-                            window_size=self.of_window_size,
-                            max_levels=self.of_max_levels,
+                            ref_instances,
+                        ) = self.get_shifted_instances_from_earlier_time(
+                            ref_t, ref_img, ref_instances, t
                         )
 
-                        # Add to candidate pool.
-                        candidate_instances.extend(shifted_instances)
-
-                        # Save shifted instances.
-                        if self.save_shifted_instances:
-                            self.shifted_instances[
-                                (ref_t, t)
-                            ] = MatchedShiftedFrameInstances(
-                                ref_t,
-                                t,
-                                shifted_instances,
-                                img,
+                    if len(ref_instances) > 0:
+                        candidate_instances.extend(
+                            self.get_shifted_instances(
+                                ref_instances, ref_img, ref_t, img, t
                             )
+                        )
 
         return candidate_instances
 
@@ -456,7 +443,7 @@ class SimpleMaxTracksCandidateMaker(SimpleCandidateMaker):
 
     def get_candidates(
         self,
-        track_matching_queue_dict: dict(),
+        track_matching_queue_dict: Dict,
         *args,
         **kwargs,
     ) -> List[InstanceType]:
