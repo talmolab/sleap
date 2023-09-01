@@ -885,7 +885,7 @@ class Trainer(ABC):
         """Return all callbacks currently configured."""
         callbacks = (
             self.optimization_callbacks
-            # TODO(LM): add this line back: + self.visualization_callbacks
+            + self.visualization_callbacks
             + self.output_callbacks
         )
 
