@@ -90,9 +90,10 @@ pypi = [
     "tensorflow",
     "tensorflow-hub",
 ]
-conda_jupyter = ["ipykernel", "jupyterlab"] # No pypi dependencies included.
+conda_jupyter = ["ipywidgets", "ipykernel", "jupyterlab"] # No pypi dependencies included.
 jupyter = [
     # Include conda_jupyter dependencies.
+    "ipywidgets",
     "ipykernel",
     "jupyterlab",
     # Also include all pypi dependencies.
@@ -148,6 +149,7 @@ conda_dev = [ # No pypi dependencies included.
     "jedi==0.17.2",
     "click==8.0.4",
     # Also include all jupyter dependencies.
+    "ipywidgets",
     "ipykernel",
     "jupyterlab",
 ]
@@ -173,6 +175,7 @@ dev = [
     "jedi==0.17.2",
     "click==8.0.4",
     # Also include all jupyter dependencies.
+    "ipywidgets",
     "ipykernel",
     "jupyterlab",
     # Also include all pypi dependencies.
