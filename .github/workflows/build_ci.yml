@@ -6,11 +6,8 @@ on:
   push:
     paths:
       - 'pyproject.toml'
-      - 'environment_pypi.yml'
       - 'environment_build.yml'
       - '.github/workflows/build_ci.yml'
-      - 'tests/**'  # TODO(LM): Remove when ready to merge
-      - 'sleap/**'  # TODO(LM): Remove when ready to merge
 
 jobs:
   build:
