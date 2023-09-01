@@ -344,7 +344,8 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This should take care of all the dependencies on colab:</span>
-<span class="o">!</span>pip uninstall -y opencv-python opencv-contrib-python <span class="o">&amp;&amp;</span> pip install sleap<span class="o">[</span>pypi<span class="o">]</span>
+<span class="o">!</span>pip uninstall -qqq -y opencv-python opencv-contrib-python
+<span class="o">!</span>pip install -qqq sleap<span class="o">[</span>pypi<span class="o">]</span>
 
 
 <span class="c1"># But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):</span>
@@ -353,120 +354,9 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Found existing installation: opencv-python 4.8.0.76
-Uninstalling opencv-python-4.8.0.76:
-  Successfully uninstalled opencv-python-4.8.0.76
-Requirement already satisfied: sleap[pypi] in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (1.3.2)
-Requirement already satisfied: imgstore&lt;0.30 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (0.3.5)
-Requirement already satisfied: ndx-pose in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (0.1.1)
-Requirement already satisfied: nixio&gt;=1.5.3 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (1.5.3)
-Requirement already satisfied: qimage2ndarray in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (1.10.0)
-Requirement already satisfied: segmentation-models in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (1.0.1)
-Requirement already satisfied: pynwb&gt;=2.3.3 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (2.3.3)
-Requirement already satisfied: h5py&lt;3.2 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (3.1.0)
-Requirement already satisfied: attrs&lt;=21.4.0,&gt;=21.2.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (21.4.0)
-Requirement already satisfied: cattrs==1.1.1 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (1.1.1)
-Requirement already satisfied: jsmin in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (3.0.1)
-Requirement already satisfied: jsonpickle==1.2 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (1.2)
-Requirement already satisfied: networkx in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (2.6.3)
-Requirement already satisfied: numpy&gt;=1.19.5 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (1.21.6)
-Collecting opencv-python&lt;=4.6.0,&gt;=4.2.0 (from sleap[pypi])
-  Using cached opencv_python-4.5.5.64-cp36-abi3-win_amd64.whl (35.4 MB)
-Requirement already satisfied: pandas in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (1.3.5)
-Requirement already satisfied: pillow&gt;=8.3.1 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (9.5.0)
-Requirement already satisfied: psutil in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (5.9.5)
-Requirement already satisfied: pykalman in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (0.9.5)
-Requirement already satisfied: python-rapidjson in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (1.10)
-Requirement already satisfied: pyyaml in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (6.0.1)
-Requirement already satisfied: pyzmq in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (24.0.1)
-Requirement already satisfied: qtpy&gt;=2.0.1 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (2.4.0)
-Requirement already satisfied: rich==10.16.1 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (10.16.1)
-Requirement already satisfied: imageio&lt;=2.15.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (2.15.0)
-Requirement already satisfied: imgaug==0.4.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (0.4.0)
-Requirement already satisfied: scipy&gt;=1.4.1 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (1.7.3)
-Requirement already satisfied: scikit-image in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (0.19.3)
-Requirement already satisfied: scikit-learn~=1.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (1.0.2)
-Requirement already satisfied: scikit-video in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (1.1.11)
-Requirement already satisfied: seaborn in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (0.12.2)
-Requirement already satisfied: tensorflow in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (2.11.0)
-Requirement already satisfied: tensorflow-hub in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (0.14.0)
-Requirement already satisfied: PySide2&lt;=5.14.1,&gt;=5.13.2 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from sleap[pypi]) (5.14.1)
-Requirement already satisfied: six in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from imgaug==0.4.0-&gt;sleap[pypi]) (1.16.0)
-Requirement already satisfied: matplotlib in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from imgaug==0.4.0-&gt;sleap[pypi]) (3.5.3)
-Requirement already satisfied: Shapely in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from imgaug==0.4.0-&gt;sleap[pypi]) (2.0.1)
-Requirement already satisfied: colorama&lt;0.5.0,&gt;=0.4.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from rich==10.16.1-&gt;sleap[pypi]) (0.4.6)
-Requirement already satisfied: commonmark&lt;0.10.0,&gt;=0.9.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from rich==10.16.1-&gt;sleap[pypi]) (0.9.1)
-Requirement already satisfied: pygments&lt;3.0.0,&gt;=2.6.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from rich==10.16.1-&gt;sleap[pypi]) (2.16.1)
-Requirement already satisfied: typing-extensions&lt;5.0,&gt;=3.7.4 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from rich==10.16.1-&gt;sleap[pypi]) (4.7.1)
-Requirement already satisfied: cached-property in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from h5py&lt;3.2-&gt;sleap[pypi]) (1.5.2)
-Requirement already satisfied: tzlocal in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from imgstore&lt;0.30-&gt;sleap[pypi]) (5.0.1)
-Requirement already satisfied: python-dateutil in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from imgstore&lt;0.30-&gt;sleap[pypi]) (2.8.2)
-Requirement already satisfied: backports.zoneinfo in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from imgstore&lt;0.30-&gt;sleap[pypi]) (0.2.1)
-Requirement already satisfied: hdmf&gt;=3.5.4 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from pynwb&gt;=2.3.3-&gt;sleap[pypi]) (3.5.5)
-Requirement already satisfied: setuptools in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from pynwb&gt;=2.3.3-&gt;sleap[pypi]) (68.1.2)
-Requirement already satisfied: pytz&gt;=2017.3 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from pandas-&gt;sleap[pypi]) (2023.3)
-Requirement already satisfied: shiboken2==5.14.1 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from PySide2&lt;=5.14.1,&gt;=5.13.2-&gt;sleap[pypi]) (5.14.1)
-Requirement already satisfied: packaging in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from qtpy&gt;=2.0.1-&gt;sleap[pypi]) (23.1)
-Requirement already satisfied: tifffile&gt;=2019.7.26 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from scikit-image-&gt;sleap[pypi]) (2021.11.2)
-Requirement already satisfied: PyWavelets&gt;=1.1.1 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from scikit-image-&gt;sleap[pypi]) (1.3.0)
-Requirement already satisfied: joblib&gt;=0.11 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from scikit-learn~=1.0-&gt;sleap[pypi]) (1.3.2)
-Requirement already satisfied: threadpoolctl&gt;=2.0.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from scikit-learn~=1.0-&gt;sleap[pypi]) (3.1.0)
-Requirement already satisfied: keras-applications&lt;=1.0.8,&gt;=1.0.7 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from segmentation-models-&gt;sleap[pypi]) (1.0.8)
-Requirement already satisfied: image-classifiers==1.0.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from segmentation-models-&gt;sleap[pypi]) (1.0.0)
-Requirement already satisfied: efficientnet==1.0.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from segmentation-models-&gt;sleap[pypi]) (1.0.0)
-Requirement already satisfied: tensorflow-intel==2.11.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorflow-&gt;sleap[pypi]) (2.11.0)
-Requirement already satisfied: absl-py&gt;=1.0.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (1.4.0)
-Requirement already satisfied: astunparse&gt;=1.6.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (1.6.3)
-Requirement already satisfied: flatbuffers&gt;=2.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (23.5.26)
-Requirement already satisfied: gast&lt;=0.4.0,&gt;=0.2.1 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (0.4.0)
-Requirement already satisfied: google-pasta&gt;=0.1.1 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (0.2.0)
-Requirement already satisfied: libclang&gt;=13.0.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (16.0.6)
-Requirement already satisfied: opt-einsum&gt;=2.3.2 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (3.3.0)
-Requirement already satisfied: protobuf&lt;3.20,&gt;=3.9.2 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (3.19.6)
-Requirement already satisfied: termcolor&gt;=1.1.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (2.3.0)
-Requirement already satisfied: wrapt&gt;=1.11.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (1.15.0)
-Requirement already satisfied: grpcio&lt;2.0,&gt;=1.24.3 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (1.57.0)
-Requirement already satisfied: tensorboard&lt;2.12,&gt;=2.11 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (2.11.2)
-Requirement already satisfied: tensorflow-estimator&lt;2.12,&gt;=2.11.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (2.11.0)
-Requirement already satisfied: keras&lt;2.12,&gt;=2.11.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (2.11.0)
-Requirement already satisfied: tensorflow-io-gcs-filesystem&gt;=0.23.1 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (0.31.0)
-Requirement already satisfied: jsonschema&gt;=2.6.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from hdmf&gt;=3.5.4-&gt;pynwb&gt;=2.3.3-&gt;sleap[pypi]) (4.17.3)
-Requirement already satisfied: ruamel.yaml&gt;=0.16 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from hdmf&gt;=3.5.4-&gt;pynwb&gt;=2.3.3-&gt;sleap[pypi]) (0.17.32)
-Requirement already satisfied: cycler&gt;=0.10 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap[pypi]) (0.11.0)
-Requirement already satisfied: fonttools&gt;=4.22.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap[pypi]) (4.38.0)
-Requirement already satisfied: kiwisolver&gt;=1.0.1 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap[pypi]) (1.4.5)
-Requirement already satisfied: pyparsing&gt;=2.2.1 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap[pypi]) (3.1.1)
-Requirement already satisfied: tzdata in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tzlocal-&gt;imgstore&lt;0.30-&gt;sleap[pypi]) (2023.3)
-Requirement already satisfied: wheel&lt;1.0,&gt;=0.23.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from astunparse&gt;=1.6.0-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (0.41.2)
-Requirement already satisfied: importlib-metadata in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from jsonschema&gt;=2.6.0-&gt;hdmf&gt;=3.5.4-&gt;pynwb&gt;=2.3.3-&gt;sleap[pypi]) (6.7.0)
-Requirement already satisfied: importlib-resources&gt;=1.4.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from jsonschema&gt;=2.6.0-&gt;hdmf&gt;=3.5.4-&gt;pynwb&gt;=2.3.3-&gt;sleap[pypi]) (5.12.0)
-Requirement already satisfied: pkgutil-resolve-name&gt;=1.3.10 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from jsonschema&gt;=2.6.0-&gt;hdmf&gt;=3.5.4-&gt;pynwb&gt;=2.3.3-&gt;sleap[pypi]) (1.3.10)
-Requirement already satisfied: pyrsistent!=0.17.0,!=0.17.1,!=0.17.2,&gt;=0.14.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from jsonschema&gt;=2.6.0-&gt;hdmf&gt;=3.5.4-&gt;pynwb&gt;=2.3.3-&gt;sleap[pypi]) (0.19.3)
-Requirement already satisfied: ruamel.yaml.clib&gt;=0.2.7 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from ruamel.yaml&gt;=0.16-&gt;hdmf&gt;=3.5.4-&gt;pynwb&gt;=2.3.3-&gt;sleap[pypi]) (0.2.7)
-Requirement already satisfied: google-auth&lt;3,&gt;=1.6.3 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (2.22.0)
-Requirement already satisfied: google-auth-oauthlib&lt;0.5,&gt;=0.4.1 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (0.4.6)
-Requirement already satisfied: markdown&gt;=2.6.8 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (3.4.4)
-Requirement already satisfied: requests&lt;3,&gt;=2.21.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (2.31.0)
-Requirement already satisfied: tensorboard-data-server&lt;0.7.0,&gt;=0.6.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (0.6.1)
-Requirement already satisfied: tensorboard-plugin-wit&gt;=1.6.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (1.8.1)
-Requirement already satisfied: werkzeug&gt;=1.0.1 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (2.2.3)
-Requirement already satisfied: cachetools&lt;6.0,&gt;=2.0.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (5.3.1)
-Requirement already satisfied: pyasn1-modules&gt;=0.2.1 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (0.3.0)
-Requirement already satisfied: rsa&lt;5,&gt;=3.1.4 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (4.9)
-Requirement already satisfied: urllib3&lt;2.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (1.26.16)
-Requirement already satisfied: requests-oauthlib&gt;=0.7.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from google-auth-oauthlib&lt;0.5,&gt;=0.4.1-&gt;tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (1.3.1)
-Requirement already satisfied: zipp&gt;=3.1.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from importlib-resources&gt;=1.4.0-&gt;jsonschema&gt;=2.6.0-&gt;hdmf&gt;=3.5.4-&gt;pynwb&gt;=2.3.3-&gt;sleap[pypi]) (3.15.0)
-Requirement already satisfied: charset-normalizer&lt;4,&gt;=2 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (3.2.0)
-Requirement already satisfied: idna&lt;4,&gt;=2.5 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (3.4)
-Requirement already satisfied: certifi&gt;=2017.4.17 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (2023.7.22)
-Requirement already satisfied: MarkupSafe&gt;=2.1.1 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from werkzeug&gt;=1.0.1-&gt;tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (2.1.3)
-Requirement already satisfied: pyasn1&lt;0.6.0,&gt;=0.4.6 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from pyasn1-modules&gt;=0.2.1-&gt;google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (0.5.0)
-Requirement already satisfied: oauthlib&gt;=3.0.0 in c:\users\talmolab\mambaforge\envs\sleap_jupyter\lib\site-packages (from requests-oauthlib&gt;=0.7.0-&gt;google-auth-oauthlib&lt;0.5,&gt;=0.4.1-&gt;tensorboard&lt;2.12,&gt;=2.11-&gt;tensorflow-intel==2.11.0-&gt;tensorflow-&gt;sleap[pypi]) (3.2.2)
-Installing collected packages: opencv-python
-Successfully installed opencv-python-4.5.5.64
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING: Skipping opencv-contrib-python as it is not installed.
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span class=" -Color -Color-Red">ERROR: Cannot uninstall opencv-python 4.6.0, RECORD file not found. Hint: The package was installed by conda.</span>
+<span class=" -Color -Color-Red">ERROR: Cannot uninstall shiboken2 5.15.6, RECORD file not found. You might be able to recover from this via: &#39;pip install --force-reinstall --no-deps shiboken2==5.15.6&#39;.</span>
+
 </pre></div>
 </div>
 </div>
@@ -483,11 +373,20 @@ Successfully installed opencv-python-4.5.5.64
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>SLEAP: 1.3.2
-TensorFlow: 2.11.0
-Numpy: 1.21.6
+TensorFlow: 2.7.0
+Numpy: 1.21.5
 Python: 3.7.12
-OS: Windows-10-10.0.19041-SP0
-GPUs: None detected.
+OS: Linux-5.15.0-78-generic-x86_64-with-debian-bookworm-sid
+GPUs: 1/1 available
+  Device: /physical_device:GPU:0
+         Available: True
+        Initalized: False
+     Memory growth: True
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-09-01 13:56:37.731425: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2023-09-01 13:56:37.735933: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2023-09-01 13:56:37.736867: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
 </pre></div>
 </div>
 </div>
@@ -506,29 +405,48 @@ GPUs: None detected.
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
-  0 81.3M    0  6008    0     0   8514      0  2:47:03 --:--:--  2:47:03  8521
- 26 81.3M   26 21.1M    0     0  11.2M      0  0:00:07  0:00:01  0:00:06 11.2M
- 59 81.3M   59 48.2M    0     0  18.0M      0  0:00:04  0:00:02  0:00:02 18.0M
-100 81.3M  100 81.3M    0     0  24.3M      0  0:00:03  0:00:03 --:--:-- 24.3M
+100 81.3M  100 81.3M    0     0  23.7M      0  0:00:03  0:00:03 --:--:-- 23.7M
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
-  0 6223k    0 17913    0     0  52173      0  0:02:02 --:--:--  0:02:02 52224
-100 6223k  100 6223k    0     0  7059k      0 --:--:-- --:--:-- --:--:-- 7055k
+100 6223k  100 6223k    0     0  30.2M      0 --:--:-- --:--:-- --:--:-- 30.3M
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
-  0 32.2M    0  6002    0     0   9494      0  0:59:24 --:--:--  0:59:24  9496
- 39 32.2M   39 12.8M    0     0  8944k      0  0:00:03  0:00:01  0:00:02 8942k
-100 32.2M  100 32.2M    0     0  14.4M      0  0:00:02  0:00:02 --:--:-- 14.4M
-&#39;ls&#39; is not recognized as an internal or external command,
-operable program or batch file.
+100 32.2M  100 32.2M    0     0  14.5M      0  0:00:02  0:00:02 --:--:-- 14.5M
+total 1.1G
+drwxrwxr-x  5 talmolab talmolab 4.0K Sep  1 13:56  .
+drwxrwxr-x 10 talmolab talmolab 4.0K Aug 31 15:43  ..
+-rw-rw-r--  1 talmolab talmolab  82M May 20  2021  190719_090330_wt_18159206_rig1.2@15000-17560.mp4.1
+-rw-rw-r--  1 talmolab talmolab 1.6M May 20  2021  190719_090330_wt_18159206_rig1.2@15000-17560.slp
+-rw-rw-r--  1 talmolab talmolab 1.6M May 20  2021  190719_090330_wt_18159206_rig1.2@15000-17560.slp.1
+drwxrwxr-x  2 talmolab talmolab 4.0K Jun 20 10:00  analysis_example
+-rw-rw-r--  1 talmolab talmolab 713K Jun 20 10:00  Analysis_examples.ipynb
+-rw-rw-r--  1 talmolab talmolab  33M Sep  1 13:56  centered_instance_id_model.zip
+-rw-rw-r--  1 talmolab talmolab 6.1M May 20  2021 &#39;centroid.fast.210504_182918.centroid.n=1800.zip&#39;
+-rw-rw-r--  1 talmolab talmolab 6.1M May 20  2021 &#39;centroid.fast.210504_182918.centroid.n=1800.zip.1&#39;
+-rw-rw-r--  1 talmolab talmolab 6.1M Sep  1 13:56  centroid_model.zip
+drwxrwxr-x  4 talmolab talmolab 4.0K Sep  1 13:30  dataset
+-rw-rw-r--  1 talmolab talmolab 481K Sep  1 13:49  Data_structures.ipynb
+-rw-rw-r--  1 talmolab talmolab 661K Aug 31 12:52  fly_clip.mp4
+-rw-rw-r--  1 talmolab talmolab 4.1K Jun 20 10:00  index.rst
+-rw-rw-r--  1 talmolab talmolab 197K Sep  1 13:53  Interactive_and_realtime_inference.ipynb
+-rw-rw-r--  1 talmolab talmolab 120K Aug 31 12:25  Interactive_and_resumable_training.ipynb
+-rw-rw-r--  1 talmolab talmolab 620M Aug 31 12:14  labels.pkg.slp
+-rw-rw-r--  1 talmolab talmolab 1.6M Aug 31 12:05  labels_with_images.pkg.slp
+-rw-rw-r--  1 talmolab talmolab 158K Aug 31 12:35  Model_evaluation.ipynb
+drwxrwxr-x  4 talmolab talmolab 4.0K Sep  1 13:39  models
+-rw-rw-r--  1 talmolab talmolab 157K Aug 31 12:52  Post_inference_tracking.ipynb
+-rw-rw-r--  1 talmolab talmolab 412K Aug 31 12:52  predictions.slp
+-rw-rw-r--  1 talmolab talmolab 422K Aug 31 12:52  retracked.slp
+-rw-rw-r--  1 talmolab talmolab  30M May 20  2021 &#39;td_fast.210505_012601.centered_instance.n=1800.zip&#39;
+-rw-rw-r--  1 talmolab talmolab  30M May 20  2021 &#39;td_fast.210505_012601.centered_instance.n=1800.zip.1&#39;
+-rw-rw-r--  1 talmolab talmolab  30M May 20  2021 &#39;td_fast.210505_012601.centered_instance.n=1800.zip.2&#39;
+-rw-rw-r--  1 talmolab talmolab  78M May  6  2021  test.pkg.slp
+-rw-rw-r--  1 talmolab talmolab  89M Sep  1 13:42  trained_models.zip
+-rw-rw-r--  1 talmolab talmolab  94K Sep  1 13:44  Training_and_inference_on_an_example_dataset.ipynb
+-rw-rw-r--  1 talmolab talmolab  12K Aug 31 11:39  Training_and_inference_using_Google_Drive.ipynb
+-rw-rw-r--  1 talmolab talmolab  82M Sep  1 13:56  video.mp4
 </pre></div>
 </div>
 </div>
@@ -542,6 +460,19 @@ operable program or batch file.
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">predictor</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_model</span><span class="p">([</span><span class="s2">&quot;centroid_model.zip&quot;</span><span class="p">,</span> <span class="s2">&quot;centered_instance_id_model.zip&quot;</span><span class="p">],</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-09-01 13:57:04.806004: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-09-01 13:57:04.807011: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2023-09-01 13:57:04.807970: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2023-09-01 13:57:04.808962: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2023-09-01 13:57:05.103658: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2023-09-01 13:57:05.104377: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2023-09-01 13:57:05.105059: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2023-09-01 13:57:05.106019: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1525] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 21129 MB memory:  -&gt; device: 0, name: NVIDIA RTX A5000, pci bus id: 0000:01:00.0, compute capability: 8.6
 </pre></div>
 </div>
 </div>
@@ -575,37 +506,21 @@ operable program or batch file.
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">c:\Users\TalmoLab\mambaforge\envs\sleap_jupyter\lib\site-packages\rich\live.py:221: 
-UserWarning: install "ipywidgets" for Jupyter support
-  warnings.warn('install "ipywidgets" for Jupyter support')
-</pre>
-</div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>imgs.shape: (100, 1024, 1024, 1)
-WARNING:tensorflow:From c:\Users\TalmoLab\mambaforge\envs\sleap_jupyter\lib\site-packages\tensorflow\python\autograph\pyct\static_analysis\liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
-Instructions for updating:
-Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id": "0cc2e3a471764285a58d023906ba1f7a", "version_major": 2, "version_minor": 0}
+</script><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>imgs.shape: (100, 1024, 1024, 1)
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-09-01 13:57:13.455046: I tensorflow/stream_executor/cuda/cuda_dnn.cc:366] Loaded cuDNN version 8201
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-09-01 13:57:15.358483: I tensorflow/stream_executor/cuda/cuda_blas.cc:1774] TensorFloat-32 will be used for the matrix multiplication. This will only be logged once.
 </pre></div>
 </div>
 <div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
 </div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
 </pre>
 </div><div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Labels(labeled_frames=100, videos=1, skeletons=1, tracks=2)
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Predict on the entire video with parallelizable loading/preprocessing:</span>
-<span class="n">predictions</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
-<span class="n">predictions</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
-</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
-</pre>
-</div><div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Labels(labeled_frames=2560, videos=1, skeletons=1, tracks=2)
 </pre></div>
 </div>
 </div>
@@ -619,7 +534,7 @@ Lambda fuctions will be no more assumed to be used in the statement where they a
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Interactive_and_realtime_inference_17_0.png" src="../_images/Interactive_and_realtime_inference_17_0.png" />
+<img alt="../_images/Interactive_and_realtime_inference_16_0.png" src="../_images/Interactive_and_realtime_inference_16_0.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -1440,7 +1355,7 @@ Inference times: 63.1 +- 1.2 ms
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Interactive_and_realtime_inference_28_0.png" src="../_images/Interactive_and_realtime_inference_28_0.png" />
+<img alt="../_images/Interactive_and_realtime_inference_27_0.png" src="../_images/Interactive_and_realtime_inference_27_0.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -1453,7 +1368,7 @@ Inference times: 63.1 +- 1.2 ms
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Interactive_and_realtime_inference_29_0.png" src="../_images/Interactive_and_realtime_inference_29_0.png" />
+<img alt="../_images/Interactive_and_realtime_inference_28_0.png" src="../_images/Interactive_and_realtime_inference_28_0.png" />
 </div>
 </div>
 </section>
