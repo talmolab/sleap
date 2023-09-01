@@ -1,7 +1,3 @@
-import sys
-
-import pytest
-
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 
 

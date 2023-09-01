@@ -1,7 +1,4 @@
-import sys
-
 import numpy as np
-import pytest
 
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import *

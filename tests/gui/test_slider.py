@@ -1,7 +1,3 @@
-import sys
-
-import pytest
-
 from sleap.gui.widgets.slider import VideoSlider, set_slider_marks_from_labels
 
 

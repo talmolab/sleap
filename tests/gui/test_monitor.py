@@ -1,7 +1,3 @@
-import sys
-
-import pytest
-
 from sleap import TrainingJobConfig
 from sleap.gui.widgets.monitor import LossViewer
 

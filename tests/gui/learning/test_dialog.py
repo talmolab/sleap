@@ -1,12 +1,8 @@
 import shutil
-import sys
-import traceback
 from pathlib import Path
 from typing import Callable, List, Optional, Set
 
 import cattr
-import pytest
-from qtpy import QtWidgets
 
 from sleap.gui.app import MainWindow
 from sleap.gui.learning.configs import (
@@ -21,7 +17,6 @@ from sleap.gui.learning.scopedkeydict import (
 )
 from sleap.io.dataset import Labels
 from sleap.nn.config import TrainingJobConfig, UNetConfig
-from sleap.util import get_package_file
 
 
 def test_use_hidden_params_from_loaded_config(

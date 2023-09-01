@@ -1,14 +1,8 @@
 """Module to test the dialogs of the GUI (contained in sleap/gui/dialogs)."""
 
-
-import os
-import sys
-from pathlib import Path
-
 import pytest
 from qtpy.QtWidgets import QComboBox
 
-import sleap
 from sleap.skeleton import Skeleton
 from sleap.io.dataset import Labels
 from sleap.gui.commands import OpenSkeleton

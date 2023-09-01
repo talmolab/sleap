@@ -1,7 +1,3 @@
-import sys
-
-import pytest
-
 from sleap.gui.commands import CommandContext
 from sleap.gui.dialogs.delete import DeleteDialog
 

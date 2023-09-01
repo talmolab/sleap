@@ -1,7 +1,3 @@
-import sys
-
-import pytest
-
 from sleap.gui.overlays.pafs import MultiQuiverPlot
 from sleap.gui.widgets.video import QtVideoPlayer
 

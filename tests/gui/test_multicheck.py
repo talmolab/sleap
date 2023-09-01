@@ -1,6 +1,3 @@
-import sys
-
-import pytest
 from qtpy import QtCore
 
 from sleap.gui.widgets.multicheck import MultiCheckWidget

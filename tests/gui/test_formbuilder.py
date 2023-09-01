@@ -1,7 +1,4 @@
-import sys
 import yaml
-
-import pytest
 
 from sleap.gui.dialogs import formbuilder
 

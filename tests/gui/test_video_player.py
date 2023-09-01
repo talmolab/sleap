@@ -1,14 +1,8 @@
-import sys
-
-import numpy as np
-import pytest
 from qtpy import QtCore, QtWidgets
 from qtpy.QtGui import QColor
 
-from sleap import Instance, Skeleton
 from sleap.gui.widgets.video import (
     GraphicsView,
-    QtInstance,
     QtTextWithBackground,
     QtVideoPlayer,
     VisibleBoundingBox,

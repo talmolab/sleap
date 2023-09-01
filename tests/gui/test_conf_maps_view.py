@@ -1,12 +1,8 @@
-import sys
-
-import pytest
+from sleap.gui.overlays.confmaps import ConfMapsPlot
+from sleap.gui.widgets.video import QtVideoPlayer
 
 
 def test_gui_conf_maps(qtbot, hdf5_confmaps):
-
-    from sleap.gui.widgets.video import QtVideoPlayer
-    from sleap.gui.overlays.confmaps import ConfMapsPlot
 
     vp = QtVideoPlayer()
     vp.show()

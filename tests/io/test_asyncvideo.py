@@ -1,6 +1,5 @@
 import pytest
 import sys
-from sleap import Video
 from sleap.io.asyncvideo import AsyncVideo
 
 
