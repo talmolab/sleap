@@ -81,18 +81,20 @@ jobs:
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Default values
+          - wheel_name: sleap-wheel-*linux*
           - venv_cmd: source venv/bin/activate
           - test_args: pytest --durations=-1 tests/
           - condarc: .conda/condarc.yaml
           # Use special condarc if macos
           - os: "macos-latest"
             condarc: .conda_mac/condarc.yaml
-          - pip_cmd: |
+            wheel_name: sleap-wheel-*macos*
+            pip_cmd: |
               wheel_path=$(find dist -name "*macos*.whl")
               pip install "$wheel_path"[dev]
           # Ubuntu specific values
           - os: ubuntu-22.04
-          - pip_cmd: |
+            pip_cmd: |
               wheel_path=$(find dist -name "*linux*.whl")
               pip install "$wheel_path"[dev]
             test_args: |
@@ -104,7 +106,7 @@ jobs:
           - os: windows-2022
             venv_cmd: .\venv\Scripts\activate
             pip_cmd: |
-              for /r %i in (dist\*windows*.whl) do set "wheel_path=%~fi"
+              for /r %i in (dist\*linux*.whl) do set "wheel_path=%~fi"
               pip install %wheel_path%[dev]
     steps:
       # Download wheel
@@ -118,7 +120,7 @@ jobs:
         uses: actions/download-artifact@v3
         id: download
         with:
-          name: sleap-wheel
+          name: ${{ matrix.wheel_name }}
           path: dist
 
       - name: Create virtual environment
