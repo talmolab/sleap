@@ -1492,6 +1492,58 @@ def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
             assert abs(key[0] - key[1]) <= track_window  # References within window
 
 
+@pytest.mark.parametrize(
+    "max_tracks, trackername",
+    [
+        (2, "flowmaxtracks"),
+        (2, "simplemaxtracks"),
+    ],
+)
+def test_max_tracks_matching_queue(
+    centered_pair_predictions: Labels, max_tracks, trackername
+):
+    """Test flow max tracks instance generation."""
+    labels: Labels = centered_pair_predictions
+    max_tracking = True
+    track_window = 5
+
+    # Setup flow max tracker
+    tracker: Tracker = Tracker.make_tracker_by_name(
+        tracker=trackername,
+        track_window=track_window,
+        save_shifted_instances=True,
+        max_tracking=max_tracking,
+        max_tracks=max_tracks,
+    )
+
+    tracker.candidate_maker = cast(FlowMaxTracksCandidateMaker, tracker.candidate_maker)
+
+    # Run tracking
+    frames = sorted(labels.labeled_frames, key=lambda lf: lf.frame_idx)
+
+    for lf in frames[:20]:
+
+        # Clear the tracks
+        for inst in lf.instances:
+            inst.track = None
+
+        track_args = dict(untracked_instances=lf.instances, img=lf.video[lf.frame_idx])
+        tracker.track(**track_args)
+
+        if trackername == "flowmaxtracks":
+            # Check that saved instances are pruned to track window
+            for key in tracker.candidate_maker.shifted_instances.keys():
+                assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
+                assert abs(key[0] - key[1]) <= track_window
+
+        # Check if the length of each of the tracks is not more than the track window
+        for track in tracker.track_matching_queue_dict.keys():
+            assert len(tracker.track_matching_queue_dict[track]) <= track_window
+
+        # Check if number of tracks that are generated are not more than the maximum tracks
+        assert len(tracker.track_matching_queue_dict) <= max_tracks
+
+
 def test_movenet_inference(movenet_video):
     inference_layer = MoveNetInferenceLayer(model_name="lightning")
     inference_model = MoveNetInferenceModel(inference_layer)
