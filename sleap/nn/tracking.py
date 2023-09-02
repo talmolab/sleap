@@ -142,7 +142,14 @@ class FlowCandidateMaker:
     def get_shifted_instances_from_earlier_time(
         self, ref_t: int, ref_img: np.ndarray, ref_instances: List[InstanceType], t: int
     ) -> (np.ndarray, List[InstanceType]):
-        """Check if shifted instance was computed at earlier time and return instances and corresponding image."""
+        """Generate shifted instances and corresponding image from earlier time.
+
+        Args:
+            ref_instances: Reference instances in the previous frame.
+            ref_img: Previous frame image as a numpy array.
+            ref_t: Previous frame time instance.
+            t: Current time instance.
+        """
         for ti in reversed(range(ref_t, t)):
             if (ref_t, ti) in self.shifted_instances:
                 ref_shifted_instances = self.shifted_instances[(ref_t, ti)]
@@ -161,7 +168,15 @@ class FlowCandidateMaker:
         img: np.ndarray,
         t: int,
     ) -> List[ShiftedInstance]:
-        """Returns a list of shifted instances and saves the shifted instances if necessary."""
+        """Returns a list of shifted instances and save shifted instances if needed.
+
+        Args:
+            ref_instances: Reference instances in the previous frame.
+            ref_img: Previous frame image as a numpy array.
+            ref_t: Previous frame time instance.
+            img: Current frame image as a numpy array.
+            t: Current time instance.
+        """
         # Flow shift reference instances to current frame.
         shifted_instances = self.flow_shift_instances(
             ref_instances,
@@ -341,10 +356,10 @@ class FlowCandidateMaker:
 
 @attr.s(auto_attribs=True)
 class FlowMaxTracksCandidateMaker(FlowCandidateMaker):
-    """Class for producing optical flow shift matching candidates with cap on the number of tracks.
+    """Class for producing optical flow shift matching candidates with maximum tracks.
 
     Attributes:
-        max_tracks: The maximum number of tracks that needs to be maintained in order to avoid redundant/irrelevant tracks.
+        max_tracks: The maximum number of tracks to avoid redundant tracks.
 
     """
 
@@ -356,7 +371,14 @@ class FlowMaxTracksCandidateMaker(FlowCandidateMaker):
         ref_img: np.ndarray,
         track_matching_queue_dict: Dict[Track, Deque[MatchedFrameInstance]],
     ) -> List[InstanceType]:
-        """Generates a list of instances based on the reference time and reference image."""
+        """Generates a list of instances based on the reference time and image.
+
+        Args:
+            ref_t: Previous frame time instance.
+            ref_img: Previous frame image as a numpy array.
+            track_matching_queue_dict: A dictionary of mapping between the tracks
+                and the corresponding instances associated with the track.
+        """
         instances = []
         for track, matched_items in track_matching_queue_dict.items():
             instances += [
@@ -437,7 +459,7 @@ class SimpleCandidateMaker:
 
 @attr.s(auto_attribs=True)
 class SimpleMaxTracksCandidateMaker(SimpleCandidateMaker):
-    """Class to generate instances based on the maximum number of tracks from prior frames."""
+    """Class to generate instances with maximum number of tracks from prior frames."""
 
     max_tracks: int = None
 
@@ -447,7 +469,7 @@ class SimpleMaxTracksCandidateMaker(SimpleCandidateMaker):
         *args,
         **kwargs,
     ) -> List[InstanceType]:
-        # Create set of matchable candidate instances from each track for max number of tracks.
+        # Create set of matchable candidate instances from each track.
         candidate_instances = []
         tracks = []
         for track, matched_instances in track_matching_queue_dict.items():
@@ -534,6 +556,7 @@ class Tracker(BaseTracker):
             use a robust quantile similarity score for the track. If the value is 1,
             use the max similarity (non-robust). For selecting a robust score,
             0.95 is a good value.
+        max_tracking: Max tracking is incorporated when this is set to true.
     """
 
     max_tracks: int = None
@@ -576,7 +599,7 @@ class Tracker(BaseTracker):
         return deque(maxlen=self.track_window)
 
     def reset_candidates(self):
-        if self.max_tracking and self.track_matching_queue_dict:
+        if self.max_tracking:
             for track in self.track_matching_queue_dict:
                 self.track_matching_queue_dict[track] = deque(maxlen=self.track_window)
         else:
@@ -626,7 +649,8 @@ class Tracker(BaseTracker):
             if self.max_tracking:
                 if len(self.track_matching_queue_dict) > 0:
 
-                    # Default to last timestep + 1 if available. Here we find the track that has the most instances.
+                    # Default to last timestep + 1 if available.
+                    # Here we find the track that has the most instances.
                     track_with_max_instances = max(
                         self.track_matching_queue_dict,
                         key=lambda track: len(self.track_matching_queue_dict[track]),
@@ -805,7 +829,7 @@ class Tracker(BaseTracker):
         kf_init_frame_count: int = 0,
         kf_node_indices: Optional[list] = None,
         # Max tracking options
-        max_tracks: int = None,
+        max_tracks: Optional[int] = None,
         max_tracking: bool = False,
         **kwargs,
     ) -> BaseTracker:
@@ -900,9 +924,7 @@ class Tracker(BaseTracker):
 
         option = dict(name="max_tracking", default=False)
         option["type"] = bool
-        option[
-            "help"
-        ] = "If true then the tracker will cap the max number of tracks created or tracked."
+        option["help"] = "If true then the tracker will cap the max number of tracks."
         options.append(option)
 
         option = dict(name="max_tracks", default=None)
@@ -1060,7 +1082,7 @@ attr.s(auto_attribs=True)
 
 
 class FlowMaxTracker(Tracker):
-    """A Tracker pre-configured to use optical flow shifted candidates with a maximum limit on tracks."""
+    """Pre-configured tracker to use optical flow shifted candidates with max tracks."""
 
     max_tracks: int = attr.ib(kw_only=True)
     similarity_function: Callable = instance_similarity
@@ -1080,7 +1102,7 @@ class SimpleTracker(Tracker):
 
 @attr.s(auto_attribs=True)
 class SimpleMaxTracker(Tracker):
-    """A tracked pre-configured to use simple, non-image-based candidates with a maximum number of tracks."""
+    """Pre-configured tracker to use simple, non-image-based candidates with max tracks."""
 
     max_tracks: int = attr.ib(kw_only=True)
     similarity_function: Callable = instance_iou
