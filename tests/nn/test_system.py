@@ -88,7 +88,8 @@ def test_gpu_order_and_length():
     # Assert that the order and length of GPU indices match
     assert sleap_indices == nvidia_indices
 
+
 def test_gpu_device_order():
     """Indirectly tests GPU device order by ensuring environment variable is set."""
-    
+
     assert os.environ["CUDA_DEVICE_ORDER"] == "PCI_BUS_ID"
