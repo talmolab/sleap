@@ -39,5 +39,5 @@ dependencies:
     - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
     - conda-forge::tensorflow-hub
 
-    - pip:  
+    - pip:
         - "--editable=.[conda_dev]"
