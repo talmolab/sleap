@@ -771,6 +771,13 @@ class Tracker(BaseTracker):
             if inst.n_visible_points < self.min_new_track_points:
                 continue
 
+            # Skip if we've reached the maximum number of tracks.
+            if (
+                self.max_tracking
+                and len(self.track_matching_queue_dict) >= self.max_tracks
+            ):
+                break
+
             # Spawn new track.
             new_track = Track(spawned_on=t, name=f"track_{len(self.spawned_tracks)}")
             self.spawned_tracks.append(new_track)
