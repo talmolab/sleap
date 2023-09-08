@@ -118,158 +118,166 @@ optional arguments:
 If you specify how many identities there should be in a frame (i.e., the number of animals) with the {code}`--tracking.clean_instance_count` argument, then we will use a heuristic method to connect "breaks" in the track identities where we lose one identity and spawn another. This can be used as part of the inference pipeline (if models are specified), as part of the tracking-only pipeline (if the predictions file is specified and no models are specified), or by itself on predictions with pre-tracked identities (if you specify {code}`--tracking.tracker none`). See {ref}`proofreading` for more details on tracking.
 
 ```none
-usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames]
-                   [--only-suggested-frames] [-o OUTPUT] [--no-empty-frames]
-                   [--verbosity {none,rich,json}]
-                   [--video.dataset VIDEO.DATASET]
-                   [--video.input_format VIDEO.INPUT_FORMAT]
-                   [--video.index VIDEO.INDEX]
-                   [--cpu | --first-gpu | --last-gpu | --gpu GPU]
-                   [--peak_threshold PEAK_THRESHOLD] [--batch_size BATCH_SIZE]
-                   [--open-in-gui] [--tracking.tracker TRACKING.TRACKER]
-                   [--tracking.target_instance_count TRACKING.TARGET_INSTANCE_COUNT]
-                   [--tracking.pre_cull_to_target TRACKING.PRE_CULL_TO_TARGET]
-                   [--tracking.pre_cull_iou_threshold TRACKING.PRE_CULL_IOU_THRESHOLD]
+usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames] [--only-suggested-frames] [-o OUTPUT] [--no-empty-frames]
+                   [--verbosity {none,rich,json}] [--video.dataset VIDEO.DATASET] [--video.input_format VIDEO.INPUT_FORMAT]
+                   [--video.index VIDEO.INDEX] [--cpu | --first-gpu | --last-gpu | --gpu GPU] [--max_edge_length_ratio MAX_EDGE_LENGTH_RATIO]
+                   [--dist_penalty_weight DIST_PENALTY_WEIGHT] [--batch_size BATCH_SIZE] [--open-in-gui] [--peak_threshold PEAK_THRESHOLD]
+                   [-n MAX_INSTANCES] [--tracking.tracker TRACKING.TRACKER] [--tracking.max_tracking TRACKING.MAX_TRACKING]
+                   [--tracking.max_tracks TRACKING.MAX_TRACKS] [--tracking.target_instance_count TRACKING.TARGET_INSTANCE_COUNT]
+                   [--tracking.pre_cull_to_target TRACKING.PRE_CULL_TO_TARGET] [--tracking.pre_cull_iou_threshold TRACKING.PRE_CULL_IOU_THRESHOLD]
                    [--tracking.post_connect_single_breaks TRACKING.POST_CONNECT_SINGLE_BREAKS]
-                   [--tracking.clean_instance_count TRACKING.CLEAN_INSTANCE_COUNT]
-                   [--tracking.clean_iou_threshold TRACKING.CLEAN_IOU_THRESHOLD]
-                   [--tracking.similarity TRACKING.SIMILARITY]
-                   [--tracking.match TRACKING.MATCH]
-                   [--tracking.track_window TRACKING.TRACK_WINDOW]
-                   [--tracking.save_shifted_instances TRACKING.SAVE_SHIFTED_INSTANCES]
-                   [--tracking.min_new_track_points TRACKING.MIN_NEW_TRACK_POINTS]
-                   [--tracking.min_match_points TRACKING.MIN_MATCH_POINTS]
-                   [--tracking.img_scale TRACKING.IMG_SCALE]
-                   [--tracking.of_window_size TRACKING.OF_WINDOW_SIZE]
-                   [--tracking.of_max_levels TRACKING.OF_MAX_LEVELS]
-                   [--tracking.kf_node_indices TRACKING.KF_NODE_INDICES]
+                   [--tracking.clean_instance_count TRACKING.CLEAN_INSTANCE_COUNT] [--tracking.clean_iou_threshold TRACKING.CLEAN_IOU_THRESHOLD]
+                   [--tracking.similarity TRACKING.SIMILARITY] [--tracking.match TRACKING.MATCH] [--tracking.robust TRACKING.ROBUST]
+                   [--tracking.track_window TRACKING.TRACK_WINDOW] [--tracking.min_new_track_points TRACKING.MIN_NEW_TRACK_POINTS]
+                   [--tracking.min_match_points TRACKING.MIN_MATCH_POINTS] [--tracking.img_scale TRACKING.IMG_SCALE]
+                   [--tracking.of_window_size TRACKING.OF_WINDOW_SIZE] [--tracking.of_max_levels TRACKING.OF_MAX_LEVELS]
+                   [--tracking.save_shifted_instances TRACKING.SAVE_SHIFTED_INSTANCES] [--tracking.kf_node_indices TRACKING.KF_NODE_INDICES]
                    [--tracking.kf_init_frame_count TRACKING.KF_INIT_FRAME_COUNT]
                    [data_path]
 
 positional arguments:
-  data_path             Path to data to predict on. This can be a labels
-                        (.slp) file or any supported video format.
+  data_path             Path to data to predict on. This can be a labels (.slp) file or any supported video format.
 
 optional arguments:
   -h, --help            show this help message and exit
   -m MODELS, --model MODELS
-                        Path to trained model directory (with
-                        training_config.json). Multiple models can be
-                        specified, each preceded by --model.
-  --frames FRAMES       List of frames to predict when running on a video. Can
-                        be specified as a comma separated list (e.g. 1,2,3) or
-                        a range separated by hyphen (e.g., 1-3, for 1,2,3). If
-                        not provided, defaults to predicting on the entire
-                        video.
+                        Path to trained model directory (with training_config.json). Multiple models can be specified, each preceded by --model.
+  --frames FRAMES       List of frames to predict when running on a video. Can be specified as a comma separated list (e.g. 1,2,3) or a range
+                        separated by hyphen (e.g., 1-3, for 1,2,3). If not provided, defaults to predicting on the entire video.
   --only-labeled-frames
-                        Only run inference on user labeled frames when running
-                        on labels dataset. This is useful for generating
-                        predictions to compare against ground truth.
+                        Only run inference on user labeled frames when running on labels dataset. This is useful for generating predictions to compare
+                        against ground truth.
   --only-suggested-frames
-                        Only run inference on unlabeled suggested frames when
-                        running on labels dataset. This is useful for
-                        generating predictions for initialization during
-                        labeling.
+                        Only run inference on unlabeled suggested frames when running on labels dataset. This is useful for generating predictions for
+                        initialization during labeling.
   -o OUTPUT, --output OUTPUT
-                        The output filename to use for the predicted data. If
-                        not provided, defaults to
-                        '[data_path].predictions.slp' if generating predictions or
-                        '[data_path].[tracker].[similarity method].[matching method].slp'
-                        if retracking predictions.
-  --no-empty-frames     Clear any empty frames that did not have any detected
-                        instances before saving to output.
-  -n, --max_instances MAX_INSTANCES
-                        Limit maximum number of instances in multi-instance models.
-                        Not available for ID models. Defaults to None.
+                        The output filename to use for the predicted data. If not provided, defaults to '[data_path].predictions.slp'.
+  --no-empty-frames     Clear any empty frames that did not have any detected instances before saving to output.
   --verbosity {none,rich,json}
-                        Verbosity of inference progress reporting. 'none' does
-                        not output anything during inference, 'rich' displays
-                        an updating progress bar, and 'json' outputs the
-                        progress as a JSON encoded response to the console.
+                        Verbosity of inference progress reporting. 'none' does not output anything during inference, 'rich' displays an updating
+                        progress bar, and 'json' outputs the progress as a JSON encoded response to the console.
   --video.dataset VIDEO.DATASET
                         The dataset for HDF5 videos.
   --video.input_format VIDEO.INPUT_FORMAT
                         The input_format for HDF5 videos.
   --video.index VIDEO.INDEX
-                        The index of the video to run inference on. Only used if
-                        data_path points to a labels file.
-  --cpu                 Run inference only on CPU. If not specified, will use
-                        available GPU.
+                        Integer index of video in .slp file to predict on. To be used with an .slp path as an alternative to specifying the video
+                        path.
+  --cpu                 Run inference only on CPU. If not specified, will use available GPU.
   --first-gpu           Run inference on the first GPU, if available.
   --last-gpu            Run inference on the last GPU, if available.
-  --gpu GPU             Run training on the i-th GPU on the system. If 'auto', run on
-                        the GPU with the highest percentage of available memory.
+  --gpu GPU             Run training on the i-th GPU on the system. If 'auto', run on the GPU with the highest percentage of available memory.
   --max_edge_length_ratio MAX_EDGE_LENGTH_RATIO
-                        The maximum expected length of a connected pair of points as a
-                        fraction of the image size. Candidate connections longer than
-                        this length will be penalized during matching. Only applies to
-                        bottom-up (PAF) models.
+                        The maximum expected length of a connected pair of points as a fraction of the image size. Candidate connections longer than
+                        this length will be penalized during matching. Only applies to bottom-up (PAF) models.
   --dist_penalty_weight DIST_PENALTY_WEIGHT
-                        A coefficient to scale weight of the distance penalty. Set to
-                        values greater than 1.0 to enforce the distance penalty more
+                        A coefficient to scale weight of the distance penalty. Set to values greater than 1.0 to enforce the distance penalty more
                         strictly. Only applies to bottom-up (PAF) models.
-  --peak_threshold PEAK_THRESHOLD
-                        Minimum confidence map value to consider a peak as
-                        valid.
   --batch_size BATCH_SIZE
-                        Number of frames to predict at a time. Larger values
-                        result in faster inference speeds, but require more
-                        memory.
-  --open-in-gui         Open the resulting predictions in the GUI when
-                        finished.
+                        Number of frames to predict at a time. Larger values result in faster inference speeds, but require more memory.
+  --open-in-gui         Open the resulting predictions in the GUI when finished.
+  --peak_threshold PEAK_THRESHOLD
+                        Minimum confidence map value to consider a peak as valid.
+  -n MAX_INSTANCES, --max_instances MAX_INSTANCES
+                        Limit maximum number of instances in multi-instance models. Not available for ID models. Defaults to None.
   --tracking.tracker TRACKING.TRACKER
-                        Options: simple, flow, None (default: None)
+                        Options: simple, flow, simplemaxtracks, flowmaxtracks, None (default: None)
+  --tracking.max_tracking TRACKING.MAX_TRACKING
+                        If true then the tracker will cap the max number of tracks. (default: False)
+  --tracking.max_tracks TRACKING.MAX_TRACKS
+                        Maximum number of tracks to be tracked by the tracker. (default: None)
   --tracking.target_instance_count TRACKING.TARGET_INSTANCE_COUNT
-                        Target number of instances to track per frame.
-                        (default: 0)
+                        Target number of instances to track per frame. (default: 0)
   --tracking.pre_cull_to_target TRACKING.PRE_CULL_TO_TARGET
-                        If non-zero and target_instance_count is also non-
-                        zero, then cull instances over target count per frame
-                        *before* tracking. (default: 0)
+                        If non-zero and target_instance_count is also non-zero, then cull instances over target count per frame *before* tracking.
+                        (default: 0)
   --tracking.pre_cull_iou_threshold TRACKING.PRE_CULL_IOU_THRESHOLD
-                        If non-zero and pre_cull_to_target also set, then use
-                        IOU threshold to remove overlapping instances over
-                        count *before* tracking. (default: 0)
+                        If non-zero and pre_cull_to_target also set, then use IOU threshold to remove overlapping instances over count *before*
+                        tracking. (default: 0)
   --tracking.post_connect_single_breaks TRACKING.POST_CONNECT_SINGLE_BREAKS
-                        If non-zero and target_instance_count is also non-
-                        zero, then connect track breaks when exactly one track
-                        is lost and exactly one track is spawned in frame.
-                        (default: 0)
+                        If non-zero and target_instance_count is also non-zero, then connect track breaks when exactly one track is lost and exactly
+                        one track is spawned in frame. (default: 0)
   --tracking.clean_instance_count TRACKING.CLEAN_INSTANCE_COUNT
-                        Target number of instances to clean *after* tracking.
-                        (default: 0)
+                        Target number of instances to clean *after* tracking. (default: 0)
   --tracking.clean_iou_threshold TRACKING.CLEAN_IOU_THRESHOLD
-                        IOU to use when culling instances *after* tracking.
-                        (default: 0)
+                        IOU to use when culling instances *after* tracking. (default: 0)
   --tracking.similarity TRACKING.SIMILARITY
                         Options: instance, centroid, iou (default: instance)
   --tracking.match TRACKING.MATCH
                         Options: hungarian, greedy (default: greedy)
+  --tracking.robust TRACKING.ROBUST
+                        Robust quantile of similarity score for instance matching. If equal to 1, keep the max similarity score (non-robust).
+                        (default: 1)
   --tracking.track_window TRACKING.TRACK_WINDOW
                         How many frames back to look for matches (default: 5)
-  --tracking.save_shifted_instances TRACKING.SAVE_SHIFTED_INSTANCES
-                        For optical-flow: Save the shifted instances between
-                        elapsed frames for optimal comparison (default: 0)
   --tracking.min_new_track_points TRACKING.MIN_NEW_TRACK_POINTS
-                        Minimum number of instance points for spawning new
-                        track (default: 0)
+                        Minimum number of instance points for spawning new track (default: 0)
   --tracking.min_match_points TRACKING.MIN_MATCH_POINTS
                         Minimum points for match candidates (default: 0)
   --tracking.img_scale TRACKING.IMG_SCALE
                         For optical-flow: Image scale (default: 1.0)
   --tracking.of_window_size TRACKING.OF_WINDOW_SIZE
-                        For optical-flow: Optical flow window size to consider
-                        at each pyramid (default: 21)
+                        For optical-flow: Optical flow window size to consider at each pyramid (default: 21)
   --tracking.of_max_levels TRACKING.OF_MAX_LEVELS
-                        For optical-flow: Number of pyramid scale levels to
-                        consider (default: 3)
+                        For optical-flow: Number of pyramid scale levels to consider (default: 3)
+  --tracking.save_shifted_instances TRACKING.SAVE_SHIFTED_INSTANCES
+                        If non-zero and tracking.tracker is set to flow, save the shifted instances between elapsed frames (default: 0)
   --tracking.kf_node_indices TRACKING.KF_NODE_INDICES
-                        For Kalman filter: Indices of nodes to track.
-                        (default: )
+                        For Kalman filter: Indices of nodes to track. (default: )
   --tracking.kf_init_frame_count TRACKING.KF_INIT_FRAME_COUNT
-                        For Kalman filter: Number of frames to track with
-                        other tracker. 0 means no Kalman filters will be used.
-                        (default: 0)
+                        For Kalman filter: Number of frames to track with other tracker. 0 means no Kalman filters will be used. (default: 0)
+```
+
+#### Examples:
+
+**1. Simple inference without tracking:**
+
+```none
+sleap-track -m "models/my_model" -o "output_predictions.slp" "input_video.mp4"
+```
+
+**2. Inference with multi-model pipelines (e.g., top-down):**
+
+```none
+sleap-track -m "models/centroid" -m "models/centered_instance" -o "output_predictions.slp" "input_video.mp4"
+```
+
+**3. Inference on suggested frames of a labeling project:**
+
+```none
+sleap-track -m "models/my_model" --only-suggested-frames -o "labels_with_predictions.slp" "labels.v005.slp"
+```
+
+The resulting `labels_with_predictions.slp` can then merged into the base labels project from the SLEAP GUI via **File** --> **Merge into project...**.
+
+**4. Inference with simple tracking:**
+
+```none
+sleap-track -m "models/my_model" --tracking.tracker simple -o "output_predictions.slp" "input_video.mp4"
+```
+
+**5. Inference with max tracks limit:**
+
+```none
+sleap-track -m "models/my_model" --tracking.tracker simplemaxtracks --tracking.max_tracking 1 --tracking.max_tracks 4 -o "output_predictions.slp" "input_video.mp4"
+```
+
+**6. Re-tracking without pose inference:**
+
+```none
+sleap-track --tracking.tracker simplemaxtracks --tracking.max_tracking 1 --tracking.max_tracks 4 -o "retracked.slp" "input_predictions.slp"
+```
+
+**7. Select GPU for pose inference:**
+
+```none
+sleap-track --gpu 1 ...
+```
+
+**8. Select subset of frames to predict on:**
+
+```none
+sleap-track -m "models/my_model" --frames 1000-2000 "input_video.mp4"
 ```
 
 ## Dataset files

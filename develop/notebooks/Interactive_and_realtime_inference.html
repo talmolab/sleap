@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Interactive and realtime inference &#8212; SLEAP (v1.3.2)</title>
+    <title>Interactive and realtime inference &#8212; SLEAP (v1.3.1)</title>
   
   
   
@@ -343,20 +343,171 @@ document.write(`
 <p>Don’t forget to set <strong>Runtime</strong> → <strong>Change runtime type</strong> → <strong>GPU</strong> as the accelerator.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This should take care of all the dependencies on colab:</span>
-<span class="o">!</span>pip uninstall -qqq -y opencv-python opencv-contrib-python
-<span class="o">!</span>pip install -qqq sleap<span class="o">[</span>pypi<span class="o">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># This should take care of all the dependencies on colab:
+!pip uninstall -y opencv-python opencv-contrib-python &amp;&amp; pip install sleap
 
 
-<span class="c1"># But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):</span>
-<span class="c1"># conda create -n sleap -c sleap -c conda-forge -c nvidia sleap</span>
+# But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):
+# conda create -n sleap -c sleap -c conda-forge -c nvidia sleap
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span class=" -Color -Color-Red">ERROR: Cannot uninstall opencv-python 4.6.0, RECORD file not found. Hint: The package was installed by conda.</span>
-<span class=" -Color -Color-Red">ERROR: Cannot uninstall shiboken2 5.15.6, RECORD file not found. You might be able to recover from this via: &#39;pip install --force-reinstall --no-deps shiboken2==5.15.6&#39;.</span>
-
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Found existing installation: opencv-python 4.1.2.30
+Uninstalling opencv-python-4.1.2.30:
+  Successfully uninstalled opencv-python-4.1.2.30
+Found existing installation: opencv-contrib-python 4.1.2.30
+Uninstalling opencv-contrib-python-4.1.2.30:
+  Successfully uninstalled opencv-contrib-python-4.1.2.30
+Collecting sleap
+  Downloading sleap-1.2.2-py3-none-any.whl (62.0 MB)
+     |████████████████████████████████| 62.0 MB 17 kB/s 
+?25hRequirement already satisfied: networkx in /usr/local/lib/python3.7/dist-packages (from sleap) (2.6.3)
+Collecting rich==10.16.1
+  Downloading rich-10.16.1-py3-none-any.whl (214 kB)
+     |████████████████████████████████| 214 kB 51.1 MB/s 
+?25hRequirement already satisfied: psutil in /usr/local/lib/python3.7/dist-packages (from sleap) (5.4.8)
+Collecting segmentation-models==1.0.1
+  Downloading segmentation_models-1.0.1-py3-none-any.whl (33 kB)
+Requirement already satisfied: seaborn in /usr/local/lib/python3.7/dist-packages (from sleap) (0.11.2)
+Collecting jsmin
+  Downloading jsmin-3.0.1.tar.gz (13 kB)
+Collecting attrs==21.2.0
+  Downloading attrs-21.2.0-py2.py3-none-any.whl (53 kB)
+     |████████████████████████████████| 53 kB 1.9 MB/s 
+?25hCollecting opencv-python-headless&lt;=4.5.5.62,&gt;=4.2.0.34
+  Downloading opencv_python_headless-4.5.5.62-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (47.7 MB)
+     |████████████████████████████████| 47.7 MB 92 kB/s 
+?25hCollecting pykalman==0.9.5
+  Downloading pykalman-0.9.5.tar.gz (228 kB)
+     |████████████████████████████████| 228 kB 67.2 MB/s 
+?25hCollecting cattrs==1.1.1
+  Downloading cattrs-1.1.1-py3-none-any.whl (16 kB)
+Requirement already satisfied: scikit-image in /usr/local/lib/python3.7/dist-packages (from sleap) (0.18.3)
+Requirement already satisfied: numpy&lt;=1.21.5,&gt;=1.19.5 in /usr/local/lib/python3.7/dist-packages (from sleap) (1.21.5)
+Requirement already satisfied: scipy&lt;=1.7.3,&gt;=1.4.1 in /usr/local/lib/python3.7/dist-packages (from sleap) (1.4.1)
+Collecting jsonpickle==1.2
+  Downloading jsonpickle-1.2-py2.py3-none-any.whl (32 kB)
+Requirement already satisfied: pyzmq in /usr/local/lib/python3.7/dist-packages (from sleap) (22.3.0)
+Collecting scikit-video
+  Downloading scikit_video-1.1.11-py2.py3-none-any.whl (2.3 MB)
+     |████████████████████████████████| 2.3 MB 54.6 MB/s 
+?25hRequirement already satisfied: pyyaml in /usr/local/lib/python3.7/dist-packages (from sleap) (3.13)
+Requirement already satisfied: tensorflow&lt;2.9.0,&gt;=2.6.3 in /usr/local/lib/python3.7/dist-packages (from sleap) (2.8.0)
+Requirement already satisfied: certifi&lt;=2021.10.8,&gt;=2017.4.17 in /usr/local/lib/python3.7/dist-packages (from sleap) (2021.10.8)
+Requirement already satisfied: h5py&lt;=3.6.0,&gt;=3.1.0 in /usr/local/lib/python3.7/dist-packages (from sleap) (3.1.0)
+Collecting PySide2&lt;=5.14.1,&gt;=5.13.2
+  Downloading PySide2-5.14.1-5.14.1-cp35.cp36.cp37.cp38-abi3-manylinux1_x86_64.whl (165.5 MB)
+     |████████████████████████████████| 165.5 MB 64 kB/s 
+?25hRequirement already satisfied: imageio&lt;=2.15.0 in /usr/local/lib/python3.7/dist-packages (from sleap) (2.4.1)
+Collecting python-rapidjson
+  Downloading python_rapidjson-1.6-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.6 MB)
+     |████████████████████████████████| 1.6 MB 42.0 MB/s 
+?25hCollecting qimage2ndarray&lt;=1.8.3,&gt;=1.8.2
+  Downloading qimage2ndarray-1.8.3-py3-none-any.whl (11 kB)
+Requirement already satisfied: scikit-learn==1.0.* in /usr/local/lib/python3.7/dist-packages (from sleap) (1.0.2)
+Collecting imgstore==0.2.9
+  Downloading imgstore-0.2.9-py2.py3-none-any.whl (904 kB)
+     |████████████████████████████████| 904 kB 70.2 MB/s 
+?25hRequirement already satisfied: pandas in /usr/local/lib/python3.7/dist-packages (from sleap) (1.3.5)
+Collecting imgaug==0.4.0
+  Downloading imgaug-0.4.0-py2.py3-none-any.whl (948 kB)
+     |████████████████████████████████| 948 kB 72.4 MB/s 
+?25hRequirement already satisfied: matplotlib in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (3.2.2)
+Requirement already satisfied: six in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (1.15.0)
+Requirement already satisfied: Pillow in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (7.1.2)
+Collecting opencv-python
+  Downloading opencv_python-4.5.5.64-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (60.5 MB)
+     |████████████████████████████████| 60.5 MB 1.3 MB/s 
+?25hRequirement already satisfied: Shapely in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (1.8.1.post1)
+Requirement already satisfied: pytz in /usr/local/lib/python3.7/dist-packages (from imgstore==0.2.9-&gt;sleap) (2018.9)
+Requirement already satisfied: python-dateutil in /usr/local/lib/python3.7/dist-packages (from imgstore==0.2.9-&gt;sleap) (2.8.2)
+Requirement already satisfied: tzlocal in /usr/local/lib/python3.7/dist-packages (from imgstore==0.2.9-&gt;sleap) (1.5.1)
+Requirement already satisfied: typing-extensions&lt;5.0,&gt;=3.7.4 in /usr/local/lib/python3.7/dist-packages (from rich==10.16.1-&gt;sleap) (3.10.0.2)
+<span class=" -Color -Color-Yellow">WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by &#39;ProtocolError(&#39;Connection aborted.&#39;, ConnectionResetError(104, &#39;Connection reset by peer&#39;))&#39;: /simple/colorama/</span>
+Collecting colorama&lt;0.5.0,&gt;=0.4.0
+  Downloading colorama-0.4.4-py2.py3-none-any.whl (16 kB)
+Requirement already satisfied: pygments&lt;3.0.0,&gt;=2.6.0 in /usr/local/lib/python3.7/dist-packages (from rich==10.16.1-&gt;sleap) (2.6.1)
+Collecting commonmark&lt;0.10.0,&gt;=0.9.0
+  Downloading commonmark-0.9.1-py2.py3-none-any.whl (51 kB)
+     |████████████████████████████████| 51 kB 8.9 MB/s 
+?25hRequirement already satisfied: joblib&gt;=0.11 in /usr/local/lib/python3.7/dist-packages (from scikit-learn==1.0.*-&gt;sleap) (1.1.0)
+Requirement already satisfied: threadpoolctl&gt;=2.0.0 in /usr/local/lib/python3.7/dist-packages (from scikit-learn==1.0.*-&gt;sleap) (3.1.0)
+Collecting keras-applications&lt;=1.0.8,&gt;=1.0.7
+  Downloading Keras_Applications-1.0.8-py3-none-any.whl (50 kB)
+     |████████████████████████████████| 50 kB 8.7 MB/s 
+?25hCollecting image-classifiers==1.0.0
+  Downloading image_classifiers-1.0.0-py3-none-any.whl (19 kB)
+Collecting efficientnet==1.0.0
+  Downloading efficientnet-1.0.0-py3-none-any.whl (17 kB)
+Requirement already satisfied: cached-property in /usr/local/lib/python3.7/dist-packages (from h5py&lt;=3.6.0,&gt;=3.1.0-&gt;sleap) (1.5.2)
+Collecting shiboken2==5.14.1
+  Downloading shiboken2-5.14.1-5.14.1-cp35.cp36.cp37.cp38-abi3-manylinux1_x86_64.whl (847 kB)
+     |████████████████████████████████| 847 kB 56.7 MB/s 
+?25hRequirement already satisfied: PyWavelets&gt;=1.1.1 in /usr/local/lib/python3.7/dist-packages (from scikit-image-&gt;sleap) (1.3.0)
+Requirement already satisfied: tifffile&gt;=2019.7.26 in /usr/local/lib/python3.7/dist-packages (from scikit-image-&gt;sleap) (2021.11.2)
+Requirement already satisfied: pyparsing!=2.0.4,!=2.1.2,!=2.1.6,&gt;=2.0.1 in /usr/local/lib/python3.7/dist-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap) (3.0.7)
+Requirement already satisfied: kiwisolver&gt;=1.0.1 in /usr/local/lib/python3.7/dist-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap) (1.4.0)
+Requirement already satisfied: cycler&gt;=0.10 in /usr/local/lib/python3.7/dist-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap) (0.11.0)
+Requirement already satisfied: termcolor&gt;=1.1.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.1.0)
+Collecting tf-estimator-nightly==2.8.0.dev2021122109
+  Downloading tf_estimator_nightly-2.8.0.dev2021122109-py2.py3-none-any.whl (462 kB)
+     |████████████████████████████████| 462 kB 69.9 MB/s 
+?25hRequirement already satisfied: astunparse&gt;=1.6.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.6.3)
+Requirement already satisfied: gast&gt;=0.2.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.5.3)
+Requirement already satisfied: google-pasta&gt;=0.1.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.2.0)
+Requirement already satisfied: protobuf&gt;=3.9.2 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.17.3)
+Requirement already satisfied: libclang&gt;=9.0.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (13.0.0)
+Requirement already satisfied: keras-preprocessing&gt;=1.1.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.1.2)
+Requirement already satisfied: wrapt&gt;=1.11.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.14.0)
+Requirement already satisfied: tensorflow-io-gcs-filesystem&gt;=0.23.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.24.0)
+Requirement already satisfied: setuptools in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (57.4.0)
+Requirement already satisfied: opt-einsum&gt;=2.3.2 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.3.0)
+Requirement already satisfied: grpcio&lt;2.0,&gt;=1.24.3 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.44.0)
+Requirement already satisfied: absl-py&gt;=0.4.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.0.0)
+Requirement already satisfied: tensorboard&lt;2.9,&gt;=2.8 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.8.0)
+Requirement already satisfied: keras&lt;2.9,&gt;=2.8.0rc0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.8.0)
+Requirement already satisfied: flatbuffers&gt;=1.12 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.0)
+Requirement already satisfied: wheel&lt;1.0,&gt;=0.23.0 in /usr/local/lib/python3.7/dist-packages (from astunparse&gt;=1.6.0-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.37.1)
+Requirement already satisfied: google-auth&lt;3,&gt;=1.6.3 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.35.0)
+Requirement already satisfied: markdown&gt;=2.6.8 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.3.6)
+Requirement already satisfied: google-auth-oauthlib&lt;0.5,&gt;=0.4.1 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.4.6)
+Requirement already satisfied: tensorboard-plugin-wit&gt;=1.6.0 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.8.1)
+Requirement already satisfied: tensorboard-data-server&lt;0.7.0,&gt;=0.6.0 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.6.1)
+Requirement already satisfied: werkzeug&gt;=0.11.15 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.0.1)
+Requirement already satisfied: requests&lt;3,&gt;=2.21.0 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.23.0)
+Requirement already satisfied: rsa&lt;5,&gt;=3.1.4 in /usr/local/lib/python3.7/dist-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (4.8)
+Requirement already satisfied: pyasn1-modules&gt;=0.2.1 in /usr/local/lib/python3.7/dist-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.2.8)
+Requirement already satisfied: cachetools&lt;5.0,&gt;=2.0.0 in /usr/local/lib/python3.7/dist-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (4.2.4)
+Requirement already satisfied: requests-oauthlib&gt;=0.7.0 in /usr/local/lib/python3.7/dist-packages (from google-auth-oauthlib&lt;0.5,&gt;=0.4.1-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.3.1)
+Requirement already satisfied: importlib-metadata&gt;=4.4 in /usr/local/lib/python3.7/dist-packages (from markdown&gt;=2.6.8-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (4.11.3)
+Requirement already satisfied: zipp&gt;=0.5 in /usr/local/lib/python3.7/dist-packages (from importlib-metadata&gt;=4.4-&gt;markdown&gt;=2.6.8-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.7.0)
+Requirement already satisfied: pyasn1&lt;0.5.0,&gt;=0.4.6 in /usr/local/lib/python3.7/dist-packages (from pyasn1-modules&gt;=0.2.1-&gt;google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.4.8)
+Requirement already satisfied: chardet&lt;4,&gt;=3.0.2 in /usr/local/lib/python3.7/dist-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.0.4)
+Requirement already satisfied: idna&lt;3,&gt;=2.5 in /usr/local/lib/python3.7/dist-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.10)
+Requirement already satisfied: urllib3!=1.25.0,!=1.25.1,&lt;1.26,&gt;=1.21.1 in /usr/local/lib/python3.7/dist-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.24.3)
+Requirement already satisfied: oauthlib&gt;=3.0.0 in /usr/local/lib/python3.7/dist-packages (from requests-oauthlib&gt;=0.7.0-&gt;google-auth-oauthlib&lt;0.5,&gt;=0.4.1-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.2.0)
+Building wheels for collected packages: pykalman, jsmin
+  Building wheel for pykalman (setup.py) ... ?25l?25hdone
+  Created wheel for pykalman: filename=pykalman-0.9.5-py3-none-any.whl size=48462 sha256=b43fd016511642d3238f564a820ccced9855d44660a169c46474533d3cf57390
+  Stored in directory: /root/.cache/pip/wheels/6a/04/02/2dda6ea59c66d9e685affc8af3a31ad3a5d87b7311689efce6
+  Building wheel for jsmin (setup.py) ... ?25l?25hdone
+  Created wheel for jsmin: filename=jsmin-3.0.1-py3-none-any.whl size=13782 sha256=fd47efc594f3416388e6e074d4602a5b5559ce66e69e621778a182409f5a004c
+  Stored in directory: /root/.cache/pip/wheels/a4/0b/64/fb4f87526ecbdf7921769a39d91dcfe4860e621cf15b8250d6
+Successfully built pykalman jsmin
+Installing collected packages: keras-applications, tf-estimator-nightly, shiboken2, opencv-python, image-classifiers, efficientnet, commonmark, colorama, attrs, segmentation-models, scikit-video, rich, qimage2ndarray, python-rapidjson, PySide2, pykalman, opencv-python-headless, jsonpickle, jsmin, imgstore, imgaug, cattrs, sleap
+  Attempting uninstall: attrs
+    Found existing installation: attrs 21.4.0
+    Uninstalling attrs-21.4.0:
+      Successfully uninstalled attrs-21.4.0
+  Attempting uninstall: imgaug
+    Found existing installation: imgaug 0.2.9
+    Uninstalling imgaug-0.2.9:
+      Successfully uninstalled imgaug-0.2.9
+<span class=" -Color -Color-Red">ERROR: pip&#39;s dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.</span>
+<span class=" -Color -Color-Red">datascience 0.10.6 requires folium==0.2.1, but you have folium 0.8.3 which is incompatible.</span>
+<span class=" -Color -Color-Red">albumentations 0.1.12 requires imgaug&lt;0.2.7,&gt;=0.2.5, but you have imgaug 0.4.0 which is incompatible.</span>
+Successfully installed PySide2-5.14.1 attrs-21.2.0 cattrs-1.1.1 colorama-0.4.4 commonmark-0.9.1 efficientnet-1.0.0 image-classifiers-1.0.0 imgaug-0.4.0 imgstore-0.2.9 jsmin-3.0.1 jsonpickle-1.2 keras-applications-1.0.8 opencv-python-4.5.5.64 opencv-python-headless-4.5.5.62 pykalman-0.9.5 python-rapidjson-1.6 qimage2ndarray-1.8.3 rich-10.16.1 scikit-video-1.1.11 segmentation-models-1.0.1 shiboken2-5.14.1 sleap-1.2.2 tf-estimator-nightly-2.8.0.dev2021122109
 </pre></div>
 </div>
 </div>
@@ -364,7 +515,7 @@ document.write(`
 <p>Import SLEAP to make sure it installed correctly and print out some information about the system:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sleap</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sleap</span>
 <span class="n">sleap</span><span class="o">.</span><span class="n">disable_preallocation</span><span class="p">()</span>  <span class="c1"># This initializes the GPU and prevents TensorFlow from filling the entire GPU memory</span>
 <span class="n">sleap</span><span class="o">.</span><span class="n">versions</span><span class="p">()</span>
 <span class="n">sleap</span><span class="o">.</span><span class="n">system_summary</span><span class="p">()</span>
@@ -372,21 +523,17 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>SLEAP: 1.3.2
-TensorFlow: 2.7.0
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:numexpr.utils:NumExpr defaulting to 2 threads.
+SLEAP: 1.2.2
+TensorFlow: 2.8.0
 Numpy: 1.21.5
-Python: 3.7.12
-OS: Linux-5.15.0-78-generic-x86_64-with-debian-bookworm-sid
+Python: 3.7.13
+OS: Linux-5.4.144+-x86_64-with-Ubuntu-18.04-bionic
 GPUs: 1/1 available
   Device: /physical_device:GPU:0
          Available: True
         Initalized: False
      Memory growth: True
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-09-01 13:56:37.731425: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2023-09-01 13:56:37.735933: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2023-09-01 13:56:37.736867: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
 </pre></div>
 </div>
 </div>
@@ -397,56 +544,31 @@ GPUs: 1/1 available
 <p>Before we start, let’s download a raw video and a set of trained top-down ID models that we’ll use to build our application around.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>curl -L --output video.mp4 https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.mp4
-<span class="o">!</span>curl -L --output centroid_model.zip https://storage.googleapis.com/sleap-data/reference/flies13/centroid.fast.210504_182918.centroid.n%3D1800.zip
-<span class="o">!</span>curl -L --output centered_instance_id_model.zip https://storage.googleapis.com/sleap-data/reference/flies13/td_id.fast.v2.210519_111253.multi_class_topdown.n%3D1800.zip
-<span class="o">!</span>ls -lah
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>!curl -L --output video.mp4 https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.mp4
+!curl -L --output centroid_model.zip https://storage.googleapis.com/sleap-data/reference/flies13/centroid.fast.210504_182918.centroid.n%3D1800.zip
+!curl -L --output centered_instance_id_model.zip https://storage.googleapis.com/sleap-data/reference/flies13/td_id.fast.v2.210519_111253.multi_class_topdown.n%3D1800.zip
+!ls -lah
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 81.3M  100 81.3M    0     0  23.7M      0  0:00:03  0:00:03 --:--:-- 23.7M
+100 81.3M  100 81.3M    0     0   119M      0 --:--:-- --:--:-- --:--:--  119M
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 6223k  100 6223k    0     0  30.2M      0 --:--:-- --:--:-- --:--:-- 30.3M
+100 6223k  100 6223k    0     0  23.2M      0 --:--:-- --:--:-- --:--:-- 23.2M
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 32.2M  100 32.2M    0     0  14.5M      0  0:00:02  0:00:02 --:--:-- 14.5M
-total 1.1G
-drwxrwxr-x  5 talmolab talmolab 4.0K Sep  1 13:56  .
-drwxrwxr-x 10 talmolab talmolab 4.0K Aug 31 15:43  ..
--rw-rw-r--  1 talmolab talmolab  82M May 20  2021  190719_090330_wt_18159206_rig1.2@15000-17560.mp4.1
--rw-rw-r--  1 talmolab talmolab 1.6M May 20  2021  190719_090330_wt_18159206_rig1.2@15000-17560.slp
--rw-rw-r--  1 talmolab talmolab 1.6M May 20  2021  190719_090330_wt_18159206_rig1.2@15000-17560.slp.1
-drwxrwxr-x  2 talmolab talmolab 4.0K Jun 20 10:00  analysis_example
--rw-rw-r--  1 talmolab talmolab 713K Jun 20 10:00  Analysis_examples.ipynb
--rw-rw-r--  1 talmolab talmolab  33M Sep  1 13:56  centered_instance_id_model.zip
--rw-rw-r--  1 talmolab talmolab 6.1M May 20  2021 &#39;centroid.fast.210504_182918.centroid.n=1800.zip&#39;
--rw-rw-r--  1 talmolab talmolab 6.1M May 20  2021 &#39;centroid.fast.210504_182918.centroid.n=1800.zip.1&#39;
--rw-rw-r--  1 talmolab talmolab 6.1M Sep  1 13:56  centroid_model.zip
-drwxrwxr-x  4 talmolab talmolab 4.0K Sep  1 13:30  dataset
--rw-rw-r--  1 talmolab talmolab 481K Sep  1 13:49  Data_structures.ipynb
--rw-rw-r--  1 talmolab talmolab 661K Aug 31 12:52  fly_clip.mp4
--rw-rw-r--  1 talmolab talmolab 4.1K Jun 20 10:00  index.rst
--rw-rw-r--  1 talmolab talmolab 197K Sep  1 13:53  Interactive_and_realtime_inference.ipynb
--rw-rw-r--  1 talmolab talmolab 120K Aug 31 12:25  Interactive_and_resumable_training.ipynb
--rw-rw-r--  1 talmolab talmolab 620M Aug 31 12:14  labels.pkg.slp
--rw-rw-r--  1 talmolab talmolab 1.6M Aug 31 12:05  labels_with_images.pkg.slp
--rw-rw-r--  1 talmolab talmolab 158K Aug 31 12:35  Model_evaluation.ipynb
-drwxrwxr-x  4 talmolab talmolab 4.0K Sep  1 13:39  models
--rw-rw-r--  1 talmolab talmolab 157K Aug 31 12:52  Post_inference_tracking.ipynb
--rw-rw-r--  1 talmolab talmolab 412K Aug 31 12:52  predictions.slp
--rw-rw-r--  1 talmolab talmolab 422K Aug 31 12:52  retracked.slp
--rw-rw-r--  1 talmolab talmolab  30M May 20  2021 &#39;td_fast.210505_012601.centered_instance.n=1800.zip&#39;
--rw-rw-r--  1 talmolab talmolab  30M May 20  2021 &#39;td_fast.210505_012601.centered_instance.n=1800.zip.1&#39;
--rw-rw-r--  1 talmolab talmolab  30M May 20  2021 &#39;td_fast.210505_012601.centered_instance.n=1800.zip.2&#39;
--rw-rw-r--  1 talmolab talmolab  78M May  6  2021  test.pkg.slp
--rw-rw-r--  1 talmolab talmolab  89M Sep  1 13:42  trained_models.zip
--rw-rw-r--  1 talmolab talmolab  94K Sep  1 13:44  Training_and_inference_on_an_example_dataset.ipynb
--rw-rw-r--  1 talmolab talmolab  12K Aug 31 11:39  Training_and_inference_using_Google_Drive.ipynb
--rw-rw-r--  1 talmolab talmolab  82M Sep  1 13:56  video.mp4
+100 32.2M  100 32.2M    0     0  62.4M      0 --:--:-- --:--:-- --:--:-- 62.4M
+total 120M
+drwxr-xr-x 1 root root 4.0K Apr  3 23:33 .
+drwxr-xr-x 1 root root 4.0K Apr  3 23:31 ..
+-rw-r--r-- 1 root root  33M Apr  3 23:33 centered_instance_id_model.zip
+-rw-r--r-- 1 root root 6.1M Apr  3 23:33 centroid_model.zip
+drwxr-xr-x 4 root root 4.0K Mar 23 14:21 .config
+drwxr-xr-x 1 root root 4.0K Mar 23 14:22 sample_data
+-rw-r--r-- 1 root root  82M Apr  3 23:33 video.mp4
 </pre></div>
 </div>
 </div>
@@ -459,20 +581,7 @@ drwxrwxr-x  4 talmolab talmolab 4.0K Sep  1 13:39  models
 <p>To create one from a set of trained models, we can use the high-level <code class="docutils literal notranslate"><span class="pre">sleap.load_model()</span></code> function:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">predictor</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_model</span><span class="p">([</span><span class="s2">&quot;centroid_model.zip&quot;</span><span class="p">,</span> <span class="s2">&quot;centered_instance_id_model.zip&quot;</span><span class="p">],</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-09-01 13:57:04.806004: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2023-09-01 13:57:04.807011: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2023-09-01 13:57:04.807970: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2023-09-01 13:57:04.808962: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2023-09-01 13:57:05.103658: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2023-09-01 13:57:05.104377: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2023-09-01 13:57:05.105059: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2023-09-01 13:57:05.106019: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1525] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 21129 MB memory:  -&gt; device: 0, name: NVIDIA RTX A5000, pci bus id: 0000:01:00.0, compute capability: 8.6
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">predictor</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_model</span><span class="p">([</span><span class="s2">&quot;centroid_model.zip&quot;</span><span class="p">,</span> <span class="s2">&quot;centered_instance_id_model.zip&quot;</span><span class="p">],</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -481,7 +590,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 <p>Next, we’ll load a video that we want to use for inference. SLEAP <code class="docutils literal notranslate"><span class="pre">Video</span></code> objects don’t actually load the whole video into memory, they just provide a common numpy-like interface for reading from different file formats:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">video</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_video</span><span class="p">(</span><span class="s2">&quot;video.mp4&quot;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">video</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_video</span><span class="p">(</span><span class="s2">&quot;video.mp4&quot;</span><span class="p">)</span>
 <span class="n">video</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">video</span><span class="o">.</span><span class="n">dtype</span>
 </pre></div>
 </div>
@@ -495,7 +604,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 <p>Our predictor is pretty flexible. It can handle a variety of different input formats, all of which will return a <code class="docutils literal notranslate"><span class="pre">Labels</span></code> object that contains all of our predictions:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load frames to a numpy array.</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load frames to a numpy array.</span>
 <span class="n">imgs</span> <span class="o">=</span> <span class="n">video</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;imgs.shape: </span><span class="si">{</span><span class="n">imgs</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -507,14 +616,8 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 </div>
 <div class="cell_output docutils container">
 <script type="application/vnd.jupyter.widget-view+json">
-{"model_id": "0cc2e3a471764285a58d023906ba1f7a", "version_major": 2, "version_minor": 0}
+{"version_major": 2, "version_minor": 0, "model_id": "d6ca46c1a214448098ad47270939d0c2"}
 </script><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>imgs.shape: (100, 1024, 1024, 1)
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-09-01 13:57:13.455046: I tensorflow/stream_executor/cuda/cuda_dnn.cc:366] Loaded cuDNN version 8201
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-09-01 13:57:15.358483: I tensorflow/stream_executor/cuda/cuda_blas.cc:1774] TensorFloat-32 will be used for the matrix multiplication. This will only be logged once.
 </pre></div>
 </div>
 <div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
@@ -525,21 +628,40 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 </div>
 </div>
 </div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Predict on the entire video with parallelizable loading/preprocessing:</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
+<span class="n">predictions</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<script type="application/vnd.jupyter.widget-view+json">
+{"version_major": 2, "version_minor": 0, "model_id": "0e9d4c257a4d4c45b02337a0e038e45e"}
+</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+</div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre>
+</div><div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Labels(labeled_frames=2560, videos=1, skeletons=1, tracks=2)
+</pre></div>
+</div>
+</div>
+</div>
 <p>We can then inspect the results of our predictor:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Visualize a frame.</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Visualize a frame.</span>
 <span class="n">predictions</span><span class="p">[</span><span class="mi">100</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Interactive_and_realtime_inference_16_0.png" src="../_images/Interactive_and_realtime_inference_16_0.png" />
+<img alt="../_images/Interactive_and_realtime_inference_17_0.png" src="../_images/Interactive_and_realtime_inference_17_0.png" />
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Inspect the contents of a single frame.</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Inspect the contents of a single frame.</span>
 <span class="n">labeled_frame</span> <span class="o">=</span> <span class="n">predictions</span><span class="p">[</span><span class="mi">100</span><span class="p">]</span>
 <span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances</span>
 </pre></div>
@@ -554,7 +676,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert an instance to a numpy array:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert an instance to a numpy array:</span>
 <span class="n">labeled_frame</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -565,7 +687,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
            [288.64355469, 439.3086853 ],
            [304.53396606, 443.33477783],
            [306.20336914, 435.77227783],
-           [216.24688721, 445.47549438],
+           [216.24688721, 445.4755249 ],
            [216.14550781, 409.98342896],
            [244.39497375, 471.31561279],
            [256.61740112, 408.89056396],
@@ -582,7 +704,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 <p>By using the low-level inference model, we can actually go directly from image to numpy arrays of our results:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">imgs</span> <span class="o">=</span> <span class="n">video</span><span class="p">[:</span><span class="mi">16</span><span class="p">]</span>  <span class="c1"># batch of 16 images</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">imgs</span> <span class="o">=</span> <span class="n">video</span><span class="p">[:</span><span class="mi">16</span><span class="p">]</span>  <span class="c1"># batch of 16 images</span>
 
 <span class="n">predictions</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">inference_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">imgs</span><span class="p">,</span> <span class="n">numpy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">predictions</span>
@@ -590,22 +712,193 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>4/4 [==============================] - 2s 176ms/step
-</pre></div>
-</div>
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;instance_peaks&#39;: array([[[[234.2224 , 430.62598],
-          [271.5043 , 436.13202],
-          [309.87125, 436.64966],
-          [324.12512, 438.3908 ],
-          [320.3458 , 435.9504 ],
-          [246.42352, 450.67786],
-          [242.37636, 413.81458],
-          [285.5624 , 460.22766],
-          [273.45117, 406.51895],
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;centroid_vals&#39;: array([[0.9455479 , 0.8394836 ],
+        [0.95911187, 0.85253626],
+        [0.9596152 , 0.8630471 ],
+        [0.9252076 , 0.9757867 ],
+        [0.9740962 , 0.9668303 ],
+        [0.98455054, 0.95724756],
+        [0.91053814, 0.9752301 ],
+        [0.88006395, 0.99431276],
+        [0.9113332 , 1.0001038 ],
+        [0.9698767 , 0.9948529 ],
+        [0.96454954, 0.9799493 ],
+        [0.9614236 , 1.0046192 ],
+        [0.9535493 , 0.99878174],
+        [0.9474647 , 0.98374265],
+        [0.9781825 , 0.9867112 ],
+        [0.98339975, 0.9842536 ]], dtype=float32),
+ &#39;centroids&#39;: array([[[271.8735 , 436.4811 ],
+         [355.93707, 435.63477]],
+ 
+        [[272.0215 , 436.42197],
+         [356.2099 , 435.4682 ]],
+ 
+        [[272.23578, 436.31976],
+         [356.61108, 435.4756 ]],
+ 
+        [[356.57007, 433.15857],
+         [272.7147 , 435.9847 ]],
+ 
+        [[356.93347, 432.73026],
+         [272.7111 , 435.8055 ]],
+ 
+        [[356.86227, 432.03918],
+         [272.64484, 435.49347]],
+ 
+        [[357.0275 , 431.29968],
+         [272.49817, 435.54977]],
+ 
+        [[359.29578, 431.42874],
+         [272.1338 , 435.81354]],
+ 
+        [[359.7555 , 429.4507 ],
+         [272.2437 , 435.95605]],
+ 
+        [[359.9807 , 428.4453 ],
+         [272.04776, 436.2247 ]],
+ 
+        [[360.3565 , 427.81192],
+         [271.94632, 437.30673]],
+ 
+        [[360.8997 , 427.5365 ],
+         [272.4532 , 436.9694 ]],
+ 
+        [[361.10843, 427.52646],
+         [272.42938, 436.09125]],
+ 
+        [[361.59042, 425.5916 ],
+         [272.44873, 435.94284]],
+ 
+        [[364.18994, 425.5058 ],
+         [272.18735, 436.0978 ]],
+ 
+        [[364.8356 , 425.49683],
+         [272.1019 , 436.49136]]], dtype=float32),
+ &#39;instance_peak_vals&#39;: array([[[0.9913698 , 0.9798432 , 0.755395  , 0.45440078, 0.49718782,
+          0.82649314, 0.8982548 , 0.7941463 , 0.8178157 , 0.05604962,
+          0.06407703, 0.8860661 , 0.9635323 ],
+         [0.9033977 , 0.25969282, 0.63431203, 0.83960074, 0.76130724,
+          0.04938019, 0.8405748 , 0.8820077 , 0.8816873 , 0.8243383 ,
+          0.33521542, 0.843406  , 0.8127705 ]],
+ 
+        [[0.9598928 , 0.9734157 , 0.67664635, 0.35409918, 0.49767363,
+          0.8832786 , 0.9271228 , 0.79897636, 0.7574272 , 0.04437801,
+          0.06204455, 0.86091673, 0.89724076],
+         [0.88144   , 0.43337217, 0.6627725 , 0.83882016, 0.7175109 ,
+          0.08318386, 0.7553143 , 0.8750135 , 0.89725804, 0.8539097 ,
+          0.87049586, 0.84071857, 0.8853135 ]],
+ 
+        [[0.9277582 , 0.9876474 , 0.71884066, 0.36052445, 0.5332413 ,
+          0.8968105 , 0.9209892 , 0.8180278 , 0.6177353 , 0.03119754,
+          0.07055765, 0.83666456, 0.86083984],
+         [0.8386838 , 0.5882865 , 0.7205018 , 0.79034203, 0.70366687,
+          0.21814364, 0.7629925 , 0.85078365, 0.88240033, 0.889361  ,
+          0.855937  , 0.83885545, 0.9163793 ]],
+ 
+        [[0.9318245 , 1.005442  , 0.70377296, 0.44777974, 0.5514284 ,
+          0.8751964 , 0.8788199 , 0.7378154 , 0.60576206, 0.06517099,
+          0.145257  , 0.81688404, 0.88855964],
+         [0.8562528 , 0.86021775, 0.82891434, 0.5004723 , 0.8896506 ,
+          0.1508227 , 0.57128006, 0.8668301 , 0.94244254, 0.8910252 ,
+          0.9375358 , 0.92730594, 0.8518941 ]],
+ 
+        [[0.93351734, 0.98755234, 0.6618066 , 0.55908614, 0.5017102 ,
+          0.89124554, 0.8839096 , 0.77439624, 0.5733776 , 0.06467963,
+          0.12731154, 0.81659895, 0.9002954 ],
+         [0.9238624 , 0.8279646 , 0.7274185 , 0.8509916 , 0.91163963,
+          0.21640284, 0.41097188, 0.9234465 , 0.8912649 , 0.8676514 ,
+          0.91081864, 0.9236754 , 0.9313458 ]],
+ 
+        [[0.96605366, 0.9777925 , 0.67958933, 0.5347009 , 0.49430045,
+          0.89868015, 0.88998073, 0.82294536, 0.49898368, 0.1423007 ,
+          0.1347502 , 0.846156  , 0.8986051 ],
+         [0.8971774 , 0.85703975, 0.74316317, 0.87278455, 0.9055221 ,
+          0.19766904, 0.3356636 , 0.89383155, 0.8715803 , 0.8314053 ,
+          0.92693067, 0.94992954, 0.8578277 ]],
+ 
+        [[0.92144465, 0.98048437, 0.65757245, 0.4610521 , 0.57402426,
+          0.88368344, 0.89460254, 0.8111973 , 0.50101817, 0.24979569,
+          0.16411611, 0.83694774, 0.9241577 ],
+         [0.89160013, 0.8712998 , 0.72397256, 0.88281846, 0.7020805 ,
+          0.16116247, 0.36204454, 0.8973186 , 0.8997571 , 0.5167517 ,
+          0.89034295, 0.98887867, 0.8843883 ]],
+ 
+        [[0.89794546, 0.97743154, 0.5481075 , 0.52363163, 0.570176  ,
+          0.8288712 , 0.9113766 , 0.9194614 , 0.57585603, 0.07603604,
+          0.21255916, 0.90180147, 0.9266095 ],
+         [0.9199309 , 0.8616993 , 0.78142613, 0.77502143, 0.8532426 ,
+          0.14189675, 0.5463987 , 0.8761284 , 0.9354262 , 0.5091697 ,
+          0.8713986 , 0.862072  , 0.91699666]],
+ 
+        [[0.9048965 , 0.96337247, 0.6176863 , 0.6120858 , 0.53412384,
+          0.8082984 , 0.914149  , 0.8100912 , 0.7064674 , 0.07797385,
+          0.28660813, 0.9255539 , 0.9081667 ],
+         [0.9197771 , 0.89081717, 0.769785  , 0.85063875, 0.82405925,
+          0.22763878, 0.7375746 , 0.95731395, 0.95667887, 0.7197969 ,
+          0.87627506, 0.8575353 , 0.8765893 ]],
+ 
+        [[0.9522317 , 0.96551776, 0.728644  , 0.58902043, 0.56121   ,
+          0.7050669 , 0.94214785, 0.39777142, 0.7715537 , 0.617287  ,
+          0.06328648, 1.0118883 , 0.8866795 ],
+         [0.9031525 , 0.90114677, 0.7290425 , 0.84665924, 0.855581  ,
+          0.35440993, 0.8101314 , 0.93183535, 0.91998935, 0.9771715 ,
+          0.8836143 , 0.86114466, 0.88294595]],
+ 
+        [[0.9387202 , 0.97103214, 0.6380678 , 0.89064   , 0.6806271 ,
+          0.9067394 , 0.89928854, 0.40190598, 0.7516978 , 0.5388293 ,
+          0.30325472, 0.8661613 , 0.8647857 ],
+         [0.9355016 , 0.9346907 , 0.7350116 , 0.8936991 , 0.7947871 ,
+          0.29464447, 0.9174315 , 0.8810758 , 0.89442706, 0.97276264,
+          0.92083865, 0.84369785, 0.94922733]],
+ 
+        [[0.914409  , 0.9727311 , 0.64372706, 0.85304916, 0.6125537 ,
+          0.89858156, 0.89086455, 0.33406293, 0.76246554, 0.64882785,
+          0.18051788, 0.9338125 , 0.903689  ],
+         [0.9286875 , 0.93761635, 0.79485124, 0.8181616 , 0.76288086,
+          0.3038448 , 0.8355305 , 0.83106405, 0.91892713, 0.9376198 ,
+          0.94770956, 0.85123426, 0.9446316 ]],
+ 
+        [[0.94501513, 0.95821375, 0.7855571 , 0.7544449 , 0.58367   ,
+          0.8593804 , 0.9449818 , 0.6194321 , 0.7035531 , 0.22808488,
+          0.24900919, 0.981288  , 0.92618316],
+         [0.93841255, 0.9422814 , 0.80968684, 0.8445455 , 0.7991051 ,
+          0.49167132, 0.77814525, 0.6231524 , 0.9319882 , 0.9570072 ,
+          0.95540494, 0.9207019 , 0.8778761 ]],
+ 
+        [[0.93817955, 0.9492211 , 0.7767393 , 0.8758958 , 0.38491583,
+          0.88775396, 0.9298349 , 0.8082794 , 0.69305503, 0.1668036 ,
+          0.26728866, 0.9830228 , 0.9346242 ],
+         [0.909315  , 0.9609095 , 0.840956  , 0.83797425, 0.8743328 ,
+          0.82546026, 0.32881746, 0.54940474, 0.96532434, 0.98827827,
+          0.85375595, 0.95603913, 0.93167067]],
+ 
+        [[0.9048101 , 0.9246041 , 0.7558464 , 0.80823594, 0.47512585,
+          0.86846614, 0.9260269 , 0.8822637 , 0.7126984 , 0.15086724,
+          0.22018576, 0.9016736 , 0.90536344],
+         [0.91812086, 0.9669677 , 0.78534484, 0.88368094, 0.7989964 ,
+          0.6972392 , 0.51700455, 0.8321577 , 0.9426196 , 0.9527976 ,
+          0.9190021 , 0.9706677 , 0.9077022 ]],
+ 
+        [[0.9391487 , 0.93520033, 0.85189587, 0.72796357, 0.6884538 ,
+          0.8768974 , 0.9508925 , 0.6879569 , 0.7112255 , 0.70129263,
+          0.6031595 , 0.8761619 , 0.9142955 ],
+         [0.8932256 , 0.9750102 , 0.7894063 , 0.8651795 , 0.7224442 ,
+          0.8268989 , 0.45971498, 0.93260354, 0.9202294 , 0.94214976,
+          0.88344055, 0.9803063 , 0.8976606 ]]], dtype=float32),
+ &#39;instance_peaks&#39;: array([[[[234.2223 , 430.62558],
+          [271.50427, 436.13205],
+          [309.87225, 436.65012],
+          [324.12576, 438.39148],
+          [320.34717, 435.95013],
+          [246.42339, 450.67798],
+          [242.37634, 413.81458],
+          [285.56247, 460.2276 ],
+          [273.45126, 406.51892],
           [      nan,       nan],
           [      nan,       nan],
-          [241.9716 , 442.32303],
-          [245.46788, 421.90228]],
+          [241.9709 , 442.32263],
+          [245.46785, 421.90225]],
  
          [[319.80017, 435.48407],
           [351.93695, 434.0301 ],
@@ -622,19 +915,19 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
           [328.1667 , 423.94733]]],
  
  
-        [[[234.36913, 430.38037],
+        [[[234.36911, 430.38037],
           [271.65576, 436.0479 ],
-          [311.6751 , 437.00995],
-          [324.48315, 438.1421 ],
-          [322.20544, 435.06784],
-          [246.43257, 450.61487],
-          [242.3986 , 413.8269 ],
-          [285.565  , 460.00977],
-          [273.78204, 406.46442],
+          [311.67505, 437.0108 ],
+          [324.4831 , 438.1426 ],
+          [322.2054 , 435.06854],
+          [246.43256, 450.61487],
+          [242.39862, 413.8269 ],
+          [285.56503, 460.0099 ],
+          [273.78204, 406.4644 ],
           [      nan,       nan],
           [      nan,       nan],
-          [242.11816, 442.0634 ],
-          [245.55441, 421.7281 ]],
+          [242.11815, 442.0634 ],
+          [245.55441, 421.72803]],
  
          [[320.03793, 435.2389 ],
           [353.87274, 434.77695],
@@ -665,33 +958,33 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
           [242.26588, 441.80545],
           [245.77664, 420.7662 ]],
  
-         [[320.46994, 435.2546 ],
-          [354.89484, 434.93176],
-          [372.25574, 433.46127],
-          [394.40717, 479.5797 ],
-          [400.30173, 431.96054],
-          [306.9821 , 449.3157 ],
+         [[320.46982, 435.25452],
+          [354.89542, 434.93198],
+          [372.2558 , 433.46106],
+          [394.40723, 479.57962],
+          [400.3011 , 431.9626 ],
+          [306.98218, 449.3156 ],
           [308.8817 , 421.52148],
-          [325.98843, 474.9167 ],
+          [325.98843, 474.91672],
           [332.17917, 385.04684],
-          [363.0318 , 473.50616],
+          [363.03186, 473.50638],
           [391.05493, 396.85666],
-          [329.16904, 445.04953],
-          [328.89996, 423.52533]]],
+          [329.1689 , 445.0495 ],
+          [328.89993, 423.52527]]],
  
  
-        [[[234.65547, 429.6946 ],
-          [272.38303, 435.68842],
-          [311.04352, 437.86963],
-          [324.80847, 437.3792 ],
-          [322.84747, 433.93973],
-          [246.71852, 451.2873 ],
-          [242.57388, 413.58414],
-          [286.164  , 461.83655],
-          [272.8726 , 406.21753],
+        [[[234.65546, 429.69464],
+          [272.38306, 435.6884 ],
+          [311.04346, 437.86926],
+          [324.80878, 437.3788 ],
+          [322.84747, 433.93933],
+          [246.71854, 451.2873 ],
+          [242.57391, 413.58414],
+          [286.16397, 461.83658],
+          [272.8733 , 406.21573],
           [      nan,       nan],
           [      nan,       nan],
-          [242.43861, 441.46246],
+          [242.4386 , 441.46246],
           [245.25829, 420.48416]],
  
          [[320.7713 , 433.55927],
@@ -770,7 +1063,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
         [[[234.15704, 429.3947 ],
           [272.1558 , 435.1859 ],
           [310.46423, 435.5753 ],
-          [324.42407, 437.18854],
+          [324.42407, 437.18857],
           [322.80786, 433.41486],
           [246.72241, 450.9671 ],
           [242.64005, 413.65726],
@@ -788,11 +1081,11 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
           [402.97113, 431.12497],
           [      nan,       nan],
           [312.74753, 421.16742],
-          [325.3774 , 474.73508],
+          [325.3774 , 474.7351 ],
           [331.5342 , 384.97403],
           [378.56894, 469.3632 ],
           [388.81372, 393.89886],
-          [330.641  , 439.67194],
+          [330.641  , 439.67197],
           [329.04425, 418.99023]]],
  
  
@@ -810,8 +1103,8 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
           [240.58961, 440.1936 ],
           [244.4464 , 420.00543]],
  
-         [[322.69318, 430.96207],
-          [358.88284, 430.98035],
+         [[322.69318, 430.96204],
+          [358.8828 , 430.98035],
           [379.26816, 431.0259 ],
           [405.7312 , 449.5473 ],
           [405.13306, 431.02057],
@@ -846,7 +1139,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
           [405.74594, 429.27792],
           [315.46356, 441.38046],
           [309.48642, 421.8147 ],
-          [325.63016, 474.81934],
+          [325.63013, 474.81934],
           [331.73767, 385.03244],
           [399.19778, 461.1395 ],
           [388.32227, 394.00305],
@@ -854,32 +1147,32 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
           [330.20728, 418.03998]]],
  
  
-        [[[232.59984, 427.94275],
-          [271.68756, 435.925  ],
-          [309.74356, 438.45367],
-          [322.3493 , 441.94934],
-          [322.39355, 436.09885],
-          [246.09349, 450.45755],
-          [242.331  , 413.8041 ],
-          [284.40057, 460.55066],
-          [273.6091 , 406.43307],
-          [286.35394, 459.9949 ],
+        [[[232.59995, 427.9426 ],
+          [271.68756, 435.92496],
+          [309.74353, 438.45377],
+          [322.3493 , 441.9495 ],
+          [322.39355, 436.099  ],
+          [246.09337, 450.45764],
+          [242.33101, 413.80396],
+          [284.40045, 460.55066],
+          [273.6091 , 406.4331 ],
+          [286.35364, 459.99496],
           [      nan,       nan],
-          [240.04814, 440.10544],
-          [244.36105, 419.95673]],
+          [240.04811, 440.10532],
+          [244.36139, 419.95685]],
  
          [[322.50397, 428.86414],
           [359.65952, 428.01282],
           [381.80063, 428.2879 ],
           [407.9239 , 446.02728],
           [406.27682, 428.24774],
-          [317.42343, 444.4193 ],
+          [317.4234 , 444.4193 ],
           [308.38232, 422.35754],
           [325.6553 , 474.45853],
           [331.8156 , 384.7812 ],
           [399.62988, 456.58368],
           [388.52002, 394.27118],
-          [332.3299 , 438.78006],
+          [332.3299 , 438.7801 ],
           [330.43085, 417.03174]]],
  
  
@@ -970,22 +1263,22 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
           [332.6642 , 419.31372]]],
  
  
-        [[[232.83435, 428.26373],
+        [[[232.83435, 428.2637 ],
           [272.11572, 435.61078],
-          [312.17926, 439.66278],
-          [322.83746, 442.15924],
-          [324.40552, 435.6441 ],
+          [312.17938, 439.66312],
+          [322.83755, 442.15845],
+          [324.40564, 435.64343],
           [225.87045, 451.41144],
           [242.64131, 413.59937],
-          [285.06647, 460.35507],
-          [273.84183, 406.3719 ],
+          [285.06653, 460.35504],
+          [273.84183, 406.37183],
           [      nan,       nan],
-          [322.41534, 422.61237],
-          [240.42723, 440.2208 ],
-          [244.4097 , 419.95218]],
+          [322.4148 , 422.6127 ],
+          [240.42722, 440.2208 ],
+          [244.4097 , 419.95215]],
  
          [[327.3499 , 431.52005],
-          [361.313  , 425.36267],
+          [361.313  , 425.36264],
           [389.47607, 423.60114],
           [411.6601 , 435.50894],
           [409.51843, 419.6943 ],
@@ -1005,7 +1298,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
           [322.19714, 443.71683],
           [324.71207, 434.39133],
           [224.85786, 451.4593 ],
-          [242.5914 , 413.65207],
+          [242.5914 , 413.65204],
           [285.67142, 461.77646],
           [273.7307 , 406.5118 ],
           [      nan,       nan],
@@ -1014,7 +1307,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
           [243.82819, 420.339  ]],
  
          [[328.47983, 431.74188],
-          [363.93173, 425.2397 ],
+          [363.9317 , 425.2397 ],
           [390.49423, 423.05255],
           [413.68115, 433.6671 ],
           [410.5454 , 419.09042],
@@ -1055,204 +1348,30 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
           [388.68896, 394.04962],
           [340.75934, 441.0198 ],
           [335.4428 , 419.33124]]]], dtype=float32),
- &#39;instance_peak_vals&#39;: array([[[0.9914025 , 0.9798533 , 0.7552497 , 0.45417705, 0.49756864,
-          0.8265212 , 0.89824754, 0.7941327 , 0.81785023, 0.05611448,
-          0.06403984, 0.88647026, 0.96359974],
-         [0.9033977 , 0.25969282, 0.6343123 , 0.8396003 , 0.7613073 ,
-          0.04938014, 0.84057474, 0.8820076 , 0.8816869 , 0.8243384 ,
-          0.33521563, 0.8434063 , 0.8127704 ]],
- 
-        [[0.9598888 , 0.97341204, 0.6766811 , 0.35414153, 0.49778372,
-          0.883279  , 0.9271338 , 0.7989652 , 0.7574282 , 0.04437362,
-          0.06203796, 0.8609162 , 0.89723104],
-         [0.8814398 , 0.43337214, 0.6627722 , 0.8388201 , 0.71751094,
-          0.08318384, 0.7553143 , 0.8750135 , 0.8972577 , 0.85390973,
-          0.87049603, 0.84071857, 0.8853136 ]],
- 
-        [[0.9277581 , 0.9876475 , 0.71884066, 0.36052382, 0.53324103,
-          0.89681005, 0.92098916, 0.8180281 , 0.6177351 , 0.0311976 ,
-          0.07055778, 0.83666444, 0.8608399 ],
-         [0.8386477 , 0.58817774, 0.72051835, 0.7902795 , 0.7041355 ,
-          0.2181147 , 0.76299024, 0.8507803 , 0.8824023 , 0.8892915 ,
-          0.8559173 , 0.83882904, 0.9163557 ]],
- 
-        [[0.9318335 , 1.0054291 , 0.7037247 , 0.44776785, 0.55141157,
-          0.8751741 , 0.8788193 , 0.7378067 , 0.6061791 , 0.06516132,
-          0.145283  , 0.81688696, 0.88854957],
-         [0.85625255, 0.86021763, 0.82891417, 0.5004723 , 0.8896506 ,
-          0.15082283, 0.57127994, 0.86683005, 0.94244254, 0.8910252 ,
-          0.9375356 , 0.92730576, 0.8518939 ]],
- 
-        [[0.9335175 , 0.98755246, 0.66180676, 0.5590857 , 0.5017098 ,
-          0.89124495, 0.8839093 , 0.77439654, 0.5733776 , 0.0646795 ,
-          0.12731166, 0.816599  , 0.90029544],
-         [0.9238624 , 0.8279644 , 0.7274184 , 0.8509916 , 0.9116395 ,
-          0.21640316, 0.4109717 , 0.92344654, 0.8912647 , 0.8676515 ,
-          0.91081876, 0.9236755 , 0.9313457 ]],
- 
-        [[0.9660537 , 0.97779256, 0.6795893 , 0.5347014 , 0.49429995,
-          0.89868015, 0.88998085, 0.82294524, 0.49898362, 0.14230077,
-          0.13475017, 0.8461558 , 0.89860517],
-         [0.8971772 , 0.85703963, 0.743163  , 0.87278444, 0.90552235,
-          0.19766915, 0.33566353, 0.89383173, 0.87157995, 0.83140534,
-          0.92693084, 0.9499294 , 0.85782766]],
- 
-        [[0.9214447 , 0.9804845 , 0.6575725 , 0.46105212, 0.5740245 ,
-          0.88368326, 0.89460224, 0.81119704, 0.50101817, 0.24979575,
-          0.16411652, 0.83694774, 0.9241573 ],
-         [0.8916    , 0.87129986, 0.7239725 , 0.8828186 , 0.7020806 ,
-          0.16116264, 0.36204475, 0.8973187 , 0.8997571 , 0.51675177,
-          0.89034307, 0.98887885, 0.88438815]],
- 
-        [[0.8979453 , 0.97743154, 0.5481076 , 0.523632  , 0.570176  ,
-          0.8288708 , 0.9113763 , 0.9194614 , 0.575856  , 0.07603623,
-          0.21255928, 0.9018014 , 0.9266098 ],
-         [0.91993105, 0.8616991 , 0.781426  , 0.7750215 , 0.85324234,
-          0.14189687, 0.5463986 , 0.8761287 , 0.93542594, 0.50916994,
-          0.87139845, 0.8620718 , 0.9169966 ]],
- 
-        [[0.90489644, 0.9633726 , 0.6176859 , 0.6120859 , 0.53412354,
-          0.8082982 , 0.9141492 , 0.8100913 , 0.7064677 , 0.07797408,
-          0.28660768, 0.9255538 , 0.9081669 ],
-         [0.9197768 , 0.89081717, 0.7697851 , 0.850639  , 0.8240589 ,
-          0.2276387 , 0.7375747 , 0.9573141 , 0.95667875, 0.7197965 ,
-          0.8762751 , 0.8575352 , 0.8765895 ]],
- 
-        [[0.9522048 , 0.96551245, 0.72864616, 0.5890152 , 0.561211  ,
-          0.7051566 , 0.9421855 , 0.39786857, 0.7715297 , 0.6171893 ,
-          0.06328589, 1.0118455 , 0.886791  ],
-         [0.9031525 , 0.9011465 , 0.7290425 , 0.84665924, 0.85558087,
-          0.35440978, 0.8101312 , 0.931835  , 0.91998947, 0.9771716 ,
-          0.88361436, 0.8611444 , 0.88294595]],
- 
-        [[0.93872   , 0.97103214, 0.63806784, 0.89063996, 0.68062663,
-          0.9067393 , 0.89928836, 0.40190646, 0.75169766, 0.5388288 ,
-          0.30325472, 0.86616135, 0.864786  ],
-         [0.9355017 , 0.93469065, 0.73501164, 0.89369905, 0.794787  ,
-          0.29464462, 0.91743165, 0.88107586, 0.89442694, 0.97276276,
-          0.9208387 , 0.8436978 , 0.9492276 ]],
- 
-        [[0.91440874, 0.97273135, 0.64372706, 0.85304886, 0.6125536 ,
-          0.89858156, 0.89086473, 0.33406225, 0.7624657 , 0.64882857,
-          0.18051867, 0.93381244, 0.90368915],
-         [0.9286875 , 0.93761605, 0.7948513 , 0.81816167, 0.7628807 ,
-          0.30384466, 0.83553046, 0.83106405, 0.9189269 , 0.93762034,
-          0.94770956, 0.8512343 , 0.9446315 ]],
- 
-        [[0.9450149 , 0.9582136 , 0.78555703, 0.7544447 , 0.58366936,
-          0.85938   , 0.94498163, 0.6194322 , 0.7035529 , 0.22808443,
-          0.24900974, 0.981288  , 0.92618316],
-         [0.93841267, 0.9422818 , 0.80968696, 0.8445456 , 0.7991047 ,
-          0.4916717 , 0.77814513, 0.6231525 , 0.93198806, 0.9570074 ,
-          0.95540506, 0.9207018 , 0.8778759 ]],
- 
-        [[0.9381855 , 0.94920886, 0.77673894, 0.87591183, 0.3847992 ,
-          0.88775337, 0.92982674, 0.8082221 , 0.6930795 , 0.16653292,
-          0.26732486, 0.9830136 , 0.93462956],
-         [0.9093149 , 0.96090955, 0.8409559 , 0.83797425, 0.8743328 ,
-          0.82546026, 0.32881752, 0.5494046 , 0.9653242 , 0.9882784 ,
-          0.85375595, 0.95603913, 0.9316707 ]],
- 
-        [[0.9048104 , 0.92460406, 0.75584614, 0.8082359 , 0.47512543,
-          0.8684657 , 0.9260271 , 0.8822638 , 0.71269846, 0.1508674 ,
-          0.22018598, 0.9016738 , 0.90536344],
-         [0.918121  , 0.96696764, 0.78534484, 0.883681  , 0.798996  ,
-          0.69723856, 0.5170047 , 0.8321578 , 0.9426196 , 0.9527973 ,
-          0.91900206, 0.9706679 , 0.90770215]],
- 
-        [[0.9391487 , 0.9352003 , 0.85189575, 0.72796327, 0.6884535 ,
-          0.8768972 , 0.9508924 , 0.6879568 , 0.71122557, 0.7012927 ,
-          0.6031595 , 0.87616193, 0.91429555],
-         [0.8932258 , 0.97501004, 0.78940654, 0.8651793 , 0.72244436,
-          0.82689875, 0.4597148 , 0.93260366, 0.9202296 , 0.94214964,
-          0.8834407 , 0.98030627, 0.8976605 ]]], dtype=float32),
- &#39;instance_scores&#39;: array([[0.9953135 , 0.99476504],
-        [0.99593395, 0.99526805],
-        [0.9959078 , 0.9945123 ],
-        [0.99573624, 0.993386  ],
+ &#39;instance_scores&#39;: array([[0.9953146 , 0.99476504],
+        [0.9959341 , 0.99526805],
+        [0.9959078 , 0.99451363],
+        [0.99573493, 0.993386  ],
         [0.99603134, 0.99172956],
         [0.99564207, 0.9916197 ],
         [0.9947187 , 0.9915406 ],
         [0.9940315 , 0.98916876],
         [0.99394447, 0.98962784],
-        [0.9944642 , 0.9910501 ],
+        [0.99446183, 0.9910501 ],
         [0.99155337, 0.9933716 ],
-        [0.9916019 , 0.9933976 ],
+        [0.9916019 , 0.9933977 ],
         [0.9932473 , 0.9932013 ],
-        [0.9920751 , 0.9946308 ],
+        [0.99207497, 0.9946308 ],
         [0.991653  , 0.99465877],
         [0.99162734, 0.99486005]], dtype=float32),
- &#39;centroids&#39;: array([[[271.8735 , 436.4811 ],
-         [355.93707, 435.63477]],
- 
-        [[272.0215 , 436.42197],
-         [356.2099 , 435.4682 ]],
- 
-        [[272.23578, 436.31976],
-         [356.61108, 435.4756 ]],
- 
-        [[356.57007, 433.15857],
-         [272.7147 , 435.9847 ]],
- 
-        [[356.93347, 432.73026],
-         [272.7111 , 435.8055 ]],
- 
-        [[356.86227, 432.03918],
-         [272.64484, 435.49347]],
- 
-        [[357.0275 , 431.29968],
-         [272.49817, 435.54977]],
- 
-        [[359.29578, 431.42874],
-         [272.1338 , 435.81354]],
- 
-        [[359.7555 , 429.4507 ],
-         [272.2437 , 435.95605]],
- 
-        [[359.9807 , 428.4453 ],
-         [272.04776, 436.2247 ]],
- 
-        [[360.3565 , 427.81192],
-         [271.94632, 437.30673]],
- 
-        [[360.8997 , 427.5365 ],
-         [272.4532 , 436.9694 ]],
- 
-        [[361.10843, 427.52646],
-         [272.42938, 436.09125]],
- 
-        [[361.59042, 425.5916 ],
-         [272.44873, 435.94284]],
- 
-        [[364.18994, 425.5058 ],
-         [272.18735, 436.0978 ]],
- 
-        [[364.8356 , 425.49683],
-         [272.1019 , 436.49136]]], dtype=float32),
- &#39;centroid_vals&#39;: array([[0.94554764, 0.83948356],
-        [0.9591119 , 0.8525362 ],
-        [0.95961505, 0.86304706],
-        [0.9252076 , 0.97578657],
-        [0.974096  , 0.9668305 ],
-        [0.9845507 , 0.9572475 ],
-        [0.9105379 , 0.97522974],
-        [0.880064  , 0.9943127 ],
-        [0.911333  , 1.0001038 ],
-        [0.9698766 , 0.9948527 ],
-        [0.96454924, 0.9799493 ],
-        [0.96142364, 1.0046191 ],
-        [0.95354944, 0.9987816 ],
-        [0.94746464, 0.98374254],
-        [0.97818244, 0.98671097],
-        [0.9833999 , 0.98425347]], dtype=float32),
- &#39;n_valid&#39;: array([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])}
+ &#39;n_valid&#39;: array([2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], dtype=int32)}
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">predictions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">predictions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">value</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1275,7 +1394,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 <p>First, we’ll create a class that simulates a camera grabber API that provides a sequence of pre-loaded frames.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">perf_counter</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">perf_counter</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 
@@ -1305,7 +1424,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 <p>Then, we’ll define a simply acquisition loop, in which we repeatedly grab a frame and perform inference to time how long it takes.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">recording_duration</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># session length in frames</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">recording_duration</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># session length in frames</span>
 
 <span class="c1"># Pre-load images onto &quot;camera&quot;</span>
 <span class="n">camera</span> <span class="o">=</span> <span class="n">SimulatedCamera</span><span class="p">(</span><span class="n">video</span><span class="p">[:</span><span class="mi">512</span><span class="p">])</span>
@@ -1335,8 +1454,8 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>First inference time: 886.2 ms
-Inference times: 63.1 +- 1.2 ms
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>First inference time: 2181.9 ms
+Inference times: 28.8 +- 2.6 ms
 </pre></div>
 </div>
 </div>
@@ -1344,7 +1463,7 @@ Inference times: 63.1 +- 1.2 ms
 <p>After the first batch, our inference latencies go way down and we can see how they vary over time:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">inference_times</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
@@ -1355,12 +1474,12 @@ Inference times: 63.1 +- 1.2 ms
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Interactive_and_realtime_inference_27_0.png" src="../_images/Interactive_and_realtime_inference_27_0.png" />
+<img alt="../_images/Interactive_and_realtime_inference_28_0.png" src="../_images/Interactive_and_realtime_inference_28_0.png" />
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">inference_times</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Inference latency (ms)&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;PDF&quot;</span><span class="p">);</span>
@@ -1368,7 +1487,7 @@ Inference times: 63.1 +- 1.2 ms
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Interactive_and_realtime_inference_28_0.png" src="../_images/Interactive_and_realtime_inference_28_0.png" />
+<img alt="../_images/Interactive_and_realtime_inference_29_0.png" src="../_images/Interactive_and_realtime_inference_29_0.png" />
 </div>
 </div>
 </section>

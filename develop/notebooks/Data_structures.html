@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Data structures &#8212; SLEAP (v1.3.2)</title>
+    <title>Data structures &#8212; SLEAP (v1.3.1)</title>
   
   
   
@@ -348,116 +348,261 @@ document.write(`
 <p>If you get a dependency error in subsequent cells, just click <strong>Runtime</strong> → <strong>Restart runtime</strong> to reload the packages.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This should take care of all the dependencies on colab:</span>
-<span class="o">!</span>pip uninstall -qqq -y opencv-python opencv-contrib-python
-<span class="o">!</span>pip install -qqq sleap<span class="o">[</span>pypi<span class="o">]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span># This should take care of all the dependencies on colab:
+!pip uninstall -y opencv-python opencv-contrib-python &amp;&amp; pip install sleap
 
-<span class="c1"># But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):</span>
-<span class="c1"># conda create -n sleap -c sleap -c conda-forge -c nvidia sleap</span>
+# But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):
+# conda create -n sleap -c sleap -c conda-forge -c nvidia sleap
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Found existing installation: opencv-python 4.1.2.30
+Uninstalling opencv-python-4.1.2.30:
+  Successfully uninstalled opencv-python-4.1.2.30
+Found existing installation: opencv-contrib-python 4.1.2.30
+Uninstalling opencv-contrib-python-4.1.2.30:
+  Successfully uninstalled opencv-contrib-python-4.1.2.30
+Collecting sleap
+  Downloading sleap-1.2.2-py3-none-any.whl (62.0 MB)
+     |████████████████████████████████| 62.0 MB 1.1 MB/s 
+?25hCollecting python-rapidjson
+  Downloading python_rapidjson-1.6-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.6 MB)
+     |████████████████████████████████| 1.6 MB 28.0 MB/s 
+?25hCollecting opencv-python-headless&lt;=4.5.5.62,&gt;=4.2.0.34
+  Downloading opencv_python_headless-4.5.5.62-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (47.7 MB)
+     |████████████████████████████████| 47.7 MB 82 kB/s 
+?25hRequirement already satisfied: h5py&lt;=3.6.0,&gt;=3.1.0 in /usr/local/lib/python3.7/dist-packages (from sleap) (3.1.0)
+Collecting pykalman==0.9.5
+  Downloading pykalman-0.9.5.tar.gz (228 kB)
+     |████████████████████████████████| 228 kB 61.2 MB/s 
+?25hRequirement already satisfied: seaborn in /usr/local/lib/python3.7/dist-packages (from sleap) (0.11.2)
+Collecting attrs==21.2.0
+  Downloading attrs-21.2.0-py2.py3-none-any.whl (53 kB)
+     |████████████████████████████████| 53 kB 2.3 MB/s 
+?25hCollecting imgstore==0.2.9
+  Downloading imgstore-0.2.9-py2.py3-none-any.whl (904 kB)
+     |████████████████████████████████| 904 kB 47.6 MB/s 
+?25hRequirement already satisfied: pyzmq in /usr/local/lib/python3.7/dist-packages (from sleap) (22.3.0)
+Collecting qimage2ndarray&lt;=1.8.3,&gt;=1.8.2
+  Downloading qimage2ndarray-1.8.3-py3-none-any.whl (11 kB)
+Requirement already satisfied: networkx in /usr/local/lib/python3.7/dist-packages (from sleap) (2.6.3)
+Collecting scikit-video
+  Downloading scikit_video-1.1.11-py2.py3-none-any.whl (2.3 MB)
+     |████████████████████████████████| 2.3 MB 51.0 MB/s 
+?25hRequirement already satisfied: scikit-image in /usr/local/lib/python3.7/dist-packages (from sleap) (0.18.3)
+Requirement already satisfied: pyyaml in /usr/local/lib/python3.7/dist-packages (from sleap) (3.13)
+Requirement already satisfied: psutil in /usr/local/lib/python3.7/dist-packages (from sleap) (5.4.8)
+Requirement already satisfied: numpy&lt;=1.21.5,&gt;=1.19.5 in /usr/local/lib/python3.7/dist-packages (from sleap) (1.21.5)
+Requirement already satisfied: scipy&lt;=1.7.3,&gt;=1.4.1 in /usr/local/lib/python3.7/dist-packages (from sleap) (1.4.1)
+Collecting rich==10.16.1
+  Downloading rich-10.16.1-py3-none-any.whl (214 kB)
+     |████████████████████████████████| 214 kB 63.7 MB/s 
+?25hCollecting segmentation-models==1.0.1
+  Downloading segmentation_models-1.0.1-py3-none-any.whl (33 kB)
+Collecting cattrs==1.1.1
+  Downloading cattrs-1.1.1-py3-none-any.whl (16 kB)
+Requirement already satisfied: scikit-learn==1.0.* in /usr/local/lib/python3.7/dist-packages (from sleap) (1.0.2)
+Requirement already satisfied: imageio&lt;=2.15.0 in /usr/local/lib/python3.7/dist-packages (from sleap) (2.4.1)
+Requirement already satisfied: pandas in /usr/local/lib/python3.7/dist-packages (from sleap) (1.3.5)
+Requirement already satisfied: certifi&lt;=2021.10.8,&gt;=2017.4.17 in /usr/local/lib/python3.7/dist-packages (from sleap) (2021.10.8)
+Collecting jsonpickle==1.2
+  Downloading jsonpickle-1.2-py2.py3-none-any.whl (32 kB)
+Collecting PySide2&lt;=5.14.1,&gt;=5.13.2
+  Downloading PySide2-5.14.1-5.14.1-cp35.cp36.cp37.cp38-abi3-manylinux1_x86_64.whl (165.5 MB)
+     |████████████████████████████████| 165.5 MB 79 kB/s 
+?25hCollecting imgaug==0.4.0
+  Downloading imgaug-0.4.0-py2.py3-none-any.whl (948 kB)
+     |████████████████████████████████| 948 kB 54.8 MB/s 
+?25hCollecting jsmin
+  Downloading jsmin-3.0.1.tar.gz (13 kB)
+Requirement already satisfied: tensorflow&lt;2.9.0,&gt;=2.6.3 in /usr/local/lib/python3.7/dist-packages (from sleap) (2.8.0)
+Requirement already satisfied: six in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (1.15.0)
+Requirement already satisfied: matplotlib in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (3.2.2)
+Collecting opencv-python
+  Downloading opencv_python-4.5.5.64-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (60.5 MB)
+     |████████████████████████████████| 60.5 MB 1.3 MB/s 
+?25hRequirement already satisfied: Shapely in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (1.8.1.post1)
+Requirement already satisfied: Pillow in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (7.1.2)
+Requirement already satisfied: pytz in /usr/local/lib/python3.7/dist-packages (from imgstore==0.2.9-&gt;sleap) (2018.9)
+Requirement already satisfied: python-dateutil in /usr/local/lib/python3.7/dist-packages (from imgstore==0.2.9-&gt;sleap) (2.8.2)
+Requirement already satisfied: tzlocal in /usr/local/lib/python3.7/dist-packages (from imgstore==0.2.9-&gt;sleap) (1.5.1)
+Collecting commonmark&lt;0.10.0,&gt;=0.9.0
+  Downloading commonmark-0.9.1-py2.py3-none-any.whl (51 kB)
+     |████████████████████████████████| 51 kB 8.0 MB/s 
+?25hRequirement already satisfied: pygments&lt;3.0.0,&gt;=2.6.0 in /usr/local/lib/python3.7/dist-packages (from rich==10.16.1-&gt;sleap) (2.6.1)
+Collecting colorama&lt;0.5.0,&gt;=0.4.0
+  Downloading colorama-0.4.4-py2.py3-none-any.whl (16 kB)
+Requirement already satisfied: typing-extensions&lt;5.0,&gt;=3.7.4 in /usr/local/lib/python3.7/dist-packages (from rich==10.16.1-&gt;sleap) (3.10.0.2)
+Requirement already satisfied: threadpoolctl&gt;=2.0.0 in /usr/local/lib/python3.7/dist-packages (from scikit-learn==1.0.*-&gt;sleap) (3.1.0)
+Requirement already satisfied: joblib&gt;=0.11 in /usr/local/lib/python3.7/dist-packages (from scikit-learn==1.0.*-&gt;sleap) (1.1.0)
+Collecting image-classifiers==1.0.0
+  Downloading image_classifiers-1.0.0-py3-none-any.whl (19 kB)
+Collecting keras-applications&lt;=1.0.8,&gt;=1.0.7
+  Downloading Keras_Applications-1.0.8-py3-none-any.whl (50 kB)
+     |████████████████████████████████| 50 kB 6.9 MB/s 
+?25hCollecting efficientnet==1.0.0
+  Downloading efficientnet-1.0.0-py3-none-any.whl (17 kB)
+Requirement already satisfied: cached-property in /usr/local/lib/python3.7/dist-packages (from h5py&lt;=3.6.0,&gt;=3.1.0-&gt;sleap) (1.5.2)
+Collecting shiboken2==5.14.1
+  Downloading shiboken2-5.14.1-5.14.1-cp35.cp36.cp37.cp38-abi3-manylinux1_x86_64.whl (847 kB)
+     |████████████████████████████████| 847 kB 52.6 MB/s 
+?25hRequirement already satisfied: tifffile&gt;=2019.7.26 in /usr/local/lib/python3.7/dist-packages (from scikit-image-&gt;sleap) (2021.11.2)
+Requirement already satisfied: PyWavelets&gt;=1.1.1 in /usr/local/lib/python3.7/dist-packages (from scikit-image-&gt;sleap) (1.3.0)
+Requirement already satisfied: kiwisolver&gt;=1.0.1 in /usr/local/lib/python3.7/dist-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap) (1.4.0)
+Requirement already satisfied: cycler&gt;=0.10 in /usr/local/lib/python3.7/dist-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap) (0.11.0)
+Requirement already satisfied: pyparsing!=2.0.4,!=2.1.2,!=2.1.6,&gt;=2.0.1 in /usr/local/lib/python3.7/dist-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap) (3.0.7)
+Requirement already satisfied: astunparse&gt;=1.6.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.6.3)
+Requirement already satisfied: grpcio&lt;2.0,&gt;=1.24.3 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.44.0)
+Requirement already satisfied: tensorflow-io-gcs-filesystem&gt;=0.23.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.24.0)
+Requirement already satisfied: keras&lt;2.9,&gt;=2.8.0rc0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.8.0)
+Requirement already satisfied: absl-py&gt;=0.4.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.0.0)
+Requirement already satisfied: setuptools in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (57.4.0)
+Requirement already satisfied: opt-einsum&gt;=2.3.2 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.3.0)
+Requirement already satisfied: protobuf&gt;=3.9.2 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.17.3)
+Requirement already satisfied: flatbuffers&gt;=1.12 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.0)
+Requirement already satisfied: google-pasta&gt;=0.1.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.2.0)
+Requirement already satisfied: wrapt&gt;=1.11.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.14.0)
+Requirement already satisfied: termcolor&gt;=1.1.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.1.0)
+Requirement already satisfied: libclang&gt;=9.0.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (13.0.0)
+Collecting tf-estimator-nightly==2.8.0.dev2021122109
+  Downloading tf_estimator_nightly-2.8.0.dev2021122109-py2.py3-none-any.whl (462 kB)
+     |████████████████████████████████| 462 kB 57.3 MB/s 
+?25hRequirement already satisfied: tensorboard&lt;2.9,&gt;=2.8 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.8.0)
+Requirement already satisfied: keras-preprocessing&gt;=1.1.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.1.2)
+Requirement already satisfied: gast&gt;=0.2.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.5.3)
+Requirement already satisfied: wheel&lt;1.0,&gt;=0.23.0 in /usr/local/lib/python3.7/dist-packages (from astunparse&gt;=1.6.0-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.37.1)
+Requirement already satisfied: google-auth&lt;3,&gt;=1.6.3 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.35.0)
+Requirement already satisfied: tensorboard-data-server&lt;0.7.0,&gt;=0.6.0 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.6.1)
+Requirement already satisfied: werkzeug&gt;=0.11.15 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.0.1)
+Requirement already satisfied: tensorboard-plugin-wit&gt;=1.6.0 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.8.1)
+Requirement already satisfied: requests&lt;3,&gt;=2.21.0 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.23.0)
+Requirement already satisfied: google-auth-oauthlib&lt;0.5,&gt;=0.4.1 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.4.6)
+Requirement already satisfied: markdown&gt;=2.6.8 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.3.6)
+Requirement already satisfied: rsa&lt;5,&gt;=3.1.4 in /usr/local/lib/python3.7/dist-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (4.8)
+Requirement already satisfied: pyasn1-modules&gt;=0.2.1 in /usr/local/lib/python3.7/dist-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.2.8)
+Requirement already satisfied: cachetools&lt;5.0,&gt;=2.0.0 in /usr/local/lib/python3.7/dist-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (4.2.4)
+Requirement already satisfied: requests-oauthlib&gt;=0.7.0 in /usr/local/lib/python3.7/dist-packages (from google-auth-oauthlib&lt;0.5,&gt;=0.4.1-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.3.1)
+Requirement already satisfied: importlib-metadata&gt;=4.4 in /usr/local/lib/python3.7/dist-packages (from markdown&gt;=2.6.8-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (4.11.3)
+Requirement already satisfied: zipp&gt;=0.5 in /usr/local/lib/python3.7/dist-packages (from importlib-metadata&gt;=4.4-&gt;markdown&gt;=2.6.8-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.7.0)
+Requirement already satisfied: pyasn1&lt;0.5.0,&gt;=0.4.6 in /usr/local/lib/python3.7/dist-packages (from pyasn1-modules&gt;=0.2.1-&gt;google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.4.8)
+Requirement already satisfied: chardet&lt;4,&gt;=3.0.2 in /usr/local/lib/python3.7/dist-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.0.4)
+Requirement already satisfied: urllib3!=1.25.0,!=1.25.1,&lt;1.26,&gt;=1.21.1 in /usr/local/lib/python3.7/dist-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.24.3)
+Requirement already satisfied: idna&lt;3,&gt;=2.5 in /usr/local/lib/python3.7/dist-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.10)
+Requirement already satisfied: oauthlib&gt;=3.0.0 in /usr/local/lib/python3.7/dist-packages (from requests-oauthlib&gt;=0.7.0-&gt;google-auth-oauthlib&lt;0.5,&gt;=0.4.1-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.2.0)
+Building wheels for collected packages: pykalman, jsmin
+  Building wheel for pykalman (setup.py) ... ?25l?25hdone
+  Created wheel for pykalman: filename=pykalman-0.9.5-py3-none-any.whl size=48462 sha256=a06494160ef192a795ebcc248474d9c759e93594f237a46d572d71045302de71
+  Stored in directory: /root/.cache/pip/wheels/6a/04/02/2dda6ea59c66d9e685affc8af3a31ad3a5d87b7311689efce6
+  Building wheel for jsmin (setup.py) ... ?25l?25hdone
+  Created wheel for jsmin: filename=jsmin-3.0.1-py3-none-any.whl size=13782 sha256=11175f12c4cdb3583f65125aa1f875e232ab437f5d9bdf1a6a73fbdb3d9ba69a
+  Stored in directory: /root/.cache/pip/wheels/a4/0b/64/fb4f87526ecbdf7921769a39d91dcfe4860e621cf15b8250d6
+Successfully built pykalman jsmin
+Installing collected packages: keras-applications, tf-estimator-nightly, shiboken2, opencv-python, image-classifiers, efficientnet, commonmark, colorama, attrs, segmentation-models, scikit-video, rich, qimage2ndarray, python-rapidjson, PySide2, pykalman, opencv-python-headless, jsonpickle, jsmin, imgstore, imgaug, cattrs, sleap
+  Attempting uninstall: attrs
+    Found existing installation: attrs 21.4.0
+    Uninstalling attrs-21.4.0:
+      Successfully uninstalled attrs-21.4.0
+  Attempting uninstall: imgaug
+    Found existing installation: imgaug 0.2.9
+    Uninstalling imgaug-0.2.9:
+      Successfully uninstalled imgaug-0.2.9
+<span class=" -Color -Color-Red">ERROR: pip&#39;s dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.</span>
+<span class=" -Color -Color-Red">datascience 0.10.6 requires folium==0.2.1, but you have folium 0.8.3 which is incompatible.</span>
+<span class=" -Color -Color-Red">albumentations 0.1.12 requires imgaug&lt;0.2.7,&gt;=0.2.5, but you have imgaug 0.4.0 which is incompatible.</span>
+Successfully installed PySide2-5.14.1 attrs-21.2.0 cattrs-1.1.1 colorama-0.4.4 commonmark-0.9.1 efficientnet-1.0.0 image-classifiers-1.0.0 imgaug-0.4.0 imgstore-0.2.9 jsmin-3.0.1 jsonpickle-1.2 keras-applications-1.0.8 opencv-python-4.5.5.64 opencv-python-headless-4.5.5.62 pykalman-0.9.5 python-rapidjson-1.6 qimage2ndarray-1.8.3 rich-10.16.1 scikit-video-1.1.11 segmentation-models-1.0.1 shiboken2-5.14.1 sleap-1.2.2 tf-estimator-nightly-2.8.0.dev2021122109
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Test video:</span>
-<span class="o">!</span>wget https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.mp4
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span># Test video:
+!wget https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.mp4
 
-<span class="c1"># Test video labels (from predictions/not necessary for inference benchmarking):</span>
-<span class="o">!</span>wget https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.slp
+# Test video labels (from predictions/not necessary for inference benchmarking):
+!wget https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.slp
 
-<span class="c1"># Bottom-up model:</span>
-<span class="c1"># !wget https://storage.googleapis.com/sleap-data/reference/flies13/bu.210506_230852.multi_instance.n%3D1800.zip</span>
+# Bottom-up model:
+# !wget https://storage.googleapis.com/sleap-data/reference/flies13/bu.210506_230852.multi_instance.n%3D1800.zip
 
-<span class="c1"># Top-down model (two-stage):</span>
-<span class="o">!</span>wget https://storage.googleapis.com/sleap-data/reference/flies13/centroid.fast.210504_182918.centroid.n%3D1800.zip
-<span class="o">!</span>wget https://storage.googleapis.com/sleap-data/reference/flies13/td_fast.210505_012601.centered_instance.n%3D1800.zip
+# Top-down model (two-stage):
+!wget https://storage.googleapis.com/sleap-data/reference/flies13/centroid.fast.210504_182918.centroid.n%3D1800.zip
+!wget https://storage.googleapis.com/sleap-data/reference/flies13/td_fast.210505_012601.centered_instance.n%3D1800.zip
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>--2023-08-31 12:03:50--  https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.mp4
-Resolving storage.googleapis.com (storage.googleapis.com)... 142.250.176.16, 142.250.72.144, 172.217.12.144, ...
-Connecting to storage.googleapis.com (storage.googleapis.com)|142.250.176.16|:443... connected.
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>--2022-04-04 00:19:01--  https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.mp4
+Resolving storage.googleapis.com (storage.googleapis.com)... 142.250.97.128, 142.251.107.128, 173.194.214.128, ...
+Connecting to storage.googleapis.com (storage.googleapis.com)|142.250.97.128|:443... connected.
 HTTP request sent, awaiting response... 200 OK
 Length: 85343812 (81M) [video/mp4]
-Saving to: ‘190719_090330_wt_18159206_rig1.2@15000-17560.mp4.1’
+Saving to: ‘190719_090330_wt_18159206_rig1.2@15000-17560.mp4’
 
-190719_090330_wt_18 100%[===================&gt;]  81.39M  27.7MB/s    in 2.9s    
+190719_090330_wt_18 100%[===================&gt;]  81.39M   142MB/s    in 0.6s    
 
-2023-08-31 12:03:53 (27.7 MB/s) - ‘190719_090330_wt_18159206_rig1.2@15000-17560.mp4.1’ saved [85343812/85343812]
+2022-04-04 00:19:02 (142 MB/s) - ‘190719_090330_wt_18159206_rig1.2@15000-17560.mp4’ saved [85343812/85343812]
 
---2023-08-31 12:03:53--  https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.slp
-Resolving storage.googleapis.com (storage.googleapis.com)... 142.250.188.240, 142.250.217.144, 142.250.68.16, ...
-Connecting to storage.googleapis.com (storage.googleapis.com)|142.250.188.240|:443... connected.
+--2022-04-04 00:19:02--  https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.slp
+Resolving storage.googleapis.com (storage.googleapis.com)... 173.194.214.128, 173.194.215.128, 173.194.216.128, ...
+Connecting to storage.googleapis.com (storage.googleapis.com)|173.194.214.128|:443... connected.
 HTTP request sent, awaiting response... 200 OK
 Length: 1581400 (1.5M) [application/octet-stream]
-Saving to: ‘190719_090330_wt_18159206_rig1.2@15000-17560.slp.1’
+Saving to: ‘190719_090330_wt_18159206_rig1.2@15000-17560.slp’
 
-190719_090330_wt_18 100%[===================&gt;]   1.51M  3.99MB/s    in 0.4s    
+190719_090330_wt_18 100%[===================&gt;]   1.51M  --.-KB/s    in 0.01s   
 
-2023-08-31 12:03:54 (3.99 MB/s) - ‘190719_090330_wt_18159206_rig1.2@15000-17560.slp.1’ saved [1581400/1581400]
+2022-04-04 00:19:02 (151 MB/s) - ‘190719_090330_wt_18159206_rig1.2@15000-17560.slp’ saved [1581400/1581400]
 
---2023-08-31 12:03:54--  https://storage.googleapis.com/sleap-data/reference/flies13/centroid.fast.210504_182918.centroid.n%3D1800.zip
-Resolving storage.googleapis.com (storage.googleapis.com)... 142.250.72.240, 142.250.188.240, 142.250.189.16, ...
-Connecting to storage.googleapis.com (storage.googleapis.com)|142.250.72.240|:443... connected.
+--2022-04-04 00:19:02--  https://storage.googleapis.com/sleap-data/reference/flies13/centroid.fast.210504_182918.centroid.n%3D1800.zip
+Resolving storage.googleapis.com (storage.googleapis.com)... 173.194.214.128, 173.194.215.128, 173.194.216.128, ...
+Connecting to storage.googleapis.com (storage.googleapis.com)|173.194.214.128|:443... connected.
 HTTP request sent, awaiting response... 200 OK
 Length: 6372537 (6.1M) [application/zip]
-Saving to: ‘centroid.fast.210504_182918.centroid.n=1800.zip.1’
+Saving to: ‘centroid.fast.210504_182918.centroid.n=1800.zip’
 
-centroid.fast.21050 100%[===================&gt;]   6.08M  --.-KB/s    in 0.1s    
+centroid.fast.21050 100%[===================&gt;]   6.08M  --.-KB/s    in 0.05s   
 
-2023-08-31 12:03:54 (56.6 MB/s) - ‘centroid.fast.210504_182918.centroid.n=1800.zip.1’ saved [6372537/6372537]
+2022-04-04 00:19:02 (134 MB/s) - ‘centroid.fast.210504_182918.centroid.n=1800.zip’ saved [6372537/6372537]
 
---2023-08-31 12:03:54--  https://storage.googleapis.com/sleap-data/reference/flies13/td_fast.210505_012601.centered_instance.n%3D1800.zip
-Resolving storage.googleapis.com (storage.googleapis.com)... 172.217.14.112, 142.250.176.16, 142.250.72.176, ...
-Connecting to storage.googleapis.com (storage.googleapis.com)|172.217.14.112|:443... connected.
+--2022-04-04 00:19:02--  https://storage.googleapis.com/sleap-data/reference/flies13/td_fast.210505_012601.centered_instance.n%3D1800.zip
+Resolving storage.googleapis.com (storage.googleapis.com)... 173.194.216.128, 173.194.217.128, 173.194.218.128, ...
+Connecting to storage.googleapis.com (storage.googleapis.com)|173.194.216.128|:443... connected.
 HTTP request sent, awaiting response... 200 OK
 Length: 30775963 (29M) [application/zip]
-Saving to: ‘td_fast.210505_012601.centered_instance.n=1800.zip.1’
+Saving to: ‘td_fast.210505_012601.centered_instance.n=1800.zip’
 
-td_fast.210505_0126 100%[===================&gt;]  29.35M  21.3MB/s    in 1.4s    
+td_fast.210505_0126 100%[===================&gt;]  29.35M   190MB/s    in 0.2s    
 
-2023-08-31 12:03:56 (21.3 MB/s) - ‘td_fast.210505_012601.centered_instance.n=1800.zip.1’ saved [30775963/30775963]
+2022-04-04 00:19:03 (190 MB/s) - ‘td_fast.210505_012601.centered_instance.n=1800.zip’ saved [30775963/30775963]
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>ls -lah
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>!ls -lah
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>total 239M
-drwxrwxr-x 3 talmolab talmolab 4.0K Aug 31 12:03  .
-drwxrwxr-x 7 talmolab talmolab 4.0K Aug 31 11:39  ..
--rw-rw-r-- 1 talmolab talmolab  82M May 20  2021  190719_090330_wt_18159206_rig1.2@15000-17560.mp4
--rw-rw-r-- 1 talmolab talmolab  82M May 20  2021  190719_090330_wt_18159206_rig1.2@15000-17560.mp4.1
--rw-rw-r-- 1 talmolab talmolab 1.6M May 20  2021  190719_090330_wt_18159206_rig1.2@15000-17560.slp
--rw-rw-r-- 1 talmolab talmolab 1.6M May 20  2021  190719_090330_wt_18159206_rig1.2@15000-17560.slp.1
-drwxrwxr-x 2 talmolab talmolab 4.0K Jun 20 10:00  analysis_example
--rw-rw-r-- 1 talmolab talmolab 713K Jun 20 10:00  Analysis_examples.ipynb
--rw-rw-r-- 1 talmolab talmolab 6.1M May 20  2021 &#39;centroid.fast.210504_182918.centroid.n=1800.zip&#39;
--rw-rw-r-- 1 talmolab talmolab 6.1M May 20  2021 &#39;centroid.fast.210504_182918.centroid.n=1800.zip.1&#39;
--rw-rw-r-- 1 talmolab talmolab 486K Aug 31 11:39  Data_structures.ipynb
--rw-rw-r-- 1 talmolab talmolab 4.1K Jun 20 10:00  index.rst
--rw-rw-r-- 1 talmolab talmolab 197K Aug 31 11:39  Interactive_and_realtime_inference.ipynb
--rw-rw-r-- 1 talmolab talmolab 398K Aug 31 11:39  Interactive_and_resumable_training.ipynb
--rw-rw-r-- 1 talmolab talmolab 149K Aug 31 11:39  Model_evaluation.ipynb
--rw-rw-r-- 1 talmolab talmolab 150K Aug 31 11:39  Post_inference_tracking.ipynb
--rw-rw-r-- 1 talmolab talmolab  30M May 20  2021 &#39;td_fast.210505_012601.centered_instance.n=1800.zip&#39;
--rw-rw-r-- 1 talmolab talmolab  30M May 20  2021 &#39;td_fast.210505_012601.centered_instance.n=1800.zip.1&#39;
--rw-rw-r-- 1 talmolab talmolab 9.5K Aug 31 11:39  Training_and_inference_on_an_example_dataset.ipynb
--rw-rw-r-- 1 talmolab talmolab  12K Aug 31 11:39  Training_and_inference_using_Google_Drive.ipynb
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>total 119M
+drwxr-xr-x 1 root root 4.0K Apr  4 00:19  .
+drwxr-xr-x 1 root root 4.0K Apr  4 00:15  ..
+-rw-r--r-- 1 root root  82M May 20  2021  190719_090330_wt_18159206_rig1.2@15000-17560.mp4
+-rw-r--r-- 1 root root 1.6M May 20  2021  190719_090330_wt_18159206_rig1.2@15000-17560.slp
+-rw-r--r-- 1 root root 6.1M May 20  2021 &#39;centroid.fast.210504_182918.centroid.n=1800.zip&#39;
+drwxr-xr-x 4 root root 4.0K Mar 23 14:21  .config
+drwxr-xr-x 1 root root 4.0K Mar 23 14:22  sample_data
+-rw-r--r-- 1 root root  30M May 20  2021 &#39;td_fast.210505_012601.centered_instance.n=1800.zip&#39;
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sleap</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sleap</span>
 
 <span class="c1"># This prevents TensorFlow from allocating all the GPU memory, which leads to issues on</span>
 <span class="c1"># some GPUs/platforms:</span>
@@ -473,35 +618,17 @@ drwxrwxr-x 2 talmolab talmolab 4.0K Jun 20 10:00  analysis_example
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-08-31 12:03:56.989133: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F AVX512_VNNI FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2023-08-31 12:03:57.058048: I tensorflow/core/util/port.cc:104] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
-2023-08-31 12:03:57.060007: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcudart.so.11.0&#39;; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
-2023-08-31 12:03:57.060013: I tensorflow/compiler/xla/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
-2023-08-31 12:03:57.445179: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libnvinfer.so.7&#39;; dlerror: libnvinfer.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
-2023-08-31 12:03:57.445232: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libnvinfer_plugin.so.7&#39;; dlerror: libnvinfer_plugin.so.7: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
-2023-08-31 12:03:57.445236: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Cannot dlopen some TensorRT libraries. If you would like to use Nvidia GPU with TensorRT, please make sure the missing libraries mentioned above are installed properly.
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>SLEAP: 1.3.2
-TensorFlow: 2.11.0
-Numpy: 1.21.6
-Python: 3.7.12
-OS: Linux-5.15.0-78-generic-x86_64-with-debian-bookworm-sid
-GPUs: None detected.
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-08-31 12:03:58.223182: I tensorflow/compiler/xla/stream_executor/cuda/cuda_gpu_executor.cc:981] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2023-08-31 12:03:58.223923: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcudart.so.11.0&#39;; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
-2023-08-31 12:03:58.223968: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcublas.so.11&#39;; dlerror: libcublas.so.11: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
-2023-08-31 12:03:58.223999: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcublasLt.so.11&#39;; dlerror: libcublasLt.so.11: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
-2023-08-31 12:03:58.224028: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcufft.so.10&#39;; dlerror: libcufft.so.10: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
-2023-08-31 12:03:58.224057: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcurand.so.10&#39;; dlerror: libcurand.so.10: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
-2023-08-31 12:03:58.224084: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcusolver.so.11&#39;; dlerror: libcusolver.so.11: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
-2023-08-31 12:03:58.224111: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcusparse.so.11&#39;; dlerror: libcusparse.so.11: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
-2023-08-31 12:03:58.224140: W tensorflow/compiler/xla/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcudnn.so.8&#39;; dlerror: libcudnn.so.8: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:
-2023-08-31 12:03:58.224144: W tensorflow/core/common_runtime/gpu/gpu_device.cc:1934] Cannot dlopen some GPU libraries. Please make sure the missing libraries mentioned above are installed properly if you would like to use GPU. Follow the guide at https://www.tensorflow.org/install/gpu for how to download and setup the required libraries for your platform.
-Skipping registering GPU devices...
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:numexpr.utils:NumExpr defaulting to 2 threads.
+SLEAP: 1.2.2
+TensorFlow: 2.8.0
+Numpy: 1.21.5
+Python: 3.7.13
+OS: Linux-5.4.144+-x86_64-with-Ubuntu-18.04-bionic
+GPUs: 1/1 available
+  Device: /physical_device:GPU:0
+         Available: True
+        Initalized: False
+     Memory growth: True
 </pre></div>
 </div>
 </div>
@@ -513,7 +640,7 @@ Skipping registering GPU devices...
 <p><strong>Note:</strong> The actual frames are not loaded until you access them so we don’t blow up our memory when using long videos.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Videos can be represented agnostic to the backend format</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Videos can be represented agnostic to the backend format</span>
 <span class="n">video</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_video</span><span class="p">(</span><span class="s2">&quot;190719_090330_wt_18159206_rig1.2@15000-17560.mp4&quot;</span><span class="p">)</span>
 
 <span class="c1"># sleap.Video objects have a numpy-like interface:</span>
@@ -541,7 +668,7 @@ like what channels of the model correspond to what landmarks and etc.</p>
 <p>Top-down models have two stages: centroid and centered instance confidence maps, which we train and save out separately, so loading them together links them up into a single inference model.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Top-down</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Top-down</span>
 <span class="n">predictor</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_model</span><span class="p">([</span>
     <span class="s2">&quot;centroid.fast.210504_182918.centroid.n=1800.zip&quot;</span><span class="p">,</span>
     <span class="s2">&quot;td_fast.210505_012601.centered_instance.n=1800.zip&quot;</span>
@@ -552,30 +679,19 @@ like what channels of the model correspond to what landmarks and etc.</p>
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-08-31 12:03:58.498908: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F AVX512_VNNI FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-</pre></div>
-</div>
-</div>
 </div>
 <p>The high level predictor creates all the SLEAP data structures after doing inference. For example:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span> <span class="o">=</span> <span class="n">predictor</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
 <span class="n">labels</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
 <script type="application/vnd.jupyter.widget-view+json">
-{"model_id": "cf38d776e9fc48ada47705ce018c64af", "version_major": 2, "version_minor": 0}
-</script><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-08-31 12:04:01.923466: W tensorflow/core/grappler/costs/op_level_cost_estimator.cc:690] Error in PredictCost() for the op: op: &quot;CropAndResize&quot; attr { key: &quot;T&quot; value { type: DT_FLOAT } } attr { key: &quot;extrapolation_value&quot; value { f: 0 } } attr { key: &quot;method&quot; value { s: &quot;bilinear&quot; } } inputs { dtype: DT_FLOAT shape { dim { size: -45 } dim { size: -46 } dim { size: -47 } dim { size: 1 } } } inputs { dtype: DT_FLOAT shape { dim { size: -15 } dim { size: 4 } } } inputs { dtype: DT_INT32 shape { dim { size: -15 } } } inputs { dtype: DT_INT32 shape { dim { size: 2 } } } device { type: &quot;CPU&quot; vendor: &quot;GenuineIntel&quot; model: &quot;103&quot; frequency: 3600 num_cores: 16 environment { key: &quot;cpu_instruction_set&quot; value: &quot;AVX SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2&quot; } environment { key: &quot;eigen&quot; value: &quot;3.4.90&quot; } l1_cache_size: 49152 l2_cache_size: 524288 l3_cache_size: 16777216 memory_size: 268435456 } outputs { dtype: DT_FLOAT shape { dim { size: -15 } dim { size: -48 } dim { size: -49 } dim { size: 1 } } }
-2023-08-31 12:04:01.923717: W tensorflow/core/grappler/costs/op_level_cost_estimator.cc:690] Error in PredictCost() for the op: op: &quot;CropAndResize&quot; attr { key: &quot;T&quot; value { type: DT_UINT8 } } attr { key: &quot;extrapolation_value&quot; value { f: 0 } } attr { key: &quot;method&quot; value { s: &quot;bilinear&quot; } } inputs { dtype: DT_UINT8 shape { dim { size: 4 } dim { size: 1024 } dim { size: 1024 } dim { size: 1 } } } inputs { dtype: DT_FLOAT shape { dim { size: -15 } dim { size: 4 } } } inputs { dtype: DT_INT32 shape { dim { size: -15 } } } inputs { dtype: DT_INT32 shape { dim { size: 2 } } } device { type: &quot;CPU&quot; vendor: &quot;GenuineIntel&quot; model: &quot;103&quot; frequency: 3600 num_cores: 16 environment { key: &quot;cpu_instruction_set&quot; value: &quot;AVX SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2&quot; } environment { key: &quot;eigen&quot; value: &quot;3.4.90&quot; } l1_cache_size: 49152 l2_cache_size: 524288 l3_cache_size: 16777216 memory_size: 268435456 } outputs { dtype: DT_FLOAT shape { dim { size: -15 } dim { size: -56 } dim { size: -57 } dim { size: 1 } } }
-2023-08-31 12:04:01.926044: W tensorflow/core/grappler/costs/op_level_cost_estimator.cc:690] Error in PredictCost() for the op: op: &quot;CropAndResize&quot; attr { key: &quot;T&quot; value { type: DT_FLOAT } } attr { key: &quot;extrapolation_value&quot; value { f: 0 } } attr { key: &quot;method&quot; value { s: &quot;bilinear&quot; } } inputs { dtype: DT_FLOAT shape { dim { size: -90 } dim { size: -91 } dim { size: -92 } dim { size: 1 } } } inputs { dtype: DT_FLOAT shape { dim { size: -20 } dim { size: 4 } } } inputs { dtype: DT_INT32 shape { dim { size: -20 } } } inputs { dtype: DT_INT32 shape { dim { size: 2 } } } device { type: &quot;CPU&quot; vendor: &quot;GenuineIntel&quot; model: &quot;103&quot; frequency: 3600 num_cores: 16 environment { key: &quot;cpu_instruction_set&quot; value: &quot;AVX SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2&quot; } environment { key: &quot;eigen&quot; value: &quot;3.4.90&quot; } l1_cache_size: 49152 l2_cache_size: 524288 l3_cache_size: 16777216 memory_size: 268435456 } outputs { dtype: DT_FLOAT shape { dim { size: -20 } dim { size: -94 } dim { size: -95 } dim { size: 1 } } }
-</pre></div>
-</div>
-<div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+{"version_major": 2, "version_minor": 0, "model_id": "581b3a9402bc4837bde932e98fa475a7"}
+</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
 </div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
 </pre>
 </div><div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Labels(labeled_frames=2560, videos=1, skeletons=1, tracks=0)
@@ -586,7 +702,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 <p>Labels contain not just the predicted data, but all the other associated data structures and metadata:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="o">.</span><span class="n">videos</span>
 </pre></div>
 </div>
 </div>
@@ -598,12 +714,12 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="o">.</span><span class="n">skeletons</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[Skeleton(name=&#39;Skeleton-0&#39;, description=&#39;None&#39;, nodes=[&#39;head&#39;, &#39;thorax&#39;, &#39;abdomen&#39;, &#39;wingL&#39;, &#39;wingR&#39;, &#39;forelegL4&#39;, &#39;forelegR4&#39;, &#39;midlegL4&#39;, &#39;midlegR4&#39;, &#39;hindlegL4&#39;, &#39;hindlegR4&#39;, &#39;eyeL&#39;, &#39;eyeR&#39;], edges=[(&#39;thorax&#39;, &#39;head&#39;), (&#39;thorax&#39;, &#39;abdomen&#39;), (&#39;thorax&#39;, &#39;wingL&#39;), (&#39;thorax&#39;, &#39;wingR&#39;), (&#39;thorax&#39;, &#39;forelegL4&#39;), (&#39;thorax&#39;, &#39;forelegR4&#39;), (&#39;thorax&#39;, &#39;midlegL4&#39;), (&#39;thorax&#39;, &#39;midlegR4&#39;), (&#39;thorax&#39;, &#39;hindlegL4&#39;), (&#39;thorax&#39;, &#39;hindlegR4&#39;), (&#39;head&#39;, &#39;eyeL&#39;), (&#39;head&#39;, &#39;eyeR&#39;)], symmetries=[(&#39;forelegL4&#39;, &#39;forelegR4&#39;), (&#39;wingL&#39;, &#39;wingR&#39;), (&#39;eyeL&#39;, &#39;eyeR&#39;), (&#39;midlegL4&#39;, &#39;midlegR4&#39;), (&#39;hindlegL4&#39;, &#39;hindlegR4&#39;)])]
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[Skeleton(name=&#39;Skeleton-0&#39;, nodes=[&#39;head&#39;, &#39;thorax&#39;, &#39;abdomen&#39;, &#39;wingL&#39;, &#39;wingR&#39;, &#39;forelegL4&#39;, &#39;forelegR4&#39;, &#39;midlegL4&#39;, &#39;midlegR4&#39;, &#39;hindlegL4&#39;, &#39;hindlegR4&#39;, &#39;eyeL&#39;, &#39;eyeR&#39;], edges=[(&#39;thorax&#39;, &#39;head&#39;), (&#39;thorax&#39;, &#39;abdomen&#39;), (&#39;thorax&#39;, &#39;wingL&#39;), (&#39;thorax&#39;, &#39;wingR&#39;), (&#39;thorax&#39;, &#39;forelegL4&#39;), (&#39;thorax&#39;, &#39;forelegR4&#39;), (&#39;thorax&#39;, &#39;midlegL4&#39;), (&#39;thorax&#39;, &#39;midlegR4&#39;), (&#39;thorax&#39;, &#39;hindlegL4&#39;), (&#39;thorax&#39;, &#39;hindlegR4&#39;), (&#39;head&#39;, &#39;eyeL&#39;), (&#39;head&#39;, &#39;eyeR&#39;)], symmetries=[(&#39;wingL&#39;, &#39;wingR&#39;), (&#39;forelegL4&#39;, &#39;forelegR4&#39;), (&#39;hindlegL4&#39;, &#39;hindlegR4&#39;), (&#39;eyeL&#39;, &#39;eyeR&#39;), (&#39;midlegL4&#39;, &#39;midlegR4&#39;)])]
 </pre></div>
 </div>
 </div>
@@ -611,7 +727,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 <p>Individual labeled frames are accessible through a list-like interface:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labeled_frame</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># shortcut for labels.labeled_frames[0]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">labeled_frame</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># shortcut for labels.labeled_frames[0]</span>
 <span class="n">labeled_frame</span>
 </pre></div>
 </div>
@@ -625,7 +741,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 <p>Convenient methods allow for easy inspection:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -636,7 +752,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 <p>The labeled frame is itself a container for instances:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">labeled_frame</span><span class="o">.</span><span class="n">instances</span>
 </pre></div>
 </div>
 </div>
@@ -649,7 +765,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">instance</span> <span class="o">=</span> <span class="n">labeled_frame</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># shortcut for labeled_frame.instances[0]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">instance</span> <span class="o">=</span> <span class="n">labeled_frame</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># shortcut for labeled_frame.instances[0]</span>
 <span class="n">instance</span>
 </pre></div>
 </div>
@@ -663,23 +779,23 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 <p>Finally, instances are containers for points:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">instance</span><span class="o">.</span><span class="n">points</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">instance</span><span class="o">.</span><span class="n">points</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(PredictedPoint(x=234.24440002441406, y=430.52008056640625, visible=True, complete=False, score=0.9790770411491394),
- PredictedPoint(x=271.58941650390625, y=436.1461486816406, visible=True, complete=False, score=0.9358043670654297),
- PredictedPoint(x=308.02960205078125, y=438.57135009765625, visible=True, complete=False, score=0.5861632227897644),
- PredictedPoint(x=321.81768798828125, y=440.08721923828125, visible=True, complete=False, score=0.39127233624458313),
- PredictedPoint(x=322.0193176269531, y=436.7702941894531, visible=True, complete=False, score=0.48629727959632874),
- PredictedPoint(x=246.14295959472656, y=450.5621643066406, visible=True, complete=False, score=0.9176925420761108),
- PredictedPoint(x=242.2632598876953, y=413.9497375488281, visible=True, complete=False, score=0.780803382396698),
- PredictedPoint(x=285.78155517578125, y=459.91552734375, visible=True, complete=False, score=0.47393468022346497),
- PredictedPoint(x=272.280029296875, y=406.71759033203125, visible=True, complete=False, score=0.7721256017684937),
- PredictedPoint(x=317.598876953125, y=430.6053466796875, visible=True, complete=False, score=0.296230286359787),
- PredictedPoint(x=242.10415649414062, y=441.9450378417969, visible=True, complete=False, score=0.8855596780776978),
- PredictedPoint(x=245.32009887695312, y=420.9360656738281, visible=True, complete=False, score=0.9200019240379333))
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(PredictedPoint(x=234.244384765625, y=430.52001953125, visible=True, complete=False, score=0.9790461659431458),
+ PredictedPoint(x=271.5894470214844, y=436.1461181640625, visible=True, complete=False, score=0.9357967376708984),
+ PredictedPoint(x=308.02899169921875, y=438.5711975097656, visible=True, complete=False, score=0.5859644412994385),
+ PredictedPoint(x=321.8167419433594, y=440.0872802734375, visible=True, complete=False, score=0.3912011682987213),
+ PredictedPoint(x=322.0196533203125, y=436.77008056640625, visible=True, complete=False, score=0.48613619804382324),
+ PredictedPoint(x=246.1430206298828, y=450.56182861328125, visible=True, complete=False, score=0.9176540970802307),
+ PredictedPoint(x=242.2632293701172, y=413.94976806640625, visible=True, complete=False, score=0.7807964086532593),
+ PredictedPoint(x=285.78167724609375, y=459.9156494140625, visible=True, complete=False, score=0.4739593267440796),
+ PredictedPoint(x=272.27996826171875, y=406.71759033203125, visible=True, complete=False, score=0.7721188068389893),
+ PredictedPoint(x=317.5997619628906, y=430.6052551269531, visible=True, complete=False, score=0.2960105538368225),
+ PredictedPoint(x=242.1038055419922, y=441.94561767578125, visible=True, complete=False, score=0.8855815529823303),
+ PredictedPoint(x=245.3200225830078, y=420.93609619140625, visible=True, complete=False, score=0.9199579954147339))
 </pre></div>
 </div>
 </div>
@@ -687,25 +803,25 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 <p>These can be converted into concrete arrays:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pts</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pts</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">pts</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[[234.24440002 430.52008057]
- [271.5894165  436.14614868]
- [308.02960205 438.5713501 ]
- [321.81768799 440.08721924]
- [322.01931763 436.77029419]
- [246.14295959 450.56216431]
- [242.26325989 413.94973755]
- [285.78155518 459.91552734]
- [272.2800293  406.71759033]
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[[234.24438477 430.52001953]
+ [271.58944702 436.14611816]
+ [308.0289917  438.57119751]
+ [321.81674194 440.08728027]
+ [322.01965332 436.77008057]
+ [246.14302063 450.56182861]
+ [242.26322937 413.94976807]
+ [285.78167725 459.91564941]
+ [272.27996826 406.71759033]
  [         nan          nan]
- [317.59887695 430.60534668]
- [242.10415649 441.94503784]
- [245.32009888 420.93606567]]
+ [317.59976196 430.60525513]
+ [242.10380554 441.94561768]
+ [245.32002258 420.93609619]]
 </pre></div>
 </div>
 </div>
@@ -713,7 +829,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 <p>Images can be embedded together with the predictions in the same format:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">labeled_frames</span><span class="p">[:</span><span class="mi">4</span><span class="p">])</span>  <span class="c1"># crop to the first few labels for this example</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">labeled_frames</span><span class="p">[:</span><span class="mi">4</span><span class="p">])</span>  <span class="c1"># crop to the first few labels for this example</span>
 <span class="n">labels</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;labels_with_images.pkg.slp&quot;</span><span class="p">,</span> <span class="n">with_images</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">embed_all_labeled</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -722,7 +838,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 <p>Let’s delete the source data:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>rm <span class="s2">&quot;190719_090330_wt_18159206_rig1.2@15000-17560.mp4&quot;</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>!rm &quot;190719_090330_wt_18159206_rig1.2@15000-17560.mp4&quot;
 </pre></div>
 </div>
 </div>
@@ -730,7 +846,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 <p>And check out what happens when we load in some labels with embedded images:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="s2">&quot;labels_with_images.pkg.slp&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="s2">&quot;labels_with_images.pkg.slp&quot;</span><span class="p">)</span>
 <span class="n">labels</span>
 </pre></div>
 </div>
@@ -743,7 +859,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
