@@ -36,9 +36,9 @@ setup(
         "conda_jupyter": get_requirements("jupyter"),
         "conda_dev": get_requirements("dev") + get_requirements("jupyter"),
         # For pip install
-        "pip": get_requirements("pip"),
-        "jupyter": get_requirements("pip") + get_requirements("jupyter"),
-        "dev": get_requirements("pip") + get_requirements("jupyter") + get_requirements("dev"),
+        "pypi": get_requirements("pypi"),
+        "jupyter": get_requirements("pypi") + get_requirements("jupyter"),
+        "dev": get_requirements("pypi") + get_requirements("jupyter") + get_requirements("dev"),
     },
     description="SLEAP (Social LEAP Estimates Animal Poses) is a deep learning framework for animal pose tracking.",
     long_description=long_description,
