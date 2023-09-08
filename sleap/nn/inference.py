@@ -4866,7 +4866,7 @@ def load_model(
         if use_max_tracker and not tracker.endswith("maxtracks"):
             # Append maxtracks to the tracker name to use the right tracker variants.
             tracker += "maxtracks"
-            
+
         predictor.tracker = Tracker.make_tracker_by_name(
             tracker=tracker,
             track_window=tracker_window,
