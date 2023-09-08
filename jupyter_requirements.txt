@@ -3,4 +3,5 @@
 # installed when running pip install sleap[jupyter].
 
 ipykernel
+ipywidgets
 jupyterlab
