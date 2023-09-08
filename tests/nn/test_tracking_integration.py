@@ -116,7 +116,7 @@ def main(f, dir):
         tracker_name, matcher_name, sim_name, max_tracks, max_tracking=False, scale=0
     ):
         if tracker_name == "simplemaxtracks" or tracker_name == "flowmaxtracks":
-            tracker[tracker_name](
+            tracker = tracker[tracker_name](
                 matching_function=matchers[matcher_name],
                 similarity_function=similarities[sim_name],
                 max_tracks=max_tracks,
