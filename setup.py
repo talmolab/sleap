@@ -33,7 +33,10 @@ setup(
     setup_requires=["setuptools_scm"],
     install_requires=get_requirements(),  # Minimal requirements if using conda.
     extras_require={
-        "pip": get_requirements("pip"),  # For pip install
+        "conda_jupyter": get_requirements("jupyter"),
+        "conda_dev": get_requirements("dev") + get_requirements("jupyter"),
+        # For pip install
+        "pip": get_requirements("pip"),
         "jupyter": get_requirements("pip") + get_requirements("jupyter"),
         "dev": get_requirements("pip") + get_requirements("jupyter") + get_requirements("dev"),
     },
