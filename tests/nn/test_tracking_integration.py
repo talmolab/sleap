@@ -3,8 +3,40 @@ import operator
 import os
 import time
 
+import sleap
+from sleap.nn.inference import main as inference_cli
 import sleap.nn.tracker.components
 from sleap.io.dataset import Labels, LabeledFrame
+
+
+def test_simple_tracker(tmpdir, centered_pair_predictions_slp_path):
+    cli = (
+        "--tracking.tracker simple "
+        "--frames 200-300 "
+        f"-o {tmpdir}/simpletracks.slp "
+        f"{centered_pair_predictions_slp_path}"
+    )
+    inference_cli(cli.split(" "))
+
+    labels = sleap.load_file(f"{tmpdir}/simpletracks.slp")
+    assert len(labels.tracks) == 27
+
+
+def test_simplemax_tracker(tmpdir, centered_pair_predictions_slp_path):
+    cli = (
+        "--tracking.tracker simplemaxtracks "
+        "--tracking.max_tracking 1 --tracking.max_tracks 2 "
+        "--frames 200-300 "
+        f"-o {tmpdir}/simplemaxtracks.slp "
+        f"{centered_pair_predictions_slp_path}"
+    )
+    inference_cli(cli.split(" "))
+
+    labels = sleap.load_file(f"{tmpdir}/simplemaxtracks.slp")
+    assert len(labels.tracks) == 2
+
+
+# TODO: Refactor the below things into a real test suite.
 
 
 def make_ground_truth(frames, tracker, gt_filename):
