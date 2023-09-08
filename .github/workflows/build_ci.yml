@@ -5,7 +5,10 @@ name: Build CI (no upload)
 on:
   push:
     paths:
-      - 'pyproject.toml'
+      - 'setup.py'
+      - 'requirements.txt'
+      - 'dev_requirements.txt'
+      - 'jupyter_requirements.txt'
       - 'environment_build.yml'
       - '.github/workflows/build_ci.yml'
 
@@ -56,7 +59,7 @@ jobs:
       - name: Build pip wheel
         shell: bash -l {0}
         run: |
-          python -m build
+          python setup.py bdist_wheel
       
       # Upload artifact "tests" can use it
       - name: Upload wheel artifact

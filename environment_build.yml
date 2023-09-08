@@ -11,5 +11,3 @@ dependencies:
     - conda-verify
     - twine
     - pip
-    - pip:
-        - build
