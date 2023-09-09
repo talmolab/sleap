@@ -21,6 +21,7 @@ import numpy as np
 import psutil
 import rapidjson
 import yaml
+
 try:
     from importlib.resources import files  # New in 3.9+
 except ImportError:
