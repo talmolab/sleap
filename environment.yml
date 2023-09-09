@@ -45,5 +45,4 @@ dependencies:
     - nvidia::cuda-nvcc=11.3
 
     - pip:  
-        - "--editable=."
-        - "--requirement=./dev_requirements.txt"
+        - "--editable=.[conda_dev]"

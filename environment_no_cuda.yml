@@ -40,5 +40,4 @@ dependencies:
     - conda-forge::tensorflow-hub
 
     - pip:  
-        - "--editable=."
-        - "--requirement=./dev_requirements.txt"
+        - "--editable=.[conda_dev]"
