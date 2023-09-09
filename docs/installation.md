@@ -28,7 +28,7 @@ On Windows, our personal preference is to use alternative terminal apps like [Cm
 
 (apple-silicon)=
 
-### Macs (Pre-Installation)
+### Macs Pre-M1 (Pre-Installation)
 
 SLEAP can be installed on Macs by following these instructions:
 
@@ -106,7 +106,7 @@ wget -nc https://github.com/conda-forge/miniforge/releases/latest/download/Mamba
 **On Macs (Apple Silicon)**, use this terminal command:
 
 ```bash
-wget -nc https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-MacOSX-arm64.sh && bash Mambaforge-MacOSX-arm64.sh -b && ~/mambaforge/bin/conda init zsh
+curl -fsSL --compressed https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-MacOSX-arm64.sh -o Mambaforge3-MacOSX-arm64.sh && chmod +x Mambaforge3-MacOSX-arm64.sh && ./Mambaforge3-MacOSX-arm64.sh -b -p ~/mambaforge3 && rm Mambaforge3-MacOSX-arm64.sh && ~/mambaforge3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
 ```
 
 ## Installation methods
@@ -226,7 +226,7 @@ Although you do not need Mambaforge installed to perform a `pip install`, we rec
    - **jupyter**: This installs all *pypi* and jupyter lab dependencies.
    - **dev**: This installs all **jupyter** dependencies and developement tools for testing and building docs.
    - **conda_jupyter**: For installation using a mamba environment file included in the source code. Most dependencies are listed as conda packages in the environment file and only a few come from PyPI to allow jupyter lab support.
-   - **conda_dev**: For installation using [a mamba environment](https://github.com/search?q=repo%3Atalmolab%2Fsleap+path%3Aenvironment*.yml&type=code) with a few PyPI dependencies for development tools.  
+   - **conda_dev**: For installation using [a mamba environment](https://github.com/search?q=repo%3Atalmolab%2Fsleap+path%3Aenvironment*.yml&type=code) with a few PyPI dependencies for development tools.
    ```
 
    ```{note}
