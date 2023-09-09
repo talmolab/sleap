@@ -8,7 +8,7 @@ on:
     paths:
       - '.conda/meta.yaml'
       - '.conda_mac/meta.yaml'
-      - '.github/workflows/build_manual.yml'  # TODO(LM): Remove this line
+      - '.github/workflows/build_manual.yml'
     branches:
       - develop
       - liezl/1.3.2-bump
@@ -54,21 +54,21 @@ jobs:
           which python
           conda info
 
-      # # Build pip wheel (Not Windows)
-      # - name: Build pip wheel (Not Windows)
-      #   if: matrix.os != 'windows-2022'
-      #   shell: bash -l {0}
-      #   run: |
-      #     python setup.py bdist_wheel
+      # Build pip wheel (Not Windows)
+      - name: Build pip wheel (Not Windows)
+        if: matrix.os != 'windows-2022'
+        shell: bash -l {0}
+        run: |
+          python setup.py bdist_wheel
 
-      # # Upload pip wheel (Ubuntu)
-      # - name: Upload pip wheel (Ubuntu)
-      #   if: matrix.os == 'ubuntu-22.04'
-      #   env:
-      #     PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-      #   shell: bash -l {0}
-      #   run: |
-      #     twine upload -u __token__ -p "$PYPI_TOKEN" dist/* --non-interactive --skip-existing --disable-progress-bar
+      # Upload pip wheel (Ubuntu)
+      - name: Upload pip wheel (Ubuntu)
+        if: matrix.os == 'ubuntu-22.04'
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        shell: bash -l {0}
+        run: |
+          twine upload -u __token__ -p "$PYPI_TOKEN" dist/* --non-interactive --skip-existing --disable-progress-bar
 
       # # Build conda package (Ubuntu)
       # - name: Build conda package (Ubuntu)
@@ -84,12 +84,12 @@ jobs:
       #   run: |
       #     conda build .conda --output-folder build
 
-      # Build conda package (Mac)
-      - name: Build conda package (Mac)
-        if: matrix.os == 'macos-latest'
-        shell: bash -l {0}
-        run: |
-          conda build .conda_mac --output-folder build
+      # # Build conda package (Mac)
+      # - name: Build conda package (Mac)
+      #   if: matrix.os == 'macos-latest'
+      #   shell: bash -l {0}
+      #   run: |
+      #     conda build .conda_mac --output-folder build
 
       # # Login to conda (Ubuntu)
       # - name: Login to Anaconda (Ubuntu)
@@ -109,14 +109,14 @@ jobs:
       #   run: |
       #     echo "yes" | anaconda login --username sleap --password "$env:ANACONDA_LOGIN"
       
-      # Login to conda (Mac)
-      - name: Login to Anaconda (Mac)
-        if: matrix.os == 'macos-latest'
-        env:
-          ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
-        shell: bash -l {0}
-        run: |
-          yes 2>/dev/null | anaconda login --username sleap --password "$ANACONDA_LOGIN" || true
+      # # Login to conda (Mac)
+      # - name: Login to Anaconda (Mac)
+      #   if: matrix.os == 'macos-latest'
+      #   env:
+      #     ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
+      #   shell: bash -l {0}
+      #   run: |
+      #     yes 2>/dev/null | anaconda login --username sleap --password "$ANACONDA_LOGIN" || true
       
       # # Upload conda package (Windows)
       # - name: Upload conda package (Windows/dev)
@@ -132,14 +132,14 @@ jobs:
       #   run: |
       #     anaconda -v upload build/linux-64/*.tar.bz2 --label dev
       
-      # Upload conda package (Mac)
-      - name: Upload conda package (Mac/dev)
-        if: matrix.os == 'macos-latest'
-        shell: bash -l {0}
-        run: |
-          anaconda -v upload build/osx-64/*.tar.bz2 --label dev
+      # # Upload conda package (Mac)
+      # - name: Upload conda package (Mac/dev)
+      #   if: matrix.os == 'macos-latest'
+      #   shell: bash -l {0}
+      #   run: |
+      #     anaconda -v upload build/osx-64/*.tar.bz2 --label dev
       
-      - name: Logout from Anaconda
-        shell: bash -l {0}
-        run: |
-          anaconda logout
+      # - name: Logout from Anaconda
+      #   shell: bash -l {0}
+      #   run: |
+      #     anaconda logout
