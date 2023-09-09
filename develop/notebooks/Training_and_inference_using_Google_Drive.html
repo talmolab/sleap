@@ -355,8 +355,15 @@ document.write(`
 <p>Note: Before installing SLEAP check <a class="reference external" href="https://github.com/talmolab/sleap/releases">SLEAP releases</a> page for the latest version.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip uninstall -y opencv-python opencv-contrib-python
-<span class="o">!</span>pip install sleap
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip uninstall -qqq -y opencv-python opencv-contrib-python
+<span class="o">!</span>pip install -qqq sleap<span class="o">[</span>pypi<span class="o">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span class=" -Color -Color-Red">ERROR: Cannot uninstall opencv-python 4.6.0, RECORD file not found. Hint: The package was installed by conda.</span>
+<span class=" -Color -Color-Red">ERROR: Cannot uninstall shiboken2 5.15.6, RECORD file not found. You might be able to recover from this via: &#39;pip install --force-reinstall --no-deps shiboken2==5.15.6&#39;.</span>
+
 </pre></div>
 </div>
 </div>
