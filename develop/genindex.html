@@ -1641,6 +1641,10 @@ document.write(`
 </li>
       <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowCandidateMaker">FlowCandidateMaker (class in sleap.nn.tracking)</a>
 </li>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowMaxTracker">FlowMaxTracker (class in sleap.nn.tracking)</a>
+</li>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowMaxTracksCandidateMaker">FlowMaxTracksCandidateMaker (class in sleap.nn.tracking)</a>
+</li>
       <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowTracker">FlowTracker (class in sleap.nn.tracking)</a>
 </li>
       <li><a href="api/sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle.format_id">format_id (sleap.io.format.filehandle.FileHandle property)</a>
@@ -1651,14 +1655,14 @@ document.write(`
         <li><a href="api/sleap.io.format.alphatracker.html#sleap.io.format.alphatracker.AlphaTrackerAdaptor.formatted_ext_options">(sleap.io.format.alphatracker.AlphaTrackerAdaptor property)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.forward_pass">forward_pass() (sleap.nn.inference.BottomUpInferenceLayer method)</a>
 
       <ul>
         <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpMultiClassInferenceLayer.forward_pass">(sleap.nn.inference.BottomUpMultiClassInferenceLayer method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.io.video.html#sleap.io.video.MediaVideo.fps">fps (sleap.io.video.MediaVideo property)</a>
 
       <ul>
@@ -1935,10 +1939,10 @@ document.write(`
 </li>
       <li><a href="api/sleap.info.align.html#sleap.info.align.get_most_stable_node_pair">get_most_stable_node_pair() (in module sleap.info.align)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.get_next_suggestion">get_next_suggestion() (sleap.io.dataset.Labels method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.info.write_tracking_h5.html#sleap.info.write_tracking_h5.get_nodes_as_np_strings">get_nodes_as_np_strings() (in module sleap.info.write_tracking_h5)</a>
 </li>
       <li><a href="api/sleap.info.write_tracking_h5.html#sleap.info.write_tracking_h5.get_occupancy_and_points_matrices">get_occupancy_and_points_matrices() (in module sleap.info.write_tracking_h5)</a>
@@ -1958,6 +1962,12 @@ document.write(`
       <li><a href="api/sleap.info.summary.html#sleap.info.summary.StatisticSeries.get_primary_point_displacement_series">get_primary_point_displacement_series() (sleap.info.summary.StatisticSeries method)</a>
 </li>
       <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.get_raw_images">get_raw_images() (sleap.info.feature_suggestions.ItemStack method)</a>
+</li>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowMaxTracksCandidateMaker.get_ref_instances">get_ref_instances() (sleap.nn.tracking.FlowMaxTracksCandidateMaker static method)</a>
+</li>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowCandidateMaker.get_shifted_instances">get_shifted_instances() (sleap.nn.tracking.FlowCandidateMaker method)</a>
+</li>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowCandidateMaker.get_shifted_instances_from_earlier_time">get_shifted_instances_from_earlier_time() (sleap.nn.tracking.FlowCandidateMaker method)</a>
 </li>
       <li><a href="api/sleap.info.align.html#sleap.info.align.get_stable_node_pairs">get_stable_node_pairs() (in module sleap.info.align)</a>
 </li>
@@ -2911,6 +2921,8 @@ document.write(`
       </ul></li>
       <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.matching_function">matching_function (sleap.nn.tracking.Tracker attribute)</a>
 </li>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowMaxTracker.matching_function">matching_function() (sleap.nn.tracking.FlowMaxTracker method)</a>
+</li>
       <li><a href="api/sleap.nn.callbacks.html#sleap.nn.callbacks.MatplotlibSaver">MatplotlibSaver (class in sleap.nn.callbacks)</a>
 </li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpPredictor.max_edge_length_ratio">max_edge_length_ratio (sleap.nn.inference.BottomUpPredictor attribute)</a>
@@ -2953,6 +2965,10 @@ document.write(`
         <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.UNetConfig.max_stride">(sleap.nn.config.model.UNetConfig attribute)</a>
 </li>
       </ul></li>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.max_tracking">max_tracking (sleap.nn.tracking.Tracker attribute)</a>
+</li>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowMaxTracksCandidateMaker.max_tracks">max_tracks (sleap.nn.tracking.FlowMaxTracksCandidateMaker attribute)</a>
+</li>
       <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.EncoderDecoder.maximum_stride">maximum_stride (sleap.nn.architectures.encoder_decoder.EncoderDecoder property)</a>
 
       <ul>
@@ -2971,10 +2987,10 @@ document.write(`
 </li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.merge_matching_frames">merge_matching_frames() (sleap.io.dataset.Labels method)</a>
 </li>
-      <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.merge_nodes">merge_nodes() (sleap.io.dataset.Labels method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.merge_nodes">merge_nodes() (sleap.io.dataset.Labels method)</a>
+</li>
       <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.ItemStack.meta">meta (sleap.info.feature_suggestions.ItemStack attribute)</a>
 </li>
       <li><a href="api/sleap.info.feature_suggestions.html#sleap.info.feature_suggestions.FrameGroupSet.method">method (sleap.info.feature_suggestions.FrameGroupSet attribute)</a>
@@ -4380,11 +4396,17 @@ document.write(`
 </li>
       <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.similarity_function">similarity_function (sleap.nn.tracking.Tracker attribute)</a>
 </li>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowMaxTracker.similarity_function">similarity_function() (sleap.nn.tracking.FlowMaxTracker method)</a>
+</li>
       <li><a href="api/sleap.nn.architectures.hrnet.html#sleap.nn.architectures.hrnet.simple_block">simple_block() (in module sleap.nn.architectures.hrnet)</a>
 </li>
       <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.SimpleCandidateMaker">SimpleCandidateMaker (class in sleap.nn.tracking)</a>
 </li>
       <li><a href="api/sleap.nn.architectures.encoder_decoder.html#sleap.nn.architectures.encoder_decoder.SimpleConvBlock">SimpleConvBlock (class in sleap.nn.architectures.encoder_decoder)</a>
+</li>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.SimpleMaxTracker">SimpleMaxTracker (class in sleap.nn.tracking)</a>
+</li>
+      <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.SimpleMaxTracksCandidateMaker">SimpleMaxTracksCandidateMaker (class in sleap.nn.tracking)</a>
 </li>
       <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.SimpleTracker">SimpleTracker (class in sleap.nn.tracking)</a>
 </li>
@@ -4625,6 +4647,8 @@ document.write(`
         <li><a href="api/sleap.io.format.ndx_pose.html#module-sleap.io.format.ndx_pose">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     sleap.io.format.nix
 
@@ -4632,8 +4656,6 @@ document.write(`
         <li><a href="api/sleap.io.format.nix.html#module-sleap.io.format.nix">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     sleap.io.format.sleap_analysis
 
