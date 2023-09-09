@@ -186,7 +186,7 @@ mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.1
 
 ### `pip` package
 
-Although you do not need Mambaforge installed to perform a `pip install`, we recommend {ref}`installing Mambaforge<mambaforge>` to create a new environment where we can isolate the `pip install`. If you are working on **Google Colab**, skip to step 3 to perform the `pip install` without using a conda environment.
+Although you do not need Mambaforge installed to perform a `pip install`, we recommend {ref}`installing Mambaforge<mambaforge>` to create a new environment where we can isolate the `pip install`. Alternatively, you can use a venv if you have an existing python installation. If you are working on **Google Colab**, skip to step 3 to perform the `pip install` without using a conda environment.
 
 1. Otherwise, create a new conda environment where we will `pip install sleap`:
 
@@ -215,10 +215,19 @@ Although you do not need Mambaforge installed to perform a `pip install`, we rec
 3. Finally, we can perform the `pip install`:
 
    ```bash
-   pip install sleap==1.3.1
+   pip install sleap[pypi]==1.3.1
    ```
 
    This works on **any OS except Apple silicon** and on **Google Colab**.
+
+   ```{note}
+   The pypi distributed package of SLEAP ships with the following extras:
+   - **pypi**: For installation without an mamba environment file. All dependencies come from PyPI.
+   - **jupyter**: This installs all *pypi* and jupyter lab dependencies.
+   - **dev**: This installs all **jupyter** dependencies and developement tools for testing and building docs.
+   - **conda_jupyter**: For installation using a mamba environment file included in the source code. Most dependencies are listed as conda packages in the environment file and only a few come from PyPI to allow jupyter lab support.
+   - **conda_dev**: For installation using [a mamba environment](https://github.com/search?q=repo%3Atalmolab%2Fsleap+path%3Aenvironment*.yml&type=code) with a few PyPI dependencies for development tools.  
+   ```
 
    ```{note}
    - Requires Python 3.7
