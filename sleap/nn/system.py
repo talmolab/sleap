@@ -195,6 +195,7 @@ def get_gpu_memory() -> List[int]:
         A list of the available memory on each GPU in MiB.
 
     """
+
     if shutil.which("nvidia-smi") is None:
         return []
 

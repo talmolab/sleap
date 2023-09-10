@@ -1,4 +1,4 @@
-"""Generate an HDF5 file with track occupancy and point location data.
+"""Generate an HDF5 or CSV file with track occupancy and point location data.
 
 Ignores tracks that are entirely empty. By default will also ignore
 empty frames from the beginning and end of video, although
@@ -29,6 +29,7 @@ import re
 import json
 import h5py as h5
 import numpy as np
+import pandas as pd
 
 from typing import Any, Dict, List, Tuple, Union
 
@@ -286,12 +287,77 @@ def write_occupancy_file(
     print(f"Saved as {output_path}")
 
 
+def write_csv_file(output_path, data_dict):
+
+    """Write CSV file with data from given dictionary.
+
+    Args:
+        output_path: Path of HDF5 file.
+        data_dict: Dictionary with data to save. Keys are dataset names,
+            values are the data.
+
+    Returns:
+        None
+    """
+
+    if data_dict["tracks"].shape[-1] == 0:
+        print(f"No tracks to export in {data_dict['video_path']}. Skipping the export")
+        return
+
+    data_dict["node_names"] = [s.decode() for s in data_dict["node_names"]]
+    data_dict["track_names"] = [s.decode() for s in data_dict["track_names"]]
+    data_dict["track_occupancy"] = np.transpose(data_dict["track_occupancy"]).astype(
+        bool
+    )
+
+    # Find frames with at least one animal tracked.
+    valid_frame_idxs = np.argwhere(data_dict["track_occupancy"].any(axis=1)).flatten()
+
+    tracks = []
+    for frame_idx in valid_frame_idxs:
+        frame_tracks = data_dict["tracks"][frame_idx]
+
+        for i in range(frame_tracks.shape[-1]):
+            pts = frame_tracks[..., i]
+            conf_scores = data_dict["point_scores"][frame_idx][..., i]
+
+            if np.isnan(pts).all():
+                # Skip if animal wasn't detected in the current frame.
+                continue
+            if data_dict["track_names"]:
+                track = data_dict["track_names"][i]
+            else:
+                track = None
+
+            instance_score = data_dict["instance_scores"][frame_idx][i]
+
+            detection = {
+                "track": track,
+                "frame_idx": frame_idx,
+                "instance.score": instance_score,
+            }
+
+            # Coordinates for each body part.
+            for node_name, score, (x, y) in zip(
+                data_dict["node_names"], conf_scores, pts
+            ):
+                detection[f"{node_name}.x"] = x
+                detection[f"{node_name}.y"] = y
+                detection[f"{node_name}.score"] = score
+
+            tracks.append(detection)
+
+    tracks = pd.DataFrame(tracks)
+    tracks.to_csv(output_path, index=False)
+
+
 def main(
     labels: Labels,
     output_path: str,
     labels_path: str = None,
     all_frames: bool = True,
     video: Video = None,
+    csv: bool = False,
 ):
     """Writes HDF5 file with matrices of track occupancy and coordinates.
 
@@ -306,6 +372,7 @@ def main(
         video: The :py:class:`Video` from which to get data. If no `video` is specified,
             then the first video in `source_object` videos list will be used. If there
             are no labeled frames in the `video`, then no output file will be written.
+        csv: Bool to save the analysis as a csv file if set to True
 
     Returns:
         None
@@ -367,7 +434,10 @@ def main(
         provenance=json.dumps(labels.provenance),  # dict cannot be written to hdf5.
     )
 
-    write_occupancy_file(output_path, data_dict, transpose=True)
+    if csv:
+        write_csv_file(output_path, data_dict)
+    else:
+        write_occupancy_file(output_path, data_dict, transpose=True)
 
 
 if __name__ == "__main__":
