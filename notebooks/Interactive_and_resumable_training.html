@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Interactive and resumable training &#8212; SLEAP (v1.3.1)</title>
+    <title>Interactive and resumable training &#8212; SLEAP (v1.3.2)</title>
   
   
   
@@ -345,170 +345,20 @@ document.write(`
 <p>Don’t forget to set <strong>Runtime</strong> → <strong>Change runtime type</strong> → <strong>GPU</strong> as the accelerator.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># This should take care of all the dependencies on colab:
-!pip uninstall -y opencv-python opencv-contrib-python &amp;&amp; pip install sleap
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This should take care of all the dependencies on colab:</span>
+<span class="o">!</span>pip uninstall -qqq -y opencv-python opencv-contrib-python
+<span class="o">!</span>pip install -qqq sleap<span class="o">[</span>pypi<span class="o">]</span>
 
 
-# But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):
-# conda create -n sleap -c sleap -c conda-forge -c nvidia sleap
+<span class="c1"># But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):</span>
+<span class="c1"># conda create -n sleap -c sleap -c conda-forge -c nvidia sleap</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Found existing installation: opencv-python 4.1.2.30
-Uninstalling opencv-python-4.1.2.30:
-  Successfully uninstalled opencv-python-4.1.2.30
-Found existing installation: opencv-contrib-python 4.1.2.30
-Uninstalling opencv-contrib-python-4.1.2.30:
-  Successfully uninstalled opencv-contrib-python-4.1.2.30
-Collecting sleap
-  Downloading sleap-1.2.2-py3-none-any.whl (62.0 MB)
-     |████████████████████████████████| 62.0 MB 1.3 MB/s 
-?25hRequirement already satisfied: certifi&lt;=2021.10.8,&gt;=2017.4.17 in /usr/local/lib/python3.7/dist-packages (from sleap) (2021.10.8)
-Requirement already satisfied: tensorflow&lt;2.9.0,&gt;=2.6.3 in /usr/local/lib/python3.7/dist-packages (from sleap) (2.8.0)
-Requirement already satisfied: pyzmq in /usr/local/lib/python3.7/dist-packages (from sleap) (22.3.0)
-Collecting jsonpickle==1.2
-  Downloading jsonpickle-1.2-py2.py3-none-any.whl (32 kB)
-Requirement already satisfied: scikit-learn==1.0.* in /usr/local/lib/python3.7/dist-packages (from sleap) (1.0.2)
-Collecting opencv-python-headless&lt;=4.5.5.62,&gt;=4.2.0.34
-  Downloading opencv_python_headless-4.5.5.62-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (47.7 MB)
-     |████████████████████████████████| 47.7 MB 85 kB/s 
-?25hCollecting rich==10.16.1
-  Downloading rich-10.16.1-py3-none-any.whl (214 kB)
-     |████████████████████████████████| 214 kB 49.1 MB/s 
-?25hRequirement already satisfied: numpy&lt;=1.21.5,&gt;=1.19.5 in /usr/local/lib/python3.7/dist-packages (from sleap) (1.21.5)
-Requirement already satisfied: imageio&lt;=2.15.0 in /usr/local/lib/python3.7/dist-packages (from sleap) (2.4.1)
-Collecting scikit-video
-  Downloading scikit_video-1.1.11-py2.py3-none-any.whl (2.3 MB)
-     |████████████████████████████████| 2.3 MB 38.3 MB/s 
-?25hRequirement already satisfied: h5py&lt;=3.6.0,&gt;=3.1.0 in /usr/local/lib/python3.7/dist-packages (from sleap) (3.1.0)
-Collecting cattrs==1.1.1
-  Downloading cattrs-1.1.1-py3-none-any.whl (16 kB)
-Collecting python-rapidjson
-  Downloading python_rapidjson-1.6-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.6 MB)
-     |████████████████████████████████| 1.6 MB 39.3 MB/s 
-?25hCollecting imgaug==0.4.0
-  Downloading imgaug-0.4.0-py2.py3-none-any.whl (948 kB)
-     |████████████████████████████████| 948 kB 40.4 MB/s 
-?25hRequirement already satisfied: networkx in /usr/local/lib/python3.7/dist-packages (from sleap) (2.6.3)
-Requirement already satisfied: seaborn in /usr/local/lib/python3.7/dist-packages (from sleap) (0.11.2)
-Collecting pykalman==0.9.5
-  Downloading pykalman-0.9.5.tar.gz (228 kB)
-     |████████████████████████████████| 228 kB 52.8 MB/s 
-?25hRequirement already satisfied: pyyaml in /usr/local/lib/python3.7/dist-packages (from sleap) (3.13)
-Collecting PySide2&lt;=5.14.1,&gt;=5.13.2
-  Downloading PySide2-5.14.1-5.14.1-cp35.cp36.cp37.cp38-abi3-manylinux1_x86_64.whl (165.5 MB)
-     |████████████████████████████████| 165.5 MB 76 kB/s 
-?25hCollecting attrs==21.2.0
-  Downloading attrs-21.2.0-py2.py3-none-any.whl (53 kB)
-     |████████████████████████████████| 53 kB 2.3 MB/s 
-?25hRequirement already satisfied: psutil in /usr/local/lib/python3.7/dist-packages (from sleap) (5.4.8)
-Collecting imgstore==0.2.9
-  Downloading imgstore-0.2.9-py2.py3-none-any.whl (904 kB)
-     |████████████████████████████████| 904 kB 39.4 MB/s 
-?25hCollecting jsmin
-  Downloading jsmin-3.0.1.tar.gz (13 kB)
-Requirement already satisfied: pandas in /usr/local/lib/python3.7/dist-packages (from sleap) (1.3.5)
-Collecting segmentation-models==1.0.1
-  Downloading segmentation_models-1.0.1-py3-none-any.whl (33 kB)
-Requirement already satisfied: scipy&lt;=1.7.3,&gt;=1.4.1 in /usr/local/lib/python3.7/dist-packages (from sleap) (1.4.1)
-Requirement already satisfied: scikit-image in /usr/local/lib/python3.7/dist-packages (from sleap) (0.18.3)
-Collecting qimage2ndarray&lt;=1.8.3,&gt;=1.8.2
-  Downloading qimage2ndarray-1.8.3-py3-none-any.whl (11 kB)
-Requirement already satisfied: Shapely in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (1.8.1.post1)
-Requirement already satisfied: Pillow in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (7.1.2)
-Requirement already satisfied: matplotlib in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (3.2.2)
-Collecting opencv-python
-  Downloading opencv_python-4.5.5.64-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (60.5 MB)
-     |████████████████████████████████| 60.5 MB 1.4 MB/s 
-?25hRequirement already satisfied: six in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (1.15.0)
-Requirement already satisfied: pytz in /usr/local/lib/python3.7/dist-packages (from imgstore==0.2.9-&gt;sleap) (2018.9)
-Requirement already satisfied: python-dateutil in /usr/local/lib/python3.7/dist-packages (from imgstore==0.2.9-&gt;sleap) (2.8.2)
-Requirement already satisfied: tzlocal in /usr/local/lib/python3.7/dist-packages (from imgstore==0.2.9-&gt;sleap) (1.5.1)
-Collecting colorama&lt;0.5.0,&gt;=0.4.0
-  Downloading colorama-0.4.4-py2.py3-none-any.whl (16 kB)
-Requirement already satisfied: typing-extensions&lt;5.0,&gt;=3.7.4 in /usr/local/lib/python3.7/dist-packages (from rich==10.16.1-&gt;sleap) (3.10.0.2)
-Requirement already satisfied: pygments&lt;3.0.0,&gt;=2.6.0 in /usr/local/lib/python3.7/dist-packages (from rich==10.16.1-&gt;sleap) (2.6.1)
-Collecting commonmark&lt;0.10.0,&gt;=0.9.0
-  Downloading commonmark-0.9.1-py2.py3-none-any.whl (51 kB)
-     |████████████████████████████████| 51 kB 6.5 MB/s 
-?25hRequirement already satisfied: joblib&gt;=0.11 in /usr/local/lib/python3.7/dist-packages (from scikit-learn==1.0.*-&gt;sleap) (1.1.0)
-Requirement already satisfied: threadpoolctl&gt;=2.0.0 in /usr/local/lib/python3.7/dist-packages (from scikit-learn==1.0.*-&gt;sleap) (3.1.0)
-Collecting keras-applications&lt;=1.0.8,&gt;=1.0.7
-  Downloading Keras_Applications-1.0.8-py3-none-any.whl (50 kB)
-     |████████████████████████████████| 50 kB 6.0 MB/s 
-?25hCollecting image-classifiers==1.0.0
-  Downloading image_classifiers-1.0.0-py3-none-any.whl (19 kB)
-Collecting efficientnet==1.0.0
-  Downloading efficientnet-1.0.0-py3-none-any.whl (17 kB)
-Requirement already satisfied: cached-property in /usr/local/lib/python3.7/dist-packages (from h5py&lt;=3.6.0,&gt;=3.1.0-&gt;sleap) (1.5.2)
-Collecting shiboken2==5.14.1
-  Downloading shiboken2-5.14.1-5.14.1-cp35.cp36.cp37.cp38-abi3-manylinux1_x86_64.whl (847 kB)
-     |████████████████████████████████| 847 kB 39.4 MB/s 
-?25hRequirement already satisfied: tifffile&gt;=2019.7.26 in /usr/local/lib/python3.7/dist-packages (from scikit-image-&gt;sleap) (2021.11.2)
-Requirement already satisfied: PyWavelets&gt;=1.1.1 in /usr/local/lib/python3.7/dist-packages (from scikit-image-&gt;sleap) (1.3.0)
-Requirement already satisfied: cycler&gt;=0.10 in /usr/local/lib/python3.7/dist-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap) (0.11.0)
-Requirement already satisfied: kiwisolver&gt;=1.0.1 in /usr/local/lib/python3.7/dist-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap) (1.4.0)
-Requirement already satisfied: pyparsing!=2.0.4,!=2.1.2,!=2.1.6,&gt;=2.0.1 in /usr/local/lib/python3.7/dist-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap) (3.0.7)
-Requirement already satisfied: tensorflow-io-gcs-filesystem&gt;=0.23.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.24.0)
-Requirement already satisfied: flatbuffers&gt;=1.12 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.0)
-Requirement already satisfied: astunparse&gt;=1.6.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.6.3)
-Requirement already satisfied: opt-einsum&gt;=2.3.2 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.3.0)
-Requirement already satisfied: protobuf&gt;=3.9.2 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.17.3)
-Collecting tf-estimator-nightly==2.8.0.dev2021122109
-  Downloading tf_estimator_nightly-2.8.0.dev2021122109-py2.py3-none-any.whl (462 kB)
-     |████████████████████████████████| 462 kB 48.3 MB/s 
-?25hRequirement already satisfied: google-pasta&gt;=0.1.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.2.0)
-Requirement already satisfied: tensorboard&lt;2.9,&gt;=2.8 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.8.0)
-Requirement already satisfied: wrapt&gt;=1.11.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.14.0)
-Requirement already satisfied: setuptools in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (57.4.0)
-Requirement already satisfied: keras-preprocessing&gt;=1.1.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.1.2)
-Requirement already satisfied: termcolor&gt;=1.1.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.1.0)
-Requirement already satisfied: grpcio&lt;2.0,&gt;=1.24.3 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.44.0)
-Requirement already satisfied: gast&gt;=0.2.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.5.3)
-Requirement already satisfied: libclang&gt;=9.0.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (13.0.0)
-Requirement already satisfied: absl-py&gt;=0.4.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.0.0)
-Requirement already satisfied: keras&lt;2.9,&gt;=2.8.0rc0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.8.0)
-Requirement already satisfied: wheel&lt;1.0,&gt;=0.23.0 in /usr/local/lib/python3.7/dist-packages (from astunparse&gt;=1.6.0-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.37.1)
-Requirement already satisfied: markdown&gt;=2.6.8 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.3.6)
-Requirement already satisfied: tensorboard-plugin-wit&gt;=1.6.0 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.8.1)
-Requirement already satisfied: werkzeug&gt;=0.11.15 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.0.1)
-Requirement already satisfied: requests&lt;3,&gt;=2.21.0 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.23.0)
-Requirement already satisfied: google-auth&lt;3,&gt;=1.6.3 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.35.0)
-Requirement already satisfied: tensorboard-data-server&lt;0.7.0,&gt;=0.6.0 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.6.1)
-Requirement already satisfied: google-auth-oauthlib&lt;0.5,&gt;=0.4.1 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.4.6)
-Requirement already satisfied: pyasn1-modules&gt;=0.2.1 in /usr/local/lib/python3.7/dist-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.2.8)
-Requirement already satisfied: cachetools&lt;5.0,&gt;=2.0.0 in /usr/local/lib/python3.7/dist-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (4.2.4)
-Requirement already satisfied: rsa&lt;5,&gt;=3.1.4 in /usr/local/lib/python3.7/dist-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (4.8)
-Requirement already satisfied: requests-oauthlib&gt;=0.7.0 in /usr/local/lib/python3.7/dist-packages (from google-auth-oauthlib&lt;0.5,&gt;=0.4.1-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.3.1)
-Requirement already satisfied: importlib-metadata&gt;=4.4 in /usr/local/lib/python3.7/dist-packages (from markdown&gt;=2.6.8-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (4.11.3)
-Requirement already satisfied: zipp&gt;=0.5 in /usr/local/lib/python3.7/dist-packages (from importlib-metadata&gt;=4.4-&gt;markdown&gt;=2.6.8-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.7.0)
-Requirement already satisfied: pyasn1&lt;0.5.0,&gt;=0.4.6 in /usr/local/lib/python3.7/dist-packages (from pyasn1-modules&gt;=0.2.1-&gt;google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.4.8)
-Requirement already satisfied: chardet&lt;4,&gt;=3.0.2 in /usr/local/lib/python3.7/dist-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.0.4)
-Requirement already satisfied: urllib3!=1.25.0,!=1.25.1,&lt;1.26,&gt;=1.21.1 in /usr/local/lib/python3.7/dist-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.24.3)
-Requirement already satisfied: idna&lt;3,&gt;=2.5 in /usr/local/lib/python3.7/dist-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.10)
-Requirement already satisfied: oauthlib&gt;=3.0.0 in /usr/local/lib/python3.7/dist-packages (from requests-oauthlib&gt;=0.7.0-&gt;google-auth-oauthlib&lt;0.5,&gt;=0.4.1-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.2.0)
-Building wheels for collected packages: pykalman, jsmin
-  Building wheel for pykalman (setup.py) ... ?25l?25hdone
-  Created wheel for pykalman: filename=pykalman-0.9.5-py3-none-any.whl size=48462 sha256=dde739150408cee5e4cb98680575a79e9cf2574d606fea22d81dac69689e1b5f
-  Stored in directory: /root/.cache/pip/wheels/6a/04/02/2dda6ea59c66d9e685affc8af3a31ad3a5d87b7311689efce6
-  Building wheel for jsmin (setup.py) ... ?25l?25hdone
-  Created wheel for jsmin: filename=jsmin-3.0.1-py3-none-any.whl size=13782 sha256=28e30a78deeb41cb8a5a2a452ecd4209438e26a6f74af8de2e29a7da35b6fe93
-  Stored in directory: /root/.cache/pip/wheels/a4/0b/64/fb4f87526ecbdf7921769a39d91dcfe4860e621cf15b8250d6
-Successfully built pykalman jsmin
-Installing collected packages: keras-applications, tf-estimator-nightly, shiboken2, opencv-python, image-classifiers, efficientnet, commonmark, colorama, attrs, segmentation-models, scikit-video, rich, qimage2ndarray, python-rapidjson, PySide2, pykalman, opencv-python-headless, jsonpickle, jsmin, imgstore, imgaug, cattrs, sleap
-  Attempting uninstall: attrs
-    Found existing installation: attrs 21.4.0
-    Uninstalling attrs-21.4.0:
-      Successfully uninstalled attrs-21.4.0
-  Attempting uninstall: imgaug
-    Found existing installation: imgaug 0.2.9
-    Uninstalling imgaug-0.2.9:
-      Successfully uninstalled imgaug-0.2.9
-<span class=" -Color -Color-Red">ERROR: pip&#39;s dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.</span>
-<span class=" -Color -Color-Red">datascience 0.10.6 requires folium==0.2.1, but you have folium 0.8.3 which is incompatible.</span>
-<span class=" -Color -Color-Red">albumentations 0.1.12 requires imgaug&lt;0.2.7,&gt;=0.2.5, but you have imgaug 0.4.0 which is incompatible.</span>
-Successfully installed PySide2-5.14.1 attrs-21.2.0 cattrs-1.1.1 colorama-0.4.4 commonmark-0.9.1 efficientnet-1.0.0 image-classifiers-1.0.0 imgaug-0.4.0 imgstore-0.2.9 jsmin-3.0.1 jsonpickle-1.2 keras-applications-1.0.8 opencv-python-4.5.5.64 opencv-python-headless-4.5.5.62 pykalman-0.9.5 python-rapidjson-1.6 qimage2ndarray-1.8.3 rich-10.16.1 scikit-video-1.1.11 segmentation-models-1.0.1 shiboken2-5.14.1 sleap-1.2.2 tf-estimator-nightly-2.8.0.dev2021122109
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span><span class=" -Color -Color-Red">ERROR: Cannot uninstall opencv-python 4.6.0, RECORD file not found. Hint: The package was installed by conda.</span>
+<span class=" -Color -Color-Red">ERROR: Cannot uninstall shiboken2 5.15.6, RECORD file not found. You might be able to recover from this via: &#39;pip install --force-reinstall --no-deps shiboken2==5.15.6&#39;.</span>
+
 </pre></div>
 </div>
 </div>
@@ -516,19 +366,18 @@ Successfully installed PySide2-5.14.1 attrs-21.2.0 cattrs-1.1.1 colorama-0.4.4 c
 <p>Import SLEAP to make sure it installed correctly and print out some information about the system:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sleap</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sleap</span>
 <span class="n">sleap</span><span class="o">.</span><span class="n">versions</span><span class="p">()</span>
 <span class="n">sleap</span><span class="o">.</span><span class="n">system_summary</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:numexpr.utils:NumExpr defaulting to 2 threads.
-SLEAP: 1.2.2
-TensorFlow: 2.8.0
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>SLEAP: 1.3.2
+TensorFlow: 2.7.0
 Numpy: 1.21.5
-Python: 3.7.13
-OS: Linux-5.4.144+-x86_64-with-Ubuntu-18.04-bionic
+Python: 3.7.12
+OS: Linux-5.15.0-78-generic-x86_64-with-debian-bookworm-sid
 GPUs: 1/1 available
   Device: /physical_device:GPU:0
          Available: True
@@ -545,29 +394,37 @@ GPUs: 1/1 available
 <p>If running on Google Colab, you’ll want to replace this with mounting your Google Drive folder containing your own data, or if running locally, simply change the path to your labels below in <code class="docutils literal notranslate"><span class="pre">TRAINING_SLP_FILE</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># !curl -L --output labels.pkg.slp https://www.dropbox.com/s/b990gxjt3d3j3jh/210205.sleap_wt_gold.13pt.pkg.slp?dl=1
-!curl -L --output labels.pkg.slp https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/train.pkg.slp
-!ls -lah
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># !curl -L --output labels.pkg.slp https://www.dropbox.com/s/b990gxjt3d3j3jh/210205.sleap_wt_gold.13pt.pkg.slp?dl=1</span>
+<span class="o">!</span>curl -L --output labels.pkg.slp https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/train.pkg.slp
+<span class="o">!</span>ls -lah
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100  619M  100  619M    0     0   106M      0  0:00:05  0:00:05 --:--:--  110M
-total 620M
-drwxr-xr-x 1 root root 4.0K Apr  3 23:48 .
-drwxr-xr-x 1 root root 4.0K Apr  3 23:40 ..
-drwxr-xr-x 4 root root 4.0K Mar 23 14:21 .config
--rw-r--r-- 1 root root 620M Apr  3 23:48 labels.pkg.slp
-drwxr-xr-x 1 root root 4.0K Mar 23 14:22 sample_data
+100  619M  100  619M    0     0  32.9M      0  0:00:18  0:00:18 --:--:-- 34.4M
+total 622M
+drwxrwxr-x  3 talmolab talmolab 4.0K Sep  1 14:23 .
+drwxrwxr-x 10 talmolab talmolab 4.0K Aug 31 15:43 ..
+drwxrwxr-x  2 talmolab talmolab 4.0K Jun 20 10:00 analysis_example
+-rw-rw-r--  1 talmolab talmolab 713K Jun 20 10:00 Analysis_examples.ipynb
+-rw-rw-r--  1 talmolab talmolab 481K Sep  1 14:02 Data_structures.ipynb
+-rw-rw-r--  1 talmolab talmolab 4.1K Jun 20 10:00 index.rst
+-rw-rw-r--  1 talmolab talmolab 179K Sep  1 13:58 Interactive_and_realtime_inference.ipynb
+-rw-rw-r--  1 talmolab talmolab 120K Sep  1 14:21 Interactive_and_resumable_training.ipynb
+-rw-rw-r--  1 talmolab talmolab 620M Sep  1 14:24 labels.pkg.slp
+-rw-rw-r--  1 talmolab talmolab 157K Sep  1 14:15 Model_evaluation.ipynb
+-rw-rw-r--  1 talmolab talmolab 132K Sep  1 14:18 Post_inference_tracking.ipynb
+-rw-rw-r--  1 talmolab talmolab  94K Sep  1 13:44 Training_and_inference_on_an_example_dataset.ipynb
+-rw-rw-r--  1 talmolab talmolab  12K Aug 31 11:39 Training_and_inference_using_Google_Drive.ipynb
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">TRAINING_SLP_FILE</span> <span class="o">=</span> <span class="s2">&quot;labels.pkg.slp&quot;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">TRAINING_SLP_FILE</span> <span class="o">=</span> <span class="s2">&quot;labels.pkg.slp&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -579,7 +436,7 @@ drwxr-xr-x 1 root root 4.0K Mar 23 14:22 sample_data
 <p>Normally, these are generated interactively by the GUI, or manually by editing an existing JSON file in a text editor. Here, we will define a configuration interactively entirely in Python.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sleap.nn.config</span> <span class="kn">import</span> <span class="o">*</span>
 
 <span class="c1"># Initialize the default training job configuration.</span>
 <span class="n">cfg</span> <span class="o">=</span> <span class="n">TrainingJobConfig</span><span class="p">()</span>
@@ -620,7 +477,7 @@ drwxr-xr-x 1 root root 4.0K Mar 23 14:22 sample_data
 <p>Next we will create a SLEAP <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> from the configuration we just specified. This handles all the nitty gritty mechanics necessary to setup training in the backend.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">Trainer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">Trainer</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -635,7 +492,7 @@ INFO:sleap.nn.training:  Splits: Training = 1440 / Validation = 160.
 <p>Great, now we’re ready to do the first round of training. This is when the model will actually start to improve over time:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -644,7 +501,20 @@ INFO:sleap.nn.training:  Splits: Training = 1440 / Validation = 160.
 INFO:sleap.nn.training:Setting up pipeline builders...
 INFO:sleap.nn.training:Setting up model...
 INFO:sleap.nn.training:Building test pipeline...
-INFO:sleap.nn.training:Loaded test example. [6.047s]
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-09-01 14:24:11.775633: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-09-01 14:24:11.776555: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2023-09-01 14:24:11.777493: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2023-09-01 14:24:11.778196: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2023-09-01 14:24:12.055738: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2023-09-01 14:24:12.056597: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2023-09-01 14:24:12.057389: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:939] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2023-09-01 14:24:12.058046: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1525] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 21261 MB memory:  -&gt; device: 0, name: NVIDIA RTX A5000, pci bus id: 0000:01:00.0, compute capability: 8.6
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.training:Loaded test example. [1.799s]
 INFO:sleap.nn.training:  Input shape: (160, 160, 1)
 INFO:sleap.nn.training:Created Keras model.
 INFO:sleap.nn.training:  Backbone: UNet(stacks=1, filters=16, filters_rate=2, kernel_size=3, stem_kernel_size=7, convs_per_block=2, stem_blocks=0, down_blocks=4, middle_block=True, up_blocks=2, up_interpolate=False, block_contraction=False)
@@ -654,6 +524,7 @@ INFO:sleap.nn.training:  Heads:
 INFO:sleap.nn.training:    [0] = CenteredInstanceConfmapsHead(part_names=[&#39;head&#39;, &#39;thorax&#39;, &#39;abdomen&#39;, &#39;wingL&#39;, &#39;wingR&#39;, &#39;forelegL4&#39;, &#39;forelegR4&#39;, &#39;midlegL4&#39;, &#39;midlegR4&#39;, &#39;hindlegL4&#39;, &#39;hindlegR4&#39;, &#39;eyeL&#39;, &#39;eyeR&#39;], anchor_part=&#39;thorax&#39;, sigma=1.5, output_stride=4, loss_weight=1.0)
 INFO:sleap.nn.training:  Outputs: 
 INFO:sleap.nn.training:    [0] = KerasTensor(type_spec=TensorSpec(shape=(None, 40, 40, 13), dtype=tf.float32, name=None), name=&#39;CenteredInstanceConfmapsHead/BiasAdd:0&#39;, description=&quot;created by layer &#39;CenteredInstanceConfmapsHead&#39;&quot;)
+INFO:sleap.nn.training:Training from scratch
 INFO:sleap.nn.training:Setting up data pipelines...
 INFO:sleap.nn.training:Training set: n = 1440
 INFO:sleap.nn.training:Validation set: n = 160
@@ -663,54 +534,59 @@ INFO:sleap.nn.training:  Early stopping: EarlyStoppingConfig(stop_training_on_pl
 INFO:sleap.nn.training:Setting up outputs...
 INFO:sleap.nn.training:Created run path: models/baseline_model.topdown
 INFO:sleap.nn.training:Setting up visualization...
-Unable to use Qt backend for matplotlib. This probably means Qt is running headless.
-INFO:sleap.nn.training:Finished trainer set up. [10.4s]
+INFO:sleap.nn.training:Finished trainer set up. [3.3s]
 INFO:sleap.nn.training:Creating tf.data.Datasets for training data generation...
-INFO:sleap.nn.training:Finished creating training datasets. [29.5s]
+INFO:sleap.nn.training:Finished creating training datasets. [16.2s]
 INFO:sleap.nn.training:Starting training loop...
 Epoch 1/10
-360/360 - 70s - loss: 0.0037 - head: 0.0029 - thorax: 0.0030 - abdomen: 0.0037 - wingL: 0.0041 - wingR: 0.0041 - forelegL4: 0.0037 - forelegR4: 0.0038 - midlegL4: 0.0041 - midlegR4: 0.0041 - hindlegL4: 0.0039 - hindlegR4: 0.0040 - eyeL: 0.0033 - eyeR: 0.0034 - val_loss: 0.0033 - val_head: 0.0017 - val_thorax: 0.0025 - val_abdomen: 0.0035 - val_wingL: 0.0039 - val_wingR: 0.0039 - val_forelegL4: 0.0033 - val_forelegR4: 0.0036 - val_midlegL4: 0.0040 - val_midlegR4: 0.0040 - val_hindlegL4: 0.0040 - val_hindlegR4: 0.0040 - val_eyeL: 0.0022 - val_eyeR: 0.0023 - lr: 1.0000e-04 - 70s/epoch - 194ms/step
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-09-01 14:24:32.586040: I tensorflow/stream_executor/cuda/cuda_dnn.cc:366] Loaded cuDNN version 8201
+2023-09-01 14:24:42.104556: I tensorflow/stream_executor/cuda/cuda_blas.cc:1774] TensorFloat-32 will be used for the matrix multiplication. This will only be logged once.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>360/360 - 12s - loss: 0.0037 - head: 0.0030 - thorax: 0.0030 - abdomen: 0.0036 - wingL: 0.0040 - wingR: 0.0040 - forelegL4: 0.0037 - forelegR4: 0.0038 - midlegL4: 0.0041 - midlegR4: 0.0041 - hindlegL4: 0.0039 - hindlegR4: 0.0040 - eyeL: 0.0035 - eyeR: 0.0035 - val_loss: 0.0033 - val_head: 0.0020 - val_thorax: 0.0029 - val_abdomen: 0.0030 - val_wingL: 0.0033 - val_wingR: 0.0034 - val_forelegL4: 0.0037 - val_forelegR4: 0.0036 - val_midlegL4: 0.0039 - val_midlegR4: 0.0039 - val_hindlegL4: 0.0037 - val_hindlegR4: 0.0038 - val_eyeL: 0.0029 - val_eyeR: 0.0027 - lr: 1.0000e-04 - 12s/epoch - 32ms/step
 Epoch 2/10
-360/360 - 53s - loss: 0.0028 - head: 0.0013 - thorax: 0.0020 - abdomen: 0.0028 - wingL: 0.0031 - wingR: 0.0031 - forelegL4: 0.0032 - forelegR4: 0.0033 - midlegL4: 0.0039 - midlegR4: 0.0039 - hindlegL4: 0.0037 - hindlegR4: 0.0038 - eyeL: 0.0013 - eyeR: 0.0014 - val_loss: 0.0025 - val_head: 9.5906e-04 - val_thorax: 0.0013 - val_abdomen: 0.0023 - val_wingL: 0.0025 - val_wingR: 0.0025 - val_forelegL4: 0.0029 - val_forelegR4: 0.0030 - val_midlegL4: 0.0037 - val_midlegR4: 0.0038 - val_hindlegL4: 0.0037 - val_hindlegR4: 0.0038 - val_eyeL: 8.8668e-04 - val_eyeR: 9.7728e-04 - lr: 1.0000e-04 - 53s/epoch - 148ms/step
+360/360 - 7s - loss: 0.0028 - head: 0.0013 - thorax: 0.0018 - abdomen: 0.0026 - wingL: 0.0027 - wingR: 0.0028 - forelegL4: 0.0032 - forelegR4: 0.0033 - midlegL4: 0.0038 - midlegR4: 0.0038 - hindlegL4: 0.0037 - hindlegR4: 0.0038 - eyeL: 0.0015 - eyeR: 0.0015 - val_loss: 0.0025 - val_head: 9.7323e-04 - val_thorax: 0.0011 - val_abdomen: 0.0026 - val_wingL: 0.0024 - val_wingR: 0.0026 - val_forelegL4: 0.0030 - val_forelegR4: 0.0030 - val_midlegL4: 0.0036 - val_midlegR4: 0.0037 - val_hindlegL4: 0.0038 - val_hindlegR4: 0.0037 - val_eyeL: 0.0012 - val_eyeR: 0.0012 - lr: 1.0000e-04 - 7s/epoch - 21ms/step
 Epoch 3/10
-360/360 - 55s - loss: 0.0023 - head: 8.0222e-04 - thorax: 9.4507e-04 - abdomen: 0.0022 - wingL: 0.0022 - wingR: 0.0022 - forelegL4: 0.0027 - forelegR4: 0.0028 - midlegL4: 0.0035 - midlegR4: 0.0036 - hindlegL4: 0.0034 - hindlegR4: 0.0036 - eyeL: 8.5909e-04 - eyeR: 8.8003e-04 - val_loss: 0.0021 - val_head: 7.4704e-04 - val_thorax: 6.8354e-04 - val_abdomen: 0.0020 - val_wingL: 0.0018 - val_wingR: 0.0019 - val_forelegL4: 0.0024 - val_forelegR4: 0.0025 - val_midlegL4: 0.0031 - val_midlegR4: 0.0034 - val_hindlegL4: 0.0032 - val_hindlegR4: 0.0035 - val_eyeL: 7.6220e-04 - val_eyeR: 7.1808e-04 - lr: 1.0000e-04 - 55s/epoch - 154ms/step
+360/360 - 7s - loss: 0.0022 - head: 8.0630e-04 - thorax: 6.7199e-04 - abdomen: 0.0022 - wingL: 0.0020 - wingR: 0.0021 - forelegL4: 0.0027 - forelegR4: 0.0027 - midlegL4: 0.0033 - midlegR4: 0.0035 - hindlegL4: 0.0034 - hindlegR4: 0.0035 - eyeL: 8.7345e-04 - eyeR: 8.4145e-04 - val_loss: 0.0020 - val_head: 8.6439e-04 - val_thorax: 5.9914e-04 - val_abdomen: 0.0020 - val_wingL: 0.0019 - val_wingR: 0.0020 - val_forelegL4: 0.0025 - val_forelegR4: 0.0024 - val_midlegL4: 0.0030 - val_midlegR4: 0.0031 - val_hindlegL4: 0.0030 - val_hindlegR4: 0.0031 - val_eyeL: 8.9466e-04 - val_eyeR: 9.5174e-04 - lr: 1.0000e-04 - 7s/epoch - 20ms/step
 Epoch 4/10
-360/360 - 61s - loss: 0.0019 - head: 6.5537e-04 - thorax: 5.3996e-04 - abdomen: 0.0019 - wingL: 0.0018 - wingR: 0.0018 - forelegL4: 0.0023 - forelegR4: 0.0024 - midlegL4: 0.0027 - midlegR4: 0.0029 - hindlegL4: 0.0029 - hindlegR4: 0.0032 - eyeL: 7.4337e-04 - eyeR: 7.2396e-04 - val_loss: 0.0017 - val_head: 5.5193e-04 - val_thorax: 3.6303e-04 - val_abdomen: 0.0018 - val_wingL: 0.0016 - val_wingR: 0.0016 - val_forelegL4: 0.0020 - val_forelegR4: 0.0020 - val_midlegL4: 0.0023 - val_midlegR4: 0.0026 - val_hindlegL4: 0.0027 - val_hindlegR4: 0.0031 - val_eyeL: 6.5068e-04 - val_eyeR: 6.0169e-04 - lr: 1.0000e-04 - 61s/epoch - 169ms/step
+360/360 - 7s - loss: 0.0018 - head: 6.7854e-04 - thorax: 4.6945e-04 - abdomen: 0.0020 - wingL: 0.0017 - wingR: 0.0018 - forelegL4: 0.0023 - forelegR4: 0.0023 - midlegL4: 0.0026 - midlegR4: 0.0027 - hindlegL4: 0.0028 - hindlegR4: 0.0029 - eyeL: 7.4546e-04 - eyeR: 6.9585e-04 - val_loss: 0.0018 - val_head: 7.7640e-04 - val_thorax: 5.3180e-04 - val_abdomen: 0.0020 - val_wingL: 0.0018 - val_wingR: 0.0018 - val_forelegL4: 0.0022 - val_forelegR4: 0.0022 - val_midlegL4: 0.0024 - val_midlegR4: 0.0025 - val_hindlegL4: 0.0026 - val_hindlegR4: 0.0026 - val_eyeL: 9.2650e-04 - val_eyeR: 9.0064e-04 - lr: 1.0000e-04 - 7s/epoch - 20ms/step
 Epoch 5/10
-360/360 - 57s - loss: 0.0016 - head: 5.6982e-04 - thorax: 4.1064e-04 - abdomen: 0.0017 - wingL: 0.0016 - wingR: 0.0016 - forelegL4: 0.0020 - forelegR4: 0.0020 - midlegL4: 0.0021 - midlegR4: 0.0022 - hindlegL4: 0.0024 - hindlegR4: 0.0028 - eyeL: 6.5447e-04 - eyeR: 6.3768e-04 - val_loss: 0.0014 - val_head: 4.9811e-04 - val_thorax: 3.0411e-04 - val_abdomen: 0.0015 - val_wingL: 0.0014 - val_wingR: 0.0014 - val_forelegL4: 0.0017 - val_forelegR4: 0.0019 - val_midlegL4: 0.0018 - val_midlegR4: 0.0020 - val_hindlegL4: 0.0023 - val_hindlegR4: 0.0026 - val_eyeL: 5.9634e-04 - val_eyeR: 5.8405e-04 - lr: 1.0000e-04 - 57s/epoch - 157ms/step
+360/360 - 7s - loss: 0.0015 - head: 5.8714e-04 - thorax: 4.0531e-04 - abdomen: 0.0017 - wingL: 0.0015 - wingR: 0.0015 - forelegL4: 0.0020 - forelegR4: 0.0019 - midlegL4: 0.0020 - midlegR4: 0.0021 - hindlegL4: 0.0023 - hindlegR4: 0.0024 - eyeL: 6.7827e-04 - eyeR: 6.2254e-04 - val_loss: 0.0015 - val_head: 6.5523e-04 - val_thorax: 4.4019e-04 - val_abdomen: 0.0016 - val_wingL: 0.0016 - val_wingR: 0.0015 - val_forelegL4: 0.0019 - val_forelegR4: 0.0020 - val_midlegL4: 0.0021 - val_midlegR4: 0.0020 - val_hindlegL4: 0.0021 - val_hindlegR4: 0.0021 - val_eyeL: 7.9871e-04 - val_eyeR: 7.8608e-04 - lr: 1.0000e-04 - 7s/epoch - 20ms/step
 Epoch 6/10
-360/360 - 54s - loss: 0.0014 - head: 5.1206e-04 - thorax: 3.4952e-04 - abdomen: 0.0015 - wingL: 0.0014 - wingR: 0.0014 - forelegL4: 0.0017 - forelegR4: 0.0018 - midlegL4: 0.0017 - midlegR4: 0.0018 - hindlegL4: 0.0020 - hindlegR4: 0.0023 - eyeL: 6.0045e-04 - eyeR: 5.7847e-04 - val_loss: 0.0012 - val_head: 4.3860e-04 - val_thorax: 2.5352e-04 - val_abdomen: 0.0014 - val_wingL: 0.0013 - val_wingR: 0.0012 - val_forelegL4: 0.0015 - val_forelegR4: 0.0016 - val_midlegL4: 0.0014 - val_midlegR4: 0.0017 - val_hindlegL4: 0.0020 - val_hindlegR4: 0.0022 - val_eyeL: 5.1261e-04 - val_eyeR: 5.5203e-04 - lr: 1.0000e-04 - 54s/epoch - 151ms/step
+360/360 - 7s - loss: 0.0013 - head: 5.3215e-04 - thorax: 3.5232e-04 - abdomen: 0.0016 - wingL: 0.0014 - wingR: 0.0014 - forelegL4: 0.0017 - forelegR4: 0.0018 - midlegL4: 0.0017 - midlegR4: 0.0018 - hindlegL4: 0.0020 - hindlegR4: 0.0021 - eyeL: 5.9826e-04 - eyeR: 5.6906e-04 - val_loss: 0.0013 - val_head: 5.3776e-04 - val_thorax: 3.7946e-04 - val_abdomen: 0.0014 - val_wingL: 0.0014 - val_wingR: 0.0013 - val_forelegL4: 0.0017 - val_forelegR4: 0.0018 - val_midlegL4: 0.0016 - val_midlegR4: 0.0017 - val_hindlegL4: 0.0017 - val_hindlegR4: 0.0018 - val_eyeL: 6.6378e-04 - val_eyeR: 6.5611e-04 - lr: 1.0000e-04 - 7s/epoch - 19ms/step
 Epoch 7/10
-360/360 - 54s - loss: 0.0012 - head: 4.7131e-04 - thorax: 3.1231e-04 - abdomen: 0.0014 - wingL: 0.0012 - wingR: 0.0012 - forelegL4: 0.0016 - forelegR4: 0.0016 - midlegL4: 0.0015 - midlegR4: 0.0016 - hindlegL4: 0.0018 - hindlegR4: 0.0020 - eyeL: 5.7016e-04 - eyeR: 5.4539e-04 - val_loss: 0.0011 - val_head: 4.3133e-04 - val_thorax: 2.2694e-04 - val_abdomen: 0.0013 - val_wingL: 0.0011 - val_wingR: 0.0011 - val_forelegL4: 0.0014 - val_forelegR4: 0.0015 - val_midlegL4: 0.0013 - val_midlegR4: 0.0015 - val_hindlegL4: 0.0018 - val_hindlegR4: 0.0020 - val_eyeL: 5.5373e-04 - val_eyeR: 5.0355e-04 - lr: 1.0000e-04 - 54s/epoch - 149ms/step
+360/360 - 7s - loss: 0.0012 - head: 4.8557e-04 - thorax: 3.1089e-04 - abdomen: 0.0014 - wingL: 0.0012 - wingR: 0.0012 - forelegL4: 0.0016 - forelegR4: 0.0016 - midlegL4: 0.0015 - midlegR4: 0.0016 - hindlegL4: 0.0018 - hindlegR4: 0.0019 - eyeL: 5.6096e-04 - eyeR: 5.3123e-04 - val_loss: 0.0012 - val_head: 5.2092e-04 - val_thorax: 3.4376e-04 - val_abdomen: 0.0014 - val_wingL: 0.0012 - val_wingR: 0.0012 - val_forelegL4: 0.0015 - val_forelegR4: 0.0017 - val_midlegL4: 0.0015 - val_midlegR4: 0.0015 - val_hindlegL4: 0.0017 - val_hindlegR4: 0.0017 - val_eyeL: 6.4288e-04 - val_eyeR: 6.0581e-04 - lr: 1.0000e-04 - 7s/epoch - 19ms/step
 Epoch 8/10
-360/360 - 53s - loss: 0.0011 - head: 4.3369e-04 - thorax: 2.6750e-04 - abdomen: 0.0013 - wingL: 0.0011 - wingR: 0.0011 - forelegL4: 0.0015 - forelegR4: 0.0015 - midlegL4: 0.0014 - midlegR4: 0.0014 - hindlegL4: 0.0017 - hindlegR4: 0.0018 - eyeL: 5.2745e-04 - eyeR: 5.0480e-04 - val_loss: 0.0011 - val_head: 4.1774e-04 - val_thorax: 2.4407e-04 - val_abdomen: 0.0013 - val_wingL: 0.0011 - val_wingR: 0.0010 - val_forelegL4: 0.0013 - val_forelegR4: 0.0014 - val_midlegL4: 0.0012 - val_midlegR4: 0.0014 - val_hindlegL4: 0.0017 - val_hindlegR4: 0.0018 - val_eyeL: 6.2877e-04 - val_eyeR: 5.7243e-04 - lr: 1.0000e-04 - 53s/epoch - 148ms/step
+360/360 - 7s - loss: 0.0011 - head: 4.3752e-04 - thorax: 2.7513e-04 - abdomen: 0.0013 - wingL: 0.0011 - wingR: 0.0011 - forelegL4: 0.0015 - forelegR4: 0.0015 - midlegL4: 0.0014 - midlegR4: 0.0014 - hindlegL4: 0.0017 - hindlegR4: 0.0017 - eyeL: 5.1807e-04 - eyeR: 4.9554e-04 - val_loss: 0.0011 - val_head: 5.6743e-04 - val_thorax: 3.5883e-04 - val_abdomen: 0.0014 - val_wingL: 0.0012 - val_wingR: 0.0011 - val_forelegL4: 0.0015 - val_forelegR4: 0.0016 - val_midlegL4: 0.0014 - val_midlegR4: 0.0014 - val_hindlegL4: 0.0015 - val_hindlegR4: 0.0015 - val_eyeL: 6.2925e-04 - val_eyeR: 6.5965e-04 - lr: 1.0000e-04 - 7s/epoch - 19ms/step
 Epoch 9/10
-360/360 - 53s - loss: 0.0010 - head: 4.0425e-04 - thorax: 2.3597e-04 - abdomen: 0.0012 - wingL: 0.0010 - wingR: 0.0011 - forelegL4: 0.0014 - forelegR4: 0.0014 - midlegL4: 0.0013 - midlegR4: 0.0013 - hindlegL4: 0.0016 - hindlegR4: 0.0017 - eyeL: 5.0906e-04 - eyeR: 4.9227e-04 - val_loss: 0.0010 - val_head: 3.9088e-04 - val_thorax: 2.1458e-04 - val_abdomen: 0.0012 - val_wingL: 0.0010 - val_wingR: 9.4879e-04 - val_forelegL4: 0.0012 - val_forelegR4: 0.0013 - val_midlegL4: 0.0011 - val_midlegR4: 0.0014 - val_hindlegL4: 0.0016 - val_hindlegR4: 0.0017 - val_eyeL: 4.6829e-04 - val_eyeR: 4.7323e-04 - lr: 1.0000e-04 - 53s/epoch - 147ms/step
+360/360 - 7s - loss: 0.0011 - head: 4.2635e-04 - thorax: 2.4829e-04 - abdomen: 0.0012 - wingL: 0.0010 - wingR: 0.0010 - forelegL4: 0.0015 - forelegR4: 0.0014 - midlegL4: 0.0013 - midlegR4: 0.0013 - hindlegL4: 0.0016 - hindlegR4: 0.0017 - eyeL: 5.0197e-04 - eyeR: 4.8384e-04 - val_loss: 0.0011 - val_head: 4.8699e-04 - val_thorax: 3.5631e-04 - val_abdomen: 0.0013 - val_wingL: 0.0011 - val_wingR: 0.0011 - val_forelegL4: 0.0014 - val_forelegR4: 0.0016 - val_midlegL4: 0.0013 - val_midlegR4: 0.0015 - val_hindlegL4: 0.0014 - val_hindlegR4: 0.0015 - val_eyeL: 6.1692e-04 - val_eyeR: 5.8370e-04 - lr: 1.0000e-04 - 7s/epoch - 19ms/step
 Epoch 10/10
-360/360 - 55s - loss: 9.7632e-04 - head: 3.7896e-04 - thorax: 2.1828e-04 - abdomen: 0.0011 - wingL: 9.9185e-04 - wingR: 9.9033e-04 - forelegL4: 0.0014 - forelegR4: 0.0013 - midlegL4: 0.0012 - midlegR4: 0.0012 - hindlegL4: 0.0015 - hindlegR4: 0.0016 - eyeL: 4.7323e-04 - eyeR: 4.5868e-04 - val_loss: 9.2870e-04 - val_head: 3.3704e-04 - val_thorax: 1.5806e-04 - val_abdomen: 0.0010 - val_wingL: 9.5121e-04 - val_wingR: 9.2122e-04 - val_forelegL4: 0.0012 - val_forelegR4: 0.0014 - val_midlegL4: 0.0010 - val_midlegR4: 0.0012 - val_hindlegL4: 0.0015 - val_hindlegR4: 0.0016 - val_eyeL: 4.2130e-04 - val_eyeR: 4.1479e-04 - lr: 1.0000e-04 - 55s/epoch - 154ms/step
-INFO:sleap.nn.training:Finished training loop. [9.4 min]
+360/360 - 7s - loss: 9.8454e-04 - head: 3.9611e-04 - thorax: 2.2278e-04 - abdomen: 0.0012 - wingL: 9.4893e-04 - wingR: 9.5555e-04 - forelegL4: 0.0014 - forelegR4: 0.0014 - midlegL4: 0.0012 - midlegR4: 0.0012 - hindlegL4: 0.0015 - hindlegR4: 0.0016 - eyeL: 4.7396e-04 - eyeR: 4.4770e-04 - val_loss: 0.0010 - val_head: 4.9330e-04 - val_thorax: 2.9460e-04 - val_abdomen: 0.0013 - val_wingL: 9.5190e-04 - val_wingR: 9.9289e-04 - val_forelegL4: 0.0014 - val_forelegR4: 0.0015 - val_midlegL4: 0.0012 - val_midlegR4: 0.0012 - val_hindlegL4: 0.0014 - val_hindlegR4: 0.0014 - val_eyeL: 5.5512e-04 - val_eyeR: 5.3737e-04 - lr: 1.0000e-04 - 7s/epoch - 19ms/step
+INFO:sleap.nn.training:Finished training loop. [1.3 min]
 INFO:sleap.nn.training:Deleting visualization directory: models/baseline_model.topdown/viz
 INFO:sleap.nn.training:Saving evaluation metrics to model folder...
 </pre></div>
 </div>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "6b2a262ed72e4c659969f996ac889aa7"}
+{"model_id": "9864dea73605449cb08b26c938812cfb", "version_major": 2, "version_minor": 0}
 </script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
 </div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
 </pre>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.train.slp
 INFO:sleap.nn.evals:Saved metrics: models/baseline_model.topdown/metrics.train.npz
-INFO:sleap.nn.evals:OKS mAP: 0.518988
+INFO:sleap.nn.evals:OKS mAP: 0.508754
 </pre></div>
 </div>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "973660ab9cb2472786b368a18db11c63"}
+{"model_id": "243984a359bc41e9975653fa6206ac27", "version_major": 2, "version_minor": 0}
 </script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
 </div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
 </pre>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.val.slp
 INFO:sleap.nn.evals:Saved metrics: models/baseline_model.topdown/metrics.val.npz
-INFO:sleap.nn.evals:OKS mAP: 0.520377
+INFO:sleap.nn.evals:OKS mAP: 0.477220
 </pre></div>
 </div>
 </div>
@@ -721,44 +597,44 @@ INFO:sleap.nn.evals:OKS mAP: 0.520377
 <p>If we still have the trainer in memory, we can continue training by simply calling <code class="docutils literal notranslate"><span class="pre">trainer.train()</span></code> again with a potentially different number of epochs:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">optimization</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="mi">3</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">optimization</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.training:Creating tf.data.Datasets for training data generation...
-INFO:sleap.nn.training:Finished creating training datasets. [29.4s]
+INFO:sleap.nn.training:Finished creating training datasets. [17.1s]
 INFO:sleap.nn.training:Starting training loop...
 Epoch 1/3
-360/360 - 57s - loss: 9.1732e-04 - head: 3.5629e-04 - thorax: 1.9609e-04 - abdomen: 0.0010 - wingL: 9.1318e-04 - wingR: 9.1330e-04 - forelegL4: 0.0013 - forelegR4: 0.0013 - midlegL4: 0.0011 - midlegR4: 0.0011 - hindlegL4: 0.0014 - hindlegR4: 0.0015 - eyeL: 4.4475e-04 - eyeR: 4.3944e-04 - val_loss: 9.2727e-04 - val_head: 3.8719e-04 - val_thorax: 1.5200e-04 - val_abdomen: 0.0011 - val_wingL: 9.3115e-04 - val_wingR: 8.9376e-04 - val_forelegL4: 0.0012 - val_forelegR4: 0.0012 - val_midlegL4: 9.9703e-04 - val_midlegR4: 0.0012 - val_hindlegL4: 0.0015 - val_hindlegR4: 0.0016 - val_eyeL: 4.5374e-04 - val_eyeR: 5.1839e-04 - lr: 1.0000e-04 - 57s/epoch - 158ms/step
+360/360 - 7s - loss: 9.3201e-04 - head: 3.7118e-04 - thorax: 2.0303e-04 - abdomen: 0.0011 - wingL: 8.9319e-04 - wingR: 9.0134e-04 - forelegL4: 0.0013 - forelegR4: 0.0013 - midlegL4: 0.0011 - midlegR4: 0.0011 - hindlegL4: 0.0014 - hindlegR4: 0.0015 - eyeL: 4.4919e-04 - eyeR: 4.2012e-04 - val_loss: 9.4680e-04 - val_head: 3.9131e-04 - val_thorax: 2.4191e-04 - val_abdomen: 0.0010 - val_wingL: 8.9155e-04 - val_wingR: 8.9295e-04 - val_forelegL4: 0.0013 - val_forelegR4: 0.0014 - val_midlegL4: 0.0012 - val_midlegR4: 0.0012 - val_hindlegL4: 0.0013 - val_hindlegR4: 0.0013 - val_eyeL: 5.3658e-04 - val_eyeR: 5.0085e-04 - lr: 1.0000e-04 - 7s/epoch - 20ms/step
 Epoch 2/3
-360/360 - 56s - loss: 8.7900e-04 - head: 3.4532e-04 - thorax: 1.7895e-04 - abdomen: 0.0010 - wingL: 8.7539e-04 - wingR: 8.8524e-04 - forelegL4: 0.0012 - forelegR4: 0.0012 - midlegL4: 0.0010 - midlegR4: 0.0010 - hindlegL4: 0.0014 - hindlegR4: 0.0014 - eyeL: 4.3484e-04 - eyeR: 4.2888e-04 - val_loss: 8.5310e-04 - val_head: 3.0429e-04 - val_thorax: 1.4837e-04 - val_abdomen: 0.0010 - val_wingL: 8.2237e-04 - val_wingR: 8.3093e-04 - val_forelegL4: 0.0011 - val_forelegR4: 0.0012 - val_midlegL4: 8.5634e-04 - val_midlegR4: 0.0011 - val_hindlegL4: 0.0014 - val_hindlegR4: 0.0015 - val_eyeL: 4.0362e-04 - val_eyeR: 3.8104e-04 - lr: 1.0000e-04 - 56s/epoch - 156ms/step
+360/360 - 7s - loss: 8.8906e-04 - head: 3.6015e-04 - thorax: 1.9128e-04 - abdomen: 0.0010 - wingL: 8.5054e-04 - wingR: 8.5352e-04 - forelegL4: 0.0013 - forelegR4: 0.0013 - midlegL4: 0.0010 - midlegR4: 0.0011 - hindlegL4: 0.0014 - hindlegR4: 0.0014 - eyeL: 4.3093e-04 - eyeR: 4.0690e-04 - val_loss: 8.9501e-04 - val_head: 4.1907e-04 - val_thorax: 2.3487e-04 - val_abdomen: 0.0010 - val_wingL: 8.6145e-04 - val_wingR: 8.4151e-04 - val_forelegL4: 0.0013 - val_forelegR4: 0.0014 - val_midlegL4: 0.0010 - val_midlegR4: 0.0011 - val_hindlegL4: 0.0013 - val_hindlegR4: 0.0012 - val_eyeL: 5.2130e-04 - val_eyeR: 4.9293e-04 - lr: 1.0000e-04 - 7s/epoch - 19ms/step
 Epoch 3/3
-360/360 - 56s - loss: 8.4466e-04 - head: 3.4540e-04 - thorax: 1.6180e-04 - abdomen: 9.6890e-04 - wingL: 8.4974e-04 - wingR: 8.5187e-04 - forelegL4: 0.0012 - forelegR4: 0.0012 - midlegL4: 9.5015e-04 - midlegR4: 9.8870e-04 - hindlegL4: 0.0013 - hindlegR4: 0.0014 - eyeL: 4.2245e-04 - eyeR: 4.0856e-04 - val_loss: 8.2153e-04 - val_head: 3.1832e-04 - val_thorax: 1.4803e-04 - val_abdomen: 9.4013e-04 - val_wingL: 8.4738e-04 - val_wingR: 8.4686e-04 - val_forelegL4: 0.0010 - val_forelegR4: 0.0011 - val_midlegL4: 8.5740e-04 - val_midlegR4: 0.0010 - val_hindlegL4: 0.0014 - val_hindlegR4: 0.0015 - val_eyeL: 3.7928e-04 - val_eyeR: 3.8285e-04 - lr: 1.0000e-04 - 56s/epoch - 156ms/step
-INFO:sleap.nn.training:Finished training loop. [2.8 min]
+360/360 - 7s - loss: 8.5396e-04 - head: 3.4440e-04 - thorax: 1.7180e-04 - abdomen: 9.9867e-04 - wingL: 8.1743e-04 - wingR: 8.2288e-04 - forelegL4: 0.0012 - forelegR4: 0.0012 - midlegL4: 9.7110e-04 - midlegR4: 0.0010 - hindlegL4: 0.0013 - hindlegR4: 0.0014 - eyeL: 4.1497e-04 - eyeR: 3.9294e-04 - val_loss: 8.8076e-04 - val_head: 3.7130e-04 - val_thorax: 2.4712e-04 - val_abdomen: 0.0010 - val_wingL: 8.2889e-04 - val_wingR: 8.5931e-04 - val_forelegL4: 0.0012 - val_forelegR4: 0.0014 - val_midlegL4: 9.9400e-04 - val_midlegR4: 0.0011 - val_hindlegL4: 0.0012 - val_hindlegR4: 0.0012 - val_eyeL: 4.9486e-04 - val_eyeR: 4.6961e-04 - lr: 1.0000e-04 - 7s/epoch - 19ms/step
+INFO:sleap.nn.training:Finished training loop. [0.4 min]
 INFO:sleap.nn.training:Deleting visualization directory: models/baseline_model.topdown/viz
 INFO:sleap.nn.training:Saving evaluation metrics to model folder...
 </pre></div>
 </div>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "d49529f91f6d4090a7820b081094823d"}
+{"model_id": "f1bb0ee48431420d9cb6d99c4db4680d", "version_major": 2, "version_minor": 0}
 </script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
 </div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
 </pre>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.train.slp
 INFO:sleap.nn.evals:Saved metrics: models/baseline_model.topdown/metrics.train.npz
-INFO:sleap.nn.evals:OKS mAP: 0.551905
+INFO:sleap.nn.evals:OKS mAP: 0.559100
 </pre></div>
 </div>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "8291326df0b9435b8ba2298c8977778b"}
+{"model_id": "db5de880cd154476a097178972c8f0a3", "version_major": 2, "version_minor": 0}
 </script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
 </div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
 </pre>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.val.slp
 INFO:sleap.nn.evals:Saved metrics: models/baseline_model.topdown/metrics.val.npz
-INFO:sleap.nn.evals:OKS mAP: 0.551469
+INFO:sleap.nn.evals:OKS mAP: 0.529680
 </pre></div>
 </div>
 </div>
@@ -768,7 +644,7 @@ INFO:sleap.nn.evals:OKS mAP: 0.551469
 <p>In this case, all you need to do to continue training is to create a new <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> from the existing model configuration and load up the weights before continuing training:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load config.</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load config.</span>
 <span class="n">cfg</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="s2">&quot;models/baseline_model.topdown&quot;</span><span class="p">)</span>
 <span class="c1"># cfg.outputs.run_name = &quot;new_folder&quot;  # Set the run_name to a new value if you want the model to be saved to a different folder.</span>
 
@@ -789,7 +665,7 @@ INFO:sleap.nn.training:Setting up for training...
 INFO:sleap.nn.training:Setting up pipeline builders...
 INFO:sleap.nn.training:Setting up model...
 INFO:sleap.nn.training:Building test pipeline...
-INFO:sleap.nn.training:Loaded test example. [1.909s]
+INFO:sleap.nn.training:Loaded test example. [0.925s]
 INFO:sleap.nn.training:  Input shape: (160, 160, 1)
 INFO:sleap.nn.training:Created Keras model.
 INFO:sleap.nn.training:  Backbone: UNet(stacks=1, filters=16, filters_rate=2.0, kernel_size=3, stem_kernel_size=7, convs_per_block=2, stem_blocks=0, down_blocks=4, middle_block=True, up_blocks=2, up_interpolate=False, block_contraction=False)
@@ -799,6 +675,7 @@ INFO:sleap.nn.training:  Heads:
 INFO:sleap.nn.training:    [0] = CenteredInstanceConfmapsHead(part_names=[&#39;head&#39;, &#39;thorax&#39;, &#39;abdomen&#39;, &#39;wingL&#39;, &#39;wingR&#39;, &#39;forelegL4&#39;, &#39;forelegR4&#39;, &#39;midlegL4&#39;, &#39;midlegR4&#39;, &#39;hindlegL4&#39;, &#39;hindlegR4&#39;, &#39;eyeL&#39;, &#39;eyeR&#39;], anchor_part=&#39;thorax&#39;, sigma=1.5, output_stride=4, loss_weight=1.0)
 INFO:sleap.nn.training:  Outputs: 
 INFO:sleap.nn.training:    [0] = KerasTensor(type_spec=TensorSpec(shape=(None, 40, 40, 13), dtype=tf.float32, name=None), name=&#39;CenteredInstanceConfmapsHead/BiasAdd:0&#39;, description=&quot;created by layer &#39;CenteredInstanceConfmapsHead&#39;&quot;)
+INFO:sleap.nn.training:Training from scratch
 INFO:sleap.nn.training:Setting up data pipelines...
 INFO:sleap.nn.training:Training set: n = 1440
 INFO:sleap.nn.training:Validation set: n = 160
@@ -808,51 +685,51 @@ INFO:sleap.nn.training:  Early stopping: EarlyStoppingConfig(stop_training_on_pl
 INFO:sleap.nn.training:Setting up outputs...
 INFO:sleap.nn.training:Created run path: models/baseline_model.topdown
 INFO:sleap.nn.training:Setting up visualization...
-INFO:sleap.nn.training:Finished trainer set up. [6.0s]
+INFO:sleap.nn.training:Finished trainer set up. [2.2s]
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">optimization</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="mi">3</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">optimization</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.training:Creating tf.data.Datasets for training data generation...
-INFO:sleap.nn.training:Finished creating training datasets. [28.9s]
+INFO:sleap.nn.training:Finished creating training datasets. [17.7s]
 INFO:sleap.nn.training:Starting training loop...
 Epoch 1/3
-360/360 - 63s - loss: 8.2769e-04 - head: 3.4427e-04 - thorax: 1.6900e-04 - abdomen: 9.4941e-04 - wingL: 8.1514e-04 - wingR: 8.1826e-04 - forelegL4: 0.0012 - forelegR4: 0.0012 - midlegL4: 9.2980e-04 - midlegR4: 9.6439e-04 - hindlegL4: 0.0013 - hindlegR4: 0.0013 - eyeL: 4.2129e-04 - eyeR: 4.0767e-04 - val_loss: 7.8855e-04 - val_head: 3.2701e-04 - val_thorax: 1.8405e-04 - val_abdomen: 0.0010 - val_wingL: 7.3709e-04 - val_wingR: 7.1027e-04 - val_forelegL4: 0.0010 - val_forelegR4: 0.0011 - val_midlegL4: 9.3918e-04 - val_midlegR4: 9.0288e-04 - val_hindlegL4: 0.0012 - val_hindlegR4: 0.0013 - val_eyeL: 3.8746e-04 - val_eyeR: 3.3939e-04 - lr: 1.0000e-04 - 63s/epoch - 174ms/step
+360/360 - 9s - loss: 8.3664e-04 - head: 3.5190e-04 - thorax: 1.7037e-04 - abdomen: 9.8467e-04 - wingL: 7.9929e-04 - wingR: 8.0385e-04 - forelegL4: 0.0012 - forelegR4: 0.0012 - midlegL4: 9.5228e-04 - midlegR4: 9.8510e-04 - hindlegL4: 0.0013 - hindlegR4: 0.0013 - eyeL: 4.0772e-04 - eyeR: 3.9413e-04 - val_loss: 8.7351e-04 - val_head: 4.0943e-04 - val_thorax: 1.7453e-04 - val_abdomen: 9.4413e-04 - val_wingL: 8.3617e-04 - val_wingR: 8.4860e-04 - val_forelegL4: 0.0012 - val_forelegR4: 0.0012 - val_midlegL4: 9.4441e-04 - val_midlegR4: 0.0011 - val_hindlegL4: 0.0014 - val_hindlegR4: 0.0014 - val_eyeL: 4.4847e-04 - val_eyeR: 4.4179e-04 - lr: 1.0000e-04 - 9s/epoch - 24ms/step
 Epoch 2/3
-360/360 - 58s - loss: 7.9662e-04 - head: 3.2407e-04 - thorax: 1.5127e-04 - abdomen: 9.1911e-04 - wingL: 7.6866e-04 - wingR: 7.8884e-04 - forelegL4: 0.0011 - forelegR4: 0.0011 - midlegL4: 8.8560e-04 - midlegR4: 9.3151e-04 - hindlegL4: 0.0012 - hindlegR4: 0.0013 - eyeL: 4.1677e-04 - eyeR: 3.9983e-04 - val_loss: 7.3673e-04 - val_head: 2.8314e-04 - val_thorax: 1.1026e-04 - val_abdomen: 9.4263e-04 - val_wingL: 6.7871e-04 - val_wingR: 6.4992e-04 - val_forelegL4: 0.0011 - val_forelegR4: 0.0011 - val_midlegL4: 8.0315e-04 - val_midlegR4: 8.3331e-04 - val_hindlegL4: 0.0012 - val_hindlegR4: 0.0012 - val_eyeL: 3.4531e-04 - val_eyeR: 3.5707e-04 - lr: 1.0000e-04 - 58s/epoch - 162ms/step
+360/360 - 7s - loss: 8.0541e-04 - head: 3.4627e-04 - thorax: 1.6070e-04 - abdomen: 9.4325e-04 - wingL: 7.7257e-04 - wingR: 7.7434e-04 - forelegL4: 0.0012 - forelegR4: 0.0012 - midlegL4: 8.9573e-04 - midlegR4: 9.3483e-04 - hindlegL4: 0.0013 - hindlegR4: 0.0013 - eyeL: 4.0939e-04 - eyeR: 3.8417e-04 - val_loss: 8.2339e-04 - val_head: 3.9561e-04 - val_thorax: 1.2637e-04 - val_abdomen: 8.6513e-04 - val_wingL: 7.1751e-04 - val_wingR: 7.5540e-04 - val_forelegL4: 0.0012 - val_forelegR4: 0.0012 - val_midlegL4: 8.5588e-04 - val_midlegR4: 0.0010 - val_hindlegL4: 0.0013 - val_hindlegR4: 0.0014 - val_eyeL: 4.8189e-04 - val_eyeR: 4.2402e-04 - lr: 1.0000e-04 - 7s/epoch - 20ms/step
 Epoch 3/3
-360/360 - 58s - loss: 7.6463e-04 - head: 3.0854e-04 - thorax: 1.3497e-04 - abdomen: 8.9188e-04 - wingL: 7.4921e-04 - wingR: 7.5430e-04 - forelegL4: 0.0011 - forelegR4: 0.0011 - midlegL4: 8.3320e-04 - midlegR4: 8.7736e-04 - hindlegL4: 0.0012 - hindlegR4: 0.0013 - eyeL: 3.9640e-04 - eyeR: 3.7940e-04 - val_loss: 7.0126e-04 - val_head: 2.8905e-04 - val_thorax: 1.1305e-04 - val_abdomen: 9.0676e-04 - val_wingL: 6.4827e-04 - val_wingR: 6.2576e-04 - val_forelegL4: 0.0010 - val_forelegR4: 9.8253e-04 - val_midlegL4: 8.0471e-04 - val_midlegR4: 7.3788e-04 - val_hindlegL4: 0.0011 - val_hindlegR4: 0.0012 - val_eyeL: 3.1543e-04 - val_eyeR: 3.4044e-04 - lr: 1.0000e-04 - 58s/epoch - 161ms/step
-INFO:sleap.nn.training:Finished training loop. [3.0 min]
+360/360 - 7s - loss: 7.7741e-04 - head: 3.2087e-04 - thorax: 1.4398e-04 - abdomen: 9.1826e-04 - wingL: 7.4005e-04 - wingR: 7.5282e-04 - forelegL4: 0.0011 - forelegR4: 0.0011 - midlegL4: 8.6551e-04 - midlegR4: 8.9726e-04 - hindlegL4: 0.0012 - hindlegR4: 0.0013 - eyeL: 3.8423e-04 - eyeR: 3.7468e-04 - val_loss: 8.4657e-04 - val_head: 3.5649e-04 - val_thorax: 1.2162e-04 - val_abdomen: 8.9171e-04 - val_wingL: 7.9007e-04 - val_wingR: 8.2471e-04 - val_forelegL4: 0.0013 - val_forelegR4: 0.0013 - val_midlegL4: 8.1375e-04 - val_midlegR4: 9.8217e-04 - val_hindlegL4: 0.0014 - val_hindlegR4: 0.0013 - val_eyeL: 4.7370e-04 - val_eyeR: 4.2098e-04 - lr: 1.0000e-04 - 7s/epoch - 19ms/step
+INFO:sleap.nn.training:Finished training loop. [0.4 min]
 INFO:sleap.nn.training:Deleting visualization directory: models/baseline_model.topdown/viz
 INFO:sleap.nn.training:Saving evaluation metrics to model folder...
 </pre></div>
 </div>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "c74d0a9e497146acaf8da36faf5f496a"}
+{"model_id": "b94057057f6442c990c6fc548910a685", "version_major": 2, "version_minor": 0}
 </script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
 </div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
 </pre>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.train.slp
 INFO:sleap.nn.evals:Saved metrics: models/baseline_model.topdown/metrics.train.npz
-INFO:sleap.nn.evals:OKS mAP: 0.597609
+INFO:sleap.nn.evals:OKS mAP: 0.585451
 </pre></div>
 </div>
 <script type="application/vnd.jupyter.widget-view+json">
-{"version_major": 2, "version_minor": 0, "model_id": "bf6a847899a24fcea5f14409a7ee1c33"}
+{"model_id": "8f2e64c8d4d6457986ee8b43b47e2876", "version_major": 2, "version_minor": 0}
 </script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
 </div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
 </pre>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.val.slp
 INFO:sleap.nn.evals:Saved metrics: models/baseline_model.topdown/metrics.val.npz
-INFO:sleap.nn.evals:OKS mAP: 0.621393
+INFO:sleap.nn.evals:OKS mAP: 0.574921
 </pre></div>
 </div>
 </div>

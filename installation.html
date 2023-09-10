@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Installation &#8212; SLEAP (v1.3.1)</title>
+    <title>Installation &#8212; SLEAP (v1.3.2)</title>
   
   
   
@@ -317,7 +317,7 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#macs-pre-installation">Macs (Pre-Installation)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#macs-pre-m1-pre-installation">Macs Pre-M1 (Pre-Installation)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-mambaforge">Installing Mambaforge</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-methods">Installation methods</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conda-package"><code class="docutils literal notranslate"><span class="pre">conda</span></code> package</a></li>
@@ -352,7 +352,7 @@ document.write(`
 <div class="contents local topic" id="contents">
 <p class="topic-title">Contents</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#macs-pre-installation" id="id1">Macs (Pre-Installation)</a></p></li>
+<li><p><a class="reference internal" href="#macs-pre-m1-pre-installation" id="id1">Macs Pre-M1 (Pre-Installation)</a></p></li>
 <li><p><a class="reference internal" href="#installing-mambaforge" id="id2">Installing Mambaforge</a></p></li>
 <li><p><a class="reference internal" href="#installation-methods" id="id3">Installation methods</a></p>
 <ul>
@@ -383,8 +383,8 @@ document.write(`
 <p><strong>Linux:</strong> Launch a new terminal by pressing <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>.</p>
 <p><strong>Mac:</strong> Launch a new terminal by pressing <kbd>Cmd</kbd> + <kbd>Space</kbd> and searching for <em>Terminal</em>.</p>
 </div>
-<section id="macs-pre-installation">
-<h2><a class="toc-backref" href="#id1">Macs (Pre-Installation)</a><a class="headerlink" href="#macs-pre-installation" title="Permalink to this headline">#</a></h2>
+<section id="macs-pre-m1-pre-installation">
+<h2><a class="toc-backref" href="#id1">Macs Pre-M1 (Pre-Installation)</a><a class="headerlink" href="#macs-pre-m1-pre-installation" title="Permalink to this headline">#</a></h2>
 <p>SLEAP can be installed on Macs by following these instructions:</p>
 <ol>
 <li><p>Make sure you’re on <strong>macOS Monterey</strong> or later, i.e., version 12+.</p></li>
@@ -444,7 +444,7 @@ These will make sure that MambaForge is easily accessible from most places on yo
 </pre></div>
 </div>
 <p><strong>On Macs (Apple Silicon)</strong>, use this terminal command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget -nc https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-MacOSX-arm64.sh <span class="o">&amp;&amp;</span> bash Mambaforge-MacOSX-arm64.sh -b <span class="o">&amp;&amp;</span> ~/mambaforge/bin/conda init zsh
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl -fsSL --compressed https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-MacOSX-arm64.sh -o Mambaforge3-MacOSX-arm64.sh <span class="o">&amp;&amp;</span> chmod +x Mambaforge3-MacOSX-arm64.sh <span class="o">&amp;&amp;</span> ./Mambaforge3-MacOSX-arm64.sh -b -p ~/mambaforge3 <span class="o">&amp;&amp;</span> rm Mambaforge3-MacOSX-arm64.sh <span class="o">&amp;&amp;</span> ~/mambaforge3/bin/conda init <span class="s2">&quot;</span><span class="k">$(</span>basename <span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span> <span class="o">&amp;&amp;</span> <span class="nb">source</span> <span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.</span><span class="k">$(</span>basename <span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">rc&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -454,11 +454,11 @@ These will make sure that MambaForge is easily accessible from most places on yo
 <section id="conda-package">
 <span id="condapackage"></span><h3><a class="toc-backref" href="#id4"><code class="docutils literal notranslate"><span class="pre">conda</span></code> package</a><a class="headerlink" href="#conda-package" title="Permalink to this headline">#</a></h3>
 <p><strong>Windows</strong> and <strong>Linux</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda <span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.3.1
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda <span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.3.2
 </pre></div>
 </div>
 <p><strong>Mac OS X</strong> and <strong>Apple Silicon</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba create -y -n sleap -c conda-forge -c anaconda -c sleap <span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.3.1
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba create -y -n sleap -c conda-forge -c anaconda -c sleap <span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.3.2
 </pre></div>
 </div>
 <p><strong>This is the recommended installation method</strong>.</p>
@@ -511,7 +511,7 @@ These will make sure that MambaForge is easily accessible from most places on yo
 </section>
 <section id="pip-package">
 <span id="pippackage"></span><h3><a class="toc-backref" href="#id6"><code class="docutils literal notranslate"><span class="pre">pip</span></code> package</a><a class="headerlink" href="#pip-package" title="Permalink to this headline">#</a></h3>
-<p>Although you do not need Mambaforge installed to perform a <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>, we recommend <a class="reference internal" href="#mambaforge"><span class="std std-ref">installing Mambaforge</span></a> to create a new environment where we can isolate the <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>. If you are working on <strong>Google Colab</strong>, skip to step 3 to perform the <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> without using a conda environment.</p>
+<p>Although you do not need Mambaforge installed to perform a <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>, we recommend <a class="reference internal" href="#mambaforge"><span class="std std-ref">installing Mambaforge</span></a> to create a new environment where we can isolate the <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>. Alternatively, you can use a venv if you have an existing python installation. If you are working on <strong>Google Colab</strong>, skip to step 3 to perform the <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> without using a conda environment.</p>
 <ol>
 <li><p>Otherwise, create a new conda environment where we will <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">sleap</span></code>:</p>
 <p>either without GPU support:</p>
@@ -533,10 +533,21 @@ These will make sure that MambaForge is easily accessible from most places on yo
 </div>
 </li>
 <li><p>Finally, we can perform the <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install <span class="nv">sleap</span><span class="o">==</span><span class="m">1</span>.3.1
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install sleap<span class="o">[</span>pypi<span class="o">]==</span><span class="m">1</span>.3.1
 </pre></div>
 </div>
 <p>This works on <strong>any OS except Apple silicon</strong> and on <strong>Google Colab</strong>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The pypi distributed package of SLEAP ships with the following extras:</p>
+<ul class="simple">
+<li><p><strong>pypi</strong>: For installation without an mamba environment file. All dependencies come from PyPI.</p></li>
+<li><p><strong>jupyter</strong>: This installs all <em>pypi</em> and jupyter lab dependencies.</p></li>
+<li><p><strong>dev</strong>: This installs all <em>jupyter</em> dependencies and developement tools for testing and building docs.</p></li>
+<li><p><strong>conda_jupyter</strong>: For installation using a mamba environment file included in the source code. Most dependencies are listed as conda packages in the environment file and only a few come from PyPI to allow jupyter lab support.</p></li>
+<li><p><strong>conda_dev</strong>: For installation using <a class="reference external" href="https://github.com/search?q=repo%3Atalmolab%2Fsleap+path%3Aenvironment*.yml&amp;type=code">a mamba environment</a> with a few PyPI dependencies for development tools.</p></li>
+</ul>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
@@ -717,7 +728,7 @@ GPUs: 2/2 available
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#macs-pre-installation">Macs (Pre-Installation)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#macs-pre-m1-pre-installation">Macs Pre-M1 (Pre-Installation)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-mambaforge">Installing Mambaforge</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-methods">Installation methods</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conda-package"><code class="docutils literal notranslate"><span class="pre">conda</span></code> package</a></li>

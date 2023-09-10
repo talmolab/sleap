@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Post-inference tracking &#8212; SLEAP (v1.3.1)</title>
+    <title>Post-inference tracking &#8212; SLEAP (v1.3.2)</title>
   
   
   
@@ -354,169 +354,12 @@ document.write(`
 <h3>Install<a class="headerlink" href="#install" title="Permalink to this headline">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span># This should take care of all the dependencies on colab:
-!pip uninstall -y opencv-python opencv-contrib-python &amp;&amp; pip install sleap
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This should take care of all the dependencies on colab:</span>
+<span class="o">!</span>pip uninstall -qqq -y opencv-python opencv-contrib-python
+<span class="o">!</span>pip install -qqq sleap<span class="o">[</span>pypi<span class="o">]</span>
 
-# But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):
-# conda create -n sleap -c sleap -c conda-forge -c nvidia sleap
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Found existing installation: opencv-python 4.1.2.30
-Uninstalling opencv-python-4.1.2.30:
-  Successfully uninstalled opencv-python-4.1.2.30
-Found existing installation: opencv-contrib-python 4.1.2.30
-Uninstalling opencv-contrib-python-4.1.2.30:
-  Successfully uninstalled opencv-contrib-python-4.1.2.30
-Collecting sleap
-  Downloading sleap-1.2.2-py3-none-any.whl (62.0 MB)
-     |████████████████████████████████| 62.0 MB 19 kB/s 
-?25hCollecting pykalman==0.9.5
-  Downloading pykalman-0.9.5.tar.gz (228 kB)
-     |████████████████████████████████| 228 kB 21.7 MB/s 
-?25hRequirement already satisfied: certifi&lt;=2021.10.8,&gt;=2017.4.17 in /usr/local/lib/python3.7/dist-packages (from sleap) (2021.10.8)
-Requirement already satisfied: h5py&lt;=3.6.0,&gt;=3.1.0 in /usr/local/lib/python3.7/dist-packages (from sleap) (3.1.0)
-Collecting opencv-python-headless&lt;=4.5.5.62,&gt;=4.2.0.34
-  Downloading opencv_python_headless-4.5.5.62-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (47.7 MB)
-     |████████████████████████████████| 47.7 MB 1.4 MB/s 
-?25hCollecting jsonpickle==1.2
-  Downloading jsonpickle-1.2-py2.py3-none-any.whl (32 kB)
-Requirement already satisfied: pyyaml in /usr/local/lib/python3.7/dist-packages (from sleap) (3.13)
-Requirement already satisfied: scikit-learn==1.0.* in /usr/local/lib/python3.7/dist-packages (from sleap) (1.0.2)
-Collecting imgstore==0.2.9
-  Downloading imgstore-0.2.9-py2.py3-none-any.whl (904 kB)
-     |████████████████████████████████| 904 kB 44.2 MB/s 
-?25hRequirement already satisfied: networkx in /usr/local/lib/python3.7/dist-packages (from sleap) (2.6.3)
-Requirement already satisfied: pyzmq in /usr/local/lib/python3.7/dist-packages (from sleap) (22.3.0)
-Requirement already satisfied: scipy&lt;=1.7.3,&gt;=1.4.1 in /usr/local/lib/python3.7/dist-packages (from sleap) (1.4.1)
-Requirement already satisfied: psutil in /usr/local/lib/python3.7/dist-packages (from sleap) (5.4.8)
-Requirement already satisfied: pandas in /usr/local/lib/python3.7/dist-packages (from sleap) (1.3.5)
-Collecting segmentation-models==1.0.1
-  Downloading segmentation_models-1.0.1-py3-none-any.whl (33 kB)
-Collecting rich==10.16.1
-  Downloading rich-10.16.1-py3-none-any.whl (214 kB)
-     |████████████████████████████████| 214 kB 53.6 MB/s 
-?25hRequirement already satisfied: numpy&lt;=1.21.5,&gt;=1.19.5 in /usr/local/lib/python3.7/dist-packages (from sleap) (1.21.5)
-Collecting qimage2ndarray&lt;=1.8.3,&gt;=1.8.2
-  Downloading qimage2ndarray-1.8.3-py3-none-any.whl (11 kB)
-Collecting python-rapidjson
-  Downloading python_rapidjson-1.6-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.6 MB)
-     |████████████████████████████████| 1.6 MB 21.9 MB/s 
-?25hCollecting attrs==21.2.0
-  Downloading attrs-21.2.0-py2.py3-none-any.whl (53 kB)
-     |████████████████████████████████| 53 kB 1.6 MB/s 
-?25hRequirement already satisfied: tensorflow&lt;2.9.0,&gt;=2.6.3 in /usr/local/lib/python3.7/dist-packages (from sleap) (2.8.0)
-Requirement already satisfied: scikit-image in /usr/local/lib/python3.7/dist-packages (from sleap) (0.18.3)
-Collecting cattrs==1.1.1
-  Downloading cattrs-1.1.1-py3-none-any.whl (16 kB)
-Collecting jsmin
-  Downloading jsmin-3.0.1.tar.gz (13 kB)
-Collecting scikit-video
-  Downloading scikit_video-1.1.11-py2.py3-none-any.whl (2.3 MB)
-     |████████████████████████████████| 2.3 MB 61.6 MB/s 
-?25hRequirement already satisfied: imageio&lt;=2.15.0 in /usr/local/lib/python3.7/dist-packages (from sleap) (2.4.1)
-Requirement already satisfied: seaborn in /usr/local/lib/python3.7/dist-packages (from sleap) (0.11.2)
-Collecting PySide2&lt;=5.14.1,&gt;=5.13.2
-  Downloading PySide2-5.14.1-5.14.1-cp35.cp36.cp37.cp38-abi3-manylinux1_x86_64.whl (165.5 MB)
-     |████████████████████████████████| 165.5 MB 69 kB/s 
-?25hCollecting imgaug==0.4.0
-  Downloading imgaug-0.4.0-py2.py3-none-any.whl (948 kB)
-     |████████████████████████████████| 948 kB 27.9 MB/s 
-?25hRequirement already satisfied: six in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (1.15.0)
-Collecting opencv-python
-  Downloading opencv_python-4.5.5.64-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (60.5 MB)
-     |████████████████████████████████| 60.5 MB 1.1 MB/s 
-?25hRequirement already satisfied: Shapely in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (1.8.1.post1)
-Requirement already satisfied: Pillow in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (7.1.2)
-Requirement already satisfied: matplotlib in /usr/local/lib/python3.7/dist-packages (from imgaug==0.4.0-&gt;sleap) (3.2.2)
-Requirement already satisfied: tzlocal in /usr/local/lib/python3.7/dist-packages (from imgstore==0.2.9-&gt;sleap) (1.5.1)
-Requirement already satisfied: python-dateutil in /usr/local/lib/python3.7/dist-packages (from imgstore==0.2.9-&gt;sleap) (2.8.2)
-Requirement already satisfied: pytz in /usr/local/lib/python3.7/dist-packages (from imgstore==0.2.9-&gt;sleap) (2018.9)
-Collecting colorama&lt;0.5.0,&gt;=0.4.0
-  Downloading colorama-0.4.4-py2.py3-none-any.whl (16 kB)
-Requirement already satisfied: pygments&lt;3.0.0,&gt;=2.6.0 in /usr/local/lib/python3.7/dist-packages (from rich==10.16.1-&gt;sleap) (2.6.1)
-Collecting commonmark&lt;0.10.0,&gt;=0.9.0
-  Downloading commonmark-0.9.1-py2.py3-none-any.whl (51 kB)
-     |████████████████████████████████| 51 kB 5.9 MB/s 
-?25hRequirement already satisfied: typing-extensions&lt;5.0,&gt;=3.7.4 in /usr/local/lib/python3.7/dist-packages (from rich==10.16.1-&gt;sleap) (3.10.0.2)
-Requirement already satisfied: threadpoolctl&gt;=2.0.0 in /usr/local/lib/python3.7/dist-packages (from scikit-learn==1.0.*-&gt;sleap) (3.1.0)
-Requirement already satisfied: joblib&gt;=0.11 in /usr/local/lib/python3.7/dist-packages (from scikit-learn==1.0.*-&gt;sleap) (1.1.0)
-Collecting efficientnet==1.0.0
-  Downloading efficientnet-1.0.0-py3-none-any.whl (17 kB)
-Collecting image-classifiers==1.0.0
-  Downloading image_classifiers-1.0.0-py3-none-any.whl (19 kB)
-Collecting keras-applications&lt;=1.0.8,&gt;=1.0.7
-  Downloading Keras_Applications-1.0.8-py3-none-any.whl (50 kB)
-     |████████████████████████████████| 50 kB 6.3 MB/s 
-?25hRequirement already satisfied: cached-property in /usr/local/lib/python3.7/dist-packages (from h5py&lt;=3.6.0,&gt;=3.1.0-&gt;sleap) (1.5.2)
-Collecting shiboken2==5.14.1
-  Downloading shiboken2-5.14.1-5.14.1-cp35.cp36.cp37.cp38-abi3-manylinux1_x86_64.whl (847 kB)
-     |████████████████████████████████| 847 kB 43.5 MB/s 
-?25hRequirement already satisfied: PyWavelets&gt;=1.1.1 in /usr/local/lib/python3.7/dist-packages (from scikit-image-&gt;sleap) (1.3.0)
-Requirement already satisfied: tifffile&gt;=2019.7.26 in /usr/local/lib/python3.7/dist-packages (from scikit-image-&gt;sleap) (2021.11.2)
-Requirement already satisfied: pyparsing!=2.0.4,!=2.1.2,!=2.1.6,&gt;=2.0.1 in /usr/local/lib/python3.7/dist-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap) (3.0.7)
-Requirement already satisfied: cycler&gt;=0.10 in /usr/local/lib/python3.7/dist-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap) (0.11.0)
-Requirement already satisfied: kiwisolver&gt;=1.0.1 in /usr/local/lib/python3.7/dist-packages (from matplotlib-&gt;imgaug==0.4.0-&gt;sleap) (1.4.0)
-Requirement already satisfied: gast&gt;=0.2.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.5.3)
-Requirement already satisfied: setuptools in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (57.4.0)
-Requirement already satisfied: libclang&gt;=9.0.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (13.0.0)
-Requirement already satisfied: tensorflow-io-gcs-filesystem&gt;=0.23.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.24.0)
-Requirement already satisfied: astunparse&gt;=1.6.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.6.3)
-Requirement already satisfied: opt-einsum&gt;=2.3.2 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.3.0)
-Requirement already satisfied: termcolor&gt;=1.1.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.1.0)
-Requirement already satisfied: keras&lt;2.9,&gt;=2.8.0rc0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.8.0)
-Requirement already satisfied: wrapt&gt;=1.11.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.14.0)
-Requirement already satisfied: keras-preprocessing&gt;=1.1.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.1.2)
-Requirement already satisfied: google-pasta&gt;=0.1.1 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.2.0)
-Collecting tf-estimator-nightly==2.8.0.dev2021122109
-  Downloading tf_estimator_nightly-2.8.0.dev2021122109-py2.py3-none-any.whl (462 kB)
-     |████████████████████████████████| 462 kB 49.8 MB/s 
-?25hRequirement already satisfied: protobuf&gt;=3.9.2 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.17.3)
-Requirement already satisfied: tensorboard&lt;2.9,&gt;=2.8 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.8.0)
-Requirement already satisfied: flatbuffers&gt;=1.12 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.0)
-Requirement already satisfied: absl-py&gt;=0.4.0 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.0.0)
-Requirement already satisfied: grpcio&lt;2.0,&gt;=1.24.3 in /usr/local/lib/python3.7/dist-packages (from tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.44.0)
-Requirement already satisfied: wheel&lt;1.0,&gt;=0.23.0 in /usr/local/lib/python3.7/dist-packages (from astunparse&gt;=1.6.0-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.37.1)
-Requirement already satisfied: google-auth-oauthlib&lt;0.5,&gt;=0.4.1 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.4.6)
-Requirement already satisfied: tensorboard-plugin-wit&gt;=1.6.0 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.8.1)
-Requirement already satisfied: markdown&gt;=2.6.8 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.3.6)
-Requirement already satisfied: tensorboard-data-server&lt;0.7.0,&gt;=0.6.0 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.6.1)
-Requirement already satisfied: werkzeug&gt;=0.11.15 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.0.1)
-Requirement already satisfied: requests&lt;3,&gt;=2.21.0 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.23.0)
-Requirement already satisfied: google-auth&lt;3,&gt;=1.6.3 in /usr/local/lib/python3.7/dist-packages (from tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.35.0)
-Requirement already satisfied: rsa&lt;5,&gt;=3.1.4 in /usr/local/lib/python3.7/dist-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (4.8)
-Requirement already satisfied: pyasn1-modules&gt;=0.2.1 in /usr/local/lib/python3.7/dist-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.2.8)
-Requirement already satisfied: cachetools&lt;5.0,&gt;=2.0.0 in /usr/local/lib/python3.7/dist-packages (from google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (4.2.4)
-Requirement already satisfied: requests-oauthlib&gt;=0.7.0 in /usr/local/lib/python3.7/dist-packages (from google-auth-oauthlib&lt;0.5,&gt;=0.4.1-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.3.1)
-Requirement already satisfied: importlib-metadata&gt;=4.4 in /usr/local/lib/python3.7/dist-packages (from markdown&gt;=2.6.8-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (4.11.3)
-Requirement already satisfied: zipp&gt;=0.5 in /usr/local/lib/python3.7/dist-packages (from importlib-metadata&gt;=4.4-&gt;markdown&gt;=2.6.8-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.7.0)
-Requirement already satisfied: pyasn1&lt;0.5.0,&gt;=0.4.6 in /usr/local/lib/python3.7/dist-packages (from pyasn1-modules&gt;=0.2.1-&gt;google-auth&lt;3,&gt;=1.6.3-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (0.4.8)
-Requirement already satisfied: idna&lt;3,&gt;=2.5 in /usr/local/lib/python3.7/dist-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (2.10)
-Requirement already satisfied: chardet&lt;4,&gt;=3.0.2 in /usr/local/lib/python3.7/dist-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.0.4)
-Requirement already satisfied: urllib3!=1.25.0,!=1.25.1,&lt;1.26,&gt;=1.21.1 in /usr/local/lib/python3.7/dist-packages (from requests&lt;3,&gt;=2.21.0-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (1.24.3)
-Requirement already satisfied: oauthlib&gt;=3.0.0 in /usr/local/lib/python3.7/dist-packages (from requests-oauthlib&gt;=0.7.0-&gt;google-auth-oauthlib&lt;0.5,&gt;=0.4.1-&gt;tensorboard&lt;2.9,&gt;=2.8-&gt;tensorflow&lt;2.9.0,&gt;=2.6.3-&gt;sleap) (3.2.0)
-Building wheels for collected packages: pykalman, jsmin
-  Building wheel for pykalman (setup.py) ... ?25l?25hdone
-  Created wheel for pykalman: filename=pykalman-0.9.5-py3-none-any.whl size=48462 sha256=5de7d8c6487261ac5359426edf6b9d6ff977786a758424aaa6462a743fae77e4
-  Stored in directory: /root/.cache/pip/wheels/6a/04/02/2dda6ea59c66d9e685affc8af3a31ad3a5d87b7311689efce6
-  Building wheel for jsmin (setup.py) ... ?25l?25hdone
-  Created wheel for jsmin: filename=jsmin-3.0.1-py3-none-any.whl size=13782 sha256=353b91b543700f74d4c7801c636ff32de6e99c9578162db575ea8d5e0b29d64e
-  Stored in directory: /root/.cache/pip/wheels/a4/0b/64/fb4f87526ecbdf7921769a39d91dcfe4860e621cf15b8250d6
-Successfully built pykalman jsmin
-Installing collected packages: keras-applications, tf-estimator-nightly, shiboken2, opencv-python, image-classifiers, efficientnet, commonmark, colorama, attrs, segmentation-models, scikit-video, rich, qimage2ndarray, python-rapidjson, PySide2, pykalman, opencv-python-headless, jsonpickle, jsmin, imgstore, imgaug, cattrs, sleap
-  Attempting uninstall: attrs
-    Found existing installation: attrs 21.4.0
-    Uninstalling attrs-21.4.0:
-      Successfully uninstalled attrs-21.4.0
-  Attempting uninstall: imgaug
-    Found existing installation: imgaug 0.2.9
-    Uninstalling imgaug-0.2.9:
-      Successfully uninstalled imgaug-0.2.9
-<span class=" -Color -Color-Red">ERROR: pip&#39;s dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.</span>
-<span class=" -Color -Color-Red">datascience 0.10.6 requires folium==0.2.1, but you have folium 0.8.3 which is incompatible.</span>
-<span class=" -Color -Color-Red">albumentations 0.1.12 requires imgaug&lt;0.2.7,&gt;=0.2.5, but you have imgaug 0.4.0 which is incompatible.</span>
-Successfully installed PySide2-5.14.1 attrs-21.2.0 cattrs-1.1.1 colorama-0.4.4 commonmark-0.9.1 efficientnet-1.0.0 image-classifiers-1.0.0 imgaug-0.4.0 imgstore-0.2.9 jsmin-3.0.1 jsonpickle-1.2 keras-applications-1.0.8 opencv-python-4.5.5.64 opencv-python-headless-4.5.5.62 pykalman-0.9.5 python-rapidjson-1.6 qimage2ndarray-1.8.3 rich-10.16.1 scikit-video-1.1.11 segmentation-models-1.0.1 shiboken2-5.14.1 sleap-1.2.2 tf-estimator-nightly-2.8.0.dev2021122109
+<span class="c1"># But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):</span>
+<span class="c1"># conda create -n sleap -c sleap -c conda-forge -c nvidia sleap</span>
 </pre></div>
 </div>
 </div>
@@ -526,7 +369,7 @@ Successfully installed PySide2-5.14.1 attrs-21.2.0 cattrs-1.1.1 colorama-0.4.4 c
 <h3>Test<a class="headerlink" href="#test" title="Permalink to this headline">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1">#@title SLEAP and system versions: { display-mode: &quot;form&quot; }</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#@title SLEAP and system versions: { display-mode: &quot;form&quot; }</span>
 <span class="kn">import</span> <span class="nn">sleap</span>
 <span class="n">sleap</span><span class="o">.</span><span class="n">versions</span><span class="p">()</span>
 <span class="n">sleap</span><span class="o">.</span><span class="n">system_summary</span><span class="p">()</span>
@@ -534,13 +377,29 @@ Successfully installed PySide2-5.14.1 attrs-21.2.0 cattrs-1.1.1 colorama-0.4.4 c
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:numexpr.utils:NumExpr defaulting to 2 threads.
-SLEAP: 1.2.2
-TensorFlow: 2.8.0
-Numpy: 1.21.5
-Python: 3.7.13
-OS: Linux-5.4.144+-x86_64-with-Ubuntu-18.04-bionic
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-09-01 14:17:16.250591: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcudart.so.11.0&#39;; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:/home/talmolab/micromamba/envs/sleap_jupyter/lib:
+2023-09-01 14:17:16.250602: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>SLEAP: 1.3.1
+TensorFlow: 2.8.4
+Numpy: 1.21.6
+Python: 3.7.12
+OS: Linux-5.15.0-78-generic-x86_64-with-debian-bookworm-sid
 GPUs: None detected.
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-09-01 14:17:17.389239: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:936] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2023-09-01 14:17:17.390139: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcudart.so.11.0&#39;; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:/home/talmolab/micromamba/envs/sleap_jupyter/lib:
+2023-09-01 14:17:17.390188: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcublas.so.11&#39;; dlerror: libcublas.so.11: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:/home/talmolab/micromamba/envs/sleap_jupyter/lib:
+2023-09-01 14:17:17.390230: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcublasLt.so.11&#39;; dlerror: libcublasLt.so.11: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:/home/talmolab/micromamba/envs/sleap_jupyter/lib:
+2023-09-01 14:17:17.390267: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcufft.so.10&#39;; dlerror: libcufft.so.10: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:/home/talmolab/micromamba/envs/sleap_jupyter/lib:
+2023-09-01 14:17:17.390306: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcurand.so.10&#39;; dlerror: libcurand.so.10: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:/home/talmolab/micromamba/envs/sleap_jupyter/lib:
+2023-09-01 14:17:17.390345: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcusolver.so.11&#39;; dlerror: libcusolver.so.11: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:/home/talmolab/micromamba/envs/sleap_jupyter/lib:
+2023-09-01 14:17:17.390383: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcusparse.so.11&#39;; dlerror: libcusparse.so.11: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:/home/talmolab/micromamba/envs/sleap_jupyter/lib:
+2023-09-01 14:17:17.390421: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library &#39;libcudnn.so.8&#39;; dlerror: libcudnn.so.8: cannot open shared object file: No such file or directory; LD_LIBRARY_PATH: /home/talmolab/micromamba/envs/sleap_jupyter/lib/python3.7/site-packages/cv2/../../lib64:/home/talmolab/micromamba/envs/sleap_jupyter/lib:
+2023-09-01 14:17:17.390425: W tensorflow/core/common_runtime/gpu/gpu_device.cc:1850] Cannot dlopen some GPU libraries. Please make sure the missing libraries mentioned above are installed properly if you would like to use GPU. Follow the guide at https://www.tensorflow.org/install/gpu for how to download and setup the required libraries for your platform.
+Skipping registering GPU devices...
 </pre></div>
 </div>
 </div>
@@ -554,58 +413,15 @@ GPUs: None detected.
 <p>You should replace this with Google Drive mounting if running this on Google Colab, or simply skip it altogether and just set the paths below if running locally.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>!wget -O fly_clip.mp4 https://github.com/talmolab/sleap-tutorial-uo/blob/main/data/fly_clip.mp4?raw=true
-!wget -O predictions.slp https://github.com/talmolab/sleap-tutorial-uo/blob/main/data/predictions.slp?raw=true
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>--2022-04-04 00:10:34--  https://github.com/talmolab/sleap-tutorial-uo/blob/main/data/fly_clip.mp4?raw=true
-Resolving github.com (github.com)... 13.114.40.48
-Connecting to github.com (github.com)|13.114.40.48|:443... connected.
-HTTP request sent, awaiting response... 302 Found
-Location: https://github.com/talmolab/sleap-tutorial-uo/raw/main/data/fly_clip.mp4 [following]
---2022-04-04 00:10:34--  https://github.com/talmolab/sleap-tutorial-uo/raw/main/data/fly_clip.mp4
-Reusing existing connection to github.com:443.
-HTTP request sent, awaiting response... 302 Found
-Location: https://raw.githubusercontent.com/talmolab/sleap-tutorial-uo/main/data/fly_clip.mp4 [following]
---2022-04-04 00:10:34--  https://raw.githubusercontent.com/talmolab/sleap-tutorial-uo/main/data/fly_clip.mp4
-Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 185.199.111.133, 185.199.108.133, 185.199.109.133, ...
-Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|185.199.111.133|:443... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: 676194 (660K) [application/octet-stream]
-Saving to: ‘fly_clip.mp4’
-
-fly_clip.mp4        100%[===================&gt;] 660.35K  --.-KB/s    in 0.05s   
-
-2022-04-04 00:10:36 (12.1 MB/s) - ‘fly_clip.mp4’ saved [676194/676194]
-
---2022-04-04 00:10:36--  https://github.com/talmolab/sleap-tutorial-uo/blob/main/data/predictions.slp?raw=true
-Resolving github.com (github.com)... 52.69.186.44
-Connecting to github.com (github.com)|52.69.186.44|:443... connected.
-HTTP request sent, awaiting response... 302 Found
-Location: https://github.com/talmolab/sleap-tutorial-uo/raw/main/data/predictions.slp [following]
---2022-04-04 00:10:37--  https://github.com/talmolab/sleap-tutorial-uo/raw/main/data/predictions.slp
-Reusing existing connection to github.com:443.
-HTTP request sent, awaiting response... 302 Found
-Location: https://raw.githubusercontent.com/talmolab/sleap-tutorial-uo/main/data/predictions.slp [following]
---2022-04-04 00:10:37--  https://raw.githubusercontent.com/talmolab/sleap-tutorial-uo/main/data/predictions.slp
-Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 185.199.111.133, 185.199.108.133, 185.199.109.133, ...
-Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|185.199.111.133|:443... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: 420976 (411K) [application/octet-stream]
-Saving to: ‘predictions.slp’
-
-predictions.slp     100%[===================&gt;] 411.11K  --.-KB/s    in 0.04s   
-
-2022-04-04 00:10:38 (9.66 MB/s) - ‘predictions.slp’ saved [420976/420976]
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>wget -q -O fly_clip.mp4 https://github.com/talmolab/sleap-tutorial-uo/blob/main/data/fly_clip.mp4?raw<span class="o">=</span>true
+<span class="o">!</span>wget -q -O predictions.slp https://github.com/talmolab/sleap-tutorial-uo/blob/main/data/predictions.slp?raw<span class="o">=</span>true
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">PREDICTIONS_FILE</span> <span class="o">=</span> <span class="s2">&quot;predictions.slp&quot;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">PREDICTIONS_FILE</span> <span class="o">=</span> <span class="s2">&quot;predictions.slp&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -615,7 +431,7 @@ predictions.slp     100%[===================&gt;] 411.11K  --.-KB/s    in 0.04s
 <h1>3. Track<a class="headerlink" href="#track" title="Permalink to this headline">#</a></h1>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load predictions</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load predictions</span>
 <span class="n">labels</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">PREDICTIONS_FILE</span><span class="p">)</span>
 
 <span class="c1"># Here I&#39;m removing the tracks so we just have instances without any tracking applied.</span>
@@ -635,7 +451,7 @@ predictions.slp     100%[===================&gt;] 411.11K  --.-KB/s    in 0.04s
 <p>Here we create a tracker with the options we want to experiment with. You can <a class="reference external" href="https://sleap.ai/guides/proofreading.html#tracking-methods">read more about tracking in the documentation</a> or the parameters in the <a class="reference external" href="https://sleap.ai/guides/cli.html#sleap-track"><code class="docutils literal notranslate"><span class="pre">sleap-track</span></code> CLI help</a>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create tracker</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create tracker</span>
 <span class="n">tracker</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">tracking</span><span class="o">.</span><span class="n">Tracker</span><span class="o">.</span><span class="n">make_tracker_by_name</span><span class="p">(</span>
     <span class="c1"># General tracking options</span>
     <span class="n">tracker</span><span class="o">=</span><span class="s2">&quot;flow&quot;</span><span class="p">,</span>
@@ -669,7 +485,7 @@ predictions.slp     100%[===================&gt;] 411.11K  --.-KB/s    in 0.04s
 <p>Next we’ll actually run the tracking on each frame. This might take a bit longer when using the <code class="docutils literal notranslate"><span class="pre">&quot;flow&quot;</span></code> method.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tracked_lfs</span> <span class="o">=</span> <span class="p">[]</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tracked_lfs</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">lf</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
     <span class="n">lf</span><span class="o">.</span><span class="n">instances</span> <span class="o">=</span> <span class="n">tracker</span><span class="o">.</span><span class="n">track</span><span class="p">(</span><span class="n">lf</span><span class="o">.</span><span class="n">instances</span><span class="p">,</span> <span class="n">img</span><span class="o">=</span><span class="n">lf</span><span class="o">.</span><span class="n">image</span><span class="p">)</span>
     <span class="n">tracked_lfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lf</span><span class="p">)</span>
@@ -690,7 +506,7 @@ predictions.slp     100%[===================&gt;] 411.11K  --.-KB/s    in 0.04s
 <p>Let’s see the results and save out the tracked predictions.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tracked_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tracked_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -700,7 +516,7 @@ predictions.slp     100%[===================&gt;] 411.11K  --.-KB/s    in 0.04s
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tracked_labels</span><span class="p">[</span><span class="mi">100</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tracked_labels</span><span class="p">[</span><span class="mi">100</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -710,7 +526,7 @@ predictions.slp     100%[===================&gt;] 411.11K  --.-KB/s    in 0.04s
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tracked_labels</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;retracked.slp&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tracked_labels</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;retracked.slp&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
