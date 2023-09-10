@@ -21,7 +21,11 @@ import numpy as np
 import psutil
 import rapidjson
 import yaml
-from importlib_resources import files  # TODO(LM): Upgrade to importlib.resources.
+
+try:
+    from importlib.resources import files  # New in 3.9+
+except ImportError:
+    from importlib_resources import files  # TODO(LM): Upgrade to importlib.resources.
 from PIL import Image
 
 import sleap.version as sleap_version

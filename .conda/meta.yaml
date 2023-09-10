@@ -16,7 +16,7 @@ source:
   path: ../
 
 build:
-  number: 12
+  number: 1
 
 requirements:
   host:
