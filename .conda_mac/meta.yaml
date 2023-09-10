@@ -1,0 +1,90 @@
+# Ref: https://docs.conda.io/projects/conda-build/en/latest/resources/define-metadata.html
+
+# Jinja template: Process setup.py to obtain version and metadata
+{% set data = load_setup_py_data() %}
+
+
+package:
+  # Repeating name because of the following issue:
+  # https://github.com/conda/conda-build/issues/2475
+  name: sleap
+  version: {{ data.get('version') }}
+
+about:
+  home: {{ data.get('url') }}
+  license: {{ data.get('license') }}
+  summary: {{ data.get('description') }}
+
+build:
+  number: 1
+
+source:
+  path: ../
+
+requirements:
+  host:  
+    - conda-forge::python ~=3.9
+    - anaconda::numpy >=1.19.5,<1.23.0
+    - conda-forge::setuptools
+    - conda-forge::packaging
+    - conda-forge::pip
+
+    # Only the packages above are required to build, but listing them all ensures no 
+    # unnecessary pypi packages are installed via the build script (bld.bat, build.sh)
+    - conda-forge::attrs >=21.2.0
+    - conda-forge::cattrs ==1.1.1
+    - conda-forge::h5py
+    - conda-forge::imgaug ==0.4.0
+    - conda-forge::jsmin
+    - conda-forge::jsonpickle ==1.2
+    - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
+    - conda-forge::networkx
+    - conda-forge::opencv
+    - conda-forge::pandas
+    - conda-forge::pillow
+    - conda-forge::psutil
+    - conda-forge::pykalman
+    - conda-forge::pyside2 >=5.12
+    - conda-forge::python-rapidjson
+    - conda-forge::pyyaml
+    - conda-forge::pyzmq
+    - conda-forge::qtpy >=2.0.1
+    - conda-forge::rich
+    - conda-forge::scipy >=1.4.1,<=1.9.0
+    - conda-forge::scikit-image
+    - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-video
+    - conda-forge::seaborn
+
+  run:
+    - conda-forge::python ~=3.9
+    - conda-forge::attrs >=21.2.0
+    - conda-forge::cattrs ==1.1.1
+    - conda-forge::h5py
+    - conda-forge::imgaug ==0.4.0
+    - conda-forge::jsmin
+    - conda-forge::jsonpickle ==1.2
+    - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
+    - conda-forge::networkx
+    - anaconda::numpy >=1.19.5,<1.23.0
+    - conda-forge::opencv
+    - conda-forge::pandas
+    - conda-forge::pillow
+    - conda-forge::psutil
+    - conda-forge::pykalman
+    - conda-forge::pyside2 >=5.12
+    - conda-forge::python-rapidjson
+    - conda-forge::pyyaml
+    - conda-forge::pyzmq
+    - conda-forge::qtpy >=2.0.1
+    - conda-forge::rich
+    - conda-forge::scipy >=1.4.1,<=1.9.0
+    - conda-forge::scikit-image
+    - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-video
+    - conda-forge::seaborn
+    - conda-forge::tensorflow-hub
+
+test:
+  imports:
+    - sleap

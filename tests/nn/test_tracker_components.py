@@ -14,7 +14,9 @@ from sleap.instance import PredictedInstance
 from sleap.skeleton import Skeleton
 
 
-@pytest.mark.parametrize("tracker", ["simple", "flow"])
+@pytest.mark.parametrize(
+    "tracker", ["simple", "flow", "simplemaxtracks", "flowmaxtracks"]
+)
 @pytest.mark.parametrize("similarity", ["instance", "iou", "centroid"])
 @pytest.mark.parametrize("match", ["greedy", "hungarian"])
 @pytest.mark.parametrize("count", [0, 2])
@@ -166,3 +168,222 @@ def test_frame_match_object():
 
     assert matches[1].track == "track b"
     assert matches[1].instance == "instance b"
+
+
+def make_insts(trx):
+    skel = Skeleton.from_names_and_edge_inds(
+        ["A", "B", "C"], edge_inds=[[0, 1], [1, 2]]
+    )
+
+    def make_inst(x, y):
+        pts = np.array([[-0.1, -0.1], [0.0, 0.0], [0.1, 0.1]]) + np.array([[x, y]])
+        return PredictedInstance.from_numpy(pts, [1, 1, 1], 1, skel)
+
+    insts = []
+    for frame in trx:
+        insts_frame = []
+        for x, y in frame:
+            insts_frame.append(make_inst(x, y))
+        insts.append(insts_frame)
+    return insts
+
+
+def test_max_tracking_large_gap_single_track():
+    # Track 2 instances with gap > window size
+    preds = make_insts(
+        [
+            [
+                (0, 0),
+                (0, 1),
+            ],
+            [
+                (0.1, 0),
+                (0.1, 1),
+            ],
+            [
+                (0.2, 0),
+                (0.2, 1),
+            ],
+            [
+                (0.3, 0),
+            ],
+            [
+                (0.4, 0),
+            ],
+            [
+                (0.5, 0),
+                (0.5, 1),
+            ],
+            [
+                (0.6, 0),
+                (0.6, 1),
+            ],
+        ]
+    )
+
+    tracker = Tracker.make_tracker_by_name(
+        tracker="simple",
+        # tracker="simplemaxtracks",
+        match="hungarian",
+        track_window=2,
+        # max_tracks=2,
+        # max_tracking=True,
+    )
+
+    tracked = []
+    for insts in preds:
+        tracked_insts = tracker.track(insts)
+        tracked.append(tracked_insts)
+    all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
+
+    assert len(all_tracks) == 3
+
+    tracker = Tracker.make_tracker_by_name(
+        # tracker="simple",
+        tracker="simplemaxtracks",
+        match="hungarian",
+        track_window=2,
+        max_tracks=2,
+        max_tracking=True,
+    )
+
+    tracked = []
+    for insts in preds:
+        tracked_insts = tracker.track(insts)
+        tracked.append(tracked_insts)
+    all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
+
+    assert len(all_tracks) == 2
+
+
+def test_max_tracking_small_gap_on_both_tracks():
+    # Test 2 instances with both tracks with gap > window size
+    preds = make_insts(
+        [
+            [
+                (0, 0),
+                (0, 1),
+            ],
+            [
+                (0.1, 0),
+                (0.1, 1),
+            ],
+            [
+                (0.2, 0),
+                (0.2, 1),
+            ],
+            [],
+            [],
+            [
+                (0.5, 0),
+                (0.5, 1),
+            ],
+            [
+                (0.6, 0),
+                (0.6, 1),
+            ],
+        ]
+    )
+
+    tracker = Tracker.make_tracker_by_name(
+        tracker="simple",
+        # tracker="simplemaxtracks",
+        match="hungarian",
+        track_window=2,
+        # max_tracks=2,
+        # max_tracking=True,
+    )
+
+    tracked = []
+    for insts in preds:
+        tracked_insts = tracker.track(insts)
+        tracked.append(tracked_insts)
+    all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
+
+    assert len(all_tracks) == 4
+
+    tracker = Tracker.make_tracker_by_name(
+        # tracker="simple",
+        tracker="simplemaxtracks",
+        match="hungarian",
+        track_window=2,
+        max_tracks=2,
+        max_tracking=True,
+    )
+
+    tracked = []
+    for insts in preds:
+        tracked_insts = tracker.track(insts)
+        tracked.append(tracked_insts)
+    all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
+
+    assert len(all_tracks) == 2
+
+
+def test_max_tracking_extra_detections():
+    # Test having more than 2 detected instances in a frame
+    preds = make_insts(
+        [
+            [
+                (0, 0),
+                (0, 1),
+            ],
+            [
+                (0.1, 0),
+                (0.1, 1),
+            ],
+            [
+                (0.2, 0),
+                (0.2, 1),
+            ],
+            [
+                (0.3, 0),
+            ],
+            [
+                (0.4, 0),
+            ],
+            [
+                (0.5, 0),
+                (0.5, 1),
+            ],
+            [
+                (0.6, 0),
+                (0.6, 1),
+                (0.6, 0.5),
+            ],
+        ]
+    )
+
+    tracker = Tracker.make_tracker_by_name(
+        tracker="simple",
+        # tracker="simplemaxtracks",
+        match="hungarian",
+        track_window=2,
+        # max_tracks=2,
+        # max_tracking=True,
+    )
+
+    tracked = []
+    for insts in preds:
+        tracked_insts = tracker.track(insts)
+        tracked.append(tracked_insts)
+    all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
+
+    assert len(all_tracks) == 4
+
+    tracker = Tracker.make_tracker_by_name(
+        # tracker="simple",
+        tracker="simplemaxtracks",
+        match="hungarian",
+        track_window=2,
+        max_tracks=2,
+        max_tracking=True,
+    )
+
+    tracked = []
+    for insts in preds:
+        tracked_insts = tracker.track(insts)
+        tracked.append(tracked_insts)
+    all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
+
+    assert len(all_tracks) == 2

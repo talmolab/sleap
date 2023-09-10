@@ -13,8 +13,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-20.04", "windows-2019"]
-        # os: ["ubuntu-20.04"]
+        os: ["ubuntu-22.04", "windows-2022", "macos-latest"]
+        # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
+        include:
+          # Use this condarc as default
+          - condarc: .conda/condarc.yaml
+          # Use special condarc if macos
+          - os: "macos-latest"
+            condarc: .conda_mac/condarc.yaml
     steps:
       # Setup
       - uses: actions/checkout@v2
@@ -33,7 +39,8 @@ jobs:
           python-version: 3.7
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
           environment-file: environment_build.yml
-          activate-environment: sleap
+          condarc-file: ${{ matrix.condarc }}
+          activate-environment: sleap_ci
       - name: Print environment info
         shell: bash -l {0}
         run: |
@@ -42,42 +49,51 @@ jobs:
 
       # Build pip wheel (Ubuntu)
       - name: Build pip wheel (Ubuntu)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         shell: bash -l {0}
         run: |
           python setup.py bdist_wheel
 
       # Upload pip wheel (Ubuntu)
       - name: Upload pip wheel (Ubuntu)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         shell: bash -l {0}
         run: |
           twine upload -u __token__ -p "$PYPI_TOKEN" dist/* --non-interactive --skip-existing --disable-progress-bar
 
-      # Build conda package
+      # Build conda package (Ubuntu)
       - name: Build conda package (Ubuntu)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         shell: bash -l {0}
         run: |
-          conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/ -c nvidia -c conda-forge
+          conda build .conda --output-folder build
+
+      # Build conda package (Windows)
       - name: Build conda package (Windows)
-        if: matrix.os == 'windows-2019'
+        if: matrix.os == 'windows-2022'
         shell: powershell
         run: |
-          conda activate sleap
-          pytest tests/
-          conda build .conda --output-folder build -c https://conda.anaconda.org/sleap/ -c nvidia -c conda-forge
+          conda build .conda --output-folder build
 
-      # Upload conda package
+      # Build conda package (Mac)
+      - name: Build conda package (Mac)
+        if: matrix.os == 'macos-latest'
+        shell: bash -l {0}
+        run: |
+          conda build .conda_mac --output-folder build
+
+      # Login to conda (Ubuntu)
       - name: Login to Anaconda (Ubuntu)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         env:
           ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
         shell: bash -l {0}
         run: |
           yes 2>/dev/null | anaconda login --username sleap --password "$ANACONDA_LOGIN" || true
+
+      # Login to conda (Windows)
       - name: Login to Anaconda (Windows)
         if: matrix.os == 'windows-2019'
         env:
@@ -85,6 +101,17 @@ jobs:
         shell: powershell
         run: |
           echo "yes" | anaconda login --username sleap --password "$env:ANACONDA_LOGIN"
+      
+      # Login to conda (Mac)
+      - name: Login to Anaconda (Mac)
+        if: matrix.os == 'macos-latest'
+        env:
+          ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
+        shell: bash -l {0}
+        run: |
+          yes 2>/dev/null | anaconda login --username sleap --password "$ANACONDA_LOGIN" || true
+      
+      # Upload conda package (Windows)
       - name: Upload conda package (Windows/main)
         if: matrix.os == 'windows-2019' && !github.event.release.prerelease
         shell: powershell
@@ -95,16 +122,32 @@ jobs:
         shell: powershell
         run: |
           anaconda -v upload "build\win-64\*.tar.bz2" --label dev
+
+      # Upload conda package (Ubuntu)
       - name: Upload conda package (Ubuntu/main)
-        if: matrix.os == 'ubuntu-20.04' && !github.event.release.prerelease
+        if: matrix.os == 'ubuntu-22.04' && !github.event.release.prerelease
         shell: bash -l {0}
         run: |
           anaconda -v upload build/linux-64/*.tar.bz2
       - name: Upload conda package (Ubuntu/dev)
-        if: matrix.os == 'ubuntu-20.04' && github.event.release.prerelease
+        if: matrix.os == 'ubuntu-22.04' && github.event.release.prerelease
         shell: bash -l {0}
         run: |
           anaconda -v upload build/linux-64/*.tar.bz2 --label dev
+      
+      # Upload conda package (Mac)
+      - name: Upload conda package (Mac/main)
+        if: matrix.os == 'macos-latest' && !github.event.release.prerelease
+        shell: bash -l {0}
+        run: |
+          anaconda -v upload build/osx-64/*.tar.bz2 --label dev
+      - name: Upload conda package (Mac/dev)
+        if: matrix.os == 'macos-latest' && github.event.release.prerelease
+        shell: bash -l {0}
+        run: |
+          anaconda -v upload build/osx-64/*.tar.bz2 --label dev
+      
+      # Logout
       - name: Logout from Anaconda
         shell: bash -l {0}
         run: |

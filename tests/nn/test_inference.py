@@ -1,25 +1,28 @@
 import ast
-from typing import cast
-import pytest
-import numpy as np
 import json
-from sleap.io.dataset import Labels
-from sleap.nn.tracking import FlowCandidateMaker, Tracker
-import tensorflow as tf
-import sleap
-from numpy.testing import assert_array_equal, assert_allclose
+import zipfile
 from pathlib import Path
+from typing import cast
+
+import numpy as np
+import pytest
+import tensorflow as tf
 import tensorflow_hub as hub
+from numpy.testing import assert_array_equal, assert_allclose
+
+import sleap
+from sleap.gui.learning import runners
+from sleap.io.dataset import Labels
 from sleap.nn.data.confidence_maps import (
     make_confmaps,
     make_grid_vectors,
     make_multi_confmaps,
 )
-
 from sleap.nn.inference import (
     InferenceLayer,
     InferenceModel,
     Predictor,
+    _make_predictor_from_cli,
     get_model_output_stride,
     find_head,
     SingleInstanceInferenceLayer,
@@ -48,9 +51,14 @@ from sleap.nn.inference import (
     main as sleap_track,
     export_cli as sleap_export,
 )
+from sleap.nn.tracking import (
+    MatchedFrameInstance,
+    FlowCandidateMaker,
+    FlowMaxTracksCandidateMaker,
+    Tracker,
+)
+from sleap.instance import Track
 
-
-from sleap.gui.learning import runners
 
 sleap.nn.system.use_cpu_only()
 
@@ -643,12 +651,20 @@ def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
     inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
 
-    # test max_instances (>2 will fail)
-    predictor.inference_model.centroid_crop.max_instances = 2
-    labels_pr = predictor.predict(min_labels)
 
-    assert len(labels_pr) == 1
-    assert len(labels_pr[0].instances) == 2
+def test_topdown_predictor_centroid_max_instances(min_labels, min_centroid_model_path):
+    predictor = TopDownPredictor.from_trained_models(
+        centroid_model_path=min_centroid_model_path
+    )
+
+    # Test max_instances <, =, and > than number of expected instances
+    for i in [1, 2, 3]:
+        predictor._initialize_inference_model()
+        predictor.inference_model.centroid_crop.max_instances = i
+        labels_pr = predictor.predict(min_labels)
+
+        assert len(labels_pr) == 1
+        assert len(labels_pr[0].instances) == min(i, 2)
 
 
 def test_topdown_predictor_centroid_high_threshold(min_labels, min_centroid_model_path):
@@ -821,6 +837,47 @@ def test_topdown_multiclass_predictor_high_threshold(
     labels_pr = predictor.predict(labels_gt)
     assert len(labels_pr) == 1
     assert len(labels_pr[0].instances) == 0
+
+
+def zip_directory_with_itself(src_dir, output_path):
+    """Zip a directory, including the directory itself.
+
+    Args:
+        src_dir: Path to directory to zip.
+        output_path: Path to output zip file.
+    """
+
+    src_path = Path(src_dir)
+    with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for file_path in src_path.rglob("*"):
+            arcname = src_path.name / file_path.relative_to(src_path)
+            zipf.write(file_path, arcname)
+
+
+def zip_directory_contents(src_dir, output_path):
+    """Zip the contents of a directory, not the directory itself.
+
+    Args:
+        src_dir: Path to directory to zip.
+        output_path: Path to output zip file.
+    """
+
+    src_path = Path(src_dir)
+    with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for file_path in src_path.rglob("*"):
+            arcname = file_path.relative_to(src_path)
+            zipf.write(file_path, arcname)
+
+
+@pytest.mark.parametrize(
+    "zip_func", [zip_directory_with_itself, zip_directory_contents]
+)
+def test_load_model_zipped(tmpdir, min_centroid_model_path, zip_func):
+    mp = Path(min_centroid_model_path)
+    zip_dir = Path(tmpdir, mp.name).with_name(mp.name + ".zip")
+    zip_func(mp, zip_dir)
+
+    predictor = load_model(str(zip_dir))
 
 
 @pytest.mark.parametrize("resize_input_shape", [True, False])
@@ -1284,7 +1341,13 @@ def test_topdown_id_predictor_save(
 
 
 @pytest.mark.parametrize(
-    "output_path,tracker_method", [("not_default", "flow"), (None, "simple")]
+    "output_path,tracker_method",
+    [
+        ("not_default", "flow"),
+        ("not_default", "flowmaxtracks"),
+        (None, "simple"),
+        (None, "simplemaxtracks"),
+    ],
 )
 def test_retracking(
     centered_pair_predictions: Labels, tmpdir, output_path, tracker_method
@@ -1299,6 +1362,9 @@ def test_retracking(
     )
     if tracker_method == "flow":
         cmd += " --tracking.save_shifted_instances 1"
+    elif tracker_method == "simplemaxtracks" or tracker_method == "flowmaxtracks":
+        cmd += " --tracking.max_tracking 1"
+        cmd += " --tracking.max_tracks 2"
     if output_path == "not_default":
         output_path = Path(tmpdir, "tracked_slp.slp")
         cmd += f" --output {output_path}"
@@ -1328,6 +1394,45 @@ def test_retracking(
     assert new_inst.track != old_inst.track
 
 
+@pytest.mark.parametrize("cmd", ["--max_instances 1", "-n 1"])
+def test_valid_cli_command(cmd):
+    """Test that sleap-track CLI command is valid."""
+    parser = _make_cli_parser()
+    args = parser.parse_args(cmd.split())
+    assert args.max_instances == 1
+
+
+def test_make_predictor_from_cli(
+    centered_pair_predictions: Labels,
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    min_bottomup_model_path: str,
+    tmpdir,
+):
+    slp_path = str(Path(tmpdir, "old_slp.slp"))
+    Labels.save(centered_pair_predictions, slp_path)
+
+    # Create sleap-track command
+    model_args = [
+        f"--model {min_centroid_model_path} --model {min_centered_instance_model_path}",
+        f"--model {min_bottomup_model_path}",
+    ]
+    for model_arg in model_args:
+        args = (
+            f"{slp_path} {model_arg} --video.index 0 --frames 1-3 "
+            "--cpu --max_instances 5"
+        ).split()
+        parser = _make_cli_parser()
+        args, _ = parser.parse_known_args(args=args)
+
+        # Create predictor
+        predictor = _make_predictor_from_cli(args=args)
+        if isinstance(predictor, TopDownPredictor):
+            assert predictor.inference_model.centroid_crop.max_instances == 5
+        elif isinstance(predictor, BottomUpPredictor):
+            assert predictor.max_instances == 5
+
+
 def test_sleap_track(
     centered_pair_predictions: Labels,
     min_centroid_model_path: str,
@@ -1335,10 +1440,9 @@ def test_sleap_track(
     tmpdir,
 ):
     slp_path = str(Path(tmpdir, "old_slp.slp"))
-    labels: Labels = Labels.save(centered_pair_predictions, slp_path)
+    Labels.save(centered_pair_predictions, slp_path)
 
     # Create sleap-track command
-    args = f"{slp_path} --model {min_centered_instance_model_path} --frames 1-3 --cpu".split()
     args = (
         f"{slp_path} --model {min_centroid_model_path} "
         f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
@@ -1386,6 +1490,58 @@ def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
         for key in tracker.candidate_maker.shifted_instances.keys():
             assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
             assert abs(key[0] - key[1]) <= track_window  # References within window
+
+
+@pytest.mark.parametrize(
+    "max_tracks, trackername",
+    [
+        (2, "flowmaxtracks"),
+        (2, "simplemaxtracks"),
+    ],
+)
+def test_max_tracks_matching_queue(
+    centered_pair_predictions: Labels, max_tracks, trackername
+):
+    """Test flow max tracks instance generation."""
+    labels: Labels = centered_pair_predictions
+    max_tracking = True
+    track_window = 5
+
+    # Setup flow max tracker
+    tracker: Tracker = Tracker.make_tracker_by_name(
+        tracker=trackername,
+        track_window=track_window,
+        save_shifted_instances=True,
+        max_tracking=max_tracking,
+        max_tracks=max_tracks,
+    )
+
+    tracker.candidate_maker = cast(FlowMaxTracksCandidateMaker, tracker.candidate_maker)
+
+    # Run tracking
+    frames = sorted(labels.labeled_frames, key=lambda lf: lf.frame_idx)
+
+    for lf in frames[:20]:
+
+        # Clear the tracks
+        for inst in lf.instances:
+            inst.track = None
+
+        track_args = dict(untracked_instances=lf.instances, img=lf.video[lf.frame_idx])
+        tracker.track(**track_args)
+
+        if trackername == "flowmaxtracks":
+            # Check that saved instances are pruned to track window
+            for key in tracker.candidate_maker.shifted_instances.keys():
+                assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
+                assert abs(key[0] - key[1]) <= track_window
+
+        # Check if the length of each of the tracks is not more than the track window
+        for track in tracker.track_matching_queue_dict.keys():
+            assert len(tracker.track_matching_queue_dict[track]) <= track_window
+
+        # Check if number of tracks that are generated are not more than the maximum tracks
+        assert len(tracker.track_matching_queue_dict) <= max_tracks
 
 
 def test_movenet_inference(movenet_video):

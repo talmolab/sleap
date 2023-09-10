@@ -809,6 +809,7 @@ class SingleImageVideo:
     """
 
     EXTS = ("jpg", "jpeg", "png", "tif", "tiff")
+    CACHING = False  # Deprecated, but keeping functionality for now.
 
     filename: Optional[str] = attr.ib(default=None)
     filenames: Optional[List[str]] = attr.ib(factory=list)
@@ -816,7 +817,6 @@ class SingleImageVideo:
     width_: Optional[int] = attr.ib(default=None)
     channels_: Optional[int] = attr.ib(default=None)
     grayscale: Optional[bool] = attr.ib()
-    caching: bool = attr.ib(default=False)
 
     _detect_grayscale = False
 
@@ -871,7 +871,7 @@ class SingleImageVideo:
                 self.width_ = test_frame_.shape[1]
             if self.channels_ is None:
                 self.channels_ = test_frame_.shape[2]
-        if self.caching:
+        if self.CACHING:  # Deprecated, but keeping functionality for now.
             self.test_frame_ = test_frame_
         return test_frame_
 
@@ -980,7 +980,7 @@ class SingleImageVideo:
 
     def get_frame(self, idx: int, grayscale: bool = None) -> np.ndarray:
         """See :class:`Video`."""
-        if self.caching:
+        if self.CACHING:  # Deprecated, but keeping functionality for now.
             if idx not in self.cache_:
                 self.cache_[idx] = self._load_idx(idx)
 
@@ -1274,7 +1274,9 @@ class Video:
         elif filename.lower().endswith(SingleImageVideo.EXTS):
             backend_class = SingleImageVideo
         else:
-            raise ValueError("Could not detect backend for specified filename.")
+            raise ValueError(
+                f"Could not detect backend for specified filename: {filename}"
+            )
 
         kwargs["filename"] = filename
 

@@ -1,6 +1,4 @@
-"""
-Run training/inference in background process via CLI.
-"""
+"""Run training/inference in background process via CLI."""
 import abc
 import attr
 import os
@@ -41,8 +39,7 @@ def kill_process(pid: int):
 
 @attr.s(auto_attribs=True)
 class ItemForInference(abc.ABC):
-    """
-    Abstract base class for item on which we can run inference via CLI.
+    """Abstract base class for item on which we can run inference via CLI.
 
     Must have `path` and `cli_args` properties, used to build CLI call.
     """
@@ -60,8 +57,7 @@ class ItemForInference(abc.ABC):
 
 @attr.s(auto_attribs=True)
 class VideoItemForInference(ItemForInference):
-    """
-    Encapsulate data about video on which inference should run.
+    """Encapsulate data about video on which inference should run.
 
     This allows for inference on an arbitrary list of frames from video.
 
@@ -119,8 +115,7 @@ class VideoItemForInference(ItemForInference):
 
 @attr.s(auto_attribs=True)
 class DatasetItemForInference(ItemForInference):
-    """
-    Encapsulate data about frame selection based on dataset data.
+    """Encapsulate data about frame selection based on dataset data.
 
     Attributes:
         labels_path: path to the saved :py:class:`Labels` dataset.
@@ -142,7 +137,7 @@ class DatasetItemForInference(ItemForInference):
 
     @property
     def cli_args(self):
-        args_list = ["--labels", self.path]
+        args_list = [self.path]
         if self.frame_filter == "user":
             args_list.append("--only-labeled-frames")
         elif self.frame_filter == "suggested":
@@ -200,17 +195,7 @@ class InferenceTask:
     ) -> List[Text]:
         """Makes list of CLI arguments needed for running inference."""
         cli_args = ["sleap-track"]
-
         cli_args.extend(item_for_inference.cli_args)
-
-        # TODO: encapsulate in inference item class
-        if (
-            not self.trained_job_paths
-            and "tracking.tracker" in self.inference_params
-            and self.labels_filename
-        ):
-            # No models so we must want to re-track previous predictions
-            cli_args.extend(("--labels", self.labels_filename))
 
         # Make path where we'll save predictions (if not specified)
         if output_path is None:
@@ -239,13 +224,25 @@ class InferenceTask:
 
         optional_items_as_nones = (
             "tracking.target_instance_count",
+            "tracking.max_tracks",
             "tracking.kf_init_frame_count",
             "tracking.robust",
+            "max_instances",
         )
 
         for key in optional_items_as_nones:
             if key in self.inference_params and self.inference_params[key] is None:
                 del self.inference_params[key]
+
+        # Setting max_tracks to True means we want to use the max_tracking mode.
+        if "tracking.max_tracks" in self.inference_params:
+            self.inference_params["tracking.max_tracking"] = True
+
+            # Hacky:  Update the tracker name to include "maxtracks" suffix.
+            if self.inference_params["tracking.tracker"] in ("simple", "flow"):
+                self.inference_params["tracking.tracker"] = (
+                    self.inference_params["tracking.tracker"] + "maxtracks"
+                )
 
         # --tracking.kf_init_frame_count enables the kalman filter tracking
         # so if not set, then remove other (unused) args
@@ -255,6 +252,7 @@ class InferenceTask:
 
         bool_items_as_ints = (
             "tracking.pre_cull_to_target",
+            "tracking.max_tracking",
             "tracking.post_connect_single_breaks",
             "tracking.save_shifted_instances",
         )
@@ -484,7 +482,6 @@ def write_pipeline_files(
         )
         # And join them into a single call to inference
         inference_script += " ".join(cli_args) + "\n"
-
         # Setup job params
         only_suggested_frames = False
         if type(item_for_inference) == DatasetItemForInference:

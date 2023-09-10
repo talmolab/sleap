@@ -20,11 +20,15 @@ TEST_SLP_MIN_LABELS = "tests/data/slp_hdf5/minimal_instance.slp"
 TEST_MAT_LABELS = "tests/data/mat/labels.mat"
 TEST_SLP_MIN_LABELS_ROBOT = "tests/data/slp_hdf5/small_robot_minimal.slp"
 TEST_SLP_SIV_ROBOT = "tests/data/siv_format_v1/small_robot_siv.slp"
+TEST_SLP_SIV_ROBOT_CACHING = "tests/data/siv_format_v2/small_robot_siv_caching.slp"
 TEST_MIN_TRACKS_2NODE_LABELS = "tests/data/tracks/clip.2node.slp"
 TEST_MIN_TRACKS_13NODE_LABELS = "tests/data/tracks/clip.slp"
 TEST_HDF5_PREDICTIONS = "tests/data/hdf5_format_v1/centered_pair_predictions.h5"
 TEST_SLP_PREDICTIONS = "tests/data/hdf5_format_v1/centered_pair_predictions.slp"
 TEST_MIN_DANCE_LABELS = "tests/data/slp_hdf5/dance.mp4.labels.slp"
+TEST_CSV_PREDICTIONS = (
+    "tests/data/csv_format/minimal_instance.000_centered_pair_low_quality.analysis.csv"
+)
 
 
 @pytest.fixture
@@ -61,6 +65,22 @@ def min_labels_robot():
 def siv_robot():
     """Created before grayscale attribute was added to SingleImageVideo backend."""
     return Labels.load_file(TEST_SLP_SIV_ROBOT, video_search="tests/data/videos/")
+
+
+@pytest.fixture
+def siv_robot_caching():
+    """Created after caching attribute was added to `SingleImageVideo` backend.
+
+    The typehinting of the `caching` attribute (#1243) caused it to be used by cattrs to
+    determine which type of dataclass to use. However, the older datasets containing
+    `SingleImageVideo`s were now being read in as `NumpyVideo`s. Although removing the
+    typehinting from `caching` seems to do the trick (and never made it into an official
+    release), this is a fixture to test that datasets created while `caching` was added
+    into the serialization are read in correctly.
+    """
+    return Labels.load_file(
+        TEST_SLP_SIV_ROBOT_CACHING, video_search="tests/data/videos/"
+    )
 
 
 @pytest.fixture
@@ -228,6 +248,11 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
 @pytest.fixture
 def centered_pair_predictions_hdf5_path():
     return TEST_HDF5_PREDICTIONS
+
+
+@pytest.fixture
+def minimal_instance_predictions_csv_path():
+    return TEST_CSV_PREDICTIONS
 
 
 @pytest.fixture

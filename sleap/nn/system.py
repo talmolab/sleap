@@ -7,6 +7,8 @@ environment by wrapping `tf.config` module functions.
 import tensorflow as tf
 from typing import List, Optional, Text
 import subprocess
+import shutil
+import os
 
 
 def get_all_gpus() -> List[tf.config.PhysicalDevice]:
@@ -187,18 +189,19 @@ def best_logical_device_name() -> Text:
 
 
 def get_gpu_memory() -> List[int]:
-    """Return list of available GPU memory.
+    """Get the available memory on each GPU.
 
     Returns:
-        List of available GPU memory (in MiB) with indices corresponding to GPU indices.
+        A list of the available memory on each GPU in MiB.
 
-    Notes:
-        This function depends on the `nvidia-smi` system utility. If it cannot be found
-        in the `PATH`, this function returns an empty list.
     """
+
+    if shutil.which("nvidia-smi") is None:
+        return []
+
     command = [
         "nvidia-smi",
-        "--query-gpu=memory.free",
+        "--query-gpu=index,memory.free",
         "--format=csv",
     ]
 
@@ -207,20 +210,20 @@ def get_gpu_memory() -> List[int]:
     except (subprocess.SubprocessError, FileNotFoundError):
         return []
 
-    # Capture subprocess standard output
     subprocess_result = memory_poll.stdout
-
-    # nvidia-smi returns an ascii encoded byte string separated by newlines (\n)
-    # Splitting gives a list where the final entry is an empty string. Slice it off
-    # and finally slice off the csv header in the 0th element.
     memory_string = subprocess_result.decode("ascii").split("\n")[1:-1]
+
+    if "CUDA_VISIBLE_DEVICES" in os.environ.keys():
+        cuda_visible_devices = os.environ["CUDA_VISIBLE_DEVICES"].split(",")
+    else:
+        cuda_visible_devices = None
 
     memory_list = []
     for row in memory_string:
-        # Removing megabyte text returned by nvidia-smi
-        available_memory = row.split(" MiB")[0]
+        gpu_index, available_memory = row.split(", ")
+        available_memory = available_memory.split(" MiB")[0]
 
-        # Append percent of GPU available to GPU ID, assume GPUs returned in index order
-        memory_list.append(int(available_memory))
+        if cuda_visible_devices is None or gpu_index in cuda_visible_devices:
+            memory_list.append(int(available_memory))
 
     return memory_list

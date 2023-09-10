@@ -1,6 +1,3 @@
-# Ref: https://docs.conda.io/projects/conda-build/en/latest/resources/define-metadata.html
-
-# Jinja template: Process setup.py to obtain version and metadata
 {% set data = load_setup_py_data() %}
 
 
@@ -15,49 +12,78 @@ about:
   license: {{ data.get('license') }}
   summary: {{ data.get('description') }}
 
-build:
-  number: 4
-
 source:
   path: ../
 
+build:
+  number: 1
+
 requirements:
   host:
-    - python=3.7
-    # - sleap::pyside2=5.14.1
-    - conda-forge::numpy=1.19.5
-    - sleap::tensorflow=2.6.3
-    - conda-forge::pyside2=5.13.2
-    - conda-forge::h5py=3.1.0
-    - conda-forge::scipy=1.7.3
-    - conda-forge::six=1.15.0
-    - pillow=8.4.0
-    - shapely=1.7.1
-    - conda-forge::pandas
-    - ffmpeg
-    - qtpy>=2.0.1
-    - conda-forge::pip!=22.0.4
-
-  run:
-    - python=3.7
-    - conda-forge::numpy~=1.19.5
-    - sleap::tensorflow=2.6.3
-    - conda-forge::pyside2>=5.13.2,<=5.14.1
-    - conda-forge::h5py~=3.1.0
-    - conda-forge::scipy>=1.4.1,<=1.7.3
-    - conda-forge::six~=1.15.0
-    - pillow=8.4.0
-    - shapely=1.7.1
-    - conda-forge::pandas
-    - ffmpeg
-    - qtpy>=2.0.1
-    - cudatoolkit=11.3.1
-    - cudnn=8.2.1
+    - conda-forge::python ==3.7.12  # Run into _MAX_WINDOWS_WORKERS not found if <
+    - numpy >=1.19.5,<1.23.0  # Linux likes anaconda, windows likes conda-forge
+    - conda-forge::cudatoolkit ==11.3.1
+    - conda-forge::cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
-    - conda-forge::pip!=22.0.4
+    - conda-forge::setuptools
+    - conda-forge::pip
 
-  run_constrained:
-    - pyqt==9999999999
+    # Only the packages above are required to build, but listing them all ensures no 
+    # unnecessary pypi packages are installed via the build script (bld.bat, build.sh)
+    - conda-forge::attrs ==21.4.0
+    - conda-forge::cattrs ==1.1.1
+    - conda-forge::h5py ==3.1  # [not win]
+    - conda-forge::imgaug ==0.4.0
+    - conda-forge::jsmin
+    - conda-forge::jsonpickle ==1.2
+    - conda-forge::networkx
+    - conda-forge::opencv
+    - conda-forge::pandas
+    - conda-forge::pillow >=8.3.2
+    - conda-forge::psutil
+    - conda-forge::pykalman
+    - conda-forge::pyside2 >=5.12,<5.14
+    - conda-forge::python-rapidjson
+    - conda-forge::pyyaml
+    - conda-forge::pyzmq
+    - conda-forge::qtpy >=2.0.1
+    - conda-forge::rich
+    - conda-forge::scipy >=1.4.1,<=1.9.0
+    - conda-forge::scikit-image
+    - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-video
+    - conda-forge::seaborn
+  run:
+    - conda-forge::python ==3.7.12  # Run into _MAX_WINDOWS_WORKERS not found if <
+    - conda-forge::attrs ==21.4.0
+    - conda-forge::cattrs ==1.1.1
+    - conda-forge::cudatoolkit ==11.3.1
+    - conda-forge::cudnn=8.2.1
+    - nvidia::cuda-nvcc=11.3
+    - conda-forge::h5py ==3.1  # [not win]
+    - conda-forge::imgaug ==0.4.0
+    - conda-forge::jsmin
+    - conda-forge::jsonpickle ==1.2
+    - conda-forge::networkx
+    - numpy >=1.19.5,<1.23.0  # Linux likes anaconda, windows likes conda-forge
+    - conda-forge::opencv
+    - conda-forge::pandas
+    - conda-forge::pillow >=8.3.2
+    - conda-forge::psutil
+    - conda-forge::pykalman
+    - conda-forge::pyside2 >=5.12,<5.14  # To ensure works correctly with QtPy.
+    - conda-forge::python-rapidjson
+    - conda-forge::pyyaml
+    - conda-forge::pyzmq
+    - conda-forge::qtpy >=2.0.1
+    - conda-forge::rich
+    - conda-forge::scipy >=1.4.1,<=1.9.0
+    - conda-forge::scikit-image
+    - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-video
+    - conda-forge::seaborn
+    - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10, sleap channel has 2.6.3
+    - conda-forge::tensorflow-hub <0.14.0  # Causes pynwb conflicts on linux GH-1446
 
 test:
   imports:

@@ -1,16 +1,40 @@
+# Use this file if your computer runs Mac OS X or Apple Silicon.
+
 name: sleap
 
+channels:
+    - conda-forge
+    - anaconda
+
 dependencies:
-- python=3.7
-- pillow=8.4.0
-- shapely=1.7.1
-- ffmpeg
-- qtpy>=2.0.1
-- anaconda-client
-- conda-verify
-- conda-forge::pip!=22.0.4
-- pip:
-    - tensorflow==2.7.0
-    - pyside2==5.14.1
-    - "--editable=./"
-    - "--requirement=./dev_requirements.txt"
+    # Packages SLEAP uses directly
+    - conda-forge::attrs >=21.2.0
+    - conda-forge::cattrs ==1.1.1
+    - conda-forge::h5py
+    - conda-forge::imgaug ==0.4.0
+    - conda-forge::jsmin
+    - conda-forge::jsonpickle ==1.2
+    - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
+    - conda-forge::networkx
+    - anaconda::numpy >=1.19.5,<1.23.0
+    - conda-forge::opencv
+    - conda-forge::pandas
+    - conda-forge::pip
+    - conda-forge::pillow
+    - conda-forge::psutil
+    - conda-forge::pykalman
+    - conda-forge::pyside2 >=5.12  # To ensure application works correctly with QtPy.
+    - conda-forge::python  ~=3.9
+    - conda-forge::python-rapidjson
+    - conda-forge::pyyaml
+    - conda-forge::pyzmq
+    - conda-forge::qtpy >=2.0.1
+    - conda-forge::rich
+    - conda-forge::scipy >=1.4.1,<=1.9.0
+    - conda-forge::scikit-image
+    - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-video
+    - conda-forge::seaborn
+    - conda-forge::tensorflow-hub
+    - pip:
+        - "--editable=.[conda_dev]"

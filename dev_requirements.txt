@@ -1,3 +1,5 @@
+# This file contains the dependencies to be installed if in developer mode.
+
 pytest
 pytest-qt>=4.0.0
 pytest-cov<=3.0.0
@@ -16,7 +18,5 @@ black==21.6b0
 pre-commit
 twine==3.3.0
 PyGithub
-jupyterlab
 jedi==0.17.2
-ipykernel
 click==8.0.4

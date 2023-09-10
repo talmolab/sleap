@@ -13,6 +13,14 @@ training:
       a "<u>confidence map</u>" head to predicts the
       nodes for an entire image and a "<u>part affinity field</u>" head to group
       the nodes into distinct animal instances.'
+  - label: Max Instances
+    name: max_instances
+    type: optional_int
+    help: Maximum number of instances per frame.
+    none_label: No max
+    default_disabled: true
+    range: 1,100
+    default: 1
 
   - name: model.heads.multi_instance.confmaps.sigma
     label: Sigma for Nodes
@@ -44,7 +52,15 @@ training:
     This pipeline uses two models: a "<u>centroid</u>" model to
     locate and crop around each animal in the frame, and a
     "<u>centered-instance confidence map</u>" model for predicted node locations
-    for each individual animal predicted by the centroid model.'
+    for each individual animal predicted by the centroid model.' 
+  - label: Max Instances
+    name: max_instances
+    type: optional_int
+    help: Maximum number of instances per frame.
+    none_label: No max
+    default_disabled: true
+    range: 1,100
+    default: 1
 
   - default: 5.0
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
@@ -280,6 +296,14 @@ inference:
       a "<u>confidence map</u>" head to predicts the
       nodes for an entire image and a "<u>part affinity field</u>" head to group
       the nodes into distinct animal instances.'
+  - label: Max Instances
+    name: max_instances
+    type: optional_int
+    help: Maximum number of instances per frame.
+    none_label: No max
+    default_disabled: true
+    range: 1,100
+    default: 1
 
   multi-animal top-down:
   - type: text
@@ -288,6 +312,14 @@ inference:
     locate and crop around each animal in the frame, and a
     "<u>centered-instance confidence map</u>" model for predicted node locations
     for each individual animal predicted by the centroid model.'
+  - label: Max Instances
+    name: max_instances
+    type: optional_int
+    help: Maximum number of instances per frame.
+    none_label: No max
+    default_disabled: true
+    range: 1,100
+    default: 1
 
   multi-animal bottom-up-id:
   - type: text
@@ -344,28 +376,39 @@ inference:
   none:
 
   flow:
-    - type: text
-      text: '<b>Pre-tracker data cleaning</b>:'
-    - name: tracking.target_instance_count
-      label: Target Number of Instances Per Frame
-      type: optional_int
-      none_label: No target
-      default_disabled: true
-      range: 1,100
-      default: 1
-    - name: tracking.pre_cull_to_target
-      label: Cull to Target Instance Count
-      type: bool
-      default: false
-    - name: tracking.pre_cull_iou_threshold
-      label: Cull using IoU Threshold
-      type: double
-      default: 0.8
+    # - type: text
+    #   text: '<b>Pre-tracker data cleaning</b>:'
+    # - name: tracking.target_instance_count
+    #   label: Target Number of Instances Per Frame
+    #   type: optional_int
+    #   none_label: No target
+    #   default_disabled: true
+    #   range: 1,100
+    #   default: 1
+    # - name: tracking.pre_cull_to_target
+    #   label: Cull to Target Instance Count
+    #   type: bool
+    #   default: false
+    # - name: tracking.pre_cull_iou_threshold
+    #   label: Cull using IoU Threshold
+    #   type: double
+    #   default: 0.8
     - type: text
       text: '<b>Tracking with optical flow</b>:<br />
       This tracker "shifts" instances from previous frames using optical flow
       before matching instances in each frame to the <i>shifted</i> instances from
       prior frames.'
+    # - name: tracking.max_tracking
+    #   label: Limit max number of tracks
+    #   type: bool
+      default: false
+    - name: tracking.max_tracks
+      label: Max number of tracks
+      type: optional_int
+      none_label: No limit
+      default_disabled: true
+      range: 1,100
+      default: 1
     - name: tracking.similarity
       label: Similarity Method
       type: list
@@ -390,10 +433,10 @@ inference:
       none_label: Use max (non-robust)
       range: 0,1
       default: 0.95
-    - name: tracking.save_shifted_instances
-      label: Save shifted instances
-      type: bool
-      default: false
+    # - name: tracking.save_shifted_instances
+    #   label: Save shifted instances
+    #   type: bool
+    #   default: false
     - type: text
       text: '<b>Kalman filter-based tracking</b>:<br />
       Uses the above tracking options to track instances for an initial
@@ -417,27 +460,38 @@ inference:
       default: false
 
   simple:
-    - type: text
-      text: '<b>Pre-tracker data cleaning</b>:'
-    - name: tracking.target_instance_count
-      label: Target Number of Instances Per Frame
-      type: optional_int
-      none_label: No target
-      default_disabled: true
-      range: 1,100
-      default: 1
-    - name: tracking.pre_cull_to_target
-      label: Cull to Target Instance Count
-      type: bool
-      default: false
-    - name: tracking.pre_cull_iou_threshold
-      label: Cull using IoU Threshold
-      type: double
-      default: 0.8
+    # - type: text
+    #   text: '<b>Pre-tracker data cleaning</b>:'
+    # - name: tracking.target_instance_count
+    #   label: Target Number of Instances Per Frame
+    #   type: optional_int
+    #   none_label: No target
+    #   default_disabled: true
+    #   range: 1,100
+    #   default: 1
+    # - name: tracking.pre_cull_to_target
+    #   label: Cull to Target Instance Count
+    #   type: bool
+    #   default: false
+    # - name: tracking.pre_cull_iou_threshold
+    #   label: Cull using IoU Threshold
+    #   type: double
+    #   default: 0.8
     - type: text
       text: '<b>Tracking</b>:<br />
         This tracker assigns track identities by matching instances from prior
         frames to instances on subsequent frames.'
+    # - name: tracking.max_tracking
+    #   label: Limit max number of tracks
+    #   type: bool
+    #   default: false
+    - name: tracking.max_tracks
+      label: Max number of tracks
+      type: optional_int
+      none_label: No limit
+      default_disabled: true
+      range: 1,100
+      default: 1
     - name: tracking.similarity
       label: Similarity Method
       type: list

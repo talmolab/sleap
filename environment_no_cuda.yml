@@ -1,23 +1,43 @@
+# Use this environment file if your computer does not have a nvidia GPU and runs Windows
+# or Linux. This environment file has exactly the same dependencies listed as 
+# environment.yaml, minus the packages required by tensorflow to find/use GPUs. 
+
 name: sleap_ci
 
+channels:
+    - conda-forge
+    - sleap
+    - anaconda
+
 dependencies:
-  - python=3.7
-  - conda-forge::numpy>=1.19.5,<=1.21.5
-  # - conda-forge::tensorflow>=2.6.3,<=2.7.1
-  - conda-forge::pyside2>=5.13.2,<=5.14.1
-  - conda-forge::h5py=3.1.0
-  - conda-forge::scipy>=1.4.1,<=1.7.3
-  - conda-forge::pillow=8.4.0
-  - shapely=1.7.1
-  - conda-forge::pandas
-  - ffmpeg
-  # - cudatoolkit=11.3.1
-  # - cudnn=8.2.1
-  # - nvidia::cuda-nvcc=11.3
-  # - sleap::tensorflow=2.7.0
-  # - sleap::pyside2=5.14.1
-  - qtpy>=2.0.1
-  - conda-forge::pip  # !=22.0.4
-  - pip:
-      - "--editable=."
-      - "--requirement=./dev_requirements.txt"
+    # Packages SLEAP uses directly
+    - conda-forge::attrs >=21.2.0  #,<=21.4.0
+    - conda-forge::cattrs ==1.1.1
+    - conda-forge::imgaug ==0.4.0
+    - conda-forge::jsmin
+    - conda-forge::jsonpickle ==1.2
+    - conda-forge::networkx
+    - anaconda::numpy >=1.19.5,<1.23.0
+    - conda-forge::opencv
+    - conda-forge::pandas
+    - conda-forge::pip
+    - conda-forge::pillow #>=8.3.1,<=8.4.0
+    - conda-forge::psutil
+    - conda-forge::pykalman
+    - conda-forge::pyside2 >=5.12  # To ensure application works correctly with QtPy.
+    - conda-forge::python ~=3.7    # Run into _MAX_WINDOWS_WORKERS not found if ==
+    - conda-forge::python-rapidjson
+    - conda-forge::pyyaml
+    - conda-forge::pyzmq
+    - conda-forge::qtpy >=2.0.1
+    - conda-forge::rich
+    - conda-forge::scipy >=1.4.1,<=1.9.0
+    - conda-forge::scikit-image
+    - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-video
+    - conda-forge::seaborn
+    - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
+    - conda-forge::tensorflow-hub
+
+    - pip:  
+        - "--editable=.[conda_dev]"
