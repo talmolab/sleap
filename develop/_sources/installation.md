@@ -120,13 +120,13 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
 **Windows** and **Linux**
 
 ```bash
-mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.3.1
+mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.3.2
 ```
 
 **Mac OS X** and **Apple Silicon**
 
 ```bash
-mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.1
+mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.2
 ```
 
 **This is the recommended installation method**.
