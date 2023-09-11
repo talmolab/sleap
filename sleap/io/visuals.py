@@ -32,7 +32,7 @@ def reader(
     video: Video,
     frames: List[int],
     scale: float = 1.0,
-    background="Original",
+    background: str = "original",
 ):
     """Read frame images from video and send them into queue.
 
@@ -48,6 +48,7 @@ def reader(
         None.
     """
 
+    background = background.lower()
     cv2.setNumThreads(usable_cpu_count())
 
     total_count = len(frames)
@@ -71,15 +72,17 @@ def reader(
             loaded_chunk_idxs, video_frame_images = video.get_frames_safely(
                 frames_idx_chunk
             )
-            if background != "Original":
+            if background != "original":
                 # fill the frame with the color
-                if background == "Black":
+                if background == "black":
                     fill = 0
-                elif background == "Grey":
+                elif background == "grey":
                     fill = 127
-                else:
+                elif background == "white":
                     # background == White
                     fill = 255
+                else:
+                    raise ValueError(f"Invalid background color: {background}")
                 video_frame_images = video_frame_images * 0 + fill
 
             if not loaded_chunk_idxs:
@@ -514,7 +517,7 @@ def save_labeled_video(
     fps: int = 15,
     scale: float = 1.0,
     crop_size_xy: Optional[Tuple[int, int]] = None,
-    background: str = "Original",
+    background: str = "original",
     show_edges: bool = True,
     edge_is_wedge: bool = False,
     marker_size: int = 4,
@@ -714,6 +717,15 @@ def main(args: list = None):
             "and 'nodes' (default: 'nodes')"
         ),
     )
+    parser.add_argument(
+        "--background",
+        type=str,
+        default="original",
+        help=(
+            "Specify the type of background to be used to save the videos."
+            "Options for background: original, black, white and grey"
+        ),
+    )
     args = parser.parse_args(args=args)
     labels = Labels.load_file(
         args.data_path, video_search=[os.path.dirname(args.data_path)]
@@ -749,6 +761,7 @@ def main(args: list = None):
         marker_size=args.marker_size,
         palette=args.palette,
         distinctly_color=args.distinctly_color,
+        background=args.background,
     )
 
     print(f"Video saved as: {filename}")

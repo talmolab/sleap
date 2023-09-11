@@ -63,6 +63,16 @@ def test_serial_pipeline(centered_pair_predictions, tmpdir):
     )
 
 
+@pytest.mark.parametrize("background", ["original", "black", "white", "grey"])
+def test_sleap_render_with_different_backgrounds(background):
+    args = (
+        f"-o test_{background}.avi -f 2 --scale 1.2 --frames 1,2 --video-index 0 --background {background} "
+        "tests/data/json_format_v2/centered_pair_predictions.json".split()
+    )
+    sleap_render(args)
+    assert os.path.exists(f"test_{background}.avi")
+
+
 def test_sleap_render(centered_pair_predictions):
     args = (
         "-o testvis.avi -f 2 --scale 1.2 --frames 1,2 --video-index 0 "
