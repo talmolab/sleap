@@ -67,7 +67,8 @@ def test_serial_pipeline(centered_pair_predictions, tmpdir):
 @pytest.mark.parametrize("background", ["original", "black", "white", "grey"])
 def test_sleap_render_with_different_backgrounds(background):
     args = (
-        f"-o test_{background}.avi -f 2 --scale 1.2 --frames 1,2 --video-index 0 --background {background} "
+        f"-o test_{background}.avi -f 2 --scale 1.2 --frames 1,2 --video-index 0 "
+        f"--background {background} "
         "tests/data/json_format_v2/centered_pair_predictions.json".split()
     )
     sleap_render(args)
@@ -82,13 +83,14 @@ def test_sleap_render_with_different_backgrounds(background):
         cap = cv2.VideoCapture(saved_video_path)
         ret, frame = cap.read()
 
-        # Accumulate color channels
+        # Calculate mean color of the channels
         b, g, r = cv2.split(frame)
         mean_b = np.mean(b)
         mean_g = np.mean(g)
         mean_r = np.mean(r)
 
-        # Set threshold values.
+        # Set threshold values. Color is white if greater than white threshold, black
+        # if less than grey threshold and grey if in between both threshold values.
         white_threshold = 240
         grey_threshold = 40
 
