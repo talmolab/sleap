@@ -415,7 +415,13 @@ document.write(`
 <section id="installing-mambaforge">
 <span id="mambaforge"></span><h2><a class="toc-backref" href="#id2">Installing Mambaforge</a><a class="headerlink" href="#installing-mambaforge" title="Permalink to this headline">#</a></h2>
 <p><strong>Anaconda</strong> is a Python environment manager that makes it easy to install SLEAP and its necessary dependencies without affecting other Python software on your computer.</p>
-<p><a class="reference external" href="https://mamba.readthedocs.io/en/latest/installation.html"><strong>Mambaforge</strong></a> is a lightweight installer of Anaconda with speedy package resolution that we recommend. To install it:</p>
+<p><a class="reference external" href="https://mamba.readthedocs.io/en/latest/installation.html"><strong>Mambaforge</strong></a> is a lightweight installer of Anaconda with speedy package resolution that we recommend. If you already have Anaconda on your computer, then you can <a class="reference external" href="https://www.anaconda.com/blog/a-faster-conda-for-a-growing-community">set the solver to <code class="docutils literal notranslate"><span class="pre">libmamba</span></code></a> in the <code class="docutils literal notranslate"><span class="pre">base</span></code> environment (and skip the Mambaforge installation):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda update -n base conda
+conda install -n base conda-libmamba-solver
+conda config --set solver libmamba
+</pre></div>
+</div>
+<p>Otherwise, to install Mamba:</p>
 <p><strong>On Windows</strong>, just click through the installation steps.</p>
 <ol class="simple">
 <li><p>Go to: <a class="github reference external" href="https://github.com/conda-forge/miniforge#mambaforge">conda-forge/miniforge</a></p></li>
