@@ -137,13 +137,13 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
 **Windows** and **Linux**
 
 ```bash
-mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.3.3
+mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.3.2
 ```
 
 **Mac OS X** and **Apple Silicon**
 
 ```bash
-mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.3
+mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.2
 ```
 
 **This is the recommended installation method**.
@@ -232,7 +232,7 @@ Although you do not need Mambaforge installed to perform a `pip install`, we rec
 3. Finally, we can perform the `pip install`:
 
    ```bash
-   pip install sleap[pypi]==1.3.3
+   pip install sleap==1.3.1
    ```
 
    This works on **any OS except Apple silicon** and on **Google Colab**.
