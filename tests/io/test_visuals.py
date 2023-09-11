@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import pytest
+import cv2
 from sleap.io.dataset import Labels
 from sleap.io.visuals import (
     save_labeled_video,
@@ -70,7 +71,35 @@ def test_sleap_render_with_different_backgrounds(background):
         "tests/data/json_format_v2/centered_pair_predictions.json".split()
     )
     sleap_render(args)
-    assert os.path.exists(f"test_{background}.avi")
+    assert (
+        os.path.exists(f"test_{background}.avi")
+        and os.path.getsize(f"test_{background}.avi") > 0
+    )
+
+    # Check if the background is set correctly if not original background
+    if background != "original":
+        saved_video_path = f"test_{background}.avi"
+        cap = cv2.VideoCapture(saved_video_path)
+        ret, frame = cap.read()
+
+        # Accumulate color channels
+        b, g, r = cv2.split(frame)
+        mean_b = np.mean(b)
+        mean_g = np.mean(g)
+        mean_r = np.mean(r)
+
+        # Set threshold values.
+        white_threshold = 240
+        grey_threshold = 40
+
+        # Check if the average color is white, grey, or black
+        if all(val > white_threshold for val in [mean_b, mean_g, mean_r]):
+            background_color = "white"
+        elif all(val < grey_threshold for val in [mean_b, mean_g, mean_r]):
+            background_color = "black"
+        else:
+            background_color = "grey"
+        assert background_color == background
 
 
 def test_sleap_render(centered_pair_predictions):
