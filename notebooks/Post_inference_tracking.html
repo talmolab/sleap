@@ -356,7 +356,7 @@ document.write(`
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This should take care of all the dependencies on colab:</span>
 <span class="o">!</span>pip uninstall -qqq -y opencv-python opencv-contrib-python
-<span class="o">!</span>pip install -qqq sleap<span class="o">[</span>pypi<span class="o">]</span>
+<span class="o">!</span>pip install -qqq <span class="nv">sleap</span><span class="o">==</span><span class="m">1</span>.3.1
 
 <span class="c1"># But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):</span>
 <span class="c1"># conda create -n sleap -c sleap -c conda-forge -c nvidia sleap</span>
