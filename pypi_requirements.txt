@@ -12,7 +12,6 @@ jsonpickle==1.2
 networkx
 numpy>=1.19.5,<1.23.0
 opencv-python>=4.2.0,<=4.6.0
-# opencv-python-headless>=4.2.0.34,<=4.5.5.62
 pandas
 pillow>=8.3.1,<=8.4.0
 psutil
@@ -34,6 +33,7 @@ seaborn
 tensorflow>=2.6.3,<2.11; sys_platform == "win32" and platform_machine != 'arm64'
 tensorflow>=2.6.3,<=2.11; sys_platform != "win32" and platform_machine != 'arm64'
 tensorflow-hub<=0.14.0
+# These dependencies are untested since we do not offer a wheel for apple silicon atm.
 tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
 tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64'
 
