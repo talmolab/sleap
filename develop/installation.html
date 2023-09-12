@@ -661,6 +661,27 @@ GPUs: 2/2 available
 </pre></div>
 </div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you are on Linux, have a NVIDIA GPU, and are having trouble utilizing your GPU:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>W tensorflow/stream_executor/platform/default/dso_loader.cc:64 Could not load dynamic 
+library <span class="s1">&#39;libcudart.so.11.0&#39;</span><span class="p">;</span> dlerror: libcudart.so.11.0: cannot open shared object 
+file: No such file or directory
+</pre></div>
+</div>
+<p>then activate the environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba activate sleap
+</pre></div>
+</div>
+<p>and run the commands:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir -p <span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d
+<span class="nb">echo</span> <span class="s1">&#39;#!/bin/sh&#39;</span> &gt;&gt; <span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/sleap_activate.sh
+<span class="nb">echo</span> <span class="s1">&#39;export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH&#39;</span> &gt;&gt; <span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/sleap_activate.sh
+<span class="nb">source</span> <span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/sleap_activate.sh
+</pre></div>
+</div>
+<p>These commands only need to be run once and will subsequently run automatically upon activating your <code class="docutils literal notranslate"><span class="pre">sleap</span></code> environment.</p>
+</div>
 </section>
 </section>
 <section id="upgrading-and-uninstalling">
