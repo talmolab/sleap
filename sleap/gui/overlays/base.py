@@ -24,6 +24,7 @@ from sleap.nn.inference import VisualPredictor
 
 logger = logging.getLogger(__name__)
 
+
 @attr.s(auto_attribs=True)
 class BaseOverlay(abc.ABC):
     """Abstract base class for overlays.
