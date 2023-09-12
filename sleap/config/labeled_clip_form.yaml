@@ -21,7 +21,7 @@ main:
   - name: background
     label: Video Background
     type: list
-    options: Original,Black,White,Grey
+    options: original,black,white,grey
   - name: open_when_done
     label: Open When Done Saving
     type: bool

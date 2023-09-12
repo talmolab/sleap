@@ -42,7 +42,7 @@ def reader(
         video: The `Video` object to read.
         frames: Full list frame indexes we want to read.
         scale: Output scale for frame images.
-        background: output video background. Either Original, Black, White, Grey
+        background: output video background. Either original, black, white, grey
 
     Returns:
         None.
@@ -79,7 +79,6 @@ def reader(
                 elif background == "grey":
                     fill = 127
                 elif background == "white":
-                    # background == White
                     fill = 255
                 else:
                     raise ValueError(f"Invalid background color: {background}")
@@ -536,7 +535,7 @@ def save_labeled_video(
         fps: Frames per second for output video.
         scale: scale of image (so we can scale point locations to match)
         crop_size_xy: size of crop around instances, or None for full images
-        background: output video background. Either Original, Black, White, Grey
+        background: output video background. Either original, black, white, grey
         show_edges: whether to draw lines between nodes
         edge_is_wedge: whether to draw edges as wedges (draw as line if False)
         marker_size: Size of marker in pixels before scaling by `scale`
