@@ -349,6 +349,31 @@ pip install tensorflow==2.6.3
 ```
 ````
 
+````{note}
+If you are on Linux, have a NVIDIA GPU, and are having trouble utilizing your GPU:
+
+```bash
+W tensorflow/stream_executor/platform/default/dso_loader.cc:64 Could not load dynamic 
+library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object 
+file: No such file or directory
+```
+
+then activate the environment:
+
+```bash
+mamba activate sleap
+```
+
+and run the commands:
+```bash
+mkdir -p $CONDA_PREFIX/etc/conda/activate.d
+echo '#!/bin/sh' >> $CONDA_PREFIX/etc/conda/activate.d/libcudart_activate.sh
+echo 'export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH' >> $CONDA_PREFIX/etc/conda/activate.d/libcudart_activate.sh
+source $CONDA_PREFIX/etc/conda/activate.d/libcudart_activate.sh
+```
+These commands only need to be run once and will subsequently run autimatically upon activating your `sleap` environment.
+````
+
 ## Upgrading and uninstalling
 
 We **strongly recommend** installing SLEAP in a fresh environment when updating. This is because dependency versions might change, and depending on the state of your previous environment, directly updating might break compatibility with some of them.
