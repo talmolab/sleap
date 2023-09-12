@@ -68,7 +68,24 @@ SLEAP can be installed on Macs by following these instructions:
 
 **Anaconda** is a Python environment manager that makes it easy to install SLEAP and its necessary dependencies without affecting other Python software on your computer.
 
-[**Mambaforge**](https://mamba.readthedocs.io/en/latest/installation.html) is a lightweight installer of Anaconda with speedy package resolution that we recommend. To install it:
+[**Mambaforge**](https://mamba.readthedocs.io/en/latest/installation.html) is a lightweight installer of Anaconda with speedy package resolution that we recommend.
+
+````{note}
+If you already have Anaconda on your computer, then you can [set the solver to `libmamba`](https://www.anaconda.com/blog/a-faster-conda-for-a-growing-community) in the `base` environment (and skip the Mambaforge installation):
+
+```bash
+conda update -n base conda
+conda install -n base conda-libmamba-solver
+conda config --set solver libmamba
+```
+
+```{warning}
+Any subsequent `mamba` commands in the docs will need to be replaced with `conda` if you choose to use your existing Anaconda installation.
+```
+
+````
+
+Otherwise, to install Mamba:
 
 **On Windows**, just click through the installation steps.
 
@@ -215,7 +232,7 @@ Although you do not need Mambaforge installed to perform a `pip install`, we rec
 3. Finally, we can perform the `pip install`:
 
    ```bash
-   pip install sleap[pypi]==1.3.1
+   pip install sleap[pypi]==1.3.2
    ```
 
    This works on **any OS except Apple silicon** and on **Google Colab**.
