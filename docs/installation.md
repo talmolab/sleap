@@ -367,11 +367,11 @@ mamba activate sleap
 and run the commands:
 ```bash
 mkdir -p $CONDA_PREFIX/etc/conda/activate.d
-echo '#!/bin/sh' >> $CONDA_PREFIX/etc/conda/activate.d/libcudart_activate.sh
-echo 'export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH' >> $CONDA_PREFIX/etc/conda/activate.d/libcudart_activate.sh
-source $CONDA_PREFIX/etc/conda/activate.d/libcudart_activate.sh
+echo '#!/bin/sh' >> $CONDA_PREFIX/etc/conda/activate.d/sleap_activate.sh
+echo 'export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH' >> $CONDA_PREFIX/etc/conda/activate.d/sleap_activate.sh
+source $CONDA_PREFIX/etc/conda/activate.d/sleap_activate.sh
 ```
-These commands only need to be run once and will subsequently run autimatically upon activating your `sleap` environment.
+These commands only need to be run once and will subsequently run automatically upon activating your `sleap` environment.
 ````
 
 ## Upgrading and uninstalling
