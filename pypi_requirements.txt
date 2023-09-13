@@ -32,7 +32,7 @@ scikit-image
 scikit-learn ==1.0.*
 scikit-video
 seaborn
-tensorflow>=2.6.3,<2.11; sys_platform == "win32" and platform_machine != 'arm64'
+tensorflow>=2.6.3,<2.9; sys_platform == "win32"
 tensorflow>=2.6.3,<=2.11; sys_platform != "win32" and platform_machine != 'arm64'
 tensorflow-hub<=0.14.0
 # These dependencies are untested since we do not offer a wheel for apple silicon atm.
