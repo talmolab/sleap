@@ -18,7 +18,9 @@ psutil
 pykalman==0.9.5
 PySide2>=5.13.2,<=5.14.1; platform_machine != 'arm64'
 PySide6; sys_platform == 'darwin' and platform_machine == 'arm64'
-python-rapidjson
+# Otherwise error: Microsoft Visual C++ 14.0 is required. 
+python-rapidjson <=1.10; sys_platform == 'win32'
+python-rapidjson; sys_platform != 'win32'
 pyyaml
 pyzmq
 qtpy>=2.0.1
