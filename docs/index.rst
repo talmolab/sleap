@@ -19,4 +19,5 @@ SLEAP Documentation
     datasets
     GitHub <https://github.com/talmolab/sleap>
     Releases <https://github.com/talmolab/sleap/releases>
+    bulletin
     help
