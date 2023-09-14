@@ -46,3 +46,4 @@ dependencies:
 
     - pip:  
         - "--editable=.[conda_dev]"
+        
