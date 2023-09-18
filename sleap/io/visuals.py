@@ -74,14 +74,13 @@ def reader(
             )
             if background != "original":
                 # fill the frame with the color
-                if background == "black":
-                    fill = 0
-                elif background == "grey":
-                    fill = 127
-                elif background == "white":
-                    fill = 255
-                else:
-                    raise ValueError(f"Invalid background color: {background}")
+                fill_values = {"black": 0, "grey": 127, "white": 255}
+                try:
+                    fill = fill_values[background]
+                except KeyError:
+                    raise ValueError(
+                        f"Invalid background color: {background}. Options include: {', '.join(fill_values.keys())}"
+                    )
                 video_frame_images = video_frame_images * 0 + fill
 
             if not loaded_chunk_idxs:
