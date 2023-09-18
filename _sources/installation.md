@@ -137,13 +137,13 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
 **Windows** and **Linux**
 
 ```bash
-mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.3.2
+mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.3.3
 ```
 
 **Mac OS X** and **Apple Silicon**
 
 ```bash
-mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.2
+mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.3
 ```
 
 **This is the recommended installation method**.
@@ -354,8 +354,8 @@ or follow the note below.
 If you are on Linux, have a NVIDIA GPU, but cannot detect your GPU:
 
 ```bash
-W tensorflow/stream_executor/platform/default/dso_loader.cc:64 Could not load dynamic 
-library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object 
+W tensorflow/stream_executor/platform/default/dso_loader.cc:64 Could not load dynamic
+library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object
 file: No such file or directory
 ```
 

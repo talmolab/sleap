@@ -468,11 +468,11 @@ These will make sure that MambaForge is easily accessible from most places on yo
 <section id="conda-package">
 <span id="condapackage"></span><h3><a class="toc-backref" href="#id4"><code class="docutils literal notranslate"><span class="pre">conda</span></code> package</a><a class="headerlink" href="#conda-package" title="Permalink to this headline">#</a></h3>
 <p><strong>Windows</strong> and <strong>Linux</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda <span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.3.2
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda <span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.3.3
 </pre></div>
 </div>
 <p><strong>Mac OS X</strong> and <strong>Apple Silicon</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba create -y -n sleap -c conda-forge -c anaconda -c sleap <span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.3.2
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba create -y -n sleap -c conda-forge -c anaconda -c sleap <span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.3.3
 </pre></div>
 </div>
 <p><strong>This is the recommended installation method</strong>.</p>
@@ -665,8 +665,8 @@ GPUs: 2/2 available
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>If you are on Linux, have a NVIDIA GPU, but cannot detect your GPU:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>W tensorflow/stream_executor/platform/default/dso_loader.cc:64 Could not load dynamic 
-library <span class="s1">&#39;libcudart.so.11.0&#39;</span><span class="p">;</span> dlerror: libcudart.so.11.0: cannot open shared object 
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>W tensorflow/stream_executor/platform/default/dso_loader.cc:64 Could not load dynamic
+library <span class="s1">&#39;libcudart.so.11.0&#39;</span><span class="p">;</span> dlerror: libcudart.so.11.0: cannot open shared object
 file: No such file or directory
 </pre></div>
 </div>
