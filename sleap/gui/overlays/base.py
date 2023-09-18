@@ -71,7 +71,6 @@ class BaseOverlay(abc.ABC):
 
             except RuntimeError as e:  # Internal C++ object (PySide2.QtWidgets.QGraphicsPathItem) already deleted.
                 logger.debug(e)
-                pass
 
         # Stop tracking the items after they been removed from the scene
         self.items = []
