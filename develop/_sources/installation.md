@@ -137,13 +137,13 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
 **Windows** and **Linux**
 
 ```bash
-mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.3.3
+mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.3.2
 ```
 
 **Mac OS X** and **Apple Silicon**
 
 ```bash
-mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.3
+mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.2
 ```
 
 **This is the recommended installation method**.
@@ -232,7 +232,7 @@ Although you do not need Mambaforge installed to perform a `pip install`, we rec
 3. Finally, we can perform the `pip install`:
 
    ```bash
-   pip install sleap[pypi]==1.3.3
+   pip install sleap[pypi]==1.3.2
    ```
 
    This works on **any OS except Apple silicon** and on **Google Colab**.
@@ -343,19 +343,18 @@ python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU')
 ````{warning}
 TensorFlow 2.7+ is currently failing to detect CUDA Toolkit and CuDNN on some systems (see [Issue thread](https://github.com/tensorflow/tensorflow/issues/52988)).
 
-If you run into issues, either try downgrading the TensorFlow 2.6:
+If you run into issues, try downgrading the TensorFlow 2.6:
 ```bash
 pip install tensorflow==2.6.3
 ```
-or follow the note below.
 ````
 
 ````{note}
-If you are on Linux, have a NVIDIA GPU, but cannot detect your GPU:
+If you are on Linux, have a NVIDIA GPU, and are having trouble utilizing your GPU:
 
 ```bash
-W tensorflow/stream_executor/platform/default/dso_loader.cc:64 Could not load dynamic
-library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object
+W tensorflow/stream_executor/platform/default/dso_loader.cc:64 Could not load dynamic 
+library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object 
 file: No such file or directory
 ```
 
@@ -369,19 +368,10 @@ and run the commands:
 ```bash
 mkdir -p $CONDA_PREFIX/etc/conda/activate.d
 echo '#!/bin/sh' >> $CONDA_PREFIX/etc/conda/activate.d/sleap_activate.sh
-echo 'export SLEAP_OLD_LD_LIBRARY_PATH=$LD_LIBRARY_PATH' >> $CONDA_PREFIX/etc/conda/activate.d/sleap_activate.sh
 echo 'export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH' >> $CONDA_PREFIX/etc/conda/activate.d/sleap_activate.sh
 source $CONDA_PREFIX/etc/conda/activate.d/sleap_activate.sh
 ```
-
-This will set the environment variable `LD_LIBRARY_PATH` each time the environment is activated. The environment variable will remain set in the current terminal even if we deactivate the environment. Although not strictly necessary, if you would also like the environment variable to be reset to the original value when deactivating the environment, we can run the following commands:
-```bash
-mkdir -p $CONDA_PREFIX/etc/conda/deactivate.d
-echo '#!/bin/sh' >> $CONDA_PREFIX/etc/conda/deactivate.d/sleap_deactivate.sh
-echo 'export LD_LIBRARY_PATH=$SLEAP_OLD_LD_LIBRARY_PATH' >> $CONDA_PREFIX/etc/conda/deactivate.d/sleap_deactivate.sh
-```
-
-These commands only need to be run once and will subsequently run automatically upon [de]activating your `sleap` environment.
+These commands only need to be run once and will subsequently run automatically upon activating your `sleap` environment.
 ````
 
 ## Upgrading and uninstalling

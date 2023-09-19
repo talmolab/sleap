@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Contributing to SLEAP &#8212; SLEAP (v1.3.2)</title>
+    <title>Bulletin &#8212; SLEAP (v1.3.2)</title>
   
   
   
@@ -51,11 +51,13 @@
     <script src="_static/togglebutton.js"></script>
     <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'CONTRIBUTING';</script>
-    <link rel="canonical" href="/develop/CONTRIBUTING.html" />
+    <script>DOCUMENTATION_OPTIONS.pagename = 'bulletin';</script>
+    <link rel="canonical" href="/develop/bulletin.html" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Help" href="help.html" />
+    <link rel="prev" title="Datasets" href="datasets.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="None"/>
   </head>
@@ -138,7 +140,7 @@
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <ul class="nav bd-sidenav">
+        <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
@@ -183,7 +185,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="datasets.html">Datasets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bulletin.html">Bulletin</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Bulletin</a></li>
 
 
 
@@ -261,7 +263,7 @@
       
       
       
-      <li><a href="https://github.com/talmolab/sleap/issues/new?title=Issue%20on%20page%20%2FCONTRIBUTING.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/talmolab/sleap/issues/new?title=Issue%20on%20page%20%2Fbulletin.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -309,7 +311,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Contributing to SLEAP</h1>
+    <h1>Bulletin</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -319,19 +321,18 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#table-of-contents">Table Of Contents</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#code-of-conduct">Code of Conduct</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contributing">Contributing</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#issues">Issues</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#discussions">Discussions</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pull-requests">Pull Requests</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Bulletin</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-install">Quick install</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#highlights">Highlights</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#full-changelog">Full Changelog</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enhancements">Enhancements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fixes">Fixes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#new-contributors">New Contributors</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#style-guides">Style Guides</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thank-you-for-contributing-to-sleap">Thank you for contributing to SLEAP!</a></li>
 </ul>
-</li>
-</ul>
+
             </nav>
         </div>
     </div>
@@ -342,102 +343,92 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="contributing-to-sleap">
-<h1>Contributing to SLEAP<a class="headerlink" href="#contributing-to-sleap" title="Permalink to this headline">#</a></h1>
-<p>As our community grows it is important to adhere to a set of contribution guidelines. These guidelines may change as needed. Please feel free to propose changes to source code in a pull request!</p>
-<section id="table-of-contents">
-<h2>Table Of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">#</a></h2>
-<ol class="simple">
-<li><p><a class="reference internal" href="#code-of-conduct"><span class="std std-doc">Code of Conduct</span></a></p></li>
-<li><p><a class="reference internal" href="#contributing"><span class="std std-doc">Contributing</span></a></p>
-<ul class="simple">
-<li><p><a class="reference internal" href="#issues"><span class="std std-doc">Issues</span></a></p></li>
-<li><p><a class="reference internal" href="#discussions"><span class="std std-doc">Discussions</span></a></p></li>
-<li><p><a class="reference internal" href="#pull-requests"><span class="std std-doc">Pull Requests</span></a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#style-guides"><span class="std std-doc">Style Guides</span></a></p></li>
-</ol>
+  <section class="tex2jax_ignore mathjax_ignore" id="bulletin">
+<h1>Bulletin<a class="headerlink" href="#bulletin" title="Permalink to this headline">#</a></h1>
+<p>SLEAP 1.3.2 adds some nice usability features thanks to both the community ideas and new contributors! See <a class="reference external" href="https://github.com/talmolab/sleap/releases/tag/v1.3.0">1.3.0</a> and <a class="reference external" href="https://github.com/talmolab/sleap/releases/tag/v1.3.1">1.3.1</a> for previous notable changes. As a reminder:</p>
+<blockquote>
+<div><p>The 1.3.1 dependency update requires <a class="reference external" href="https://mamba.readthedocs.io/en/latest/index.html">Mamba</a> for faster dependency resolution. If you already have anaconda installed, then you <em>can</em> set the solver to libmamba in the base environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">update</span> <span class="o">-</span><span class="n">n</span> <span class="n">base</span> <span class="n">conda</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">n</span> <span class="n">base</span> <span class="n">conda</span><span class="o">-</span><span class="n">libmamba</span><span class="o">-</span><span class="n">solver</span>
+<span class="n">conda</span> <span class="n">config</span> <span class="o">--</span><span class="nb">set</span> <span class="n">solver</span> <span class="n">libmamba</span>
+</pre></div>
+</div>
+<p>Any subsequent <code class="docutils literal notranslate"><span class="pre">mamba</span></code> commands in the docs will need to be replaced with <code class="docutils literal notranslate"><span class="pre">conda</span></code> if you choose to use your existing Anaconda installation.</p>
+<p>Otherwise, follow the <a class="reference external" href="https://mamba.readthedocs.io/en/latest/installation.html">recommended installation instruction for Mamba</a>.</p>
+</div></blockquote>
 </section>
-<section id="code-of-conduct">
-<h2>Code of Conduct<a class="headerlink" href="#code-of-conduct" title="Permalink to this headline">#</a></h2>
-<p>Everyone contributing to SLEAP is governed by the <a class="reference internal" href="CODE_OF_CONDUCT.html"><span class="doc std std-doc">SLEAP Code of Conduct</span></a>. As such, all are expected to abide by this code. Please report any unacceptable behavior to <code class="docutils literal notranslate"><span class="pre">talmo&#64;salk.edu</span></code>.</p>
+<section class="tex2jax_ignore mathjax_ignore" id="quick-install">
+<h1>Quick install<a class="headerlink" href="#quick-install" title="Permalink to this headline">#</a></h1>
+<p><strong><code class="docutils literal notranslate"><span class="pre">mamba</span></code> (Windows/Linux/GPU)</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mamba</span> <span class="n">create</span> <span class="o">-</span><span class="n">y</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="o">-</span><span class="n">c</span> <span class="n">nvidia</span> <span class="o">-</span><span class="n">c</span> <span class="n">sleap</span> <span class="o">-</span><span class="n">c</span> <span class="n">anaconda</span> <span class="n">sleap</span><span class="o">=</span><span class="mf">1.3.2</span>
+</pre></div>
+</div>
+<p><strong><code class="docutils literal notranslate"><span class="pre">mamba</span></code> (Mac)</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mamba</span> <span class="n">create</span> <span class="o">-</span><span class="n">y</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="o">-</span><span class="n">c</span> <span class="n">anaconda</span> <span class="o">-</span><span class="n">c</span> <span class="n">sleap</span> <span class="n">sleap</span><span class="o">=</span><span class="mf">1.3.2</span>
+</pre></div>
+</div>
+<p><strong><code class="docutils literal notranslate"><span class="pre">pip</span></code> (any OS except Apple Silicon)</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">sleap</span><span class="p">[</span><span class="n">pypi</span><span class="p">]</span><span class="o">==</span><span class="mf">1.3.2</span>
+</pre></div>
+</div>
 </section>
-<section id="contributing">
-<h2>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">#</a></h2>
-<p>Github has made it easy to separate issues from discussions. Generally speaking, if something warrants a pull request (e.g. bug fixes, TODOs) it should be submitted as an issue. Conversely, general questions about usage and improvement ideas should go into discussions. These both act as staging areas before adding the items to the SLEAP Roadmap. Once added to the Roadmap, items can be given priority, status, assignee(s), etc.</p>
-<section id="issues">
-<h3>Issues<a class="headerlink" href="#issues" title="Permalink to this headline">#</a></h3>
+<section class="tex2jax_ignore mathjax_ignore" id="highlights">
+<h1>Highlights<a class="headerlink" href="#highlights" title="Permalink to this headline">#</a></h1>
 <ul class="simple">
-<li><p>Check <a class="reference external" href="https://github.com/talmolab/sleap/issues">open/closed issues</a>, <a class="reference external" href="https://github.com/talmolab/sleap/discussions/categories/ideas">ideas</a>, and <a class="reference external" href="https://github.com/talmolab/sleap/discussions/categories/help">the help page</a> to make sure issue doesn’t already exist / has been solved.</p></li>
-<li><p>Create new issue using the <a class="reference external" href="https://github.com/talmolab/sleap/blob/arlo/contributing_guide/.github/ISSUE_TEMPLATE/bug_report.md">issue template</a>.</p></li>
-</ul>
-</section>
-<section id="discussions">
-<h3>Discussions<a class="headerlink" href="#discussions" title="Permalink to this headline">#</a></h3>
-<ul class="simple">
-<li><p>This is a place to go to ask questions and propose new ideas.</p></li>
-<li><p>3 categories: Help, Ideas, General</p>
-<ul>
-<li><p><strong>Help</strong> - Having trouble with software, user experience issue, etc.</p></li>
-<li><p><strong>Ideas</strong> - Enhancements, things that would make the user experience nicer but not necessarily a problem with the code.</p></li>
-<li><p><strong>General</strong> - If it doesn’t fall into help/ideas it goes here as long as it isn’t bug fix (issue).</p></li>
-</ul>
-</li>
+<li><p>Limit max tracks via track-local queues by &#64;shrivaths16 and &#64;talmo in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1447">talmolab/sleap#1447</a></p></li>
+<li><p>Add option to remove videos in batch by &#64;gitttt-1234 in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1382">talmolab/sleap#1382</a> and <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1406">talmolab/sleap#1406</a></p></li>
+<li><p>Add shortcut to export analysis for current video by &#64;KevinZ0217 in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1414">talmolab/sleap#1414</a> and <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1444">talmolab/sleap#1444</a></p></li>
+<li><p>Add video path and frame indices to metrics by &#64;roomrys in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1396">talmolab/sleap#1396</a></p></li>
+<li><p>Add a button for copying model config to clipboard by &#64;KevinZ0217 in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1433">talmolab/sleap#1433</a></p></li>
+<li><p>Add Option to Export CSV by &#64;gitttt-1234 in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1438">talmolab/sleap#1438</a></p></li>
 </ul>
 </section>
-<section id="pull-requests">
-<h3>Pull Requests<a class="headerlink" href="#pull-requests" title="Permalink to this headline">#</a></h3>
-<ol class="simple">
-<li><p>Install source code <a class="reference external" href="https://sleap.ai/installation.html#conda-from-source"><code class="docutils literal notranslate"><span class="pre">develop</span></code> branch</a> and follow instructions to create conda env, etc.</p></li>
-<li><p>Create a fork from the <code class="docutils literal notranslate"><span class="pre">develop</span></code> branch.</p>
+<section class="tex2jax_ignore mathjax_ignore" id="full-changelog">
+<h1>Full Changelog<a class="headerlink" href="#full-changelog" title="Permalink to this headline">#</a></h1>
+<section id="enhancements">
+<h2>Enhancements<a class="headerlink" href="#enhancements" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
-<li><p>Either work on the <code class="docutils literal notranslate"><span class="pre">develop</span></code> branch or create a new branch (recommended if tackling multiple issues at a time).</p></li>
-<li><p>If creating a branch, use your name followed by a relevant keyword for your changes, eg: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">-b</span> <span class="pre">john/some_issue</span></code></p></li>
+<li><p>Add option to remove videos in batch by &#64;gitttt-1234 in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1382">talmolab/sleap#1382</a> and <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1406">talmolab/sleap#1406</a></p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">Track</span></code> when add <code class="docutils literal notranslate"><span class="pre">Instance</span></code> by &#64;roomrys in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1408">talmolab/sleap#1408</a></p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">Video</span></code> to cache when adding <code class="docutils literal notranslate"><span class="pre">Track</span></code> by &#64;roomrys in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1407">talmolab/sleap#1407</a></p></li>
+<li><p>Add shortcut to export analysis for current video by &#64;KevinZ0217 in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1414">talmolab/sleap#1414</a> and <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1444">talmolab/sleap#1444</a></p></li>
+<li><p>Add video path and frame indices to metrics by &#64;roomrys in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1396">talmolab/sleap#1396</a></p></li>
+<li><p>Improve error message for detecting video backend by &#64;roomrys in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1441">talmolab/sleap#1441</a></p></li>
+<li><p>Add a button for copying model config to clipboard by &#64;KevinZ0217 in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1433">talmolab/sleap#1433</a></p></li>
+<li><p>Add Option to Export CSV by &#64;gitttt-1234 in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1438">talmolab/sleap#1438</a></p></li>
+<li><p>Limit max tracks via track-local queues by &#64;shrivaths16 and &#64;talmo in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1447">talmolab/sleap#1447</a></p></li>
 </ul>
-</li>
-<li><p>Make some changes/additions to the source code that tackle the issue(s).</p></li>
-<li><p>Write <a class="reference external" href="https://github.com/talmolab/sleap/tree/develop/tests">tests</a>.</p>
-<ul class="simple">
-<li><p>Can either write tests before creating a draft PR, or submit draft PR (to get code coverage statistics via codecov) and then write tests to narrow down error prone lines.</p></li>
-<li><p>The test(s) should go into relevant subtest folders to the proposed change(s).</p></li>
-<li><p>Test(s) should aim to hit every point in the proposed change(s) - cover edge cases to best of your ability.</p></li>
-<li><p>Try to hit code coverage points.</p></li>
-</ul>
-</li>
-<li><p>Add files, commit, and push to origin.</p></li>
-<li><p>Create a draft PR on <a class="reference external" href="https://github.com/talmolab/sleap/pulls">Github</a> (follow instructions in template).</p>
-<ul class="simple">
-<li><p>Make sure the tests pass and code coverage is good.</p></li>
-<li><p>If either the tests or code coverage fail, repeat steps 3-5.</p></li>
-</ul>
-</li>
-<li><p>Once the draft PR looks good, convert to a finalized PR (hit the <code class="docutils literal notranslate"><span class="pre">ready</span> <span class="pre">for</span> <span class="pre">review</span></code> button).</p>
-<ul class="simple">
-<li><p>IMPORTANT: Only convert to a finalized PR when you believe your changes are ready to be merged.</p></li>
-<li><p>Optionally assign a reviewer on the right of the screen - otherwise a member of the SLEAP developer team will self-assign themselves.</p></li>
-</ul>
-</li>
-<li><p>If the reviewer requests changes, repeat steps 3-5 and <code class="docutils literal notranslate"><span class="pre">Re-request</span> <span class="pre">review</span></code>.</p></li>
-<li><p>Once the reviewer signs off they will squash + merge the PR into the <code class="docutils literal notranslate"><span class="pre">develop</span></code> branch.</p>
-<ul class="simple">
-<li><p>New feautures will be available on the <code class="docutils literal notranslate"><span class="pre">main</span></code> branch when a new release of SLEAP is released.</p></li>
-</ul>
-</li>
-</ol>
 </section>
-</section>
-<section id="style-guides">
-<h2>Style Guides<a class="headerlink" href="#style-guides" title="Permalink to this headline">#</a></h2>
+<section id="fixes">
+<h2>Fixes<a class="headerlink" href="#fixes" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
-<li><p><strong>Lint</strong> - <a class="reference external" href="https://black.readthedocs.io/en/stable/">Black</a> version 21.6b0 (see <a class="reference external" href="https://github.com/talmolab/sleap/blob/develop/dev_requirements.txt">dev_requirements</a> for any changes).</p></li>
-<li><p><strong>Code</strong> - Generally follow <a class="reference external" href="https://peps.python.org/pep-0008/">PEP8</a>. Type hinting is encouraged.</p></li>
-<li><p><strong>Documentation</strong> - Use <span class="xref myst">Google-style comments and docstrings</span> to document code.</p></li>
+<li><p>Minor fix in computation of OKS by &#64;shrivaths16 in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1383">talmolab/sleap#1383</a> and <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1399">talmolab/sleap#1399</a></p></li>
+<li><p>Fix <code class="docutils literal notranslate"><span class="pre">Filedialog</span></code> to work across (mac)OS by &#64;roomrys in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1393">talmolab/sleap#1393</a></p></li>
+<li><p>Fix panning bounding box by &#64;gitttt-1234 in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1398">talmolab/sleap#1398</a></p></li>
+<li><p>Fix skeleton templates by &#64;roomrys in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1404">talmolab/sleap#1404</a></p></li>
+<li><p>Fix labels export for json by &#64;roomrys in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1410">talmolab/sleap#1410</a></p></li>
+<li><p>Correct GUI state emulation by &#64;roomrys in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1422">talmolab/sleap#1422</a></p></li>
+<li><p>Update status message on status bar by &#64;shrivaths16 in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1411">talmolab/sleap#1411</a></p></li>
+<li><p>Fix error thrown when last video is deleted  by &#64;shrivaths16 in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1421">talmolab/sleap#1421</a></p></li>
+<li><p>Add model folder to the unzip path by &#64;roomrys in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1445">talmolab/sleap#1445</a></p></li>
+<li><p>Fix drag and drop by &#64;talmo in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1449">talmolab/sleap#1449</a></p></li>
 </ul>
-<section id="thank-you-for-contributing-to-sleap">
-<h3>Thank you for contributing to SLEAP!<a class="headerlink" href="#thank-you-for-contributing-to-sleap" title="Permalink to this headline">#</a></h3>
-<p>:heart:</p>
 </section>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p>Pin micromamba version by &#64;roomrys in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1376">talmolab/sleap#1376</a></p></li>
+<li><p>Add pip extras by &#64;roomrys in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1481">talmolab/sleap#1481</a></p></li>
+</ul>
+</section>
+<section id="new-contributors">
+<h2>New Contributors<a class="headerlink" href="#new-contributors" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p>&#64;shrivaths16 made their first contribution in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1383">talmolab/sleap#1383</a></p></li>
+<li><p>&#64;gitttt-1234 made their first contribution in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1382">talmolab/sleap#1382</a></p></li>
+<li><p>&#64;KevinZ0217 made their first contribution in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1414">talmolab/sleap#1414</a></p></li>
+</ul>
+<p><strong>Full Changelog</strong>: <a class="reference external" href="https://github.com/talmolab/sleap/compare/v1.3.1...v1.3.2">https://github.com/talmolab/sleap/compare/v1.3.1…v1.3.2</a></p>
 </section>
 </section>
 
@@ -453,6 +444,24 @@ document.write(`
   
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="datasets.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Datasets</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="help.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Help</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div></div>
   
 </div>
@@ -471,19 +480,18 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#table-of-contents">Table Of Contents</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#code-of-conduct">Code of Conduct</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contributing">Contributing</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#issues">Issues</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#discussions">Discussions</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pull-requests">Pull Requests</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Bulletin</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-install">Quick install</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#highlights">Highlights</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#full-changelog">Full Changelog</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enhancements">Enhancements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fixes">Fixes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#new-contributors">New Contributors</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#style-guides">Style Guides</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thank-you-for-contributing-to-sleap">Thank you for contributing to SLEAP!</a></li>
 </ul>
-</li>
-</ul>
+
   </nav></div>
 
 </div></div>
