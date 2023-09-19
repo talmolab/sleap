@@ -152,6 +152,7 @@ class MainWindow(QMainWindow):
         self.state["share usage data"] = prefs["share usage data"]
         self.state["skeleton_preview_image"] = None
         self.state["skeleton_description"] = "No skeleton loaded yet"
+        self.state["announcement last seen date"] = prefs["announcement last seen date"]
         if no_usage_data:
             self.state["share usage data"] = False
         self.state["clipboard_track"] = None
@@ -215,6 +216,7 @@ class MainWindow(QMainWindow):
         prefs["color predicted"] = self.state["color predicted"]
         prefs["trail shade"] = self.state["trail_shade"]
         prefs["share usage data"] = self.state["share usage data"]
+        prefs["announcement last seen date"] = self.state["announcement last seen date"]
 
         # Save preferences.
         prefs.save()

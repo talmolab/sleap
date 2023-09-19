@@ -3,7 +3,9 @@
 import attr
 import pandas as pd
 import requests
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+from sleap import prefs
+from datetime import date
 
 
 REPO_ID = "talmolab/sleap"
@@ -144,6 +146,29 @@ class ReleaseChecker:
             "Check the page online for a full listing: "
             f"https://github.com/{self.repo_id}"
         )
+
+
+@attr.s(auto_attribs=True)
+class AnnouncementChecker:
+    """Checker for new announcements on the releases page of sleap."""
+
+    def check_for_new_announcements(self) -> bool:
+        """Check for new announcements on the releases page not seen by user."""
+        if date.today().strftime("%Y%m%d") > prefs.prefs["announcement last seen date"]:
+            return True
+        return False
+
+    def get_latest_announcement(self) -> Optional[date]:
+        """Return latest announcement date if available."""
+        if self.check_for_new_announcements():
+            return date.today().strftime("%Y%m%d")
+        return None
+    
+    def update_announcement_last_seen(self):
+        """Update the last seen date of announcement in preferences."""
+        latest_announcement_date = self.get_latest_announcement()
+        if latest_announcement_date is not None:
+            prefs.prefs["announcement last seen date"] = latest_announcement_date
 
 
 def get_analytics_data() -> Dict[str, Any]:
