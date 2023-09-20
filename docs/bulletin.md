@@ -12,7 +12,7 @@ SLEAP 1.3.2 adds some nice usability features thanks to both the community ideas
 >
 >Otherwise, follow the [recommended installation instruction for Mamba](https://mamba.readthedocs.io/en/latest/installation.html).
 
-# Quick install
+### Quick install
 **`mamba` (Windows/Linux/GPU)**:
 ```
 mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.3.2
@@ -28,7 +28,7 @@ mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.2
 pip install sleap[pypi]==1.3.2
 ```
 
-# Highlights
+### Highlights
 * Limit max tracks via track-local queues by @shrivaths16 and @talmo in https://github.com/talmolab/sleap/pull/1447
 * Add option to remove videos in batch by @gitttt-1234 in https://github.com/talmolab/sleap/pull/1382 and https://github.com/talmolab/sleap/pull/1406
 * Add shortcut to export analysis for current video by @KevinZ0217 in https://github.com/talmolab/sleap/pull/1414 and https://github.com/talmolab/sleap/pull/1444
@@ -36,9 +36,9 @@ pip install sleap[pypi]==1.3.2
 * Add a button for copying model config to clipboard by @KevinZ0217 in https://github.com/talmolab/sleap/pull/1433
 * Add Option to Export CSV by @gitttt-1234 in https://github.com/talmolab/sleap/pull/1438
 
-# Full Changelog
+### Full Changelog
 
-## Enhancements
+#### Enhancements
 * Add option to remove videos in batch by @gitttt-1234 in https://github.com/talmolab/sleap/pull/1382 and https://github.com/talmolab/sleap/pull/1406
 * Add `Track` when add `Instance` by @roomrys in https://github.com/talmolab/sleap/pull/1408
 * Add `Video` to cache when adding `Track` by @roomrys in https://github.com/talmolab/sleap/pull/1407
@@ -49,7 +49,7 @@ pip install sleap[pypi]==1.3.2
 * Add Option to Export CSV by @gitttt-1234 in https://github.com/talmolab/sleap/pull/1438
 * Limit max tracks via track-local queues by @shrivaths16 and @talmo in https://github.com/talmolab/sleap/pull/1447
 
-## Fixes
+#### Fixes
 * Minor fix in computation of OKS by @shrivaths16 in https://github.com/talmolab/sleap/pull/1383 and https://github.com/talmolab/sleap/pull/1399
 * Fix `Filedialog` to work across (mac)OS by @roomrys in https://github.com/talmolab/sleap/pull/1393
 * Fix panning bounding box by @gitttt-1234 in https://github.com/talmolab/sleap/pull/1398
@@ -61,11 +61,11 @@ pip install sleap[pypi]==1.3.2
 * Add model folder to the unzip path by @roomrys in https://github.com/talmolab/sleap/pull/1445
 * Fix drag and drop by @talmo in https://github.com/talmolab/sleap/pull/1449
 
-## Dependencies
+#### Dependencies
 * Pin micromamba version by @roomrys in https://github.com/talmolab/sleap/pull/1376
 * Add pip extras by @roomrys in https://github.com/talmolab/sleap/pull/1481
 
-## New Contributors
+###3 New Contributors
 * @shrivaths16 made their first contribution in https://github.com/talmolab/sleap/pull/1383
 * @gitttt-1234 made their first contribution in https://github.com/talmolab/sleap/pull/1382
 * @KevinZ0217 made their first contribution in https://github.com/talmolab/sleap/pull/1414
