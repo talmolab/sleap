@@ -318,12 +318,16 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-install">Quick install</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#highlights">Highlights</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#full-changelog">Full Changelog</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enhancements">Enhancements</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fixes">Fixes</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap-v1-3-2">SLEAP v1.3.2</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-install">Quick install</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#highlights">Highlights</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#full-changelog">Full Changelog</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#enhancements">Enhancements</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fixes">Fixes</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#new-contributors">New Contributors</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -339,6 +343,8 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="bulletin">
 <h1>Bulletin<a class="headerlink" href="#bulletin" title="Permalink to this headline">#</a></h1>
+<section id="sleap-v1-3-2">
+<h2>SLEAP v1.3.2<a class="headerlink" href="#sleap-v1-3-2" title="Permalink to this headline">#</a></h2>
 <p>SLEAP 1.3.2 adds some nice usability features thanks to both the community ideas and new contributors! See <a class="reference external" href="https://github.com/talmolab/sleap/releases/tag/v1.3.0">1.3.0</a> and <a class="reference external" href="https://github.com/talmolab/sleap/releases/tag/v1.3.1">1.3.1</a> for previous notable changes. As a reminder:</p>
 <blockquote>
 <div><p>The 1.3.1 dependency update requires <a class="reference external" href="https://mamba.readthedocs.io/en/latest/index.html">Mamba</a> for faster dependency resolution. If you already have anaconda installed, then you <em>can</em> set the solver to libmamba in the base environment:</p>
@@ -351,7 +357,7 @@ document.write(`
 <p>Otherwise, follow the <a class="reference external" href="https://mamba.readthedocs.io/en/latest/installation.html">recommended installation instruction for Mamba</a>.</p>
 </div></blockquote>
 <section id="quick-install">
-<h2>Quick install<a class="headerlink" href="#quick-install" title="Permalink to this headline">#</a></h2>
+<h3>Quick install<a class="headerlink" href="#quick-install" title="Permalink to this headline">#</a></h3>
 <p><strong><code class="docutils literal notranslate"><span class="pre">mamba</span></code> (Windows/Linux/GPU)</strong>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mamba</span> <span class="n">create</span> <span class="o">-</span><span class="n">y</span> <span class="o">-</span><span class="n">n</span> <span class="n">sleap</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="o">-</span><span class="n">c</span> <span class="n">nvidia</span> <span class="o">-</span><span class="n">c</span> <span class="n">sleap</span> <span class="o">-</span><span class="n">c</span> <span class="n">anaconda</span> <span class="n">sleap</span><span class="o">=</span><span class="mf">1.3.2</span>
 </pre></div>
@@ -366,7 +372,7 @@ document.write(`
 </div>
 </section>
 <section id="highlights">
-<h2>Highlights<a class="headerlink" href="#highlights" title="Permalink to this headline">#</a></h2>
+<h3>Highlights<a class="headerlink" href="#highlights" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p>Limit max tracks via track-local queues by &#64;shrivaths16 and &#64;talmo in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1447">talmolab/sleap#1447</a></p></li>
 <li><p>Add option to remove videos in batch by &#64;gitttt-1234 in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1382">talmolab/sleap#1382</a> and <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1406">talmolab/sleap#1406</a></p></li>
@@ -377,9 +383,9 @@ document.write(`
 </ul>
 </section>
 <section id="full-changelog">
-<h2>Full Changelog<a class="headerlink" href="#full-changelog" title="Permalink to this headline">#</a></h2>
+<h3>Full Changelog<a class="headerlink" href="#full-changelog" title="Permalink to this headline">#</a></h3>
 <section id="enhancements">
-<h3>Enhancements<a class="headerlink" href="#enhancements" title="Permalink to this headline">#</a></h3>
+<h4>Enhancements<a class="headerlink" href="#enhancements" title="Permalink to this headline">#</a></h4>
 <ul class="simple">
 <li><p>Add option to remove videos in batch by &#64;gitttt-1234 in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1382">talmolab/sleap#1382</a> and <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1406">talmolab/sleap#1406</a></p></li>
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">Track</span></code> when add <code class="docutils literal notranslate"><span class="pre">Instance</span></code> by &#64;roomrys in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1408">talmolab/sleap#1408</a></p></li>
@@ -393,7 +399,7 @@ document.write(`
 </ul>
 </section>
 <section id="fixes">
-<h3>Fixes<a class="headerlink" href="#fixes" title="Permalink to this headline">#</a></h3>
+<h4>Fixes<a class="headerlink" href="#fixes" title="Permalink to this headline">#</a></h4>
 <ul class="simple">
 <li><p>Minor fix in computation of OKS by &#64;shrivaths16 in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1383">talmolab/sleap#1383</a> and <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1399">talmolab/sleap#1399</a></p></li>
 <li><p>Fix <code class="docutils literal notranslate"><span class="pre">Filedialog</span></code> to work across (mac)OS by &#64;roomrys in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1393">talmolab/sleap#1393</a></p></li>
@@ -408,18 +414,21 @@ document.write(`
 </ul>
 </section>
 <section id="dependencies">
-<h3>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">#</a></h3>
+<h4>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">#</a></h4>
 <ul class="simple">
 <li><p>Pin micromamba version by &#64;roomrys in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1376">talmolab/sleap#1376</a></p></li>
 <li><p>Add pip extras by &#64;roomrys in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1481">talmolab/sleap#1481</a></p></li>
 </ul>
-<p>###3 New Contributors</p>
+</section>
+<section id="new-contributors">
+<h4>New Contributors<a class="headerlink" href="#new-contributors" title="Permalink to this headline">#</a></h4>
 <ul class="simple">
 <li><p>&#64;shrivaths16 made their first contribution in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1383">talmolab/sleap#1383</a></p></li>
 <li><p>&#64;gitttt-1234 made their first contribution in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1382">talmolab/sleap#1382</a></p></li>
 <li><p>&#64;KevinZ0217 made their first contribution in <a class="github reference external" href="https://github.com/talmolab/sleap/pull/1414">talmolab/sleap#1414</a></p></li>
 </ul>
 <p><strong>Full Changelog</strong>: <a class="reference external" href="https://github.com/talmolab/sleap/compare/v1.3.1...v1.3.2">https://github.com/talmolab/sleap/compare/v1.3.1…v1.3.2</a></p>
+</section>
 </section>
 </section>
 </section>
@@ -472,12 +481,16 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-install">Quick install</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#highlights">Highlights</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#full-changelog">Full Changelog</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enhancements">Enhancements</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fixes">Fixes</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap-v1-3-2">SLEAP v1.3.2</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-install">Quick install</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#highlights">Highlights</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#full-changelog">Full Changelog</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#enhancements">Enhancements</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fixes">Fixes</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#new-contributors">New Contributors</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
