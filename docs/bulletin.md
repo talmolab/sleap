@@ -1,5 +1,6 @@
 # Bulletin
 
+## SLEAP v1.3.2
 SLEAP 1.3.2 adds some nice usability features thanks to both the community ideas and new contributors! See [1.3.0](https://github.com/talmolab/sleap/releases/tag/v1.3.0) and [1.3.1](https://github.com/talmolab/sleap/releases/tag/v1.3.1) for previous notable changes. As a reminder:
 
 > The 1.3.1 dependency update requires [Mamba](https://mamba.readthedocs.io/en/latest/index.html) for faster dependency resolution. If you already have anaconda installed, then you _can_ set the solver to libmamba in the base environment:
@@ -65,7 +66,7 @@ pip install sleap[pypi]==1.3.2
 * Pin micromamba version by @roomrys in https://github.com/talmolab/sleap/pull/1376
 * Add pip extras by @roomrys in https://github.com/talmolab/sleap/pull/1481
 
-###3 New Contributors
+#### New Contributors
 * @shrivaths16 made their first contribution in https://github.com/talmolab/sleap/pull/1383
 * @gitttt-1234 made their first contribution in https://github.com/talmolab/sleap/pull/1382
 * @KevinZ0217 made their first contribution in https://github.com/talmolab/sleap/pull/1414
