@@ -30,38 +30,37 @@ import logging
 import operator
 import os
 import re
-import sys
 import subprocess
+import sys
+import traceback
 from enum import Enum
 from glob import glob
-from pathlib import PurePath, Path
-import traceback
-from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
+from pathlib import Path, PurePath
+from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type
 
-import numpy as np
-import cv2
 import attr
-from qtpy import QtCore, QtWidgets, QtGui
-from qtpy.QtWidgets import QMessageBox, QProgressDialog
+import cv2
+import numpy as np
+from qtpy import QtCore, QtGui, QtWidgets
 
-from sleap.util import get_package_file
-from sleap.skeleton import Node, Skeleton
-from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
-from sleap.io.video import Video
+from sleap.gui.dialogs.delete import DeleteDialog
+from sleap.gui.dialogs.filedialog import FileDialog
+from sleap.gui.dialogs.importvideos import ImportVideos
+from sleap.gui.dialogs.merge import MergeDialog, ReplaceSkeletonTableDialog
+from sleap.gui.dialogs.message import MessageDialog
+from sleap.gui.dialogs.missingfiles import MissingFilesDialog
+from sleap.gui.dialogs.query import QueryDialog
+from sleap.gui.state import GuiState
+from sleap.gui.suggestions import VideoFrameSuggestions
+from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
+from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
-from sleap.gui.dialogs.delete import DeleteDialog
-from sleap.gui.dialogs.importvideos import ImportVideos
-from sleap.gui.dialogs.filedialog import FileDialog
-from sleap.gui.dialogs.missingfiles import MissingFilesDialog
-from sleap.gui.dialogs.merge import MergeDialog, ReplaceSkeletonTableDialog
-from sleap.gui.dialogs.message import MessageDialog
-from sleap.gui.dialogs.query import QueryDialog
-from sleap.gui.suggestions import VideoFrameSuggestions
-from sleap.gui.state import GuiState
-
+from sleap.io.video import Video
+from sleap.skeleton import Node, Skeleton
+from sleap.util import get_package_file
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
@@ -201,6 +200,7 @@ class CommandContext:
     def from_labels(cls, labels: Labels) -> "CommandContext":
         """Creates a command context for use independently of GUI app."""
         state = GuiState()
+        state["labels"] = labels
         app = FakeApp(labels)
         return cls(state=state, app=app)
 
@@ -330,7 +330,11 @@ class CommandContext:
 
     def exportAnalysisFile(self, all_videos: bool = False):
         """Shows gui for exporting analysis h5 file."""
-        self.execute(ExportAnalysisFile, all_videos=all_videos)
+        self.execute(ExportAnalysisFile, all_videos=all_videos, csv=False)
+
+    def exportCSVFile(self, all_videos: bool = False):
+        """Shows gui for exporting analysis csv file."""
+        self.execute(ExportAnalysisFile, all_videos=all_videos, csv=True)
 
     def exportNWB(self):
         """Show gui for exporting nwb file."""
@@ -1129,13 +1133,20 @@ class ExportAnalysisFile(AppCommand):
     }
     export_filter = ";;".join(export_formats.keys())
 
+    export_formats_csv = {
+        "CSV (*.csv)": "csv",
+    }
+    export_filter_csv = ";;".join(export_formats_csv.keys())
+
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
         from sleap.io.format.nix import NixAdaptor
+        from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 
         for output_path, video in params["analysis_videos"]:
-            if Path(output_path).suffix[1:] == "nix":
+            if params["csv"]:
+                adaptor = CSVAdaptor
+            elif Path(output_path).suffix[1:] == "nix":
                 adaptor = NixAdaptor
             else:
                 adaptor = SleapAnalysisAdaptor
@@ -1148,18 +1159,24 @@ class ExportAnalysisFile(AppCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        def ask_for_filename(default_name: str) -> str:
+        def ask_for_filename(default_name: str, csv: bool) -> str:
             """Allow user to specify the filename"""
+            filter = (
+                ExportAnalysisFile.export_filter_csv
+                if csv
+                else ExportAnalysisFile.export_filter
+            )
             filename, selected_filter = FileDialog.save(
                 context.app,
                 caption="Export Analysis File...",
                 dir=default_name,
-                filter=ExportAnalysisFile.export_filter,
+                filter=filter,
             )
             return filename
 
         # Ensure labels has labeled frames
         labels = context.labels
+        is_csv = params["csv"]
         if len(labels.labeled_frames) == 0:
             raise ValueError("No labeled frames in project. Nothing to export.")
 
@@ -1177,7 +1194,7 @@ class ExportAnalysisFile(AppCommand):
         # Specify (how to get) the output filename
         default_name = context.state["filename"] or "labels"
         fn = PurePath(default_name)
-        file_extension = "h5"
+        file_extension = "csv" if is_csv else "h5"
         if len(videos) == 1:
             # Allow user to specify the filename
             use_default = False
@@ -1190,18 +1207,23 @@ class ExportAnalysisFile(AppCommand):
                 caption="Select Folder to Export Analysis Files...",
                 dir=str(fn.parent),
             )
-            if len(ExportAnalysisFile.export_formats) > 1:
+            export_format = (
+                ExportAnalysisFile.export_formats_csv
+                if is_csv
+                else ExportAnalysisFile.export_formats
+            )
+            if len(export_format) > 1:
                 item, ok = QtWidgets.QInputDialog.getItem(
                     context.app,
                     "Select export format",
                     "Available export formats",
-                    list(ExportAnalysisFile.export_formats.keys()),
+                    list(export_format.keys()),
                     0,
                     False,
                 )
                 if not ok:
                     return False
-                file_extension = ExportAnalysisFile.export_formats[item]
+                file_extension = export_format[item]
             if len(dirname) == 0:
                 return False
 
@@ -1218,7 +1240,9 @@ class ExportAnalysisFile(AppCommand):
                 format_suffix=file_extension,
             )
 
-            filename = default_name if use_default else ask_for_filename(default_name)
+            filename = (
+                default_name if use_default else ask_for_filename(default_name, is_csv)
+            )
             # Check that filename is valid and create list of video / output paths
             if len(filename) != 0:
                 analysis_videos.append(video)
@@ -1271,6 +1295,7 @@ class ExportLabeledClip(AppCommand):
             frames=list(params["frames"]),
             fps=params["fps"],
             color_manager=params["color_manager"],
+            background=params["background"],
             show_edges=params["show edges"],
             edge_is_wedge=params["edge_is_wedge"],
             marker_size=params["marker size"],
@@ -1330,6 +1355,7 @@ class ExportLabeledClip(AppCommand):
         params["fps"] = export_options["fps"]
         params["scale"] = export_options["scale"]
         params["open_when_done"] = export_options["open_when_done"]
+        params["background"] = export_options["background"]
 
         params["crop"] = None
 
@@ -1364,7 +1390,11 @@ class ExportLabeledClip(AppCommand):
 
 
 def export_dataset_gui(
-    labels: Labels, filename: str, all_labeled: bool = False, suggested: bool = False
+    labels: Labels,
+    filename: str,
+    all_labeled: bool = False,
+    suggested: bool = False,
+    verbose: bool = True,
 ) -> str:
     """Export dataset with image data and display progress GUI dialog.
 
@@ -1372,12 +1402,15 @@ def export_dataset_gui(
         labels: `sleap.Labels` dataset to export.
         filename: Output filename. Should end in `.pkg.slp`.
         all_labeled: If `True`, export all labeled frames, including frames with no user
-            instances.
-        suggested: If `True`, include image data for suggested frames.
+            instances. Defaults to `False`.
+        suggested: If `True`, include image data for suggested frames. Defaults to
+            `False`.
+        verbose: If `True`, display progress dialog. Defaults to `True`.
     """
-    win = QtWidgets.QProgressDialog(
-        "Exporting dataset with frame images...", "Cancel", 0, 1
-    )
+    if verbose:
+        win = QtWidgets.QProgressDialog(
+            "Exporting dataset with frame images...", "Cancel", 0, 1
+        )
 
     def update_progress(n, n_total):
         if win.wasCanceled():
@@ -1398,15 +1431,16 @@ def export_dataset_gui(
         save_frame_data=True,
         all_labeled=all_labeled,
         suggested=suggested,
-        progress_callback=update_progress,
+        progress_callback=update_progress if verbose else None,
     )
 
-    if win.wasCanceled():
-        # Delete output if saving was canceled.
-        os.remove(filename)
-        return "canceled"
+    if verbose:
+        if win.wasCanceled():
+            # Delete output if saving was canceled.
+            os.remove(filename)
+            return "canceled"
 
-    win.hide()
+        win.hide()
 
     return filename
 
@@ -1422,6 +1456,7 @@ class ExportDatasetWithImages(AppCommand):
             filename=params["filename"],
             all_labeled=cls.all_labeled,
             suggested=cls.suggested,
+            verbose=params.get("verbose", True),
         )
 
     @staticmethod
@@ -1837,44 +1872,61 @@ class ReplaceVideo(EditCommand):
 
 
 class RemoveVideo(EditCommand):
-    topics = [UpdateTopic.video, UpdateTopic.suggestions]
+    topics = [UpdateTopic.video, UpdateTopic.suggestions, UpdateTopic.frame]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        video = params["video"]
-        # Remove video
-        context.labels.remove_video(video)
+        videos = context.labels.videos
+        row_idxs = context.state["selected_batch_video"]
+        videos_to_be_removed = [videos[i] for i in row_idxs]
 
-        # Update view if this was the current video
-        if context.state["video"] == video:
-            if len(context.labels.videos) > 0:
+        # Remove selected videos in the project
+        for video in videos_to_be_removed:
+            context.labels.remove_video(video)
+
+        # Update the view if state has the removed video
+        if context.state["video"] in videos_to_be_removed:
+            if len(context.labels.videos):
                 context.state["video"] = context.labels.videos[-1]
             else:
                 context.state["video"] = None
 
+        if len(context.labels.videos) == 0:
+            context.app.updateStatusMessage(" ")
+
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        video = context.state["selected_video"]
-        if video is None:
-            return False
+        videos = context.labels.videos.copy()
+        row_idxs = context.state["selected_batch_video"]
+        video_file_names = []
+        total_num_labeled_frames = 0
+        for idx in row_idxs:
 
-        # Count labeled frames for this video
-        n = len(context.labels.find(video))
+            video = videos[idx]
+            if video is None:
+                return False
+
+            # Count labeled frames for this video
+            n = len(context.labels.find(video))
+
+            if n > 0:
+                total_num_labeled_frames += n
+                video_file_names.append(
+                    f"{video}".split(", shape")[0].split("filename=")[-1].split("/")[-1]
+                )
 
         # Warn if there are labels that will be deleted
-        if n > 0:
+        if len(video_file_names) >= 1:
             response = QtWidgets.QMessageBox.critical(
                 context.app,
                 "Removing video with labels",
-                f"{n} labeled frames in this video will be deleted, "
-                "are you sure you want to remove this video?",
+                f"{total_num_labeled_frames} labeled frames in {', '.join(video_file_names)} will be deleted, "
+                "are you sure you want to remove the videos?",
                 QtWidgets.QMessageBox.Yes,
                 QtWidgets.QMessageBox.No,
             )
             if response == QtWidgets.QMessageBox.No:
                 return False
-
-        params["video"] = video
         return True
 
 
@@ -1931,14 +1983,27 @@ class OpenSkeleton(EditCommand):
             labels.skeletons = skeletons_used
 
     @staticmethod
+    def get_template_skeleton_filename(context: CommandContext) -> str:
+        """Helper function to get the template skeleton filename from dropdown.
+
+        Args:
+            context: The `CommandContext`.
+
+        Returns:
+            Path to the template skeleton shipped with SLEAP.
+        """
+
+        template = context.app.skeleton_dock.skeleton_templates.currentText()
+        filename = get_package_file(f"skeletons/{template}.json")
+        return filename
+
+    @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
         # Check whether to load from file or preset
         if params.get("template", False):
             # Get selected template from dropdown
-            template = context.app.skeletonTemplates.currentText()
-            # Load from selected preset
-            filename = get_package_file(f"sleap/skeletons/{template}.json")
+            filename = OpenSkeleton.get_template_skeleton_filename(context)
         else:
             filename, selected_filter = FileDialog.open(
                 context.app,
