@@ -14,7 +14,6 @@ Example usage: ::
 """
 from collections import deque
 
-
 # FORCE_REQUESTS controls whether we emit a signal to process frame requests
 # if we haven't processed any for a certain amount of time.
 # Usually the processing gets triggered by a timer but if the user is (e.g.)
@@ -25,58 +24,55 @@ from collections import deque
 FORCE_REQUESTS = True
 
 
-from qtpy import QtWidgets, QtCore
+import atexit
+import math
+import time
+from typing import Callable, List, Optional, Union
 
-from qtpy.QtWidgets import (
-    QApplication,
-    QVBoxLayout,
-    QWidget,
-    QGraphicsView,
-    QGraphicsScene,
-    QShortcut,
-    QGraphicsItem,
-    QGraphicsObject,
-    QGraphicsEllipseItem,
-    QGraphicsTextItem,
-    QGraphicsRectItem,
-    QGraphicsPolygonItem,
-)
+import numpy as np
+import qimage2ndarray
+from qtpy import QtCore, QtWidgets
+from qtpy.QtCore import QLineF, QMarginsF, QPointF, QRectF, Qt
 from qtpy.QtGui import (
-    QImage,
-    QPixmap,
-    QPainter,
-    QPainterPath,
-    QTransform,
-    QPen,
     QBrush,
     QColor,
     QCursor,
     QFont,
-    QPolygonF,
+    QImage,
     QKeyEvent,
-    QMouseEvent,
     QKeySequence,
+    QMouseEvent,
+    QPainter,
+    QPainterPath,
+    QPen,
+    QPixmap,
+    QPolygonF,
+    QTransform,
 )
-from qtpy.QtCore import Qt, QRectF, QPointF, QMarginsF, QLineF
-
-import atexit
-import math
-import time
-import numpy as np
-
-from typing import Callable, List, Optional, Union
+from qtpy.QtWidgets import (
+    QApplication,
+    QGraphicsEllipseItem,
+    QGraphicsItem,
+    QGraphicsObject,
+    QGraphicsPolygonItem,
+    QGraphicsRectItem,
+    QGraphicsScene,
+    QGraphicsTextItem,
+    QGraphicsView,
+    QShortcut,
+    QVBoxLayout,
+    QWidget,
+)
 
 import sleap
-from sleap.prefs import prefs
-from sleap.skeleton import Node
-from sleap.instance import Instance, PredictedInstance, Point
-from sleap.io.video import Video
-from sleap.gui.widgets.slider import VideoSlider
-from sleap.gui.state import GuiState
 from sleap.gui.color import ColorManager
 from sleap.gui.shortcuts import Shortcuts
-
-import qimage2ndarray
+from sleap.gui.state import GuiState
+from sleap.gui.widgets.slider import VideoSlider
+from sleap.instance import Instance, Point, PredictedInstance
+from sleap.io.video import Video
+from sleap.prefs import prefs
+from sleap.skeleton import Node
 
 
 class LoadImageWorker(QtCore.QObject):
@@ -410,22 +406,33 @@ class QtVideoPlayer(QWidget):
 
         self.video = video
 
-        # Is this necessary?
-        self.view.scene.setSceneRect(0, 0, video.width, video.height)
+        if self.video is None:
+            self.reset()
+        else:
+            # Is this necessary?
+            self.view.scene.setSceneRect(0, 0, video.width, video.height)
 
-        self.seekbar.setMinimum(0)
-        self.seekbar.setMaximum(self.video.last_frame_idx)
-        self.seekbar.setEnabled(True)
-        self.seekbar.resizeEvent()
+            self.seekbar.setMinimum(0)
+            self.seekbar.setMaximum(self.video.last_frame_idx)
+            self.seekbar.setEnabled(True)
+            self.seekbar.resizeEvent()
 
         if plot:
             self.plot()
 
     def reset(self):
         """Reset viewer by removing all video data."""
+        # Reset view and video
         self.video = None
-        self.state["frame_idx"] = None
         self.view.clear()
+        self.view.setImage(QImage(sleap.util.get_package_file("gui/background.png")))
+
+        # Handle overlays and gui state in callback
+        frame_idx = None
+        selected_instance = None
+        self.changedPlot.emit(self, frame_idx, selected_instance)
+
+        # Reset seekbar
         self.seekbar.setMaximum(0)
         self.seekbar.setEnabled(False)
 
@@ -799,7 +806,7 @@ class GraphicsView(QGraphicsView):
         self.setTransformationAnchor(anchor_mode)
 
         # Set icon as default background.
-        self.setImage(QImage(sleap.util.get_package_file("sleap/gui/background.png")))
+        self.setImage(QImage(sleap.util.get_package_file("gui/background.png")))
 
     def dragEnterEvent(self, event):
         if self.parentWidget():
@@ -2156,6 +2163,9 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
             elif self.bottom_right_box.contains(event.pos()):
                 self.resizing = "bottom_right"
                 self.origin = self.rect().topLeft()
+            else:
+                # Pass event down the stack to continue panning
+                event.setAccepted(False)
 
             self.ref_width = self.rect().width()
             self.ref_height = self.rect().height()
@@ -2254,7 +2264,6 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
 
             # Update the instance
             self.parent.updatePoints(complete=True, user_change=True)
-
             self.resizing = None
 
 

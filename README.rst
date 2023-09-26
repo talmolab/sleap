@@ -75,7 +75,7 @@ Quick install
 
 .. code-block:: bash
 
-    pip install sleap
+    pip install sleap[pypi]
 
 
 See the docs for `full installation instructions <https://sleap.ai/installation.html>`_.

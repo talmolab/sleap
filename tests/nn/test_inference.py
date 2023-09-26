@@ -1,21 +1,23 @@
 import ast
-from typing import cast
-import pytest
-import numpy as np
 import json
-from sleap.io.dataset import Labels
-from sleap.nn.tracking import FlowCandidateMaker, Tracker
-import tensorflow as tf
-import sleap
-from numpy.testing import assert_array_equal, assert_allclose
+import zipfile
 from pathlib import Path
+from typing import cast
+
+import numpy as np
+import pytest
+import tensorflow as tf
 import tensorflow_hub as hub
+from numpy.testing import assert_array_equal, assert_allclose
+
+import sleap
+from sleap.gui.learning import runners
+from sleap.io.dataset import Labels
 from sleap.nn.data.confidence_maps import (
     make_confmaps,
     make_grid_vectors,
     make_multi_confmaps,
 )
-
 from sleap.nn.inference import (
     InferenceLayer,
     InferenceModel,
@@ -49,9 +51,14 @@ from sleap.nn.inference import (
     main as sleap_track,
     export_cli as sleap_export,
 )
+from sleap.nn.tracking import (
+    MatchedFrameInstance,
+    FlowCandidateMaker,
+    FlowMaxTracksCandidateMaker,
+    Tracker,
+)
+from sleap.instance import Track
 
-
-from sleap.gui.learning import runners
 
 sleap.nn.system.use_cpu_only()
 
@@ -832,6 +839,47 @@ def test_topdown_multiclass_predictor_high_threshold(
     assert len(labels_pr[0].instances) == 0
 
 
+def zip_directory_with_itself(src_dir, output_path):
+    """Zip a directory, including the directory itself.
+
+    Args:
+        src_dir: Path to directory to zip.
+        output_path: Path to output zip file.
+    """
+
+    src_path = Path(src_dir)
+    with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for file_path in src_path.rglob("*"):
+            arcname = src_path.name / file_path.relative_to(src_path)
+            zipf.write(file_path, arcname)
+
+
+def zip_directory_contents(src_dir, output_path):
+    """Zip the contents of a directory, not the directory itself.
+
+    Args:
+        src_dir: Path to directory to zip.
+        output_path: Path to output zip file.
+    """
+
+    src_path = Path(src_dir)
+    with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for file_path in src_path.rglob("*"):
+            arcname = file_path.relative_to(src_path)
+            zipf.write(file_path, arcname)
+
+
+@pytest.mark.parametrize(
+    "zip_func", [zip_directory_with_itself, zip_directory_contents]
+)
+def test_load_model_zipped(tmpdir, min_centroid_model_path, zip_func):
+    mp = Path(min_centroid_model_path)
+    zip_dir = Path(tmpdir, mp.name).with_name(mp.name + ".zip")
+    zip_func(mp, zip_dir)
+
+    predictor = load_model(str(zip_dir))
+
+
 @pytest.mark.parametrize("resize_input_shape", [True, False])
 @pytest.mark.parametrize(
     "model_fixture_name",
@@ -1293,7 +1341,13 @@ def test_topdown_id_predictor_save(
 
 
 @pytest.mark.parametrize(
-    "output_path,tracker_method", [("not_default", "flow"), (None, "simple")]
+    "output_path,tracker_method",
+    [
+        ("not_default", "flow"),
+        ("not_default", "flowmaxtracks"),
+        (None, "simple"),
+        (None, "simplemaxtracks"),
+    ],
 )
 def test_retracking(
     centered_pair_predictions: Labels, tmpdir, output_path, tracker_method
@@ -1308,6 +1362,9 @@ def test_retracking(
     )
     if tracker_method == "flow":
         cmd += " --tracking.save_shifted_instances 1"
+    elif tracker_method == "simplemaxtracks" or tracker_method == "flowmaxtracks":
+        cmd += " --tracking.max_tracking 1"
+        cmd += " --tracking.max_tracks 2"
     if output_path == "not_default":
         output_path = Path(tmpdir, "tracked_slp.slp")
         cmd += f" --output {output_path}"
@@ -1433,6 +1490,58 @@ def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
         for key in tracker.candidate_maker.shifted_instances.keys():
             assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
             assert abs(key[0] - key[1]) <= track_window  # References within window
+
+
+@pytest.mark.parametrize(
+    "max_tracks, trackername",
+    [
+        (2, "flowmaxtracks"),
+        (2, "simplemaxtracks"),
+    ],
+)
+def test_max_tracks_matching_queue(
+    centered_pair_predictions: Labels, max_tracks, trackername
+):
+    """Test flow max tracks instance generation."""
+    labels: Labels = centered_pair_predictions
+    max_tracking = True
+    track_window = 5
+
+    # Setup flow max tracker
+    tracker: Tracker = Tracker.make_tracker_by_name(
+        tracker=trackername,
+        track_window=track_window,
+        save_shifted_instances=True,
+        max_tracking=max_tracking,
+        max_tracks=max_tracks,
+    )
+
+    tracker.candidate_maker = cast(FlowMaxTracksCandidateMaker, tracker.candidate_maker)
+
+    # Run tracking
+    frames = sorted(labels.labeled_frames, key=lambda lf: lf.frame_idx)
+
+    for lf in frames[:20]:
+
+        # Clear the tracks
+        for inst in lf.instances:
+            inst.track = None
+
+        track_args = dict(untracked_instances=lf.instances, img=lf.video[lf.frame_idx])
+        tracker.track(**track_args)
+
+        if trackername == "flowmaxtracks":
+            # Check that saved instances are pruned to track window
+            for key in tracker.candidate_maker.shifted_instances.keys():
+                assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
+                assert abs(key[0] - key[1]) <= track_window
+
+        # Check if the length of each of the tracks is not more than the track window
+        for track in tracker.track_matching_queue_dict.keys():
+            assert len(tracker.track_matching_queue_dict[track]) <= track_window
+
+        # Check if number of tracks that are generated are not more than the maximum tracks
+        assert len(tracker.track_matching_queue_dict) <= max_tracks
 
 
 def test_movenet_inference(movenet_video):

@@ -40,7 +40,7 @@ default extension to use if none is provided in the filename.
 import itertools
 import os
 from collections.abc import MutableSequence
-from pathlib import PurePath
+from pathlib import Path
 from typing import (
     Callable,
     List,
@@ -196,10 +196,7 @@ class LabelsDataCache:
 
     def get_track_occupancy(self, video: Video, track: Track) -> RangeList:
         """Access track occupancy cache that adds video/track as needed."""
-        if video not in self._track_occupancy:
-            self._track_occupancy[video] = dict()
-
-        if track not in self._track_occupancy[video]:
+        if track not in self.get_video_track_occupancy(video=video):
             self._track_occupancy[video][track] = RangeList()
         return self._track_occupancy[video][track]
 
@@ -253,20 +250,17 @@ class LabelsDataCache:
 
     def add_track(self, video: Video, track: Track):
         """Add a track to the labels."""
-        self._track_occupancy[video][track] = RangeList()
+        self.get_track_occupancy(video=video, track=track)
 
     def add_instance(self, frame: LabeledFrame, instance: Instance):
         """Add an instance to the labels."""
-        if frame.video not in self._track_occupancy:
-            self._track_occupancy[frame.video] = dict()
 
         # Add track in its not already present in labels
-        if instance.track not in self._track_occupancy[frame.video]:
-            self._track_occupancy[frame.video][instance.track] = RangeList()
-
-        self._track_occupancy[frame.video][instance.track].insert(
-            (frame.frame_idx, frame.frame_idx + 1)
+        track_occupancy = self.get_track_occupancy(
+            video=frame.video, track=instance.track
         )
+
+        track_occupancy.insert((frame.frame_idx, frame.frame_idx + 1))
 
         self.update_counts_for_frame(frame)
 
@@ -303,6 +297,10 @@ class LabelsDataCache:
         self, video: Optional[Video] = None, filter: Text = ""
     ) -> Set[Tuple[int, int]]:
         """Return list of (video_idx, frame_idx) tuples matching video/filter."""
+        if video not in self.labels.videos:
+            # Set value of video to None if not present in the videos list.
+            video = None
+
         if filter == "":
             filter_func = lambda lf: video is None or lf.video == video
         elif filter == "user":
@@ -1338,8 +1336,12 @@ class Labels(MutableSequence):
         if instance.track in tracks_in_frame:
             instance.track = None
 
+        # Add instance and track to labels
         frame.instances.append(instance)
+        if (instance.track is not None) and (instance.track not in self.tracks):
+            self.add_track(video=frame.video, track=instance.track)
 
+        # Update cache
         self._cache.add_instance(frame, instance)
 
     def find_track_occupancy(
@@ -2239,7 +2241,12 @@ class Labels(MutableSequence):
         )
 
     def save_frame_data_imgstore(
-        self, output_dir: str = "./", format: str = "png", all_labels: bool = False
+        self,
+        output_dir: str = "./",
+        format: str = "png",
+        all_labeled: bool = False,
+        suggested: bool = False,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
     ) -> List[ImgStoreVideo]:
         """Write images for labeled frames from all videos to imgstore datasets.
 
@@ -2252,28 +2259,55 @@ class Labels(MutableSequence):
                 Use "png" for lossless, "jpg" for lossy.
                 Other imgstore formats will probably work as well but
                 have not been tested.
-            all_labels: Include any labeled frames, not just the frames
+            all_labeled: Include any labeled frames, not just the frames
                 we'll use for training (i.e., those with `Instance` objects ).
+            suggested: Include suggested frames even if they do not have instances.
+                Useful for inference after training. Defaults to `False`.
+            progress_callback: If provided, this function will be called to report the
+                progress of the frame data saving. This function should be a callable
+                of the form: `fn(n, n_total)` where `n` is the number of frames saved so
+                far and `n_total` is the total number of frames that will be saved. This
+                is called after each video is processed. If the function has a return
+                value and it returns `False`, saving will be canceled and the output
+                deleted.
 
         Returns:
             A list of :class:`ImgStoreVideo` objects with the stored
             frames.
         """
+
+        # Lets gather all the suggestions by video
+        suggestion_frames_by_video = {video: [] for video in self.videos}
+        if suggested:
+            for suggestion in self.suggestions:
+                suggestion_frames_by_video[suggestion.video].append(
+                    suggestion.frame_idx
+                )
+
         # For each label
         imgstore_vids = []
-        for v_idx, v in enumerate(self.videos):
-            frame_nums = [
-                lf.frame_idx
-                for lf in self.labeled_frames
-                if v == lf.video and (all_labels or lf.has_user_instances)
-            ]
+        total_vids = len(self.videos)
+        for v_idx, video in enumerate(self.videos):
+            lfs_v = self.find(video)
+            frame_nums = {
+                lf.frame_idx for lf in lfs_v if all_labeled or lf.has_user_instances
+            }
+
+            if suggested:
+                frame_nums.update(suggestion_frames_by_video[video])
 
             # Join with "/" instead of os.path.join() since we want
             # path to work on Windows and Posix systems
-            frames_filename = output_dir + f"/frame_data_vid{v_idx}"
-            vid = v.to_imgstore(
-                path=frames_filename, frame_numbers=frame_nums, format=format
+            frames_fn = Path(output_dir, f"frame_data_vid{v_idx}")
+            vid = video.to_imgstore(
+                path=frames_fn.as_posix(), frame_numbers=frame_nums, format=format
             )
+            if progress_callback is not None:
+                # Notify update callback.
+                ret = progress_callback(v_idx, total_vids)
+                if ret == False:
+                    vid.close()
+                    return []
 
             # Close the video for now
             vid.close()
@@ -2316,23 +2350,30 @@ class Labels(MutableSequence):
         Returns:
             A list of :class:`HDF5Video` objects with the stored frames.
         """
+
+        # Lets gather all the suggestions by video
+        suggestion_frames_by_video = {video: [] for video in self.videos}
+        if suggested:
+            for suggestion in self.suggestions:
+                suggestion_frames_by_video[suggestion.video].append(
+                    suggestion.frame_idx
+                )
+
         # Build list of frames to save.
         vids = []
         frame_idxs = []
         for video in self.videos:
             lfs_v = self.find(video)
-            frame_nums = [
+            frame_nums = {
                 lf.frame_idx
                 for lf in lfs_v
                 if all_labeled or (user_labeled and lf.has_user_instances)
-            ]
+            }
+
             if suggested:
-                frame_nums += [
-                    suggestion.frame_idx
-                    for suggestion in self.suggestions
-                    if suggestion.video == video
-                ]
-            frame_nums = sorted(list(set(frame_nums)))
+                frame_nums.update(suggestion_frames_by_video[video])
+
+            frame_nums = sorted(list(frame_nums))
             vids.append(video)
             frame_idxs.append(frame_nums)
 
