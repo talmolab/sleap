@@ -1117,8 +1117,9 @@ class Video:
 
     def get_frames_safely(self, idxs: Iterable[int]) -> Tuple[List[int], np.ndarray]:
         """Return list of frame indices and frames which were successfully loaded.
+        Args:
+            idxs: An iterable object that contains the indices of frames.
 
-        idxs: An iterable object that contains the indices of frames.
 
         Returns: A tuple of (frame indices, frames), where
             * frame indices is a subset of the specified idxs, and
@@ -1272,7 +1273,9 @@ class Video:
         elif filename.lower().endswith(SingleImageVideo.EXTS):
             backend_class = SingleImageVideo
         else:
-            raise ValueError("Could not detect backend for specified filename.")
+            raise ValueError(
+                f"Could not detect backend for specified filename: {filename}"
+            )
 
         kwargs["filename"] = filename
 

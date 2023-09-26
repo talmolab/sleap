@@ -170,7 +170,9 @@ class ColorManager:
         Returns:
             (r, g, b)-tuple
         """
-        track_idx = self.tracks.index(track) if isinstance(track, Track) else track
+        track_idx = track
+        if isinstance(track, Track):
+            track_idx = self.tracks.index(track) if track in self.tracks else None
         if track_idx is None:
             return (0, 0, 0)
 

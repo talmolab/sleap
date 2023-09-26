@@ -7,7 +7,7 @@ set PIP_IGNORE_INSTALLED=False
 
 @REM Install the pip dependencies. Note: Using urls to wheels might be better: 
 @REM https://docs.conda.io/projects/conda-build/en/stable/user-guide/wheel-files.html)
-pip install -r .\requirements.txt
+pip install --no-cache-dir -r .\requirements.txt
 
 @REM HACK(LM): (untested) Uninstall all opencv packages and install opencv-contrib-python
 for /f "tokens=1" %%a in ('conda list ^| findstr opencv') do pip uninstall %%a -y

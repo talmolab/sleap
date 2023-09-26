@@ -36,7 +36,7 @@ dependencies:
     - conda-forge::scikit-video
     - conda-forge::seaborn
     - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
-    - conda-forge::tensorflow-hub
+    - conda-forge::tensorflow-hub  # Pinned in meta.yml, but no problems here... yet
 
     # Packages required by tensorflow to find/use GPUs
     - conda-forge::cudatoolkit ==11.3.1
@@ -45,8 +45,7 @@ dependencies:
     - nvidia::cuda-nvcc=11.3
 
     - pip:  
-        - "--editable=."
-        - "--requirement=./dev_requirements.txt"
-
+        - "--editable=.[conda_dev]"
+        
 # HACK(LM): Uninstall all opencv packages and install opencv-contrib-python
 # conda activate sleap && conda list | grep opencv | awk '{system("pip uninstall " $1 " -y")}' && pip install "opencv-contrib-python<4.7.0"

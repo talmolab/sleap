@@ -28,7 +28,7 @@ On Windows, our personal preference is to use alternative terminal apps like [Cm
 
 (apple-silicon)=
 
-### Macs (Pre-Installation)
+### Macs Pre-M1 (Pre-Installation)
 
 SLEAP can be installed on Macs by following these instructions:
 
@@ -68,7 +68,24 @@ SLEAP can be installed on Macs by following these instructions:
 
 **Anaconda** is a Python environment manager that makes it easy to install SLEAP and its necessary dependencies without affecting other Python software on your computer.
 
-[**Mambaforge**](https://mamba.readthedocs.io/en/latest/installation.html) is a lightweight installer of Anaconda with speedy package resolution that we recommend. To install it:
+[**Mambaforge**](https://mamba.readthedocs.io/en/latest/installation.html) is a lightweight installer of Anaconda with speedy package resolution that we recommend.
+
+````{note}
+If you already have Anaconda on your computer, then you can [set the solver to `libmamba`](https://www.anaconda.com/blog/a-faster-conda-for-a-growing-community) in the `base` environment (and skip the Mambaforge installation):
+
+```bash
+conda update -n base conda
+conda install -n base conda-libmamba-solver
+conda config --set solver libmamba
+```
+
+```{warning}
+Any subsequent `mamba` commands in the docs will need to be replaced with `conda` if you choose to use your existing Anaconda installation.
+```
+
+````
+
+Otherwise, to install Mamba:
 
 **On Windows**, just click through the installation steps.
 
@@ -106,7 +123,7 @@ wget -nc https://github.com/conda-forge/miniforge/releases/latest/download/Mamba
 **On Macs (Apple Silicon)**, use this terminal command:
 
 ```bash
-wget -nc https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-MacOSX-arm64.sh && bash Mambaforge-MacOSX-arm64.sh -b && ~/mambaforge/bin/conda init zsh
+curl -fsSL --compressed https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-MacOSX-arm64.sh -o Mambaforge3-MacOSX-arm64.sh && chmod +x Mambaforge3-MacOSX-arm64.sh && ./Mambaforge3-MacOSX-arm64.sh -b -p ~/mambaforge3 && rm Mambaforge3-MacOSX-arm64.sh && ~/mambaforge3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
 ```
 
 ## Installation methods
@@ -120,13 +137,13 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
 **Windows** and **Linux**
 
 ```bash
-mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.3.1
+mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.3.3
 ```
 
 **Mac OS X** and **Apple Silicon**
 
 ```bash
-mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.1
+mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.3
 ```
 
 **This is the recommended installation method**.
@@ -192,7 +209,7 @@ mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.1
 
 ### `pip` package
 
-Although you do not need Mambaforge installed to perform a `pip install`, we recommend {ref}`installing Mambaforge<mambaforge>` to create a new environment where we can isolate the `pip install`. If you are working on **Google Colab**, skip to step 3 to perform the `pip install` without using a conda environment.
+Although you do not need Mambaforge installed to perform a `pip install`, we recommend {ref}`installing Mambaforge<mambaforge>` to create a new environment where we can isolate the `pip install`. Alternatively, you can use a venv if you have an existing python installation. If you are working on **Google Colab**, skip to step 3 to perform the `pip install` without using a conda environment.
 
 1. Otherwise, create a new conda environment where we will `pip install sleap`:
 
@@ -221,10 +238,19 @@ Although you do not need Mambaforge installed to perform a `pip install`, we rec
 3. Finally, we can perform the `pip install`:
 
    ```bash
-   pip install sleap==1.3.1
+   pip install sleap[pypi]==1.3.3
    ```
 
    This works on **any OS except Apple silicon** and on **Google Colab**.
+
+   ```{note}
+   The pypi distributed package of SLEAP ships with the following extras:
+   - **pypi**: For installation without an mamba environment file. All dependencies come from PyPI.
+   - **jupyter**: This installs all *pypi* and jupyter lab dependencies.
+   - **dev**: This installs all *jupyter* dependencies and developement tools for testing and building docs.
+   - **conda_jupyter**: For installation using a mamba environment file included in the source code. Most dependencies are listed as conda packages in the environment file and only a few come from PyPI to allow jupyter lab support.
+   - **conda_dev**: For installation using [a mamba environment](https://github.com/search?q=repo%3Atalmolab%2Fsleap+path%3Aenvironment*.yml&type=code) with a few PyPI dependencies for development tools.
+   ```
 
    ```{note}
    - Requires Python 3.7
@@ -323,10 +349,45 @@ python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU')
 ````{warning}
 TensorFlow 2.7+ is currently failing to detect CUDA Toolkit and CuDNN on some systems (see [Issue thread](https://github.com/tensorflow/tensorflow/issues/52988)).
 
-If you run into issues, try downgrading the TensorFlow 2.6:
+If you run into issues, either try downgrading the TensorFlow 2.6:
 ```bash
 pip install tensorflow==2.6.3
 ```
+or follow the note below.
+````
+
+````{note}
+If you are on Linux, have a NVIDIA GPU, but cannot detect your GPU:
+
+```bash
+W tensorflow/stream_executor/platform/default/dso_loader.cc:64 Could not load dynamic
+library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object
+file: No such file or directory
+```
+
+then activate the environment:
+
+```bash
+mamba activate sleap
+```
+
+and run the commands:
+```bash
+mkdir -p $CONDA_PREFIX/etc/conda/activate.d
+echo '#!/bin/sh' >> $CONDA_PREFIX/etc/conda/activate.d/sleap_activate.sh
+echo 'export SLEAP_OLD_LD_LIBRARY_PATH=$LD_LIBRARY_PATH' >> $CONDA_PREFIX/etc/conda/activate.d/sleap_activate.sh
+echo 'export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH' >> $CONDA_PREFIX/etc/conda/activate.d/sleap_activate.sh
+source $CONDA_PREFIX/etc/conda/activate.d/sleap_activate.sh
+```
+
+This will set the environment variable `LD_LIBRARY_PATH` each time the environment is activated. The environment variable will remain set in the current terminal even if we deactivate the environment. Although not strictly necessary, if you would also like the environment variable to be reset to the original value when deactivating the environment, we can run the following commands:
+```bash
+mkdir -p $CONDA_PREFIX/etc/conda/deactivate.d
+echo '#!/bin/sh' >> $CONDA_PREFIX/etc/conda/deactivate.d/sleap_deactivate.sh
+echo 'export LD_LIBRARY_PATH=$SLEAP_OLD_LD_LIBRARY_PATH' >> $CONDA_PREFIX/etc/conda/deactivate.d/sleap_deactivate.sh
+```
+
+These commands only need to be run once and will subsequently run automatically upon [de]activating your `sleap` environment.
 ````
 
 ## Upgrading and uninstalling

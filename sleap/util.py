@@ -4,27 +4,31 @@ Try not to put things in here unless they really have no other place.
 """
 
 import base64
-from collections import defaultdict
-from io import BytesIO
 import json
 import os
-from pathlib import Path
 import re
 import shutil
-from typing import Any, Dict, Hashable, Iterable, List, Optional, Callable
-from urllib.request import url2pathname
+from collections import defaultdict
+from io import BytesIO
+from pathlib import Path
+from typing import Any, Callable, Dict, Hashable, Iterable, List, Optional
 from urllib.parse import unquote, urlparse
+from urllib.request import url2pathname
 
 import attr
 from attrs import field
 from attrs.validators import is_callable, optional, and_
 import h5py as h5
 import numpy as np
-from PIL import Image
-from pkg_resources import Requirement, resource_filename
 import psutil
 import rapidjson
 import yaml
+
+try:
+    from importlib.resources import files  # New in 3.9+
+except ImportError:
+    from importlib_resources import files  # TODO(LM): Upgrade to importlib.resources.
+from PIL import Image
 
 import sleap.version as sleap_version
 
@@ -288,9 +292,9 @@ def dict_cut(d: Dict, a: int, b: int) -> Dict:
 
 def get_package_file(filename: str) -> str:
     """Returns full path to specified file within sleap package."""
-    package_path = Requirement.parse("sleap")
-    result = resource_filename(package_path, filename)
-    return result
+
+    data_path: Path = files("sleap").joinpath(filename)
+    return data_path.as_posix()
 
 
 def get_config_file(
@@ -317,6 +321,8 @@ def get_config_file(
         The full path to the specified config file.
     """
 
+    desired_path = None  # Handle case where get_defaults, but cannot find package_path
+
     if not get_defaults:
         desired_path = os.path.expanduser(
             f"~/.sleap/{sleap_version.__version__}/{shortname}"
@@ -337,7 +343,7 @@ def get_config_file(
     # config file if we can't find the user version.
 
     if get_defaults or not os.path.exists(desired_path):
-        package_path = get_package_file(f"sleap/config/{shortname}")
+        package_path = get_package_file(f"config/{shortname}")
         if not os.path.exists(package_path):
             raise FileNotFoundError(
                 f"Cannot locate {shortname} config file at {desired_path} or {package_path}."
