@@ -3,13 +3,14 @@
 import attr
 import pandas as pd
 import requests
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from sleap import prefs
-from datetime import date
+import json
 
 
 REPO_ID = "talmolab/sleap"
 ANALYTICS_ENDPOINT = "https://analytics.sleap.ai/ping"
+BULLETIN_JSON = "D:\TalmoLab\sleap\docs\\bulletin.json"
 
 
 @attr.s(auto_attribs=True)
@@ -150,25 +151,45 @@ class ReleaseChecker:
 
 @attr.s(auto_attribs=True)
 class AnnouncementChecker:
-    """Checker for new announcements on the releases page of sleap."""
+    """Checker for new announcements on the bulletin page of sleap."""
 
-    def check_for_new_announcements(self) -> bool:
-        """Check for new announcements on the releases page not seen by user."""
-        if date.today().strftime("%Y%m%d") > prefs.prefs["announcement last seen date"]:
-            return True
-        return False
+    bulletin_json_path: str = BULLETIN_JSON
+    previous_announcement_date: str = prefs.prefs["announcement last seen date"]
 
-    def get_latest_announcement(self) -> Optional[date]:
-        """Return latest announcement date if available."""
-        if self.check_for_new_announcements():
-            return date.today().strftime("%Y%m%d")
+    def check_for_announcement(self) -> bool:
+        """Returns if new announcements are available."""
+        try:
+            # Attempt to open the file in read mode
+            with open(self.bulletin_json_path, 'r', encoding='utf-8') as jsf:
+                # Load the JSON data into a Python data structure
+                data = json.load(jsf)
+                latest_data = data[0]
+                
+                if latest_data['date'] != self.previous_announcement_date:
+                    return True
+        except FileNotFoundError:
+            return False
+
+    def get_latest_announcement(self) -> Optional[Tuple[str, str]]:
+        """Return latest announcements on the releases page not seen by user."""
+        success = self.check_for_announcement()
+        if success:
+            # Attempt to open the file in read mode
+            with open(self.bulletin_json_path, 'r', encoding='utf-8') as jsf:
+                # Load the JSON data into a Python data structure
+                data = json.load(jsf)
+                latest_data = data[0]
+                
+                if latest_data['date'] != self.previous_announcement_date:
+                    return (latest_data['date'], latest_data['content'])
         return None
-    
-    def update_announcement_last_seen(self):
+
+    def update_announcement(self):
         """Update the last seen date of announcement in preferences."""
-        latest_announcement_date = self.get_latest_announcement()
-        if latest_announcement_date is not None:
-            prefs.prefs["announcement last seen date"] = latest_announcement_date
+        announcement = self.get_latest_announcement()
+        if announcement is not None:
+            prefs.prefs["announcement last seen date"] = announcement[0]
+            prefs.prefs["announcement"] = announcement[1]
 
 
 def get_analytics_data() -> Dict[str, Any]:

@@ -29,7 +29,8 @@ class Preferences(object):
         "node label size": 12,
         "show non-visible nodes": True,
         "share usage data": True,
-        "announcement last seen date": date.today().strftime("%Y%m%d")
+        "announcement last seen date": None,
+        "announcement": None,
     }
     _filename = "preferences.yaml"
 

@@ -1,6 +1,9 @@
 # Bulletin
 
 ## SLEAP v1.3.2
+
+_mm/dd/yyyy_
+
 SLEAP 1.3.2 adds some nice usability features thanks to both the community ideas and new contributors! See [1.3.0](https://github.com/talmolab/sleap/releases/tag/v1.3.0) and [1.3.1](https://github.com/talmolab/sleap/releases/tag/v1.3.1) for previous notable changes. As a reminder:
 
 > The 1.3.1 dependency update requires [Mamba](https://mamba.readthedocs.io/en/latest/index.html) for faster dependency resolution. If you already have anaconda installed, then you _can_ set the solver to libmamba in the base environment:
