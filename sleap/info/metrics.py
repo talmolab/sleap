@@ -10,75 +10,6 @@ from sleap.instance import Instance, PredictedInstance
 from sleap.io.dataset import Labels
 
 
-def matched_instance_distances(
-    labels_gt: Labels,
-    labels_pr: Labels,
-    match_lists_function: Callable,
-    frame_range: Optional[range] = None,
-) -> Tuple[List[int], np.ndarray, np.ndarray, np.ndarray]:
-
-    """
-    Distances between ground truth and predicted nodes over a set of frames.
-
-    Args:
-        labels_gt: the `Labels` object with ground truth data
-        labels_pr: the `Labels` object with predicted data
-        match_lists_function: function for determining corresponding instances
-            Takes two lists of instances and returns "sorted" lists.
-        frame_range (optional): range of frames for which to compare data
-            If None, we compare every frame in labels_gt with corresponding
-            frame in labels_pr.
-    Returns:
-        Tuple:
-        * frame indices map: instance idx (for other matrices) -> frame idx
-        * distance matrix: (instances * nodes)
-        * ground truth points matrix: (instances * nodes * 2)
-        * predicted points matrix: (instances * nodes * 2)
-    """
-
-    frame_idxs = []
-    points_gt = []
-    points_pr = []
-    for lf_gt in labels_gt.find(labels_gt.videos[0]):
-        frame_idx = lf_gt.frame_idx
-
-        # Get instances from ground truth/predicted labels
-        instances_gt = lf_gt.instances
-        lfs_pr = labels_pr.find(labels_pr.videos[0], frame_idx=frame_idx)
-        if len(lfs_pr):
-            instances_pr = lfs_pr[0].instances
-        else:
-            instances_pr = []
-
-        # Sort ground truth and predicted instances.
-        # We'll then compare points between corresponding items in lists.
-        # We can use different "match" functions depending on what we want.
-        sorted_gt, sorted_pr = match_lists_function(instances_gt, instances_pr)
-
-        # Convert lists of instances to (instances, nodes, 2) matrices.
-        # This allows match_lists_function to return data as either
-        # a list of Instances or a (instances, nodes, 2) matrix.
-        if type(sorted_gt[0]) != np.ndarray:
-            sorted_gt = list_points_array(sorted_gt)
-        if type(sorted_pr[0]) != np.ndarray:
-            sorted_pr = list_points_array(sorted_pr)
-
-        points_gt.append(sorted_gt)
-        points_pr.append(sorted_pr)
-        frame_idxs.extend([frame_idx] * len(sorted_gt))
-
-    # Convert arrays to numpy matrixes
-    # instances * nodes * (x,y)
-    points_gt = np.concatenate(points_gt)
-    points_pr = np.concatenate(points_pr)
-
-    # Calculate distances between corresponding nodes for all corresponding
-    # ground truth and predicted instances.
-    D = np.linalg.norm(points_gt - points_pr, axis=2)
-
-    return frame_idxs, D, points_gt, points_pr
-
-
 def match_instance_lists(
     instances_a: List[Union[Instance, PredictedInstance]],
     instances_b: List[Union[Instance, PredictedInstance]],
@@ -163,6 +94,75 @@ def match_instance_lists_nodewise(
         best_points_array.append(closest_point_array)
 
     return instances_a, best_points_array
+
+
+def matched_instance_distances(
+    labels_gt: Labels,
+    labels_pr: Labels,
+    match_lists_function: Callable = match_instance_lists_nodewise,
+    frame_range: Optional[range] = None,
+) -> Tuple[List[int], np.ndarray, np.ndarray, np.ndarray]:
+
+    """
+    Distances between ground truth and predicted nodes over a set of frames.
+
+    Args:
+        labels_gt: the `Labels` object with ground truth data
+        labels_pr: the `Labels` object with predicted data
+        match_lists_function: function for determining corresponding instances
+            Takes two lists of instances and returns "sorted" lists.
+        frame_range (optional): range of frames for which to compare data
+            If None, we compare every frame in labels_gt with corresponding
+            frame in labels_pr.
+    Returns:
+        Tuple:
+        * frame indices map: instance idx (for other matrices) -> frame idx
+        * distance matrix: (instances * nodes)
+        * ground truth points matrix: (instances * nodes * 2)
+        * predicted points matrix: (instances * nodes * 2)
+    """
+
+    frame_idxs = []
+    points_gt = []
+    points_pr = []
+    for lf_gt in labels_gt.find(labels_gt.videos[0]):
+        frame_idx = lf_gt.frame_idx
+
+        # Get instances from ground truth/predicted labels
+        instances_gt = lf_gt.instances
+        lfs_pr = labels_pr.find(labels_pr.videos[0], frame_idx=frame_idx)
+        if len(lfs_pr):
+            instances_pr = lfs_pr[0].instances
+        else:
+            instances_pr = []
+
+        # Sort ground truth and predicted instances.
+        # We'll then compare points between corresponding items in lists.
+        # We can use different "match" functions depending on what we want.
+        sorted_gt, sorted_pr = match_lists_function(instances_gt, instances_pr)
+
+        # Convert lists of instances to (instances, nodes, 2) matrices.
+        # This allows match_lists_function to return data as either
+        # a list of Instances or a (instances, nodes, 2) matrix.
+        if type(sorted_gt[0]) != np.ndarray:
+            sorted_gt = list_points_array(sorted_gt)
+        if type(sorted_pr[0]) != np.ndarray:
+            sorted_pr = list_points_array(sorted_pr)
+
+        points_gt.append(sorted_gt)
+        points_pr.append(sorted_pr)
+        frame_idxs.extend([frame_idx] * len(sorted_gt))
+
+    # Convert arrays to numpy matrixes
+    # instances * nodes * (x,y)
+    points_gt = np.concatenate(points_gt)
+    points_pr = np.concatenate(points_pr)
+
+    # Calculate distances between corresponding nodes for all corresponding
+    # ground truth and predicted instances.
+    D = np.linalg.norm(points_gt - points_pr, axis=2)
+
+    return frame_idxs, D, points_gt, points_pr
 
 
 def point_dist(
