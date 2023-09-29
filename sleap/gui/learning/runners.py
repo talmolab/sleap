@@ -224,6 +224,7 @@ class InferenceTask:
 
         optional_items_as_nones = (
             "tracking.target_instance_count",
+            "tracking.max_tracks",
             "tracking.kf_init_frame_count",
             "tracking.robust",
             "max_instances",
@@ -233,6 +234,16 @@ class InferenceTask:
             if key in self.inference_params and self.inference_params[key] is None:
                 del self.inference_params[key]
 
+        # Setting max_tracks to True means we want to use the max_tracking mode.
+        if "tracking.max_tracks" in self.inference_params:
+            self.inference_params["tracking.max_tracking"] = True
+
+            # Hacky:  Update the tracker name to include "maxtracks" suffix.
+            if self.inference_params["tracking.tracker"] in ("simple", "flow"):
+                self.inference_params["tracking.tracker"] = (
+                    self.inference_params["tracking.tracker"] + "maxtracks"
+                )
+
         # --tracking.kf_init_frame_count enables the kalman filter tracking
         # so if not set, then remove other (unused) args
         if "tracking.kf_init_frame_count" not in self.inference_params:
@@ -241,6 +252,7 @@ class InferenceTask:
 
         bool_items_as_ints = (
             "tracking.pre_cull_to_target",
+            "tracking.max_tracking",
             "tracking.post_connect_single_breaks",
             "tracking.save_shifted_instances",
         )
@@ -470,7 +482,6 @@ def write_pipeline_files(
         )
         # And join them into a single call to inference
         inference_script += " ".join(cli_args) + "\n"
-
         # Setup job params
         only_suggested_frames = False
         if type(item_for_inference) == DatasetItemForInference:

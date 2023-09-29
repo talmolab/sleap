@@ -1,0 +1,155 @@
+# Run tests using built conda packages and wheels.
+name: Build CI (no upload)
+
+# Run when changes to pip wheel
+on:
+  push:
+    paths:
+      - 'setup.py'
+      - 'requirements.txt'
+      - 'dev_requirements.txt'
+      - 'jupyter_requirements.txt'
+      - 'pypi_requirements.txt'
+      - 'environment_build.yml'
+      - '.github/workflows/build_ci.yml'
+
+jobs:
+  build:
+    name: Build wheel (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-22.04"]
+        # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
+        include:
+          # Use this condarc as default
+          - condarc: .conda/condarc.yaml
+          - wheel_name: sleap-wheel-linux
+    steps:
+      # Setup
+      - uses: actions/checkout@v2
+
+      - name: Cache conda
+        uses: actions/cache@v1
+        env:
+          # Increase this value to reset cache if environment_build.yml has not changed
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'pyproject.toml') }}
+
+      - name: Setup Miniconda for Build
+        # https://github.com/conda-incubator/setup-miniconda
+        uses: conda-incubator/setup-miniconda@v2.0.1
+        with:
+          python-version: 3.7
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+          environment-file: environment_build.yml
+          condarc-file: ${{ matrix.condarc }}
+          activate-environment: sleap_ci
+
+      - name: Print build environment info
+        shell: bash -l {0}
+        run: |
+          which python
+          conda list
+          pip freeze
+
+      # Build pip wheel
+      - name: Build pip wheel
+        shell: bash -l {0}
+        run: |
+          python setup.py bdist_wheel
+      
+      # Upload artifact "tests" can use it
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.wheel_name }}
+          path: dist/*.whl
+          retention-days: 1
+
+  tests:
+    name: Run tests using wheel (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: build  # Ensure the build job has completed before starting this job.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-22.04", "windows-2022", "macos-latest"]
+        # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
+        include:
+          # Default values
+          - wheel_name: sleap-wheel-linux
+          - venv_cmd: source venv/bin/activate
+          - pip_cmd: |
+              wheel_path=$(find dist -name "*.whl")
+              echo $wheel_path
+              pip install '$wheel_path'[dev]
+          - test_args: pytest --durations=-1 tests/
+          - condarc: .conda/condarc.yaml
+          # Use special condarc if macos
+          - os: "macos-latest"
+            condarc: .conda_mac/condarc.yaml
+          # Ubuntu specific values
+          - os: ubuntu-22.04
+            # Otherwise core dumped in github actions
+            test_args: |
+              sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
+              sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
+              export DISPLAY=":1"
+              pytest tests -k 'not exclude_from_linux_pip_test'
+          # Windows specific values
+          - os: windows-2022
+            venv_cmd: .\venv\Scripts\activate
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.7
+      
+      # Download wheel
+      - name: Download wheel artifact
+        uses: actions/download-artifact@v3
+        id: download
+        with:
+          name: ${{ matrix.wheel_name }}
+          path: dist
+
+      - name: Create virtual environment
+        run: python -m venv venv
+
+      - name: Activate virtual environment
+        run: ${{ matrix.venv_cmd }}
+
+      - name: Install the built wheel (not Mac)
+        if: runner.os != 'macOS'
+        shell: bash -l {0}
+        run: |
+          wheel_path=$(find dist -name "*.whl")
+          echo wheel_path
+          pip install "$wheel_path"[dev]
+
+      - name: Install the built wheel (Mac)
+        if: runner.os == 'macOS'
+        shell: bash -e {0}
+        run: |
+          wheel_path=$(find dist -name "*.whl")
+          echo wheel_path
+          pip install "$wheel_path"[dev]
+
+      - name: Print test environment info
+        shell: bash -l {0}
+        run: |
+          which python
+          pip freeze
+        
+      # Install and test the wheel
+      - name: Test the built wheel
+        run: |
+          ${{ matrix.test_args}}

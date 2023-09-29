@@ -23,7 +23,7 @@ def find_source_file(obj, root_obj):
     # Get relative filename
     fn = os.path.relpath(
         inspect.getsourcefile(obj),
-        start=os.path.dirname(os.path.dirname(root_obj.__file__))
+        start=os.path.dirname(os.path.dirname(root_obj.__file__)),
     ).replace("\\", "/")
     return fn
 
@@ -32,7 +32,7 @@ def find_source_lines(obj):
     # Find line numbers
     source_code, from_line = inspect.getsourcelines(obj)
     to_line = from_line + len(source_code) - 1
-    
+
     return from_line, to_line
 
 
@@ -40,14 +40,14 @@ def resolve(module, fullname):
     if fullname == "":
         # Submodule specified, just infer path from the module name.
         return module.replace(".", "/") + ".py"
-    
+
     # Search for member within module.
     member = find_member(sys.modules[module], fullname)
-    
+
     if member is None:
         # Member not found, so we won't be linking this.
         return None
-    
+
     try:
         fn = find_source_file(member, sleap)
     except TypeError:
@@ -56,4 +56,3 @@ def resolve(module, fullname):
     from_line, to_line = find_source_lines(member)
 
     return f"{fn}#L{from_line}-L{to_line}"
-

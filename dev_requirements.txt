@@ -18,7 +18,5 @@ black==21.6b0
 pre-commit
 twine==3.3.0
 PyGithub
-jupyterlab
 jedi==0.17.2
-ipykernel
 click==8.0.4

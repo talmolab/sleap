@@ -56,7 +56,9 @@ class Camcorder:
         return self.camera_cluster._session_by_video[video]
 
     def __attrs_post_init__(self):
-        self.camera_cluster = CameraCluster()
+        # Avoid overwriting `CameraCluster` if already set.
+        if not isinstance(self.camera_cluster, CameraCluster):
+            self.camera_cluster = CameraCluster()
 
     def __eq__(self, other):
         if not isinstance(other, Camcorder):
@@ -74,11 +76,17 @@ class Camcorder:
 
     def __getattr__(self, attr):
         """Used to grab methods from `Camera` or `FishEyeCamera` objects."""
+        if self.camera is None:
+            raise AttributeError(
+                f"No camera has been specified. "
+                f"This is likely because the `Camcorder.from_dict` method was not used to initialize this object. "
+                f"Please use `Camcorder.from_dict` to recreate the object."
+            )
         return getattr(self.camera, attr)
 
     def __getitem__(
         self, key: Union[str, "RecordingSession", Video]
-    ) -> Union["RecordingSession", Video, Any]:
+    ) -> Union["RecordingSession", Video]:  # Raises KeyError if key not found
         """Return linked `Video` or `RecordingSession`.
 
         Args:
@@ -86,6 +94,9 @@ class Camcorder:
 
         Returns:
             `Video` or `RecordingSession` object.
+
+        Raises:
+            KeyError: If key is not found.
         """
 
         # If key is a RecordingSession, return the Video
@@ -539,25 +550,56 @@ class RecordingSession:
         if self.labels is not None and self.labels.get_session(video) is not None:
             self.labels.remove_session_video(self, video)
 
-    def update_views(
-        self,
-        frame_idx: int,
-        track: Optional["Track"] = None,
-        cams_to_include: Optional[List[int]] = None,
-    ):
-        """Update the views of the `RecordingSession`.
+    def get_videos_from_selected_cameras(
+        self, cams_to_include: Optional[List[Camcorder]] = None
+    ) -> List[Video]:
+        """Get all `Video`s from selected `Camcorder`s.
 
         Args:
-            frame_idx: Frame index to update (0-indexed).
-            track: `Track` object used to find instances accross views for updating.
-            cams_to_include: List of views by indices in `self.camera_cluster.cameras` (0-indexed).
+            cams_to_include: List of `Camcorder`s to include. Defualt is all.
+
+        Returns:
+            List of `Video`s.
         """
 
-        # TODO(LM): Add support for taking in `cams_to_include` to use for triangulation
+        # If no `Camcorder`s specified, then return all videos in session
+        if cams_to_include is None:
+            return self.videos
+
+        # Get all videos from selected `Camcorder`s
+        videos: List[Video] = []
+        for cam in cams_to_include:
+            video = self.get_video(cam)
+            if video is not None:
+                videos.append(video)
+
+        return videos
+
+    def get_instances_accross_views(
+        self,
+        frame_idx: int,
+        cams_to_include: Optional[List[Camcorder]] = None,
+        track: Optional["Track"] = None,
+        require_multiple_views: bool = False,
+    ) -> List["LabeledFrame"]:
+        """Get all `Instances` accross all views at a given frame index.
+
+        Args:
+            frame_idx: Frame index to get instances from (0-indexed).
+            cams_to_include: List of `Camcorder`s to include. Default is all.
+            track: `Track` object used to find instances accross views. Default is None.
+            require_multiple_views: If True, then raise error if only one view is found.
+
+        Returns:
+            List of `Instances` objects.
+        """
+
+        views: List["LabeledFrame"] = []
+        instances: List["Instances"] = []
+        videos = self.get_videos_from_selected_cameras(cams_to_include=cams_to_include)
 
         # Get all views at this frame index
-        views: List["LabeledFrame"] = []
-        for video in self.videos:
+        for video in videos:
             lfs: List["LabeledFrame"] = self.labels.get((video, [frame_idx]))
             if len(lfs) == 0:
                 continue
@@ -567,12 +609,12 @@ class RecordingSession:
                 views.append(lf)
 
         # If no views, then return
-        if len(views) <= 1:
+        if len(views) <= 1 and require_multiple_views:
             logger.warning(
                 "One or less views found for frame "
                 f"{frame_idx} in {self.camera_cluster}."
             )
-            return
+            return instances
 
         # Find all instance accross all views
         instances: List["Instances"] = []
@@ -580,6 +622,19 @@ class RecordingSession:
             insts = lf.find(track=track)
             if len(insts) > 0:
                 instances.append(insts[0])
+
+        return instances
+
+    def calculate_reprojected_points(self, instances: List["Instances"]):
+        """Triangulate and reproject instance coordinates.
+
+        Args:
+            instances: List of `Instances` objects.
+
+        Returns:
+            List of reprojected instance coordinates. Each element in the list is a
+            numpy array of shape (1, N, 2) where N is the number of nodes.
+        """
 
         # Gather instances into M x F x T x N x 2 arrays
         # (M = # views, F = # frames = 1, T = # tracks = 1, N = # nodes, 2 = x, y)
@@ -592,6 +647,59 @@ class RecordingSession:
         inst_coords_reprojected = reproject(points_3d, calib=self.camera_cluster)
         insts_coords_list: List[np.ndarray] = np.split(
             inst_coords_reprojected.squeeze(), inst_coords_reprojected.shape[0], axis=0
+        )
+
+        return insts_coords_list
+
+    def update_views(
+        self,
+        frame_idx: int,
+        cams_to_include: Optional[List[Camcorder]] = None,
+        track: Optional["Track"] = None,
+    ):
+        """Update the views of the `RecordingSession`.
+
+        Args:
+            frame_idx: Frame index to update (0-indexed).
+            cams_to_include: List of `Camcorder`s to include. Default is all.
+            track: `Track` object used to find instances accross views for updating.
+
+        Returns:
+            None
+        """
+
+        # If not enough `Camcorder`s available/specified, then return
+        if (cams_to_include is not None and len(cams_to_include) <= 1) or (
+            len(self.videos) <= 1
+        ):
+            logger.warning(
+                "One or less cameras available. "
+                "Multiple cameras needed to triangulate. "
+                "Skipping triangulation and reprojection."
+            )
+            return
+
+        # Get all views at this frame index
+        instances = self.get_instances_accross_views(
+            frame_idx,
+            cams_to_include=cams_to_include,
+            track=track,
+            require_multiple_views=True,
+        )
+
+        # If no instances, then return
+        if len(instances) <= 1:
+            logger.warning(
+                "One or less instances found for frame "
+                f"{frame_idx} in {self.camera_cluster}. "
+                "Multiple instances accross multiple views needed to triangulate. "
+                "Skipping triangulation and reprojection."
+            )
+            return
+
+        # Triangulate, reproject, and update coordinates
+        insts_coords_list: List[np.ndarray] = self.calculate_reprojected_points(
+            instances
         )
         for inst, inst_coord in zip(instances, insts_coords_list):
             inst.update_points(

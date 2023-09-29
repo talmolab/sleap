@@ -2,7 +2,6 @@
 
 import numpy as np
 import pytest
-import toml
 
 from sleap.io.cameras import Camcorder, CameraCluster, RecordingSession
 from sleap.io.dataset import Labels
