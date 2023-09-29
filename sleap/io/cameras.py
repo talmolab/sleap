@@ -80,7 +80,7 @@ class Camcorder:
 
     def __getitem__(
         self, key: Union[str, "RecordingSession", Video]
-    ) -> Union["RecordingSession", Video, Any]:
+    ) -> Union["RecordingSession", Video]:  # Raises KeyError if key not found
         """Return linked `Video` or `RecordingSession`.
 
         Args:
@@ -88,6 +88,9 @@ class Camcorder:
 
         Returns:
             `Video` or `RecordingSession` object.
+
+        Raises:
+            KeyError: If key is not found.
         """
 
         # If key is a RecordingSession, return the Video
