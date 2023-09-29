@@ -550,14 +550,45 @@ class RecordingSession:
         if self.labels is not None and self.labels.get_session(video) is not None:
             self.labels.remove_session_video(self, video)
 
+    def get_videos_from_selected_cameras(
+        self, cams_to_include: Optional[List[Camcorder]] = None
+    ) -> List[Video]:
+        """Get all `Video`s from selected `Camcorder`s.
+
+        Args:
+            cams_to_include: List of `Camcorder`s to include. Defualt is all.
+
+        Returns:
+            List of `Video`s.
+        """
+
+        # If no `Camcorder`s specified, then return all videos in session
+        if cams_to_include is None:
+            return self.videos
+
+        # Get all videos from selected `Camcorder`s
+        videos: List[Video] = []
+        for cam in cams_to_include:
+            video = self.get_video(cam)
+            if video is not None:
+                videos.append(video)
+
+        return videos
+
     def get_instances_accross_views(
-        self, frame_idx: int, track: Optional["Track"] = None
+        self,
+        frame_idx: int,
+        cams_to_include: Optional[List[Camcorder]] = None,
+        track: Optional["Track"] = None,
+        require_multiple_views: bool = False,
     ) -> List["LabeledFrame"]:
         """Get all `Instances` accross all views at a given frame index.
 
         Args:
             frame_idx: Frame index to get instances from (0-indexed).
-            track: `Track` object used to find instances accross views.
+            cams_to_include: List of `Camcorder`s to include. Default is all.
+            track: `Track` object used to find instances accross views. Default is None.
+            require_multiple_views: If True, then raise error if only one view is found.
 
         Returns:
             List of `Instances` objects.
@@ -565,9 +596,10 @@ class RecordingSession:
 
         views: List["LabeledFrame"] = []
         instances: List["Instances"] = []
+        videos = self.get_videos_from_selected_cameras(cams_to_include=cams_to_include)
 
         # Get all views at this frame index
-        for video in self.videos:
+        for video in videos:
             lfs: List["LabeledFrame"] = self.labels.get((video, [frame_idx]))
             if len(lfs) == 0:
                 continue
@@ -577,7 +609,7 @@ class RecordingSession:
                 views.append(lf)
 
         # If no views, then return
-        if len(views) <= 1:
+        if len(views) <= 1 and require_multiple_views:
             logger.warning(
                 "One or less views found for frame "
                 f"{frame_idx} in {self.camera_cluster}."
@@ -622,24 +654,38 @@ class RecordingSession:
     def update_views(
         self,
         frame_idx: int,
+        cams_to_include: Optional[List[Camcorder]] = None,
         track: Optional["Track"] = None,
-        cams_to_include: Optional[List[int]] = None,
     ):
         """Update the views of the `RecordingSession`.
 
         Args:
             frame_idx: Frame index to update (0-indexed).
+            cams_to_include: List of `Camcorder`s to include. Default is all.
             track: `Track` object used to find instances accross views for updating.
-            cams_to_include: List of views by indices in `self.camera_cluster.cameras` (0-indexed).
 
         Returns:
             None
         """
 
-        # TODO(LM): Add support for taking in `cams_to_include` to use for triangulation
+        # If not enough `Camcorder`s available/specified, then return
+        if (cams_to_include is not None and len(cams_to_include) <= 1) or (
+            len(self.videos) <= 1
+        ):
+            logger.warning(
+                "One or less cameras available. "
+                "Multiple cameras needed to triangulate. "
+                "Skipping triangulation and reprojection."
+            )
+            return
 
         # Get all views at this frame index
-        instances = self.get_instances_accross_views(frame_idx, track=track)
+        instances = self.get_instances_accross_views(
+            frame_idx,
+            cams_to_include=cams_to_include,
+            track=track,
+            require_multiple_views=True,
+        )
 
         # If no instances, then return
         if len(instances) <= 1:
@@ -647,7 +693,7 @@ class RecordingSession:
                 "One or less instances found for frame "
                 f"{frame_idx} in {self.camera_cluster}. "
                 "Multiple instances accross multiple views needed to triangulate. "
-                "Skipping traingulation and reprojection."
+                "Skipping triangulation and reprojection."
             )
             return
 
