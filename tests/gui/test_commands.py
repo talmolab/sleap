@@ -1,26 +1,25 @@
-import pytest
 import shutil
 import sys
 import time
-
-from pathlib import PurePath, Path
+from pathlib import Path, PurePath
 from typing import List
 
-from sleap import Skeleton, Track, PredictedInstance
+import pytest
+
+from sleap import PredictedInstance, Skeleton, Track
 from sleap.gui.commands import (
     AddSession,
     CommandContext,
     ExportAnalysisFile,
     ExportDatasetWithImages,
     ImportDeepLabCutFolder,
+    OpenSkeleton,
     RemoveVideo,
     ReplaceVideo,
-    OpenSkeleton,
     SaveProjectAs,
     get_new_version_filename,
 )
 from sleap.instance import Instance, LabeledFrame
-from sleap.io.cameras import RecordingSession
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
@@ -32,8 +31,8 @@ from sleap.util import get_package_file
 # These imports cause trouble when running `pytest.main()` from within the file
 # Comment out to debug tests file via VSCode's "Debug Python File"
 from tests.info.test_h5 import extract_meta_hdf5
-from tests.io.test_video import assert_video_params
 from tests.io.test_formats import read_nix_meta
+from tests.io.test_video import assert_video_params
 
 
 def test_delete_user_dialog(centered_pair_predictions):
