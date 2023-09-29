@@ -53,7 +53,7 @@ class Camcorder:
 
     def __attrs_post_init__(self):
         # Avoid overwriting `CameraCluster` if already set.
-        if not isinstance(CameraCluster, self.camera_cluster):
+        if not isinstance(self.camera_cluster, CameraCluster):
             self.camera_cluster = CameraCluster()
 
     def __eq__(self, other):
