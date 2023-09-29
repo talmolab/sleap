@@ -1118,8 +1118,9 @@ class Video:
 
     def get_frames_safely(self, idxs: Iterable[int]) -> Tuple[List[int], np.ndarray]:
         """Return list of frame indices and frames which were successfully loaded.
+        Args:
+            idxs: An iterable object that contains the indices of frames.
 
-        idxs: An iterable object that contains the indices of frames.
 
         Returns: A tuple of (frame indices, frames), where
             * frame indices is a subset of the specified idxs, and

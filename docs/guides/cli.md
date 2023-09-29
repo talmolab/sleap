@@ -389,6 +389,9 @@ optional arguments:
   --distinctly_color DISTINCTLY_COLOR
                         Specify how to color instances. Options include: "instances",
                         "edges", and "nodes" (default: "instances")
+  --background BACKGROUND
+                        Specify the type of background to be used to save the videos.
+                        Options: original, black, white and grey. (default: "original")
 ```
 
 ## Debugging

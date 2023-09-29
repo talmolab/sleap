@@ -16,8 +16,8 @@ python setup.py install --single-version-externally-managed --record=record.txt
 
 # Copy the activate scripts to $PREFIX/etc/conda/activate.d.
 # This will allow them to be run on environment activation.
-export CHANGE=activate
-
-mkdir -p "${PREFIX}/etc/conda/${CHANGE}.d"
-ls "${RECIPE_DIR}"
-cp "${RECIPE_DIR}/${PKG_NAME}_${CHANGE}.sh" "${PREFIX}/etc/conda/${CHANGE}.d/${PKG_NAME}_${CHANGE}.sh"
+for CHANGE in "activate" "deactivate"
+do
+    mkdir -p "${PREFIX}/etc/conda/${CHANGE}.d"
+    cp "${RECIPE_DIR}/${PKG_NAME}_${CHANGE}.sh" "${PREFIX}/etc/conda/${CHANGE}.d/${PKG_NAME}_${CHANGE}.sh"
+done
