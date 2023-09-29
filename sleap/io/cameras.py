@@ -52,7 +52,9 @@ class Camcorder:
         return self.camera_cluster._session_by_video[video]
 
     def __attrs_post_init__(self):
-        self.camera_cluster = CameraCluster()
+        # Avoid overwriting `CameraCluster` if already set.
+        if not isinstance(CameraCluster, self.camera_cluster):
+            self.camera_cluster = CameraCluster()
 
     def __eq__(self, other):
         if not isinstance(other, Camcorder):
