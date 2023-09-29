@@ -33,6 +33,12 @@ class Camcorder:
 
     def __getattr__(self, attr):
         """Used to grab methods from `Camera` or `FishEyeCamera` objects."""
+        if self.camera is None:
+            raise AttributeError(
+                f"No camera has been specified. "
+                f"This is likely because the `Camcorder.from_dict` method was not used to initialize this object. "
+                f"Please use `Camcorder.from_dict` to recreate the object."
+            )
         return getattr(self.camera, attr)
 
     def __repr__(self):
