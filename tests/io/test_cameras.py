@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from sleap.io.cameras import Camcorder, CameraCluster, RecordingSession
+from sleap.io.dataset import Labels
 from sleap.io.video import Video
 
 
@@ -62,7 +63,7 @@ def test_camera_cluster(
 
     # Test __len__
     assert len(camera_cluster) == len(camera_cluster.cameras)
-    assert len(camera_cluster) == 4
+    assert len(camera_cluster) == 8
 
     # Test __getitem__, __iter__, and __contains__
     for idx, cam in enumerate(camera_cluster):
@@ -203,8 +204,8 @@ def test_recording_session(
     assert isinstance(session_dict, dict)
     assert session_dict["calibration"] == calibration_dict
     assert session_dict["camcorder_to_video_idx_map"] == {
-        0: video_to_idx[centered_pair_vid],
-        2: video_to_idx[hdf5_vid],
+        "0": str(video_to_idx[centered_pair_vid]),
+        "2": str(video_to_idx[hdf5_vid]),
     }
 
     # Test from_session_dict

@@ -85,7 +85,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
 
         # These items are stored in separate lists because the metadata group got to be
         # too big.
-        for key in ("videos", "tracks", "suggestions"):
+        for key in ("videos", "tracks", "suggestions", "sessions"):
             hdf5_key = f"{key}_json"
             if hdf5_key in f:
                 items = [json_loads(item_json) for item_json in f[hdf5_key]]
@@ -325,7 +325,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
             if not append:
                 # These items are stored in separate lists because the metadata
                 # group got to be too big.
-                for key in ("videos", "tracks", "suggestions"):
+                for key in ("videos", "tracks", "suggestions", "sessions"):
                     # Convert for saving in hdf5 dataset
                     data = [np.string_(json_dumps(item)) for item in d[key]]
 
@@ -341,7 +341,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
             meta_group.attrs["json"] = np.string_(json_dumps(d))
 
             # FIXME: We can probably construct these from attrs fields
-            # We will store Instances and PredcitedInstances in the same
+            # We will store Instances and PredictedInstances in the same
             # table. instance_type=0 or Instance and instance_type=1 for
             # PredictedInstance, score will be ignored for Instances.
             instance_dtype = np.dtype(
