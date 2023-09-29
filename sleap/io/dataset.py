@@ -653,7 +653,8 @@ class Labels(MutableSequence):
     def sessions(self, value: RecordingSession):
         """Set the sessions in the labels."""
         raise ValueError(
-            "Setting sessions should be done through `Labels.add_session`."
+            "Direct assignment to `Labels.sessions` is not allowed. "
+            "Please use `Labels.add_session` to add a session."
         )
 
     def __len__(self) -> int:
