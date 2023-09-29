@@ -631,6 +631,9 @@ class RecordingSession:
             frame_idx: Frame index to update (0-indexed).
             track: `Track` object used to find instances accross views for updating.
             cams_to_include: List of views by indices in `self.camera_cluster.cameras` (0-indexed).
+
+        Returns:
+            None
         """
 
         # TODO(LM): Add support for taking in `cams_to_include` to use for triangulation
@@ -642,7 +645,9 @@ class RecordingSession:
         if len(instances) <= 1:
             logger.warning(
                 "One or less instances found for frame "
-                f"{frame_idx} in {self.camera_cluster}."
+                f"{frame_idx} in {self.camera_cluster}. "
+                "Multiple instances accross multiple views needed to triangulate. "
+                "Skipping traingulation and reprojection."
             )
             return
 
