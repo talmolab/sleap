@@ -15,7 +15,7 @@ class Camcorder:
         camera: `Camera` or `FishEyeCamera` object.
     """
 
-    camera: Optional[Union[Camera, FisheyeCamera]] = field(factory=None)
+    camera: Optional[Union[Camera, FisheyeCamera]] = field(default=None)
 
     def __eq__(self, other):
         if not isinstance(other, Camcorder):
