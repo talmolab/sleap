@@ -1633,6 +1633,10 @@ class Labels(MutableSequence):
         Args:
             session: `RecordingSession` instance
         """
+        if not isinstance(session, RecordingSession):
+            raise TypeError(
+                f"Expected a RecordingSession instance. Received type: {type(session)}"
+            )
 
         if session not in self.sessions:
             self._sessions.append(session)

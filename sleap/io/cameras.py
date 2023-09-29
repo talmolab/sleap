@@ -55,7 +55,9 @@ class Camcorder:
         return self.camera_cluster._session_by_video[video]
 
     def __attrs_post_init__(self):
-        self.camera_cluster = CameraCluster()
+        # Avoid overwriting `CameraCluster` if already set.
+        if not isinstance(self.camera_cluster, CameraCluster):
+            self.camera_cluster = CameraCluster()
 
     def __eq__(self, other):
         if not isinstance(other, Camcorder):
@@ -73,11 +75,17 @@ class Camcorder:
 
     def __getattr__(self, attr):
         """Used to grab methods from `Camera` or `FishEyeCamera` objects."""
+        if self.camera is None:
+            raise AttributeError(
+                f"No camera has been specified. "
+                f"This is likely because the `Camcorder.from_dict` method was not used to initialize this object. "
+                f"Please use `Camcorder.from_dict` to recreate the object."
+            )
         return getattr(self.camera, attr)
 
     def __getitem__(
         self, key: Union[str, "RecordingSession", Video]
-    ) -> Union["RecordingSession", Video, Any]:
+    ) -> Union["RecordingSession", Video]:  # Raises KeyError if key not found
         """Return linked `Video` or `RecordingSession`.
 
         Args:
@@ -85,6 +93,9 @@ class Camcorder:
 
         Returns:
             `Video` or `RecordingSession` object.
+
+        Raises:
+            KeyError: If key is not found.
         """
 
         # If key is a RecordingSession, return the Video
