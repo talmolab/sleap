@@ -104,6 +104,13 @@ class CameraCluster(CameraGroup):
         Returns:
             `CameraCluster` object.
         """
-        cam_group: CameraGroup = super().load(filename)
+
+        try:
+            cam_group: CameraGroup = super().load(filename)
+        except FileNotFoundError as e:
+            raise FileNotFoundError(
+                f"Could not find calibration file at {filename}."
+            ) from e
+
         cameras = [Camcorder(cam) for cam in cam_group.cameras]
         return cls(cameras=cameras, metadata=cam_group.metadata)
