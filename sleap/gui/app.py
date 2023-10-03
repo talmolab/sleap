@@ -101,6 +101,7 @@ class MainWindow(QMainWindow):
     def __init__(
         self,
         labels_path: Optional[str] = None,
+        labels: Optional[Labels] = None,
         reset: bool = False,
         no_usage_data: bool = False,
         *args,
@@ -118,7 +119,7 @@ class MainWindow(QMainWindow):
         self.setAcceptDrops(True)
 
         self.state = GuiState()
-        self.labels = Labels()
+        self.labels = labels or Labels()
 
         self.commands = CommandContext(
             state=self.state, app=self, update_callback=self.on_data_update
@@ -1594,8 +1595,7 @@ class MainWindow(QMainWindow):
         ShortcutDialog().exec_()
 
 
-def main(args: Optional[list] = None):
-    """Starts new instance of app."""
+def create_parser():
 
     import argparse
 
@@ -1635,6 +1635,13 @@ def main(args: Optional[list] = None):
         default=False,
     )
 
+    return parser
+
+
+def main(args: Optional[list] = None, labels: Optional[Labels] = None):
+    """Starts new instance of app."""
+
+    parser = create_parser()
     args = parser.parse_args(args)
 
     if args.nonnative:
@@ -1651,12 +1658,18 @@ def main(args: Optional[list] = None):
     app.setWindowIcon(QtGui.QIcon(sleap.util.get_package_file("gui/icon.png")))
 
     window = MainWindow(
-        labels_path=args.labels_path, reset=args.reset, no_usage_data=args.no_usage_data
+        labels_path=args.labels_path,
+        labels=labels,
+        reset=args.reset,
+        no_usage_data=args.no_usage_data,
     )
     window.showMaximized()
 
     # Disable GPU in GUI process. This does not affect subprocesses.
-    sleap.use_cpu_only()
+    try:
+        sleap.use_cpu_only()
+    except RuntimeError:  # Visible devices cannot be modified after being initialized
+        pass
 
     # Print versions.
     print()
