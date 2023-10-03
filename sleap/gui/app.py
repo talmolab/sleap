@@ -164,7 +164,9 @@ class MainWindow(QMainWindow):
         self.state.connect("show non-visible nodes", self.plotFrame)
 
         self.release_checker = ReleaseChecker()
-        self.announcement_checker = AnnouncementChecker()
+        self.announcement_checker = AnnouncementChecker(
+            app = self
+        )
 
         if self.state["share usage data"]:
             ping_analytics()
