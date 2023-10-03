@@ -661,6 +661,7 @@ optimization:
   label: Batch Size
   name: optimization.batch_size
   type: int
+  range: 1,512
 - default: 100
   help: Maximum number of epochs to train for. Training can be stopped manually or automatically if early stopping is enabled and a plateau is detected.
   label: Epochs
