@@ -156,7 +156,7 @@ class AnnouncementChecker:
 
     app: "MainWindow"
     bulletin_json_path: str = BULLETIN_JSON
-    previous_announcement_date: str = app.state["announcement last seen date"]
+    previous_announcement_date: str = None
     _latest_data: Optional[Dict[str, str]] = None
 
     def _read_bulletin_data(self) -> Dict[str, str]:
@@ -170,7 +170,7 @@ class AnnouncementChecker:
 
     def get_latest_announcement(self) -> Optional[Tuple[str, str]]:
         """Return latest announcements on the releases page not seen by user."""
-        self._latest_datalatest_data = self._read_bulletin_data()
+        self._latest_data = self._read_bulletin_data()
         if self._latest_data and self._latest_data['date'] != self.previous_announcement_date:
             return (self._latest_data['date'], self._latest_data['content'])
         return None
