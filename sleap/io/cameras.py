@@ -575,7 +575,7 @@ class RecordingSession:
 
         return videos
 
-    def get_instances_accross_views(
+    def get_instances_across_views(
         self,
         frame_idx: int,
         cams_to_include: Optional[List[Camcorder]] = None,
@@ -680,7 +680,7 @@ class RecordingSession:
             return
 
         # Get all views at this frame index
-        instances = self.get_instances_accross_views(
+        instances = self.get_instances_across_views(
             frame_idx,
             cams_to_include=cams_to_include,
             track=track,
