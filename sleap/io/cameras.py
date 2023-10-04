@@ -575,6 +575,44 @@ class RecordingSession:
 
         return videos
 
+    def get_all_views_at_frame(
+        self,
+        frame_idx,
+        cams_to_include: Optional[List[Camcorder]] = None,
+    ) -> List["LabeledFrame"]:
+        """Get all views at a given frame index.
+
+        Args:
+            frame_idx: Frame index to get views from (0-indexed).
+            cams_to_include: List of `Camcorder`s to include. Default is all.
+
+        Returns:
+            List of `LabeledFrame` objects.
+        """
+
+        views: List["LabeledFrame"] = []
+
+        videos = self.get_videos_from_selected_cameras(cams_to_include=cams_to_include)
+        for video in videos:
+            lfs: List["LabeledFrame"] = self.labels.get((video, [frame_idx]))
+            if len(lfs) == 0:
+                logger.debug(
+                    "No LabeledFrames found for video " f"{video} at {frame_idx}."
+                )
+                continue
+
+            lf = lfs[0]
+            if len(lf.instances) == 0:
+                logger.warning(
+                    f"No Instances found for {lf}."
+                    " There should be not empty LabeledFrames."
+                )
+                continue
+
+            views.append(lf)
+
+        return views
+
     def get_instances_across_views(
         self,
         frame_idx: int,
@@ -601,25 +639,12 @@ class RecordingSession:
 
         views: List["LabeledFrame"] = []
         instances: List["Instances"] = []
-        videos = self.get_videos_from_selected_cameras(cams_to_include=cams_to_include)
 
         # Get all views at this frame index
-        for video in videos:
-            lfs: List["LabeledFrame"] = self.labels.get((video, [frame_idx]))
-            if len(lfs) == 0:
-                logger.debug(
-                    "No LabeledFrames found for video " f"{video} at {frame_idx}."
-                )
-                continue
-
-            lf = lfs[0]
-            if len(lf.instances) == 0:
-                logger.debug(
-                    f"No Instances with {track} found for " f"{video} at {frame_idx}."
-                )
-                continue
-
-            views.append(lf)
+        views = self.get_all_views_at_frame(
+            frame_idx=frame_idx,
+            cams_to_include=cams_to_include,
+        )
 
         # If not enough views, then raise error
         if len(views) <= 1 and require_multiple_views:
