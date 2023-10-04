@@ -588,10 +588,15 @@ class RecordingSession:
             frame_idx: Frame index to get instances from (0-indexed).
             cams_to_include: List of `Camcorder`s to include. Default is all.
             track: `Track` object used to find instances accross views. Default is None.
-            require_multiple_views: If True, then raise error if only one view is found.
+            require_multiple_views: If True, then raise and error if one or less views 
+                or instances are found.
 
         Returns:
             List of `Instances` objects.
+
+        Raises:
+            ValueError if require_multiple_view is true by one or less view or instance 
+            is found.
         """
 
         views: List["LabeledFrame"] = []
@@ -602,19 +607,28 @@ class RecordingSession:
         for video in videos:
             lfs: List["LabeledFrame"] = self.labels.get((video, [frame_idx]))
             if len(lfs) == 0:
+                logger.debug(
+                    "No LabeledFrames found for video "
+                    f"{video} at {frame_idx}."
+                )
                 continue
 
             lf = lfs[0]
-            if len(lf.instances) > 0:
-                views.append(lf)
+            if len(lf.instances) == 0:
+                logger.debug(
+                    f"No Instances with {track} found for "
+                    f"{video} at {frame_idx}."
+                )
+                continue
+            
+            views.append(lf)
 
-        # If no views, then return
+        # If not enough views, then raise error
         if len(views) <= 1 and require_multiple_views:
-            logger.warning(
+            raise ValueError(
                 "One or less views found for frame "
                 f"{frame_idx} in {self.camera_cluster}."
             )
-            return instances
 
         # Find all instance accross all views
         instances: List["Instances"] = []
@@ -622,6 +636,13 @@ class RecordingSession:
             insts = lf.find(track=track)
             if len(insts) > 0:
                 instances.append(insts[0])
+        
+        # If not enough instances for multiple views, then raise error
+        if len(instances) <= 1 and require_multiple_views:
+            raise ValueError(
+                "One or less instances found for frame "
+                f"{frame_idx} in {self.camera_cluster}."
+            )
 
         return instances
 
@@ -680,15 +701,15 @@ class RecordingSession:
             return
 
         # Get all views at this frame index
-        instances = self.get_instances_across_views(
-            frame_idx,
-            cams_to_include=cams_to_include,
-            track=track,
-            require_multiple_views=True,
-        )
-
-        # If no instances, then return
-        if len(instances) <= 1:
+        try:
+            instances = self.get_instances_across_views(
+                frame_idx,
+                cams_to_include=cams_to_include,
+                track=track,
+                require_multiple_views=True,
+            )
+        except ValueError:
+            # If not enough views or instances, then return
             logger.warning(
                 "One or less instances found for frame "
                 f"{frame_idx} in {self.camera_cluster}. "
