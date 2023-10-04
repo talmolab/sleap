@@ -4939,7 +4939,7 @@ def export_cli(args: Optional[list] = None):
     export_model(
         args.models,
         args.export_path,
-        unrag_outputs=args.unrag,
+        unrag_outputs=bool(args.unrag),
         max_instances=args.max_instances,
     )
 
@@ -4973,11 +4973,11 @@ def _make_export_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-u",
         "--unrag",
-        action="store_true",
-        default=True,
+        type=int,
+        default=1,
         help=(
             "Convert ragged tensors into regular tensors with NaN padding. "
-            "Defaults to True."
+            "Defaults to 1."
         ),
     )
     parser.add_argument(
