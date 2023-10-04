@@ -224,17 +224,6 @@ def test_recording_session(
     session_2 = RecordingSession.from_session_dict(session_dict, videos_list)
     compare_sessions(session, session_2)
 
-    # Test get_videos_from_selected_cameras
-    selected_cam = session.linked_cameras[0]
-    selected_videos = session.get_videos_from_selected_cameras([selected_cam])
-    assert len(selected_videos) == 1
-    assert selected_videos[0] == session.get_video(selected_cam)
-    # Now without any cameras selected: expect to return all videos
-    selected_videos = session.get_videos_from_selected_cameras()
-    assert len(selected_videos) == len(session.linked_cameras)
-    for cam in session.linked_cameras:
-        assert session.get_video(cam) in selected_videos
-
     # Test remove_video
     session.remove_video(centered_pair_vid)
     assert centered_pair_vid not in session.videos
@@ -259,6 +248,27 @@ def test_recording_session(
     session_3 = sessions_cattr.structure(session_dict_2, RecordingSession)
     compare_sessions(session_2, session_3)
 
+
+def test_recording_session_get_videos_from_selected_cameras(
+    multiview_min_session_labels: Labels,
+):
+    session = multiview_min_session_labels.sessions[0]
+
+    # Test get_videos_from_selected_cameras
+    selected_cam = session.linked_cameras[0]
+    selected_videos = session.get_videos_from_selected_cameras([selected_cam])
+    assert len(selected_videos) == 1
+    assert selected_videos[0] == session.get_video(selected_cam)
+    # Now without any cameras selected: expect to return all videos
+    selected_videos = session.get_videos_from_selected_cameras()
+    assert len(selected_videos) == len(session.linked_cameras)
+    for cam in session.linked_cameras:
+        assert session.get_video(cam) in selected_videos
+
+
+def test_recording_session_get_instances_across_views(
+    multiview_min_session_labels: Labels,
+):
     # Test get_instances_across_views
     labels = multiview_min_session_labels
     lf: LabeledFrame = labels[0]
@@ -310,3 +320,23 @@ def test_recording_session(
             track=track,
             require_multiple_views=True,
         )
+
+
+def test_recording_session_calculate_reprojected_points(
+    multiview_min_session_labels: Labels,
+):
+    """Test `RecordingSession.calculate_reprojected_points`."""
+    session = multiview_min_session_labels.sessions[0]
+    lf: LabeledFrame = multiview_min_session_labels[0]
+    track = multiview_min_session_labels.tracks[0]
+    instances: List[Instance] = session.get_instances_across_views(
+        frame_idx=lf.frame_idx, track=track
+    )
+    inst_coords_list = session.calculate_reprojected_points(instances)
+
+    # Check that we get the same number of instances as input
+    assert len(instances) == len(inst_coords_list)
+
+    # Check that each instance has the same number of points
+    for inst, inst_coords in zip(instances, inst_coords_list):
+        assert inst_coords.shape[1] == len(inst.skeleton)  # (1, 15, 2)
