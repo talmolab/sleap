@@ -695,6 +695,16 @@ class RecordingSession:
 
         return insts_coords_list
 
+    def update_instances(self, instances: List["Instances"]):
+        # Triangulate, reproject, and update coordinates
+        insts_coords_list: List[np.ndarray] = self.calculate_reprojected_points(
+            instances
+        )
+        for inst, inst_coord in zip(instances, insts_coords_list):
+            inst.update_points(
+                inst_coord[0], exclude_complete=True
+            )  # inst_coord is (1, N, 2)
+
     def update_views(
         self,
         frame_idx: int,
@@ -741,14 +751,7 @@ class RecordingSession:
             )
             return
 
-        # Triangulate, reproject, and update coordinates
-        insts_coords_list: List[np.ndarray] = self.calculate_reprojected_points(
-            instances
-        )
-        for inst, inst_coord in zip(instances, insts_coords_list):
-            inst.update_points(
-                inst_coord[0], exclude_complete=True
-            )  # inst_coord is (1, N, 2)
+        self.update_instances(instances)
 
     def __attrs_post_init__(self):
         self.camera_cluster.add_session(self)
