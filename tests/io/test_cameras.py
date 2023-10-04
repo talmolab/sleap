@@ -129,6 +129,7 @@ def test_recording_session(
     hdf5_vid: Video,
 ):
     """Test `RecordingSession` data structure."""
+    
     calibration: str = min_session_calibration_toml_path
     camera_cluster: CameraCluster = min_session_camera_cluster
 
@@ -219,6 +220,17 @@ def test_recording_session(
 
     session_2 = RecordingSession.from_session_dict(session_dict, videos_list)
     compare_sessions(session, session_2)
+
+    # Test get_videos_from_selected_cameras
+    selected_cam = session.linked_cameras[0]
+    selected_videos = session.get_videos_from_selected_cameras([selected_cam])
+    assert len(selected_videos) == 1
+    assert selected_videos[0] == session.get_video(selected_cam)
+    # Now without any cameras selected: expect to return all videos
+    selected_videos = session.get_videos_from_selected_cameras()
+    assert len(selected_videos) == len(session.linked_cameras)
+    for cam in session.linked_cameras:
+        assert session.get_video(cam) in selected_videos
 
     # Test remove_video
     session.remove_video(centered_pair_vid)
