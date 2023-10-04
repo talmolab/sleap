@@ -1,10 +1,12 @@
 """Module to test functions in `sleap.io.cameras`."""
 
+from typing import List
+
 import numpy as np
 import pytest
 
 from sleap.io.cameras import Camcorder, CameraCluster, RecordingSession
-from sleap.io.dataset import Labels
+from sleap.io.dataset import Instance, LabeledFrame, Labels
 from sleap.io.video import Video
 
 
@@ -127,9 +129,10 @@ def test_recording_session(
     min_session_camera_cluster: CameraCluster,
     centered_pair_vid: Video,
     hdf5_vid: Video,
+    multiview_min_session_labels: Labels,
 ):
     """Test `RecordingSession` data structure."""
-    
+
     calibration: str = min_session_calibration_toml_path
     camera_cluster: CameraCluster = min_session_camera_cluster
 
@@ -255,3 +258,49 @@ def test_recording_session(
     assert session_dict_2 == session_dict
     session_3 = sessions_cattr.structure(session_dict_2, RecordingSession)
     compare_sessions(session_2, session_3)
+
+    # Test get_instances_across_views
+    labels = multiview_min_session_labels
+    lf: LabeledFrame = labels[0]
+    track = labels.tracks[0]
+    session_from_labels = labels.sessions[0]
+    instances: List[Instance] = session_from_labels.get_instances_across_views(
+        frame_idx=lf.frame_idx, track=track
+    )
+    assert len(instances) == len(session_from_labels.videos)
+    for inst, vid in zip(instances, session_from_labels.videos):
+        assert inst.frame_idx == lf.frame_idx
+        assert inst.track == track
+        assert inst.video == vid
+    # Try with excluding cam views
+    lf: LabeledFrame = labels[2]
+    track = labels.tracks[1]
+    cams_to_include = session_from_labels.linked_cameras[:4]
+    videos_to_include = session_from_labels.get_videos_from_selected_cameras(
+        cams_to_include=cams_to_include
+    )
+    assert len(cams_to_include) == 4
+    assert len(videos_to_include) == len(cams_to_include)
+    instances: List[Instance] = session_from_labels.get_instances_across_views(
+        frame_idx=lf.frame_idx, track=track, cams_to_include=cams_to_include
+    )
+    assert len(instances) == len(
+        videos_to_include
+    )  # May not be true if no instances at that frame
+    for inst, vid in zip(instances, videos_to_include):
+        assert inst.frame_idx == lf.frame_idx
+        assert inst.track == track
+        assert inst.video == vid
+    # Try with only a single view
+    cams_to_include = [session_from_labels.linked_cameras[0]]
+    with pytest.raises(ValueError):
+        instances = session_from_labels.get_instances_across_views(frame_idx=lf.frame_idx, cams_to_include=cams_to_include, track=track, require_multiple_views=True)
+    # Try with multiple views, but not enough instances
+    track = labels.tracks[1]
+    cams_to_include = session_from_labels.linked_cameras[4:6]
+    with pytest.raises(ValueError):
+        instances = session_from_labels.get_instances_across_views(frame_idx=lf.frame_idx, cams_to_include=cams_to_include, track=track, require_multiple_views=True)
+
+
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::test_recording_session"])
