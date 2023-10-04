@@ -340,3 +340,24 @@ def test_recording_session_calculate_reprojected_points(
     # Check that each instance has the same number of points
     for inst, inst_coords in zip(instances, inst_coords_list):
         assert inst_coords.shape[1] == len(inst.skeleton)  # (1, 15, 2)
+
+
+def test_recording_session_update_instances(multiview_min_session_labels: Labels):
+    """Test `RecordingSession.update_instances`."""
+
+    # Test update_instances
+    session = multiview_min_session_labels.sessions[0]
+    lf: LabeledFrame = multiview_min_session_labels[0]
+    track = multiview_min_session_labels.tracks[0]
+    instances: List[Instance] = session.get_instances_across_views(
+        frame_idx=lf.frame_idx, track=track
+    )
+    inst_coords_list = session.calculate_reprojected_points(instances)
+    session.update_instances(instances)
+    for inst, inst_coords in zip(instances, inst_coords_list):
+        assert np.array_equal(inst_coords, inst.points_array)
+
+
+# TODO(LM): Remove debugging code
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::test_recording_session_update_instances"])
