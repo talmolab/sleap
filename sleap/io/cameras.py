@@ -680,18 +680,26 @@ class RecordingSession:
             numpy array of shape (1, N, 2) where N is the number of nodes.
         """
 
+        # TODO (LM): Support multiple tracks and optimize
+
         # Gather instances into M x F x T x N x 2 arrays
         # (M = # views, F = # frames = 1, T = # tracks = 1, N = # nodes, 2 = x, y)
-        inst_coords = np.stack([inst.numpy() for inst in instances], axis=0)
-        inst_coords = np.expand_dims(inst_coords, axis=1)
-        inst_coords = np.expand_dims(inst_coords, axis=1)
-        points_3d = triangulate(p2d=inst_coords, calib=self.camera_cluster)
+        inst_coords = np.stack(
+            [inst.numpy() for inst in instances], axis=0
+        )  # M x N x 2
+        inst_coords = np.expand_dims(inst_coords, axis=1)  # M x T=1 x N x 2
+        inst_coords = np.expand_dims(inst_coords, axis=1)  # M x F=1 x T=1 x N x 2
+        points_3d = triangulate(
+            p2d=inst_coords, calib=self.camera_cluster
+        )  # F=1, T=1, N, 3
 
         # Update the views with the new 3D points
-        inst_coords_reprojected = reproject(points_3d, calib=self.camera_cluster)
+        inst_coords_reprojected = reproject(
+            points_3d, calib=self.camera_cluster
+        )  # M x F=1 x T=1 x N x 2
         insts_coords_list: List[np.ndarray] = np.split(
             inst_coords_reprojected.squeeze(), inst_coords_reprojected.shape[0], axis=0
-        )
+        )  # len(M) of T=1 x N x 2
 
         return insts_coords_list
 
