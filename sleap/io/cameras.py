@@ -588,15 +588,15 @@ class RecordingSession:
             frame_idx: Frame index to get instances from (0-indexed).
             cams_to_include: List of `Camcorder`s to include. Default is all.
             track: `Track` object used to find instances accross views. Default is None.
-            require_multiple_views: If True, then raise and error if one or less views 
+            require_multiple_views: If True, then raise and error if one or less views
                 or instances are found.
 
         Returns:
             List of `Instances` objects.
 
         Raises:
-            ValueError if require_multiple_view is true by one or less view or instance 
-            is found.
+            ValueError if require_multiple_view is true and one or less views or
+            instances are found.
         """
 
         views: List["LabeledFrame"] = []
@@ -608,19 +608,17 @@ class RecordingSession:
             lfs: List["LabeledFrame"] = self.labels.get((video, [frame_idx]))
             if len(lfs) == 0:
                 logger.debug(
-                    "No LabeledFrames found for video "
-                    f"{video} at {frame_idx}."
+                    "No LabeledFrames found for video " f"{video} at {frame_idx}."
                 )
                 continue
 
             lf = lfs[0]
             if len(lf.instances) == 0:
                 logger.debug(
-                    f"No Instances with {track} found for "
-                    f"{video} at {frame_idx}."
+                    f"No Instances with {track} found for " f"{video} at {frame_idx}."
                 )
                 continue
-            
+
             views.append(lf)
 
         # If not enough views, then raise error
@@ -636,7 +634,7 @@ class RecordingSession:
             insts = lf.find(track=track)
             if len(insts) > 0:
                 instances.append(insts[0])
-        
+
         # If not enough instances for multiple views, then raise error
         if len(instances) <= 1 and require_multiple_views:
             raise ValueError(
@@ -737,7 +735,6 @@ class RecordingSession:
         return len(self.videos)
 
     def __getattr__(self, attr: str) -> Any:
-
         """Try to find the attribute in the camera_cluster next."""
         return getattr(self.camera_cluster, attr)
 
@@ -839,7 +836,6 @@ class RecordingSession:
         # and value is video index from `Labels.videos`
         camcorder_to_video_idx_map = {}
         for cam_idx, camcorder in enumerate(self.camera_cluster):
-
             # Skip if Camcorder is not linked to any Video
             if camcorder not in self._video_by_camcorder:
                 continue

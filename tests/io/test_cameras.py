@@ -294,13 +294,19 @@ def test_recording_session(
     # Try with only a single view
     cams_to_include = [session_from_labels.linked_cameras[0]]
     with pytest.raises(ValueError):
-        instances = session_from_labels.get_instances_across_views(frame_idx=lf.frame_idx, cams_to_include=cams_to_include, track=track, require_multiple_views=True)
+        instances = session_from_labels.get_instances_across_views(
+            frame_idx=lf.frame_idx,
+            cams_to_include=cams_to_include,
+            track=track,
+            require_multiple_views=True,
+        )
     # Try with multiple views, but not enough instances
     track = labels.tracks[1]
     cams_to_include = session_from_labels.linked_cameras[4:6]
     with pytest.raises(ValueError):
-        instances = session_from_labels.get_instances_across_views(frame_idx=lf.frame_idx, cams_to_include=cams_to_include, track=track, require_multiple_views=True)
-
-
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_recording_session"])
+        instances = session_from_labels.get_instances_across_views(
+            frame_idx=lf.frame_idx,
+            cams_to_include=cams_to_include,
+            track=track,
+            require_multiple_views=True,
+        )
