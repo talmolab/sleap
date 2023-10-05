@@ -51,6 +51,7 @@ import numpy as np
 import sleap
 
 from sleap.nn.config import TrainingJobConfig, DataConfig
+from sleap.nn.data.dataset_ops import Batcher
 from sleap.nn.data.resizing import SizeMatcher
 from sleap.nn.model import Model
 from sleap.nn.tracking import Tracker, run_tracker
@@ -2196,6 +2197,322 @@ class CentroidInferenceModel(InferenceModel):
         crop_output = self.centroid_crop(example)
 
         return crop_output
+
+
+@attr.s(auto_attribs=True)
+class CentroidPredictor(Predictor):
+    """Centroid multi-instance predictor.
+
+    This high-level class handles initialization, preprocessing and tracking using a
+    trained top-down multi-instance SLEAP model.
+
+    This should be initialized using the `from_trained_models()` constructor or the
+    high-level API (`sleap.load_model`).
+
+    Attributes:
+        centroid_config: The `sleap.nn.config.TrainingJobConfig` containing the metadata
+            for the trained centroid model.
+        centroid_model: A `sleap.nn.model.Model` instance created from the trained
+            centroid model. If `None`, ground truth centroids will be used if available
+            from the data source.
+        inference_model: A `sleap.nn.inference.CentroidInferenceModel` that wraps a
+            trained `tf.keras.Model` to implement preprocessing, centroid detection, and
+            cropping.
+        pipeline: A `sleap.nn.data.Pipeline` that loads the data and batches input data.
+            This will be updated dynamically if new data sources are used.
+        tracker: A `sleap.nn.tracking.Tracker` that will be called to associate
+            detections over time. Predicted instances will not be assigned to tracks if
+            if this is `None`.
+        batch_size: The default batch size to use when loading data for inference.
+            Higher values increase inference speed at the cost of higher memory usage.
+        peak_threshold: Minimum confidence map value to consider a local peak as valid.
+        integral_refinement: If `True`, peaks will be refined with integral regression.
+            If `False`, `"local"`, peaks will be refined with quarter pixel local
+            gradient offset. This has no effect if the model has an offset regression
+            head.
+        integral_patch_size: Size of patches to crop around each rough peak for integral
+            refinement as an integer scalar.
+        max_instances: If not `None`, discard instances beyond this count when
+            predicting, regardless of whether filtering is done at the tracking stage.
+            This is useful for preventing extraneous instances from being created when
+            tracking is not being applied.
+    """
+
+    centroid_config: TrainingJobConfig
+    centroid_model: Optional[Model] = attr.ib(default=None)
+    inference_model: Optional[CentroidInferenceModel] = attr.ib(default=None)
+    pipeline: Optional[Pipeline] = attr.ib(default=None, init=False)
+    tracker: Optional[Tracker] = attr.ib(default=None, init=False)
+    batch_size: int = 4
+    peak_threshold: float = 0.2
+    integral_refinement: bool = True
+    integral_patch_size: int = 5
+    max_instances: Optional[int] = None
+    crop_size: Optional[int] = None
+
+    def _initialize_inference_model(self):
+        """Initialize the inference model from the trained models and configuration."""
+        self.crop_size = (
+            self.crop_size
+            or self.centroid_config.data.instance_cropping.crop_size
+            or 256
+        )
+
+        centroid_crop_layer = CentroidCrop(
+            keras_model=self.centroid_model.keras_model,
+            crop_size=self.crop_size,
+            input_scale=self.centroid_config.data.preprocessing.input_scaling,
+            pad_to_stride=self.centroid_config.data.preprocessing.pad_to_stride,
+            output_stride=self.centroid_config.model.heads.centroid.output_stride,
+            peak_threshold=self.peak_threshold,
+            refinement="integral" if self.integral_refinement else "local",
+            integral_patch_size=self.integral_patch_size,
+            return_confmaps=False,
+            max_instances=self.max_instances,
+        )
+
+        self.inference_model = CentroidInferenceModel(
+            centroid_crop=centroid_crop_layer,
+        )
+
+    @property
+    def data_config(self) -> DataConfig:
+        return self.centroid_config.data
+
+    @classmethod
+    def from_trained_models(
+        cls,
+        model_path: Text,
+        batch_size: int = 4,
+        peak_threshold: float = 0.2,
+        integral_refinement: bool = True,
+        integral_patch_size: int = 5,
+        resize_input_layer: bool = True,
+        max_instances: Optional[int] = None,
+    ) -> "CentroidPredictor":
+        """Create predictor from saved models.
+
+        Args:
+            model_path: Path to a centroid model folder or training job JSON
+                file inside a model folder. This folder should contain
+                `training_config.json` and `best_model.h5` files for a trained model.
+            batch_size: The default batch size to use when loading data for inference.
+                Higher values increase inference speed at the cost of higher memory
+                usage.
+            peak_threshold: Minimum confidence map value to consider a local peak as
+                valid.
+            integral_refinement: If `True`, peaks will be refined with integral
+                regression. If `False`, `"local"`, peaks will be refined with quarter
+                pixel local gradient offset. This has no effect if the model has an
+                offset regression head.
+            integral_patch_size: Size of patches to crop around each rough peak for
+                integral refinement as an integer scalar.
+            resize_input_layer: If True, the the input layer of the `tf.Keras.model` is
+                resized to (None, None, None, num_color_channels).
+            max_instances: If not `None`, discard instances beyond this count when
+                predicting, regardless of whether filtering is done at the tracking
+                stage. This is useful for preventing extraneous instances from being
+                created when tracking is not being applied.
+
+        Returns:
+            An instance of `CentroidPredictor` with the loaded models.
+        """
+
+        if model_path is not None:
+            # Load centroid model.
+            centroid_config = TrainingJobConfig.load_json(model_path)
+            centroid_keras_model_path = get_keras_model_path(model_path)
+            centroid_model = Model.from_config(centroid_config.model)
+            centroid_model.keras_model = tf.keras.models.load_model(
+                centroid_keras_model_path, compile=False
+            )
+            if resize_input_layer:
+                # Reset input layer dimensions to be more flexible
+                centroid_model.keras_model = reset_input_layer(
+                    keras_model=centroid_model.keras_model, new_shape=None
+                )
+        else:
+            centroid_config = None
+            centroid_model = None
+
+        obj = cls(
+            centroid_config=centroid_config,
+            centroid_model=centroid_model,
+            batch_size=batch_size,
+            peak_threshold=peak_threshold,
+            integral_refinement=integral_refinement,
+            integral_patch_size=integral_patch_size,
+            max_instances=max_instances,
+        )
+        obj._initialize_inference_model()
+        return obj
+
+    @property
+    def is_grayscale(self) -> bool:
+        """Return whether the model expects grayscale inputs."""
+
+        return self.centroid_model.keras_model.input.shape[-1] == 1
+
+    def make_pipeline(self, data_provider: Optional[Provider] = None) -> Pipeline:
+        """Make a data loading pipeline.
+
+        Args:
+            data_provider: If not `None`, the pipeline will be created with an instance
+                of a `sleap.pipelines.Provider`.
+
+        Returns:
+            The created `sleap.pipelines.Pipeline` with batching and prefetching.
+
+        Notes:
+            This method also updates the class attribute for the pipeline and will be
+            called automatically when predicting on data from a new source.
+        """
+
+        pipeline = Pipeline()
+        if data_provider is not None:
+            pipeline.providers = [data_provider]
+        if self.data_config.preprocessing.resize_and_pad_to_target:
+            pipeline += SizeMatcher.from_config(
+                config=self.data_config.preprocessing,
+                provider=data_provider,
+                points_key=None,
+            )
+
+        pipeline += Normalizer(
+            ensure_float=False,
+            ensure_grayscale=self.is_grayscale,
+            ensure_rgb=(not self.is_grayscale),
+        )
+
+        pipeline += Batcher(
+            batch_size=self.batch_size, drop_remainder=False, unrag=False
+        )
+
+        pipeline += Prefetcher()
+
+        self.pipeline = pipeline
+
+        return pipeline
+
+    def process_batch(self, ex):
+        # Run inference on current batch.
+        preds = self.inference_model.predict_on_batch(ex, numpy=True)
+
+        # Add model outputs to the input data example.
+        ex.update(preds)
+
+        # Convert to numpy arrays if not already.
+        if isinstance(ex["video_ind"], tf.Tensor):
+            ex["video_ind"] = ex["video_ind"].numpy().flatten()
+        if isinstance(ex["frame_ind"], tf.Tensor):
+            ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
+
+        # Adjust for potential SizeMatcher scaling.
+        offset_x = ex.get("offset_x", 0)
+        offset_y = ex.get("offset_y", 0)
+        offset = np.reshape([offset_x, offset_y], [-1, 1, 2])
+        ex["centroids"] -= offset
+        scale = np.expand_dims(ex["scale"], axis=1)
+        ex["centroids"] /= scale
+
+        return ex
+
+    def _make_labeled_frames_from_generator(
+        self, generator: Iterator[Dict[str, np.ndarray]], data_provider: Provider
+    ) -> List[LabeledFrame]:
+        """Create labeled frames from a generator that yields inference results.
+
+        This method converts pure arrays into SLEAP-specific data structures and runs
+        them through the tracker if it is specified.
+
+        Args:
+            generator: A generator that returns dictionaries with inference results.
+                This should return dictionaries with keys `"image"`, `"video_ind"`,
+                `"frame_ind"`, `"instance_peaks"`, `"instance_peak_vals"`, and
+                `"centroid_vals"`. This can be created using the `_predict_generator()`
+                method.
+            data_provider: The `sleap.pipelines.Provider` that the predictions are being
+                created from. This is used to retrieve the `sleap.Video` instance
+                associated with each inference result.
+
+        Returns:
+            A list of `sleap.LabeledFrame`s with `sleap.PredictedInstance`s created from
+            arrays returned from the inference result generator.
+        """
+        skeleton = self.centroid_config.data.labels.skeletons[0]
+
+        predicted_frames = []
+
+        def _object_builder():
+            while True:
+                ex = prediction_queue.get()
+                if ex is None:
+                    break
+
+                if "n_valid" in ex:
+                    ex["centroids"] = [
+                        x[:n] for x, n in zip(ex["centroids"], ex["n_valid"])
+                    ]
+                    ex["centroid_vals"] = [
+                        x[:n] for x, n in zip(ex["centroid_vals"], ex["n_valid"])
+                    ]
+
+                # Loop over frames.
+                for image, video_ind, frame_ind, points, confidences in zip(
+                    ex["image"],
+                    ex["video_ind"],
+                    ex["frame_ind"],
+                    ex["centroids"],
+                    ex["centroid_vals"],
+                ):
+                    # Loop over instances.
+                    predicted_instances = []
+                    for pts, confs in zip(points, confidences):
+                        if np.isnan(pts).all():
+                            continue
+
+                        predicted_instances.append(
+                            PredictedInstance.from_numpy(
+                                points=[pts],
+                                point_confidences=[confs],
+                                instance_score=confs,
+                                skeleton=skeleton,
+                            )
+                        )
+
+                    if self.tracker:
+                        # Set tracks for predicted instances in this frame.
+                        predicted_instances = self.tracker.track(
+                            untracked_instances=predicted_instances,
+                            img=image,
+                            t=frame_ind,
+                        )
+
+                    predicted_frames.append(
+                        LabeledFrame(
+                            video=data_provider.videos[video_ind],
+                            frame_idx=frame_ind,
+                            instances=predicted_instances,
+                        )
+                    )
+
+        # Set up threaded object builder.
+        prediction_queue = Queue()
+        object_builder = Thread(target=_object_builder)
+        object_builder.start()
+
+        # Loop over batches.
+        try:
+            for ex in generator:
+                prediction_queue.put(ex)
+        finally:
+            prediction_queue.put(None)
+            object_builder.join()
+
+        if self.tracker:
+            self.tracker.final_pass(predicted_frames)
+
+        return predicted_frames
 
 
 class TopDownInferenceModel(InferenceModel):
@@ -5484,3 +5801,30 @@ def main(args: Optional[list] = None):
 
     if args.open_in_gui:
         subprocess.call(["sleap-label", output_path])
+
+
+# TODO(LM): Remove when ready to merge
+if __name__ == "__main__":
+
+    from pathlib import Path
+
+    from sleap import Labels, Video
+    from sleap.gui.app import main as sleap_label
+    from sleap.nn.data.providers import VideoReader
+
+    project_path = Path(r"J:\Shared drives\sleap\sleap_sandbox\david-dudi-many-flies")
+    model_path = Path(project_path, r"models\231002_131516.centroid.n=20").as_posix()
+    video_path = Path(project_path, r"video2023-09-24T09_30_57_crf24.sf.mp4").as_posix()
+
+    predictor = CentroidPredictor.from_trained_models(
+        model_path=model_path,
+        max_instances=8,
+    )
+
+    video = Video.from_filename(video_path)
+    # video_frame = video.get_frame(0)
+    vr = VideoReader.from_filepath(video_path, example_indices=[0, 1, 2, 3])
+
+    labels_pr = predictor.predict(vr)
+
+    sleap_label(labels=Labels(labels_pr))

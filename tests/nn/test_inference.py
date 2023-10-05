@@ -13,12 +13,14 @@ from numpy.testing import assert_array_equal, assert_allclose
 import sleap
 from sleap.gui.learning import runners
 from sleap.io.dataset import Labels
+from sleap.nn.config import TrainingJobConfig
 from sleap.nn.data.confidence_maps import (
     make_confmaps,
     make_grid_vectors,
     make_multi_confmaps,
 )
 from sleap.nn.inference import (
+    CentroidPredictor,
     InferenceLayer,
     InferenceModel,
     Predictor,
@@ -628,6 +630,34 @@ def test_single_instance_predictor_high_peak_thresh(
     assert len(labels_pr) == 2
     assert len(labels_pr[0]) == 0
     assert len(labels_pr[1]) == 0
+
+
+def test_centroid_predictor(min_labels, min_centroid_model_path):
+    # Load model path
+
+    predictor = CentroidPredictor.from_trained_models(
+        model_path=min_centroid_model_path
+    )
+    predictor.verbosity = "none"
+    labels_pr = predictor.predict(min_labels)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 2
+
+    assert predictor.is_grayscale == True
+
+    points_gt = np.concatenate(
+        [min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0
+    )
+    points_pr = np.concatenate(
+        [labels_pr[0][0].numpy(), labels_pr[0][1].numpy()], axis=0
+    )
+    # points_pr = np.nan_to_num(points_pr, nan=-1000)
+    points_pr = points_pr[~np.isnan(points_pr).any(axis=1)]
+    # points_pr_centroid = [point for point in points_pr if not np.any(np.isnan(point))]
+    inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
+    points_gt_closest = points_gt[inds1.numpy()][2:]
+    points_pr = points_pr[inds2.numpy()][2:]
+    assert_allclose(points_gt, points_gt_closest, atol=40)
 
 
 def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
@@ -1619,3 +1649,7 @@ def test_top_down_model(min_tracks_2node_labels: Labels, min_centroid_model_path
 
     # Runs without error message
     predictor.predict(labels.extract(inds=[0, 1]))
+
+
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::test_centroid_predictor"])
