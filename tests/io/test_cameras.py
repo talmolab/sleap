@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from sleap.io.cameras import Camcorder, CameraCluster, RecordingSession
-from sleap.io.dataset import Instance, LabeledFrame, Labels
+from sleap.io.dataset import Instance, LabeledFrame, Labels, LabelsDataCache
 from sleap.io.video import Video
 
 
@@ -363,6 +363,13 @@ def test_recording_session_update_instances(multiview_min_session_labels: Labels
     session.update_instances(instances)
 
 
-# TODO(LM): Remove debugging code
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_recording_session_update_instances"])
+def test_recording_session_remove_video(multiview_min_session_labels: Labels):
+    labels = multiview_min_session_labels
+    labels_cache = labels._cache
+    session = labels.sessions[0]
+    video = session.videos[0]
+    assert session.labels is not None
+    assert video in session.videos
+    session.remove_video(video)
+    assert labels_cache._session_by_video.get(video, None) is None
+    assert video not in session.videos
