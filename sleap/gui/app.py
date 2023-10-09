@@ -1234,11 +1234,13 @@ class MainWindow(QMainWindow):
 
         # Replot connected views for multi-camera projects
         session = self.labels.get_session(video)
+        cams_to_include = None  # TODO: make this configurable via GUI
         if session is not None and instance is not None:
             track = instance.track
             session.update_views(
-                frame_idx,
-                track,
+                frame_idx=frame_idx,
+                track=track,
+                cams_to_include=cams_to_include,
             )
 
             # TODO(LM): Move this to a dock for replotting on demand
