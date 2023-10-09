@@ -597,7 +597,7 @@ class RecordingSession:
             lfs: List["LabeledFrame"] = self.labels.get((video, [frame_idx]))
             if len(lfs) == 0:
                 logger.debug(
-                    "No LabeledFrames found for video " f"{video} at {frame_idx}."
+                    f"No LabeledFrames found for video {video} at {frame_idx}."
                 )
                 continue
 
@@ -605,7 +605,7 @@ class RecordingSession:
             if len(lf.instances) == 0:
                 logger.warning(
                     f"No Instances found for {lf}."
-                    " There should be not empty LabeledFrames."
+                    " There should not be empty LabeledFrames."
                 )
                 continue
 
