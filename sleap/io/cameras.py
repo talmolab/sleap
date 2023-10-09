@@ -703,7 +703,16 @@ class RecordingSession:
 
         return insts_coords_list
 
-    def update_instances(self, instances: List["Instances"]):
+    def update_instances(self, instances: List["Instance"]):
+        """Triangulate, reproject, and update coordinates of `Instances`.
+
+        Args:
+            instances: List of `Instances` objects.
+
+        Returns:
+            None
+        """
+
         # Triangulate, reproject, and update coordinates
         insts_coords_list: List[np.ndarray] = self.calculate_reprojected_points(
             instances
