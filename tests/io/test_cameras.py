@@ -373,3 +373,62 @@ def test_recording_session_remove_video(multiview_min_session_labels: Labels):
     session.remove_video(video)
     assert labels_cache._session_by_video.get(video, None) is None
     assert video not in session.videos
+
+
+def test_recording_session_update_views(multiview_min_session_labels: Labels, caplog):
+    """Test `RecordingSession.update_views`."""
+
+    labels = multiview_min_session_labels
+    session = labels.sessions[0]
+    lf: LabeledFrame = labels[2]
+
+    # 1a. Not enough cams included
+    cams_to_include = [session.linked_cameras[0]]
+    track = labels.tracks[0]
+    session.update_views(
+        frame_idx=lf.frame_idx,
+        cams_to_include=cams_to_include,
+        track=track,
+    )
+    messages = "".join([rec.message for rec in caplog.records])
+    assert "One or less cameras available." in messages
+    caplog.clear()
+
+    # 2a. Not enough instances
+    track = labels.tracks[1]
+    cams_to_include = session.linked_cameras[4:6]
+    session.update_views(
+        frame_idx=lf.frame_idx,
+        cams_to_include=cams_to_include,
+        track=track,
+    )
+    messages = "".join([rec.message for rec in caplog.records])
+    assert "One or less instances found for frame" in messages
+    caplog.clear()
+
+    # 2b. Not enough views
+    ...
+
+    # 3.  Enough views and instances
+    cams_to_include = session.linked_cameras[:4]
+    track = labels.tracks[1]
+    session.update_views(
+        frame_idx=lf.frame_idx,
+        cams_to_include=cams_to_include,
+        track=track,
+    )
+    messages = "".join([rec.message for rec in caplog.records])
+
+    # 1b. Not enough videos
+    for video in session.videos[1:]:
+        session.remove_video(video)
+    video = session.videos[0]
+    cams_to_include = [session[video]]
+    session.update_views(
+        frame_idx=lf.frame_idx,
+        cams_to_include=cams_to_include,
+        track=track,
+    )
+    messages = "".join([rec.message for rec in caplog.records])
+    assert "One or less cameras available." in messages
+    caplog.clear()
