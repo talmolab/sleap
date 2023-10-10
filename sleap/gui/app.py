@@ -176,8 +176,10 @@ class MainWindow(QMainWindow):
             print("Restoring GUI state...")
             self.restoreState(prefs["window state"])
 
-        if labels_path:
+        if labels_path is not None:
             self.commands.loadProjectFile(filename=labels_path)
+        elif labels is not None:
+            self.commands.loadLabelsObject(labels=labels)
         else:
             self.state["project_loaded"] = False
 
