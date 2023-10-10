@@ -129,7 +129,6 @@ def test_recording_session(
     min_session_camera_cluster: CameraCluster,
     centered_pair_vid: Video,
     hdf5_vid: Video,
-    multiview_min_session_labels: Labels,
 ):
     """Test `RecordingSession` data structure."""
 
@@ -189,8 +188,8 @@ def test_recording_session(
 
     # Test from_calibration_dict
     def compare_cameras(session_1: RecordingSession, session_2: RecordingSession):
-        assert len(session_2.camera_cluster) == len(session.camera_cluster)
-        for cam_1, cam_2 in zip(session, session_2):
+        assert len(session_2.camera_cluster) == len(session_1.camera_cluster)
+        for cam_1, cam_2 in zip(session_1, session_2):
             assert cam_1 == cam_2
 
     calibration_dict = session.camera_cluster.to_calibration_dict()
