@@ -669,11 +669,19 @@ class RecordingSession:
 
         return instances
 
-    def calculate_reprojected_points(self, instances: List["Instances"]):
+    def calculate_reprojected_points(
+        self, instances: List["Instances"], excluded_views: Optional[Tuple[str]] = None
+    ):
         """Triangulate and reproject instance coordinates.
+
+        Note that the order of the instances in the list must match the order of the
+        excluded_views (if included, otherwise calculated which is not recommended as
+        it computationally expensive).
 
         Args:
             instances: List of `Instances` objects.
+            excluded_views: List of view names to exclude. Default is None which results
+            in either calculating the excluded views from the instances.
 
         Returns:
             List of reprojected instance coordinates. Each element in the list is a
@@ -681,6 +689,21 @@ class RecordingSession:
         """
 
         # TODO (LM): Support multiple tracks and optimize
+
+        # If excluded_views is None calculate the excluded_views: not recommended.
+        if excluded_views is None:
+            logger.warning(
+                "Calculating excluded views from instances. "
+                "This is slower than explicitly providing excluded views."
+            )
+            cams_included: List[Camcorder] = []
+            for instance in instances:
+                video = instance.frame.video
+                cam = self.get_camera(video)
+                cams_included.append(cam)
+
+            cams_excluded = set(self.cameras) - set(cams_included)
+            excluded_views = tuple(cam.name for cam in cams_excluded)
 
         # Gather instances into M x F x T x N x 2 arrays
         # (M = # views, F = # frames = 1, T = # tracks = 1, N = # nodes, 2 = x, y)
@@ -690,12 +713,14 @@ class RecordingSession:
         inst_coords = np.expand_dims(inst_coords, axis=1)  # M x T=1 x N x 2
         inst_coords = np.expand_dims(inst_coords, axis=1)  # M x F=1 x T=1 x N x 2
         points_3d = triangulate(
-            p2d=inst_coords, calib=self.camera_cluster
+            p2d=inst_coords,
+            calib=self.camera_cluster,
+            excluded_views=excluded_views,
         )  # F=1, T=1, N, 3
 
         # Update the views with the new 3D points
         inst_coords_reprojected = reproject(
-            points_3d, calib=self.camera_cluster
+            points_3d, calib=self.camera_cluster, excluded_views=excluded_views
         )  # M x F=1 x T=1 x N x 2
         insts_coords_list: List[np.ndarray] = np.split(
             inst_coords_reprojected.squeeze(), inst_coords_reprojected.shape[0], axis=0
