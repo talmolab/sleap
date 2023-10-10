@@ -1,23 +1,20 @@
 """Module for storing information for camera groups."""
 import logging
 import tempfile
-import toml
+from pathlib import Path
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 import cattr
 import numpy as np
-
-from pathlib import Path
-from typing import List, Optional, Union, Iterator, Any, Dict, Tuple
-
-from aniposelib.cameras import Camera, FisheyeCamera, CameraGroup
+import toml
+from aniposelib.cameras import Camera, CameraGroup, FisheyeCamera
 from attrs import define, field
 from attrs.validators import deep_iterable, instance_of
-from sleap_anipose import triangulate, reproject
+from sleap_anipose import reproject, triangulate
 
 # from sleap.io.dataset import Labels  # TODO(LM): Circular import, implement Observer
 from sleap.io.video import Video
 from sleap.util import deep_iterable_converter
-
 
 logger = logging.getLogger(__name__)
 
@@ -552,26 +549,26 @@ class RecordingSession:
 
     def get_videos_from_selected_cameras(
         self, cams_to_include: Optional[List[Camcorder]] = None
-    ) -> List[Video]:
+    ) -> Dict[Camcorder, Video]:
         """Get all `Video`s from selected `Camcorder`s.
 
         Args:
             cams_to_include: List of `Camcorder`s to include. Defualt is all.
 
         Returns:
-            List of `Video`s.
+            Dictionary with `Camcorder` key and `Video` value.
         """
 
         # If no `Camcorder`s specified, then return all videos in session
         if cams_to_include is None:
-            return self.videos
+            return self._video_by_camcorder
 
         # Get all videos from selected `Camcorder`s
-        videos: List[Video] = []
+        videos: Dict[Camcorder, Video] = {}
         for cam in cams_to_include:
             video = self.get_video(cam)
             if video is not None:
-                videos.append(video)
+                videos[cam] = video
 
         return videos
 
@@ -579,7 +576,7 @@ class RecordingSession:
         self,
         frame_idx,
         cams_to_include: Optional[List[Camcorder]] = None,
-    ) -> List["LabeledFrame"]:
+    ) -> Dict[Camcorder, "LabeledFrame"]:
         """Get all views at a given frame index.
 
         Args:
@@ -587,13 +584,14 @@ class RecordingSession:
             cams_to_include: List of `Camcorder`s to include. Default is all.
 
         Returns:
-            List of `LabeledFrame` objects.
+            Dict with `Camcorder` keys and `LabeledFrame` values.
         """
 
-        views: List["LabeledFrame"] = []
-
-        videos = self.get_videos_from_selected_cameras(cams_to_include=cams_to_include)
-        for video in videos:
+        views: Dict[Camcorder, "LabeledFrame"] = {}
+        videos: Dict[Camcorder, Video] = self.get_videos_from_selected_cameras(
+            cams_to_include=cams_to_include
+        )
+        for cam, video in videos.items():
             lfs: List["LabeledFrame"] = self.labels.get((video, [frame_idx]))
             if len(lfs) == 0:
                 logger.debug(
@@ -609,7 +607,7 @@ class RecordingSession:
                 )
                 continue
 
-            views.append(lf)
+            views[cam] = lf
 
         return views
 
@@ -619,7 +617,7 @@ class RecordingSession:
         cams_to_include: Optional[List[Camcorder]] = None,
         track: Optional["Track"] = None,
         require_multiple_views: bool = False,
-    ) -> List["LabeledFrame"]:
+    ) -> Dict[Camcorder, "Instance"]:
         """Get all `Instances` accross all views at a given frame index.
 
         Args:
@@ -630,18 +628,15 @@ class RecordingSession:
                 or instances are found.
 
         Returns:
-            List of `Instances` objects.
+            Dict with `Camcorder` keys and `Instances` values.
 
         Raises:
             ValueError if require_multiple_view is true and one or less views or
             instances are found.
         """
 
-        views: List["LabeledFrame"] = []
-        instances: List["Instances"] = []
-
         # Get all views at this frame index
-        views = self.get_all_views_at_frame(
+        views: Dict[Camcorder, "LabeledFrame"] = self.get_all_views_at_frame(
             frame_idx=frame_idx,
             cams_to_include=cams_to_include,
         )
@@ -654,11 +649,11 @@ class RecordingSession:
             )
 
         # Find all instance accross all views
-        instances: List["Instances"] = []
-        for lf in views:
+        instances: Dict[Camcorder, "Instance"] = {}
+        for cam, lf in views.items():
             insts = lf.find(track=track)
             if len(insts) > 0:
-                instances.append(insts[0])
+                instances[cam] = insts[0]
 
         # If not enough instances for multiple views, then raise error
         if len(instances) <= 1 and require_multiple_views:
@@ -669,46 +664,53 @@ class RecordingSession:
 
         return instances
 
+    def calculate_excluded_views(
+        self,
+        instances: Dict[Camcorder, "Instance"],
+    ) -> Tuple[str]:
+        """Get excluded views from dictionary of `Camcorder` to `Instance`.
+
+        Args:
+            instances: Dict with `Camcorder` key and `Instance` values.
+
+        Returns:
+            Tuple of excluded view names.
+        """
+
+        # Calculate excluded views from included cameras
+        cams_excluded = set(self.cameras) - set(instances.keys())
+        excluded_views = tuple(cam.name for cam in cams_excluded)
+
+        return excluded_views
+
     def calculate_reprojected_points(
-        self, instances: List["Instances"], excluded_views: Optional[Tuple[str]] = None
-    ):
+        self, instances: Dict[Camcorder, "Instance"]
+    ) -> Iterator[Tuple["Instance", np.ndarray]]:
         """Triangulate and reproject instance coordinates.
 
         Note that the order of the instances in the list must match the order of the
-        excluded_views (if included, otherwise calculated which is not recommended as
-        it computationally expensive).
+        cameras in the `CameraCluster`, that is why we require instances be passed in as
+        a dictionary mapping back to its `Camcorder`.
+        https://github.com/lambdaloop/aniposelib/blob/d03b485c4e178d7cff076e9fe1ac36837db49158/aniposelib/cameras.py#L491
 
         Args:
-            instances: List of `Instances` objects.
-            excluded_views: List of view names to exclude. Default is None which results
-            in either calculating the excluded views from the instances.
+            instances: Dict with `Camcorder` keys and `Instance` values.
 
         Returns:
-            List of reprojected instance coordinates. Each element in the list is a
-            numpy array of shape (1, N, 2) where N is the number of nodes.
+            A zip of the ordered instances and the related reprojected coordinates. Each
+            element in the coordinates is a numpy array of shape (1, N, 2) where N is
+            the number of nodes.
         """
 
         # TODO (LM): Support multiple tracks and optimize
 
-        # If excluded_views is None calculate the excluded_views: not recommended.
-        if excluded_views is None:
-            logger.warning(
-                "Calculating excluded views from instances. "
-                "This is slower than explicitly providing excluded views."
-            )
-            cams_included: List[Camcorder] = []
-            for instance in instances:
-                video = instance.frame.video
-                cam = self.get_camera(video)
-                cams_included.append(cam)
+        excluded_views = self.calculate_excluded_views(instances=instances)
+        instances_ordered = [instances[cam] for cam in self.cameras if cam in instances]
 
-            cams_excluded = set(self.cameras) - set(cams_included)
-            excluded_views = tuple(cam.name for cam in cams_excluded)
-
-        # Gather instances into M x F x T x N x 2 arrays
+        # Gather instances into M x F x T x N x 2 arrays (require specific order)
         # (M = # views, F = # frames = 1, T = # tracks = 1, N = # nodes, 2 = x, y)
         inst_coords = np.stack(
-            [inst.numpy() for inst in instances], axis=0
+            [inst.numpy() for inst in instances_ordered], axis=0
         )  # M x N x 2
         inst_coords = np.expand_dims(inst_coords, axis=1)  # M x T=1 x N x 2
         inst_coords = np.expand_dims(inst_coords, axis=1)  # M x F=1 x T=1 x N x 2
@@ -726,23 +728,25 @@ class RecordingSession:
             inst_coords_reprojected.squeeze(), inst_coords_reprojected.shape[0], axis=0
         )  # len(M) of T=1 x N x 2
 
-        return insts_coords_list
+        return zip(instances_ordered, insts_coords_list)
 
-    def update_instances(self, instances: List["Instance"]):
+    def update_instances(self, instances: Dict[Camcorder, "Instance"]):
         """Triangulate, reproject, and update coordinates of `Instances`.
 
         Args:
-            instances: List of `Instances` objects.
+            instances: Dict with `Camcorder` keys and `Instance` values.
 
         Returns:
             None
         """
 
-        # Triangulate, reproject, and update coordinates
-        insts_coords_list: List[np.ndarray] = self.calculate_reprojected_points(
-            instances
-        )
-        for inst, inst_coord in zip(instances, insts_coords_list):
+        # Triangulate and reproject instance coordinates.
+        instances_and_coords: Iterator[
+            Tuple["Instance", np.ndarray]
+        ] = self.calculate_reprojected_points(instances)
+
+        # Update the instance coordinates.
+        for inst, inst_coord in instances_and_coords:
             inst.update_points(
                 inst_coord[0], exclude_complete=True
             )  # inst_coord is (1, N, 2)
@@ -775,9 +779,9 @@ class RecordingSession:
             )
             return
 
-        # Get all views at this frame index
+        # Get all instances accross views at this frame index
         try:
-            instances = self.get_instances_across_views(
+            instances: Dict[Camcorder, "Instance"] = self.get_instances_across_views(
                 frame_idx,
                 cams_to_include=cams_to_include,
                 track=track,
@@ -793,6 +797,7 @@ class RecordingSession:
             )
             return
 
+        # Update the instance coordinates
         self.update_instances(instances)
 
     def __attrs_post_init__(self):
