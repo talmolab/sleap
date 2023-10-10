@@ -1258,15 +1258,15 @@ def test_make_export_cli():
     args, _ = parser.parse_known_args(args=args)
     assert args.models is None
     assert args.export_path == "exported_model"
-    assert bool(args.unrag)
+    assert not args.ragged
     assert args.max_instances is None
 
     # Test all arguments
-    cmd = f"-m {models_path} -e {export_path} -u {0} -n {max_instances}"
+    cmd = f"-m {models_path} -e {export_path} -r -n {max_instances}"
     args, _ = parser.parse_known_args(args=cmd.split())
     assert args.models == [models_path]
     assert args.export_path == export_path
-    assert not bool(args.unrag)
+    assert args.ragged
     assert args.max_instances == max_instances
 
 
