@@ -141,7 +141,6 @@ class LoadImageWorker(QtCore.QObject):
         self.load_queue = []
 
         try:
-
             t0 = time.time()
 
             # Get image data
@@ -998,7 +997,6 @@ class GraphicsView(QGraphicsView):
         self._down_pos = event.pos()
         # behavior depends on which button is pressed
         if event.button() == Qt.LeftButton:
-
             if event.modifiers() == Qt.NoModifier:
                 if self.click_mode == "area":
                     self.setDragMode(QGraphicsView.RubberBandDrag)
@@ -1026,7 +1024,6 @@ class GraphicsView(QGraphicsView):
         # check if mouse moved during click
         has_moved = event.pos() != self._down_pos
         if event.button() == Qt.LeftButton:
-
             if self.in_zoom:
                 self.in_zoom = False
                 zoom_rect = self.scene.selectionArea().boundingRect()
@@ -1059,7 +1056,6 @@ class GraphicsView(QGraphicsView):
             # pass along event
             self.leftMouseButtonReleased.emit(scenePos.x(), scenePos.y())
         elif event.button() == Qt.RightButton:
-
             self.setDragMode(QGraphicsView.NoDrag)
             self.rightMouseButtonReleased.emit(scenePos.x(), scenePos.y())
 
@@ -1135,7 +1131,6 @@ class GraphicsView(QGraphicsView):
         """Custom event handler, clears zoom."""
         scenePos = self.mapToScene(event.pos())
         if event.button() == Qt.LeftButton:
-
             if event.modifiers() == Qt.AltModifier:
                 if self.canZoom:
                     self.clearZoom()
@@ -1149,11 +1144,11 @@ class GraphicsView(QGraphicsView):
     def wheelEvent(self, event):
         """Custom event handler. Zoom in/out based on scroll wheel change."""
         # zoom on wheel when no mouse buttons are pressed
-        if event.buttons() == Qt.NoButton:
+        if event.modifiers() != Qt.AltModifier:
             angle = event.angleDelta().y()
             factor = 1.1 if angle > 0 else 0.9
 
-            self.zoomFactor = max(factor * self.zoomFactor, 1)
+            self.zoomFactor = max(min(factor * self.zoomFactor, 8), 0.2)
             self.updateViewer()
 
         # Trigger wheelEvent for all child elements. This is a bit of a hack.
@@ -1586,6 +1581,7 @@ class QtNode(QGraphicsEllipseItem):
 
     def wheelEvent(self, event):
         """Custom event handler for mouse scroll wheel."""
+
         if self.dragParent:
             angle = event.delta() / 20 + self.parentObject().rotation()
             self.parentObject().setRotation(angle)
@@ -1665,7 +1661,6 @@ class QtEdge(QGraphicsPolygonItem):
         polygon = QPolygonF()
 
         if self.player.state.get("edge style", default="").lower() == "wedge":
-
             r = self.src.visible_radius / 2.0
 
             norm_a = line.normalVector()
@@ -1850,7 +1845,7 @@ class QtInstance(QGraphicsObject):
         self.track_label.setHtml(instance_label_text)
 
         # Add nodes
-        for (node, point) in self.instance.nodes_points:
+        for node, point in self.instance.nodes_points:
             if point.visible or self.show_non_visible:
                 node_item = QtNode(
                     parent=self,
@@ -1865,7 +1860,7 @@ class QtInstance(QGraphicsObject):
                 self.nodes[node.name] = node_item
 
         # Add edges
-        for (src, dst) in self.skeleton.edge_names:
+        for src, dst in self.skeleton.edge_names:
             # Make sure that both nodes are present in this instance before drawing edge
             if src in self.nodes and dst in self.nodes:
                 edge_item = QtEdge(
@@ -2363,7 +2358,6 @@ def plot_instances(scene, frame_idx, labels, video=None, fixed=True):
 
 
 if __name__ == "__main__":
-
     import argparse
 
     parser = argparse.ArgumentParser()

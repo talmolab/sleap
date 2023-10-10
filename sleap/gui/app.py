@@ -254,7 +254,6 @@ class MainWindow(QMainWindow):
             event.acceptProposedAction()
 
     def dropEvent(self, event):
-
         # Parse filenames
         filenames = event.mimeData().data("text/uri-list").data().decode()
         filenames = [parse_uri_path(f.strip()) for f in filenames.strip().split("\n")]
