@@ -99,9 +99,9 @@ optional arguments:
   -e [EXPORT_PATH], --export_path [EXPORT_PATH]
                         Path to output directory where the frozen model will be exported to.
                         Defaults to a folder named 'exported_model'.
-  -u, --unrag UNRAG
-                        Convert ragged tensors into regular tensors with NaN padding.
-                        Defaults to True.
+  -r, --ragged RAGGED
+                        Keep tensors ragged if present. If ommited, convert
+                        ragged tensors into regular tensors with NaN padding.
   -n, --max_instances MAX_INSTANCES
                         Limit maximum number of instances in multi-instance models.
                         Not available for ID models. Defaults to None.
@@ -389,6 +389,9 @@ optional arguments:
   --distinctly_color DISTINCTLY_COLOR
                         Specify how to color instances. Options include: "instances",
                         "edges", and "nodes" (default: "instances")
+  --background BACKGROUND
+                        Specify the type of background to be used to save the videos.
+                        Options: original, black, white and grey. (default: "original")
 ```
 
 ## Debugging
