@@ -36,7 +36,7 @@ import traceback
 from enum import Enum
 from glob import glob
 from pathlib import Path, PurePath
-from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type
+from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type, Union
 
 import attr
 import cv2
@@ -260,16 +260,15 @@ class CommandContext:
         """
         self.execute(LoadLabelsObject, labels=labels, filename=filename)
 
-    def loadProjectFile(self, filename: str):
+    def loadProjectFile(self, filename: Union[str, Labels]):
         """Loads given labels file into GUI.
 
         Args:
-            filename: The path to the saved labels dataset. If None,
-                then don't do anything.
+            filename: The path to the saved labels dataset or the `Labels` object.
+                If None, then don't do anything.
 
         Returns:
             None
-
         """
         self.execute(LoadProjectFile, filename=filename)
 
@@ -647,9 +646,8 @@ class LoadLabelsObject(AppCommand):
 
         Returns:
             None.
-
         """
-        filename = params["filename"]
+        filename = params.get("filename", None)  # If called with just a Labels object
         labels: Labels = params["labels"]
 
         context.state["labels"] = labels
@@ -669,7 +667,9 @@ class LoadLabelsObject(AppCommand):
             context.state["video"] = labels.videos[0]
 
         context.state["project_loaded"] = True
-        context.state["has_changes"] = params.get("changed_on_load", False)
+        context.state["has_changes"] = params.get("changed_on_load", False) or (
+            filename is None
+        )
 
         # This is not listed as an edit command since we want a clean changestack
         context.app.on_data_update([UpdateTopic.project, UpdateTopic.all])
@@ -683,17 +683,16 @@ class LoadProjectFile(LoadLabelsObject):
         if len(filename) == 0:
             return
 
-        gui_video_callback = Labels.make_gui_video_callback(
-            search_paths=[os.path.dirname(filename)], context=params
-        )
-
         has_loaded = False
         labels = None
-        if type(filename) == Labels:
+        if isinstance(filename, Labels):
             labels = filename
             filename = None
             has_loaded = True
         else:
+            gui_video_callback = Labels.make_gui_video_callback(
+                search_paths=[os.path.dirname(filename)], context=params
+            )
             try:
                 labels = Labels.load_file(filename, video_search=gui_video_callback)
                 has_loaded = True
