@@ -49,6 +49,8 @@ import os
 import platform
 import random
 import re
+import traceback
+from logging import getLogger
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
 
@@ -83,6 +85,9 @@ from sleap.io.video import available_video_exts
 from sleap.prefs import prefs
 from sleap.skeleton import Skeleton
 from sleap.util import parse_uri_path
+
+
+logger = getLogger(__name__)
 
 
 class MainWindow(QMainWindow):
@@ -1671,7 +1676,12 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
     try:
         sleap.use_cpu_only()
     except RuntimeError:  # Visible devices cannot be modified after being initialized
-        pass
+        logger.warning(
+            "Running processes on the GPU. Restarting your GUI should allow switching "
+            "back to CPU-only mode.\n"
+            "Received the following error when trying to switch back to CPU-only mode:"
+        )
+        traceback.print_exc()
 
     # Print versions.
     print()
