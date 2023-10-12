@@ -262,7 +262,6 @@ class MainWindow(QMainWindow):
             event.acceptProposedAction()
 
     def dropEvent(self, event):
-
         # Parse filenames
         filenames = event.mimeData().data("text/uri-list").data().decode()
         filenames = [parse_uri_path(f.strip()) for f in filenames.strip().split("\n")]
@@ -1602,7 +1601,12 @@ class MainWindow(QMainWindow):
         ShortcutDialog().exec_()
 
 
-def create_parser():
+def create_sleap_label_parser():
+    """Creates parser for `sleap-label` command line arguments.
+
+    Returns:
+        argparse.ArgumentParser: The parser.
+    """
 
     import argparse
 
@@ -1645,10 +1649,20 @@ def create_parser():
     return parser
 
 
+def create_app():
+    """Creates Qt application."""
+
+    app = QApplication([])
+    app.setApplicationName(f"SLEAP v{sleap.version.__version__}")
+    app.setWindowIcon(QtGui.QIcon(sleap.util.get_package_file("gui/icon.png")))
+
+    return app
+
+
 def main(args: Optional[list] = None, labels: Optional[Labels] = None):
     """Starts new instance of app."""
 
-    parser = create_parser()
+    parser = create_sleap_label_parser()
     args = parser.parse_args(args)
 
     if args.nonnative:
@@ -1660,9 +1674,7 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
         # https://stackoverflow.com/q/64818879
         os.environ["QT_MAC_WANTS_LAYER"] = "1"
 
-    app = QApplication([])
-    app.setApplicationName(f"SLEAP v{sleap.version.__version__}")
-    app.setWindowIcon(QtGui.QIcon(sleap.util.get_package_file("gui/icon.png")))
+    app = create_app()
 
     window = MainWindow(
         labels_path=args.labels_path,
