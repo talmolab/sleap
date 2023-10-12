@@ -49,6 +49,8 @@ import os
 import platform
 import random
 import re
+import traceback
+from logging import getLogger
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
 
@@ -85,6 +87,9 @@ from sleap.skeleton import Skeleton
 from sleap.util import parse_uri_path
 
 
+logger = getLogger(__name__)
+
+
 class MainWindow(QMainWindow):
     """The SLEAP GUI application.
 
@@ -101,6 +106,7 @@ class MainWindow(QMainWindow):
     def __init__(
         self,
         labels_path: Optional[str] = None,
+        labels: Optional[Labels] = None,
         reset: bool = False,
         no_usage_data: bool = False,
         *args,
@@ -118,7 +124,7 @@ class MainWindow(QMainWindow):
         self.setAcceptDrops(True)
 
         self.state = GuiState()
-        self.labels = Labels()
+        self.labels = labels or Labels()
 
         self.commands = CommandContext(
             state=self.state, app=self, update_callback=self.on_data_update
@@ -180,8 +186,10 @@ class MainWindow(QMainWindow):
             print("Restoring GUI state...")
             self.restoreState(prefs["window state"])
 
-        if labels_path:
+        if labels_path is not None:
             self.commands.loadProjectFile(filename=labels_path)
+        elif labels is not None:
+            self.commands.loadLabelsObject(labels=labels)
         else:
             self.state["project_loaded"] = False
 
@@ -261,7 +269,6 @@ class MainWindow(QMainWindow):
             event.acceptProposedAction()
 
     def dropEvent(self, event):
-
         # Parse filenames
         filenames = event.mimeData().data("text/uri-list").data().decode()
         filenames = [parse_uri_path(f.strip()) for f in filenames.strip().split("\n")]
@@ -1601,8 +1608,12 @@ class MainWindow(QMainWindow):
         ShortcutDialog().exec_()
 
 
-def main(args: Optional[list] = None):
-    """Starts new instance of app."""
+def create_sleap_label_parser():
+    """Creates parser for `sleap-label` command line arguments.
+
+    Returns:
+        argparse.ArgumentParser: The parser.
+    """
 
     import argparse
 
@@ -1642,6 +1653,23 @@ def main(args: Optional[list] = None):
         default=False,
     )
 
+    return parser
+
+
+def create_app():
+    """Creates Qt application."""
+
+    app = QApplication([])
+    app.setApplicationName(f"SLEAP v{sleap.version.__version__}")
+    app.setWindowIcon(QtGui.QIcon(sleap.util.get_package_file("gui/icon.png")))
+
+    return app
+
+
+def main(args: Optional[list] = None, labels: Optional[Labels] = None):
+    """Starts new instance of app."""
+
+    parser = create_sleap_label_parser()
     args = parser.parse_args(args)
 
     if args.nonnative:
@@ -1653,17 +1681,26 @@ def main(args: Optional[list] = None):
         # https://stackoverflow.com/q/64818879
         os.environ["QT_MAC_WANTS_LAYER"] = "1"
 
-    app = QApplication([])
-    app.setApplicationName(f"SLEAP v{sleap.version.__version__}")
-    app.setWindowIcon(QtGui.QIcon(sleap.util.get_package_file("gui/icon.png")))
+    app = create_app()
 
     window = MainWindow(
-        labels_path=args.labels_path, reset=args.reset, no_usage_data=args.no_usage_data
+        labels_path=args.labels_path,
+        labels=labels,
+        reset=args.reset,
+        no_usage_data=args.no_usage_data,
     )
     window.showMaximized()
 
     # Disable GPU in GUI process. This does not affect subprocesses.
-    sleap.use_cpu_only()
+    try:
+        sleap.use_cpu_only()
+    except RuntimeError:  # Visible devices cannot be modified after being initialized
+        logger.warning(
+            "Running processes on the GPU. Restarting your GUI should allow switching "
+            "back to CPU-only mode.\n"
+            "Received the following error when trying to switch back to CPU-only mode:"
+        )
+        traceback.print_exc()
 
     # Print versions.
     print()
