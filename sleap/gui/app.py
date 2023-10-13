@@ -1226,27 +1226,14 @@ class MainWindow(QMainWindow):
         """Run after plot is updated, but stay on same frame."""
 
         video = self.state["video"]
-        instance = self.state["instance"]
 
         # Redraw trails
         overlay: TrackTrailOverlay = self.overlays["trails"]
         overlay.redraw(video, frame_idx)
 
         # Replot connected views for multi-camera projects
-        session = self.labels.get_session(video)
         cams_to_include = None  # TODO: make this configurable via GUI
-        if session is not None and instance is not None:
-            track = instance.track
-            session.update_views(
-                frame_idx=frame_idx,
-                track=track,
-                cams_to_include=cams_to_include,
-            )
-
-            # TODO(LM): Move this to a dock for replotting on demand
-            # Replot instance nodes (but keep same QtInstance)
-            for inst in self.player.view.instances:
-                inst.updatePoints(complete=False, user_change=False)
+        self.commands.triangulateSession(cams_to_include=cams_to_include)
 
     def _after_plot_change(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
