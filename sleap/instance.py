@@ -17,21 +17,21 @@ The relationships between objects in this module:
   out of sync if the skeleton is manipulated.
 """
 
+import logging
 import math
-
-import numpy as np
-import cattr
-
 from copy import copy
-from typing import Dict, List, Optional, Union, Tuple, ForwardRef
+from typing import Dict, ForwardRef, List, Optional, Tuple, Union
 
+import attr
+import cattr
+import numpy as np
 from numpy.lib.recfunctions import structured_to_unstructured
 
 import sleap
-from sleap.skeleton import Skeleton, Node
 from sleap.io.video import Video
+from sleap.skeleton import Node, Skeleton
 
-import attr
+logger = logging.getLogger(__name__)
 
 
 class Point(np.record):
@@ -57,7 +57,6 @@ class Point(np.record):
         visible: bool = True,
         complete: bool = False,
     ) -> "Point":
-
         # HACK: This is a crazy way to instantiate at new Point but I can't figure
         # out how recarray does it. So I just use it to make matrix of size 1 and
         # index in to get the np.record/Point
@@ -124,7 +123,6 @@ class PredictedPoint(Point):
         complete: bool = False,
         score: float = 0.0,
     ) -> "PredictedPoint":
-
         # HACK: This is a crazy way to instantiate at new Point but I can't figure
         # out how recarray does it. So I just use it to make matrix of size 1 and
         # index in to get the np.record/Point
@@ -184,7 +182,6 @@ class PointArray(np.recarray):
         aligned=False,
         order="C",
     ) -> "PointArray":
-
         dtype = subtype._record_type.dtype
 
         if dtype is not None:
@@ -445,12 +442,10 @@ class Instance:
         # If the user did not pass a points list initialize a point array for future
         # points.
         if self._points is None or len(self._points) == 0:
-
             # Initialize an empty point array that is the size of the skeleton.
             self._points = self._point_array_type.make_default(len(self.skeleton.nodes))
 
         else:
-
             if type(self._points) is dict:
                 parray = self._point_array_type.make_default(len(self.skeleton.nodes))
                 Instance._points_dict_to_array(self._points, parray, self.skeleton)
@@ -507,7 +502,10 @@ class Instance:
                 parray[skeleton.node_to_index(node)] = point
                 # parray[skeleton.node_to_index(node.name)] = point
             except:
-                pass
+                logger.debug(
+                    f"Could not set point for node {node} in {skeleton} "
+                    f"with point {point}"
+                )
 
     def _node_to_index(self, node: Union[str, Node]) -> int:
         """Helper method to get the index of a node from its name.
@@ -1216,7 +1214,6 @@ def make_instance_cattr() -> cattr.Converter:
     converter.register_unstructure_hook(PredictedPointArray, lambda x: None)
 
     def unstructure_instance(x: Instance):
-
         # Unstructure everything but the points array, nodes, and frame attribute
         d = {
             field.name: converter.unstructure(x.__getattribute__(field.name))

@@ -1,11 +1,12 @@
 """Module to test functions in `sleap.io.cameras`."""
 
+from typing import Dict, List
+
 import numpy as np
 import pytest
-import toml
 
 from sleap.io.cameras import Camcorder, CameraCluster, RecordingSession
-from sleap.io.dataset import Labels
+from sleap.io.dataset import Instance, LabeledFrame, Labels, LabelsDataCache
 from sleap.io.video import Video
 
 
@@ -130,6 +131,7 @@ def test_recording_session(
     hdf5_vid: Video,
 ):
     """Test `RecordingSession` data structure."""
+
     calibration: str = min_session_calibration_toml_path
     camera_cluster: CameraCluster = min_session_camera_cluster
 
@@ -186,8 +188,8 @@ def test_recording_session(
 
     # Test from_calibration_dict
     def compare_cameras(session_1: RecordingSession, session_2: RecordingSession):
-        assert len(session_2.camera_cluster) == len(session.camera_cluster)
-        for cam_1, cam_2 in zip(session, session_2):
+        assert len(session_2.camera_cluster) == len(session_1.camera_cluster)
+        for cam_1, cam_2 in zip(session_1, session_2):
             assert cam_1 == cam_2
 
     calibration_dict = session.camera_cluster.to_calibration_dict()
@@ -244,3 +246,203 @@ def test_recording_session(
     assert session_dict_2 == session_dict
     session_3 = sessions_cattr.structure(session_dict_2, RecordingSession)
     compare_sessions(session_2, session_3)
+
+
+def test_recording_session_get_videos_from_selected_cameras(
+    multiview_min_session_labels: Labels,
+):
+    session = multiview_min_session_labels.sessions[0]
+
+    # Test get_videos_from_selected_cameras
+    selected_cam = session.linked_cameras[0]
+    selected_videos = session.get_videos_from_selected_cameras([selected_cam])
+    assert len(selected_videos) == 1
+    assert selected_videos[selected_cam] == session.get_video(selected_cam)
+    # Now without any cameras selected: expect to return all videos
+    selected_videos = session.get_videos_from_selected_cameras()
+    assert len(selected_videos) == len(session.linked_cameras)
+    for cam in session.linked_cameras:
+        assert cam in selected_videos
+        assert session.get_video(cam) == selected_videos[cam]
+
+
+def test_recording_session_get_instances_across_views(
+    multiview_min_session_labels: Labels,
+):
+
+    labels = multiview_min_session_labels
+    session = labels.sessions[0]
+
+    # Test get_instances_across_views
+    lf: LabeledFrame = labels[0]
+    track = labels.tracks[0]
+    instances: Dict[Camcorder, Instance] = session.get_instances_across_views(
+        frame_idx=lf.frame_idx, track=track
+    )
+    assert len(instances) == len(session.videos)
+    for vid in session.videos:
+        cam = session[vid]
+        inst = instances[cam]
+        assert inst.frame_idx == lf.frame_idx
+        assert inst.track == track
+        assert inst.video == vid
+
+    # Try with excluding cam views
+    lf: LabeledFrame = labels[2]
+    track = labels.tracks[1]
+    cams_to_include = session.linked_cameras[:4]
+    videos_to_include: Dict[
+        Camcorder, Video
+    ] = session.get_videos_from_selected_cameras(cams_to_include=cams_to_include)
+    assert len(cams_to_include) == 4
+    assert len(videos_to_include) == len(cams_to_include)
+    instances: Dict[Camcorder, Instance] = session.get_instances_across_views(
+        frame_idx=lf.frame_idx, track=track, cams_to_include=cams_to_include
+    )
+    assert len(instances) == len(
+        videos_to_include
+    )  # May not be true if no instances at that frame
+    for cam, vid in videos_to_include.items():
+        inst = instances[cam]
+        assert inst.frame_idx == lf.frame_idx
+        assert inst.track == track
+        assert inst.video == vid
+
+    # Try with only a single view
+    cams_to_include = [session.linked_cameras[0]]
+    with pytest.raises(ValueError):
+        instances = session.get_instances_across_views(
+            frame_idx=lf.frame_idx,
+            cams_to_include=cams_to_include,
+            track=track,
+            require_multiple_views=True,
+        )
+
+    # Try with multiple views, but not enough instances
+    track = labels.tracks[1]
+    cams_to_include = session.linked_cameras[4:6]
+    with pytest.raises(ValueError):
+        instances = session.get_instances_across_views(
+            frame_idx=lf.frame_idx,
+            cams_to_include=cams_to_include,
+            track=track,
+            require_multiple_views=True,
+        )
+
+
+def test_recording_session_calculate_reprojected_points(
+    multiview_min_session_labels: Labels,
+):
+    """Test `RecordingSession.calculate_reprojected_points`."""
+
+    session = multiview_min_session_labels.sessions[0]
+    lf: LabeledFrame = multiview_min_session_labels[0]
+    track = multiview_min_session_labels.tracks[0]
+    instances: Dict[Camcorder, Instance] = session.get_instances_across_views(
+        frame_idx=lf.frame_idx, track=track
+    )
+    instances_and_coords = session.calculate_reprojected_points(instances)
+
+    # Check that we get the same number of instances as input
+    assert len(instances) == len(list(instances_and_coords))
+
+    # Check that each instance has the same number of points
+    for inst, inst_coords in instances_and_coords:
+        assert inst_coords.shape[1] == len(inst.skeleton)  # (1, 15, 2)
+
+
+def test_recording_session_update_instances(multiview_min_session_labels: Labels):
+    """Test `RecordingSession.update_instances`."""
+
+    # Test update_instances
+    session = multiview_min_session_labels.sessions[0]
+    lf: LabeledFrame = multiview_min_session_labels[0]
+    track = multiview_min_session_labels.tracks[0]
+    instances: Dict[Camcorder, Instance] = session.get_instances_across_views(
+        frame_idx=lf.frame_idx, track=track
+    )
+    instances_and_coordinates = session.calculate_reprojected_points(instances)
+    for inst, inst_coords in instances_and_coordinates:
+        assert inst_coords.shape == (1, len(inst.skeleton), 2)  # Tracks, Nodes, 2
+        # Assert coord are different from original
+        assert not np.array_equal(inst_coords, inst.points_array)
+
+    # Just run for code coverage testing, do not test output here (race condition)
+    # (see "functional core, imperative shell" pattern)
+    session.update_instances(instances)
+
+
+def test_recording_session_remove_video(multiview_min_session_labels: Labels):
+    """Test `RecordingSession.remove_video`."""
+
+    labels = multiview_min_session_labels
+    labels_cache = labels._cache
+    session = labels.sessions[0]
+
+    video = session.videos[0]
+    assert session.labels is not None
+    assert video in session.videos
+
+    session.remove_video(video)
+    assert labels_cache._session_by_video.get(video, None) is None
+    assert video not in session.videos
+
+
+def test_recording_session_update_views(multiview_min_session_labels: Labels, caplog):
+    """Test `RecordingSession.update_views`."""
+
+    labels = multiview_min_session_labels
+    session = labels.sessions[0]
+    lf: LabeledFrame = labels[2]
+
+    # 1a. Not enough cams included
+    cams_to_include = [session.linked_cameras[0]]
+    track = labels.tracks[0]
+    session.update_views(
+        frame_idx=lf.frame_idx,
+        cams_to_include=cams_to_include,
+        track=track,
+    )
+    messages = "".join([rec.message for rec in caplog.records])
+    assert "One or less cameras available." in messages
+    caplog.clear()
+
+    # 2a. Not enough instances
+    track = labels.tracks[1]
+    cams_to_include = session.linked_cameras[4:6]
+    session.update_views(
+        frame_idx=lf.frame_idx,
+        cams_to_include=cams_to_include,
+        track=track,
+    )
+    messages = "".join([rec.message for rec in caplog.records])
+    assert "One or less instances found for frame" in messages
+    caplog.clear()
+
+    # 2b. Not enough views
+    ...
+
+    # 3.  Enough views and instances
+    cams_to_include = session.linked_cameras[:4]
+    track = labels.tracks[1]
+    session.update_views(
+        frame_idx=lf.frame_idx,
+        cams_to_include=cams_to_include,
+        track=track,
+    )
+    messages = "".join([rec.message for rec in caplog.records])
+    assert len(messages) == 0
+
+    # 1b. Not enough videos
+    for video in session.videos[1:]:
+        session.remove_video(video)
+    video = session.videos[0]
+    cams_to_include = [session[video]]
+    session.update_views(
+        frame_idx=lf.frame_idx,
+        cams_to_include=cams_to_include,
+        track=track,
+    )
+    messages = "".join([rec.message for rec in caplog.records])
+    assert "One or less cameras available." in messages
+    caplog.clear()

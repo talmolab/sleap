@@ -18,6 +18,7 @@ from typing import Dict, List, Optional, Text, Optional, cast
 
 from qtpy import QtWidgets, QtCore
 
+import json
 
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
@@ -85,6 +86,9 @@ class LearningDialog(QtWidgets.QDialog):
 
         # Layout for buttons
         buttons = QtWidgets.QDialogButtonBox()
+        self.copy_button = buttons.addButton(
+            "Copy to clipboard", QtWidgets.QDialogButtonBox.ActionRole
+        )
         self.save_button = buttons.addButton(
             "Save configuration files...", QtWidgets.QDialogButtonBox.ActionRole
         )
@@ -94,6 +98,7 @@ class LearningDialog(QtWidgets.QDialog):
         self.cancel_button = buttons.addButton(QtWidgets.QDialogButtonBox.Cancel)
         self.run_button = buttons.addButton("Run", QtWidgets.QDialogButtonBox.ApplyRole)
 
+        self.copy_button.setToolTip("Copy configuration to the clipboard")
         self.save_button.setToolTip("Save scripts and configuration to run pipeline.")
         self.export_button.setToolTip(
             "Export data, configuration, and scripts for remote training and inference."
@@ -140,6 +145,7 @@ class LearningDialog(QtWidgets.QDialog):
         self.connect_signals()
 
         # Connect actions for buttons
+        self.copy_button.clicked.connect(self.copy)
         self.save_button.clicked.connect(self.save)
         self.export_button.clicked.connect(self.export_package)
         self.cancel_button.clicked.connect(self.reject)
@@ -674,10 +680,6 @@ class LearningDialog(QtWidgets.QDialog):
         datagen.show_datagen_preview(self.labels, config_info_list)
         self.hide()
 
-    def on_button_click(self, button):
-        if button == self.save_button:
-            self.save()
-
     def run(self):
         """Run with current dialog settings."""
 
@@ -717,14 +719,38 @@ class LearningDialog(QtWidgets.QDialog):
             win.setWindowTitle("Inference Results")
             win.exec_()
 
+    def copy(self):
+        """Copy scripts and configs to clipboard"""
+
+        # Get all info from dialog
+        pipeline_form_data = self.pipeline_form_widget.get_form_data()
+        config_info_list = self.get_every_head_config_data(pipeline_form_data)
+        pipeline_form_data = json.dumps(pipeline_form_data, indent=2)
+
+        # Format information for each tab in dialog
+        output = [pipeline_form_data]
+        for config_info in config_info_list:
+            config_info = config_info.config.to_json()
+            config_info = json.loads(config_info)
+            config_info = json.dumps(config_info, indent=2)
+            output.append(config_info)
+        output = "\n".join(output)
+
+        # Set the clipboard text
+        clipboard = QtWidgets.QApplication.clipboard()
+        clipboard.setText(output)
+
     def save(
         self, output_dir: Optional[str] = None, labels_filename: Optional[str] = None
     ):
         """Save scripts and configs to run pipeline."""
         if output_dir is None:
-            models_dir = os.path.join(os.path.dirname(self.labels_filename), "/models")
+            labels_fn = Path(self.labels_filename)
+            models_dir = Path(labels_fn.parent, "models")
             output_dir = FileDialog.openDir(
-                None, directory=models_dir, caption="Select directory to save scripts"
+                None,
+                dir=models_dir.as_posix(),
+                caption="Select directory to save scripts",
             )
 
             if not output_dir:

@@ -7,15 +7,46 @@ on (some?) Ubuntu systems.
 """
 
 import os, re, sys
-from pathlib import Path
 
+from functools import wraps
+from pathlib import Path
+from typing import Callable
 from qtpy import QtWidgets
+
+
+def os_specific_method(func) -> Callable:
+    """Check if native dialog should be used and update kwargs based on OS.
+
+    Native Mac/Win file dialogs add file extension based on selected file type but
+    non-native dialog (used for Linux) does not do this by default.
+    """
+
+    @wraps(func)
+    def set_dialog_type(cls, *args, **kwargs):
+        is_linux = sys.platform.startswith("linux")
+        env_var_set = os.environ.get("USE_NON_NATIVE_FILE", False)
+        cls.is_non_native = is_linux or env_var_set
+
+        if cls.is_non_native:
+            kwargs["options"] = kwargs.get("options", 0)
+            kwargs["options"] |= QtWidgets.QFileDialog.DontUseNativeDialog
+
+        # Make sure we don't send empty options argument
+        if "options" in kwargs and not kwargs["options"]:
+            del kwargs["options"]
+
+        return func(cls, *args, **kwargs)
+
+    return set_dialog_type
 
 
 class FileDialog:
     """Substitute for QFileDialog; see class methods for details."""
 
+    is_non_native = False
+
     @classmethod
+    @os_specific_method
     def open(cls, *args, **kwargs):
         """
         Wrapper for `QFileDialog.getOpenFileName()`
@@ -24,10 +55,10 @@ class FileDialog:
 
         Passes along everything except empty "options" arg.
         """
-        cls._non_native_if_set(kwargs)
         return QtWidgets.QFileDialog.getOpenFileName(*args, **kwargs)
 
     @classmethod
+    @os_specific_method
     def openMultiple(cls, *args, **kwargs):
         """
         Wrapper for `QFileDialog.getOpenFileNames()`
@@ -36,10 +67,10 @@ class FileDialog:
 
         Passes along everything except empty "options" arg.
         """
-        cls._non_native_if_set(kwargs)
         return QtWidgets.QFileDialog.getOpenFileNames(*args, **kwargs)
 
     @classmethod
+    @os_specific_method
     def save(cls, *args, **kwargs):
         """Wrapper for `QFileDialog.getSaveFileName()`
 
@@ -47,11 +78,10 @@ class FileDialog:
 
         Passes along everything except empty "options" arg.
         """
-        is_non_native = cls._non_native_if_set(kwargs)
 
         # The non-native file dialog doesn't add file extensions from the
         # file-type menu in the dialog, so we need to do this ourselves.
-        if is_non_native and "filter" in kwargs and "dir" in kwargs:
+        if cls.is_non_native and "filter" in kwargs and "dir" in kwargs:
             filename = kwargs["dir"]
             filters = kwargs["filter"].split(";;")
             if filters:
@@ -61,7 +91,7 @@ class FileDialog:
         filename, filter = QtWidgets.QFileDialog.getSaveFileName(*args, **kwargs)
 
         # Make sure filename has appropriate file extension.
-        if is_non_native and filter:
+        if cls.is_non_native and filter:
             fn = Path(filename)
             # Get extension from filter as list of "*.ext"
             match = re.findall("\*(\.[a-zA-Z0-9]+)", filter)
@@ -77,6 +107,7 @@ class FileDialog:
         return filename, filter
 
     @classmethod
+    @os_specific_method
     def openDir(cls, *args, **kwargs):
         """Wrapper for `QFileDialog.getExistingDirectory()`
 
@@ -85,20 +116,3 @@ class FileDialog:
         Passes along everything except empty "options" arg.
         """
         return QtWidgets.QFileDialog.getExistingDirectory(*args, **kwargs)
-
-    @staticmethod
-    def _non_native_if_set(kwargs) -> bool:
-        is_non_native = False
-        is_linux = sys.platform.startswith("linux")
-        env_var_set = os.environ.get("USE_NON_NATIVE_FILE", False)
-
-        if is_linux or env_var_set:
-            is_non_native = True
-            kwargs["options"] = kwargs.get("options", 0)
-            kwargs["options"] |= QtWidgets.QFileDialog.DontUseNativeDialog
-
-        # Make sure we don't send empty options argument
-        if "options" in kwargs and not kwargs["options"]:
-            del kwargs["options"]
-
-        return is_non_native

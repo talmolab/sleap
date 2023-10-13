@@ -1,6 +1,6 @@
 import os
-import pytest
 
+import pytest
 from qtpy.QtCore import QLibraryInfo
 from qtpy.QtWidgets import QApplication
 
@@ -249,9 +249,12 @@ def test_app_workflow(
 
     # Set up to test labeled frames data cache
     app.labels = min_tracks_2node_labels
-    video = app.labels.video
+    video_clip = app.labels.video
+    app.state["labels"] = app.labels
+    app.state["video"] = video_clip
+    app.on_data_update([UpdateTopic.all])
     num_samples = 5
-    frame_delta = video.num_frames // num_samples
+    frame_delta = video_clip.num_frames // num_samples
 
     # Add suggestions
     app.labels.suggestions = VideoFrameSuggestions.suggest(
@@ -283,7 +286,7 @@ def test_app_workflow(
             (l_suggestion.video, l_suggestion.frame_idx), use_cache=True
         )
         assert type(lf) == LabeledFrame
-        assert lf.video == video
+        assert lf.video == video_clip
         assert lf.frame_idx == prev_idx + frame_delta
         prev_idx = l_suggestion.frame_idx
 
@@ -292,8 +295,6 @@ def test_app_workflow(
     app.on_data_update([UpdateTopic.video])
 
     assert len(app.labels.videos) == 2
-
-    app.state["video"] = centered_pair_vid
 
     # Generate suggested frames in both videos
     app.labels.clear_suggestions()
@@ -320,11 +321,11 @@ def test_app_workflow(
     assert app.state["selected_video"] == small_robot_mp4_vid
     app.commands.removeVideo()
     assert len(app.labels.videos) == 1
-    assert app.state["video"] == centered_pair_vid
+    assert app.state["video"] == video_clip
 
     # Verify frame suggestions from video 1 are removed
     for sugg in app.labels.suggestions:
-        assert sugg.video == app.labels.videos[0]
+        assert sugg.video == video_clip
 
 
 def test_app_new_window(qtbot):
