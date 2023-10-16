@@ -419,6 +419,14 @@ class RecordingSession:
     def videos(self) -> List[Video]:
         """List of `Video`s."""
 
+        # TODO(LM): Should these be in the same order as `self.labels.videos`?
+        # e.g. switching between views in GUI should keep the same order, but not enforced.
+        # We COULD implicitly enforce this by adding videos in the same order as
+        # `self.labels.videos`, but "explicit is better than implicit".
+        # Instead, we could sort the videos by their index in labels.videos. This might
+        # bottleneck switching between views for sessions with lots of cameras/videos.
+        # Unless! We do this (each time) when adding the videos to the session instead
+        # of when accessing the videos. This would be a good compromise.
         return self.camera_cluster._videos_by_session[self]
 
     @property
