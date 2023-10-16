@@ -10,7 +10,9 @@ import os
 
 REPO_ID = "talmolab/sleap"
 ANALYTICS_ENDPOINT = "https://analytics.sleap.ai/ping"
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(
+    os.path.abspath(os.path.join(__file__, os.path.pardir, os.pardir))
+)
 BULLETIN_JSON = os.path.join(BASE_DIR, "..", "docs", "bulletin.json")
 
 
@@ -156,13 +158,18 @@ class AnnouncementChecker:
 
     app: "MainWindow"
     bulletin_json_path: str = BULLETIN_JSON
-    previous_announcement_date: str = None
+    _previous_announcement_date: str = None
     _latest_data: Optional[Dict[str, str]] = None
+
+    @property
+    def previous_announcement_date(self):
+        _previous_announcement_date = self.app.state["announcement last seen date"]
+        return _previous_announcement_date
 
     def _read_bulletin_data(self) -> Dict[str, str]:
         """Reads the bulletin data from the JSON file."""
         try:
-            with open(self.bulletin_json_path, 'r', encoding='utf-8') as jsf:
+            with open(self.bulletin_json_path, "r") as jsf:
                 data = json.load(jsf)
                 return data[0]
         except FileNotFoundError:
@@ -171,8 +178,11 @@ class AnnouncementChecker:
     def get_latest_announcement(self) -> Optional[Tuple[str, str]]:
         """Return latest announcements on the releases page not seen by user."""
         self._latest_data = self._read_bulletin_data()
-        if self._latest_data and self._latest_data['date'] != self.previous_announcement_date:
-            return (self._latest_data['date'], self._latest_data['content'])
+        if (
+            self._latest_data
+            and self._latest_data["date"] != self.previous_announcement_date
+        ):
+            return (self._latest_data["date"], self._latest_data["content"])
         return None
 
     def update_announcement(self):

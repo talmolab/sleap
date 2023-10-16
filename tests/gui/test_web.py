@@ -1,6 +1,15 @@
 import pandas as pd
-from sleap.gui.web import ReleaseChecker, Release, get_analytics_data, ping_analytics
+from sleap.gui.web import (
+    ReleaseChecker,
+    Release,
+    AnnouncementChecker,
+    get_analytics_data,
+    ping_analytics,
+)
 import pytest
+from sleap.gui.app import create_app
+import json
+import os
 
 
 def test_release_from_json():
@@ -70,6 +79,38 @@ def test_release_checker():
     assert len(checker.releases) == 2
     assert checker.releases[0] != rls_test
     assert checker.releases[1] != rls_test
+
+
+def test_announcementchecker():
+
+    BULLETIN_JSON_PATH = os.environ["test_bulletin_json"]
+    app = create_app()
+    app.state = {}
+    app.state["announcement last seen date"] = "10/10/2023"
+    checker = AnnouncementChecker(app=app, bulletin_json_path=BULLETIN_JSON_PATH)
+
+    # Check if the announcement checker gets the correct date from the app
+    assert checker.previous_announcement_date == "10/10/2023"
+
+    # Create dummy JSON file to check
+    bulletin_data = [
+        {"title": "title1", "date": "10/11/2023", "content": "New announcement"},
+        {"title": "title2", "date": "10/07/2023", "content": "Old Announcment"},
+    ]
+    with open(BULLETIN_JSON_PATH, "w") as test_file:
+        json.dump(bulletin_data, test_file)
+    assert checker._read_bulletin_data() == bulletin_data[0]
+
+    # Check if latest announcement is fetched
+    announcement = checker.get_latest_announcement()
+    assert announcement == ("10/11/2023", "New announcement")
+
+    checker.update_announcement()
+    assert app.state["announcement last seen date"] == "10/11/2023"
+    assert app.state["announcement"] == "New announcement"
+
+    # Delete the JSON file
+    os.remove(BULLETIN_JSON_PATH)
 
 
 def test_get_analytics_data():
