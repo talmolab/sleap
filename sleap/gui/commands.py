@@ -628,6 +628,7 @@ class CommandContext:
         video: Optional[Video] = None,
         instance: Optional[Instance] = None,
         session: Optional[RecordingSession] = None,
+        cams_to_include: Optional[List[Camcorder]] = None,
     ):
         """Triangulates `Instance`s for selected views in a `RecordingSession`."""
         self.execute(
@@ -636,6 +637,7 @@ class CommandContext:
             video=video,
             instance=instance,
             session=session,
+            cams_to_include=cams_to_include,
         )
 
     def openWebsite(self, url):

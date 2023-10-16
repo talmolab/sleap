@@ -3,8 +3,8 @@ import sys
 import time
 from pathlib import Path, PurePath
 from typing import Dict, List
-import numpy as np
 
+import numpy as np
 import pytest
 
 from sleap import PredictedInstance, Skeleton, Track

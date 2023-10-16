@@ -1240,15 +1240,15 @@ class MainWindow(QMainWindow):
         """Run after plot is updated, but stay on same frame."""
 
         video = self.state["video"]
-        instance = self.state["instance"]
 
         # Redraw trails
         overlay: TrackTrailOverlay = self.overlays["trails"]
         overlay.redraw(video, frame_idx)
 
         # Replot connected views for multi-camera projects
+        cams_to_include = None  # TODO: make this configurable via GUI
         if self.state.get("auto_triangulate", False):
-            self.commands.triangulateSession()
+            self.commands.triangulateSession(cams_to_include=cams_to_include)
 
     def _after_plot_change(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
