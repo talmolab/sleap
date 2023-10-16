@@ -83,7 +83,7 @@ def test_release_checker():
 
 def test_announcementchecker():
 
-    BULLETIN_JSON_PATH = os.environ["test_bulletin_json"]
+    BULLETIN_JSON_PATH = "D:\\TalmoLab\\sleap\\tests\\data\\announcement_checker_bulletin\\test_bulletin.json"
     app = create_app()
     app.state = {}
     app.state["announcement last seen date"] = "10/10/2023"
