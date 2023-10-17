@@ -65,6 +65,7 @@ from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
 from sleap.gui.dialogs.metrics import MetricsTableDialog
 from sleap.gui.dialogs.shortcuts import ShortcutDialog
+from sleap.gui.dialogs.bulletin import BulletinDialog
 from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.tracks import TrackListOverlay, TrackTrailOverlay
 from sleap.gui.shortcuts import Shortcuts
@@ -171,6 +172,11 @@ class MainWindow(QMainWindow):
 
         self.release_checker = ReleaseChecker()
         self.announcement_checker = AnnouncementChecker(app=self)
+
+        self.new_announcement = self.announcement_checker.new_announcement
+
+        if self.new_announcement:
+            self.display_bulletin = BulletinDialog(app=self)
 
         if self.state["share usage data"]:
             ping_analytics()
