@@ -1443,19 +1443,27 @@ class Video:
 
                 def encode(img):
                     _, encoded = cv2.imencode("." + format, img)
-                    return np.squeeze(encoded)
+                    return np.squeeze(encoded).astype('int8')
 
-                dtype = h5.special_dtype(vlen=np.dtype("int8"))
+                # pad with zeroes to guarantee int8 type in hdf5 file
+                frames = []
+                for i in range(len(frame_numbers)):
+                    frames.append(encode(frame_data[i]))
+
+                max_frame_size = max([len(x) for x in frames])
+
                 dset = f.create_dataset(
-                    dataset + "/video", (len(frame_numbers),), dtype=dtype
+                    dataset + "/video", (len(frame_numbers), max_frame_size),
+                    dtype ='int8'
                 )
                 dset.attrs["format"] = format
                 dset.attrs["channels"] = self.channels
                 dset.attrs["height"] = self.height
                 dset.attrs["width"] = self.width
 
-                for i in range(len(frame_numbers)):
-                    dset[i] = encode(frame_data[i])
+                for i, frame in enumerate(frames):
+                    dset[i, 0:len(frame)] = frame
+
             else:
                 f.create_dataset(
                     dataset + "/video",
