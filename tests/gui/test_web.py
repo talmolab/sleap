@@ -94,19 +94,18 @@ def test_announcementchecker():
 
     # Create dummy JSON file to check
     bulletin_data = [
-        {"title": "title1", "date": "10/11/2023", "content": "New announcement"},
+        {"title": "title1", "date": "10/12/2023", "content": "New announcement"},
         {"title": "title2", "date": "10/07/2023", "content": "Old Announcment"},
     ]
     with open(BULLETIN_JSON_PATH, "w") as test_file:
         json.dump(bulletin_data, test_file)
-    assert checker._read_bulletin_data() == bulletin_data[0]
 
     # Check if latest announcement is fetched
     announcement = checker.get_latest_announcement()
-    assert announcement == ("10/11/2023", "New announcement")
+    assert announcement == ("10/12/2023", "New announcement")
 
     checker.update_announcement()
-    assert app.state["announcement last seen date"] == "10/11/2023"
+    assert app.state["announcement last seen date"] == "10/12/2023"
     assert app.state["announcement"] == "New announcement"
 
     # Delete the JSON file
