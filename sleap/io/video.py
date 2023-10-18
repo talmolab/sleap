@@ -1456,6 +1456,7 @@ class Video:
                     dataset + "/video",
                     (len(frame_numbers), max_frame_size),
                     dtype="int8",
+                    compression="gzip",
                 )
                 dset.attrs["format"] = format
                 dset.attrs["channels"] = self.channels
