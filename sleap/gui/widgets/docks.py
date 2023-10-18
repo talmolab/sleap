@@ -31,6 +31,7 @@ from sleap.gui.dataviews import (
     SkeletonNodesTableModel,
     SuggestionsTableModel,
     VideosTableModel,
+    VideosTableView,
 )
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.widgets.views import CollapsibleWidget
@@ -173,14 +174,13 @@ class VideosDock(DockWidget):
         )
         return self.model
 
-    def create_tables(self) -> GenericTableView:
+    def create_tables(self) -> VideosTableView:
         if self.model is None:
             self.create_models()
 
         main_window = self.main_window
-        self.table = GenericTableView(
+        self.table = VideosTableView(
             state=main_window.state,
-            row_name="video",
             is_activatable=True,
             model=self.model,
             ellipsis_left=True,
@@ -367,7 +367,6 @@ class SkeletonDock(DockWidget):
         vb.addWidget(hbw)
 
         def updatePreviewImage(preview_image_bytes: bytes):
-
             # Decode the preview image
             preview_image = decode_preview_image(preview_image_bytes)
 

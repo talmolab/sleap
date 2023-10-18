@@ -15,6 +15,7 @@ as is. For example::
 
 """
 
+import logging
 from qtpy import QtCore, QtWidgets, QtGui
 
 import numpy as np
@@ -30,6 +31,10 @@ from sleap.gui.color import ColorManager
 from sleap.io.dataset import Labels
 from sleap.instance import LabeledFrame, Instance
 from sleap.skeleton import Skeleton
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class GenericTableModel(QtCore.QAbstractTableModel):
@@ -386,10 +391,118 @@ class GenericTableView(QtWidgets.QTableView):
 
 
 class VideosTableModel(GenericTableModel):
-    properties = ("filename", "frames", "height", "width", "channels")
+    properties = ("filename", "session", "frames", "height", "width", "channels")
 
     def item_to_data(self, obj, item):
-        return {key: getattr(item, key) for key in self.properties}
+        item_data = {key: getattr(item, key, None) for key in self.properties}
+
+        # Get the session from the labels object
+        session = None
+        if self.context is not None and self.context.labels is not None:
+            session = self.context.labels.get_session(item)
+
+        # TODO(LM): Better text representation of session
+        item_data["session"] = str(session) if session is not None else ""
+
+        return item_data
+
+    def can_set(self, item, key):
+        """Virtual method, returns whether table cell is editable."""
+        return key == "session"
+
+    def set_item(self, item, key, value):
+        """Virtual method, used to set value for item in table cell."""
+        if key == "session":
+            logger.debug(f"TODO (LM): set session for {item} to {value}")
+
+
+class VideosTableView(GenericTableView):
+    """Qt table view for use with `VideoTable Model`."""
+
+    row_name: Optional[str] = "video"
+
+    def __init__(
+        self,
+        model: VideosTableModel,
+        state: GuiState = None,
+        name_prefix: Optional[str] = None,
+        is_sortable: bool = False,
+        is_activatable: bool = False,
+        ellipsis_left: bool = False,
+        multiple_selection: bool = False,
+    ):
+        super().__init__(
+            model=model,
+            state=state,
+            row_name=self.row_name,
+            name_prefix=name_prefix,
+            is_sortable=is_sortable,
+            is_activatable=is_activatable,
+            ellipsis_left=ellipsis_left,
+            multiple_selection=multiple_selection,
+        )
+
+        # Get the index of the 'sessions' column
+        self.sessions_col = self.model().properties.index("session")
+        logger.debug(f"Sessions column: {self.sessions_col}")
+
+        # Create a combobox delegate for the 'session' column
+        self.sessions_combo = None
+        self.state.connect("sessions", self.update_sessions_combo)
+
+    def update_sessions_combo(self, selected_batch_video):
+        """Updates (or creates) a combobox delegate for the 'session'  of the model."""
+
+        # Create a list of unique session names
+        session_names = [""]
+        if self.state is not None and self.state["sessions"] is not None:
+            # TODO(LM): More concise string representation
+            session_names.extend([str(session) for session in self.state["sessions"]])
+
+        # TODO(LM): Remove after testing
+        session_names.extend([str(i) for i in range(4)])
+
+        if self.sessions_combo is None:
+            # Create a combobox delegate for the 'sessions' column
+            self.sessions_combo = ComboBoxDelegate(items=session_names)
+
+            # Set the combobox delegate for the 'sessions' column
+            self.setItemDelegateForColumn(self.sessions_col, self.sessions_combo)
+        else:
+            # Get current selection
+            current_selection = self.sessions_combo.currentText()
+
+            # Update the items in the combobox delegate
+            self.sessions_combo.items = session_names
+
+            # Keep current selection if possible
+            current_index = self.sessions_combo.findText(current_selection)
+            if current_index != -1:
+                self.sessions_combo.setCurrentIndex(current_index)
+            else:
+                self.sessions_combo.setCurrentIndex(0)  # Select the first item
+
+
+class ComboBoxDelegate(QtWidgets.QStyledItemDelegate):
+    def __init__(self, parent=None, items=None):
+        super().__init__(parent)
+        self.items = items or []
+
+    def createEditor(self, parent, option, index):
+        editor = QtWidgets.QComboBox(parent)
+        editor.addItems(self.items)
+        return editor
+
+    def setEditorData(self, editor, index):
+        value = index.model().data(index, QtCore.Qt.EditRole)
+        editor.setCurrentIndex(editor.findText(value))
+
+    def setModelData(self, editor, model, index):
+        value = editor.currentText()
+        model.setData(index, value, QtCore.Qt.EditRole)
+
+    def updateEditorGeometry(self, editor, option, index):
+        editor.setGeometry(option.rect)
 
 
 class SkeletonNodesTableModel(GenericTableModel):
@@ -538,7 +651,6 @@ class SuggestionsTableModel(GenericTableModel):
         if prop != "group":
             super(SuggestionsTableModel, self).sort(column_idx, order)
         else:
-
             if not reverse:
                 # Use group_int (int) instead of group (str).
                 self.beginResetModel()

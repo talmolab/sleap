@@ -701,6 +701,7 @@ class LoadLabelsObject(AppCommand):
 
         context.state["project_loaded"] = True
         context.state["has_changes"] = params.get("changed_on_load", False)
+        context.state["sessions"] = labels.sessions
 
         # This is not listed as an edit command since we want a clean changestack
         context.app.on_data_update([UpdateTopic.project, UpdateTopic.all])
@@ -782,7 +783,6 @@ class OpenProject(AppCommand):
 class ImportAlphaTracker(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-
         video_path = params["video_path"] if "video_path" in params else None
 
         labels = Labels.load_alphatracker(
@@ -822,7 +822,6 @@ class ImportAlphaTracker(AppCommand):
 class ImportNWB(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-
         labels = Labels.load_nwb(filename=params["filename"])
 
         new_window = context.app.__class__()
@@ -855,7 +854,6 @@ class ImportNWB(AppCommand):
 class ImportDeepPoseKit(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-
         labels = Labels.from_deepposekit(
             filename=params["filename"],
             video_path=params["video_path"],
@@ -904,7 +902,6 @@ class ImportDeepPoseKit(AppCommand):
 class ImportLEAP(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-
         labels = Labels.load_leap_matlab(
             filename=params["filename"],
         )
@@ -935,7 +932,6 @@ class ImportLEAP(AppCommand):
 class ImportCoco(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-
         labels = Labels.load_coco(
             filename=params["filename"], img_dir=params["img_dir"], use_missing_gui=True
         )
@@ -967,7 +963,6 @@ class ImportCoco(AppCommand):
 class ImportDeepLabCut(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-
         labels = Labels.load_deeplabcut(filename=params["filename"])
 
         new_window = context.app.__class__()
@@ -1341,7 +1336,6 @@ class ExportLabeledClip(AppCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-
         from sleap.gui.dialogs.export_clip import ExportClipDialog
 
         dialog = ExportClipDialog()
@@ -1617,7 +1611,6 @@ class GoNextSuggestedFrame(NavCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-
         next_suggestion_frame = context.labels.get_next_suggestion(
             context.state["video"], context.state["frame_idx"], cls.seek_direction
         )
@@ -1709,7 +1702,6 @@ class SelectToFrameGui(NavCommand):
 class GoAdjacentView(NavCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-
         operator = -1 if params["prev_or_next"] == "prev" else 1
 
         labels = context.labels
@@ -1823,7 +1815,6 @@ class ReplaceVideo(EditCommand):
 
     @staticmethod
     def do_action(context: CommandContext, params: dict) -> bool:
-
         import_list = params["import_list"]
 
         for import_item, video in import_list:
@@ -1952,7 +1943,6 @@ class RemoveVideo(EditCommand):
         video_file_names = []
         total_num_labeled_frames = 0
         for idx in row_idxs:
-
             video = videos[idx]
             if video is None:
                 return False
@@ -1986,7 +1976,6 @@ class AddSession(EditCommand):
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-
         camera_calibration = params["camera_calibration"]
         session = RecordingSession.load(filename=camera_calibration)
 
@@ -1996,6 +1985,8 @@ class AddSession(EditCommand):
         # Load if no video currently loaded
         if context.state["session"] is None:
             context.state["session"] = session
+
+        context.state["sessions"] = context.labels.sessions  # TODO(LM): Test this
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
@@ -2029,7 +2020,6 @@ class OpenSkeleton(EditCommand):
     def compare_skeletons(
         skeleton: Skeleton, new_skeleton: Skeleton
     ) -> Tuple[List[str], List[str], List[str]]:
-
         delete_nodes = []
         add_nodes = []
         if skeleton.node_names != new_skeleton.node_names:
@@ -2808,7 +2798,6 @@ class GenerateSuggestions(EditCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-
         if len(context.labels.videos) == 0:
             print("Error: no videos to generate suggestions for")
             return

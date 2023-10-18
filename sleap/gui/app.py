@@ -135,6 +135,7 @@ class MainWindow(QMainWindow):
 
         self.state.connect("filename", self.setWindowTitle)
 
+        self.state["sessions"] = []
         self.state["skeleton"] = Skeleton()
         self.state["labeled_frame"] = None
         self.state["last_interacted_frame"] = None
@@ -255,7 +256,6 @@ class MainWindow(QMainWindow):
             event.acceptProposedAction()
 
     def dropEvent(self, event):
-
         # Parse filenames
         filenames = event.mimeData().data("text/uri-list").data().decode()
         filenames = [parse_uri_path(f.strip()) for f in filenames.strip().split("\n")]
