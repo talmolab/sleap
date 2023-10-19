@@ -19,10 +19,10 @@ import yaml
 import numpy as np
 import pandas as pd
 
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from sleap import Labels, Video, Skeleton
-from sleap.instance import Instance, LabeledFrame, Point
+from sleap.instance import Instance, LabeledFrame, Point, Track
 from sleap.util import find_files_by_suffix
 
 from .adaptor import Adaptor, SleapObjectType
@@ -119,11 +119,12 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
 
             # Pull out animal and node names from the columns.
             start_col = 3 if is_new_format else 1
-            animal_names = []
+            tracks: Dict[str, Optional[Track]] = {}
             node_names = []
             for animal_name, node_name, _ in data.columns[start_col:][::2]:
-                if animal_name not in animal_names:
-                    animal_names.append(animal_name)
+                # Keep the starting frame index for each individual/track
+                if animal_name not in tracks.keys():
+                    tracks[animal_name] = None
                 if node_name not in node_names:
                     node_names.append(node_name)
 
@@ -177,23 +178,33 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
 
             instances = []
             if is_multianimal:
-                for animal_name in animal_names:
+                for animal_name in tracks.keys():
                     any_not_missing = False
                     # Get points for each node.
                     instance_points = dict()
                     for node in node_names:
-                        x, y = (
-                            data[(animal_name, node, "x")][i],
-                            data[(animal_name, node, "y")][i],
-                        )
+                        if (animal_name, node) in data.columns:
+                            x, y = (
+                                data[(animal_name, node, "x")][i],
+                                data[(animal_name, node, "y")][i],
+                            )
+                        else:
+                            x, y = np.nan, np.nan
                         instance_points[node] = Point(x, y)
                         if ~(np.isnan(x) and np.isnan(y)):
                             any_not_missing = True
 
                     if any_not_missing:
+                        # Create track
+                        if tracks[animal_name] is None:
+                            tracks[animal_name] = Track(spawned_on=i, name=animal_name)
                         # Create instance with points.
                         instances.append(
-                            Instance(skeleton=skeleton, points=instance_points)
+                            Instance(
+                                skeleton=skeleton,
+                                points=instance_points,
+                                track=tracks.get(animal_name, None),
+                            )
                         )
             else:
                 # Get points for each node.
@@ -270,6 +281,8 @@ class LabelsDeepLabCutYamlAdaptor(Adaptor):
         skeleton = Skeleton()
         if project_data.get("multianimalbodyparts", False):
             skeleton.add_nodes(project_data["multianimalbodyparts"])
+            if "uniquebodyparts" in project_data:
+                skeleton.add_nodes(project_data["uniquebodyparts"])
         else:
             skeleton.add_nodes(project_data["bodyparts"])
 
@@ -298,13 +311,23 @@ class LabelsDeepLabCutYamlAdaptor(Adaptor):
                 # If subdirectory is foo, we look for foo.mp4 in videos dir.
 
                 shortname = os.path.split(data_subdir)[-1]
-                video_path = os.path.join(videos_dir, f"{shortname}.mp4")
+                video_path = None
+                with os.scandir(videos_dir) as file_iterator:
+                    for file in file_iterator:
+                        if not file.is_file():
+                            continue
+                        if os.path.splitext(file.name)[0] != shortname:
+                            continue
+                        video_path = os.path.join(videos_dir, file.name)
+                        break
 
-                if os.path.exists(video_path):
+                if video_path is not None and os.path.exists(video_path):
                     video = Video.from_filename(video_path)
                 else:
                     # When no video is found, the individual frame images
                     # stored in the labeled data subdir will be used.
+                    if video_path is None:
+                        video_path = os.path.join(videos_dir, f"{shortname}.[EXT]")
                     print(
                         f"Unable to find {video_path} so using individual frame images."
                     )
