@@ -171,7 +171,7 @@ class MainWindow(QMainWindow):
         self.state.connect("show non-visible nodes", self.plotFrame)
 
         self.release_checker = ReleaseChecker()
-        self.announcement_checker = AnnouncementChecker(app=self)
+        self.announcement_checker = AnnouncementChecker(state=self.state)
 
         self.new_announcement = self.announcement_checker.new_announcement
 

@@ -156,14 +156,14 @@ class ReleaseChecker:
 class AnnouncementChecker:
     """Checker for new announcements on the bulletin page of sleap."""
 
-    app: "MainWindow"
+    state: "GuiState"
     bulletin_json_path: str = BULLETIN_JSON
     _previous_announcement_date: str = None
     _latest_data: Optional[Dict[str, str]] = None
 
     @property
     def previous_announcement_date(self):
-        _previous_announcement_date = self.app.state["announcement last seen date"]
+        _previous_announcement_date = self.state["announcement last seen date"]
         return _previous_announcement_date
 
     def _read_bulletin_data(self):
@@ -176,7 +176,7 @@ class AnnouncementChecker:
             self._latest_data = {}
 
     @property
-    def new_announcement(self) -> bool:
+    def new_announcement(self):
         self._read_bulletin_data()
         if (
             self._latest_data
@@ -196,8 +196,8 @@ class AnnouncementChecker:
         announcement = self.get_latest_announcement()
         if announcement is None:
             return
-        self.app.state["announcement last seen date"] = announcement[0]
-        self.app.state["announcement"] = announcement[1]
+        self.state["announcement last seen date"] = announcement[0]
+        self.state["announcement"] = announcement[1]
 
 
 def get_analytics_data() -> Dict[str, Any]:

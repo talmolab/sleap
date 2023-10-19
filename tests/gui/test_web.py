@@ -7,9 +7,10 @@ from sleap.gui.web import (
     ping_analytics,
 )
 import pytest
-from sleap.gui.app import create_app
 import json
 import os
+from sleap.gui.commands import CommandContext
+from sleap.io.dataset import Labels
 
 
 def test_release_from_json():
@@ -81,13 +82,15 @@ def test_release_checker():
     assert checker.releases[1] != rls_test
 
 
-def test_announcementchecker():
+def test_announcementchecker(bulletin_json_path):
 
-    BULLETIN_JSON_PATH = "D:\\TalmoLab\\sleap\\tests\\data\\announcement_checker_bulletin\\test_bulletin.json"
-    app = create_app()
-    app.state = {}
-    app.state["announcement last seen date"] = "10/10/2023"
-    checker = AnnouncementChecker(app=app, bulletin_json_path=BULLETIN_JSON_PATH)
+    labels = Labels()
+    context = CommandContext.from_labels(labels=labels)
+    context.state = {}
+    context.state["announcement last seen date"] = "10/10/2023"
+    checker = AnnouncementChecker(
+        state=context.state, bulletin_json_path=bulletin_json_path
+    )
 
     # Check if the announcement checker gets the correct date from the app
     assert checker.previous_announcement_date == "10/10/2023"
@@ -97,7 +100,7 @@ def test_announcementchecker():
         {"title": "title1", "date": "10/12/2023", "content": "New announcement"},
         {"title": "title2", "date": "10/07/2023", "content": "Old Announcment"},
     ]
-    with open(BULLETIN_JSON_PATH, "w") as test_file:
+    with open(bulletin_json_path, "w") as test_file:
         json.dump(bulletin_data, test_file)
 
     # Check if latest announcement is fetched
@@ -105,11 +108,8 @@ def test_announcementchecker():
     assert announcement == ("10/12/2023", "New announcement")
 
     checker.update_announcement()
-    assert app.state["announcement last seen date"] == "10/12/2023"
-    assert app.state["announcement"] == "New announcement"
-
-    # Delete the JSON file
-    os.remove(BULLETIN_JSON_PATH)
+    assert context.state["announcement last seen date"] == "10/12/2023"
+    assert context.state["announcement"] == "New announcement"
 
 
 def test_get_analytics_data():
