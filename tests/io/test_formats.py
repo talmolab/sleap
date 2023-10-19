@@ -198,7 +198,6 @@ def test_matching_adaptor(centered_pair_predictions_hdf5_path):
     [
         "tests/data/dlc/labeled-data/video/madlc_testdata.csv",
         "tests/data/dlc/labeled-data/video/madlc_testdata_v2.csv",
-        "tests/data/dlc/madlc_230_config.yaml",
     ],
 )
 def test_madlc(test_data):
@@ -237,7 +236,7 @@ def test_madlc(test_data):
     [
         "tests/data/dlc/labeled-data/video/maudlc_testdata.csv",
         "tests/data/dlc/labeled-data/video/maudlc_testdata_v2.csv",
-        "tests/data/dlc/maudlc_230_config.yaml",
+        "tests/data/dlc/madlc_230_config.yaml",
     ],
 )
 def test_maudlc(test_data):
@@ -288,14 +287,15 @@ def test_maudlc(test_data):
         [[26, 27], [28, 29], [30, 31], [np.nan, np.nan], [np.nan, np.nan]],
     )
     assert_array_equal(
-        labels[2][0].numpy(),
+        labels[2][1].numpy(),
         [[np.nan, np.nan], [np.nan, np.nan], [np.nan, np.nan], [32, 33], [34, 35]],
     )
     assert labels[2].frame_idx == 3
 
     # Assert tracks are correct
     assert len(labels.tracks) == 3
-    assert set(t.name for t in labels.tracks) == set(["Animal1", "Animal1", "single"])
+    sorted_animals = sorted(["Animal1", "Animal2", "single"])
+    assert sorted([t.name for t in labels.tracks]) == sorted_animals
     for t in labels.tracks:
         if t.name == "single":
             assert t.spawned_on == 1

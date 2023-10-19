@@ -203,7 +203,7 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                             Instance(
                                 skeleton=skeleton,
                                 points=instance_points,
-                                track=tracks.get(animal_name, None),
+                                track=tracks[animal_name],
                             )
                         )
             else:
@@ -312,14 +312,15 @@ class LabelsDeepLabCutYamlAdaptor(Adaptor):
 
                 shortname = os.path.split(data_subdir)[-1]
                 video_path = None
-                with os.scandir(videos_dir) as file_iterator:
-                    for file in file_iterator:
-                        if not file.is_file():
-                            continue
-                        if os.path.splitext(file.name)[0] != shortname:
-                            continue
-                        video_path = os.path.join(videos_dir, file.name)
-                        break
+                if os.path.exists(videos_dir):
+                    with os.scandir(videos_dir) as file_iterator:
+                        for file in file_iterator:
+                            if not file.is_file():
+                                continue
+                            if os.path.splitext(file.name)[0] != shortname:
+                                continue
+                            video_path = os.path.join(videos_dir, file.name)
+                            break
 
                 if video_path is not None and os.path.exists(video_path):
                     video = Video.from_filename(video_path)
@@ -327,7 +328,7 @@ class LabelsDeepLabCutYamlAdaptor(Adaptor):
                     # When no video is found, the individual frame images
                     # stored in the labeled data subdir will be used.
                     if video_path is None:
-                        video_path = os.path.join(videos_dir, f"{shortname}.[EXT]")
+                        video_path = os.path.join(videos_dir, f"{shortname}.mp4")
                     print(
                         f"Unable to find {video_path} so using individual frame images."
                     )
