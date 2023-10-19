@@ -2983,16 +2983,15 @@ class AddInstance(EditCommand):
             Whether the new instance has missing nodes.
         """
 
+        if copy_instance is None:
+            return True
+
         has_missing_nodes = False
 
         # go through each node in skeleton
         for node in context.state["skeleton"].node_names:
             # if we're copying from a skeleton that has this node
-            if (
-                copy_instance is not None
-                and node in copy_instance
-                and not copy_instance[node].isnan()
-            ):
+            if node in copy_instance and not copy_instance[node].isnan():
                 # just copy x, y, and visible
                 # we don't want to copy a PredictedPoint or score attribute
                 new_instance[node] = Point(
