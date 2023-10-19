@@ -11,7 +11,10 @@ from attrs import define, field
 from attrs.validators import deep_iterable, instance_of
 import numpy as np
 
+
 from sleap.util import deep_iterable_converter
+
+# from sleap.io.dataset import Labels  # TODO(LM): Circular import, implement Observer
 from sleap.io.video import Video
 
 
@@ -408,9 +411,11 @@ class RecordingSession:
             not linked to a `Video`.
     """
 
+    # TODO(LM): Consider implementing Observer pattern for `camera_cluster` and `labels`
     camera_cluster: CameraCluster = field(factory=CameraCluster)
     metadata: dict = field(factory=dict)
     _video_by_camcorder: Dict[Camcorder, Video] = field(factory=dict)
+    labels: Optional["Labels"] = None
 
     @property
     def videos(self) -> List[Video]:
@@ -516,6 +521,10 @@ class RecordingSession:
         # Add camcorder-to-video (1-to-1) map to `RecordingSession`
         self._video_by_camcorder[camcorder] = video
 
+        # Update labels cache
+        if self.labels is not None:
+            self.labels.update_session(self, video)
+
     def remove_video(self, video: Video):
         """Removes a `Video` from the `RecordingSession`.
 
@@ -535,6 +544,10 @@ class RecordingSession:
 
         # Remove camcorder-to-video map from `RecordingSession`
         self._video_by_camcorder.pop(camcorder)
+
+        # Update labels cache
+        if self.labels is not None and self.labels.get_session(video) is not None:
+            self.labels.remove_session_video(self, video)
 
     def __attrs_post_init__(self):
         self.camera_cluster.add_session(self)

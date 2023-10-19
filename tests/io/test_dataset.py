@@ -1,18 +1,21 @@
 import os
+
 import pytest
 import numpy as np
-from pathlib import Path, PurePath
 
 import sleap
+
+from pathlib import Path, PurePath
+
 from sleap.io.cameras import RecordingSession
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Track
 from sleap.io.video import Video, MediaVideo
 from sleap.io.dataset import Labels, load_file
-from sleap.io.legacy import load_labels_json_old
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.format import filehandle
 from sleap.gui.suggestions import VideoFrameSuggestions, SuggestionFrame
+
 from tests.io.test_formats import assert_read_labels_match
 
 TEST_H5_DATASET = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
@@ -996,8 +999,12 @@ def test_save_labels_with_sessions(
     for cam_1, cam_2 in zip(session, loaded_session):
         assert cam_1 == cam_2
 
+    assert loaded_session.labels == loaded_labels
 
-def test_add_session(min_labels_slp: Labels, min_session_session: RecordingSession):
+
+def test_add_session_and_update_session(
+    min_labels_slp: Labels, min_session_session: RecordingSession
+):
     """Test that we can add a `RecordingSession` to a `Labels` object."""
 
     labels = min_labels_slp
@@ -1005,6 +1012,22 @@ def test_add_session(min_labels_slp: Labels, min_session_session: RecordingSessi
 
     labels.add_session(session)
     assert labels.sessions == [session]
+    assert labels._cache._session_by_video == dict()
+
+    video = labels.videos[0]
+    session.add_video(video, session.camera_cluster.cameras[0])
+    assert labels._cache._session_by_video == {video: session}
+    assert labels.get_session(video) == session
+
+    labels.remove_session_video(session, video)
+    assert video not in session.videos
+    assert video not in labels._cache._session_by_video
+
+    with pytest.raises(ValueError):
+        labels.sessions = [session]
+
+    # Warning: we would like to prevent the following, but might require custom class
+    labels.sessions.append(session)
 
 
 def test_labels_hdf5(multi_skel_vid_labels, tmpdir):
