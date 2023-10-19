@@ -41,7 +41,8 @@ from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type, Union
 import attr
 import cv2
 import numpy as np
-from qtpy import QtCore, QtGui, QtWidgets
+from qtpy import QtCore, QtWidgets, QtGui
+from qtpy.QtWidgets import QMessageBox, QProgressDialog
 
 from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.gui.dialogs.filedialog import FileDialog
@@ -52,6 +53,7 @@ from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
+from sleap.io.cameras import RecordingSession
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
@@ -429,6 +431,10 @@ class CommandContext:
     def removeVideo(self):
         """Removes selected video from project."""
         self.execute(RemoveVideo)
+
+    def addSession(self):
+        """Shows gui for adding `RecordingSession`s to the project."""
+        self.execute(AddSession)
 
     def openSkeletonTemplate(self):
         """Shows gui for loading saved skeleton into project."""
@@ -1916,6 +1922,38 @@ class RemoveVideo(EditCommand):
             if response == QtWidgets.QMessageBox.No:
                 return False
         return True
+
+
+class AddSession(EditCommand):
+    # topics = [UpdateTopic.session]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+
+        camera_calibration = params["camera_calibration"]
+        session = RecordingSession.load(filename=camera_calibration)
+
+        # Add session
+        context.labels.add_session(session)
+
+        # Load if no video currently loaded
+        if context.state["session"] is None:
+            context.state["session"] = session
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        """Shows gui for adding video to project."""
+        filters = ["Camera calibration (*.toml)"]
+        filename, selected_filter = FileDialog.open(
+            context.app,
+            dir=None,
+            caption="Select camera calibration...",
+            filter=";;".join(filters),
+        )
+
+        params["camera_calibration"] = filename
+
+        return len(filename) > 0
 
 
 class OpenSkeleton(EditCommand):

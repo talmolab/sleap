@@ -62,6 +62,7 @@ import h5py as h5
 import numpy as np
 import datetime
 from sklearn.model_selection import train_test_split
+from sleap.io.cameras import RecordingSession
 
 try:
     from typing import ForwardRef
@@ -419,6 +420,7 @@ class Labels(MutableSequence):
     nodes: List[Node] = attr.ib(default=attr.Factory(list))
     tracks: List[Track] = attr.ib(default=attr.Factory(list))
     suggestions: List[SuggestionFrame] = attr.ib(default=attr.Factory(list))
+    sessions: List[RecordingSession] = attr.ib(default=attr.Factory(list))
     negative_anchors: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
     provenance: Dict[Text, Union[str, int, float, bool]] = attr.ib(
         default=attr.Factory(dict)
@@ -1584,6 +1586,19 @@ class Labels(MutableSequence):
         self.videos.remove(video)
         self._cache.remove_video(video)
 
+    def add_session(self, session: RecordingSession):
+        """Add a recording session to the labels.
+        Args:
+            session: `RecordingSession` instance
+        """
+        if not isinstance(session, RecordingSession):
+            raise TypeError(
+                f"Expected a RecordingSession instance. Received type: {type(session)}"
+            )
+
+        if session not in self.sessions:
+            self.sessions.append(session)
+
     @classmethod
     def from_json(cls, *args, **kwargs):
         from sleap.io.format.labels_json import LabelsJsonAdaptor
@@ -1918,15 +1933,20 @@ class Labels(MutableSequence):
         label_cattr.register_unstructure_hook(
             Track, lambda x: str(self.tracks.index(x))
         )
+        label_cattr.register_unstructure_hook(
+            RecordingSession, lambda x: str(self.sessions.index(x))
+        )
 
         # Make a converter for the top level skeletons list.
         idx_to_node = {i: self.nodes[i] for i in range(len(self.nodes))}
-
         skeleton_cattr = Skeleton.make_cattr(idx_to_node)
 
         # Make attr for tracks so that we save as tuples rather than dicts;
         # this can save a lot of space when there are lots of tracks.
         track_cattr = cattr.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
+
+        # Make converter for recording sessions
+        sessions_cattr = RecordingSession.make_cattr(videos_list=self.videos)
 
         # Serialize the skeletons, videos, and labels
         dicts = {
@@ -1936,6 +1956,7 @@ class Labels(MutableSequence):
             "videos": Video.cattr().unstructure(self.videos),
             "tracks": track_cattr.unstructure(self.tracks),
             "suggestions": label_cattr.unstructure(self.suggestions),
+            "sessions": sessions_cattr.unstructure(self.sessions),
             "negative_anchors": label_cattr.unstructure(self.negative_anchors),
             "provenance": label_cattr.unstructure(self.provenance),
         }

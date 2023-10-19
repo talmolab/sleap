@@ -1,20 +1,21 @@
-import pytest
 import shutil
 import sys
 import time
-
-from pathlib import PurePath, Path
+from pathlib import Path, PurePath
 from typing import List
 
-from sleap import Skeleton, Track, PredictedInstance
+import pytest
+
+from sleap import PredictedInstance, Skeleton, Track
 from sleap.gui.commands import (
+    AddSession,
     CommandContext,
     ExportAnalysisFile,
     ExportDatasetWithImages,
     ImportDeepLabCutFolder,
+    OpenSkeleton,
     RemoveVideo,
     ReplaceVideo,
-    OpenSkeleton,
     SaveProjectAs,
     get_new_version_filename,
 )
@@ -30,8 +31,8 @@ from sleap.util import get_package_file
 # These imports cause trouble when running `pytest.main()` from within the file
 # Comment out to debug tests file via VSCode's "Debug Python File"
 from tests.info.test_h5 import extract_meta_hdf5
-from tests.io.test_video import assert_video_params
 from tests.io.test_formats import read_nix_meta
+from tests.io.test_video import assert_video_params
 
 
 def test_delete_user_dialog(centered_pair_predictions):
@@ -922,3 +923,32 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
     # Case 3: Export all frames and suggested frames with image data.
     context.exportFullPackage()
     assert_loaded_package_similar(path_to_pkg, sugg=True, pred=True)
+
+
+def test_AddSession(
+    min_tracks_2node_labels: Labels,
+    min_session_calibration_toml_path: str,
+):
+    """Test that adding a session works."""
+    labels = min_tracks_2node_labels
+    camera_calibration = min_session_calibration_toml_path
+
+    # Set-up CommandContext
+    context: CommandContext = CommandContext.from_labels(labels)
+
+    # Case 1: No session selected
+    assert context.state["session"] is None
+    assert labels.sessions == []
+
+    params = {"camera_calibration": camera_calibration}
+    AddSession.do_action(context, params)
+    assert len(labels.sessions) == 1
+    session = labels.sessions[0]
+    assert context.state["session"] is session
+
+    # Case 2: Session selected
+    params = {"camera_calibration": camera_calibration}
+    AddSession.do_action(context, params)
+    assert len(labels.sessions) == 2
+    assert context.state["session"] is session
+    assert labels.sessions[1] is not session

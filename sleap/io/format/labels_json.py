@@ -7,6 +7,7 @@ a single HDF5 file which include both the SLEAP dataset (i.e., `Labels`) and
 also the videos/frames as HDF5 datasets.
 """
 import atexit
+import logging
 import os
 import re
 import shutil
@@ -15,6 +16,8 @@ import zipfile
 from typing import Optional, Union, Dict, List, Callable, Text
 
 import cattr
+
+from sleap.io.cameras import RecordingSession
 
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
@@ -29,6 +32,8 @@ from sleap.instance import (
 from sleap.io.legacy import load_labels_json_old
 from sleap.skeleton import Node, Skeleton
 from sleap.util import json_loads, json_dumps, weak_filename_match
+
+logger = logging.getLogger(__name__)
 
 
 class LabelsJsonAdaptor(Adaptor):
@@ -498,6 +503,16 @@ class LabelsJsonAdaptor(Adaptor):
                     print(e)
                     pass
 
+        try:
+            sessions_cattr = RecordingSession.make_cattr(videos_list=videos)
+            sessions = sessions_cattr.structure(
+                dicts["sessions"], List[RecordingSession]
+            )
+        except Exception as e:
+            logger.warning("Error while loading `RecordingSession`s:")
+            logger.warning(e)
+            sessions = []
+
         if "negative_anchors" in dicts:
             negative_anchors_cattr = cattr.Converter()
             negative_anchors_cattr.register_structure_hook(
@@ -527,6 +542,9 @@ class LabelsJsonAdaptor(Adaptor):
             label_cattr.register_structure_hook(
                 Track, lambda x, type: None if x is None else tracks[int(x)]
             )
+            label_cattr.register_structure_hook(
+                RecordingSession, lambda x, type: sessions[int(x)]
+            )
 
             labels = label_cattr.structure(dicts["labels"], List[LabeledFrame])
         else:
@@ -538,6 +556,7 @@ class LabelsJsonAdaptor(Adaptor):
             skeletons=skeletons,
             nodes=nodes,
             suggestions=suggestions,
+            sessions=sessions,
             negative_anchors=negative_anchors,
             tracks=tracks,
             provenance=provenance,
