@@ -36,7 +36,7 @@ import traceback
 from enum import Enum
 from glob import glob
 from pathlib import Path, PurePath
-from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type, Union
+from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type, Union, cast
 
 import attr
 import cv2
@@ -2879,13 +2879,13 @@ class AddInstance(EditCommand):
     @staticmethod
     def create_new_instance(
         context: CommandContext,
-        from_predicted: bool,
-        copy_instance: Optional[Instance],
+        from_predicted: Optional[PredictedInstance],
+        copy_instance: Optional[Union[Instance, PredictedInstance]],
         mark_complete: bool,
         init_method: str,
         location: Optional[QtCore.QPoint],
         from_prev_frame: bool,
-    ):
+    ) -> Instance:
         """Create new instance."""
 
         # Now create the new instance
@@ -2913,6 +2913,7 @@ class AddInstance(EditCommand):
 
         # If we're copying a predicted instance or from another frame, copy the track
         if hasattr(copy_instance, "score") or from_prev_frame:
+            copy_instance = cast(Union[PredictedInstance, Instance], copy_instance)
             new_instance.track = copy_instance.track
 
         return new_instance
@@ -2920,7 +2921,7 @@ class AddInstance(EditCommand):
     @staticmethod
     def fill_missing_nodes(
         context: CommandContext,
-        copy_instance: Optional[Instance],
+        copy_instance: Optional[Union[Instance, PredictedInstance]],
         init_method: str,
         new_instance: Instance,
         location: Optional[QtCore.QPoint],
@@ -2967,10 +2968,10 @@ class AddInstance(EditCommand):
     @staticmethod
     def set_visible_nodes(
         context: CommandContext,
-        copy_instance: Optional[Instance],
+        copy_instance: Optional[Union[Instance, PredictedInstance]],
         new_instance: Instance,
         mark_complete: bool,
-    ) -> Tuple[Instance, bool]:
+    ) -> bool:
         """Sets visible nodes for new instance.
 
         Args:
@@ -3007,18 +3008,22 @@ class AddInstance(EditCommand):
 
     @staticmethod
     def find_instance_to_copy_from(
-        context: CommandContext, copy_instance: Optional[Instance], init_method: bool
-    ) -> Tuple[Optional[Instance], bool, bool]:
+        context: CommandContext,
+        copy_instance: Optional[Union[Instance, PredictedInstance]],
+        init_method: bool,
+    ) -> Tuple[
+        Optional[Union[Instance, PredictedInstance]], Optional[PredictedInstance], bool
+    ]:
         """Find instance to copy from.
 
         Args:
             context: The command context.
-            copy_instance: The instance to copy from.
+            copy_instance: The `Instance` to copy from.
             init_method: The initialization method.
 
         Returns:
-            The instance to copy from, whether it's from a predicted instance, and
-            whether it's from a previous frame.
+            The instance to copy from, the predicted instance (if it is from a predicted
+            instance, else None), and whether it's from a previous frame.
         """
 
         from_predicted = copy_instance
@@ -3071,6 +3076,7 @@ class AddInstance(EditCommand):
                     from_prev_frame = True
 
         from_predicted = from_predicted if hasattr(from_predicted, "score") else None
+        from_predicted = cast(Optional[PredictedInstance], from_predicted)
 
         return copy_instance, from_predicted, from_prev_frame
 
