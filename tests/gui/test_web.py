@@ -88,7 +88,9 @@ def test_announcementchecker(bulletin_json_path):
     context = CommandContext.from_labels(labels=labels)
     context.state = {}
     context.state["announcement last seen date"] = "10/10/2023"
-    checker = AnnouncementChecker(state=context.state, bulletin_json_path=bulletin_json_path)
+    checker = AnnouncementChecker(
+        state=context.state, bulletin_json_path=bulletin_json_path
+    )
 
     # Check if the announcement checker gets the correct date from the app
     assert checker.previous_announcement_date == "10/10/2023"
