@@ -2876,6 +2876,7 @@ class AddInstance(EditCommand):
         if context.state["labeled_frame"] not in context.labels.labels:
             context.labels.append(context.state["labeled_frame"])
 
+    @staticmethod
     def create_new_instance(
         context: CommandContext,
         from_predicted: bool,
@@ -2916,6 +2917,7 @@ class AddInstance(EditCommand):
 
         return new_instance
 
+    @staticmethod
     def fill_missing_nodes(
         context: CommandContext,
         copy_instance: Optional[Instance],
@@ -2962,6 +2964,7 @@ class AddInstance(EditCommand):
                 context=context, instance=new_instance, visible=is_visible
             )
 
+    @staticmethod
     def set_visible_nodes(
         context: CommandContext,
         copy_instance: Optional[Instance],
