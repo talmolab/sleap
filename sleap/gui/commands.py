@@ -2995,9 +2995,20 @@ class AddInstance(EditCommand):
             if node in copy_instance and not copy_instance[node].isnan():
                 # just copy x, y, and visible
                 # we don't want to copy a PredictedPoint or score attribute
+                x_old = copy_instance[node].x 
+                y_old = copy_instance[node].y 
+                old_size_width=  copy_instance.frame.video.shape[2]
+                old_size_height=  copy_instance.frame.video.shape[1]
+                new_size_width=  new_instance.frame.video.shape[2]
+                new_size_height=  new_instance.frame.video.shape[1]
+                x_new = (x_old/old_size_width) * new_size_width
+                y_new = (y_old/old_size_height) * new_size_height
+
                 new_instance[node] = Point(
-                    x=copy_instance[node].x,
-                    y=copy_instance[node].y,
+                    # x=copy_instance[node].x,
+                    # y=copy_instance[node].y,
+                    x = x_new,
+                    y = y_new,
                     visible=copy_instance[node].visible,
                     complete=mark_complete,
                 )
