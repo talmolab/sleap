@@ -1118,8 +1118,9 @@ class Video:
 
     def get_frames_safely(self, idxs: Iterable[int]) -> Tuple[List[int], np.ndarray]:
         """Return list of frame indices and frames which were successfully loaded.
+        Args:
+            idxs: An iterable object that contains the indices of frames.
 
-        idxs: An iterable object that contains the indices of frames.
 
         Returns: A tuple of (frame indices, frames), where
             * frame indices is a subset of the specified idxs, and
@@ -1442,19 +1443,29 @@ class Video:
 
                 def encode(img):
                     _, encoded = cv2.imencode("." + format, img)
-                    return np.squeeze(encoded)
+                    return np.squeeze(encoded).astype("int8")
 
-                dtype = h5.special_dtype(vlen=np.dtype("int8"))
+                # pad with zeroes to guarantee int8 type in hdf5 file
+                frames = []
+                for i in range(len(frame_numbers)):
+                    frames.append(encode(frame_data[i]))
+
+                max_frame_size = max([len(x) for x in frames])
+
                 dset = f.create_dataset(
-                    dataset + "/video", (len(frame_numbers),), dtype=dtype
+                    dataset + "/video",
+                    (len(frame_numbers), max_frame_size),
+                    dtype="int8",
+                    compression="gzip",
                 )
                 dset.attrs["format"] = format
                 dset.attrs["channels"] = self.channels
                 dset.attrs["height"] = self.height
                 dset.attrs["width"] = self.width
 
-                for i in range(len(frame_numbers)):
-                    dset[i] = encode(frame_data[i])
+                for i, frame in enumerate(frames):
+                    dset[i, 0 : len(frame)] = frame
+
             else:
                 f.create_dataset(
                     dataset + "/video",

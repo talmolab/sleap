@@ -65,7 +65,7 @@ def test_import_labels_from_dlc_folder():
     assert len(labels.videos) == 2
     assert len(labels.skeletons) == 1
     assert len(labels.nodes) == 3
-    assert len(labels.tracks) == 0
+    assert len(labels.tracks) == 3
 
     assert set(
         [fix_path_separator(l.video.backend.filename) for l in labels.labeled_frames]
@@ -122,13 +122,19 @@ def test_RemoveVideo(
     assert context.state["video"] not in videos_to_remove
 
 
-@pytest.mark.parametrize("out_suffix", ["h5", "nix"])
+@pytest.mark.parametrize("out_suffix", ["h5", "nix", "csv"])
 def test_ExportAnalysisFile(
     centered_pair_predictions: Labels,
+    centered_pair_predictions_hdf5_path: str,
     small_robot_mp4_vid: Video,
     out_suffix: str,
     tmpdir,
 ):
+    if out_suffix == "csv":
+        csv = True
+    else:
+        csv = False
+
     def ExportAnalysisFile_ask(context: CommandContext, params: dict):
         """Taken from ExportAnalysisFile.ask()"""
 
@@ -151,7 +157,7 @@ def test_ExportAnalysisFile(
         if len(videos) == 0:
             raise ValueError("No labeled frames in video(s). Nothing to export.")
 
-        default_name = context.state["filename"] or "labels"
+        default_name = "labels"
         fn = PurePath(tmpdir, default_name)
         if len(videos) == 1:
             # Allow user to specify the filename
@@ -194,7 +200,7 @@ def test_ExportAnalysisFile(
             assert Path(output_path).exists()
             output_paths.append(output_path)
 
-            if labels_path is not None:
+            if labels_path is not None and not params["csv"]:
                 meta_reader = extract_meta_hdf5 if out_suffix == "h5" else read_nix_meta
                 labels_key = "labels_path" if out_suffix == "h5" else "project"
                 read_meta = meta_reader(output_path, dset_names_in=["labels_path"])
@@ -209,8 +215,20 @@ def test_ExportAnalysisFile(
     context = CommandContext.from_labels(labels)
     context.state["filename"] = None
 
+    if csv:
+
+        context.state["filename"] = centered_pair_predictions_hdf5_path
+
+        params = {"all_videos": True, "csv": csv}
+        okay = ExportAnalysisFile_ask(context=context, params=params)
+        assert okay == True
+        ExportAnalysisFile.do_action(context=context, params=params)
+        assert_videos_written(num_videos=1, labels_path=context.state["filename"])
+
+        return
+
     # Test with all_videos False (single video)
-    params = {"all_videos": False}
+    params = {"all_videos": False, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
@@ -218,7 +236,7 @@ def test_ExportAnalysisFile(
 
     # Add labels path and test with all_videos True (single video)
     context.state["filename"] = str(tmpdir.with_name("path.to.labels"))
-    params = {"all_videos": True}
+    params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
@@ -227,7 +245,7 @@ def test_ExportAnalysisFile(
     # Add a video (no labels) and test with all_videos True
     labels.add_video(small_robot_mp4_vid)
 
-    params = {"all_videos": True}
+    params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
@@ -239,7 +257,7 @@ def test_ExportAnalysisFile(
     labels.add_instance(frame=labeled_frame, instance=instance)
     labels.append(labeled_frame)
 
-    params = {"all_videos": False}
+    params = {"all_videos": False, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
@@ -248,14 +266,14 @@ def test_ExportAnalysisFile(
     # Add specific video and test with all_videos False
     context.state["videos"] = labels.videos[1]
 
-    params = {"all_videos": False}
+    params = {"all_videos": False, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
     # Test with all videos True
-    params = {"all_videos": True}
+    params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
@@ -273,7 +291,7 @@ def test_ExportAnalysisFile(
     labels.videos[0].backend.filename = str(tmpdir / "session1" / "video.mp4")
     labels.videos[1].backend.filename = str(tmpdir / "session2" / "video.mp4")
 
-    params = {"all_videos": True}
+    params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
@@ -284,7 +302,7 @@ def test_ExportAnalysisFile(
     for video in all_videos:
         labels.remove_video(labels.videos[-1])
 
-    params = {"all_videos": True}
+    params = {"all_videos": True, "csv": csv}
     with pytest.raises(ValueError):
         okay = ExportAnalysisFile_ask(context=context, params=params)
 
@@ -438,7 +456,7 @@ def test_OpenSkeleton(
             # Original function opens FileDialog here
             filename = params["filename_in"]
         else:
-            filename = get_package_file(f"sleap/skeletons/{template}.json")
+            filename = get_package_file(f"skeletons/{template}.json")
         if len(filename) == 0:
             return False
 
@@ -504,7 +522,7 @@ def test_OpenSkeleton(
 
     # Run again with template set
     context.app.currentText = "fly32"
-    fly32_json = get_package_file(f"sleap/skeletons/fly32.json")
+    fly32_json = get_package_file(f"skeletons/fly32.json")
     OpenSkeleton_ask(context, params)
     assert params["filename"] == fly32_json
     fly32_skeleton = Skeleton.load_json(fly32_json)

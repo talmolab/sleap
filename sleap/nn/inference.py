@@ -68,7 +68,7 @@ from sleap.nn.data.pipelines import (
 )
 from sleap.nn.utils import reset_input_layer
 from sleap.io.dataset import Labels
-from sleap.util import frame_list
+from sleap.util import frame_list, make_scoped_dictionary
 from sleap.instance import PredictedInstance, LabeledFrame
 
 from tensorflow.python.framework.convert_to_constants import (
@@ -4773,8 +4773,7 @@ def load_model(
             be performed.
         tracker_window: Number of frames of history to use when tracking. No effect when
             `tracker` is `None`.
-        tracker_max_instances: If not `None`, discard instances beyond this count when
-            tracking. No effect when `tracker` is `None`.
+        tracker_max_instances: If not `None`, create at most this many tracks.
         disable_gpu_preallocation: If `True` (the default), initialize the GPU and
             disable preallocation of memory. This is necessary to prevent freezing on
             some systems with low GPU memory and has negligible impact on performance.
@@ -4824,6 +4823,7 @@ def load_model(
         # Uncompress ZIP packaged models.
         tmp_dirs = []
         for i, model_path in enumerate(model_paths):
+            mp = Path(model_path)
             if model_path.endswith(".zip"):
                 # Create temp dir on demand.
                 tmp_dir = tempfile.TemporaryDirectory()
@@ -4834,7 +4834,12 @@ def load_model(
 
                 # Extract and replace in the list.
                 shutil.unpack_archive(model_path, extract_dir=tmp_dir.name)
-                model_paths[i] = tmp_dir.name
+                unzipped_mp = Path(tmp_dir.name, mp.name).with_suffix("")
+                if Path(unzipped_mp, "best_model.h5").exists():
+                    unzipped_model_path = str(unzipped_mp)
+                else:
+                    unzipped_model_path = str(unzipped_mp.parent)
+                model_paths[i] = unzipped_model_path
 
         return model_paths, tmp_dirs
 
@@ -4857,11 +4862,18 @@ def load_model(
     )
     predictor.verbosity = progress_reporting
     if tracker is not None:
+        use_max_tracker = tracker_max_instances is not None
+        if use_max_tracker and not tracker.endswith("maxtracks"):
+            # Append maxtracks to the tracker name to use the right tracker variants.
+            tracker += "maxtracks"
+
         predictor.tracker = Tracker.make_tracker_by_name(
             tracker=tracker,
             track_window=tracker_window,
             post_connect_single_breaks=True,
-            clean_instance_count=tracker_max_instances,
+            max_tracking=use_max_tracker,
+            max_tracks=tracker_max_instances,
+            # clean_instance_count=tracker_max_instances,
         )
 
     # Remove temp dirs.
@@ -4927,7 +4939,7 @@ def export_cli(args: Optional[list] = None):
     export_model(
         args.models,
         args.export_path,
-        unrag_outputs=args.unrag,
+        unrag_outputs=(not args.ragged),
         max_instances=args.max_instances,
     )
 
@@ -4959,13 +4971,13 @@ def _make_export_cli_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
-        "-u",
-        "--unrag",
+        "-r",
+        "--ragged",
         action="store_true",
-        default=True,
+        default=False,
         help=(
-            "Convert ragged tensors into regular tensors with NaN padding. "
-            "Defaults to True."
+            "Keep tensors ragged if present. If ommited, convert ragged tensors"
+            " into regular tensors with NaN padding."
         ),
     )
     parser.add_argument(
@@ -5329,7 +5341,7 @@ def _make_tracker_from_cli(args: argparse.Namespace) -> Optional[Tracker]:
     Returns:
         An instance of `Tracker` or `None` if tracking method was not specified.
     """
-    policy_args = sleap.util.make_scoped_dictionary(vars(args), exclude_nones=True)
+    policy_args = make_scoped_dictionary(vars(args), exclude_nones=True)
     if "tracking" in policy_args:
         tracker = Tracker.make_tracker_by_name(**policy_args["tracking"])
         return tracker

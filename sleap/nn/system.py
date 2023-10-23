@@ -159,7 +159,7 @@ def summary():
         for gpu in all_gpus:
             print(f"  Device: {gpu.name}")
             print(f"         Available: {gpu in gpus}")
-            print(f"        Initalized: {is_initialized(gpu)}")
+            print(f"       Initialized: {is_initialized(gpu)}")
             print(
                 f"     Memory growth: {tf.config.experimental.get_memory_growth(gpu)}"
             )
@@ -195,6 +195,7 @@ def get_gpu_memory() -> List[int]:
         A list of the available memory on each GPU in MiB.
 
     """
+
     if shutil.which("nvidia-smi") is None:
         return []
 

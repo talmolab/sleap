@@ -1,25 +1,26 @@
 """Module for creating dock widgets for the `MainWindow`."""
 
 from typing import Callable, Iterable, List, Optional, Type, Union
+
 from qtpy import QtGui
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
-    QWidget,
-    QDockWidget,
-    QMainWindow,
-    QLabel,
     QComboBox,
+    QDockWidget,
     QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLayout,
+    QMainWindow,
     QPushButton,
     QTabWidget,
-    QLayout,
-    QHBoxLayout,
     QVBoxLayout,
+    QWidget,
 )
 
 from sleap.gui.dataviews import (
-    GenericTableView,
     GenericTableModel,
+    GenericTableView,
     LabeledFrameTableModel,
     SkeletonEdgesTableModel,
     SkeletonNodeModel,
@@ -331,7 +332,7 @@ class SkeletonDock(DockWidget):
         vb = QVBoxLayout()
         hb = QHBoxLayout()
 
-        skeletons_folder = get_package_file("sleap/skeletons")
+        skeletons_folder = get_package_file("skeletons")
         skeletons_json_files = find_files_by_suffix(
             skeletons_folder, suffix=".json", depth=1
         )

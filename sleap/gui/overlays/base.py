@@ -8,19 +8,21 @@ drawing a frame (i.e., when user navigates to a new frame or something changes
 so that current frame must be redrawn).
 """
 
-from qtpy import QtWidgets
-
-import attr
 import abc
-import numpy as np
+import logging
 from typing import Sequence, Union, Optional, List
 
+import attr
+import numpy as np
+from qtpy import QtWidgets
 from qtpy.QtWidgets import QGraphicsItem
 
 from sleap import Labels, Video
 from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.nn.data.providers import VideoReader
 from sleap.nn.inference import VisualPredictor
+
+logger = logging.getLogger(__name__)
 
 
 @attr.s(auto_attribs=True)
@@ -64,7 +66,14 @@ class BaseOverlay(abc.ABC):
         if self.items is None:
             return
         for item in self.items:
-            self.player.scene.removeItem(item)
+            try:
+                self.player.scene.removeItem(item)
+
+            except RuntimeError as e:  # Internal C++ object (PySide2.QtWidgets.QGraphicsPathItem) already deleted.
+                logger.debug(e)
+
+        # Stop tracking the items after they been removed from the scene
+        self.items = []
 
     def redraw(self, video, frame_idx, *args, **kwargs):
         """Remove all items from the scene before adding new items to the scene.
