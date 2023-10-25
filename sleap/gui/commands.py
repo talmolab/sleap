@@ -2989,24 +2989,26 @@ class AddInstance(EditCommand):
 
         has_missing_nodes = False
 
+        #calculate scale factor for getting new x and y values
+        old_size_width =  copy_instance.frame.video.shape[2]
+        old_size_height =  copy_instance.frame.video.shape[1]
+        new_size_width =  new_instance.frame.video.shape[2]
+        new_size_height =  new_instance.frame.video.shape[1]
+        scale_width = new_size_width / old_size_width
+        scale_height = new_size_height / old_size_height
+
         # go through each node in skeleton
         for node in context.state["skeleton"].node_names:
             # if we're copying from a skeleton that has this node
             if node in copy_instance and not copy_instance[node].isnan():
-                # just copy x, y, and visible
+                # Ensure x, y inside current frame, then copy x, y, and visible
                 # we don't want to copy a PredictedPoint or score attribute
                 x_old = copy_instance[node].x 
                 y_old = copy_instance[node].y 
-                old_size_width=  copy_instance.frame.video.shape[2]
-                old_size_height=  copy_instance.frame.video.shape[1]
-                new_size_width=  new_instance.frame.video.shape[2]
-                new_size_height=  new_instance.frame.video.shape[1]
-                x_new = (x_old/old_size_width) * new_size_width
-                y_new = (y_old/old_size_height) * new_size_height
+                x_new = x_old * scale_width
+                y_new = y_old * scale_height
 
                 new_instance[node] = Point(
-                    # x=copy_instance[node].x,
-                    # y=copy_instance[node].y,
                     x = x_new,
                     y = y_new,
                     visible=copy_instance[node].visible,
