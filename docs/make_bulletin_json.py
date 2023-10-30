@@ -17,13 +17,16 @@ def generate_json_file():
     date = "DEFAULT_DATE"
 
     for line in markdown_content.split("\n"):
-        if line.startswith("---"):
+        # Skip if the line begins with #
+        if line.startswith("# "):
+            continue 
+        elif line.startswith("---"):
             bulletin_json.append({"title": title, "date": date, "content": content})
             content = ""
             # Reset title and date to their default values after each section
             title = "DEFAULT_TITLE"
             date = "DEFAULT_DATE"
-        elif line.startswith("##"):
+        elif line.startswith("## "):
             title = line[3:].strip()
         elif line.startswith("_"):
             date = line[1 : len(line) - 1].strip()
