@@ -105,7 +105,7 @@ def test_announcementchecker(bulletin_json_path):
 
     # Check if latest announcement is fetched
     announcement = checker.get_latest_announcement()
-    assert announcement == ("10/12/2023", "New announcement")
+    assert announcement == ("title1", "10/12/2023", "New announcement")
 
     checker.update_announcement()
     assert context.state["announcement last seen date"] == "10/12/2023"

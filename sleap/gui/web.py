@@ -188,7 +188,7 @@ class AnnouncementChecker:
     def get_latest_announcement(self) -> Optional[Tuple[str, str]]:
         """Return latest announcements on the releases page not seen by user."""
         if self.new_announcement:
-            return (self._latest_data["date"], self._latest_data["content"])
+            return (self._latest_data["title"], self._latest_data["date"], self._latest_data["content"])
         return None
 
     def update_announcement(self):
@@ -196,8 +196,8 @@ class AnnouncementChecker:
         announcement = self.get_latest_announcement()
         if announcement is None:
             return
-        self.state["announcement last seen date"] = announcement[0]
-        self.state["announcement"] = announcement[1]
+        self.state["announcement last seen date"] = announcement[1]
+        self.state["announcement"] = announcement[2]
 
 
 def get_analytics_data() -> Dict[str, Any]:
