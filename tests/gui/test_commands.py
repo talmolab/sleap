@@ -220,7 +220,6 @@ def test_ExportAnalysisFile(
     context.state["filename"] = None
 
     if csv:
-
         context.state["filename"] = centered_pair_predictions_hdf5_path
 
         params = {"all_videos": True, "csv": csv}
@@ -986,7 +985,6 @@ def test_triangulate_session_get_all_views_at_frame(
 def test_triangulate_session_get_instances_across_views(
     multiview_min_session_labels: Labels,
 ):
-
     labels = multiview_min_session_labels
     session = labels.sessions[0]
 
@@ -1001,10 +999,11 @@ def test_triangulate_session_get_instances_across_views(
     assert len(instances) == len(session.videos)
     for vid in session.videos:
         cam = session[vid]
-        inst = instances[cam]
-        assert inst.frame_idx == lf.frame_idx
-        assert inst.track == track
-        assert inst.video == vid
+        instances_in_view = instances[cam]
+        for inst in instances_in_view:
+            assert inst.frame_idx == lf.frame_idx
+            assert inst.track == track
+            assert inst.video == vid
 
     # Try with excluding cam views
     lf: LabeledFrame = labels[2]
@@ -1027,10 +1026,11 @@ def test_triangulate_session_get_instances_across_views(
         videos_to_include
     )  # May not be true if no instances at that frame
     for cam, vid in videos_to_include.items():
-        inst = instances[cam]
-        assert inst.frame_idx == lf.frame_idx
-        assert inst.track == track
-        assert inst.video == vid
+        instances_in_view = instances[cam]
+        for inst in instances_in_view:
+            assert inst.frame_idx == lf.frame_idx
+            assert inst.track == track
+            assert inst.video == vid
 
     # Try with only a single view
     cams_to_include = [session.linked_cameras[0]]
@@ -1073,9 +1073,11 @@ def test_triangulate_session_get_and_verify_enough_instances(
     for cam in session.linked_cameras:
         if cam.name in ["side", "sideL"]:  # The views that don't have an instance
             continue
-        assert instances[cam].frame_idx == lf.frame_idx
-        assert instances[cam].track == track
-        assert instances[cam].video == session[cam]
+        instances_in_view = instances[cam]
+        for inst in instances_in_view:
+            assert inst.frame_idx == lf.frame_idx
+            assert inst.track == track
+            assert inst.video == session[cam]
 
     # Test with cams_to_include, expect views from only those cameras
     cams_to_include = session.linked_cameras[-2:]
@@ -1087,14 +1089,19 @@ def test_triangulate_session_get_and_verify_enough_instances(
     )
     assert len(instances) == len(cams_to_include)
     for cam in cams_to_include:
-        assert instances[cam].frame_idx == lf.frame_idx
-        assert instances[cam].track == track
-        assert instances[cam].video == session[cam]
+        instances_in_view = instances[cam]
+        for inst in instances_in_view:
+            assert inst.frame_idx == lf.frame_idx
+            assert inst.track == track
+            assert inst.video == session[cam]
 
     # Test with not enough instances, expect views from only those cameras
     cams_to_include = session.linked_cameras[0:2]
     instances = TriangulateSession.get_and_verify_enough_instances(
-        session=session, frame_idx=lf.frame_idx, cams_to_include=cams_to_include
+        session=session,
+        frame_idx=lf.frame_idx,
+        cams_to_include=cams_to_include,
+        track=None,
     )
     assert isinstance(instances, bool)
     assert not instances
@@ -1229,10 +1236,15 @@ def test_triangulate_session_update_instances(multiview_min_session_labels: Labe
     instances_and_coordinates = TriangulateSession.calculate_reprojected_points(
         session=session, instances=instances
     )
-    for inst, inst_coords in instances_and_coordinates:
-        assert inst_coords.shape == (1, len(inst.skeleton), 2)  # Tracks, Nodes, 2
-        # Assert coord are different from original
-        assert not np.array_equal(inst_coords, inst.points_array)
+    for instances_in_view, inst_coords in instances_and_coordinates:
+        for inst in instances_in_view:
+            assert inst_coords.shape == (
+                len(instances_in_view),
+                len(inst.skeleton),
+                2,
+            )  # Tracks, Nodes, 2
+            # Assert coord are different from original
+            assert not np.array_equal(inst_coords, inst.points_array)
 
     # Just run for code coverage testing, do not test output here (race condition)
     # (see "functional core, imperative shell" pattern)

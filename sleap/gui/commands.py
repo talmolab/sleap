@@ -1947,7 +1947,6 @@ class AddSession(EditCommand):
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-
         camera_calibration = params["camera_calibration"]
         session = RecordingSession.load(filename=camera_calibration)
 
@@ -3479,7 +3478,7 @@ class TriangulateSession(EditCommand):
         if session is None or instance is None:
             return
 
-        track = instance.track
+        track = instance.track  # TODO(LM): Replace with InstanceGroup
         cams_to_include = params.get("cams_to_include", None) or session.linked_cameras
 
         # If not enough `Camcorder`s available/specified, then return
@@ -3516,7 +3515,7 @@ class TriangulateSession(EditCommand):
         frame_idx: int,
         context: Optional[CommandContext] = None,
         cams_to_include: Optional[List[Camcorder]] = None,
-        track: Optional[Track] = None,
+        track: Union[Track, int] = -1,
         show_dialog: bool = True,
     ) -> Union[Dict[Camcorder, Instance], bool]:
         """Get all instances accross views at this frame index.
@@ -3528,7 +3527,8 @@ class TriangulateSession(EditCommand):
             frame_idx: Frame index to get instances from (0-indexed).
             context: The optional command context used to display a dialog.
             cams_to_include: List of `Camcorder`s to include. Default is all.
-            track: `Track` object used to find instances accross views. Default is None.
+            track: `Track` object used to find instances accross views. Default is -1
+                which finds all instances regardless of track.
             show_dialog: If True, then show a warning dialog. Default is True.
 
         Returns:
@@ -3601,7 +3601,7 @@ class TriangulateSession(EditCommand):
         session: RecordingSession,
         frame_idx: int,
         cams_to_include: Optional[List[Camcorder]] = None,
-        track: Optional["Track"] = None,
+        track: Union["Track", int] = -1,
         require_multiple_views: bool = False,
     ) -> Dict[Camcorder, "Instance"]:
         """Get all `Instances` accross all views at a given frame index.
@@ -3610,7 +3610,8 @@ class TriangulateSession(EditCommand):
             session: The `RecordingSession` containing the `Camcorder`s.
             frame_idx: Frame index to get instances from (0-indexed).
             cams_to_include: List of `Camcorder`s to include. Default is all.
-            track: `Track` object used to find instances accross views. Default is None.
+            track: `Track` object used to find instances accross views. Default is -1
+                which find all instances regardless of track.
             require_multiple_views: If True, then raise and error if one or less views
                 or instances are found.
 
@@ -3643,7 +3644,7 @@ class TriangulateSession(EditCommand):
         for cam, lf in views.items():
             insts = lf.find(track=track)
             if len(insts) > 0:
-                instances[cam] = insts[0]
+                instances[cam] = insts
 
         # If not enough instances for multiple views, then raise error
         if len(instances) <= 1 and require_multiple_views:
@@ -3699,7 +3700,7 @@ class TriangulateSession(EditCommand):
     def get_instances_matrices(instances_ordered: List[Instance]) -> np.ndarray:
         """Gather instances from views into M x F x T x N x 2 an array.
 
-        M: # views, F: # frames = 1, T: # tracks = 1, N: # nodes, 2: x, y
+        M: # views, F: # frames = 1, T: # tracks, N: # nodes, 2: x, y
 
         Args:
             instances_ordered: List of instances from view (following the order of the
@@ -3710,12 +3711,19 @@ class TriangulateSession(EditCommand):
         """
 
         # Gather instances into M x F x T x N x 2 arrays (require specific order)
-        # (M = # views, F = # frames = 1, T = # tracks = 1, N = # nodes, 2 = x, y)
-        inst_coords = np.stack(
-            [inst.numpy() for inst in instances_ordered], axis=0
-        )  # M x N x 2
-        inst_coords = np.expand_dims(inst_coords, axis=1)  # M x T=1 x N x 2
-        inst_coords = np.expand_dims(inst_coords, axis=1)  # M x F=1 x T=1 x N x 2
+        # (M = # views, F = # frames = 1, T = # tracks, N = # nodes, 2 = x, y)
+
+        # Get list of instances matrices from each view
+
+        inst_coords = [
+            np.stack(
+                [inst.numpy() for inst in instances_in_view],
+                axis=0,
+            )
+            for instances_in_view in instances_ordered
+        ]  # List[T x N x 2]
+        inst_coords = np.stack(inst_coords, axis=0)  # M x T x N x 2
+        inst_coords = np.expand_dims(inst_coords, axis=1)  # M x F=1 x T x N x 2
 
         return inst_coords
 
@@ -3742,7 +3750,7 @@ class TriangulateSession(EditCommand):
 
     @staticmethod
     def calculate_reprojected_points(
-        session: RecordingSession, instances: Dict[Camcorder, "Instance"]
+        session: RecordingSession, instances: Dict[Camcorder, List[Instance]]
     ) -> Iterator[Tuple["Instance", np.ndarray]]:
         """Triangulate and reproject instance coordinates.
 
@@ -3752,12 +3760,12 @@ class TriangulateSession(EditCommand):
         https://github.com/lambdaloop/aniposelib/blob/d03b485c4e178d7cff076e9fe1ac36837db49158/aniposelib/cameras.py#L491
 
         Args:
-            instances: Dict with `Camcorder` keys and `Instance` values.
+            instances: Dict with `Camcorder` keys and `List[Instance]` values.
 
         Returns:
             A zip of the ordered instances and the related reprojected coordinates. Each
-            element in the coordinates is a numpy array of shape (1, N, 2) where N is
-            the number of nodes.
+            element in the coordinates is a numpy array of shape (T, N, 2) where N is
+            the number of nodes and T is the number of reprojected instances.
         """
 
         # TODO (LM): Support multiple tracks and optimize
@@ -3770,23 +3778,23 @@ class TriangulateSession(EditCommand):
         ]
 
         # Gather instances into M x F x T x N x 2 arrays (require specific order)
-        # (M = # views, F = # frames = 1, T = # tracks = 1, N = # nodes, 2 = x, y)
+        # (M = # views, F = # frames = 1, T = # tracks, N = # nodes, 2 = x, y)
         inst_coords = TriangulateSession.get_instances_matrices(
             instances_ordered=instances_ordered
-        )  # M x F=1 x T=1 x N x 2
+        )  # M x F=1 x T x N x 2
         points_3d = triangulate(
             p2d=inst_coords,
             calib=session.camera_cluster,
             excluded_views=excluded_views,
-        )  # F=1, T=1, N, 3
+        )  # F=1, T, N, 3
 
         # Update the views with the new 3D points
         inst_coords_reprojected = reproject(
             points_3d, calib=session.camera_cluster, excluded_views=excluded_views
-        )  # M x F=1 x T=1 x N x 2
+        )  # M x F=1 x T x N x 2
         insts_coords_list: List[np.ndarray] = np.split(
             inst_coords_reprojected.squeeze(), inst_coords_reprojected.shape[0], axis=0
-        )  # len(M) of T=1 x N x 2
+        )  # len(M) of T x N x 2
 
         return zip(instances_ordered, insts_coords_list)
 
@@ -3810,10 +3818,11 @@ class TriangulateSession(EditCommand):
         )
 
         # Update the instance coordinates.
-        for inst, inst_coord in instances_and_coords:
-            inst.update_points(
-                points=inst_coord[0], exclude_complete=True
-            )  # inst_coord is (1, N, 2)
+        for instances_in_view, inst_coord in instances_and_coords:
+            for inst_idx, inst in enumerate(instances_in_view):
+                inst.update_points(
+                    points=inst_coord[inst_idx], exclude_complete=True
+                )  # inst_coord is (T, N, 2)
 
 
 def open_website(url: str):
