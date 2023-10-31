@@ -35,6 +35,7 @@ import sys
 import traceback
 from enum import Enum
 from glob import glob
+from itertools import product
 from pathlib import Path, PurePath
 from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type, Union
 
@@ -3601,9 +3602,9 @@ class TriangulateSession(EditCommand):
         session: RecordingSession,
         frame_idx: int,
         cams_to_include: Optional[List[Camcorder]] = None,
-        track: Union["Track", int] = -1,
+        track: Union[Track, int] = -1,
         require_multiple_views: bool = False,
-    ) -> Dict[Camcorder, "Instance"]:
+    ) -> Dict[Camcorder, List[Instance]]:
         """Get all `Instances` accross all views at a given frame index.
 
         Args:
@@ -3616,7 +3617,7 @@ class TriangulateSession(EditCommand):
                 or instances are found.
 
         Returns:
-            Dict with `Camcorder` keys and `Instances` values.
+            Dict with `Camcorder` keys and `List[Instance]` values.
 
         Raises:
             ValueError if require_multiple_view is true and one or less views or
@@ -3710,18 +3711,14 @@ class TriangulateSession(EditCommand):
             M x F x T x N x 2 array of instances coordinates.
         """
 
-        # Gather instances into M x F x T x N x 2 arrays (require specific order)
-        # (M = # views, F = # frames = 1, T = # tracks, N = # nodes, 2 = x, y)
-
         # Get list of instances matrices from each view
-
         inst_coords = [
             np.stack(
                 [inst.numpy() for inst in instances_in_view],
                 axis=0,
             )
             for instances_in_view in instances_ordered
-        ]  # List[T x N x 2]
+        ]  # len(M), List[T x N x 2]
         inst_coords = np.stack(inst_coords, axis=0)  # M x T x N x 2
         inst_coords = np.expand_dims(inst_coords, axis=1)  # M x F=1 x T x N x 2
 
@@ -3751,7 +3748,7 @@ class TriangulateSession(EditCommand):
     @staticmethod
     def calculate_reprojected_points(
         session: RecordingSession, instances: Dict[Camcorder, List[Instance]]
-    ) -> Iterator[Tuple["Instance", np.ndarray]]:
+    ) -> Dict[Camcorder, Tuple["Instance", np.ndarray]]:
         """Triangulate and reproject instance coordinates.
 
         Note that the order of the instances in the list must match the order of the
@@ -3768,14 +3765,13 @@ class TriangulateSession(EditCommand):
             the number of nodes and T is the number of reprojected instances.
         """
 
-        # TODO (LM): Support multiple tracks and optimize
+        # TODO (LM): Optimize
 
         excluded_views = TriangulateSession.calculate_excluded_views(
             session=session, instances=instances
         )
-        instances_ordered = [
-            instances[cam] for cam in session.cameras if cam in instances
-        ]
+        cams_ordered = [cam for cam in session.cameras if cam in instances]
+        instances_ordered = [instances[cam] for cam in cams_ordered]
 
         # Gather instances into M x F x T x N x 2 arrays (require specific order)
         # (M = # views, F = # frames = 1, T = # tracks, N = # nodes, 2 = x, y)
@@ -3796,7 +3792,14 @@ class TriangulateSession(EditCommand):
             inst_coords_reprojected.squeeze(), inst_coords_reprojected.shape[0], axis=0
         )  # len(M) of T x N x 2
 
-        return zip(instances_ordered, insts_coords_list)
+        insts_and_coords: Dict[Camcorder, Tuple[Instance, np.ndarray]] = {
+            cam: (instances_in_view, inst_coords)
+            for cam, instances_in_view, inst_coords in zip(
+                cams_ordered, instances_ordered, insts_coords_list
+            )
+        }
+
+        return insts_and_coords
 
     @staticmethod
     def update_instances(session, instances: Dict[Camcorder, Instance]):
@@ -3811,14 +3814,14 @@ class TriangulateSession(EditCommand):
         """
 
         # Triangulate and reproject instance coordinates.
-        instances_and_coords: Iterator[
-            Tuple["Instance", np.ndarray]
+        instances_and_coords: Dict[
+            Camcorder, Tuple[Instance, np.ndarray]
         ] = TriangulateSession.calculate_reprojected_points(
             session=session, instances=instances
         )
 
         # Update the instance coordinates.
-        for instances_in_view, inst_coord in instances_and_coords:
+        for cam, (instances_in_view, inst_coord) in instances_and_coords.items():
             for inst_idx, inst in enumerate(instances_in_view):
                 inst.update_points(
                     points=inst_coord[inst_idx], exclude_complete=True

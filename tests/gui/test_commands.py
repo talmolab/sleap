@@ -1189,11 +1189,13 @@ def test_triangulate_session_calculate_reprojected_points(
     )
 
     # Check that we get the same number of instances as input
-    assert len(instances) == len(list(instances_and_coords))
+    assert len(instances) == len(instances_and_coords)
 
     # Check that each instance has the same number of points
-    for inst, inst_coords in instances_and_coords:
-        assert inst_coords.shape[1] == len(inst.skeleton)  # (1, 15, 2)
+    for instances_in_view, inst_coords in instances_and_coords.values():
+        assert inst_coords.shape[0] == len(instances_in_view)
+        for inst in instances_in_view:
+            assert inst_coords.shape[1] == len(inst.skeleton)  # (1, 15, 2)
 
 
 def test_triangulate_session_get_instances_matrices(
@@ -1236,7 +1238,7 @@ def test_triangulate_session_update_instances(multiview_min_session_labels: Labe
     instances_and_coordinates = TriangulateSession.calculate_reprojected_points(
         session=session, instances=instances
     )
-    for instances_in_view, inst_coords in instances_and_coordinates:
+    for instances_in_view, inst_coords in instances_and_coordinates.values():
         for inst in instances_in_view:
             assert inst_coords.shape == (
                 len(instances_in_view),
