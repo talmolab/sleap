@@ -37,7 +37,7 @@ from enum import Enum
 from glob import glob
 from itertools import product
 from pathlib import Path, PurePath
-from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type, Union
+from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type, Union, cast
 
 import attr
 import cv2
@@ -3427,7 +3427,7 @@ class TriangulateSession(EditCommand):
         TriangulateSession.update_instances(session=session, instances=instances)
 
     @classmethod
-    def ask(cls, context: CommandContext, params: dict):
+    def ask(cls, context: CommandContext, params: dict) -> bool:
         """Add "instances" to params dict if enough views/instances, warning user otherwise.
 
         Args:
@@ -3447,7 +3447,7 @@ class TriangulateSession(EditCommand):
         return cls.verify_views_and_instances(context=context, params=params)
 
     @classmethod
-    def verify_views_and_instances(cls, context: CommandContext, params: dict):
+    def verify_views_and_instances(cls, context: CommandContext, params: dict) -> bool:
         """Verify that there are enough views and instances to triangulate.
 
         Also adds "instances" to params dict if there are enough views and instances.
@@ -3466,6 +3466,7 @@ class TriangulateSession(EditCommand):
         Returns:
             True if enough views/instances for triangulation, False otherwise.
         """
+
         video = params.get("video", None) or context.state["video"]
         session = params.get("session", None) or context.labels.get_session(video)
         instance = params.get("instance", None) or context.state["instance"]
@@ -3495,7 +3496,7 @@ class TriangulateSession(EditCommand):
         instances = TriangulateSession.get_and_verify_enough_instances(
             context=context,
             session=session,
-            frame_idx=frame_idx,
+            frame_inds=[frame_idx],
             cams_to_include=cams_to_include,
             track=track,
             show_dialog=show_dialog,
@@ -3513,19 +3514,19 @@ class TriangulateSession(EditCommand):
     @staticmethod
     def get_and_verify_enough_instances(
         session: RecordingSession,
-        frame_idcs: List[int],
+        frame_inds: List[int],
         context: Optional[CommandContext] = None,
         cams_to_include: Optional[List[Camcorder]] = None,
         track: Union[Track, int] = -1,
         show_dialog: bool = True,
-    ) -> Union[Dict[Camcorder, Instance], bool]:
+    ) -> Union[Dict[int, Dict[Camcorder, List[Instance]]], bool]:
         """Get all instances accross views at this frame index.
 
         If not enough `Instance`s are available at this frame index, then return False.
 
         Args:
             session: The `RecordingSession` containing the `Camcorder`s.
-            frame_idcs: List of frame indices to get instances from (0-indexed).
+            frame_inds: List of frame indices to get instances from (0-indexed).
             context: The optional command context used to display a dialog.
             cams_to_include: List of `Camcorder`s to include. Default is all.
             track: `Track` object used to find instances accross views. Default is -1
@@ -3533,15 +3534,17 @@ class TriangulateSession(EditCommand):
             show_dialog: If True, then show a warning dialog. Default is True.
 
         Returns:
-            Dict with `Camcorder` keys and `Instances` values (or False if not enough
-            instances at this frame index).
+            Dict with frame identifier keys (does not necessarily need to be the frame
+            index) and values of another inner dict with `Camcorder` keys and
+            `List[Instance]` values if enough instances are found, False otherwise.
         """
+
         try:
             instances: Dict[
-                int, Dict[Camcorder, Instance]
-            ] = TriangulateSession.get_instances_across_views(
+                int, Dict[Camcorder, List[Instance]]
+            ] = TriangulateSession.get_instances_across_views_multiple_frames(
                 session=session,
-                frame_idcs=frame_idcs,
+                frame_inds=frame_inds,
                 cams_to_include=cams_to_include,
                 track=track,
                 require_multiple_views=True,
@@ -3549,10 +3552,9 @@ class TriangulateSession(EditCommand):
             return instances
         except ValueError:
             # If not enough views or instances, then return
-            message = (
-                "One or less instances found for frame "
-                f"{frame_idx} in {session.camera_cluster}. "
-                "Multiple instances accross multiple views needed to triangulate. "
+            message = traceback.format_exc()
+            message += (
+                "\nMultiple instances accross multiple views needed to triangulate. "
                 "Skipping triangulation and reprojection."
             )
             if show_dialog and context is not None:
@@ -3692,7 +3694,7 @@ class TriangulateSession(EditCommand):
     @staticmethod
     def get_instances_across_views(
         session: RecordingSession,
-        frame_idcs: List[int],
+        frame_idx: int,
         cams_to_include: Optional[List[Camcorder]] = None,
         track: Union[Track, int] = -1,
         require_multiple_views: bool = False,
@@ -3701,7 +3703,7 @@ class TriangulateSession(EditCommand):
 
         Args:
             session: The `RecordingSession` containing the `Camcorder`s.
-            frame_idcs: List of frame indices to get instances from (0-indexed).
+            frame_idx: Frame index to get instances from (0-indexed).
             cams_to_include: List of `Camcorder`s to include. Default is all.
             track: `Track` object used to find instances accross views. Default is -1
                 which find all instances regardless of track.
@@ -3717,39 +3719,86 @@ class TriangulateSession(EditCommand):
         """
 
         # Get all views at this frame index
-        instances: Dict[int, Dict[Camcorder, List[Instance]]] = {}
-        for frame_idx in frame_idcs:
-            views: Dict[
-                Camcorder, "LabeledFrame"
-            ] = TriangulateSession.get_all_views_at_frame(
-                session=session,
-                frame_idx=frame_idx,
-                cams_to_include=cams_to_include,
+        views: Dict[
+            Camcorder, "LabeledFrame"
+        ] = TriangulateSession.get_all_views_at_frame(
+            session=session,
+            frame_idx=frame_idx,
+            cams_to_include=cams_to_include,
+        )
+
+        # TODO(LM): Should we just skip this frame if not enough views?
+        # If not enough views, then raise error
+        if len(views) <= 1 and require_multiple_views:
+            raise ValueError(
+                "One or less views found for frame "
+                f"{frame_idx} in {session.camera_cluster}."
             )
 
-            # TODO(LM): Should we just skip this frame if not enough views?
-            # If not enough views, then raise error
-            if len(views) <= 1 and require_multiple_views:
-                raise ValueError(
-                    "One or less views found for frame "
-                    f"{frame_idx} in {session.camera_cluster}."
+        # Find all instance accross all views
+        instances_in_frame: Dict[Camcorder, List[Instance]] = {}
+        for cam, lf in views.items():
+            insts = lf.find(track=track)
+            if len(insts) > 0:
+                instances_in_frame[cam] = insts
+
+        # If not enough instances for multiple views, then raise error
+        if len(instances_in_frame) <= 1 and require_multiple_views:
+            raise ValueError(
+                "One or less instances found for frame "
+                f"{frame_idx} in {session.camera_cluster}."
+            )
+
+        return instances_in_frame
+
+    @staticmethod
+    def get_instances_across_views_multiple_frames(
+        session: RecordingSession,
+        frame_inds: List[int],
+        cams_to_include: Optional[List[Camcorder]] = None,
+        track: Union[Track, int] = -1,
+        require_multiple_views: bool = False,
+    ) -> Dict[int, Dict[Camcorder, List[Instance]]]:
+        """Get all `Instances` accross all views at all given frame indices.
+
+        Args:
+            session: The `RecordingSession` containing the `Camcorder`s.
+            frame_inds: List of frame indices to get instances from (0-indexed).
+            cams_to_include: List of `Camcorder`s to include. Default is all.
+            track: `Track` object used to find instances accross views. Default is -1
+                which find all instances regardless of track.
+            require_multiple_views: If True, then raise and error if one or less views
+                or instances are found.
+
+        Returns:
+            Dict with frame identifier keys (does not necessarily need to be the frame
+            index) and values of another inner dict with `Camcorder` keys and
+            `List[Instance]` values.
+        """
+
+        instances: Dict[int, Dict[Camcorder, List[Instance]]] = {}
+        for frame_idx in frame_inds:
+            try:
+                # Find all instance accross all views
+                instances_in_frame = TriangulateSession.get_instances_across_views(
+                    session=session,
+                    frame_idx=frame_idx,
+                    cams_to_include=cams_to_include,
+                    track=track,
+                    require_multiple_views=require_multiple_views,
                 )
+                instances[frame_idx] = instances_in_frame
+            except ValueError:
+                message = traceback.format_exc()
+                message += " Skipping frame."
+                logger.warning(f"{message}")
 
-            # Find all instance accross all views
-            instances_in_frame: Dict[Camcorder, "Instance"] = {}
-            for cam, lf in views.items():
-                insts = lf.find(track=track)
-                if len(insts) > 0:
-                    instances_in_frame[cam] = insts
-
-            # If not enough instances for multiple views, then raise error
-            if len(instances_in_frame) <= 1 and require_multiple_views:
-                raise ValueError(
-                    "One or less instances found for frame "
-                    f"{frame_idx} in {session.camera_cluster}."
-                )
-
-            instances[frame_idx] = instances_in_frame
+        if len(instances) == 0:
+            frame_inds_str = ", ".join([str(frame_idx) for frame_idx in frame_inds])
+            raise ValueError(
+                "Not enough instances or views found for any frame identifiers in "
+                f"{frame_inds_str}."
+            )
 
         return instances
 
@@ -3796,8 +3845,9 @@ class TriangulateSession(EditCommand):
 
     @staticmethod
     def get_instances_matrices(
-        instances: Dict[int, Dict[Camcorder, List[Instance]]]
-    ) -> np.ndarray:
+        instances: Dict[int, Dict[Camcorder, List[Instance]]],
+        session: Optional[RecordingSession] = None,
+    ) -> Tuple[np.ndarray, List[Camcorder]]:
         """Gather instances from views into M x F x T x N x 2 an array.
 
         M: # views, F: # frames = 1, T: # tracks, N: # nodes, 2: x, y
@@ -3808,54 +3858,117 @@ class TriangulateSession(EditCommand):
         Args:
             instances: Dict with frame indices as keys and another Dict with `Camcorder`
                 keys and `List[Instance]` values.
+            session: The `RecordingSession` containing the `Camcorder`s. Used to order
+                the instances in the matrix as expected for triangulation.
 
         Returns:
-            M x F x T x N x 2 array of instances coordinates.
+            M x F x T x N x 2 array of instances coordinates and the ordered list of
+            `Camcorder`s by which the instances are ordered.
         """
 
+        cams_ordered = None
+
         # Get M X T X N X 2 array of instances coordinates for each frame
-        inst_coords_all_frames = []
-        for frame_idx, instances_in_frame in instances.items():
+        inst_coords_frames = []
+        for instances_in_frame in instances.values():
+
+            # Get correct camera ordering
+            if cams_ordered is None:
+                if session is None:
+                    logger.warning(
+                        "No session provided. Cannot organize instance coordinates to "
+                        "be compatible for triangulation."
+                    )
+                    cams_ordered = [cam for cam in instances_in_frame]
+                else:
+                    cams_ordered = [
+                        cam for cam in session.cameras if cam in instances_in_frame
+                    ]
+
             # Get list of instances matrices from each view
             inst_coords_in_views = [
                 np.stack(
-                    [inst.numpy() for inst in instances_in_view],
+                    [inst.numpy() for inst in instances_in_frame[cam]],
                     axis=0,
                 )
-                for instances_in_view in instances_in_frame.values()  # TODO(LM): Ensure ordered correctly
+                for cam in cams_ordered
             ]  # len(M), List[T x N x 2]
+
             inst_coords_views = np.stack(inst_coords_in_views, axis=0)  # M x T x N x 2
-            inst_coords_all_frames.append(
+            inst_coords_frames.append(
                 inst_coords_views
             )  # len=frame_idx, List[M x T x N x 2]
-        inst_coords = np.stack(inst_coords_all_frames, axis=1)  # M x F x T x N x 2
+        inst_coords = np.stack(inst_coords_frames, axis=1)  # M x F x T x N x 2
 
-        return inst_coords
+        return inst_coords, cams_ordered
 
     @staticmethod
     def calculate_excluded_views(
         session: RecordingSession,
-        instances: Dict[Camcorder, "Instance"],
+        cameras_being_used: Union[Dict[Camcorder, List[Instance]], List[Camcorder]],
     ) -> Tuple[str]:
         """Get excluded views from dictionary of `Camcorder` to `Instance`.
 
         Args:
             session: The `RecordingSession` containing the `Camcorder`s.
-            instances: Dict with `Camcorder` key and `Instance` values.
+            cameras_being_used: List of `Camcorder`s.
 
         Returns:
             Tuple of excluded view names.
         """
 
         # Calculate excluded views from included cameras
-        cams_excluded = set(session.cameras) - set(instances.keys())
+        cams_excluded = set(session.cameras) - set(cameras_being_used)
         excluded_views = tuple(cam.name for cam in cams_excluded)
+        excluded_views = cast(Tuple[str], excluded_views)  # cam.name could be Any
+
+        return excluded_views
+
+    @staticmethod
+    def calculate_excluded_views_multiple_frames(
+        session: RecordingSession,
+        instances: Dict[int, Dict[Camcorder, List[Instance]]],
+    ) -> Tuple[str]:
+        """Get excluded views from dictionary of `Camcorder` to `Instance`.
+
+        Args:
+            session: The `RecordingSession` containing the `Camcorder`s.
+            instances: Dict with frame identifier keys (does not necessarily need to be
+                the frame index) and values of another inner dict with `Camcorder` keys
+                and `List[Instance]` values.
+
+        Returns:
+            Tuple of excluded view names.
+
+        Raises:
+            ValueError if excluded views are not the same across frames.
+        """
+
+        # Calculate excluded views from included cameras
+        excluded_views = None
+        for frame_idx, instances_in_frame in instances.items():
+            excluded_views_prev = excluded_views
+            excluded_views = TriangulateSession.calculate_excluded_views(
+                session=session, cameras_being_used=instances_in_frame
+            )
+            if excluded_views_prev is None:
+                prev_frame_idx = frame_idx
+                continue
+            elif excluded_views != excluded_views_prev:
+                raise ValueError(
+                    "Excluded views are not the same across frames. "
+                    f"\n\tExcluded views in frame identifier {prev_frame_idx}: {excluded_views_prev}. "
+                    f"\n\tExcluded views in frame identifier {frame_idx}: {excluded_views}."
+                )
+            prev_frame_idx = frame_idx
+
+        excluded_views = cast(Tuple[str], excluded_views)  # Could be None if no frames
 
         return excluded_views
 
     @staticmethod
     def calculate_reprojected_points(
-        session: RecordingSession, instances: Dict[Camcorder, List[Instance]]
+        session: RecordingSession, instances: Dict[int, Dict[Camcorder, List[Instance]]]
     ) -> Dict[Camcorder, Tuple["Instance", np.ndarray]]:
         """Triangulate and reproject instance coordinates.
 
@@ -3865,57 +3978,72 @@ class TriangulateSession(EditCommand):
         https://github.com/lambdaloop/aniposelib/blob/d03b485c4e178d7cff076e9fe1ac36837db49158/aniposelib/cameras.py#L491
 
         Args:
-            instances: Dict with `Camcorder` keys and `List[Instance]` values.
-
+            session: The `RecordingSession` containing the `Camcorder`s.
+            instances: Dict with frame identifier keys (does not necessarily need to be
+                the frame index) and values of another inner dict with `Camcorder` keys
+                and `List[Instance]` values.
         Returns:
             A zip of the ordered instances and the related reprojected coordinates. Each
             element in the coordinates is a numpy array of shape (T, N, 2) where N is
             the number of nodes and T is the number of reprojected instances.
         """
 
-        # TODO (LM): Optimize
-
-        excluded_views = TriangulateSession.calculate_excluded_views(
-            session=session, instances=instances
+        # Derive the excluded views from the included cameras and ensures all frames
+        # have the same excluded views.
+        excluded_views = TriangulateSession.calculate_excluded_views_multiple_frames(
+            instances=instances, session=session
         )
-        cams_ordered = [cam for cam in session.cameras if cam in instances]
-        instances_ordered = [instances[cam] for cam in cams_ordered]
 
         # Gather instances into M x F x T x N x 2 arrays (require specific order)
-        # (M = # views, F = # frames = 1, T = # tracks, N = # nodes, 2 = x, y)
-        inst_coords = TriangulateSession.get_instances_matrices(
-            instances_ordered=instances_ordered
-        )  # M x F=1 x T x N x 2
+        # (M = # views, F = # frames, T = # tracks, N = # nodes, 2 = x, y)
+        inst_coords, cams_ordered = TriangulateSession.get_instances_matrices(
+            instances=instances, session=session
+        )  # M x F x T x N x 2
         points_3d = triangulate(
             p2d=inst_coords,
             calib=session.camera_cluster,
             excluded_views=excluded_views,
-        )  # F=1, T, N, 3
+        )  # F, T, N, 3
 
-        # Update the views with the new 3D points
+        # Get the reprojected 2D points from the 3D points
         inst_coords_reprojected = reproject(
             points_3d, calib=session.camera_cluster, excluded_views=excluded_views
-        )  # M x F=1 x T x N x 2
-        insts_coords_list: List[np.ndarray] = np.split(
-            inst_coords_reprojected.squeeze(), inst_coords_reprojected.shape[0], axis=0
-        )  # len(M) of T x N x 2
+        )  # M x F x T x N x 2
+        insts_coords_frames_list: List[np.ndarray] = np.split(
+            inst_coords_reprojected, inst_coords_reprojected.shape[1], axis=1
+        )  # len(F) of M x T x N x 2
+        insts_coords_list: List[List[np.ndarray]] = [
+            np.split(insts_coords_views, insts_coords_views.shape[0], axis=0)
+            for insts_coords_views in insts_coords_frames_list
+        ]  # len(F) of [len(M) of T x N x 2]
 
-        insts_and_coords: Dict[Camcorder, Tuple[Instance, np.ndarray]] = {
-            cam: (instances_in_view, inst_coords)
-            for cam, instances_in_view, inst_coords in zip(
-                cams_ordered, instances_ordered, insts_coords_list
-            )
-        }
+        # Group together the reordered (by cam) instances and the reprojected coords.
+        insts_and_coords: Dict[
+            int, Dict[Camcorder, Iterator[Tuple[List[Instance], List[np.ndarray]]]]
+        ]  # Dict len(F) of [list len(M) of array (T x N x 2)]
+        for frame_idx, instances_in_frame in instances.items():
+            insts_and_coords_in_frame = {}
+            for cam_idx, cam in enumerate(cams_ordered):
+                instances_in_frame_ordered = instances_in_frame[cam]
+                insts_coords_in_frame = insts_coords_list[frame_idx][cam_idx]
+                insts_and_coords_in_frame[cam] = zip(
+                    instances_in_frame_ordered, insts_coords_in_frame
+                )
+            insts_and_coords[frame_idx] = insts_and_coords_in_frame
 
         return insts_and_coords
 
     @staticmethod
-    def update_instances(session, instances: Dict[Camcorder, Instance]):
+    def update_instances(
+        session, instances: Dict[int, Dict[Camcorder, List[Instance]]]
+    ):
         """Triangulate, reproject, and update coordinates of `Instances`.
 
         Args:
             session: The `RecordingSession` containing the `Camcorder`s.
-            instances: Dict with `Camcorder` keys and `Instance` values.
+            instances: Dict with frame identifier keys (does not necessarily need to be
+                the frame index) and values of another inner dict with `Camcorder` keys
+                and `List[Instance]` values.
 
         Returns:
             None
