@@ -53,10 +53,14 @@ import traceback
 from logging import getLogger
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
+from datetime import date
 
 from qtpy import QtCore, QtGui
-from qtpy.QtCore import QEvent, Qt
+from qtpy.QtCore import QEvent, Qt, QUrl
 from qtpy.QtWidgets import QApplication, QMainWindow, QMessageBox
+
+from qtpy.QtWebChannel import QWebChannel
+from qtpy.QtWebEngineWidgets import QWebEngineView
 
 import sleap
 from sleap.gui.color import ColorManager
@@ -159,8 +163,21 @@ class MainWindow(QMainWindow):
         self.state["share usage data"] = prefs["share usage data"]
         self.state["skeleton_preview_image"] = None
         self.state["skeleton_description"] = "No skeleton loaded yet"
-        self.state["announcement last seen date"] = prefs["announcement last seen date"]
-        self.state["announcement"] = prefs["announcement"]
+
+        if prefs["announcement last seen date"]:
+            self.state["announcement last seen date"] = prefs[
+                "announcement last seen date"
+            ]
+        else:
+            self.state["announcement last seen date"] = date.today().strftime(
+                "%m/%d/%Y"
+            )
+
+        if prefs["announcement"]:
+            self.state["announcement"] = prefs["announcement"]
+        else:
+            self.state["announcement"] = "No data to display"
+
         if no_usage_data:
             self.state["share usage data"] = False
         self.state["clipboard_track"] = None
@@ -171,12 +188,9 @@ class MainWindow(QMainWindow):
         self.state.connect("show non-visible nodes", self.plotFrame)
 
         self.release_checker = ReleaseChecker()
+
         self.announcement_checker = AnnouncementChecker(state=self.state)
-
-        self.new_announcement = self.announcement_checker.new_announcement
-
-        if self.new_announcement:
-            self.display_bulletin = BulletinDialog(app=self)
+        self.new_announcement_available = self.announcement_checker.new_announcement
 
         if self.state["share usage data"]:
             ping_analytics()
@@ -196,6 +210,36 @@ class MainWindow(QMainWindow):
             self.commands.loadLabelsObject(labels=labels)
         else:
             self.state["project_loaded"] = False
+
+        # Display announcement bulletin popup
+        if self.new_announcement_available:
+            self.display_bulletin = BulletinDialog()
+            self.bulletin_dialog()
+
+    def bulletin_dialog(self):
+        """Displays bulletin dialog is new announcement is available."""
+        announcement = self.announcement_checker.get_latest_announcement()
+
+        if announcement:
+            title, date, content = announcement
+            bulletin_markdown = "\n".join(content.split("\n"))
+
+            channel = QWebChannel()
+            channel.registerObject("content", self.display_bulletin)
+
+            self.display_bulletin.set_text(bulletin_markdown)
+
+            view = QWebEngineView()
+            view.page().setWebChannel(channel)
+            base_path = os.path.dirname(os.path.abspath(os.path.join(__file__)))
+            filepath = os.path.join(
+                base_path, "..", "gui", "dialogs", "bulletin", "markdown.html"
+            )
+            url = QUrl.fromLocalFile(filepath)
+            view.load(url)
+            view.resize(720, 540)
+            view.show()
+            QApplication.exec_()
 
     def setWindowTitle(self, value):
         """Sets window title (if value is not None)."""

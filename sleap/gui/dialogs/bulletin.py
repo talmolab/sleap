@@ -2,26 +2,31 @@
 GUI for displaying the new announcement.
 """
 
-from typing import List
-from qtpy import QtWidgets
+import os
+import sleap
+import sleap.gui.web
+from qtpy.QtWidgets import QApplication
+from qtpy.QtCore import Property, Signal, QObject, QUrl
+from qtpy.QtWebChannel import QWebChannel
+from qtpy.QtWebEngineWidgets import QWebEngineView
+from sleap.gui.commands import CommandContext
+from sleap.io.dataset import Labels
 
 
-class BulletinDialog(QtWidgets.QDialog):
-    """
-    Dialog window to display the announcement.
-    """
+class BulletinDialog(QObject):
+    textChanged = Signal(str)
 
-    app: "MainWindow"
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.m_text = ""
 
-    def __init__(self, *args, **kwargs):
-        super(BulletinDialog, self).__init__(*args, **kwargs)
+    def get_text(self):
+        return self.m_text
 
-        self.setWindowTitle("Announcement")
-        self.info_msg()
+    def set_text(self, text):
+        if self.m_text == text:
+            return
+        self.m_text = text
+        self.textChanged.emit(self.m_text)
 
-    def info_msg(self):
-        """Display information about changes."""
-        msg = QtWidgets.QMessageBox()
-        information = self.app.state["announcement"]
-        msg.setText(information)
-        msg.exec_()
+    text = Property(str, fget=get_text, fset=set_text, notify=textChanged)
