@@ -35,7 +35,6 @@ import sys
 import traceback
 from enum import Enum
 from glob import glob
-from itertools import product
 from pathlib import Path, PurePath
 from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type, Union, cast
 
@@ -3598,98 +3597,6 @@ class TriangulateSession(EditCommand):
             return False
 
         return True
-
-    @staticmethod
-    def get_groups_of_instances(
-        session: RecordingSession,
-        frame_idx: int,
-        cams_to_include: Optional[List[Camcorder]] = None,
-    ):
-        """Get instances grouped by `InstanceGroup` or group instances across views.
-
-        If there are not instances in an `InstanceGroup` for all views, then try
-        regrouping using leftover instances. Do not add to an `InstanceGroup` if the
-        error is above a set threshold (i.e. there may not be the same instance labeled
-        across views).
-
-        """
-
-        permutated_instances: Dict[
-            Camcorder, List[Instance]
-        ] = TriangulateSession.get_permutations_of_instances(
-            session=session,
-            frame_idx=frame_idx,
-            cams_to_include=cams_to_include,
-        )
-
-        # Triangulate and reproject instance coordinates.
-        instances_and_coords: Dict[
-            Camcorder, Tuple[Instance, np.ndarray]
-        ] = TriangulateSession.calculate_reprojected_points(
-            session=session, instances=permutated_instances
-        )
-
-        # Compare the instance coordinates.
-        reprojection_error = {
-            cam: np.inf * np.ones() for cam in permutated_instances.keys()
-        }
-        grouped_instances = {cam: [] for cam in permutated_instances.keys()}
-        for cam, (instances_in_view, inst_coord) in instances_and_coords.keys():
-            for inst_idx, inst in enumerate(instances_in_view):
-                instance_error = np.linalg.norm(
-                    np.nan_to_num(inst.points_array - inst_coord[inst_idx])
-                )
-
-        return grouped_instances
-
-    @staticmethod
-    def get_permutations_of_instances(
-        session: RecordingSession,
-        frame_idx: int,
-        cams_to_include: Optional[List[Camcorder]] = None,
-    ) -> Dict[Camcorder, List[Instance]]:
-        """Get all possible combinations of instances across views.
-
-        Args:
-            session: The `RecordingSession` containing the `Camcorder`s.
-            frame_idx: Frame index to get instances from (0-indexed).
-            cams_to_include: List of `Camcorder`s to include. Default is all.
-            require_multiple_views: If True, then raise and error if one or less views
-                or instances are found.
-
-        Raises:
-            ValueError if one or less views or instances are found.
-
-        Returns:
-            Dict with `Camcorder` keys and `List[Instance]` values.
-        """
-
-        instances: Dict[
-            Camcorder, List[Instance]
-        ] = TriangulateSession.get_instances_across_views(
-            session=session,
-            frame_idx=frame_idx,
-            cams_to_include=cams_to_include,
-            track=-1,  # Get all instances regardless of track.
-            require_multiple_views=True,
-        )
-
-        # TODO(LM): Should we only do this for the selected instance?
-
-        # Permutate instances into psuedo groups where each element is a tuple
-        # grouping elements from different views.
-        combinations: List[Tuple[Instance]] = list(
-            product(*instances.values())
-        )  # len(prod(instances.values())) with each element of len(instances.keys())
-
-        # Regroup combos s.t. instances from a single view are in the same list.
-        cams = list(instances.keys())
-        grouped_instances = {cam: [] for cam in cams}
-        for combination in combinations:
-            for cam, inst in zip(cams, combination):
-                grouped_instances[cam].append(inst)
-
-        return grouped_instances
 
     @staticmethod
     def get_instances_across_views(
