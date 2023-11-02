@@ -3871,7 +3871,6 @@ class TriangulateSession(EditCommand):
         # Get M X T X N X 2 array of instances coordinates for each frame
         inst_coords_frames = []
         for instances_in_frame in instances.values():
-
             # Get correct camera ordering
             if cams_ordered is None:
                 if session is None:
@@ -3967,9 +3966,9 @@ class TriangulateSession(EditCommand):
         return excluded_views
 
     @staticmethod
-    def calculate_reprojected_points(
+    def _calculate_reprojected_points(
         session: RecordingSession, instances: Dict[int, Dict[Camcorder, List[Instance]]]
-    ) -> Dict[Camcorder, Tuple["Instance", np.ndarray]]:
+    ) -> Dict[int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]]:
         """Triangulate and reproject instance coordinates.
 
         Note that the order of the instances in the list must match the order of the
@@ -3977,15 +3976,20 @@ class TriangulateSession(EditCommand):
         a dictionary mapping back to its `Camcorder`.
         https://github.com/lambdaloop/aniposelib/blob/d03b485c4e178d7cff076e9fe1ac36837db49158/aniposelib/cameras.py#L491
 
+        Also, this function does not handle grouping instances with their respective
+        coordinates by reordering by camera.
+        See `TriangulateSession.calculate_reprojected_points`.
+
         Args:
             session: The `RecordingSession` containing the `Camcorder`s.
             instances: Dict with frame identifier keys (does not necessarily need to be
                 the frame index) and values of another inner dict with `Camcorder` keys
                 and `List[Instance]` values.
         Returns:
-            A zip of the ordered instances and the related reprojected coordinates. Each
-            element in the coordinates is a numpy array of shape (T, N, 2) where N is
-            the number of nodes and T is the number of reprojected instances.
+            A dictionary with frame identifier keys (does not necessarily need to be the
+            frame index) and values of another inner dict with `Camcorder` keys and
+            a zip of the `List[Instance]` and reprojected instance coordinates of shape
+            (T, N, 2) ordered by the `Camcorder` order in the `CameraCluster`.
         """
 
         # Derive the excluded views from the included cameras and ensures all frames
@@ -4009,29 +4013,111 @@ class TriangulateSession(EditCommand):
         inst_coords_reprojected = reproject(
             points_3d, calib=session.camera_cluster, excluded_views=excluded_views
         )  # M x F x T x N x 2
-        insts_coords_frames_list: List[np.ndarray] = np.split(
-            inst_coords_reprojected, inst_coords_reprojected.shape[1], axis=1
-        )  # len(F) of M x T x N x 2
+
+        return inst_coords_reprojected, cams_ordered
+
+    def group_instances_and_coords(
+        instances, inst_coords_reprojected, cams_ordered
+    ) -> Dict[int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]]:
+        """Group instances and reprojected coordinates by frame and view.
+
+        Args:
+            instances: Dict with frame identifier keys (does not necessarily need to be
+                the frame index) and values of another inner dict with `Camcorder` keys
+                and `List[Instance]` values.
+            inst_coords_reprojected: M x F x T x N x 2 array of reprojected instance
+                coordinates.
+            cams_ordered: List of `Camcorder`s ordered by the `CameraCluster`
+                representing both the order and subset of cameras used to calculate
+                `inst_coords_reprojected`.
+
+        Returns:
+            A dictionary with frame identifier keys (does not necessarily need to be the
+            frame index) and values of another inner dict with `Camcorder` keys and
+            a zip of the `List[Instance]` and reprojected instance coordinates list with
+            items of shape (N, 2) ordered by the `Camcorder` order in the `CameraCluster`.
+        """
+
+        # Split the reprojected coordinates into a list corresponding to instances list.
         insts_coords_list: List[List[np.ndarray]] = [
-            np.split(insts_coords_views, insts_coords_views.shape[0], axis=0)
-            for insts_coords_views in insts_coords_frames_list
-        ]  # len(F) of [len(M) of T x N x 2]
+            [  # Annoyingly, np.split leaves a singleton dimension, so we have to squeeze.
+                np.squeeze(insts_coords_in_view, axis=0)
+                for insts_coords_in_view in np.split(
+                    np.squeeze(insts_coords_in_frame, axis=1),
+                    insts_coords_in_frame.shape[0],
+                    axis=0,
+                )  # len(M) of T x N x 2
+                for insts_coords_track in np.split(
+                    np.squeeze(insts_coords_in_view, axis=0),
+                    insts_coords_in_view.shape[0],
+                    axis=0,
+                )  # len(T) of N x 2
+            ]
+            for insts_coords_in_frame in np.split(
+                inst_coords_reprojected, inst_coords_reprojected.shape[1], axis=1
+            )  # len(F) of M x T x N x 2
+        ]  # len(F) of len(M) of len(T) of N x 2
 
         # Group together the reordered (by cam) instances and the reprojected coords.
         insts_and_coords: Dict[
-            int, Dict[Camcorder, Iterator[Tuple[List[Instance], List[np.ndarray]]]]
-        ]  # Dict len(F) of [list len(M) of array (T x N x 2)]
-        for frame_idx, instances_in_frame in instances.items():
-            insts_and_coords_in_frame = {}
+            int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]
+        ] = (
+            {}
+        )  # Dict len(F) of dict len(M) of zipped lists of len(T) instances and array of N x 2
+        for frame_idx, instances_in_frame in instances.items():  # len(F) of dict
+            insts_and_coords_in_frame: Dict[Camcorder, Tuple[Instance, np.ndarray]] = {}
             for cam_idx, cam in enumerate(cams_ordered):
-                instances_in_frame_ordered = instances_in_frame[cam]
-                insts_coords_in_frame = insts_coords_list[frame_idx][cam_idx]
-                insts_and_coords_in_frame[cam] = zip(
-                    instances_in_frame_ordered, insts_coords_in_frame
+                instances_in_frame_ordered: List[Instance] = instances_in_frame[
+                    cam
+                ]  # Reorder by cam to match coordinates, len(T)
+                insts_coords_in_frame: np.ndarray = insts_coords_list[frame_idx][
+                    cam_idx
+                ]  # len(T) of N x 2
+                insts_and_coords_in_frame[cam]: Tuple[Instance, np.ndarray] = zip(
+                    instances_in_frame_ordered,
+                    insts_coords_in_frame,
                 )
             insts_and_coords[frame_idx] = insts_and_coords_in_frame
 
         return insts_and_coords
+
+    @staticmethod
+    def calculate_reprojected_points(
+        session: RecordingSession, instances: Dict[int, Dict[Camcorder, List[Instance]]]
+    ):
+        """Triangulate, reproject, and group coordinates of `Instances`.
+
+        Args:
+            session: The `RecordingSession` containing the `Camcorder`s.
+            instances: Dict with frame identifier keys (does not necessarily need to be
+                the frame index) and values of another inner dict with `Camcorder` keys
+                and `List[Instance]` values.
+
+        Returns:
+            A dictionary with frame identifier keys (does not necessarily need to be the
+            frame index) and values of another inner dict with `Camcorder` keys and
+            a zip of the `List[Instance]` and reprojected instance coordinates list with
+            items of shape (N, 2) ordered by the `Camcorder` order in the `CameraCluster`.
+        """
+
+        # Triangulate and reproject instance coordinates.
+        (
+            inst_coords_reprojected,
+            cams_ordered,
+        ) = TriangulateSession._calculate_reprojected_points(
+            session=session, instances=instances
+        )
+
+        # Group together instances (the reordered by cam) and the reprojected coords.
+        instances_and_coords: Dict[
+            int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]
+        ] = TriangulateSession.group_instances_and_coords(
+            inst_coords_reprojected=inst_coords_reprojected,
+            instances=instances,
+            cams_ordered=cams_ordered,
+        )
+
+        return instances_and_coords
 
     @staticmethod
     def update_instances(
@@ -4050,18 +4136,16 @@ class TriangulateSession(EditCommand):
         """
 
         # Triangulate and reproject instance coordinates.
-        instances_and_coords: Dict[
-            Camcorder, Tuple[Instance, np.ndarray]
-        ] = TriangulateSession.calculate_reprojected_points(
+        instances_and_coords = TriangulateSession.calculate_reprojected_points(
             session=session, instances=instances
         )
 
+        # TODO(LM): Since we only use the values here, is a dictionary overkill?
         # Update the instance coordinates.
-        for cam, (instances_in_view, inst_coord) in instances_and_coords.items():
-            for inst_idx, inst in enumerate(instances_in_view):
-                inst.update_points(
-                    points=inst_coord[inst_idx], exclude_complete=True
-                )  # inst_coord is (T, N, 2)
+        for instances_in_frame in instances_and_coords.values():
+            for instances_in_view in instances_in_frame.values():
+                for inst, inst_coord in instances_in_view:
+                    inst.update_points(points=inst_coord, exclude_complete=True)
 
 
 def open_website(url: str):

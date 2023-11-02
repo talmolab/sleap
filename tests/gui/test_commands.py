@@ -1067,13 +1067,16 @@ def test_triangulate_session_get_and_verify_enough_instances(
 
     # Test with no cams_to_include, expect views from all linked cameras
     instances = TriangulateSession.get_and_verify_enough_instances(
-        session=session, frame_idx=lf.frame_idx, track=track
+        session=session, frame_inds=[lf.frame_idx], track=track
     )
-    assert len(instances) == 6  # Some views don't have an instance at this track
+    instances_in_frame = instances[lf.frame_idx]
+    assert (
+        len(instances_in_frame) == 6
+    )  # Some views don't have an instance at this track
     for cam in session.linked_cameras:
         if cam.name in ["side", "sideL"]:  # The views that don't have an instance
             continue
-        instances_in_view = instances[cam]
+        instances_in_view = instances_in_frame[cam]
         for inst in instances_in_view:
             assert inst.frame_idx == lf.frame_idx
             assert inst.track == track
@@ -1083,13 +1086,14 @@ def test_triangulate_session_get_and_verify_enough_instances(
     cams_to_include = session.linked_cameras[-2:]
     instances = TriangulateSession.get_and_verify_enough_instances(
         session=session,
-        frame_idx=lf.frame_idx,
+        frame_inds=[lf.frame_idx],
         cams_to_include=cams_to_include,
         track=track,
     )
-    assert len(instances) == len(cams_to_include)
+    instances_in_frame = instances[lf.frame_idx]
+    assert len(instances_in_frame) == len(cams_to_include)
     for cam in cams_to_include:
-        instances_in_view = instances[cam]
+        instances_in_view = instances_in_frame[cam]
         for inst in instances_in_view:
             assert inst.frame_idx == lf.frame_idx
             assert inst.track == track
@@ -1099,7 +1103,7 @@ def test_triangulate_session_get_and_verify_enough_instances(
     cams_to_include = session.linked_cameras[0:2]
     instances = TriangulateSession.get_and_verify_enough_instances(
         session=session,
-        frame_idx=lf.frame_idx,
+        frame_inds=[lf.frame_idx],
         cams_to_include=cams_to_include,
         track=None,
     )
@@ -1181,8 +1185,8 @@ def test_triangulate_session_calculate_reprojected_points(
     track = multiview_min_session_labels.tracks[0]
     instances: Dict[
         Camcorder, Instance
-    ] = TriangulateSession.get_instances_across_views(
-        session=session, frame_idx=lf.frame_idx, track=track
+    ] = TriangulateSession.get_instances_across_views_multiple_frames(
+        session=session, frame_inds=[lf.frame_idx], track=track
     )
     instances_and_coords = TriangulateSession.calculate_reprojected_points(
         session=session, instances=instances
@@ -1192,10 +1196,10 @@ def test_triangulate_session_calculate_reprojected_points(
     assert len(instances) == len(instances_and_coords)
 
     # Check that each instance has the same number of points
-    for instances_in_view, inst_coords in instances_and_coords.values():
-        assert inst_coords.shape[0] == len(instances_in_view)
-        for inst in instances_in_view:
-            assert inst_coords.shape[1] == len(inst.skeleton)  # (1, 15, 2)
+    for instances_in_frame in instances_and_coords.values():
+        for instances_in_view in instances_in_frame.values():
+            for inst, inst_coords in instances_in_view:
+                assert inst_coords.shape[0] == len(inst.skeleton)  # (15, 2)
 
 
 def test_triangulate_session_get_instances_matrices(
@@ -1207,18 +1211,20 @@ def test_triangulate_session_get_instances_matrices(
     lf: LabeledFrame = labels[0]
     track = labels.tracks[0]
     instances: Dict[
-        Camcorder, Instance
-    ] = TriangulateSession.get_instances_across_views(
-        session=session, frame_idx=lf.frame_idx, track=track
+        int, Dict[Camcorder, List[Instance]]
+    ] = TriangulateSession.get_instances_across_views_multiple_frames(
+        session=session, frame_inds=[lf.frame_idx], track=track
     )
-    instances_matrices = TriangulateSession.get_instances_matrices(
-        instances_ordered=instances.values()
+    instances_matrices, cams_ordered = TriangulateSession.get_instances_matrices(
+        instances=instances
     )
 
     # Verify shape
-    n_views = len(instances)
-    n_frames = 1
-    n_tracks = 1
+    n_frames = len(instances)
+    n_views = len(instances[lf.frame_idx])
+    assert n_views == len(cams_ordered)
+    n_tracks = len(instances[lf.frame_idx][cams_ordered[0]])
+    assert n_tracks == 1
     n_nodes = len(labels.skeleton)
     assert instances_matrices.shape == (n_views, n_frames, n_tracks, n_nodes, 2)
 
@@ -1231,22 +1237,25 @@ def test_triangulate_session_update_instances(multiview_min_session_labels: Labe
     lf: LabeledFrame = multiview_min_session_labels[0]
     track = multiview_min_session_labels.tracks[0]
     instances: Dict[
-        Camcorder, Instance
-    ] = TriangulateSession.get_instances_across_views(
-        session=session, frame_idx=lf.frame_idx, track=track
+        int, Dict[Camcorder, List[Instance]]
+    ] = TriangulateSession.get_instances_across_views_multiple_frames(
+        session=session,
+        frame_inds=[lf.frame_idx],
+        track=track,
+        require_multiple_views=True,
     )
     instances_and_coordinates = TriangulateSession.calculate_reprojected_points(
         session=session, instances=instances
     )
-    for instances_in_view, inst_coords in instances_and_coordinates.values():
-        for inst in instances_in_view:
-            assert inst_coords.shape == (
-                len(instances_in_view),
-                len(inst.skeleton),
-                2,
-            )  # Tracks, Nodes, 2
-            # Assert coord are different from original
-            assert not np.array_equal(inst_coords, inst.points_array)
+    for instances_in_frame in instances_and_coordinates.values():
+        for instances_in_view in instances_in_frame.values():
+            for inst, inst_coords in instances_in_view:
+                assert inst_coords.shape == (
+                    len(inst.skeleton),
+                    2,
+                )  # Nodes, 2
+                # Assert coord are different from original
+                assert not np.array_equal(inst_coords, inst.points_array)
 
     # Just run for code coverage testing, do not test output here (race condition)
     # (see "functional core, imperative shell" pattern)
