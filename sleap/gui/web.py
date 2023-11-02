@@ -10,9 +10,7 @@ import os
 
 REPO_ID = "talmolab/sleap"
 ANALYTICS_ENDPOINT = "https://analytics.sleap.ai/ping"
-BASE_DIR = os.path.dirname(
-    os.path.abspath(os.path.join(__file__, os.path.pardir, os.pardir))
-)
+BASE_DIR = os.path.dirname(os.path.abspath(os.path.join(__file__, os.path.pardir)))
 BULLETIN_JSON = os.path.join(BASE_DIR, "..", "docs", "bulletin.json")
 
 
@@ -188,7 +186,11 @@ class AnnouncementChecker:
     def get_latest_announcement(self) -> Optional[Tuple[str, str]]:
         """Return latest announcements on the releases page not seen by user."""
         if self.new_announcement:
-            return (self._latest_data["title"], self._latest_data["date"], self._latest_data["content"])
+            return (
+                self._latest_data["title"],
+                self._latest_data["date"],
+                self._latest_data["content"],
+            )
         return None
 
     def update_announcement(self):
