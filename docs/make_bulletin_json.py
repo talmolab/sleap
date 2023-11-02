@@ -19,7 +19,7 @@ def generate_json_file():
     for line in markdown_content.split("\n"):
         # Skip if the line begins with #
         if line.startswith("# "):
-            continue 
+            continue
         elif line.startswith("---"):
             bulletin_json.append({"title": title, "date": date, "content": content})
             content = ""
