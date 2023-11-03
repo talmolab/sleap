@@ -35,6 +35,7 @@ import sys
 import traceback
 from enum import Enum
 from glob import glob
+from itertools import product
 from pathlib import Path, PurePath
 from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type, Union, cast
 
@@ -3751,6 +3752,67 @@ class TriangulateSession(EditCommand):
         return views
 
     @staticmethod
+    def get_permutations_of_instances(
+        selected_instance: Instance,
+        session: RecordingSession,
+        frame_idx: int,
+        cams_to_include: Optional[List[Camcorder]] = None,
+    ) -> Dict[int, Dict[Camcorder, List[Instance]]]:
+        """Get all (single-instance) possible combinations of instances across views.
+
+        Args:
+            selected_instance: The `Instance` to add to  permutations of instances in
+                views other than that of the `selected_instance`.
+            session: The `RecordingSession` containing the `Camcorder`s.
+            frame_idx: Frame index to get instances from (0-indexed).
+            cams_to_include: List of `Camcorder`s to include. Default is all.
+            require_multiple_views: If True, then raise and error if one or less views
+                or instances are found.
+
+        Raises:
+            ValueError if one or less views or instances are found.
+
+        Returns:
+            Dict with frame identifier keys (not the frame index) and values of another
+            inner dict with `Camcorder` keys and `List[Instance]` values. Each
+            `List[Instance]` is of length 1.
+        """
+
+        cam_selected = session.get_camera(selected_instance.video)
+        cam_selected = cast(Camcorder, cam_selected)  # Could be None if not in session
+
+        # Get all instances accross views at this frame index, then remove selected
+        instances_excluding_selected: Dict[
+            Camcorder, List[Instance]
+        ] = TriangulateSession.get_instances_across_views(
+            session=session,
+            frame_idx=frame_idx,
+            cams_to_include=cams_to_include,
+            track=-1,  # Get all instances regardless of track.
+            require_multiple_views=True,
+        )
+        instances_excluding_selected.pop(cam_selected)
+
+        # Permute instances from other views into all possible combos
+        # Ordering of dict_values is preserved in Python 3.7+
+        permutated_instances: Iterator[Tuple] = product(
+            *instances_excluding_selected.values()
+        )
+
+        # Reorganize permutaions by cam and add selected instance to each permutation
+        instances: Dict[int, Dict[Camcorder, List[Instance]]] = {}
+        for frame_id, perm in enumerate(permutated_instances):
+            instances[frame_id] = {cam_selected: [selected_instance]}
+            instances[frame_id].update(
+                {
+                    cam: [inst]
+                    for cam, inst in zip(instances_excluding_selected.keys(), perm)
+                }
+            )
+
+        return instances  # Expect <num instances in other views>! frames
+
+    @staticmethod
     def get_instances_matrices(
         instances: Dict[int, Dict[Camcorder, List[Instance]]],
         session: Optional[RecordingSession] = None,
@@ -3804,7 +3866,9 @@ class TriangulateSession(EditCommand):
             inst_coords_frames.append(
                 inst_coords_views
             )  # len=frame_idx, List[M x T x N x 2]
+
         inst_coords = np.stack(inst_coords_frames, axis=1)  # M x F x T x N x 2
+        cams_ordered = cast(List[Camcorder], cams_ordered)  # Could be None if no frames
 
         return inst_coords, cams_ordered
 

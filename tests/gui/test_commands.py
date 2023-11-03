@@ -31,11 +31,11 @@ from sleap.io.pathutils import fix_path_separator
 from sleap.io.video import Video
 from sleap.util import get_package_file
 
-# These imports cause trouble when running `pytest.main()` from within the file
-# Comment out to debug tests file via VSCode's "Debug Python File"
-from tests.info.test_h5 import extract_meta_hdf5
-from tests.io.test_formats import read_nix_meta
-from tests.io.test_video import assert_video_params
+# # These imports cause trouble when running `pytest.main()` from within the file
+# # Comment out to debug tests file via VSCode's "Debug Python File"
+# from tests.info.test_h5 import extract_meta_hdf5
+# from tests.io.test_formats import read_nix_meta
+# from tests.io.test_video import assert_video_params
 
 
 def test_delete_user_dialog(centered_pair_predictions):
@@ -1296,7 +1296,7 @@ def test_triangulate_session_do_action(multiview_min_session_labels: Labels):
 
 
 def test_triangulate_session(multiview_min_session_labels: Labels):
-    """Test `TriangulateSession`, if"""
+    """Test `TriangulateSession`."""
 
     labels = multiview_min_session_labels
     session = labels.sessions[0]
@@ -1319,3 +1319,50 @@ def test_triangulate_session(multiview_min_session_labels: Labels):
     context.state["instance"] = instance
     context.state["frame_idx"] = lf.frame_idx
     context.triangulateSession()
+
+
+def test_triangulate_session_get_permutations_of_instances(
+    multiview_min_session_labels: Labels,
+):
+    """Test `TriangulateSession.get_permutations_of_instances`."""
+
+    def product(seq):
+        """Return the product of a sequence of numbers.
+
+        math.prod is only available in Python 3.8+.
+
+        Args:
+            seq: A sequence of numbers.
+
+        Returns:
+            The product of the numbers in the sequence.
+        """
+        result = 1
+        for num in seq:
+            result *= num
+        return result
+
+    labels = multiview_min_session_labels
+    session = labels.sessions[0]
+    lf = labels.labeled_frames[0]
+    selected_instance = lf.instances[0]
+    selected_cam = session.get_camera(selected_instance.video)
+
+    instances = TriangulateSession.get_permutations_of_instances(
+        selected_instance=selected_instance,
+        session=session,
+        frame_idx=lf.frame_idx,
+    )
+
+    views = TriangulateSession.get_all_views_at_frame(session, lf.frame_idx)
+    num_instances_per_view = [len(views[cam]) for cam in views if cam != selected_cam]
+    assert len(instances) == product(num_instances_per_view)
+
+    for frame_id in instances:
+        instances_in_frame = instances[frame_id]
+        for cam in instances_in_frame:
+            instances_in_view = instances_in_frame[cam]
+            assert len(instances_in_view) == 1
+            for inst in instances_in_view:
+                assert inst.frame_idx == selected_instance.frame_idx
+                assert inst.video == session[cam]
