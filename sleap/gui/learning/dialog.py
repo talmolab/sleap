@@ -180,7 +180,6 @@ class LearningDialog(QtWidgets.QDialog):
         # Calculate target width and height
         target_width = min(screen.width() - screen.width() * margin, max_width)
         target_height = min(screen.height() - screen.height() * margin, max_height)
-        print("target:", target_width, target_height)
         # Set the dialog's dimensions
         self.resize(target_width, target_height)
 
