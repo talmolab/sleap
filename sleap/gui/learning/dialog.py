@@ -14,7 +14,7 @@ from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.learning import runners, scopedkeydict, configs, datagen, receptivefield
 
-from typing import Dict, List, Optional, Text, Optional, cast
+from typing import Dict, List, Text, Optional, cast
 
 from qtpy import QtWidgets, QtCore
 import json
@@ -173,14 +173,14 @@ class LearningDialog(QtWidgets.QDialog):
         # Get screen size
         screen = QtWidgets.QDesktopWidget().screenGeometry()
 
-        # Calculate desired margins or paddings, so the window doesn't take up the entire screen
-        margin_width = screen.width() * 0.10  # adjust this value as needed
-        margin_height = screen.height() * 0.10  # adjust this value as needed
+        max_width = 1860
+        max_height = 1150
+        margin = 0.10
 
         # Calculate target width and height
-        target_width = screen.width() - 2 * margin_width
-        target_height = screen.height() - 2 * margin_height
-
+        target_width = min(screen.width() - screen.width() * margin, max_width)
+        target_height = min(screen.height() - screen.height() * margin, max_height)
+        print("target:", target_width, target_height)
         # Set the dialog's dimensions
         self.resize(target_width, target_height)
 
