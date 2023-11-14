@@ -56,11 +56,8 @@ from typing import Callable, List, Optional, Tuple
 from datetime import date
 
 from qtpy import QtCore, QtGui
-from qtpy.QtCore import QEvent, Qt, QUrl
+from qtpy.QtCore import QEvent, Qt
 from qtpy.QtWidgets import QApplication, QMainWindow, QMessageBox
-
-from qtpy.QtWebChannel import QWebChannel
-from qtpy.QtWebEngineWidgets import QWebEngineView
 
 import sleap
 from sleap.gui.color import ColorManager
@@ -223,12 +220,26 @@ class MainWindow(QMainWindow):
             title, date, content = announcement
             bulletin_markdown = "\n".join(content.split("\n"))
 
+            # Create the pop-up dialog
             popup_dialog = BulletinDialog(self)
+
+            # Set the dialog as a top-level window with the Qt.WindowStaysOnTopHint flag
+            popup_dialog.setWindowFlags(
+                popup_dialog.windowFlags() | Qt.WindowStaysOnTopHint
+            )
+
+            # Show the dialog
             popup_dialog.show()
 
+            # Create a worker thread to update the text in the dialog
             popup_worker = BulletinWorker(bulletin_markdown)
             popup_worker.text_updated.connect(popup_dialog.updateText)
             popup_worker.start()
+
+            # Save the dialog and worker so we can close them later
+            # Otherwise get "QThread: Destroyed while thread is still running"
+            self._child_windows["bulletin_dialog"] = popup_dialog  # Not really needed
+            self._child_windows["bulletin_worker"] = popup_worker  # Needed!
 
     def setWindowTitle(self, value):
         """Sets window title (if value is not None)."""

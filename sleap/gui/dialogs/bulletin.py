@@ -3,15 +3,11 @@ GUI for displaying the new announcement.
 """
 
 from qtpy.QtWidgets import (
-    QApplication,
     QDialog,
     QVBoxLayout,
-    QMainWindow,
-    QHBoxLayout,
-    QWidget,
     QLabel,
 )
-from qtpy.QtCore import QObject, Signal, Slot, QThread, Property
+from qtpy.QtCore import Signal, Slot, QThread
 
 
 class BulletinWorker(QThread):
