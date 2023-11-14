@@ -2,31 +2,38 @@
 GUI for displaying the new announcement.
 """
 
-import os
-import sleap
-import sleap.gui.web
-from qtpy.QtWidgets import QApplication
-from qtpy.QtCore import Property, Signal, QObject, QUrl
-from qtpy.QtWebChannel import QWebChannel
-from qtpy.QtWebEngineWidgets import QWebEngineView
-from sleap.gui.commands import CommandContext
-from sleap.io.dataset import Labels
+from qtpy.QtWidgets import (
+    QApplication,
+    QDialog,
+    QVBoxLayout,
+    QMainWindow,
+    QHBoxLayout,
+    QWidget,
+    QLabel,
+)
+from qtpy.QtCore import QObject, Signal, Slot, QThread, Property
 
 
-class BulletinDialog(QObject):
-    textChanged = Signal(str)
+class BulletinWorker(QThread):
+    text_updated = Signal(str)
 
+    def __init__(self, content, parent=None):
+        super(BulletinWorker, self).__init__(parent)
+        self.content = content
+
+    def run(self):
+        self.text_updated.emit(self.content)
+
+
+class BulletinDialog(QDialog):
     def __init__(self, parent=None):
-        super().__init__(parent)
-        self.m_text = ""
+        super(BulletinDialog, self).__init__(parent)
 
-    def get_text(self):
-        return self.m_text
+        self.label = QLabel()
+        layout = QVBoxLayout()
+        layout.addWidget(self.label)
+        self.setLayout(layout)
 
-    def set_text(self, text):
-        if self.m_text == text:
-            return
-        self.m_text = text
-        self.textChanged.emit(self.m_text)
-
-    text = Property(str, fget=get_text, fset=set_text, notify=textChanged)
+    @Slot(str)
+    def updateText(self, text):
+        self.label.setText(text)

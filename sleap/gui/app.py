@@ -69,7 +69,7 @@ from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
 from sleap.gui.dialogs.metrics import MetricsTableDialog
 from sleap.gui.dialogs.shortcuts import ShortcutDialog
-from sleap.gui.dialogs.bulletin import BulletinDialog
+from sleap.gui.dialogs.bulletin import BulletinDialog, BulletinWorker
 from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.tracks import TrackListOverlay, TrackTrailOverlay
 from sleap.gui.shortcuts import Shortcuts
@@ -213,7 +213,6 @@ class MainWindow(QMainWindow):
 
         # Display announcement bulletin popup
         if self.new_announcement_available:
-            self.display_bulletin = BulletinDialog()
             self.bulletin_dialog()
 
     def bulletin_dialog(self):
@@ -224,22 +223,12 @@ class MainWindow(QMainWindow):
             title, date, content = announcement
             bulletin_markdown = "\n".join(content.split("\n"))
 
-            channel = QWebChannel()
-            channel.registerObject("content", self.display_bulletin)
+            popup_dialog = BulletinDialog(self)
+            popup_dialog.show()
 
-            self.display_bulletin.set_text(bulletin_markdown)
-
-            view = QWebEngineView()
-            view.page().setWebChannel(channel)
-            base_path = os.path.dirname(os.path.abspath(os.path.join(__file__)))
-            filepath = os.path.join(
-                base_path, "..", "gui", "dialogs", "bulletin", "markdown.html"
-            )
-            url = QUrl.fromLocalFile(filepath)
-            view.load(url)
-            view.resize(720, 540)
-            view.show()
-            QApplication.exec_()
+            popup_worker = BulletinWorker(bulletin_markdown)
+            popup_worker.text_updated.connect(popup_dialog.updateText)
+            popup_worker.start()
 
     def setWindowTitle(self, value):
         """Sets window title (if value is not None)."""
