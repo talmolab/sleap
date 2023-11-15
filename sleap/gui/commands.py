@@ -3768,10 +3768,29 @@ class TriangulateSession(EditCommand):
         return best_instances_correct_format
 
     @staticmethod
-    def calculate_reprojection_per_frame(
-        session: RecordingSession, instances: Dict[int, Dict[Camcorder, List[Instance]]]
-    ) -> Dict[int, float]:
-        """Calculate reprojection error per frame."""
+    def _calculate_reprojection_error(
+        session: RecordingSession,
+        instances: Dict[int, Dict[Camcorder, List[Instance]]],
+        per_instance: bool = False,
+    ) -> Union[
+        Dict[int, float], Dict[int, Dict[Camcorder, List[Tuple[Instance, float]]]]
+    ]:
+        """Calculate reprojection error per frame or per instance.
+
+        Args:
+            session: The `RecordingSession` containing the `Camcorder`s.
+            instances: Dict with frame identifier keys (not the frame index) and values
+                of another inner dict with `Camcorder` keys and `List[Instance]` values.
+            per_instance: If True, then return a dict with frame identifier keys and
+                values of another inner dict with `Camcorder` keys and
+                `List[Tuple[Instance, float]]` values.
+
+        Returns:
+            Dict with frame identifier keys (not the frame index) and values of another
+            inner dict with `Camcorder` keys and `List[Tuple[Instance, float]]` values
+            if per_instance is True, otherwise a dict with frame identifier keys and
+            values of reprojection error for the frame.
+        """
 
         reprojection_error_per_frame = {}
 
@@ -3782,16 +3801,51 @@ class TriangulateSession(EditCommand):
             session=session, instances=instances
         )
         for frame_id, instances_in_frame in instances_and_coords.items():
-            frame_error = 0
+            frame_error = {} if per_instance else 0
             for cam, instances_in_view in instances_in_frame.items():
                 # Compare instance coordinates here
-                view_error = 0
+                view_error = [] if per_instance else 0
                 for inst, inst_coords in instances_in_view:
                     node_errors = np.nan_to_num(inst.numpy() - inst_coords)
                     instance_error = np.linalg.norm(node_errors)
-                    view_error += instance_error
-                frame_error += view_error
+
+                    if per_instance:
+                        view_error.append((inst, instance_error))
+                    else:
+                        view_error += instance_error
+
+                if per_instance:
+                    frame_error[cam] = view_error
+                else:
+                    frame_error += view_error
+
             reprojection_error_per_frame[frame_id] = frame_error
+
+        return reprojection_error_per_frame
+
+    @staticmethod
+    def calculate_error_per_instance(
+        session: RecordingSession, instances: Dict[int, Dict[Camcorder, List[Instance]]]
+    ) -> Dict[int, float]:
+        """Calculate reprojection error per instance."""
+
+        reprojection_error_per_instance = (
+            TriangulateSession._calculate_reprojection_error(
+                session=session, instances=instances, per_instance=True
+            )
+        )
+
+        return reprojection_error_per_instance
+
+    @staticmethod
+    def calculate_error_per_frame(
+        session: RecordingSession, instances: Dict[int, Dict[Camcorder, List[Instance]]]
+    ) -> Dict[int, float]:
+        """Calculate reprojection error per frame."""
+
+        reprojection_error_per_frame = TriangulateSession._calculate_reprojection_error(
+            session=session, instances=instances, per_instance=False
+        )
 
         return reprojection_error_per_frame
 

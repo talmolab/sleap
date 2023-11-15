@@ -1368,7 +1368,7 @@ def test_triangulate_session_get_permutations_of_instances(
                 assert inst.video == session[cam]
 
 
-def test_triangulate_session_calculate_reprojection_per_frame(
+def test_triangulate_session_calculate_error_per_frame(
     multiview_min_session_labels: Labels,
 ):
     """Test `TriangulateSession.get_permutations_of_instances`."""
@@ -1384,7 +1384,7 @@ def test_triangulate_session_calculate_reprojection_per_frame(
         frame_idx=lf.frame_idx,
     )
 
-    reprojection_error_per_frame = TriangulateSession.calculate_reprojection_per_frame(
+    reprojection_error_per_frame = TriangulateSession.calculate_error_per_frame(
         session=session, instances=instances
     )
 
@@ -1409,7 +1409,7 @@ def test_triangulate_session_get_instance_grouping(
         frame_idx=lf.frame_idx,
     )
 
-    reprojection_error_per_frame = TriangulateSession.calculate_reprojection_per_frame(
+    reprojection_error_per_frame = TriangulateSession.calculate_error_per_frame(
         session=session, instances=instances
     )
 
