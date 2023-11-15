@@ -1366,3 +1366,65 @@ def test_triangulate_session_get_permutations_of_instances(
             for inst in instances_in_view:
                 assert inst.frame_idx == selected_instance.frame_idx
                 assert inst.video == session[cam]
+
+
+def test_triangulate_session_calculate_reprojection_per_frame(
+    multiview_min_session_labels: Labels,
+):
+    """Test `TriangulateSession.get_permutations_of_instances`."""
+
+    labels = multiview_min_session_labels
+    session = labels.sessions[0]
+    lf = labels.labeled_frames[0]
+    selected_instance = lf.instances[0]
+
+    instances = TriangulateSession.get_permutations_of_instances(
+        selected_instance=selected_instance,
+        session=session,
+        frame_idx=lf.frame_idx,
+    )
+
+    reprojection_error_per_frame = TriangulateSession.calculate_reprojection_per_frame(
+        session=session, instances=instances
+    )
+
+    for frame_id in instances.keys():
+        assert frame_id in reprojection_error_per_frame
+        assert isinstance(reprojection_error_per_frame[frame_id], float)
+
+
+def test_triangulate_session_get_instance_grouping(
+    multiview_min_session_labels: Labels,
+):
+    """Test `TriangulateSession.get_permutations_of_instances`."""
+
+    labels = multiview_min_session_labels
+    session = labels.sessions[0]
+    lf = labels.labeled_frames[0]
+    selected_instance = lf.instances[0]
+
+    instances = TriangulateSession.get_permutations_of_instances(
+        selected_instance=selected_instance,
+        session=session,
+        frame_idx=lf.frame_idx,
+    )
+
+    reprojection_error_per_frame = TriangulateSession.calculate_reprojection_per_frame(
+        session=session, instances=instances
+    )
+
+    best_instances: Dict[
+        int, Dict[Camcorder, Instance]
+    ] = TriangulateSession.get_instance_grouping(
+        instances=instances, reprojection_error_per_frame=reprojection_error_per_frame
+    )
+    assert len(best_instances) == 1
+    for frame_id, instances_in_frame in best_instances.items():
+        for cam, instances_in_view in instances_in_frame.items():
+            for inst in instances_in_view:
+                assert inst.frame_idx == selected_instance.frame_idx
+                assert inst.track == selected_instance.track
+
+
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::test_triangulate_session_get_instance_grouping"])

@@ -3752,6 +3752,50 @@ class TriangulateSession(EditCommand):
         return views
 
     @staticmethod
+    def get_instance_grouping(
+        instances: Dict[int, Dict[Camcorder, List[Instance]]],
+        reprojection_error_per_frame: Dict[int, float],
+    ) -> Dict[int, Dict[Camcorder, List[Instance]]]:
+        """Get instance grouping for triangulation."""
+
+        frame_with_min_error = min(
+            reprojection_error_per_frame, key=reprojection_error_per_frame.get
+        )
+
+        best_instances = instances[frame_with_min_error]
+        best_instances_correct_format = {frame_with_min_error: best_instances}
+
+        return best_instances_correct_format
+
+    @staticmethod
+    def calculate_reprojection_per_frame(
+        session: RecordingSession, instances: Dict[int, Dict[Camcorder, List[Instance]]]
+    ) -> Dict[int, float]:
+        """Calculate reprojection error per frame."""
+
+        reprojection_error_per_frame = {}
+
+        # Triangulate and reproject instance coordinates.
+        instances_and_coords: Dict[
+            int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]
+        ] = TriangulateSession.calculate_reprojected_points(
+            session=session, instances=instances
+        )
+        for frame_id, instances_in_frame in instances_and_coords.items():
+            frame_error = 0
+            for cam, instances_in_view in instances_in_frame.items():
+                # Compare instance coordinates here
+                view_error = 0
+                for inst, inst_coords in instances_in_view:
+                    node_errors = np.nan_to_num(inst.numpy() - inst_coords)
+                    instance_error = np.linalg.norm(node_errors)
+                    view_error += instance_error
+                frame_error += view_error
+            reprojection_error_per_frame[frame_id] = frame_error
+
+        return reprojection_error_per_frame
+
+    @staticmethod
     def get_permutations_of_instances(
         selected_instance: Instance,
         session: RecordingSession,
