@@ -3793,6 +3793,27 @@ class TriangulateSession(EditCommand):
         )
         instances_excluding_selected.pop(cam_selected)
 
+        # Find max number of instances in other views
+        max_num_instances = max(
+            [len(instances) for instances in instances_excluding_selected.values()]
+        )
+
+        # Create a dummy instance of all nan values
+        dummy_instance = Instance.from_numpy(
+            np.full(
+                shape=(len(selected_instance.skeleton.nodes), 2),
+                fill_value=np.nan,
+            ),
+            skeleton=selected_instance.skeleton,
+        )
+
+        # Append a dummy instance to all lists of instances if less than the max length
+        for instances in instances_excluding_selected.values():
+            num_instances = len(instances)
+            if num_instances < max_num_instances:
+                num_missing = max_num_instances - num_instances
+                instances.extend([dummy_instance] * num_missing)
+
         # Permute instances from other views into all possible combos
         # Ordering of dict_values is preserved in Python 3.7+
         permutated_instances: Iterator[Tuple] = product(

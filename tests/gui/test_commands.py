@@ -1326,27 +1326,10 @@ def test_triangulate_session_get_permutations_of_instances(
 ):
     """Test `TriangulateSession.get_permutations_of_instances`."""
 
-    def product(seq):
-        """Return the product of a sequence of numbers.
-
-        math.prod is only available in Python 3.8+.
-
-        Args:
-            seq: A sequence of numbers.
-
-        Returns:
-            The product of the numbers in the sequence.
-        """
-        result = 1
-        for num in seq:
-            result *= num
-        return result
-
     labels = multiview_min_session_labels
     session = labels.sessions[0]
     lf = labels.labeled_frames[0]
     selected_instance = lf.instances[0]
-    selected_cam = session.get_camera(selected_instance.video)
 
     instances = TriangulateSession.get_permutations_of_instances(
         selected_instance=selected_instance,
@@ -1355,8 +1338,8 @@ def test_triangulate_session_get_permutations_of_instances(
     )
 
     views = TriangulateSession.get_all_views_at_frame(session, lf.frame_idx)
-    num_instances_per_view = [len(views[cam]) for cam in views if cam != selected_cam]
-    assert len(instances) == product(num_instances_per_view)
+    max_num_instances_in_view = max([len(instances) for instances in views.values()])
+    assert len(instances) == max_num_instances_in_view ** (len(views) - 1)
 
     for frame_id in instances:
         instances_in_frame = instances[frame_id]
@@ -1364,5 +1347,9 @@ def test_triangulate_session_get_permutations_of_instances(
             instances_in_view = instances_in_frame[cam]
             assert len(instances_in_view) == 1
             for inst in instances_in_view:
-                assert inst.frame_idx == selected_instance.frame_idx
-                assert inst.video == session[cam]
+                try:
+                    assert inst.frame_idx == selected_instance.frame_idx
+                    assert inst.video == session[cam]
+                except:
+                    assert inst.frame is None
+                    assert inst.video is None
