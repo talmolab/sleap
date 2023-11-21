@@ -3752,13 +3752,13 @@ class TriangulateSession(EditCommand):
         return views
 
     @staticmethod
-    def get_permutations_of_instances(
+    def get_products_of_instances(
         selected_instance: Instance,
         session: RecordingSession,
         frame_idx: int,
         cams_to_include: Optional[List[Camcorder]] = None,
     ) -> Dict[int, Dict[Camcorder, List[Instance]]]:
-        """Get all (single-instance) possible combinations of instances across views.
+        """Get all (single-instance) possible products of instances across views.
 
         Args:
             selected_instance: The `Instance` to add to  permutations of instances in

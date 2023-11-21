@@ -1321,17 +1321,17 @@ def test_triangulate_session(multiview_min_session_labels: Labels):
     context.triangulateSession()
 
 
-def test_triangulate_session_get_permutations_of_instances(
+def test_triangulate_session_get_products_of_instances(
     multiview_min_session_labels: Labels,
 ):
-    """Test `TriangulateSession.get_permutations_of_instances`."""
+    """Test `TriangulateSession.get_products_of_instances`."""
 
     labels = multiview_min_session_labels
     session = labels.sessions[0]
     lf = labels.labeled_frames[0]
     selected_instance = lf.instances[0]
 
-    instances = TriangulateSession.get_permutations_of_instances(
+    instances = TriangulateSession.get_products_of_instances(
         selected_instance=selected_instance,
         session=session,
         frame_idx=lf.frame_idx,
