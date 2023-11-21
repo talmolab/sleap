@@ -1339,13 +1339,13 @@ def test_triangulate_session_get_products_of_instances(
 
     views = TriangulateSession.get_all_views_at_frame(session, lf.frame_idx)
     max_num_instances_in_view = max([len(instances) for instances in views.values()])
-    assert len(instances) == max_num_instances_in_view ** (len(views) - 1)
+    assert len(instances) == max_num_instances_in_view ** len(views)
 
     for frame_id in instances:
         instances_in_frame = instances[frame_id]
         for cam in instances_in_frame:
             instances_in_view = instances_in_frame[cam]
-            assert len(instances_in_view) == 1
+            assert len(instances_in_view) == max_num_instances_in_view
             for inst in instances_in_view:
                 try:
                     assert inst.frame_idx == selected_instance.frame_idx
@@ -1408,10 +1408,16 @@ def test_triangulate_session_get_instance_grouping(
     assert len(best_instances) == 1
     for frame_id, instances_in_frame in best_instances.items():
         for cam, instances_in_view in instances_in_frame.items():
+            tracks_in_view = set(
+                [
+                    inst.track if inst is not None else "None"
+                    for inst in instances_in_view
+                ]
+            )
+            assert len(tracks_in_view) == len(instances_in_view)
             for inst in instances_in_view:
                 try:
                     assert inst.frame_idx == selected_instance.frame_idx
-                    assert inst.track == selected_instance.track
                 except:
                     assert inst.frame is None
                     assert inst.track is None

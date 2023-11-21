@@ -35,7 +35,7 @@ import sys
 import traceback
 from enum import Enum
 from glob import glob
-from itertools import product
+from itertools import permutations, product
 from pathlib import Path, PurePath
 from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type, Union, cast
 
@@ -3880,7 +3880,7 @@ class TriangulateSession(EditCommand):
         cam_selected = cast(Camcorder, cam_selected)  # Could be None if not in session
 
         # Get all instances accross views at this frame index, then remove selected
-        instances_excluding_selected: Dict[
+        instances: Dict[
             Camcorder, List[Instance]
         ] = TriangulateSession.get_instances_across_views(
             session=session,
@@ -3889,12 +3889,9 @@ class TriangulateSession(EditCommand):
             track=-1,  # Get all instances regardless of track.
             require_multiple_views=True,
         )
-        instances_excluding_selected.pop(cam_selected)
 
         # Find max number of instances in other views
-        max_num_instances = max(
-            [len(instances) for instances in instances_excluding_selected.values()]
-        )
+        max_num_instances = max([len(instances) for instances in instances.values()])
 
         # Create a dummy instance of all nan values
         dummy_instance = Instance.from_numpy(
@@ -3905,31 +3902,36 @@ class TriangulateSession(EditCommand):
             skeleton=selected_instance.skeleton,
         )
 
-        # Append a dummy instance to all lists of instances if less than the max length
-        for instances in instances_excluding_selected.values():
-            num_instances = len(instances)
+        # Get permutations of instances from other views
+        instances_permutations: Dict[Camcorder, Iterator[Tuple]] = {}
+        for cam, instances_in_view in instances.items():
+            # Append a dummy instance to all lists of instances if less than the max length
+            num_missing = 1
+            num_instances = len(instances_in_view)
             if num_instances < max_num_instances:
                 num_missing = max_num_instances - num_instances
-                instances.extend([dummy_instance] * num_missing)
 
-        # Permute instances from other views into all possible combos
+                # Extend the list first
+                instances_in_view.extend([dummy_instance] * num_missing)
+
+            # Permute instances into all possible orderings w/in a view
+            instances_permutations[cam] = permutations(instances_in_view)
+
+        # Get products of instances from other views into all possible groupings
         # Ordering of dict_values is preserved in Python 3.7+
-        permutated_instances: Iterator[Tuple] = product(
-            *instances_excluding_selected.values()
+        products_of_instances: Iterator[Iterator[Tuple]] = product(
+            *instances_permutations.values()
         )
 
-        # Reorganize permutaions by cam and add selected instance to each permutation
-        instances: Dict[int, Dict[Camcorder, List[Instance]]] = {}
-        for frame_id, perm in enumerate(permutated_instances):
-            instances[frame_id] = {cam_selected: [selected_instance]}
-            instances[frame_id].update(
-                {
-                    cam: [inst]
-                    for cam, inst in zip(instances_excluding_selected.keys(), perm)
-                }
-            )
+        # Reorganize products by cam and add selected instance to each permutation
+        instances_hypotheses: Dict[int, Dict[Camcorder, List[Instance]]] = {}
+        for frame_id, prod in enumerate(products_of_instances):
+            instances_hypotheses[frame_id] = {
+                cam: [*inst] for cam, inst in zip(instances.keys(), prod)
+            }
 
-        return instances  # Expect <num instances in other views>! frames
+        # Expect "max # instances in view" ** "# views" frames (a.k.a. hypotheses)
+        return instances_hypotheses
 
     @staticmethod
     def get_instances_matrices(
