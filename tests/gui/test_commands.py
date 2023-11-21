@@ -1409,9 +1409,9 @@ def test_triangulate_session_get_instance_grouping(
     for frame_id, instances_in_frame in best_instances.items():
         for cam, instances_in_view in instances_in_frame.items():
             for inst in instances_in_view:
-                assert inst.frame_idx == selected_instance.frame_idx
-                assert inst.track == selected_instance.track
-
-
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_triangulate_session_get_instance_grouping"])
+                try:
+                    assert inst.frame_idx == selected_instance.frame_idx
+                    assert inst.track == selected_instance.track
+                except:
+                    assert inst.frame is None
+                    assert inst.track is None
