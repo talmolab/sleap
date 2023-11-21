@@ -1358,14 +1358,14 @@ def test_triangulate_session_get_products_of_instances(
 def test_triangulate_session_calculate_error_per_frame(
     multiview_min_session_labels: Labels,
 ):
-    """Test `TriangulateSession.get_permutations_of_instances`."""
+    """Test `TriangulateSession.calculate_error_per_frame`."""
 
     labels = multiview_min_session_labels
     session = labels.sessions[0]
     lf = labels.labeled_frames[0]
     selected_instance = lf.instances[0]
 
-    instances = TriangulateSession.get_permutations_of_instances(
+    instances = TriangulateSession.get_products_of_instances(
         selected_instance=selected_instance,
         session=session,
         frame_idx=lf.frame_idx,
@@ -1383,14 +1383,14 @@ def test_triangulate_session_calculate_error_per_frame(
 def test_triangulate_session_get_instance_grouping(
     multiview_min_session_labels: Labels,
 ):
-    """Test `TriangulateSession.get_permutations_of_instances`."""
+    """Test `TriangulateSession.get_instance_grouping`."""
 
     labels = multiview_min_session_labels
     session = labels.sessions[0]
     lf = labels.labeled_frames[0]
     selected_instance = lf.instances[0]
 
-    instances = TriangulateSession.get_permutations_of_instances(
+    instances = TriangulateSession.get_products_of_instances(
         selected_instance=selected_instance,
         session=session,
         frame_idx=lf.frame_idx,
