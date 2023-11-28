@@ -66,7 +66,7 @@ from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
 from sleap.gui.dialogs.metrics import MetricsTableDialog
 from sleap.gui.dialogs.shortcuts import ShortcutDialog
-from sleap.gui.dialogs.bulletin import BulletinDialog, BulletinWorker
+from sleap.gui.dialogs.bulletin import BulletinWorker
 from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.tracks import TrackListOverlay, TrackTrailOverlay
 from sleap.gui.shortcuts import Shortcuts
@@ -220,25 +220,11 @@ class MainWindow(QMainWindow):
             title, date, content = announcement
             bulletin_markdown = "\n".join(content.split("\n"))
 
-            # Create the pop-up dialog
-            popup_dialog = BulletinDialog(self)
+            # initialize the bulletin popup worker
+            popup_worker = BulletinWorker(bulletin_markdown, self)
+            popup_worker.show_bulletin()
 
-            # Set the dialog as a top-level window with the Qt.WindowStaysOnTopHint flag
-            popup_dialog.setWindowFlags(
-                popup_dialog.windowFlags() | Qt.WindowStaysOnTopHint
-            )
-
-            # Show the dialog
-            popup_dialog.show()
-
-            # Create a worker thread to update the text in the dialog
-            popup_worker = BulletinWorker(bulletin_markdown)
-            popup_worker.text_updated.connect(popup_dialog.updateText)
-            popup_worker.start()
-
-            # Save the dialog and worker so we can close them later
-            # Otherwise get "QThread: Destroyed while thread is still running"
-            self._child_windows["bulletin_dialog"] = popup_dialog  # Not really needed
+            # Save the bulletin worker so we can close them later
             self._child_windows["bulletin_worker"] = popup_worker  # Needed!
 
     def setWindowTitle(self, value):

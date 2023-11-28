@@ -2,34 +2,56 @@
 GUI for displaying the new announcement.
 """
 
-from qtpy.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QLabel,
-)
-from qtpy.QtCore import Signal, Slot, QThread
+from qtpy.QtCore import Signal, Qt
+from qtpy.QtWebEngineWidgets import QWebEngineView
+from qtpy.QtCore import Property, Signal, QObject, QUrl
+from qtpy.QtWebChannel import QWebChannel
+from qtpy import QtWidgets
+from pathlib import Path
 
 
-class BulletinWorker(QThread):
-    text_updated = Signal(str)
-
+class BulletinWorker(QtWidgets.QMainWindow):
     def __init__(self, content, parent=None):
         super(BulletinWorker, self).__init__(parent)
-        self.content = content
+        self._content = content
+        # Set the window to stay on top
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
-    def run(self):
-        self.text_updated.emit(self.content)
+    def show_bulletin(self):
+
+        self.document = Document()
+
+        # Set the webchannel
+        self.channel = QWebChannel()
+        self.channel.registerObject("content", self.document)
+
+        self.document.set_text(self._content)
+        self.view = QWebEngineView()
+        self.view.page().setWebChannel(self.channel)
+
+        filename = str(Path(__file__).resolve().parent / "bulletin/markdown.html")
+        url = QUrl.fromLocalFile(filename)
+        self.view.load(url)
+
+        # Set the central window with view
+        self.setCentralWidget(self.view)
+        self.show()
 
 
-class BulletinDialog(QDialog):
+class Document(QObject):
+    textChanged = Signal(str)
+
     def __init__(self, parent=None):
-        super(BulletinDialog, self).__init__(parent)
+        super().__init__(parent)
+        self.m_text = ""
 
-        self.label = QLabel()
-        layout = QVBoxLayout()
-        layout.addWidget(self.label)
-        self.setLayout(layout)
+    def get_text(self):
+        return self.m_text
 
-    @Slot(str)
-    def updateText(self, text):
-        self.label.setText(text)
+    def set_text(self, text):
+        if self.m_text == text:
+            return
+        self.m_text = text
+        self.textChanged.emit(self.m_text)
+
+    text = Property(str, fget=get_text, fset=set_text, notify=textChanged)
