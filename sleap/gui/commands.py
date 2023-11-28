@@ -1240,7 +1240,7 @@ class ExportAnalysisFile(AppCommand):
                 analysis_videos.append(video)
                 output_paths.append(filename)
 
-        # Chack that output paths are valid
+        # Check that output paths are valid
         if len(output_paths) == 0:
             return False
 

@@ -2095,7 +2095,7 @@ class Labels(MutableSequence):
 
         Args:
             filename: Output path for the NWB format file.
-            labels: The `Labels` object to covert to a NWB format file.
+            labels: The `Labels` object to convert to a NWB format file.
             overwrite: Boolean that overwrites existing NWB file if True. If False, data
                 will be appended to existing NWB file.
             session_description: Description for entire project. Stored under

@@ -303,7 +303,7 @@ optional arguments:
                         naming convention
                         <slp path>.<video index>_<video filename>.analysis.h5 will be
                         used for every video without a specified output path. Multiple
-                        outputs can be specified, each preceeded by --output.
+                        outputs can be specified, each preceded by --output.
 
                         Example (analysis format):
                           Input:
