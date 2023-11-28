@@ -2,4 +2,5 @@
 skip = .git,*.pdf,*.svg,.codespellrc
 check-hidden = true
 ignore-regex = ^\s*"image/\S+": ".*|^        "# .*\bbu.210506
-# ignore-words-list =
+# importAT - is a function
+ignore-words-list = importat
