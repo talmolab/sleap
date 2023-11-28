@@ -1172,11 +1172,11 @@ class GraphicsView(QGraphicsView):
                 pass
 
     def keyPressEvent(self, event):
-        """Custom event hander, disables default QGraphicsView behavior."""
+        """Custom event handler, disables default QGraphicsView behavior."""
         event.ignore()  # Kicks the event up to parent
 
     def keyReleaseEvent(self, event):
-        """Custom event hander, disables default QGraphicsView behavior."""
+        """Custom event handler, disables default QGraphicsView behavior."""
         event.ignore()  # Kicks the event up to parent
 
 

@@ -459,7 +459,7 @@ class LearningDialog(QtWidgets.QDialog):
                 editor GUI tab.
 
         Returns:
-            A `ScopedKeyDict` with the loaded config values overriden by the corresponding
+            A `ScopedKeyDict` with the loaded config values overridden by the corresponding
             ones from the `tab_cfg_key_val_dict`.
         """
         # Serialize training config

@@ -1146,7 +1146,7 @@ class KalmanInitSet:
         # Which frames are "good"? First, we'll see if the best track match
         # for each of the instances was distinct—i.e., no competition for
         # matching any track. Second, we'll make sure that there are enough
-        # "usuable" instances—i.e., instances with the nodes that we'll track
+        # "usable" instances—i.e., instances with the nodes that we'll track
         # using Kalman filters.
         elif frame_match.has_only_first_choice_matches:
 
@@ -1342,7 +1342,7 @@ class KalmanTracker(BaseTracker):
                 # print(f"Kalman filters initialized (frame {t})")
 
                 # Clear the data used to init filters, so that if the filters
-                # stop tracking and we need to re-init, we won't re-use the
+                # stop tracking and we need to re-init, we won't reuse the
                 # tracked data from earlier frames.
                 self.init_done = True
                 self.last_init_t = t

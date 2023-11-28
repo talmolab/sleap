@@ -80,7 +80,7 @@ class RangeList:
         return self.cut_(self.list, cut)
 
     def cut_range(self, cut: tuple):
-        """Return three lists, everthing before/within/after cut range."""
+        """Return three lists, everything before/within/after cut range."""
         if not self.list:
             return [], [], []
         cut = self._as_tuple(cut)

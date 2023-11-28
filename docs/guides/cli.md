@@ -100,7 +100,7 @@ optional arguments:
                         Path to output directory where the frozen model will be exported to.
                         Defaults to a folder named 'exported_model'.
   -r, --ragged RAGGED
-                        Keep tensors ragged if present. If ommited, convert
+                        Keep tensors ragged if present. If omitted, convert
                         ragged tensors into regular tensors with NaN padding.
   -n, --max_instances MAX_INSTANCES
                         Limit maximum number of instances in multi-instance models.
