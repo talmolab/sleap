@@ -755,14 +755,15 @@ class RecordingSession:
         )
         return sessions_cattr
 
+
 @define
 class InstanceGroup:
     """Defines a group of instances across the same frame index.
-    
+
     Args:
         camera_cluster: `CameraCluster` object.
         instances: List of `Instance` objects.
-    
+
     """
 
     frame_idx: int = field(validator=instance_of(int))
@@ -776,12 +777,11 @@ class InstanceGroup:
         for cam, instance in self._instance_by_camcorder.items():
             self._camcorder_by_instance[instance] = cam
 
-
     @property
     def instances(self) -> List["Instance"]:
         """List of `Instance` objects."""
         return list(self._instance_by_camcorder.values())
-    
+
     def get_instance(self, cam: Camcorder) -> Optional["Instance"]:
         """Retrieve `Instance` linked to `Camcorder`.
 
@@ -801,7 +801,6 @@ class InstanceGroup:
             return None
 
         return self._instance_by_camcorder[cam]
-    
 
     def get_cam(self, instance: "Instance") -> Optional[Camcorder]:
         """Retrieve `Camcorder` linked to `Instance`.
@@ -820,8 +819,7 @@ class InstanceGroup:
             return None
 
         return self._camcorder_by_instance[instance]
-    
-    
+
     def __getitem__(
         self, idx_or_key: Union[int, Camcorder, "Instance"]
     ) -> Union[Camcorder, "Instance"]:
@@ -844,20 +842,20 @@ class InstanceGroup:
                 return self.get_cam(idx_or_key)
             except:
                 pass
-        
+
         raise KeyError(
-                f"Key {idx_or_key} not found in {self.__class__.__name__} or "
-                "associated metadata."
-            )
+            f"Key {idx_or_key} not found in {self.__class__.__name__} or "
+            "associated metadata."
+        )
 
     def __len__(self):
         return len(self.instances)
 
     def __repr__(self):
         return f"{self.__class__.__name__}(frame_idx={self.frame_idx}, instances={len(self)}, camera_cluster={self.camera_cluster})"
-    
+
     @classmethod
-    def from_dict(cls,  d: dict) -> "InstanceGroup":
+    def from_dict(cls, d: dict) -> "InstanceGroup":
         """Creates an `InstanceGroup` object from a dictionary.
 
         Args:
@@ -886,11 +884,13 @@ class InstanceGroup:
                         f"Cannot create `InstanceGroup`: Frame index {frame_idx} "
                         f"does not match instance frame index {instance.frame_idx}."
                     )
-        
+
         if len(d) == 0:
             logger.warning("Cannot create `InstanceGroup`: No real instances found.")
-            
-        frame_idx = cast(int, frame_idx)  # Could be None if no real instances in dictionary
+
+        frame_idx = cast(
+            int, frame_idx
+        )  # Could be None if no real instances in dictionary
 
         return cls(
             frame_idx=frame_idx,
