@@ -307,16 +307,48 @@ def test_instance_group(multiview_min_session_labels: Labels):
         )
         instance_by_camera[cam] = instance
 
+    # Add a dummy instance to make sure it gets ignored
+    instance_by_camera[cam] = dummy_instance
+
     # Test `from_dict`
     instance_group = InstanceGroup.from_dict(d=instance_by_camera)
     assert isinstance(instance_group, InstanceGroup)
     assert instance_group.frame_idx == frame_idx
     assert instance_group.camera_cluster == camera_cluster
-    for cam in session.linked_cameras:
-        try:
-            instance = instance_group[cam]
+    for camera in session.linked_cameras:
+        if camera == cam:
+            assert instance_by_camera[camera] == dummy_instance
+            assert camera not in instance_group.cameras
+        else:
+            instance = instance_group[camera]
             assert isinstance(instance, Instance)
-            assert instance_group[cam] == instance_by_camera[cam]
-            assert instance_group[instance] == cam
-        except:
-            assert instance_by_camera[cam] == dummy_instance
+            assert instance_group[camera] == instance_by_camera[camera]
+            assert instance_group[instance] == camera
+
+    # Test `__repr__`
+    print(instance_group)
+
+    # Test `__len__`
+    assert len(instance_group) == len(instance_by_camera) - 1
+
+    # Test `get_cam`
+    assert instance_group.get_cam(dummy_instance) is None
+
+    # Test `get_instance`
+    assert instance_group.get_instance(cam) is None
+
+    # Test `instances` property
+    assert len(instance_group.instances) == len(instance_by_camera) - 1
+
+    # Test `cameras` property
+    assert len(instance_group.cameras) == len(instance_by_camera) - 1
+
+    # Test `__getitem__` with `int` key
+    assert isinstance(instance_group[0], Instance)
+    with pytest.raises(KeyError):
+        instance_group[len(instance_group)]
+
+    # Populate with only dummy instance and test `from_dict`
+    instance_by_camera = {cam: dummy_instance}
+    instance_group = InstanceGroup.from_dict(d=instance_by_camera)
+    assert instance_group is None
