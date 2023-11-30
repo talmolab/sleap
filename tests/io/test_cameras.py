@@ -292,17 +292,19 @@ def test_instance_group(multiview_min_session_labels: Labels):
     instance = lf.instances[0]
 
     dummy_instance = Instance.from_numpy(
-            np.full(
-                shape=(len(instance.skeleton.nodes), 2),
-                fill_value=np.nan,
-            ),
-            skeleton=instance.skeleton,
-        )
+        np.full(
+            shape=(len(instance.skeleton.nodes), 2),
+            fill_value=np.nan,
+        ),
+        skeleton=instance.skeleton,
+    )
     instance_by_camera = {}
     for cam in session.linked_cameras:
         video = session.get_video(cam)
         lfs_in_view = labels.find(video=video, frame_idx=frame_idx)
-        instance = lfs_in_view[0].instances[0] if len(lfs_in_view) > 0 else dummy_instance
+        instance = (
+            lfs_in_view[0].instances[0] if len(lfs_in_view) > 0 else dummy_instance
+        )
         instance_by_camera[cam] = instance
 
     # Test `from_dict`
