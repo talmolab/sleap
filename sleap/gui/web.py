@@ -171,13 +171,13 @@ class AnnouncementChecker:
                 data = json.load(jsf)
                 self._latest_data = data[0]
         except FileNotFoundError:
-            self._latest_data = {}
+            self._latest_data = None
 
     @property
-    def new_announcement(self):
+    def new_announcement_available(self):
         self._read_bulletin_data()
         if (
-            self._latest_data
+            self._latest_data and self.previous_announcement_date
             and self._latest_data["date"] != self.previous_announcement_date
         ):
             return True
@@ -185,7 +185,7 @@ class AnnouncementChecker:
 
     def get_latest_announcement(self) -> Optional[Tuple[str, str]]:
         """Return latest announcements on the releases page not seen by user."""
-        if self.new_announcement:
+        if self.new_announcement_available:
             return (
                 self._latest_data["title"],
                 self._latest_data["date"],
