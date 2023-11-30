@@ -1,12 +1,10 @@
 """Module to test functions in `sleap.io.cameras`."""
 
-from typing import Dict, List
-
 import numpy as np
 import pytest
 
-from sleap.io.cameras import Camcorder, CameraCluster, RecordingSession
-from sleap.io.dataset import Instance, LabeledFrame, Labels, LabelsDataCache
+from sleap.io.cameras import Camcorder, CameraCluster, InstanceGroup, RecordingSession
+from sleap.io.dataset import Instance, Labels
 from sleap.io.video import Video
 
 
@@ -280,3 +278,43 @@ def test_recording_session_remove_video(multiview_min_session_labels: Labels):
     session.remove_video(video)
     assert labels_cache._session_by_video.get(video, None) is None
     assert video not in session.videos
+
+
+def test_instance_group(multiview_min_session_labels: Labels):
+    """Test `InstanceGroup` data structure."""
+
+    labels = multiview_min_session_labels
+    session = labels.sessions[0]
+    camera_cluster = session.camera_cluster
+
+    lf = labels.labeled_frames[0]
+    frame_idx = lf.frame_idx
+    instance = lf.instances[0]
+
+    dummy_instance = Instance.from_numpy(
+            np.full(
+                shape=(len(instance.skeleton.nodes), 2),
+                fill_value=np.nan,
+            ),
+            skeleton=instance.skeleton,
+        )
+    instance_by_camera = {}
+    for cam in session.linked_cameras:
+        video = session.get_video(cam)
+        lfs_in_view = labels.find(video=video, frame_idx=frame_idx)
+        instance = lfs_in_view[0].instances[0] if len(lfs_in_view) > 0 else dummy_instance
+        instance_by_camera[cam] = instance
+
+    # Test `from_dict`
+    instance_group = InstanceGroup.from_dict(d=instance_by_camera)
+    assert isinstance(instance_group, InstanceGroup)
+    assert instance_group.frame_idx == frame_idx
+    assert instance_group.camera_cluster == camera_cluster
+    for cam in session.linked_cameras:
+        try:
+            instance = instance_group[cam]
+            assert isinstance(instance, Instance)
+            assert instance_group[cam] == instance_by_camera[cam]
+            assert instance_group[instance] == cam
+        except:
+            assert instance_by_camera[cam] == dummy_instance
