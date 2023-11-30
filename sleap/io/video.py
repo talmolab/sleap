@@ -1450,7 +1450,9 @@ class Video:
                 for i in range(len(frame_numbers)):
                     frames.append(encode(frame_data[i]))
 
-                max_frame_size = max([len(x) for x in frames])
+                max_frame_size = (
+                    max([len(x) if len(x) else 0 for x in frames]) if len(frames) else 0
+                )
 
                 dset = f.create_dataset(
                     dataset + "/video",
