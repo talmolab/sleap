@@ -31,11 +31,11 @@ from sleap.io.pathutils import fix_path_separator
 from sleap.io.video import Video
 from sleap.util import get_package_file
 
-# # These imports cause trouble when running `pytest.main()` from within the file
-# # Comment out to debug tests file via VSCode's "Debug Python File"
-# from tests.info.test_h5 import extract_meta_hdf5
-# from tests.io.test_formats import read_nix_meta
-# from tests.io.test_video import assert_video_params
+# These imports cause trouble when running `pytest.main()` from within the file
+# Comment out to debug tests file via VSCode's "Debug Python File"
+from tests.info.test_h5 import extract_meta_hdf5
+from tests.io.test_formats import read_nix_meta
+from tests.io.test_video import assert_video_params
 
 
 def test_delete_user_dialog(centered_pair_predictions):
