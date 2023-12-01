@@ -1063,32 +1063,29 @@ def test_triangulate_session_get_and_verify_enough_instances(
     labels = multiview_min_session_labels
     session = labels.sessions[0]
     lf = labels.labeled_frames[0]
-    track = labels.tracks[1]
 
     # Test with no cams_to_include, expect views from all linked cameras
     instances = TriangulateSession.get_and_verify_enough_instances(
-        session=session, frame_inds=[lf.frame_idx], track=track
+        session=session, frame_idx=lf.frame_idx
     )
-    instances_in_frame = instances[lf.frame_idx]
+    instances_in_frame = instances[0]
     assert (
-        len(instances_in_frame) == 6
-    )  # Some views don't have an instance at this track
+        len(instances_in_frame) == 8
+    )  # All views should have same number of instances (padded with dummy instance(s))
     for cam in session.linked_cameras:
         if cam.name in ["side", "sideL"]:  # The views that don't have an instance
             continue
         instances_in_view = instances_in_frame[cam]
         for inst in instances_in_view:
             assert inst.frame_idx == lf.frame_idx
-            assert inst.track == track
             assert inst.video == session[cam]
 
     # Test with cams_to_include, expect views from only those cameras
     cams_to_include = session.linked_cameras[-2:]
     instances = TriangulateSession.get_and_verify_enough_instances(
         session=session,
-        frame_inds=[lf.frame_idx],
+        frame_idx=lf.frame_idx,
         cams_to_include=cams_to_include,
-        track=track,
     )
     instances_in_frame = instances[lf.frame_idx]
     assert len(instances_in_frame) == len(cams_to_include)
@@ -1096,21 +1093,24 @@ def test_triangulate_session_get_and_verify_enough_instances(
         instances_in_view = instances_in_frame[cam]
         for inst in instances_in_view:
             assert inst.frame_idx == lf.frame_idx
-            assert inst.track == track
             assert inst.video == session[cam]
 
     # Test with not enough instances, expect views from only those cameras
     cams_to_include = session.linked_cameras[0:2]
+    cam = cams_to_include[0]
+    video = session[cam]
+    lfs = labels.find(video, lf.frame_idx)
+    lf = lfs[0]
+    lf.instances = []
     instances = TriangulateSession.get_and_verify_enough_instances(
         session=session,
-        frame_inds=[lf.frame_idx],
+        frame_idx=lf.frame_idx,
         cams_to_include=cams_to_include,
-        track=None,
     )
     assert isinstance(instances, bool)
     assert not instances
     messages = "".join([rec.message for rec in caplog.records])
-    assert "One or less instances found for frame" in messages
+    assert "No Instances found for" in messages
 
 
 def test_triangulate_session_verify_enough_views(
@@ -1259,7 +1259,9 @@ def test_triangulate_session_update_instances(multiview_min_session_labels: Labe
 
     # Just run for code coverage testing, do not test output here (race condition)
     # (see "functional core, imperative shell" pattern)
-    TriangulateSession.update_instances(session=session, instances=instances)
+    TriangulateSession.update_instances(
+        instances_and_coords=instances_and_coordinates[0]
+    )
 
 
 def test_triangulate_session_do_action(multiview_min_session_labels: Labels):
@@ -1332,7 +1334,6 @@ def test_triangulate_session_get_products_of_instances(
     selected_instance = lf.instances[0]
 
     instances = TriangulateSession.get_products_of_instances(
-        selected_instance=selected_instance,
         session=session,
         frame_idx=lf.frame_idx,
     )
@@ -1363,15 +1364,16 @@ def test_triangulate_session_calculate_error_per_frame(
     labels = multiview_min_session_labels
     session = labels.sessions[0]
     lf = labels.labeled_frames[0]
-    selected_instance = lf.instances[0]
 
     instances = TriangulateSession.get_products_of_instances(
-        selected_instance=selected_instance,
         session=session,
         frame_idx=lf.frame_idx,
     )
 
-    reprojection_error_per_frame = TriangulateSession.calculate_error_per_frame(
+    (
+        reprojection_error_per_frame,
+        instances_and_coords,
+    ) = TriangulateSession.calculate_error_per_frame(
         session=session, instances=instances
     )
 
@@ -1383,7 +1385,7 @@ def test_triangulate_session_calculate_error_per_frame(
 def test_triangulate_session_get_instance_grouping(
     multiview_min_session_labels: Labels,
 ):
-    """Test `TriangulateSession.get_instance_grouping`."""
+    """Test `TriangulateSession._get_instance_grouping`."""
 
     labels = multiview_min_session_labels
     session = labels.sessions[0]
@@ -1391,33 +1393,29 @@ def test_triangulate_session_get_instance_grouping(
     selected_instance = lf.instances[0]
 
     instances = TriangulateSession.get_products_of_instances(
-        selected_instance=selected_instance,
         session=session,
         frame_idx=lf.frame_idx,
     )
 
-    reprojection_error_per_frame = TriangulateSession.calculate_error_per_frame(
+    (
+        reprojection_error_per_frame,
+        instances_and_coords,
+    ) = TriangulateSession.calculate_error_per_frame(
         session=session, instances=instances
     )
 
-    best_instances: Dict[
-        int, Dict[Camcorder, Instance]
-    ] = TriangulateSession.get_instance_grouping(
+    best_instances, frame_id_min_error = TriangulateSession._get_instance_grouping(
         instances=instances, reprojection_error_per_frame=reprojection_error_per_frame
     )
-    assert len(best_instances) == 1
-    for frame_id, instances_in_frame in best_instances.items():
-        for cam, instances_in_view in instances_in_frame.items():
-            tracks_in_view = set(
-                [
-                    inst.track if inst is not None else "None"
-                    for inst in instances_in_view
-                ]
-            )
-            assert len(tracks_in_view) == len(instances_in_view)
-            for inst in instances_in_view:
-                try:
-                    assert inst.frame_idx == selected_instance.frame_idx
-                except:
-                    assert inst.frame is None
-                    assert inst.track is None
+    assert len(best_instances) == len(session.camera_cluster)
+    for instances_in_view in best_instances.values():
+        tracks_in_view = set(
+            [inst.track if inst is not None else "None" for inst in instances_in_view]
+        )
+        assert len(tracks_in_view) == len(instances_in_view)
+        for inst in instances_in_view:
+            try:
+                assert inst.frame_idx == selected_instance.frame_idx
+            except:
+                assert inst.frame is None
+                assert inst.track is None
