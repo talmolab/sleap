@@ -3422,6 +3422,9 @@ class TriangulateSession(EditCommand):
         video = params.get("video", None) or context.state["video"]
         session = params.get("session", None) or context.labels.get_session(video)
         instances = params["instances"]
+        session = cast(RecordingSession, session)  # Could be None if no labels or video
+
+        # Get best instance grouping and reprojected coords
         instances_and_reprojected_coords = (
             TriangulateSession.get_instance_grouping_and_reprojected_coords(
                 session=session, instance_hypotheses=instances
@@ -3818,7 +3821,7 @@ class TriangulateSession(EditCommand):
     def _get_instance_grouping(
         instances: Dict[int, Dict[Camcorder, List[Instance]]],
         reprojection_error_per_frame: Dict[int, float],
-    ) -> Tuple[int, Dict[Camcorder, List[Instance]]]:
+    ) -> Tuple[Dict[Camcorder, List[Instance]], int]:
         """Get instance grouping with lowest reprojection error.
 
         Args:
