@@ -16,7 +16,7 @@ def test_augmentation(min_labels):
 
     augmenter = augmentation.AlbumentationsAugmenter.from_config(
         augmentation.AugmentationConfig(
-            rotate=True, rotation_min_angle=-90, rotation_max_angle=-90
+            rotate=True, rotation_min_angle=90, rotation_max_angle=90
         )
     )
     ds = augmenter.transform_dataset(ds)
