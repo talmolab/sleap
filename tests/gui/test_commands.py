@@ -1332,10 +1332,10 @@ def test_triangulate_session_get_products_of_instances(
     session = labels.sessions[0]
     lf = labels.labeled_frames[0]
     selected_instance = lf.instances[0]
+    selected_cam = session.get_camera(lf.video)
 
     instances = TriangulateSession.get_products_of_instances(
-        session=session,
-        frame_idx=lf.frame_idx,
+        session=session, frame_idx=lf.frame_idx, selected_cam=selected_cam
     )
 
     views = TriangulateSession.get_all_views_at_frame(session, lf.frame_idx)
@@ -1419,3 +1419,51 @@ def test_triangulate_session_get_instance_grouping(
             except:
                 assert inst.frame is None
                 assert inst.track is None
+
+
+def test_get_instance_grouping_and_reprojected_coords(
+    multiview_min_session_labels: Labels,
+):
+    """Test `TriangulateSession.get_instance_grouping_and_reprojected_coords`."""
+
+    labels = multiview_min_session_labels
+    session = labels.sessions[0]
+    lf = labels.labeled_frames[0]
+    selected_cam = session.get_camera(lf.video)
+
+    # There should not be any instance groups yet
+    assert session.get_instance_group(lf.frame_idx) is None
+
+    instances: Dict[
+        int, Dict[Camcorder, List[Instance]]
+    ] = TriangulateSession.get_products_of_instances(
+        session=session,
+        frame_idx=lf.frame_idx,
+        selected_cam=selected_cam,
+    )
+    max_num_instances_in_view = 2
+    num_views = 8
+    assert len(instances) == max_num_instances_in_view ** num_views
+
+    TriangulateSession.get_instance_grouping_and_reprojected_coords(
+        session=session, frame_idx=lf.frame_idx, instance_hypotheses=instances
+    )
+
+    # There should now be an instance group for the frame_idx
+    assert session.get_instance_group(lf.frame_idx) is not None
+
+    # If an instance group is present, it should be used for greedy assignment
+    instances_hypotheses = TriangulateSession.get_products_of_instances(
+        session=session, frame_idx=lf.frame_idx, selected_cam=selected_cam
+    )
+    assert len(instances_hypotheses) == 2
+    instances_in_view = TriangulateSession.get_instances_across_views(
+        session=session, frame_idx=lf.frame_idx
+    )[selected_cam]
+    assert instances_in_view in [
+        instances_hypotheses[frame_id][selected_cam]
+        for frame_id in instances_hypotheses.keys()
+    ]
+    assert instances_hypotheses[0][selected_cam] == list(
+        reversed(instances_hypotheses[1][selected_cam])
+    )

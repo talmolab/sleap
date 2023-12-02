@@ -54,7 +54,7 @@ from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
-from sleap.io.cameras import Camcorder, RecordingSession
+from sleap.io.cameras import Camcorder, InstanceGroup, RecordingSession
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
@@ -3421,13 +3421,14 @@ class TriangulateSession(EditCommand):
         # Get params
         video = params.get("video", None) or context.state["video"]
         session = params.get("session", None) or context.labels.get_session(video)
-        instances = params["instances"]
+        instances: Dict[int, Dict[Camcorder, List[Instance]]] = params["instances"]
+        frame_idx: int = params["frame_idx"]
         session = cast(RecordingSession, session)  # Could be None if no labels or video
 
         # Get best instance grouping and reprojected coords
         instances_and_reprojected_coords = (
             TriangulateSession.get_instance_grouping_and_reprojected_coords(
-                session=session, instance_hypotheses=instances
+                session=session, frame_idx=frame_idx, instance_hypotheses=instances
             )
         )
 
@@ -3491,6 +3492,7 @@ class TriangulateSession(EditCommand):
             return
 
         cams_to_include = params.get("cams_to_include", None) or session.linked_cameras
+        selected_cam: Camcorder = session.get_camera(video)
 
         # If not enough `Camcorder`s available/specified, then return
         if not TriangulateSession.verify_enough_views(
@@ -3506,6 +3508,7 @@ class TriangulateSession(EditCommand):
             context=context,
             session=session,
             frame_idx=frame_idx,
+            selected_cam=selected_cam,
             cams_to_include=cams_to_include,
             show_dialog=show_dialog,
         )
@@ -3514,8 +3517,9 @@ class TriangulateSession(EditCommand):
         if not instance:
             return False
 
-        # Add instances to params dict
+        # Add instances and frame_idx to params dict
         params["instances"] = instances
+        params["frame_idx"] = frame_idx
 
         return True
 
@@ -3523,6 +3527,7 @@ class TriangulateSession(EditCommand):
     def get_and_verify_enough_instances(
         session: RecordingSession,
         frame_idx: int,
+        selected_cam: Camcorder,
         context: Optional[CommandContext] = None,
         cams_to_include: Optional[List[Camcorder]] = None,
         show_dialog: bool = True,
@@ -3534,6 +3539,7 @@ class TriangulateSession(EditCommand):
         Args:
             session: The `RecordingSession` containing the `Camcorder`s.
             frame_idx: Frame index to get instances from (0-indexed).
+            selected_cam: The `Camcorder` object to determine the current view.
             context: The optional command context used to display a dialog.
             cams_to_include: List of `Camcorder`s to include. Default is all.
             track: `Track` object used to find instances accross views. Default is -1
@@ -3552,6 +3558,7 @@ class TriangulateSession(EditCommand):
             ] = TriangulateSession.get_products_of_instances(
                 session=session,
                 frame_idx=frame_idx,
+                selected_cam=selected_cam,
                 cams_to_include=cams_to_include,
             )
             return instances
@@ -3759,6 +3766,7 @@ class TriangulateSession(EditCommand):
     @staticmethod
     def get_instance_grouping_and_reprojected_coords(
         session: RecordingSession,
+        frame_idx: int,
         instance_hypotheses: Dict[int, Dict[Camcorder, List[Instance]]],
     ):
         """Get instance grouping and reprojected coords with lowest reprojection error.
@@ -3769,6 +3777,7 @@ class TriangulateSession(EditCommand):
 
         Args:
             session: The `RecordingSession` containing the `Camcorder`s.
+            frame_idx: Frame index to get views from (0-indexed).
             instance_hypotheses: Dict with frame identifier keys (not the frame index)
                 and values of another inner dict with `Camcorder` keys and
                 `List[Instance]` values.
@@ -3802,6 +3811,9 @@ class TriangulateSession(EditCommand):
             instances=instance_hypotheses,
             reprojection_error_per_frame=reprojection_error_per_frame,
         )
+
+        # Assign to `InstanceGroup`s
+        session.update_instance_group(frame_idx, best_instances)
 
         # Just for type hinting
         best_instances = cast(Dict[Camcorder, List[Instance]], best_instances)
@@ -4019,6 +4031,7 @@ class TriangulateSession(EditCommand):
     def get_products_of_instances(
         session: RecordingSession,
         frame_idx: int,
+        selected_cam: Camcorder,
         cams_to_include: Optional[List[Camcorder]] = None,
     ) -> Dict[int, Dict[Camcorder, List[Instance]]]:
         """Get all (multi-instance) possible products of instances across views.
@@ -4026,6 +4039,7 @@ class TriangulateSession(EditCommand):
         Args:
             session: The `RecordingSession` containing the `Camcorder`s.
             frame_idx: Frame index to get instances from (0-indexed).
+            selected_cam: The `Camcorder` object to determine the current view.
             cams_to_include: List of `Camcorder`s to include. Default is all.
             require_multiple_views: If True, then raise and error if one or less views
                 or instances are found.
@@ -4062,33 +4076,69 @@ class TriangulateSession(EditCommand):
             skeleton=skeleton,
         )
 
-        # Get permutations of instances from other views
-        instances_permutations: Dict[Camcorder, Iterator[Tuple]] = {}
-        for cam, instances_in_view in instances.items():
-            # Append a dummy instance to all lists of instances if less than the max length
-            num_missing = 1
+        def _fill_in_missing_instances(instances_in_view: List[Instance]):
+            """Fill in missing instances with dummy instances up to max number of instances.
+
+            Args:
+                instances_in_view: List of instances in a view.
+            """
+
             num_instances = len(instances_in_view)
+
             if num_instances < max_num_instances:
                 num_missing = max_num_instances - num_instances
 
                 # Extend the list first
                 instances_in_view.extend([dummy_instance] * num_missing)
 
-            # Permute instances into all possible orderings w/in a view
-            instances_permutations[cam] = permutations(instances_in_view)
+            return instances_in_view
 
-        # Get products of instances from other views into all possible groupings
-        # Ordering of dict_values is preserved in Python 3.7+
-        products_of_instances: Iterator[Iterator[Tuple]] = product(
-            *instances_permutations.values()
-        )
+        # The existing grouping of instances
+        instance_group: Optional[
+            Dict[Camcorder, List[Instance]]
+        ] = session.get_instance_group(frame_idx=frame_idx)
 
-        # Reorganize products by cam and add selected instance to each permutation
         instances_hypotheses: Dict[int, Dict[Camcorder, List[Instance]]] = {}
-        for frame_id, prod in enumerate(products_of_instances):
-            instances_hypotheses[frame_id] = {
-                cam: [*inst] for cam, inst in zip(instances.keys(), prod)
-            }
+        # TODO(LM): This should be skipped if we are doing greedy matching, not if instance_group is None
+        if instance_group is None:
+            # Get permutations of instances from other views
+            instances_permutations: Dict[Camcorder, Iterator[Tuple]] = {}
+            for cam, instances_in_view in instances.items():
+                # Append a dummy instance to all lists of instances if less than the max length
+                instances_in_view = _fill_in_missing_instances(instances_in_view)
+
+                # Permute instances into all possible orderings w/in a view
+                instances_permutations[cam] = permutations(instances_in_view)
+
+            # Get products of instances from other views into all possible groupings
+            # Ordering of dict_values is preserved in Python 3.7+
+            products_of_instances: Iterator[Iterator[Tuple]] = product(
+                *instances_permutations.values()
+            )
+
+            # Reorganize products by cam and add selected instance to each permutation
+            for frame_id, prod in enumerate(products_of_instances):
+                instances_hypotheses[frame_id] = {
+                    cam: list(inst) for cam, inst in zip(instances.keys(), prod)
+                }
+        else:
+            # Remove instances in selected view from instance grouping, we can't assume
+            # that all instances in the selected view will be in the instance_group
+            instance_group.pop(selected_cam, None)
+
+            # Get instances in current view
+            instances_in_view = instances[selected_cam]
+
+            # Fill in with dummy instances if less than max number of instances
+            instances_in_view = _fill_in_missing_instances(instances_in_view)
+
+            # Permute instances into all possible orderings w/in a view
+            instances_permutations = permutations(instances_in_view)
+
+            # Create hypotheses
+            for frame_id, perm in enumerate(instances_permutations):
+                instances_hypotheses[frame_id] = instance_group.copy()
+                instances_hypotheses[frame_id].update({selected_cam: list(perm)})
 
         # Expect "max # instances in view" ** "# views" frames (a.k.a. hypotheses)
         return instances_hypotheses
@@ -4327,10 +4377,12 @@ class TriangulateSession(EditCommand):
                 ]  # len(T) of N x 2
 
                 # TODO(LM): I think we will need a reconsumable iterator here.
-                insts_and_coords_in_frame[cam]: Tuple[Instance, np.ndarray] = zip(
+                insts_and_coords_in_view: Tuple[Instance, np.ndarray] = zip(
                     instances_in_frame_ordered,
                     insts_coords_in_frame,
                 )
+                insts_and_coords_in_frame[cam] = insts_and_coords_in_view
+
             insts_and_coords[frame_idx] = insts_and_coords_in_frame
 
         return insts_and_coords

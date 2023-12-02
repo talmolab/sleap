@@ -393,6 +393,159 @@ class CameraCluster(CameraGroup):
         return calibration_dict
 
 
+@define
+class InstanceGroup:
+    """Defines a group of instances across the same frame index.
+
+    Args:
+        camera_cluster: `CameraCluster` object.
+        instances: List of `Instance` objects.
+
+    """
+
+    frame_idx: int = field(validator=instance_of(int))
+    camera_cluster: Optional[CameraCluster] = None
+    _instance_by_camcorder: Dict[Camcorder, "Instance"] = field(factory=dict)
+    _camcorder_by_instance: Dict["Instance", Camcorder] = field(factory=dict)
+
+    def __attrs_post_init__(self):
+        """Initialize `InstanceGroup` object."""
+
+        for cam, instance in self._instance_by_camcorder.items():
+            self._camcorder_by_instance[instance] = cam
+
+    @property
+    def instances(self) -> List["Instance"]:
+        """List of `Instance` objects."""
+        return list(self._instance_by_camcorder.values())
+
+    @property
+    def cameras(self) -> List[Camcorder]:
+        """List of `Camcorder` objects."""
+        return list(self._instance_by_camcorder.keys())
+
+    def get_instance(self, cam: Camcorder) -> Optional["Instance"]:
+        """Retrieve `Instance` linked to `Camcorder`.
+
+        Args:
+            camcorder: `Camcorder` object.
+
+        Returns:
+            If `Camcorder` in `self.camera_cluster`, then `Instance` object if found, else
+            `None` if `Camcorder` has no linked `Instance`.
+        """
+
+        if cam not in self._instance_by_camcorder:
+            logger.warning(
+                f"Camcorder {cam.name} is not linked to a video in this "
+                f"RecordingSession."
+            )
+            return None
+
+        return self._instance_by_camcorder[cam]
+
+    def get_cam(self, instance: "Instance") -> Optional[Camcorder]:
+        """Retrieve `Camcorder` linked to `Instance`.
+
+        Args:
+            instance: `Instance` object.
+
+        Returns:
+            `Camcorder` object if found, else `None`.
+        """
+
+        if instance not in self._camcorder_by_instance:
+            logger.warning(
+                f"{instance} is not in this InstanceGroup's Instances: \n\t{self.instances}."
+            )
+            return None
+
+        return self._camcorder_by_instance[instance]
+
+    def __getitem__(
+        self, idx_or_key: Union[int, Camcorder, "Instance"]
+    ) -> Union[Camcorder, "Instance"]:
+        """Grab a `Camcorder` of `Instance` from the `InstanceGroup`."""
+
+        def _raise_key_error():
+            raise KeyError(f"Key {idx_or_key} not found in {self.__class__.__name__}.")
+
+        # Try to find in `self.camera_cluster.cameras`
+        if isinstance(idx_or_key, int):
+            try:
+                return self.instances[idx_or_key]
+            except IndexError:
+                _raise_key_error()
+
+        # Return a `Instance` if `idx_or_key` is a `Camcorder``
+        if isinstance(idx_or_key, Camcorder):
+            return self.get_instance(idx_or_key)
+
+        else:
+            # isinstance(idx_or_key, "Instance"):
+            try:
+                return self.get_cam(idx_or_key)
+            except:
+                pass
+
+        _raise_key_error()
+
+    def __len__(self):
+        return len(self.instances)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(frame_idx={self.frame_idx}, instances={len(self)}, camera_cluster={self.camera_cluster})"
+
+    @classmethod
+    def from_dict(cls, d: dict) -> Optional["InstanceGroup"]:
+        """Creates an `InstanceGroup` object from a dictionary.
+
+        Args:
+            d: Dictionary with `Camcorder` keys and `Instance` values.
+
+        Returns:
+            `InstanceGroup` object or None if no "real" (determined by `frame_idx` other
+            than None) instances found.
+        """
+
+        # Ensure not to mutate the original dictionary
+        d_copy = d.copy()
+
+        frame_idx = None
+        for cam, instance in d_copy.copy().items():
+            camera_cluster = cam.camera_cluster
+
+            # Remove dummy instances (determined by not having a frame index)
+            if instance.frame_idx is None:
+                d_copy.pop(cam)
+            # Grab the frame index from non-dummy instances
+            elif frame_idx is None:
+                frame_idx = instance.frame_idx
+            # Ensure all instances have the same frame index
+            else:
+                try:
+                    assert frame_idx == instance.frame_idx
+                except AssertionError:
+                    logger.warning(
+                        f"Cannot create `InstanceGroup`: Frame index {frame_idx} "
+                        f"does not match instance frame index {instance.frame_idx}."
+                    )
+
+        if len(d_copy) == 0:
+            logger.warning("Cannot create `InstanceGroup`: No real instances found.")
+            return None
+
+        frame_idx = cast(
+            int, frame_idx
+        )  # Could be None if no real instances in dictionary
+
+        return cls(
+            frame_idx=frame_idx,
+            camera_cluster=camera_cluster,
+            instance_by_camcorder=d_copy,
+        )
+
+
 @define(eq=False)
 class RecordingSession:
     """Class for storing information for a recording session.
@@ -413,6 +566,7 @@ class RecordingSession:
     metadata: dict = field(factory=dict)
     _video_by_camcorder: Dict[Camcorder, Video] = field(factory=dict)
     labels: Optional["Labels"] = None
+    _instance_groups_by_frame_idx: Dict[int, InstanceGroup] = field(factory=dict)
 
     @property
     def videos(self) -> List[Video]:
@@ -431,6 +585,12 @@ class RecordingSession:
         """List of `Camcorder`s in `self.camera_cluster` that are not linked to a video."""
 
         return list(set(self.camera_cluster.cameras) - set(self.linked_cameras))
+
+    @property
+    def instance_groups(self) -> Dict[int, InstanceGroup]:
+        """Dict of `InstanceGroup`s by frame index."""
+
+        return self._instance_groups_by_frame_idx
 
     def get_video(self, camcorder: Camcorder) -> Optional[Video]:
         """Retrieve `Video` linked to `Camcorder`.
@@ -570,6 +730,35 @@ class RecordingSession:
                 videos[cam] = video
 
         return videos
+
+    def get_instance_group(self, frame_idx: int) -> Optional[InstanceGroup]:
+        """Get `InstanceGroup` from frame index.
+
+        Args:
+            frame_idx: Frame index.
+
+        Returns:
+            `InstanceGroup` object or `None` if not found.
+        """
+
+        if frame_idx not in self.instance_groups:
+            logger.warning(
+                f"Frame index {frame_idx} not found in this RecordingSession's "
+                f"InstanceGroup's keys: \n\t{self.instance_groups.keys()}."
+            )
+            return None
+
+        return self.instance_groups[frame_idx]
+
+    def update_instance_group(self, frame_idx: int, instance_group: InstanceGroup):
+        """Update `InstanceGroup` from frame index.
+
+        Args:
+            frame_idx: Frame index.
+            instance_groups: `InstanceGroup` object.
+        """
+
+        self._instance_groups_by_frame_idx[frame_idx] = instance_group
 
     def __attrs_post_init__(self):
         self.camera_cluster.add_session(self)
@@ -754,156 +943,3 @@ class RecordingSession:
             RecordingSession, lambda x: x.to_session_dict(video_to_idx)
         )
         return sessions_cattr
-
-
-@define
-class InstanceGroup:
-    """Defines a group of instances across the same frame index.
-
-    Args:
-        camera_cluster: `CameraCluster` object.
-        instances: List of `Instance` objects.
-
-    """
-
-    frame_idx: int = field(validator=instance_of(int))
-    camera_cluster: Optional[CameraCluster] = None
-    _instance_by_camcorder: Dict[Camcorder, "Instance"] = field(factory=dict)
-    _camcorder_by_instance: Dict["Instance", Camcorder] = field(factory=dict)
-
-    def __attrs_post_init__(self):
-        """Initialize `InstanceGroup` object."""
-
-        for cam, instance in self._instance_by_camcorder.items():
-            self._camcorder_by_instance[instance] = cam
-
-    @property
-    def instances(self) -> List["Instance"]:
-        """List of `Instance` objects."""
-        return list(self._instance_by_camcorder.values())
-
-    @property
-    def cameras(self) -> List[Camcorder]:
-        """List of `Camcorder` objects."""
-        return list(self._instance_by_camcorder.keys())
-
-    def get_instance(self, cam: Camcorder) -> Optional["Instance"]:
-        """Retrieve `Instance` linked to `Camcorder`.
-
-        Args:
-            camcorder: `Camcorder` object.
-
-        Returns:
-            If `Camcorder` in `self.camera_cluster`, then `Instance` object if found, else
-            `None` if `Camcorder` has no linked `Instance`.
-        """
-
-        if cam not in self._instance_by_camcorder:
-            logger.warning(
-                f"Camcorder {cam.name} is not linked to a video in this "
-                f"RecordingSession."
-            )
-            return None
-
-        return self._instance_by_camcorder[cam]
-
-    def get_cam(self, instance: "Instance") -> Optional[Camcorder]:
-        """Retrieve `Camcorder` linked to `Instance`.
-
-        Args:
-            instance: `Instance` object.
-
-        Returns:
-            `Camcorder` object if found, else `None`.
-        """
-
-        if instance not in self._camcorder_by_instance:
-            logger.warning(
-                f"{instance} is not in this InstanceGroup's Instances: \n\t{self.instances}."
-            )
-            return None
-
-        return self._camcorder_by_instance[instance]
-
-    def __getitem__(
-        self, idx_or_key: Union[int, Camcorder, "Instance"]
-    ) -> Union[Camcorder, "Instance"]:
-        """Grab a `Camcorder` of `Instance` from the `InstanceGroup`."""
-
-        def _raise_key_error():
-            raise KeyError(f"Key {idx_or_key} not found in {self.__class__.__name__}.")
-
-        # Try to find in `self.camera_cluster.cameras`
-        if isinstance(idx_or_key, int):
-            try:
-                return self.instances[idx_or_key]
-            except IndexError:
-                _raise_key_error()
-
-        # Return a `Instance` if `idx_or_key` is a `Camcorder``
-        if isinstance(idx_or_key, Camcorder):
-            return self.get_instance(idx_or_key)
-
-        else:
-            # isinstance(idx_or_key, "Instance"):
-            try:
-                return self.get_cam(idx_or_key)
-            except:
-                pass
-
-        _raise_key_error()
-
-    def __len__(self):
-        return len(self.instances)
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}(frame_idx={self.frame_idx}, instances={len(self)}, camera_cluster={self.camera_cluster})"
-
-    @classmethod
-    def from_dict(cls, d: dict) -> Optional["InstanceGroup"]:
-        """Creates an `InstanceGroup` object from a dictionary.
-
-        Args:
-            d: Dictionary with `Camcorder` keys and `Instance` values.
-
-        Returns:
-            `InstanceGroup` object or None if no "real" (determined by `frame_idx` other
-            than None) instances found.
-        """
-
-        # Ensure not to mutate the original dictionary
-        d_copy = d.copy()
-
-        frame_idx = None
-        for cam, instance in d_copy.copy().items():
-            camera_cluster = cam.camera_cluster
-
-            # Remove dummy instances (determined by not having a frame index)
-            if instance.frame_idx is None:
-                d_copy.pop(cam)
-            # Grab the frame index from non-dummy instances
-            elif frame_idx is None:
-                frame_idx = instance.frame_idx
-            # Ensure all instances have the same frame index
-            else:
-                try:
-                    assert frame_idx == instance.frame_idx
-                except AssertionError:
-                    logger.warning(
-                        f"Cannot create `InstanceGroup`: Frame index {frame_idx} "
-                        f"does not match instance frame index {instance.frame_idx}."
-                    )
-
-        if len(d_copy) == 0:
-            logger.warning("Cannot create `InstanceGroup`: No real instances found.")
-            return None
-
-        frame_idx = cast(
-            int, frame_idx
-        )  # Could be None if no real instances in dictionary
-
-        return cls(
-            frame_idx=frame_idx,
-            camera_cluster=camera_cluster,
-            instance_by_camcorder=d_copy,
-        )
