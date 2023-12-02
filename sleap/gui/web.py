@@ -6,6 +6,7 @@ import requests
 from typing import List, Dict, Any, Optional, Tuple
 import json
 import os
+from datetime import datetime
 
 
 REPO_ID = "talmolab/sleap"
@@ -164,7 +165,7 @@ class AnnouncementChecker:
         _previous_announcement_date = self.state["announcement last seen date"]
         return _previous_announcement_date
 
-    def _read_bulletin_data(self):
+    def _read_bulletin_data(self) -> Optional[Dict]:
         """Reads the bulletin data from the JSON file."""
         try:
             with open(self.bulletin_json_path, "r") as jsf:
@@ -176,14 +177,17 @@ class AnnouncementChecker:
     @property
     def new_announcement_available(self):
         self._read_bulletin_data()
+        latest_date = datetime.strptime(self._latest_data["date"], "%m/%d/%Y")
+        previous_date = datetime.strptime(self.previous_announcement_date, "%m/%d/%Y")
         if (
-            self._latest_data and self.previous_announcement_date
-            and self._latest_data["date"] != self.previous_announcement_date
+            self._latest_data
+            and self.previous_announcement_date
+            and latest_date > previous_date
         ):
             return True
         return False
 
-    def get_latest_announcement(self) -> Optional[Tuple[str, str]]:
+    def get_latest_announcement(self) -> Optional[Tuple[str, str, str]]:
         """Return latest announcements on the releases page not seen by user."""
         if self.new_announcement_available:
             return (

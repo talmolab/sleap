@@ -107,9 +107,22 @@ def test_announcementchecker(bulletin_json_path):
     announcement = checker.get_latest_announcement()
     assert announcement == ("title1", "10/12/2023", "New announcement")
 
+    # Check if announcement is updated
     checker.update_announcement()
     assert context.state["announcement last seen date"] == "10/12/2023"
     assert context.state["announcement"] == "New announcement"
+
+    # Create dummy JSON file
+    bulletin_data = [
+        {"title": "title1", "date": "10/09/2023", "content": "New announcement"},
+        {"title": "title2", "date": "10/07/2023", "content": "Old Announcment"},
+    ]
+    with open(bulletin_json_path, "w") as test_file:
+        json.dump(bulletin_data, test_file)
+
+    # Check to ensure no new announcement is created
+    announcement = checker.get_latest_announcement()
+    assert announcement == None
 
 
 def test_get_analytics_data():
