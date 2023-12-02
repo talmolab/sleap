@@ -1063,10 +1063,11 @@ def test_triangulate_session_get_and_verify_enough_instances(
     labels = multiview_min_session_labels
     session = labels.sessions[0]
     lf = labels.labeled_frames[0]
+    selected_cam = session.get_camera(lf.video)
 
     # Test with no cams_to_include, expect views from all linked cameras
     instances = TriangulateSession.get_and_verify_enough_instances(
-        session=session, frame_idx=lf.frame_idx
+        session=session, frame_idx=lf.frame_idx, selected_cam=selected_cam
     )
     instances_in_frame = instances[0]
     assert (
@@ -1085,6 +1086,7 @@ def test_triangulate_session_get_and_verify_enough_instances(
     instances = TriangulateSession.get_and_verify_enough_instances(
         session=session,
         frame_idx=lf.frame_idx,
+        selected_cam=selected_cam,
         cams_to_include=cams_to_include,
     )
     instances_in_frame = instances[lf.frame_idx]
@@ -1105,6 +1107,7 @@ def test_triangulate_session_get_and_verify_enough_instances(
     instances = TriangulateSession.get_and_verify_enough_instances(
         session=session,
         frame_idx=lf.frame_idx,
+        selected_cam=selected_cam,
         cams_to_include=cams_to_include,
     )
     assert isinstance(instances, bool)
@@ -1364,10 +1367,12 @@ def test_triangulate_session_calculate_error_per_frame(
     labels = multiview_min_session_labels
     session = labels.sessions[0]
     lf = labels.labeled_frames[0]
+    selected_cam = session.get_camera(lf.video)
 
     instances = TriangulateSession.get_products_of_instances(
         session=session,
         frame_idx=lf.frame_idx,
+        selected_cam=selected_cam,
     )
 
     (
@@ -1391,10 +1396,12 @@ def test_triangulate_session_get_instance_grouping(
     session = labels.sessions[0]
     lf = labels.labeled_frames[0]
     selected_instance = lf.instances[0]
+    selected_cam = session.get_camera(lf.video)
 
     instances = TriangulateSession.get_products_of_instances(
         session=session,
         frame_idx=lf.frame_idx,
+        selected_cam=selected_cam,
     )
 
     (
