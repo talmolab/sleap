@@ -14,7 +14,7 @@ def test_augmentation(min_labels):
     ds = labels_reader.make_dataset()
     example_preaug = next(iter(ds))
 
-    augmenter = augmentation.ImgaugAugmenter.from_config(
+    augmenter = augmentation.AlbumentationsAugmenter.from_config(
         augmentation.AugmentationConfig(
             rotate=True, rotation_min_angle=-90, rotation_max_angle=-90
         )
@@ -52,7 +52,7 @@ def test_augmentation_with_no_instances(min_labels):
     )
 
     p = min_labels.to_pipeline(user_labeled_only=False)
-    p += augmentation.ImgaugAugmenter.from_config(
+    p += augmentation.AlbumentationsAugmenter.from_config(
         augmentation.AugmentationConfig(rotate=True)
     )
     exs = p.run()
