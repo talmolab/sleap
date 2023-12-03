@@ -326,13 +326,13 @@ class CommandContext:
         """Show gui to save project as a new file."""
         self.execute(SaveProjectAs)
 
-    def exportAnalysisFile(self, all_videos: bool = False):
+    def exportAnalysisFile(self, all_videos: bool = False, all_frames: bool = False):
         """Shows gui for exporting analysis h5 file."""
-        self.execute(ExportAnalysisFile, all_videos=all_videos, csv=False)
+        self.execute(ExportAnalysisFile, all_videos=all_videos, all_frames=all_frames, csv=False)
 
-    def exportCSVFile(self, all_videos: bool = False):
+    def exportCSVFile(self, all_videos: bool = False, all_frames: bool = False):
         """Shows gui for exporting analysis csv file."""
-        self.execute(ExportAnalysisFile, all_videos=all_videos, csv=True)
+        self.execute(ExportAnalysisFile, all_videos=all_videos, all_frames=all_frames, csv=True)
 
     def exportNWB(self):
         """Show gui for exporting nwb file."""
@@ -1142,13 +1142,24 @@ class ExportAnalysisFile(AppCommand):
                 adaptor = NixAdaptor
             else:
                 adaptor = SleapAnalysisAdaptor
+
+        if params['all_frames']:
             adaptor.write(
                 filename=output_path,
+                all_frames=True,
                 source_object=context.labels,
                 source_path=context.state["filename"],
                 video=video,
-            )
-
+                )
+        else:
+            adaptor.write(
+                filename=output_path,
+                all_frames=False,
+                source_object=context.labels,
+                source_path=context.state["filename"],
+                video=video,
+                )
+            
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         def ask_for_filename(default_name: str, csv: bool) -> str:
