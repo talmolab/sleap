@@ -3502,7 +3502,7 @@ class TriangulateSession(EditCommand):
         )
 
         # Return if not enough instances
-        if not instance:
+        if not instances:
             return False
 
         # Add instances to params dict
