@@ -161,20 +161,6 @@ class MainWindow(QMainWindow):
         self.state["skeleton_preview_image"] = None
         self.state["skeleton_description"] = "No skeleton loaded yet"
 
-        if prefs["announcement last seen date"]:
-            self.state["announcement last seen date"] = prefs[
-                "announcement last seen date"
-            ]
-        else:
-            self.state["announcement last seen date"] = date.today().strftime(
-                "%m/%d/%Y"
-            )
-
-        if prefs["announcement"]:
-            self.state["announcement"] = prefs["announcement"]
-        else:
-            self.state["announcement"] = "No data to display"
-
         if no_usage_data:
             self.state["share usage data"] = False
         self.state["clipboard_track"] = None
@@ -186,8 +172,10 @@ class MainWindow(QMainWindow):
 
         self.release_checker = ReleaseChecker()
 
+        self.state["announcement last seen date"] = prefs["announcement last seen date"]
+        self.state["announcement"] = prefs["announcement"]
+
         self.announcement_checker = AnnouncementChecker(state=self.state)
-        self.new_announcement_available = self.announcement_checker.new_announcement
 
         if self.state["share usage data"]:
             ping_analytics()
@@ -209,23 +197,18 @@ class MainWindow(QMainWindow):
             self.state["project_loaded"] = False
 
         # Display announcement bulletin popup
-        if self.new_announcement_available:
+        if self.announcement_checker.new_announcement_available():
             self.bulletin_dialog()
+            self.announcement_checker.update_announcement()
 
     def bulletin_dialog(self):
         """Displays bulletin dialog is new announcement is available."""
-        announcement = self.announcement_checker.get_latest_announcement()
+        # Initialize the bulletin popup worker
+        popup_worker = BulletinWorker(self.state["announcement"], self)
+        popup_worker.show_bulletin()
 
-        if announcement:
-            title, date, content = announcement
-            bulletin_markdown = "\n".join(content.split("\n"))
-
-            # initialize the bulletin popup worker
-            popup_worker = BulletinWorker(bulletin_markdown, self)
-            popup_worker.show_bulletin()
-
-            # Save the bulletin worker so we can close them later
-            self._child_windows["bulletin_worker"] = popup_worker  # Needed!
+        # Save the bulletin worker so we can close them later
+        self._child_windows["bulletin_worker"] = popup_worker  # Needed!
 
     def setWindowTitle(self, value):
         """Sets window title (if value is not None)."""
