@@ -174,22 +174,24 @@ class AnnouncementChecker:
         except FileNotFoundError:
             self._latest_data = None
 
-    @property
-    def new_announcement_available(self):
+    def new_announcement_available(self) -> bool:
+        """Check if latest announcement is available."""
         self._read_bulletin_data()
-        latest_date = datetime.strptime(self._latest_data["date"], "%m/%d/%Y")
-        previous_date = datetime.strptime(self.previous_announcement_date, "%m/%d/%Y")
-        if (
-            self._latest_data
-            and self.previous_announcement_date
-            and latest_date > previous_date
-        ):
+        if self.previous_announcement_date and self._latest_data:
+            latest_date = datetime.strptime(self._latest_data["date"], "%m/%d/%Y")
+            previous_date = datetime.strptime(
+                self.previous_announcement_date, "%m/%d/%Y"
+            )
+            if latest_date > previous_date:
+                return True
+            else:
+                return False
+        else:
             return True
-        return False
 
     def get_latest_announcement(self) -> Optional[Tuple[str, str, str]]:
         """Return latest announcements on the releases page not seen by user."""
-        if self.new_announcement_available:
+        if self.new_announcement_available():
             return (
                 self._latest_data["title"],
                 self._latest_data["date"],
@@ -203,7 +205,8 @@ class AnnouncementChecker:
         if announcement is None:
             return
         self.state["announcement last seen date"] = announcement[1]
-        self.state["announcement"] = announcement[2]
+        new_announcement = "\n".join(announcement[2].split("\n"))
+        self.state["announcement"] = "## " + announcement[0] + "\n" + new_announcement
 
 
 def get_analytics_data() -> Dict[str, Any]:
