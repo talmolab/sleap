@@ -110,7 +110,7 @@ def test_announcementchecker(bulletin_json_path):
     # Check if announcement is updated
     checker.update_announcement()
     assert context.state["announcement last seen date"] == "10/12/2023"
-    assert context.state["announcement"] == "New announcement"
+    assert context.state["announcement"] == "## title1\nNew announcement"
 
     # Create dummy JSON file
     bulletin_data = [
