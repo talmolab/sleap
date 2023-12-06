@@ -279,6 +279,7 @@ def multiview_min_session_labels():
         video_search=["tests/data/videos/"],
     )
 
+
 @pytest.fixture
 def multiview_min_session_user_labels():
     return Labels.load_file(
