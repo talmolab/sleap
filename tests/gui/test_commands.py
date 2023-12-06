@@ -1296,7 +1296,7 @@ def test_triangulate_session_do_action(multiview_min_session_labels: Labels):
 
 
 def test_triangulate_session(multiview_min_session_labels: Labels):
-    """Test `TriangulateSession`, if"""
+    """Test `TriangulateSession`."""
 
     labels = multiview_min_session_labels
     session = labels.sessions[0]

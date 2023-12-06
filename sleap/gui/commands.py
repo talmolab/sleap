@@ -3502,7 +3502,7 @@ class TriangulateSession(EditCommand):
         )
 
         # Return if not enough instances
-        if not instance:
+        if not instances:
             return False
 
         # Add instances to params dict
@@ -3549,17 +3549,11 @@ class TriangulateSession(EditCommand):
                 require_multiple_views=True,
             )
             return instances
-        except ValueError:
-            # If not enough views or instances, then return
-            message = traceback.format_exc()
-            message += (
-                "\nMultiple instances accross multiple views needed to triangulate. "
-                "Skipping triangulation and reprojection."
-            )
-            if show_dialog and context is not None:
-                QtWidgets.QMessageBox.warning(context.app, "Triangulation", message)
-            else:
-                logger.warning(message)
+        except Exception as e:
+            # If not enough views, instances or some other error, then return
+            message = str(e)
+            message += "\n\tSkipping triangulation and reprojection."
+            logger.warning(message)
             return False
 
     @staticmethod
@@ -3625,6 +3619,14 @@ class TriangulateSession(EditCommand):
             instances are found.
         """
 
+        def _message(views: bool):
+            views_or_instances = "views" if views else "instances"
+            return (
+                f"One or less {views_or_instances} found for frame "
+                f"{frame_idx} in {session.camera_cluster}. "
+                "Multiple instances accross multiple views needed to triangulate."
+            )
+
         # Get all views at this frame index
         views: Dict[
             Camcorder, "LabeledFrame"
@@ -3637,10 +3639,7 @@ class TriangulateSession(EditCommand):
         # TODO(LM): Should we just skip this frame if not enough views?
         # If not enough views, then raise error
         if len(views) <= 1 and require_multiple_views:
-            raise ValueError(
-                "One or less views found for frame "
-                f"{frame_idx} in {session.camera_cluster}."
-            )
+            raise ValueError(_message(views=True))
 
         # Find all instance accross all views
         instances_in_frame: Dict[Camcorder, List[Instance]] = {}
@@ -3651,10 +3650,7 @@ class TriangulateSession(EditCommand):
 
         # If not enough instances for multiple views, then raise error
         if len(instances_in_frame) <= 1 and require_multiple_views:
-            raise ValueError(
-                "One or less instances found for frame "
-                f"{frame_idx} in {session.camera_cluster}."
-            )
+            raise ValueError(_message(views=False))
 
         return instances_in_frame
 
