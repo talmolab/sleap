@@ -3859,7 +3859,7 @@ class TriangulateSession(EditCommand):
         per_view: bool = False,
     ) -> Tuple[
         Dict[int, Union[float, Dict[Camcorder, List[Tuple[Instance, float]]]]],
-        Dict[int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]],
+        Dict[int, Dict[Camcorder, List[Tuple[Instance, np.ndarray]]]],
     ]:
         """Calculate reprojection error per frame or per instance.
 
@@ -3881,7 +3881,7 @@ class TriangulateSession(EditCommand):
                 values of reprojection error for the frame.
             instances_and_coords: Dict with frame identifier keys (not the frame index)
                 and values of another inner dict with `Camcorder` keys and
-                `Iterator[Tuple[Instance, np.ndarray]]` values that contain the instance
+                `List[Tuple[Instance, np.ndarray]]` values that contain the instance
                 and the reprojected coordinates.
 
         """
@@ -3890,7 +3890,7 @@ class TriangulateSession(EditCommand):
 
         # Triangulate and reproject instance coordinates.
         instances_and_coords: Dict[
-            int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]
+            int, Dict[Camcorder, List[Tuple[Instance, np.ndarray]]]
         ] = TriangulateSession.calculate_reprojected_points(
             session=session, instances=instances
         )
@@ -3940,7 +3940,7 @@ class TriangulateSession(EditCommand):
         session: RecordingSession, instances: Dict[int, Dict[Camcorder, List[Instance]]]
     ) -> Tuple[
         Dict[int, Dict[Camcorder, List[Tuple[Instance, float]]]],
-        Dict[int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]],
+        Dict[int, Dict[Camcorder, List[Tuple[Instance, np.ndarray]]]],
     ]:
         """Calculate reprojection error per instance.
 
@@ -3955,7 +3955,7 @@ class TriangulateSession(EditCommand):
                 `List[Tuple[Instance, float]]` values.
             instances_and_coords: Dict with frame identifier keys (not the frame index)
                 and values of another inner dict with `Camcorder` keys and
-                `Iterator[Tuple[Instance, np.ndarray]]` values that contain the instance
+                `List[Tuple[Instance, np.ndarray]]` values that contain the instance
                 and the reprojected coordinates.
         """
 
@@ -3973,7 +3973,7 @@ class TriangulateSession(EditCommand):
         session: RecordingSession, instances: Dict[int, Dict[Camcorder, List[Instance]]]
     ) -> Tuple[
         Dict[int, Dict[Camcorder, float]],
-        Dict[int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]],
+        Dict[int, Dict[Camcorder, List[Tuple[Instance, np.ndarray]]]],
     ]:
         """Calculate reprojection error per instance.
 
@@ -3988,7 +3988,7 @@ class TriangulateSession(EditCommand):
                 `float` values.
             instances_and_coords: Dict with frame identifier keys (not the frame index)
                 and values of another inner dict with `Camcorder` keys and
-                `Iterator[Tuple[Instance, np.ndarray]]` values that contain the instance
+                `List[Tuple[Instance, np.ndarray]]` values that contain the instance
                 and the reprojected coordinates.
         """
 
@@ -4329,7 +4329,7 @@ class TriangulateSession(EditCommand):
         instances: Dict[int, Dict[Camcorder, List[Instance]]],
         inst_coords_reprojected: np.ndarray,
         cams_ordered: List[Camcorder],
-    ) -> Dict[int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]]:
+    ) -> Dict[int, Dict[Camcorder, List[Tuple[Instance, np.ndarray]]]]:
         """Group instances and reprojected coordinates by frame and view.
 
         Args:
@@ -4371,13 +4371,13 @@ class TriangulateSession(EditCommand):
 
         # Group together the reordered (by cam) instances and the reprojected coords.
         insts_and_coords: Dict[
-            int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]
+            int, Dict[Camcorder, List[Tuple[Instance, np.ndarray]]]
         ] = (
             {}
         )  # Dict len(F) of dict len(M) of zipped lists of len(T) instances and array of N x 2
         for frame_idx, instances_in_frame in instances.items():  # len(F) of dict
             insts_and_coords_in_frame: Dict[
-                Camcorder, Iterator[Tuple[Instance, np.ndarray]]
+                Camcorder, List[Tuple[Instance, np.ndarray]]
             ] = {}
             for cam_idx, cam in enumerate(cams_ordered):
                 instances_in_frame_ordered: List[Instance] = instances_in_frame[
@@ -4387,10 +4387,12 @@ class TriangulateSession(EditCommand):
                     cam_idx
                 ]  # len(T) of N x 2
 
-                # TODO(LM): I think we will need a reconsumable iterator here.
-                insts_and_coords_in_view: Iterator[Tuple[Instance, np.ndarray]] = zip(
-                    instances_in_frame_ordered,
-                    insts_coords_in_frame,
+                # We need a reconsumable iterator here
+                insts_and_coords_in_view: List[Tuple[Instance, np.ndarray]] = list(
+                    zip(
+                        instances_in_frame_ordered,
+                        insts_coords_in_frame,
+                    )
                 )  # len(T) of (Instance, N x 2)
                 insts_and_coords_in_frame[cam] = insts_and_coords_in_view
 
@@ -4401,7 +4403,7 @@ class TriangulateSession(EditCommand):
     @staticmethod
     def calculate_reprojected_points(
         session: RecordingSession, instances: Dict[int, Dict[Camcorder, List[Instance]]]
-    ):
+    ) -> Dict[int, Dict[Camcorder, List[Tuple[Instance, np.ndarray]]]]:
         """Triangulate, reproject, and group coordinates of `Instances`.
 
         Args:
@@ -4427,7 +4429,7 @@ class TriangulateSession(EditCommand):
 
         # Reorder instances (by cam) and the reprojected coords.
         instances_and_coords: Dict[
-            int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]
+            int, Dict[Camcorder, List[Tuple[Instance, np.ndarray]]]
         ] = TriangulateSession.group_instances_and_coords(
             inst_coords_reprojected=inst_coords_reprojected,
             instances=instances,
