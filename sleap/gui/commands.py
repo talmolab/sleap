@@ -3657,7 +3657,7 @@ class TriangulateSession(EditCommand):
         # Find all instance accross all views
         instances_in_frame: Dict[Camcorder, List[Instance]] = {}
         for cam, lf in views.items():
-            insts = lf.find(track=track)
+            insts = lf.find(track=track, user=True)
             if len(insts) > 0:
                 instances_in_frame[cam] = insts
 
@@ -3846,7 +3846,6 @@ class TriangulateSession(EditCommand):
         frame_id_min_error: int = min(
             reprojection_error_per_frame, key=reprojection_error_per_frame.get
         )
-
         best_instances: Dict[Camcorder, List[Instance]] = instances[frame_id_min_error]
 
         return best_instances, frame_id_min_error

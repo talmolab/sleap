@@ -983,9 +983,9 @@ def test_triangulate_session_get_all_views_at_frame(
 
 
 def test_triangulate_session_get_instances_across_views(
-    multiview_min_session_labels: Labels,
+    multiview_min_session_user_labels: Labels,
 ):
-    labels = multiview_min_session_labels
+    labels = multiview_min_session_user_labels
     session = labels.sessions[0]
 
     # Test get_instances_across_views
@@ -1057,10 +1057,10 @@ def test_triangulate_session_get_instances_across_views(
 
 
 def test_triangulate_session_get_and_verify_enough_instances(
-    multiview_min_session_labels: Labels,
+    multiview_min_session_user_labels: Labels,
     caplog,
 ):
-    labels = multiview_min_session_labels
+    labels = multiview_min_session_user_labels
     session = labels.sessions[0]
     lf = labels.labeled_frames[0]
     selected_cam = session.get_camera(lf.video)
@@ -1142,9 +1142,9 @@ def test_triangulate_session_verify_enough_views(
 
 
 def test_triangulate_session_verify_views_and_instances(
-    multiview_min_session_labels: Labels,
+    multiview_min_session_user_labels: Labels,
 ):
-    labels = multiview_min_session_labels
+    labels = multiview_min_session_user_labels
     session = labels.sessions[0]
 
     # Test with enough views and instances
@@ -1179,13 +1179,14 @@ def test_triangulate_session_verify_views_and_instances(
 
 
 def test_triangulate_session_calculate_reprojected_points(
-    multiview_min_session_labels: Labels,
+    multiview_min_session_user_labels: Labels,
 ):
     """Test `TriangulateSession.calculate_reprojected_points`."""
 
-    session = multiview_min_session_labels.sessions[0]
-    lf: LabeledFrame = multiview_min_session_labels[0]
-    track = multiview_min_session_labels.tracks[0]
+    labels = multiview_min_session_user_labels
+    session = labels.sessions[0]
+    lf: LabeledFrame = labels[0]
+    track = labels.tracks[0]
     instances: Dict[
         Camcorder, Instance
     ] = TriangulateSession.get_instances_across_views_multiple_frames(
@@ -1206,10 +1207,10 @@ def test_triangulate_session_calculate_reprojected_points(
 
 
 def test_triangulate_session_get_instances_matrices(
-    multiview_min_session_labels: Labels,
+    multiview_min_session_user_labels: Labels,
 ):
     """Test `TriangulateSession.get_instance_matrices`."""
-    labels = multiview_min_session_labels
+    labels = multiview_min_session_user_labels
     session = labels.sessions[0]
     lf: LabeledFrame = labels[0]
     track = labels.tracks[0]
@@ -1232,13 +1233,16 @@ def test_triangulate_session_get_instances_matrices(
     assert instances_matrices.shape == (n_views, n_frames, n_tracks, n_nodes, 2)
 
 
-def test_triangulate_session_update_instances(multiview_min_session_labels: Labels):
+def test_triangulate_session_update_instances(
+    multiview_min_session_user_labels: Labels,
+):
     """Test `RecordingSession.update_instances`."""
 
     # Test update_instances
-    session = multiview_min_session_labels.sessions[0]
-    lf: LabeledFrame = multiview_min_session_labels[0]
-    track = multiview_min_session_labels.tracks[0]
+    labels = multiview_min_session_user_labels
+    session = labels.sessions[0]
+    lf: LabeledFrame = labels[0]
+    track = labels.tracks[0]
     instances: Dict[
         int, Dict[Camcorder, List[Instance]]
     ] = TriangulateSession.get_instances_across_views_multiple_frames(
@@ -1300,10 +1304,13 @@ def test_triangulate_session_do_action(multiview_min_session_labels: Labels):
     TriangulateSession.do_action(context, params)
 
 
-def test_triangulate_session(multiview_min_session_labels: Labels):
+@pytest.mark.parametrize(
+    "labels", ["multiview_min_session_user_labels", "multiview_min_session_labels"]
+)
+def test_triangulate_session(labels: Labels, request):
     """Test `TriangulateSession`."""
 
-    labels = multiview_min_session_labels
+    labels = request.getfixturevalue(labels)
     session = labels.sessions[0]
     video = session.videos[0]
     lf = labels.labeled_frames[0]
@@ -1327,11 +1334,11 @@ def test_triangulate_session(multiview_min_session_labels: Labels):
 
 
 def test_triangulate_session_get_products_of_instances(
-    multiview_min_session_labels: Labels,
+    multiview_min_session_user_labels: Labels,
 ):
     """Test `TriangulateSession.get_products_of_instances`."""
 
-    labels = multiview_min_session_labels
+    labels = multiview_min_session_user_labels
     session = labels.sessions[0]
     lf = labels.labeled_frames[0]
     selected_instance = lf.instances[0]
@@ -1342,7 +1349,7 @@ def test_triangulate_session_get_products_of_instances(
     )
 
     views = TriangulateSession.get_all_views_at_frame(session, lf.frame_idx)
-    max_num_instances_in_view = max([len(instances) for instances in views.values()])
+    max_num_instances_in_view = max([lf.n_user_instances for lf in views.values()])
     assert len(instances) == max_num_instances_in_view ** len(views)
 
     for frame_id in instances:
@@ -1360,11 +1367,11 @@ def test_triangulate_session_get_products_of_instances(
 
 
 def test_triangulate_session_calculate_error_per_frame(
-    multiview_min_session_labels: Labels,
+    multiview_min_session_user_labels: Labels,
 ):
     """Test `TriangulateSession.calculate_error_per_frame`."""
 
-    labels = multiview_min_session_labels
+    labels = multiview_min_session_user_labels
     session = labels.sessions[0]
     lf = labels.labeled_frames[0]
     selected_cam = session.get_camera(lf.video)
@@ -1388,11 +1395,11 @@ def test_triangulate_session_calculate_error_per_frame(
 
 
 def test_triangulate_session_get_instance_grouping(
-    multiview_min_session_labels: Labels,
+    multiview_min_session_user_labels: Labels,
 ):
     """Test `TriangulateSession._get_instance_grouping`."""
 
-    labels = multiview_min_session_labels
+    labels = multiview_min_session_user_labels
     session = labels.sessions[0]
     lf = labels.labeled_frames[0]
     selected_instance = lf.instances[0]
@@ -1429,11 +1436,11 @@ def test_triangulate_session_get_instance_grouping(
 
 
 def test_get_instance_grouping_and_reprojected_coords(
-    multiview_min_session_labels: Labels,
+    multiview_min_session_user_labels: Labels,
 ):
     """Test `TriangulateSession.get_instance_grouping_and_reprojected_coords`."""
 
-    labels = multiview_min_session_labels
+    labels = multiview_min_session_user_labels
     session = labels.sessions[0]
     lf = labels.labeled_frames[0]
     selected_cam = session.get_camera(lf.video)
