@@ -196,8 +196,11 @@ class MainWindow(QMainWindow):
         else:
             self.state["project_loaded"] = False
 
+        self.new_announcement_available = (
+            self.announcement_checker.new_announcement_available()
+        )
         # Display announcement bulletin popup
-        if self.announcement_checker.new_announcement_available():
+        if self.new_announcement_available:
             self.bulletin_dialog()
             self.announcement_checker.update_announcement()
 

@@ -13,11 +13,9 @@ def test_app_workflow(
 
     # Check if the bulletin is shown or not
     bulletin_dialog = app._child_windows.get("bulletin_worker", False)
-    if app.announcement_checker.new_announcement_available():
-        print("bulletin available")
+    if app.new_announcement_available:
         assert isinstance(bulletin_dialog, BulletinWorker)
     else:
-        print("no bulletin")
         assert bulletin_dialog == False
 
     # Add nodes
