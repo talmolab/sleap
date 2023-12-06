@@ -3514,7 +3514,7 @@ class TriangulateSession(EditCommand):
         )
 
         # Return if not enough instances
-        if not instance:
+        if not instances:
             return False
 
         # Add instances and frame_idx to params dict
@@ -3562,17 +3562,11 @@ class TriangulateSession(EditCommand):
                 cams_to_include=cams_to_include,
             )
             return instances
-        except ValueError:
-            # If not enough views or instances, then return
-            message = traceback.format_exc()
-            message += (
-                "\nMultiple instances accross multiple views needed to triangulate. "
-                "Skipping triangulation and reprojection."
-            )
-            if show_dialog and context is not None:
-                QtWidgets.QMessageBox.warning(context.app, "Triangulation", message)
-            else:
-                logger.warning(message)
+        except Exception as e:
+            # If not enough views, instances or some other error, then return
+            message = str(e)
+            message += "\n\tSkipping triangulation and reprojection."
+            logger.warning(message)
             return False
 
     @staticmethod
@@ -3638,6 +3632,14 @@ class TriangulateSession(EditCommand):
             instances are found.
         """
 
+        def _message(views: bool):
+            views_or_instances = "views" if views else "instances"
+            return (
+                f"One or less {views_or_instances} found for frame "
+                f"{frame_idx} in {session.camera_cluster}. "
+                "Multiple instances accross multiple views needed to triangulate."
+            )
+
         # Get all views at this frame index
         views: Dict[
             Camcorder, "LabeledFrame"
@@ -3650,10 +3652,7 @@ class TriangulateSession(EditCommand):
         # TODO(LM): Should we just skip this frame if not enough views?
         # If not enough views, then raise error
         if len(views) <= 1 and require_multiple_views:
-            raise ValueError(
-                "One or less views found for frame "
-                f"{frame_idx} in {session.camera_cluster}."
-            )
+            raise ValueError(_message(views=True))
 
         # Find all instance accross all views
         instances_in_frame: Dict[Camcorder, List[Instance]] = {}
@@ -3664,10 +3663,7 @@ class TriangulateSession(EditCommand):
 
         # If not enough instances for multiple views, then raise error
         if len(instances_in_frame) <= 1 and require_multiple_views:
-            raise ValueError(
-                "One or less instances found for frame "
-                f"{frame_idx} in {session.camera_cluster}."
-            )
+            raise ValueError(_message(views=False))
 
         return instances_in_frame
 
@@ -3847,11 +3843,11 @@ class TriangulateSession(EditCommand):
             frame_id_min_error: The frame identifier with the lowest reprojection
         """
 
-        frame_id_min_error = min(
+        frame_id_min_error: int = min(
             reprojection_error_per_frame, key=reprojection_error_per_frame.get
         )
 
-        best_instances = instances[frame_id_min_error]
+        best_instances: Dict[Camcorder, List[Instance]] = instances[frame_id_min_error]
 
         return best_instances, frame_id_min_error
 
@@ -3862,9 +3858,7 @@ class TriangulateSession(EditCommand):
         per_instance: bool = False,
         per_view: bool = False,
     ) -> Tuple[
-        Union[
-            Dict[int, float], Dict[int, Dict[Camcorder, List[Tuple[Instance, float]]]]
-        ],
+        Dict[int, Union[float, Dict[Camcorder, List[Tuple[Instance, float]]]]],
         Dict[int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]],
     ]:
         """Calculate reprojection error per frame or per instance.
@@ -3901,28 +3895,40 @@ class TriangulateSession(EditCommand):
             session=session, instances=instances
         )
         for frame_id, instances_in_frame in instances_and_coords.items():
-            frame_error = {} if per_instance or per_view else 0
+            frame_error: Union[Dict, float] = {} if per_instance or per_view else 0
             for cam, instances_in_view in instances_in_frame.items():
                 # Compare instance coordinates here
-                instance_ids = []
-                view_error = [] if per_instance else 0
+                instance_ids: List[Union[Track, str]] = []
+                view_error: Union[List, int] = [] if per_instance else 0
                 for inst, inst_coords in instances_in_view:
                     node_errors = np.nan_to_num(inst.numpy() - inst_coords)
                     instance_error = np.linalg.norm(node_errors)
 
                     if per_instance:
+                        view_error = cast(List, view_error)
                         view_error.append((inst, instance_error))
                     else:
+                        view_error = cast(int, view_error)
                         view_error += instance_error
 
-                    inst_id = inst.track if inst.track is not None else "None"
+                    inst_id: Union[Track, str] = (
+                        inst.track if inst.track is not None else "None"
+                    )
                     instance_ids.append(inst_id)
 
                 if per_instance:
+                    frame_error = cast(Dict, frame_error)
                     frame_error[cam] = view_error
                 elif per_view:
+                    view_error = cast(int, view_error)
+                    frame_error = cast(
+                        Dict[Camcorder, Tuple[Tuple[Union[Track, str], ...], int]],
+                        frame_error,
+                    )
                     frame_error[cam] = (tuple(instance_ids), view_error)
                 else:
+                    view_error = cast(int, view_error)
+                    frame_error = cast(int, frame_error)
                     frame_error += view_error
 
             reprojection_error_per_frame[frame_id] = frame_error
@@ -4270,7 +4276,7 @@ class TriangulateSession(EditCommand):
     @staticmethod
     def _calculate_reprojected_points(
         session: RecordingSession, instances: Dict[int, Dict[Camcorder, List[Instance]]]
-    ) -> Dict[int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]]:
+    ) -> Tuple[np.ndarray, List[Camcorder]]:
         """Triangulate and reproject instance coordinates.
 
         Note that the order of the instances in the list must match the order of the
@@ -4318,8 +4324,11 @@ class TriangulateSession(EditCommand):
 
         return inst_coords_reprojected, cams_ordered
 
+    @staticmethod
     def group_instances_and_coords(
-        instances, inst_coords_reprojected, cams_ordered
+        instances: Dict[int, Dict[Camcorder, List[Instance]]],
+        inst_coords_reprojected: np.ndarray,
+        cams_ordered: List[Camcorder],
     ) -> Dict[int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]]:
         """Group instances and reprojected coordinates by frame and view.
 
@@ -4367,7 +4376,9 @@ class TriangulateSession(EditCommand):
             {}
         )  # Dict len(F) of dict len(M) of zipped lists of len(T) instances and array of N x 2
         for frame_idx, instances_in_frame in instances.items():  # len(F) of dict
-            insts_and_coords_in_frame: Dict[Camcorder, Tuple[Instance, np.ndarray]] = {}
+            insts_and_coords_in_frame: Dict[
+                Camcorder, Iterator[Tuple[Instance, np.ndarray]]
+            ] = {}
             for cam_idx, cam in enumerate(cams_ordered):
                 instances_in_frame_ordered: List[Instance] = instances_in_frame[
                     cam
