@@ -4388,10 +4388,10 @@ class TriangulateSession(EditCommand):
                 ]  # len(T) of N x 2
 
                 # TODO(LM): I think we will need a reconsumable iterator here.
-                insts_and_coords_in_view: Tuple[Instance, np.ndarray] = zip(
+                insts_and_coords_in_view: Iterator[Tuple[Instance, np.ndarray]] = zip(
                     instances_in_frame_ordered,
                     insts_coords_in_frame,
-                )
+                )  # len(T) of (Instance, N x 2)
                 insts_and_coords_in_frame[cam] = insts_and_coords_in_view
 
             insts_and_coords[frame_idx] = insts_and_coords_in_frame
