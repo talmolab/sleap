@@ -1,9 +1,12 @@
 """Module to test functions in `sleap.io.cameras`."""
 
+from typing import Dict, List
+
 import numpy as np
 import pytest
 
 from sleap.io.cameras import Camcorder, CameraCluster, RecordingSession
+from sleap.io.dataset import Instance, LabeledFrame, Labels, LabelsDataCache
 from sleap.io.video import Video
 
 
@@ -62,7 +65,7 @@ def test_camera_cluster(
 
     # Test __len__
     assert len(camera_cluster) == len(camera_cluster.cameras)
-    assert len(camera_cluster) == 4
+    assert len(camera_cluster) == 8
 
     # Test __getitem__, __iter__, and __contains__
     for idx, cam in enumerate(camera_cluster):
@@ -128,6 +131,7 @@ def test_recording_session(
     hdf5_vid: Video,
 ):
     """Test `RecordingSession` data structure."""
+
     calibration: str = min_session_calibration_toml_path
     camera_cluster: CameraCluster = min_session_camera_cluster
 
@@ -184,8 +188,8 @@ def test_recording_session(
 
     # Test from_calibration_dict
     def compare_cameras(session_1: RecordingSession, session_2: RecordingSession):
-        assert len(session_2.camera_cluster) == len(session.camera_cluster)
-        for cam_1, cam_2 in zip(session, session_2):
+        assert len(session_2.camera_cluster) == len(session_1.camera_cluster)
+        for cam_1, cam_2 in zip(session_1, session_2):
             assert cam_1 == cam_2
 
     calibration_dict = session.camera_cluster.to_calibration_dict()
@@ -203,8 +207,8 @@ def test_recording_session(
     assert isinstance(session_dict, dict)
     assert session_dict["calibration"] == calibration_dict
     assert session_dict["camcorder_to_video_idx_map"] == {
-        0: video_to_idx[centered_pair_vid],
-        2: video_to_idx[hdf5_vid],
+        "0": str(video_to_idx[centered_pair_vid]),
+        "2": str(video_to_idx[hdf5_vid]),
     }
 
     # Test from_session_dict
@@ -242,3 +246,37 @@ def test_recording_session(
     assert session_dict_2 == session_dict
     session_3 = sessions_cattr.structure(session_dict_2, RecordingSession)
     compare_sessions(session_2, session_3)
+
+
+def test_recording_session_get_videos_from_selected_cameras(
+    multiview_min_session_labels: Labels,
+):
+    session = multiview_min_session_labels.sessions[0]
+
+    # Test get_videos_from_selected_cameras
+    selected_cam = session.linked_cameras[0]
+    selected_videos = session.get_videos_from_selected_cameras([selected_cam])
+    assert len(selected_videos) == 1
+    assert selected_videos[selected_cam] == session.get_video(selected_cam)
+    # Now without any cameras selected: expect to return all videos
+    selected_videos = session.get_videos_from_selected_cameras()
+    assert len(selected_videos) == len(session.linked_cameras)
+    for cam in session.linked_cameras:
+        assert cam in selected_videos
+        assert session.get_video(cam) == selected_videos[cam]
+
+
+def test_recording_session_remove_video(multiview_min_session_labels: Labels):
+    """Test `RecordingSession.remove_video`."""
+
+    labels = multiview_min_session_labels
+    labels_cache = labels._cache
+    session = labels.sessions[0]
+
+    video = session.videos[0]
+    assert session.labels is not None
+    assert video in session.videos
+
+    session.remove_video(video)
+    assert labels_cache._session_by_video.get(video, None) is None
+    assert video not in session.videos

@@ -1,22 +1,20 @@
 """Module for storing information for camera groups."""
 import logging
-from pathlib import Path
 import tempfile
-import cattr
-import toml
-from typing import List, Optional, Union, Iterator, Any, Dict, Tuple
+from pathlib import Path
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
-from aniposelib.cameras import Camera, FisheyeCamera, CameraGroup
+import cattr
+import numpy as np
+import toml
+from aniposelib.cameras import Camera, CameraGroup, FisheyeCamera
 from attrs import define, field
 from attrs.validators import deep_iterable, instance_of
-import numpy as np
-
-
-from sleap.util import deep_iterable_converter
+from sleap_anipose import reproject, triangulate
 
 # from sleap.io.dataset import Labels  # TODO(LM): Circular import, implement Observer
 from sleap.io.video import Video
-
+from sleap.util import deep_iterable_converter
 
 logger = logging.getLogger(__name__)
 
@@ -549,6 +547,31 @@ class RecordingSession:
         if self.labels is not None and self.labels.get_session(video) is not None:
             self.labels.remove_session_video(self, video)
 
+    def get_videos_from_selected_cameras(
+        self, cams_to_include: Optional[List[Camcorder]] = None
+    ) -> Dict[Camcorder, Video]:
+        """Get all `Video`s from selected `Camcorder`s.
+
+        Args:
+            cams_to_include: List of `Camcorder`s to include. Defualt is all.
+
+        Returns:
+            Dictionary with `Camcorder` key and `Video` value.
+        """
+
+        # If no `Camcorder`s specified, then return all videos in session
+        if cams_to_include is None:
+            return self._video_by_camcorder
+
+        # Get all videos from selected `Camcorder`s
+        videos: Dict[Camcorder, Video] = {}
+        for cam in cams_to_include:
+            video = self.get_video(cam)
+            if video is not None:
+                videos[cam] = video
+
+        return videos
+
     def __attrs_post_init__(self):
         self.camera_cluster.add_session(self)
 
@@ -559,7 +582,6 @@ class RecordingSession:
         return len(self.videos)
 
     def __getattr__(self, attr: str) -> Any:
-
         """Try to find the attribute in the camera_cluster next."""
         return getattr(self.camera_cluster, attr)
 
@@ -603,7 +625,10 @@ class RecordingSession:
             )
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(camera_cluster={self.camera_cluster})"
+        return (
+            f"{self.__class__.__name__}(videos:{len(self.videos)},"
+            f"camera_cluster={self.camera_cluster})"
+        )
 
     @classmethod
     def load(
@@ -658,7 +683,6 @@ class RecordingSession:
         # and value is video index from `Labels.videos`
         camcorder_to_video_idx_map = {}
         for cam_idx, camcorder in enumerate(self.camera_cluster):
-
             # Skip if Camcorder is not linked to any Video
             if camcorder not in self._video_by_camcorder:
                 continue
@@ -668,7 +692,7 @@ class RecordingSession:
             video_idx = video_to_idx.get(video, None)
 
             if video_idx is not None:
-                camcorder_to_video_idx_map[cam_idx] = video_idx
+                camcorder_to_video_idx_map[str(cam_idx)] = str(video_idx)
             else:
                 logger.warning(
                     f"Video {video} not found in `Labels.videos`. "
@@ -704,8 +728,8 @@ class RecordingSession:
         # Retrieve all `Camcorder` and `Video` objects, then add to `RecordingSession`
         camcorder_to_video_idx_map = session_dict["camcorder_to_video_idx_map"]
         for cam_idx, video_idx in camcorder_to_video_idx_map.items():
-            camcorder = session.camera_cluster.cameras[cam_idx]
-            video = videos_list[video_idx]
+            camcorder = session.camera_cluster.cameras[int(cam_idx)]
+            video = videos_list[int(video_idx)]
             session.add_video(video, camcorder)
 
         return session

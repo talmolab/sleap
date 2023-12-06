@@ -671,6 +671,7 @@ class Labels(MutableSequence):
             "Labels("
             f"labeled_frames={len(self.labeled_frames)}, "
             f"videos={len(self.videos)}, "
+            f"sessions={len(self.sessions)}, "
             f"skeletons={len(self.skeletons)}, "
             f"tracks={len(self.tracks)}"
             ")"

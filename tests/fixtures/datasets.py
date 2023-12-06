@@ -270,3 +270,11 @@ def min_dance_labels():
 @pytest.fixture
 def movenet_video():
     return Video.from_filename("tests/data/videos/dance.mp4")
+
+
+@pytest.fixture
+def multiview_min_session_labels():
+    return Labels.load_file(
+        "tests/data/cameras/minimal_session/min_session.slp",
+        video_search=["tests/data/videos/"],
+    )
