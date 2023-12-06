@@ -3956,7 +3956,10 @@ class TriangulateSession(EditCommand):
     @staticmethod
     def _calculate_reprojected_points(
         session: RecordingSession, instances: Dict[int, Dict[Camcorder, List[Instance]]]
-    ) -> Dict[int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]]:
+    ) -> Tuple[
+        Dict[int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]],
+        List[Camcorder],
+    ]:
         """Triangulate and reproject instance coordinates.
 
         Note that the order of the instances in the list must match the order of the
@@ -4004,8 +4007,11 @@ class TriangulateSession(EditCommand):
 
         return inst_coords_reprojected, cams_ordered
 
+    @staticmethod
     def group_instances_and_coords(
-        instances, inst_coords_reprojected, cams_ordered
+        instances: Dict[int, Dict[Camcorder, List[Instance]]],
+        inst_coords_reprojected: np.ndarray,
+        cams_ordered: List[Camcorder],
     ) -> Dict[int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]]:
         """Group instances and reprojected coordinates by frame and view.
 
@@ -4053,7 +4059,9 @@ class TriangulateSession(EditCommand):
             {}
         )  # Dict len(F) of dict len(M) of zipped lists of len(T) instances and array of N x 2
         for frame_idx, instances_in_frame in instances.items():  # len(F) of dict
-            insts_and_coords_in_frame: Dict[Camcorder, Tuple[Instance, np.ndarray]] = {}
+            insts_and_coords_in_frame: Dict[
+                Camcorder, Iterator[Tuple[Instance, np.ndarray]]
+            ] = {}
             for cam_idx, cam in enumerate(cams_ordered):
                 instances_in_frame_ordered: List[Instance] = instances_in_frame[
                     cam
@@ -4061,7 +4069,7 @@ class TriangulateSession(EditCommand):
                 insts_coords_in_frame: np.ndarray = insts_coords_list[frame_idx][
                     cam_idx
                 ]  # len(T) of N x 2
-                insts_and_coords_in_frame[cam]: Tuple[Instance, np.ndarray] = zip(
+                insts_and_coords_in_frame[cam] = zip(
                     instances_in_frame_ordered,
                     insts_coords_in_frame,
                 )
