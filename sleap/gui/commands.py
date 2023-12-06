@@ -3831,11 +3831,11 @@ class TriangulateSession(EditCommand):
             frame_id_min_error: The frame identifier with the lowest reprojection
         """
 
-        frame_id_min_error = min(
+        frame_id_min_error: int = min(
             reprojection_error_per_frame, key=reprojection_error_per_frame.get
         )
 
-        best_instances = instances[frame_id_min_error]
+        best_instances: Dict[Camcorder, List[Instance]] = instances[frame_id_min_error]
 
         return best_instances, frame_id_min_error
 
@@ -3886,7 +3886,7 @@ class TriangulateSession(EditCommand):
             frame_error: Union[Dict, float] = {} if per_instance or per_view else 0
             for cam, instances_in_view in instances_in_frame.items():
                 # Compare instance coordinates here
-                instance_ids = []
+                instance_ids: List[Union[Track, str]] = []
                 view_error: Union[List, int] = [] if per_instance else 0
                 for inst, inst_coords in instances_in_view:
                     node_errors = np.nan_to_num(inst.numpy() - inst_coords)
@@ -3899,13 +3899,20 @@ class TriangulateSession(EditCommand):
                         view_error = cast(int, view_error)
                         view_error += instance_error
 
-                    inst_id = inst.track if inst.track is not None else "None"
+                    inst_id: Union[Track, str] = (
+                        inst.track if inst.track is not None else "None"
+                    )
                     instance_ids.append(inst_id)
 
                 if per_instance:
                     frame_error = cast(Dict, frame_error)
                     frame_error[cam] = view_error
                 elif per_view:
+                    view_error = cast(int, view_error)
+                    frame_error = cast(
+                        Dict[Camcorder, Tuple[Tuple[Union[Track, str], ...], int]],
+                        frame_error,
+                    )
                     frame_error[cam] = (tuple(instance_ids), view_error)
                 else:
                     view_error = cast(int, view_error)
@@ -4219,10 +4226,7 @@ class TriangulateSession(EditCommand):
     @staticmethod
     def _calculate_reprojected_points(
         session: RecordingSession, instances: Dict[int, Dict[Camcorder, List[Instance]]]
-    ) -> Tuple[
-        Dict[int, Dict[Camcorder, Iterator[Tuple[Instance, np.ndarray]]]],
-        List[Camcorder],
-    ]:
+    ) -> Tuple[np.ndarray, List[Camcorder]]:
         """Triangulate and reproject instance coordinates.
 
         Note that the order of the instances in the list must match the order of the
