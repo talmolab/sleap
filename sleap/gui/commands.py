@@ -4066,6 +4066,11 @@ class TriangulateSession(EditCommand):
             track=-1,  # Get all instances regardless of track.
             require_multiple_views=True,
         )
+        # Possible race condition
+        if selected_cam not in instances:
+            raise RuntimeError(
+                f"Selected camera {selected_cam} not in instances at frame {frame_idx}."
+            )
 
         # Get the skeleton from an example instance
         skeleton = next(iter(instances.values()))[0].skeleton
