@@ -3900,8 +3900,11 @@ class TriangulateSession(EditCommand):
                 instance_ids: List[Union[Track, str]] = []
                 view_error: Union[List, int] = [] if per_instance else 0
                 for inst, inst_coords in instances_in_view:
+                    n_non_nan = np.count_nonzero(~np.isnan(inst.numpy()))
                     node_errors = np.nan_to_num(inst.numpy() - inst_coords)
-                    instance_error = np.linalg.norm(node_errors)
+                    instance_error = (
+                        np.linalg.norm(node_errors) / n_non_nan if n_non_nan > 0 else 0
+                    )
 
                     if per_instance:
                         view_error = cast(List, view_error)
