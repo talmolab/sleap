@@ -3067,15 +3067,25 @@ class AddInstance(EditCommand):
             prev_idx = AddInstance.get_previous_frame_index(context)
 
             if prev_idx is not None:
-                prev_instances = context.labels.find(
+                prev_frame = context.labels.find(
                     context.state["video"], prev_idx, return_new=True
-                )[0].instances
+                )[0]
+                prev_instances = prev_frame.instances
                 if len(prev_instances) > len(context.state["labeled_frame"].instances):
                     # If more instances in previous frame than current, then use the
                     # first unmatched instance.
                     copy_instance = prev_instances[
                         len(context.state["labeled_frame"].instances)
                     ]
+
+                    if isinstance(copy_instance, PredictedInstance):
+                        # If the first unmatched instanced in the previous frame is a PredictedInstance then 
+                        # traverse backwards in the previous instances until you find the first UserInstance.
+                        # If no UserInstances are found then stay with the current copy_instance.
+                        user_instances = prev_frame.user_instances
+                        if len(user_instances) > 0:
+                            copy_instance = user_instances[-1]
+
                     from_prev_frame = True
                 elif init_method == "best" and (
                     context.state["labeled_frame"].instances
@@ -3083,6 +3093,12 @@ class AddInstance(EditCommand):
                     # Otherwise, if there are already instances in current frame,
                     # copy the points from the last instance added to frame.
                     copy_instance = context.state["labeled_frame"].instances[-1]
+                    
+                    if isinstance(copy_instance, PredictedInstance):
+                        user_instances = context.state["labeled_frame"].user_instances
+                        if len(user_instances) > 0:
+                            copy_instance = user_instances[-1]
+
                 elif len(prev_instances):
                     # Otherwise use the last instance added to previous frame.
                     copy_instance = prev_instances[-1]
