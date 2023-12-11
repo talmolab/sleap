@@ -348,14 +348,22 @@ def write_csv_file(output_path, data_dict):
             tracks.append(detection)
 
     tracks = pd.DataFrame(tracks)
-    tracks.to_csv(output_path, index=False)
+    all_frames = globals().get('all_frames', False)
+
+    if all_frames:
+        tracks = tracks.set_index('frame_idx')
+        tracks = tracks.reindex(range(0, len(data_dict['track_occupancy'])), fill_value=np.nan)
+        tracks = tracks.reset_index(drop=False)
+        tracks.to_csv(output_path, index=False)
+    else:
+        tracks.to_csv(output_path, index=False)
 
 
 def main(
     labels: Labels,
     output_path: str,
     labels_path: str = None,
-    all_frames: bool = True,
+    all_frames: bool = False,
     video: Video = None,
     csv: bool = False,
 ):

@@ -1146,7 +1146,7 @@ class ExportAnalysisFile(AppCommand):
         if params['all_frames']:
             adaptor.write(
                 filename=output_path,
-                all_frames=True,
+                all_frames=params.get('all_frames', False),
                 source_object=context.labels,
                 source_path=context.state["filename"],
                 video=video,
