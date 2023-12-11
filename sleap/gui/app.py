@@ -509,13 +509,13 @@ class MainWindow(QMainWindow):
         fileMenu.addSeparator()
         add_menu_item(
             export_csv_menu,
-            "export_csv_current",
+            "export_csv_current_all_frames",
             "Current Video (all frames)...",
             lambda: self.commands.exportCSVFile(all_frames=True),
         )
         add_menu_item(
             export_csv_menu,
-            "export_csv_all",
+            "export_csv_all_frames",
             "All Videos (all frames)...",
             lambda: self.commands.exportCSVFile(all_frames=True, all_videos=True),
 
