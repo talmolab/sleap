@@ -148,6 +148,6 @@ class SleapAnalysisAdaptor(Adaptor):
             labels=source_object,
             output_path=filename,
             labels_path=source_path,
-            all_frames=True,
+            all_frames=all_frames,
             video=video,
         )

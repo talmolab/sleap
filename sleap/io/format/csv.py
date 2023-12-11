@@ -45,7 +45,7 @@ class CSVAdaptor(format.adaptor.Adaptor):
         filename: str,
         source_object: Labels,
         source_path: str = None,
-        all_frames: bool: False,
+        all_frames: bool= False,
         video: Video = None,
     ):
         """Writes csv file for :py:class:`Labels` `source_object`.
@@ -67,7 +67,7 @@ class CSVAdaptor(format.adaptor.Adaptor):
             labels=source_object,
             output_path=filename,
             labels_path=source_path,
-            all_frames=True,
+            all_frames=all_frames,
             video=video,
             csv=True,
         )
