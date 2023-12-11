@@ -505,6 +505,19 @@ class MainWindow(QMainWindow):
             "All Videos (only tracked frames)...",
             lambda: self.commands.exportCSVFile(all_videos=True),
         )
+        
+        fileMenu.addSeparator()
+        add_menu_item(
+            export_csv_menu,
+            "export_csv_current_all_frames",
+            "Current Video (all frames)...",
+            lambda: self.commands.exportCSVFile(all_frames=True),
+        )
+        add_menu_item(
+            export_csv_menu,
+            "export_csv_all_frames",
+            "All Videos (all frames)...",
+            lambda: self.commands.exportCSVFile(all_frames=True, all_videos=True),
 
         export_csv_menu.addSeparator()
         add_menu_item(
