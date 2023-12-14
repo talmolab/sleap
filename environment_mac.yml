@@ -38,3 +38,4 @@ dependencies:
     - conda-forge::tensorflow-hub
     - pip:
         - "--editable=.[conda_dev]"
+        - "--no-binary qudida,albumentations"

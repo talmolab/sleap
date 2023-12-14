@@ -34,7 +34,6 @@ requirements:
     - conda-forge::attrs >=21.2.0
     - conda-forge::cattrs ==1.1.1
     - conda-forge::h5py
-    - conda-forge::imgaug ==0.4.0
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
@@ -61,7 +60,6 @@ requirements:
     - conda-forge::attrs >=21.2.0
     - conda-forge::cattrs ==1.1.1
     - conda-forge::h5py
-    - conda-forge::imgaug ==0.4.0
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos

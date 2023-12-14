@@ -7,7 +7,7 @@ export PIP_IGNORE_INSTALLED=False
 
 # Install the pip dependencies. Note: Using urls to wheels might be better: 
 # https://docs.conda.io/projects/conda-build/en/stable/user-guide/wheel-files.html)
-pip install --no-cache-dir -r ./requirements.txt
+pip install --no-cache-dir -r ./requirements.txt --no-binary qudida,albumentations
 
 
 # Install sleap itself. This does not install the requirements, but will list which 
