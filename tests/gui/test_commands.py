@@ -65,7 +65,7 @@ def test_import_labels_from_dlc_folder():
     assert len(labels.videos) == 2
     assert len(labels.skeletons) == 1
     assert len(labels.nodes) == 3
-    assert len(labels.tracks) == 0
+    assert len(labels.tracks) == 3
 
     assert set(
         [fix_path_separator(l.video.backend.filename) for l in labels.labeled_frames]
