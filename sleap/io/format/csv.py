@@ -45,7 +45,7 @@ class CSVAdaptor(format.adaptor.Adaptor):
         filename: str,
         source_object: Labels,
         source_path: str = None,
-        all_frames: bool= False,
+        all_frames: bool = False,
         video: Video = None,
     ):
         """Writes csv file for :py:class:`Labels` `source_object`.
@@ -54,15 +54,14 @@ class CSVAdaptor(format.adaptor.Adaptor):
             filename: The filename for the output file.
             source_object: The :py:class:`Labels` from which to get data from.
             source_path: Path for the labels object
-            all_frames: A boolean flag to determine whether to include all frames
-                or only those with tracking data in the export.
-            video: The :py:class:`Video` from which toget data from. If no `video` is
+            all_frames: A boolean flag to determine whether to include all frames or
+                only those with tracking data in the export.
+            video: The :py:class:`Video` from which to get data from. If no `video` is
                 specified, then the first video in `source_object` videos list will be
                 used. If there are no :py:class:`Labeled Frame`s in the `video`, then no
                 analysis file will be written.
         """
         from sleap.info.write_tracking_h5 import main as write_analysis
-
         write_analysis(
             labels=source_object,
             output_path=filename,

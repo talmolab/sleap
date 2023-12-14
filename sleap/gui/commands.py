@@ -1143,23 +1143,23 @@ class ExportAnalysisFile(AppCommand):
             else:
                 adaptor = SleapAnalysisAdaptor
 
-        if params['all_frames']:
-            adaptor.write(
-                filename=output_path,
-                all_frames=params.get('all_frames', False),
-                source_object=context.labels,
-                source_path=context.state["filename"],
-                video=video,
-                )
-        else:
-            adaptor.write(
-                filename=output_path,
-                all_frames=False,
-                source_object=context.labels,
-                source_path=context.state["filename"],
-                video=video,
-                )
-            
+            if 'all_frames' in params and params['all_frames']:
+                adaptor.write(
+                    filename=output_path,
+                    all_frames=True,
+                    source_object=context.labels,
+                    source_path=context.state["filename"],
+                    video=video,
+                    )
+            else:
+                adaptor.write(
+                    filename=output_path,
+                    all_frames=False,
+                    source_object=context.labels,
+                    source_path=context.state["filename"],
+                    video=video,
+                    )
+
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         def ask_for_filename(default_name: str, csv: bool) -> str:

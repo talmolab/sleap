@@ -287,7 +287,7 @@ def write_occupancy_file(
     print(f"Saved as {output_path}")
 
 
-def write_csv_file(output_path, data_dict):
+def write_csv_file(output_path, data_dict, all_frames):
 
     """Write CSV file with data from given dictionary.
 
@@ -348,7 +348,6 @@ def write_csv_file(output_path, data_dict):
             tracks.append(detection)
 
     tracks = pd.DataFrame(tracks)
-    all_frames = globals().get('all_frames', False)
 
     if all_frames:
         tracks = tracks.set_index('frame_idx')
@@ -443,7 +442,7 @@ def main(
     )
 
     if csv:
-        write_csv_file(output_path, data_dict)
+        write_csv_file(output_path, data_dict, all_frames=all_frames)
     else:
         write_occupancy_file(output_path, data_dict, transpose=True)
 
