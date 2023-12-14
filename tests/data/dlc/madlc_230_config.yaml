@@ -1,12 +1,12 @@
     # Project definitions (do not edit)
-Task: madlc_2.3.0
+Task: maudlc_2.3.0
 scorer: LM
 date: Mar1
 multianimalproject: true
 identity: false
 
     # Project path (change when moving around)
-project_path: D:\social-leap-estimates-animal-poses\pull-requests\sleap\tests\data\dlc\madlc_testdata_v3
+project_path: D:\social-leap-estimates-animal-poses\pull-requests\sleap\tests\data\dlc\maudlc_testdata_v3
 
     # Annotation data set configuration (and individual video cropping parameters)
 video_sets:
@@ -16,7 +16,9 @@ individuals:
 - individual1
 - individual2
 - individual3
-uniquebodyparts: []
+uniquebodyparts:
+- D
+- E
 multianimalbodyparts:
 - A
 - B

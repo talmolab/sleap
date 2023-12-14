@@ -159,7 +159,7 @@ def summary():
         for gpu in all_gpus:
             print(f"  Device: {gpu.name}")
             print(f"         Available: {gpu in gpus}")
-            print(f"        Initalized: {is_initialized(gpu)}")
+            print(f"       Initialized: {is_initialized(gpu)}")
             print(
                 f"     Memory growth: {tf.config.experimental.get_memory_growth(gpu)}"
             )
