@@ -2,6 +2,8 @@
 GUI for displaying the new announcement.
 """
 
+import os 
+os.environ['QT_API'] = 'pyside2'
 from qtpy.QtCore import Signal, Qt
 from qtpy.QtWebEngineWidgets import QWebEngineView
 from qtpy.QtCore import Property, Signal, QObject, QUrl
