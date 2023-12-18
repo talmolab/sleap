@@ -23,7 +23,7 @@ dependencies:
     - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside2 >=5.12  # To ensure application works correctly with QtPy.
+    - conda-forge::pyside6 >=6.0  # To ensure application works correctly with QtPy.
     - conda-forge::python  ~=3.9
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
