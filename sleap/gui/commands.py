@@ -3401,6 +3401,7 @@ class OpenPrereleaseVersion(AppCommand):
         if rls is not None:
             context.openWebsite(rls.url)
 
+
 class ShowBulletin(AppCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
