@@ -3,9 +3,9 @@ GUI for displaying the new announcement.
 """
 
 import os 
-os.environ['QT_API'] = 'pyside6'
+# os.environ['QT_API'] = 'pyside6'
 from qtpy.QtCore import Signal, Qt
-from qtpy.QtWebEngineWidgets import QWebEngineView
+from qtpy import QtWebEngineWidgets #import QWebEngineView
 from qtpy.QtCore import Property, Signal, QObject, QUrl
 from qtpy.QtWebChannel import QWebChannel
 from qtpy import QtWidgets
@@ -28,7 +28,7 @@ class BulletinWorker(QtWidgets.QMainWindow):
         self.channel.registerObject("content", self.document)
 
         self.document.set_text(self._content)
-        self.view = QWebEngineView()
+        self.view = QtWebEngineWidgets.QWebEngineView()
         self.view.page().setWebChannel(self.channel)
 
         filename = str(Path(__file__).resolve().parent / "bulletin/markdown.html")
