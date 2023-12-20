@@ -17,7 +17,7 @@ SLEAP Documentation
     notebooks/index
     Developer API <api>
     datasets
-    bulletin
+    What's new <bulletin.md>
     GitHub <https://github.com/talmolab/sleap>
     Releases <https://github.com/talmolab/sleap/releases>
     help
