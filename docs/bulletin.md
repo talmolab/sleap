@@ -1,4 +1,55 @@
-# Bulletin
+# What's New?
+
+## SLEAP v1.3.3
+
+_mm/dd/yyyy_
+
+This is a brown-bag release following insufficient restrictions on allowable `tensorflow` versions for the "pypi" extra `sleap[pypi]` in 1.3.2. While the conda packages for 1.3.2 were not affected (since `tensorflow` is pulled in from anaconda), the PyPI only package installed via `pip install sleap[pypi]` had conflicts between the version of `tensorflow` and the version of `keras`. See [1.3.0](https://github.com/talmolab/sleap/releases/tag/v1.3.0), [1.3.1](https://github.com/talmolab/sleap/releases/tag/v1.3.1), and  [1.3.2](https://github.com/talmolab/sleap/releases/tag/v1.3.2) for previous notable changes. 
+
+###### From 1.3.2+, to install SLEAP through pip use `pip install sleap[pypi]` to ensure all dependencies are gathered.
+
+As a reminder:
+
+> The 1.3.1 dependency update requires [Mamba](https://mamba.readthedocs.io/en/latest/index.html) for faster dependency resolution. If you already have anaconda installed, then you _can_ set the solver to libmamba in the base environment:
+>```
+>conda update -n base conda
+>conda install -n base conda-libmamba-solver
+>conda config --set solver libmamba
+>```
+>Any subsequent `mamba` commands in the docs will need to be replaced with `conda` if you choose to use your existing Anaconda installation. 
+>
+>Otherwise, follow the [recommended installation instruction for Mamba](https://mamba.readthedocs.io/en/latest/installation.html).
+
+### Quick install
+**`mamba` (Windows/Linux/GPU)**:
+```
+mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.3.3
+```
+
+**`mamba` (Mac)**:
+```
+mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.3.3
+```
+
+**`pip` (any OS except Apple Silicon)**:
+```
+pip install sleap[pypi]==1.3.3
+```
+
+### Full Changelog
+
+##### Fixes
+* Do not try to remove item if already deleted by @roomrys in https://github.com/talmolab/sleap/pull/1498
+* Set `LD_LIBRARY_PATH` on mamba activate by @roomrys in https://github.com/talmolab/sleap/pull/1496
+* Reset `LD_LIBRARY_PATH` on deactivate by @roomrys in #1502
+
+##### Dependencies
+* Add version restirctions to tendorflow for pypi by @roomrys in #1485
+* Remove `imageio` pin by @roomrys in #1501
+
+**Full Changelog**: https://github.com/talmolab/sleap/compare/v1.3.2...v1.3.3
+
+---
 
 ## SLEAP v1.3.2
 
@@ -42,7 +93,7 @@ pip install sleap[pypi]==1.3.2
 
 ### Full Changelog
 
-#### Enhancements
+##### Enhancements
 * Add option to remove videos in batch by @gitttt-1234 in https://github.com/talmolab/sleap/pull/1382 and https://github.com/talmolab/sleap/pull/1406
 * Add `Track` when add `Instance` by @roomrys in https://github.com/talmolab/sleap/pull/1408
 * Add `Video` to cache when adding `Track` by @roomrys in https://github.com/talmolab/sleap/pull/1407
@@ -53,7 +104,7 @@ pip install sleap[pypi]==1.3.2
 * Add Option to Export CSV by @gitttt-1234 in https://github.com/talmolab/sleap/pull/1438
 * Limit max tracks via track-local queues by @shrivaths16 and @talmo in https://github.com/talmolab/sleap/pull/1447
 
-#### Fixes
+##### Fixes
 * Minor fix in computation of OKS by @shrivaths16 in https://github.com/talmolab/sleap/pull/1383 and https://github.com/talmolab/sleap/pull/1399
 * Fix `Filedialog` to work across (mac)OS by @roomrys in https://github.com/talmolab/sleap/pull/1393
 * Fix panning bounding box by @gitttt-1234 in https://github.com/talmolab/sleap/pull/1398
@@ -65,11 +116,11 @@ pip install sleap[pypi]==1.3.2
 * Add model folder to the unzip path by @roomrys in https://github.com/talmolab/sleap/pull/1445
 * Fix drag and drop by @talmo in https://github.com/talmolab/sleap/pull/1449
 
-#### Dependencies
+##### Dependencies
 * Pin micromamba version by @roomrys in https://github.com/talmolab/sleap/pull/1376
 * Add pip extras by @roomrys in https://github.com/talmolab/sleap/pull/1481
 
-#### New Contributors
+##### New Contributors
 * @shrivaths16 made their first contribution in https://github.com/talmolab/sleap/pull/1383
 * @gitttt-1234 made their first contribution in https://github.com/talmolab/sleap/pull/1382
 * @KevinZ0217 made their first contribution in https://github.com/talmolab/sleap/pull/1414
