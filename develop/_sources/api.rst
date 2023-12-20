@@ -19,13 +19,6 @@ Developer API
    sleap.message
    sleap.skeleton
    sleap.util
-   sleap.info.align
-   sleap.info.feature_suggestions
-   sleap.info.labels
-   sleap.info.metrics
-   sleap.info.summary
-   sleap.info.trackcleaner
-   sleap.info.write_tracking_h5
    sleap.nn.callbacks
    sleap.nn.evals
    sleap.nn.heads
@@ -40,6 +33,12 @@ Developer API
    sleap.nn.training
    sleap.nn.utils
    sleap.nn.viz
+   sleap.nn.config.data
+   sleap.nn.config.model
+   sleap.nn.config.optimization
+   sleap.nn.config.outputs
+   sleap.nn.config.training_job
+   sleap.nn.config.utils
    sleap.nn.data.augmentation
    sleap.nn.data.confidence_maps
    sleap.nn.data.dataset_ops
@@ -57,12 +56,6 @@ Developer API
    sleap.nn.data.resizing
    sleap.nn.data.training
    sleap.nn.data.utils
-   sleap.nn.config.data
-   sleap.nn.config.model
-   sleap.nn.config.optimization
-   sleap.nn.config.outputs
-   sleap.nn.config.training_job
-   sleap.nn.config.utils
    sleap.nn.architectures.common
    sleap.nn.architectures.encoder_decoder
    sleap.nn.architectures.hourglass
@@ -99,3 +92,10 @@ Developer API
    sleap.io.format.nix
    sleap.io.format.sleap_analysis
    sleap.io.format.text
+   sleap.info.align
+   sleap.info.feature_suggestions
+   sleap.info.labels
+   sleap.info.metrics
+   sleap.info.summary
+   sleap.info.trackcleaner
+   sleap.info.write_tracking_h5
