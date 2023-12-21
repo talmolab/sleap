@@ -1024,7 +1024,7 @@ class MainWindow(QMainWindow):
         helpMenu.addAction("Keyboard Shortcuts", self._show_keyboard_shortcuts_window)
 
         helpMenu.addSeparator()
-        helpMenu.addAction("Announcements", self.commands.showBulletin)
+        helpMenu.addAction("What's New?", self.commands.showBulletin)
 
     def process_events_then(self, action: Callable):
         """Decorates a function with a call to first process events."""
