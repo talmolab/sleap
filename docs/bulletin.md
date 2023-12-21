@@ -6,7 +6,7 @@ _mm/dd/yyyy_
 
 This is a brown-bag release following insufficient restrictions on allowable `tensorflow` versions for the "pypi" extra `sleap[pypi]` in 1.3.2. While the conda packages for 1.3.2 were not affected (since `tensorflow` is pulled in from anaconda), the PyPI only package installed via `pip install sleap[pypi]` had conflicts between the version of `tensorflow` and the version of `keras`. See [1.3.0](https://github.com/talmolab/sleap/releases/tag/v1.3.0), [1.3.1](https://github.com/talmolab/sleap/releases/tag/v1.3.1), and  [1.3.2](https://github.com/talmolab/sleap/releases/tag/v1.3.2) for previous notable changes. 
 
-###### From 1.3.2+, to install SLEAP through pip use `pip install sleap[pypi]` to ensure all dependencies are gathered.
+**From 1.3.2+, to install SLEAP through pip use `pip install sleap[pypi]` to ensure all dependencies are gathered.**
 
 As a reminder:
 
