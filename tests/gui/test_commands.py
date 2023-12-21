@@ -216,7 +216,6 @@ def test_ExportAnalysisFile(
     context.state["filename"] = None
 
     if csv:
-
         context.state["filename"] = centered_pair_predictions_hdf5_path
 
         params = {"all_videos": True, "csv": csv}
@@ -615,6 +614,48 @@ def test_CopyInstance(min_tracks_2node_labels: Labels):
     context.state["instance"] = instance
     context.copyInstance()
     assert context.state["clipboard_instance"] == instance
+
+
+def test_CopyPriorFrame(centered_pair_predictions: Labels):
+    # make the frame idx 124 so that the previous frame has two predicted and then add a user instance to the previous
+    # then run addInstance on the current frame and assert that the added instance is the user instance we added
+
+    # Test labels.numpy prefers user instances
+    context = CommandContext.from_labels(centered_pair_predictions)
+    context.state["labeled_frame"] = centered_pair_predictions.find(
+        centered_pair_predictions.videos[0], frame_idx=124
+    )[0]
+    context.state["video"] = centered_pair_predictions.videos[0]
+    context.state["frame_idx"] = 124
+
+    # No user instances in current frame, only predicted
+    assert len(context.state["labeled_frame"].user_instances) == 0
+    assert len(context.state["labeled_frame"].predicted_instances) == 2
+
+    prev_idx = AddInstance.get_previous_frame_index(context)
+    assert prev_idx is not None
+    prev_frame = context.labels.find(context.state["video"], prev_idx, return_new=True)[
+        0
+    ]
+    prev_instances = prev_frame.instances
+
+    # No user instances in previous frame, only predicted
+    assert len(prev_frame.user_instances) == 0
+    assert len(prev_frame.predicted_instances) == 2
+
+    user_inst = Instance(
+        skeleton=skeleton, points={node: Point(1, 1) for node in skeleton.nodes}
+    )
+    prev_instances.append(user_inst)
+
+    context.newInstance(init_method="prior_frame")
+
+    # Confirm we only added one user instance
+    assert len(context.state["labeled_frame"].user_instances) == 1
+    assert len(context.state["labeled_frame"].predicted_instances) == 2
+
+    # Confirm that the user instance added is the last one from previous frame
+    assert context.state["labeled_frame"].user_instances[0] == user_inst
 
 
 def test_PasteInstance(min_tracks_2node_labels: Labels):

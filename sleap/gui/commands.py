@@ -3020,6 +3020,23 @@ class AddInstance(EditCommand):
         return has_missing_nodes
 
     @staticmethod
+    def find_last_user_instance(
+        prev_frame: LabeledFrame,
+    ) -> Optional[Instance]:
+        """Find last user instance to copy from.
+
+        Args:
+            prev_frame: The last labeled frame from which we obtain the last user instance.
+
+        Returns:
+            The last user instance in the previous frame (if present), otherwise null
+        """
+
+        user_instances = prev_frame.user_instances
+        if len(user_instances) > 0:
+            return user_instances[-1]
+
+    @staticmethod
     def find_instance_to_copy_from(
         context: CommandContext,
         copy_instance: Optional[Union[Instance, PredictedInstance]],
@@ -3079,12 +3096,10 @@ class AddInstance(EditCommand):
                     ]
 
                     if isinstance(copy_instance, PredictedInstance):
-                        # If the first unmatched instanced in the previous frame is a PredictedInstance then 
-                        # traverse backwards in the previous instances until you find the first UserInstance.
-                        # If no UserInstances are found then stay with the current copy_instance.
-                        user_instances = prev_frame.user_instances
-                        if len(user_instances) > 0:
-                            copy_instance = user_instances[-1]
+                        # Set copy instance to last user instance in previous frame, if present
+                        user_instance = AddInstance.find_last_user_instance(prev_frame)
+                        if user_instance is not None:
+                            copy_instance = user_instance
 
                     from_prev_frame = True
                 elif init_method == "best" and (
@@ -3093,15 +3108,24 @@ class AddInstance(EditCommand):
                     # Otherwise, if there are already instances in current frame,
                     # copy the points from the last instance added to frame.
                     copy_instance = context.state["labeled_frame"].instances[-1]
-                    
                     if isinstance(copy_instance, PredictedInstance):
-                        user_instances = context.state["labeled_frame"].user_instances
-                        if len(user_instances) > 0:
-                            copy_instance = user_instances[-1]
+                        # Set copy instance to last user instance in current frame
+                        user_instance = AddInstance.find_last_user_instance(
+                            context.state["labeled_frame"]
+                        )
+                        if user_instance is not None:
+                            copy_instance = user_instance
 
                 elif len(prev_instances):
                     # Otherwise use the last instance added to previous frame.
                     copy_instance = prev_instances[-1]
+
+                    if isinstance(copy_instance, PredictedInstance):
+                        # Set copy instance to last user instance in previous frame, if present
+                        user_instance = AddInstance.find_last_user_instance(prev_frame)
+                        if user_instance is not None:
+                            copy_instance = user_instance
+
                     from_prev_frame = True
 
         from_predicted = from_predicted if hasattr(from_predicted, "score") else None
