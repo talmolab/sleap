@@ -16,6 +16,7 @@ class BulletinWorker(QtWidgets.QMainWindow):
         self._content = content
         # Set the window to stay on top
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        self.setWindowTitle("What's New?")
 
     def show_bulletin(self):
 

@@ -8,6 +8,5 @@ export PIP_NO_DEPENDENCIES=False
 export PIP_IGNORE_INSTALLED=False
 
 pip install --no-cache-dir -r requirements.txt
-pip install PySide2==5.14.1
 
 python setup.py install --single-version-externally-managed --record=record.txt
