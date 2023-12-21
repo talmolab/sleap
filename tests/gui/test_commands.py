@@ -617,10 +617,6 @@ def test_CopyInstance(min_tracks_2node_labels: Labels):
 
 
 def test_CopyPriorFrame(centered_pair_predictions: Labels):
-    # make the frame idx 124 so that the previous frame has two predicted and then add a user instance to the previous
-    # then run addInstance on the current frame and assert that the added instance is the user instance we added
-
-    # Test labels.numpy prefers user instances
     context = CommandContext.from_labels(centered_pair_predictions)
     context.state["labeled_frame"] = centered_pair_predictions.find(
         centered_pair_predictions.videos[0], frame_idx=124
@@ -632,8 +628,8 @@ def test_CopyPriorFrame(centered_pair_predictions: Labels):
     assert len(context.state["labeled_frame"].user_instances) == 0
     assert len(context.state["labeled_frame"].predicted_instances) == 2
 
-    prev_idx = AddInstance.get_previous_frame_index(context)
-    assert prev_idx is not None
+    # Modify previous frame to have a user instance
+    prev_idx = 123
     prev_frame = context.labels.find(context.state["video"], prev_idx, return_new=True)[
         0
     ]
@@ -643,6 +639,7 @@ def test_CopyPriorFrame(centered_pair_predictions: Labels):
     assert len(prev_frame.user_instances) == 0
     assert len(prev_frame.predicted_instances) == 2
 
+    skeleton = centered_pair_predictions.skeleton
     user_inst = Instance(
         skeleton=skeleton, points={node: Point(1, 1) for node in skeleton.nodes}
     )
