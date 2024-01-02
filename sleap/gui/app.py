@@ -201,13 +201,15 @@ class MainWindow(QMainWindow):
         )
         # Display announcement bulletin popup
         if self.new_announcement_available:
-            self.bulletin_dialog()
             self.announcement_checker.update_announcement()
+            self.bulletin_dialog()
 
     def bulletin_dialog(self):
         """Displays bulletin dialog is new announcement is available."""
         # Initialize the bulletin popup worker
-        popup_worker = BulletinWorker("# What's New? \n#" + self.state["announcement"], self)
+        popup_worker = BulletinWorker(
+            "".join(["## What's New? \n#", self.state["announcement"]]), self
+        )
         popup_worker.show_bulletin()
 
         # Save the bulletin worker so we can close them later

@@ -1,17 +1,18 @@
 body {
-    margin: 0 auto;
+    margin: 0px auto;
     font-family: Helvetica, Arial, Sans-Serif;
     color: #000000;
     line-height: 1;
     max-width: 960px;
-    padding: 30px;
+    padding: 2px 30px;
+    font-size: 18px;
 }
 
 h1,
 h2,
 h3,
 h4 {
-    font-weight: 600;
+    font-weight: 500;
 }
 
 h1,
@@ -25,22 +26,19 @@ p {
 }
 
 h1 {
-    font-size: 50px;
+    font-size: 48px;
 }
 
 h2 {
-    font-size: 38px;
-    /* The bottom margin is small. It's designed to be used with gray meta text
-     * below a post title. */
-    margin: 24px 0 6px;
+    font-size: 41px;
 }
 
 h3 {
-    font-size: 26px;
+    font-size: 34px;
 }
 
 h4 {
-    font-size: 22px;
+    font-size: 27px;
 }
 
 h5 {
@@ -57,10 +55,11 @@ a {
 a:hover {
     text-decoration: none;
     color: #ff6600b7;
+    cursor: pointer;
 }
 
 a:visited {
-    color: rgba(128, 0, 128, 0.815);
+    color: rgb(128, 0, 128);
 }
 
 ul,
@@ -94,8 +93,8 @@ pre {
 
 code {
     font-family: Consolas, Monaco, Andale Mono, monospace;
-    line-height: 1.5;
-    font-size: 13px;
+    line-height: 1.2;
+    font-size: 15px;
 }
 
 aside {
@@ -313,4 +312,33 @@ button:active {
 button::-moz-focus-inner {
     padding: 0;
     border: 0;
+}
+
+#placeholder {
+    text-decoration: none;
+}
+
+#navbar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    padding: 10px;
+    background-color: #ffffff00;
+    color: black;
+    z-index: 1000;
+}
+
+#navbar a {
+    margin-right: 10px;
+    text-decoration: underline;
+    scroll-behavior: smooth;
+}
+
+#navbar a:hover {
+    cursor: pointer;
+    color: gray
+}
+
+#navbar a:visited {
+    color: black;
 }
