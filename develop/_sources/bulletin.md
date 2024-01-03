@@ -2,7 +2,7 @@
 
 ## SLEAP v1.3.3
 
-_mm/dd/yyyy_
+_09/15/2023_
 
 This is a brown-bag release following insufficient restrictions on allowable `tensorflow` versions for the "pypi" extra `sleap[pypi]` in 1.3.2. While the conda packages for 1.3.2 were not affected (since `tensorflow` is pulled in from anaconda), the PyPI only package installed via `pip install sleap[pypi]` had conflicts between the version of `tensorflow` and the version of `keras`. See [1.3.0](https://github.com/talmolab/sleap/releases/tag/v1.3.0), [1.3.1](https://github.com/talmolab/sleap/releases/tag/v1.3.1), and  [1.3.2](https://github.com/talmolab/sleap/releases/tag/v1.3.2) for previous notable changes. 
 
@@ -53,7 +53,7 @@ pip install sleap[pypi]==1.3.3
 
 ## SLEAP v1.3.2
 
-_mm/dd/yyyy_
+_09/10/2023_
 
 SLEAP 1.3.2 adds some nice usability features thanks to both the community ideas and new contributors! See [1.3.0](https://github.com/talmolab/sleap/releases/tag/v1.3.0) and [1.3.1](https://github.com/talmolab/sleap/releases/tag/v1.3.1) for previous notable changes. As a reminder:
 
