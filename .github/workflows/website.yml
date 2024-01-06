@@ -8,7 +8,7 @@ on:
       # 'main' triggers updates to 'sleap.ai', all others to 'sleap.ai/develop'
       - main
       - develop
-      - liezl/add-pip-extras
+      - shrivaths/changelog-announcement-1
     paths:
       - "docs/**"
       - "README.rst"
