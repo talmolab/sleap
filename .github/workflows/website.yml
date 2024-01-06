@@ -9,6 +9,7 @@ on:
       - main
       - develop
       - shrivaths/changelog-announcement-1
+      - shrivaths/changelog-announcement-2
     paths:
       - "docs/**"
       - "README.rst"
