@@ -35,7 +35,7 @@ def generate_json_file():
     # Append last section
     bulletin_json.append({"title": title, "date": date, "content": content})
 
-    with open(output_json_file, "w", encoding="utf-8") as json_file:
+    with open("bulletin.json", "w", encoding="utf-8") as json_file:
         json.dump(bulletin_json, json_file, ensure_ascii=False, indent=4)
 
 
