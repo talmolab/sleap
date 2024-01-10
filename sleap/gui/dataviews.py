@@ -32,6 +32,7 @@ from sleap.instance import LabeledFrame, Instance
 from sleap.skeleton import Skeleton
 
 
+# Todo: Vaibhav subclass this to create sessions table model
 class GenericTableModel(QtCore.QAbstractTableModel):
     """
     Generic Qt table model to show a list of properties for some items.
@@ -538,7 +539,6 @@ class SuggestionsTableModel(GenericTableModel):
         if prop != "group":
             super(SuggestionsTableModel, self).sort(column_idx, order)
         else:
-
             if not reverse:
                 # Use group_int (int) instead of group (str).
                 self.beginResetModel()
