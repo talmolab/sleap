@@ -106,7 +106,13 @@ def test_announcementchecker():
     for announcement in bulletin_data:
         announcement_content = "\n".join(announcement["content"].split("\n"))
         announcement_markdown += (
-            "## " + announcement["title"] + "\n" + announcement_content + "\n"
+            "## "
+            + announcement["title"]
+            + "\n"
+            + announcement["date"]
+            + "\n"
+            + announcement_content
+            + "\n"
         )
 
     # Check if announcement is updated
