@@ -11,8 +11,8 @@ from datetime import datetime
 
 REPO_ID = "talmolab/sleap"
 ANALYTICS_ENDPOINT = "https://analytics.sleap.ai/ping"
-BASE_DIR = os.path.dirname(os.path.abspath(os.path.join(__file__, os.path.pardir)))
-BULLETIN_JSON = os.path.join(BASE_DIR, "..", "docs", "bulletin.json")
+# TODO: Change the Bulletin URL to the main website before deploying
+BULLETIN_JSON_ENDPOINT = "https://sleap.ai/develop/docs/_static/bulletin.json"
 
 
 @attr.s(auto_attribs=True)
@@ -156,57 +156,58 @@ class AnnouncementChecker:
     """Checker for new announcements on the bulletin page of sleap."""
 
     state: "GuiState"
-    bulletin_json_path: str = BULLETIN_JSON
     _previous_announcement_date: str = None
-    _latest_data: Optional[Dict[str, str]] = None
+    bulletin_json_data: Optional[List[Dict[str, str]]] = None
+    json_data_url: str = BULLETIN_JSON_ENDPOINT
+    checked: bool = attr.ib(default=False, init=False)
 
     @property
     def previous_announcement_date(self):
         _previous_announcement_date = self.state["announcement last seen date"]
         return _previous_announcement_date
 
-    def _read_bulletin_data(self) -> Optional[Dict]:
-        """Reads the bulletin data from the JSON file."""
+    def check_for_bulletin_data(self) -> Optional[List[Dict]]:
+        """Reads the bulletin data from the JSON file endpoint."""
         try:
-            with open(self.bulletin_json_path, "r") as jsf:
-                data = json.load(jsf)
-                self._latest_data = data[0]
-        except FileNotFoundError:
-            self._latest_data = None
+            self.checked = True
+            self.bulletin_json_data = requests.get(self.json_data_url).json()
+        except (requests.ConnectionError, requests.Timeout):
+            self.bulletin_json_data = None
 
     def new_announcement_available(self) -> bool:
         """Check if latest announcement is available."""
-        self._read_bulletin_data()
-        if self.previous_announcement_date and self._latest_data:
-            latest_date = datetime.strptime(self._latest_data["date"], "%m/%d/%Y")
-            previous_date = datetime.strptime(
-                self.previous_announcement_date, "%m/%d/%Y"
-            )
-            if latest_date > previous_date:
-                return True
+        if not self.checked:
+            self.check_for_bulletin_data()
+        if self.bulletin_json_data:
+            if self.previous_announcement_date:
+                latest_date = datetime.strptime(
+                    self.bulletin_json_data[0]["date"], "%m/%d/%Y"
+                )
+                previous_date = datetime.strptime(
+                    self.previous_announcement_date, "%m/%d/%Y"
+                )
+                if latest_date > previous_date:
+                    return True
+                else:
+                    return False
             else:
-                return False
+                return True
         else:
-            return True
+            return False
 
-    def get_latest_announcement(self) -> Optional[Tuple[str, str, str]]:
+    def update_latest_announcement(self) -> Optional[Tuple[str, str, str]]:
         """Return latest announcements on the releases page not seen by user."""
         if self.new_announcement_available():
-            return (
-                self._latest_data["title"],
-                self._latest_data["date"],
-                self._latest_data["content"],
-            )
-        return None
-
-    def update_announcement(self):
-        """Update the last seen date of announcement in preferences."""
-        announcement = self.get_latest_announcement()
-        if announcement is None:
-            return
-        self.state["announcement last seen date"] = announcement[1]
-        new_announcement = "\n".join(announcement[2].split("\n"))
-        self.state["announcement"] = "## " + announcement[0] + "\n" + new_announcement
+            announcement_markdown = ""
+            for announcement in self.bulletin_json_data:
+                announcement_content = "\n".join(announcement["content"].split("\n"))
+                announcement_markdown += (
+                    "## " + announcement["title"] + "\n" + announcement_content + "\n"
+                )
+            self.state["announcement"] = announcement_markdown
+            self.state["announcement last seen date"] = self.bulletin_json_data[0][
+                "date"
+            ]
 
 
 def get_analytics_data() -> Dict[str, Any]:
