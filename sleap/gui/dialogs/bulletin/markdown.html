@@ -4,23 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>What's New?</title>
+  <link rel="stylesheet" href="pico.min.css">
   <link rel="stylesheet" type="text/css" href="markdown.css">
   <script src="marked.js"></script>
   <script src="qrc:/qtwebchannel/qwebchannel.js"></script>
 </head>
 <body>
-  <div id="placeholder"></div>
-  <div id="navbar"></div>
+  <div id="container">
+    <div id="content"></div>
+    <div id="navbar"></div>
+  </div>
   <script>
   'use strict';
 
-  var placeholder = document.getElementById('placeholder');
+  var content = document.getElementById('content');
+  var navbar = document.getElementById('navbar');
 
   var updateText = function(text) {
-      placeholder.innerHTML = marked(text);
+      content.innerHTML = marked(text);
       // Wait till the document is loaded to add navbar
       setTimeout(function() {
-            executeSecondScript();
+            generateNavbar();
         }, 100);
   }
 
@@ -31,39 +35,36 @@
       content.textChanged.connect(updateText);
     }
   );
-    
-  function executeSecondScript() {
-    const hTags = document.querySelectorAll('h3');
-    const navbar = document.getElementById('navbar');
-    const ul = document.createElement('ul');
-    var uniqueIdCounter = 1;
+  
+  function generateNavbar() {
+      const h2Tags = document.querySelectorAll('h2');
+      const ul = document.createElement('ul');
+      var uniqueIdCounter = 1;
 
-    hTags.forEach((h, index) => {
-      const li = document.createElement('li');
-      const link = document.createElement('a');
-      // Assign a unique ID if one doesn't exist
-      if (!h.id) {
-        h.id = `generated-id-${uniqueIdCounter}`;
-        uniqueIdCounter++;
-      }
-      link.href = '#' + h.id; //  Create anchor links based on h2 IDs
-      link.textContent = h.textContent;
-      link.addEventListener('click', function(event) {
-              event.preventDefault();
-              scrollToSection(index);
-          });
+      h2Tags.forEach((h2, index) => {
+        const li = document.createElement('li');
+        const link = document.createElement('a');
+        if (!h2.id) {
+          h2.id = `generated-id-${uniqueIdCounter}`;
+          uniqueIdCounter++;
+        }
+        link.href = '#' + h2.id;
+        link.textContent = h2.textContent;
+        link.addEventListener('click', function(event) {
+          event.preventDefault();
+          scrollToSection(h2);
+        });
+        li.appendChild(link);
+        ul.appendChild(li);
+      });
+      navbar.appendChild(ul);
+      document.body.insertBefore(navbar, document.body.firstChild);
+    };
 
-      li.appendChild(link);
-      ul.appendChild(li);
-    });
+    function scrollToSection(element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
 
-    navbar.appendChild(ul);
-    document.body.insertBefore(navbar, document.body.firstChild)
-  };
-  function scrollToSection(index) {
-    var targetSection = document.querySelectorAll('h3')[index];
-    targetSection.scrollIntoView({ behavior: 'smooth' });
-  }
   </script>
 </body>
 </html>

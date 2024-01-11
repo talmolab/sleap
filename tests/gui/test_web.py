@@ -82,47 +82,47 @@ def test_release_checker():
     assert checker.releases[1] != rls_test
 
 
-def test_announcementchecker(bulletin_json_path):
-
+def test_announcementchecker():
     labels = Labels()
     context = CommandContext.from_labels(labels=labels)
     context.state = {}
     context.state["announcement last seen date"] = "10/10/2023"
-    checker = AnnouncementChecker(
-        state=context.state, bulletin_json_path=bulletin_json_path
-    )
-
-    # Check if the announcement checker gets the correct date from the app
-    assert checker.previous_announcement_date == "10/10/2023"
-
     # Create dummy JSON file to check
     bulletin_data = [
         {"title": "title1", "date": "10/12/2023", "content": "New announcement"},
         {"title": "title2", "date": "10/07/2023", "content": "Old Announcment"},
     ]
-    with open(bulletin_json_path, "w") as test_file:
-        json.dump(bulletin_data, test_file)
+    checker = AnnouncementChecker(state=context.state, bulletin_json_data=bulletin_data)
+    checker.checked = True
+    # Check if the announcement checker gets the correct date from the app
+    assert checker.previous_announcement_date == "10/10/2023"
 
     # Check if latest announcement is fetched
-    announcement = checker.get_latest_announcement()
-    assert announcement == ("title1", "10/12/2023", "New announcement")
+    is_announcement_available = checker.new_announcement_available()
+    assert is_announcement_available == True
+
+    # Concatenate the bulletin content to check updated announcement text
+    announcement_markdown = ""
+    for announcement in bulletin_data:
+        announcement_content = "\n".join(announcement["content"].split("\n"))
+        announcement_markdown += (
+            "## " + announcement["title"] + "\n" + announcement_content + "\n"
+        )
 
     # Check if announcement is updated
-    checker.update_announcement()
+    checker.update_latest_announcement()
     assert context.state["announcement last seen date"] == "10/12/2023"
-    assert context.state["announcement"] == "## title1\nNew announcement"
+    assert context.state["announcement"] == announcement_markdown
 
-    # Create dummy JSON file
+    # Create another dummy JSON file
     bulletin_data = [
         {"title": "title1", "date": "10/09/2023", "content": "New announcement"},
         {"title": "title2", "date": "10/07/2023", "content": "Old Announcment"},
     ]
-    with open(bulletin_json_path, "w") as test_file:
-        json.dump(bulletin_data, test_file)
-
+    checker.bulletin_json_data = bulletin_data
     # Check to ensure no new announcement is created
-    announcement = checker.get_latest_announcement()
-    assert announcement == None
+    is_announcement_available = checker.new_announcement_available()
+    assert is_announcement_available == False
 
 
 def test_get_analytics_data():
