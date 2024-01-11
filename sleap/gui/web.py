@@ -202,7 +202,13 @@ class AnnouncementChecker:
             for announcement in self.bulletin_json_data:
                 announcement_content = "\n".join(announcement["content"].split("\n"))
                 announcement_markdown += (
-                    "## " + announcement["title"] + "\n" + announcement_content + "\n"
+                    "## "
+                    + announcement["title"]
+                    + "\n"
+                    + announcement["date"]
+                    + "\n"
+                    + announcement_content
+                    + "\n"
                 )
             self.state["announcement"] = announcement_markdown
             self.state["announcement last seen date"] = self.bulletin_json_data[0][
