@@ -9,9 +9,11 @@ import pytest
 import nixio
 
 # Skip the test for MacOS due to QWebEngineView ImportError
-pytestmark = pytest.mark.skipif(
-    sys.platform == "darwin", reason="ImportError for MacOS"
-)
+if sys.platform == 'darwin':
+    pytestmark = pytest.mark.skip(
+         reason="ImportError for MacOS"
+    )
+    pytest.skip("Skipping tests and import on macOS")
 
 from sleap.io.video import Video
 from sleap.instance import Instance, LabeledFrame, PredictedInstance, Track
