@@ -9,6 +9,7 @@ on:
       - main
       - develop
       - shrivaths/changelog-announcement-1
+      - shrivaths/changelog-announcement-2
     paths:
       - "docs/**"
       - "README.rst"
@@ -48,6 +49,7 @@ jobs:
         run: |
           cd docs
           python make_api_doctree.py
+          python make_bulletin_json.py
           make html
 
       - name: Deploy (sleap.ai)
@@ -67,3 +69,4 @@ jobs:
           publish_branch: gh-pages
           publish_dir: docs/build/html
           destination_dir: develop
+          keep_files: true
