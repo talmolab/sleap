@@ -70,20 +70,3 @@ class Document(QObject):
         self.textChanged.emit(self.m_text)
 
     text = Property(str, fget=get_text, fset=set_text, notify=textChanged)
-
-
-# class MyWebEngineView(QWebEngineView):
-#     def createWindow(self, type):
-#         new_view = MyWebEngineView(self)
-#         new_view.show()
-#         return new_view
-
-#     def acceptNavigationRequest(self, url, navigation_type, is_main_frame):
-#         if navigation_type == QWebEnginePage.NavigationTypeLinkClicked:
-#             # Emit the linkClicked signal when a link is clicked
-#             self.page().mainFrame().javaScriptWindowObjectCleared.connect(
-#                 lambda: self.page().mainFrame().addToJavaScriptWindowObject("linkHandler", self)
-#             )
-#             self.page().runJavaScript("linkHandler.linkClicked('%s');" % url.toString())
-#             return False
-#         return super().acceptNavigationRequest(url, navigation_type, is_main_frame)
