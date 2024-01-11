@@ -1,5 +1,6 @@
 import os
 from pathlib import Path, PurePath
+import sys
 
 import numpy as np
 import pandas as pd
@@ -8,7 +9,9 @@ import pytest
 import nixio
 
 # Skip the test for MacOS due to QWebEngineView ImportError
-pytestmark = pytest.mark.skipif(os.name == "macos", reason="ImportError for MacOS")
+pytestmark = pytest.mark.skipif(
+    sys.platform == "darwin", reason="ImportError for MacOS"
+)
 
 from sleap.io.video import Video
 from sleap.instance import Instance, LabeledFrame, PredictedInstance, Track
