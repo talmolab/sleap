@@ -1,16 +1,17 @@
 import pytest
 import sys
-from qtpy.QtWidgets import QApplication
-
-from sleap.gui.app import MainWindow
-from sleap.gui.commands import *
-from sleap.gui.dialogs.bulletin import BulletinWorker
 
 # Skip the test for MacOS due to QWebEngineView ImportError
 # TODO: Need to resolve the ImportError
 if sys.platform == "darwin":
     pytestmark = pytest.mark.skip(reason="ImportError for MacOS")
     pytest.skip(reason="Skipping tests and import on macOS", allow_module_level=True)
+
+from qtpy.QtWidgets import QApplication
+
+from sleap.gui.app import MainWindow
+from sleap.gui.commands import *
+from sleap.gui.dialogs.bulletin import BulletinWorker
 
 
 def test_app_workflow(
