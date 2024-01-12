@@ -54,6 +54,7 @@ from logging import getLogger
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
 from datetime import date
+import webbrowser
 
 from qtpy import QtCore, QtGui
 from qtpy.QtCore import QEvent, Qt
@@ -66,7 +67,14 @@ from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
 from sleap.gui.dialogs.metrics import MetricsTableDialog
 from sleap.gui.dialogs.shortcuts import ShortcutDialog
-from sleap.gui.dialogs.bulletin import BulletinWorker
+
+# Open bulletin online if there is an ImportError (for MacOS)
+online_bulletin = False
+try:
+    from sleap.gui.dialogs.bulletin import BulletinWorker
+except ImportError:
+    online_bulletin = True
+
 from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.tracks import TrackListOverlay, TrackTrailOverlay
 from sleap.gui.shortcuts import Shortcuts
@@ -206,14 +214,18 @@ class MainWindow(QMainWindow):
 
     def bulletin_dialog(self):
         """Displays bulletin dialog is new announcement is available."""
-        # Initialize the bulletin popup worker
-        popup_worker = BulletinWorker(
-            "".join(["# What's New? \n", self.state["announcement"]]), self
-        )
-        popup_worker.show_bulletin()
+        # TODO: Change the URL to the actual SLEAP website before merging to main
+        if online_bulletin:
+            webbrowser.open("https://sleap.ai/develop/bulletin.html")
+        else:
+            # Initialize the bulletin popup worker
+            popup_worker = BulletinWorker(
+                "".join(["# What's New? \n", self.state["announcement"]]), self
+            )
+            popup_worker.show_bulletin()
 
-        # Save the bulletin worker so we can close them later
-        self._child_windows["bulletin_worker"] = popup_worker  # Needed!
+            # Save the bulletin worker so we can close them later
+            self._child_windows["bulletin_worker"] = popup_worker  # Needed!
 
     def setWindowTitle(self, value):
         """Sets window title (if value is not None)."""
