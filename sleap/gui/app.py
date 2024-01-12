@@ -216,7 +216,7 @@ class MainWindow(QMainWindow):
         """Displays bulletin dialog is new announcement is available."""
         # TODO: Change the URL to the actual SLEAP website before merging to main
         if online_bulletin:
-            webbrowser.open('https://sleap.ai/develop/bulletin.html')
+            webbrowser.open("https://sleap.ai/develop/bulletin.html")
         else:
             # Initialize the bulletin popup worker
             popup_worker = BulletinWorker(

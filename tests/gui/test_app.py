@@ -1,17 +1,15 @@
 import pytest
-import sys
-
-# Skip the test for MacOS due to QWebEngineView ImportError
-# TODO: Need to resolve the ImportError
-if sys.platform == "darwin":
-    pytestmark = pytest.mark.skip(reason="ImportError for MacOS")
-    pytest.skip(reason="Skipping tests and import on macOS", allow_module_level=True)
-
 from qtpy.QtWidgets import QApplication
 
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
-from sleap.gui.dialogs.bulletin import BulletinWorker
+
+# Online bulletin if there is an ImportError (for MacOS)
+online_bulletin = False
+try:
+    from sleap.gui.dialogs.bulletin import BulletinWorker
+except ImportError:
+    online_bulletin = True
 
 
 def test_app_workflow(
@@ -20,11 +18,12 @@ def test_app_workflow(
     app = MainWindow(no_usage_data=True)
 
     # Check if the bulletin is shown or not
-    bulletin_dialog = app._child_windows.get("bulletin_worker", False)
-    if app.new_announcement_available:
-        assert isinstance(bulletin_dialog, BulletinWorker)
-    else:
-        assert bulletin_dialog == False
+    if not online_bulletin:
+        bulletin_dialog = app._child_windows.get("bulletin_worker", False)
+        if app.new_announcement_available:
+            assert isinstance(bulletin_dialog, BulletinWorker)
+        else:
+            assert bulletin_dialog == False
 
     # Add nodes
     app.commands.newNode()
