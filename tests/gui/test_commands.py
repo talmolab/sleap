@@ -18,7 +18,7 @@ from sleap.gui.commands import (
     SaveProjectAs,
     get_new_version_filename,
 )
-from sleap.instance import Instance, LabeledFrame
+from sleap.instance import Instance, LabeledFrame, Point
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
@@ -216,7 +216,6 @@ def test_ExportAnalysisFile(
     context.state["filename"] = None
 
     if csv:
-
         context.state["filename"] = centered_pair_predictions_hdf5_path
 
         params = {"all_videos": True, "csv": csv}
@@ -615,6 +614,149 @@ def test_CopyInstance(min_tracks_2node_labels: Labels):
     context.state["instance"] = instance
     context.copyInstance()
     assert context.state["clipboard_instance"] == instance
+
+
+def test_CopyPriorFramePreviousUser(centered_pair_predictions: Labels):
+    """Test that we copy prior user frame when available."""
+    context = CommandContext.from_labels(centered_pair_predictions)
+    context.state["labeled_frame"] = centered_pair_predictions.find(
+        centered_pair_predictions.videos[0], frame_idx=124
+    )[0]
+    context.state["video"] = centered_pair_predictions.videos[0]
+    context.state["frame_idx"] = 124
+    context.state["skeleton"] = centered_pair_predictions.skeleton
+
+    # No user instances in current frame, only predicted
+    assert len(context.state["labeled_frame"].user_instances) == 0
+    assert len(context.state["labeled_frame"].predicted_instances) == 2
+
+    # Modify previous frame to have a user instance
+    prev_idx = 123
+    prev_frame = context.labels.find(context.state["video"], prev_idx, return_new=True)[
+        0
+    ]
+    prev_instances = prev_frame.instances
+
+    # No user instances in previous frame, only predicted
+    assert len(prev_frame.user_instances) == 0
+    assert len(prev_frame.predicted_instances) == 2
+
+    skeleton = centered_pair_predictions.skeleton
+    user_inst = Instance(
+        skeleton=skeleton,
+        points={node: Point(1, 1) for node in skeleton.nodes},
+        frame=prev_frame,
+    )
+    prev_instances.append(user_inst)
+
+    # Confirm there is one user instance in previous frame
+    assert len(prev_frame.user_instances) == 1
+
+    context.newInstance(init_method="prior_frame")
+
+    # Confirm that the newly added user instance is the same as the sole user instance in the previous frame+
+    newly_added_instance = context.state["labeled_frame"].user_instances[0]
+    assert newly_added_instance.video == user_inst.video
+    assert newly_added_instance.points == user_inst.points
+    assert newly_added_instance.track == user_inst.track
+
+
+def test_CopyPriorFramePreviousUser2(centered_pair_predictions: Labels):
+    """Test that we copy user instance in previous frame when the current frame has no instances."""
+    context = CommandContext.from_labels(centered_pair_predictions)
+    context.state["labeled_frame"] = centered_pair_predictions.find(
+        centered_pair_predictions.videos[0], frame_idx=124
+    )[0]
+    context.state["labeled_frame"].instances = []
+    context.state["video"] = centered_pair_predictions.videos[0]
+    context.state["frame_idx"] = 124
+    context.state["skeleton"] = centered_pair_predictions.skeleton
+
+    # No instances in current frame
+    assert len(context.state["labeled_frame"].instances) == 0
+
+    # Get previous frame
+    prev_idx = 123
+    prev_frame = context.labels.find(context.state["video"], prev_idx, return_new=True)[
+        0
+    ]
+    prev_instances = prev_frame.instances
+
+    # Confirm that previous frame has 2 predicted instances
+    assert len(prev_frame.user_instances) == 0
+    assert len(prev_frame.predicted_instances) == 2
+
+    # Add user instance to previous frame
+    skeleton = centered_pair_predictions.skeleton
+    user_inst = Instance(
+        skeleton=skeleton,
+        points={node: Point(1, 1) for node in skeleton.nodes},
+        frame=context.state["labeled_frame"],
+    )
+    prev_instances.insert(0, user_inst)
+
+    # Confirm addition of user instance in previous frame
+    assert len(prev_frame.user_instances) == 1
+
+    context.newInstance(init_method="best")
+
+    # Confirm that user instance in current frame is the same as the user instance in previous frame
+    current_user_instance = context.state["labeled_frame"].user_instances[0]
+    assert current_user_instance.video == user_inst.video
+    assert current_user_instance.points == user_inst.points
+    assert current_user_instance.track == user_inst.track
+
+
+def test_CopyPriorFrameCurrentUser(centered_pair_predictions: Labels):
+    """Test that we copy user instance in current frame when the current frame has >= amount of instances
+    as the previous frame."""
+    context = CommandContext.from_labels(centered_pair_predictions)
+    context.state["labeled_frame"] = centered_pair_predictions.find(
+        centered_pair_predictions.videos[0], frame_idx=124
+    )[0]
+    context.state["video"] = centered_pair_predictions.videos[0]
+    context.state["frame_idx"] = 124
+    context.state["skeleton"] = centered_pair_predictions.skeleton
+
+    assert len(context.state["labeled_frame"].predicted_instances) == 2
+
+    # Get previous frame
+    prev_idx = 123
+    prev_frame = context.labels.find(context.state["video"], prev_idx, return_new=True)[
+        0
+    ]
+    prev_instances = prev_frame.instances
+    assert len(prev_frame.user_instances) == 0
+    assert len(prev_frame.predicted_instances) == 2
+
+    # Add user instance to current frame
+    skeleton = centered_pair_predictions.skeleton
+    user_inst = Instance(
+        skeleton=skeleton,
+        points={node: Point(1, 1) for node in skeleton.nodes},
+        frame=context.state["labeled_frame"],
+    )
+    context.state["labeled_frame"].instances.insert(0, user_inst)
+
+    # Confirm addition of user instance in current frame
+    assert len(context.state["labeled_frame"].user_instances) == 1
+
+    # Confirm that current frame has more instances than previous frame
+    assert len(context.state["labeled_frame"].instances) > len(prev_frame.instances)
+
+    # Remove tracks from all instances so that unused_predictions is empty
+    for inst in context.state["labeled_frame"].instances:
+        inst.track = None
+        inst.from_predicted = inst
+
+    context.newInstance(init_method="best")
+
+    # Confirm that both user instances in the current frame are the same+
+    previous_user_instance = context.state["labeled_frame"].user_instances[0]
+    newly_added_instance = context.state["labeled_frame"].user_instances[1]
+    assert newly_added_instance.video == previous_user_instance.video
+    assert newly_added_instance.points == previous_user_instance.points
+    assert newly_added_instance.track == previous_user_instance.track
 
 
 def test_PasteInstance(min_tracks_2node_labels: Labels):
