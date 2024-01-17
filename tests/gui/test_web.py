@@ -1,6 +1,16 @@
 import pandas as pd
-from sleap.gui.web import ReleaseChecker, Release, get_analytics_data, ping_analytics
+from sleap.gui.web import (
+    ReleaseChecker,
+    Release,
+    AnnouncementChecker,
+    get_analytics_data,
+    ping_analytics,
+)
 import pytest
+import json
+import os
+from sleap.gui.commands import CommandContext
+from sleap.io.dataset import Labels
 
 
 def test_release_from_json():
@@ -70,6 +80,55 @@ def test_release_checker():
     assert len(checker.releases) == 2
     assert checker.releases[0] != rls_test
     assert checker.releases[1] != rls_test
+
+
+def test_announcementchecker():
+    labels = Labels()
+    context = CommandContext.from_labels(labels=labels)
+    context.state = {}
+    context.state["announcement last seen date"] = "10/10/2023"
+    # Create dummy JSON file to check
+    bulletin_data = [
+        {"title": "title1", "date": "10/12/2023", "content": "New announcement"},
+        {"title": "title2", "date": "10/07/2023", "content": "Old Announcment"},
+    ]
+    checker = AnnouncementChecker(state=context.state, bulletin_json_data=bulletin_data)
+    checker.checked = True
+    # Check if the announcement checker gets the correct date from the app
+    assert checker.previous_announcement_date == "10/10/2023"
+
+    # Check if latest announcement is fetched
+    is_announcement_available = checker.new_announcement_available()
+    assert is_announcement_available == True
+
+    # Concatenate the bulletin content to check updated announcement text
+    announcement_markdown = ""
+    for announcement in bulletin_data:
+        announcement_content = "\n".join(announcement["content"].split("\n"))
+        announcement_markdown += (
+            "## "
+            + announcement["title"]
+            + "\n"
+            + announcement["date"]
+            + "\n"
+            + announcement_content
+            + "\n"
+        )
+
+    # Check if announcement is updated
+    checker.update_latest_announcement()
+    assert context.state["announcement last seen date"] == "10/12/2023"
+    assert context.state["announcement"] == announcement_markdown
+
+    # Create another dummy JSON file
+    bulletin_data = [
+        {"title": "title1", "date": "10/09/2023", "content": "New announcement"},
+        {"title": "title2", "date": "10/07/2023", "content": "Old Announcment"},
+    ]
+    checker.bulletin_json_data = bulletin_data
+    # Check to ensure no new announcement is created
+    is_announcement_available = checker.new_announcement_available()
+    assert is_announcement_available == False
 
 
 def test_get_analytics_data():

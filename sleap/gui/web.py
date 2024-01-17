@@ -3,11 +3,16 @@
 import attr
 import pandas as pd
 import requests
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional, Tuple
+import json
+import os
+from datetime import datetime
 
 
 REPO_ID = "talmolab/sleap"
 ANALYTICS_ENDPOINT = "https://analytics.sleap.ai/ping"
+# TODO: Change the Bulletin URL to the main website before deploying
+BULLETIN_JSON_ENDPOINT = "https://sleap.ai/develop/docs/_static/bulletin.json"
 
 
 @attr.s(auto_attribs=True)
@@ -144,6 +149,71 @@ class ReleaseChecker:
             "Check the page online for a full listing: "
             f"https://github.com/{self.repo_id}"
         )
+
+
+@attr.s(auto_attribs=True)
+class AnnouncementChecker:
+    """Checker for new announcements on the bulletin page of sleap."""
+
+    state: "GuiState"
+    _previous_announcement_date: str = None
+    bulletin_json_data: Optional[List[Dict[str, str]]] = None
+    json_data_url: str = BULLETIN_JSON_ENDPOINT
+    checked: bool = attr.ib(default=False, init=False)
+
+    @property
+    def previous_announcement_date(self):
+        _previous_announcement_date = self.state["announcement last seen date"]
+        return _previous_announcement_date
+
+    def check_for_bulletin_data(self) -> Optional[List[Dict]]:
+        """Reads the bulletin data from the JSON file endpoint."""
+        try:
+            self.checked = True
+            self.bulletin_json_data = requests.get(self.json_data_url).json()
+        except (requests.ConnectionError, requests.Timeout):
+            self.bulletin_json_data = None
+
+    def new_announcement_available(self) -> bool:
+        """Check if latest announcement is available."""
+        if not self.checked:
+            self.check_for_bulletin_data()
+        if self.bulletin_json_data:
+            if self.previous_announcement_date:
+                latest_date = datetime.strptime(
+                    self.bulletin_json_data[0]["date"], "%m/%d/%Y"
+                )
+                previous_date = datetime.strptime(
+                    self.previous_announcement_date, "%m/%d/%Y"
+                )
+                if latest_date > previous_date:
+                    return True
+                else:
+                    return False
+            else:
+                return True
+        else:
+            return False
+
+    def update_latest_announcement(self) -> Optional[Tuple[str, str, str]]:
+        """Return latest announcements on the releases page not seen by user."""
+        if self.new_announcement_available():
+            announcement_markdown = ""
+            for announcement in self.bulletin_json_data:
+                announcement_content = "\n".join(announcement["content"].split("\n"))
+                announcement_markdown += (
+                    "## "
+                    + announcement["title"]
+                    + "\n"
+                    + announcement["date"]
+                    + "\n"
+                    + announcement_content
+                    + "\n"
+                )
+            self.state["announcement"] = announcement_markdown
+            self.state["announcement last seen date"] = self.bulletin_json_data[0][
+                "date"
+            ]
 
 
 def get_analytics_data() -> Dict[str, Any]:

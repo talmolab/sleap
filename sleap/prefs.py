@@ -5,6 +5,7 @@ Importing this module creates `prefs`, instance of `Preferences` class.
 """
 
 from sleap import util
+from datetime import date
 
 
 class Preferences(object):
@@ -28,6 +29,8 @@ class Preferences(object):
         "node label size": 12,
         "show non-visible nodes": True,
         "share usage data": True,
+        "announcement last seen date": False,
+        "announcement": False,
     }
     _filename = "preferences.yaml"
 

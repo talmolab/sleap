@@ -69,7 +69,7 @@ from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.tracks import TrackListOverlay, TrackTrailOverlay
 from sleap.gui.shortcuts import Shortcuts
 from sleap.gui.state import GuiState
-from sleap.gui.web import ReleaseChecker, ping_analytics
+from sleap.gui.web import ReleaseChecker, AnnouncementChecker, ping_analytics
 from sleap.gui.widgets.docks import (
     InstancesDock,
     SkeletonDock,
@@ -158,6 +158,8 @@ class MainWindow(QMainWindow):
         self.state["share usage data"] = prefs["share usage data"]
         self.state["skeleton_preview_image"] = None
         self.state["skeleton_description"] = "No skeleton loaded yet"
+        self.state["announcement last seen date"] = prefs["announcement last seen date"]
+        self.state["announcement"] = prefs["announcement"]
         if no_usage_data:
             self.state["share usage data"] = False
         self.state["clipboard_track"] = None
@@ -168,6 +170,7 @@ class MainWindow(QMainWindow):
         self.state.connect("show non-visible nodes", self.plotFrame)
 
         self.release_checker = ReleaseChecker()
+        self.announcement_checker = AnnouncementChecker(state=self.state)
 
         if self.state["share usage data"]:
             ping_analytics()
@@ -223,6 +226,8 @@ class MainWindow(QMainWindow):
         prefs["color predicted"] = self.state["color predicted"]
         prefs["trail shade"] = self.state["trail_shade"]
         prefs["share usage data"] = self.state["share usage data"]
+        prefs["announcement last seen date"] = self.state["announcement last seen date"]
+        prefs["announcement"] = self.state["announcement"]
 
         # Save preferences.
         prefs.save()
