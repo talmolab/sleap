@@ -69,11 +69,11 @@ from sleap.gui.dialogs.metrics import MetricsTableDialog
 from sleap.gui.dialogs.shortcuts import ShortcutDialog
 
 # Open bulletin online if there is an ImportError (for MacOS)
-online_bulletin = False
+ONLINE_BULLETIN = False
 try:
     from sleap.gui.dialogs.bulletin import BulletinWorker
 except ImportError:
-    online_bulletin = True
+    ONLINE_BULLETIN = True
 
 from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.tracks import TrackListOverlay, TrackTrailOverlay
@@ -215,7 +215,7 @@ class MainWindow(QMainWindow):
     def bulletin_dialog(self):
         """Displays bulletin dialog is new announcement is available."""
         # TODO: Change the URL to the actual SLEAP website before merging to main
-        if online_bulletin:
+        if ONLINE_BULLETIN:
             webbrowser.open("https://sleap.ai/develop/bulletin.html")
         else:
             # Initialize the bulletin popup worker
