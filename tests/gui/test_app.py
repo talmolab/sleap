@@ -1,15 +1,8 @@
 import pytest
 from qtpy.QtWidgets import QApplication
 
-from sleap.gui.app import MainWindow
+from sleap.gui.app import *
 from sleap.gui.commands import *
-
-# Online bulletin if there is an ImportError (for MacOS)
-online_bulletin = False
-try:
-    from sleap.gui.dialogs.bulletin import BulletinWorker
-except ImportError:
-    online_bulletin = True
 
 
 def test_app_workflow(
@@ -18,7 +11,7 @@ def test_app_workflow(
     app = MainWindow(no_usage_data=True)
 
     # Check if the bulletin is shown or not
-    if not online_bulletin:
+    if not ONLINE_BULLETIN:
         bulletin_dialog = app._child_windows.get("bulletin_worker", False)
         if app.new_announcement_available:
             assert isinstance(bulletin_dialog, BulletinWorker)
