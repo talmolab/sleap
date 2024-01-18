@@ -1,9 +1,17 @@
 """Module to test functions in `sleap.io.cameras`."""
 
+from typing import List
+
 import numpy as np
 import pytest
 
-from sleap.io.cameras import Camcorder, CameraCluster, InstanceGroup, RecordingSession
+from sleap.io.cameras import (
+    Camcorder,
+    CameraCluster,
+    InstanceGroup,
+    FrameGroup,
+    RecordingSession,
+)
 from sleap.io.dataset import Instance, Labels
 from sleap.io.video import Video
 
@@ -352,3 +360,33 @@ def test_instance_group(multiview_min_session_labels: Labels):
     instance_by_camera = {cam: dummy_instance}
     instance_group = InstanceGroup.from_dict(d=instance_by_camera)
     assert instance_group is None
+
+
+def test_frame_group(multiview_min_session_labels: Labels):
+    """Test `FrameGroup` data structure."""
+
+    labels = multiview_min_session_labels
+    session = labels.sessions[0]
+    camera_cluster = session.camera_cluster
+
+    lf = labels.labeled_frames[0]
+    frame_idx = lf.frame_idx
+
+    # Test `from_instance_groups` from list of instance groups
+    instance_groups: List[InstanceGroup] = ...
+    frame_group = FrameGroup.from_instance_groups(instance_groups=instance_groups)
+    assert isinstance(frame_group, FrameGroup)
+
+    # Test `from_dict`
+    instances_by_camera = {}
+    for cam in session.linked_cameras:
+        video = session.get_video(cam)
+        lfs_in_view = labels.find(video=video, frame_idx=frame_idx)
+        instances = lfs_in_view[0].instances
+        instances_by_camera[cam] = instances
+    frame_group = FrameGroup.from_instances_by_view(
+        instances_by_camera=instances_by_camera
+    )
+    assert isinstance(frame_group, FrameGroup)
+
+    # Test `generate_hypotheses`

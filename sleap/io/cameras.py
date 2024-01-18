@@ -1,8 +1,9 @@
 """Module for storing information for camera groups."""
+from itertools import permutations, product
 import logging
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union, cast, Set
 
 import cattr
 import numpy as np
@@ -546,6 +547,417 @@ class InstanceGroup:
         )
 
 
+@define
+class FrameGroup:
+    """Defines a group of `InstanceGroups` across views at the same frame index."""
+
+    # Class attribute to keep track of frame indices across all `RecordingSession`s
+    _frame_idx_registry: Dict["RecordingSession", Set[int]] = {}
+
+    # Instance attributes
+    frame_idx: int = field(validator=instance_of(int))
+    instance_groups: List[InstanceGroup] = field(
+        validator=deep_iterable(
+            member_validator=instance_of(InstanceGroup),
+            iterable_validator=instance_of(list),
+        ),
+    )  # Akin to `LabeledFrame.instances`
+    session: "RecordingSession" = field(validator=instance_of("RecordingSession"))
+
+    # Hidden attributes
+    _cams_to_include: Optional[List[Camcorder]] = None
+
+    # TODO(LM): This dict should be updated each time a LabeledFrame is added/removed
+    # from the Labels object. Or if a video is added/removed from the RecordingSession.
+    _labeled_frames_by_cam: Dict[Camcorder, "LabeledFrame"] = field(factory=dict)
+
+    # TODO(LM): This dict should be updated each time an InstanceGroup is
+    # added/removed/locked/unlocked
+    _locked_instance_groups: List[InstanceGroup] = field(factory=list)
+    _locked_instances_by_cam: Dict[Camcorder, Set["Instance"]] = field(
+        factory=dict
+    )  # Internally updated in `update_locked_instances_by_cam`
+
+    def __attrs_post_init__(self):
+        """Initialize `FrameGroup` object."""
+
+        # Remove existing `FrameGroup` object from the `RecordingSession._frame_group_by_frame_idx`
+        self.enforce_frame_idx_unique(self.session, self.frame_idx)
+
+        # Reorder `cams_to_include` to match `CameraCluster` order (via setter method)
+        if self._cams_to_include is not None:
+            self.cams_to_include = self._cams_to_include
+
+        # Add frame index to registry
+        if self.session not in self._frame_idx_registry:
+            self._frame_idx_registry[self.session] = set()
+
+        self._frame_idx_registry[self.session].add(self.frame_idx)
+
+        # Add `FrameGroup` to `RecordingSession`
+        self.session._frame_group_by_frame_idx[self.frame_idx] = self
+
+        # Initialize `_labeled_frames_by_cam` dictionary
+        self.update_labeled_frames_by_cam()
+
+        # Initialize `_locked_instance_groups` dictionary
+        self.update_locked_instance_groups()
+
+    @property
+    def cams_to_include(self) -> Optional[List[Camcorder]]:
+        """List of `Camcorder`s to include in this `FrameGroup`."""
+
+        if self._cams_to_include is None:
+            return self._cams_to_include.sort(
+                key=self.session.camera_cluster.cameras.index
+            )
+        else:
+            return self._cams_to_include
+
+    @cams_to_include.setter
+    def cams_to_include(self, cams_to_include: List[Camcorder]):
+        """Setter for `cams_to_include` attribute that sorts by `CameraCluster` order."""
+
+        self._cams_to_include = cams_to_include.sort(
+            key=self.session.camera_cluster.cameras.index
+        )
+
+    @property
+    def labeled_frames(self) -> List["LabeledFrame"]:
+        """List of `LabeledFrame`s."""
+
+        return list(self._labeled_frames_by_cam.values())
+
+    @property
+    def cameras(self) -> List[Camcorder]:
+        """List of `Camcorder`s."""
+
+        return list(self._labeled_frames_by_cam.keys())
+
+    @property
+    def locked_instance_groups(self) -> List[InstanceGroup]:
+        """List of locked `InstanceGroup`s."""
+
+        return self._locked_instance_groups
+
+    def update_labeled_frames_by_cam(
+        self, return_instances_by_camera: bool = False
+    ) -> Union[Dict[Camcorder, "LabeledFrame"], Dict[Camcorder, List["Instance"]]]:
+        """Get all views for this frame index across all `RecordingSession`s.
+
+        Updates the `_labeled_frames_by_cam` dictionary attribute.
+
+        Args:
+            return_instances_by_camera: If true, then returns a dictionary with `Camcorder` key and `Set[Instance]` values instead. Default is False.
+
+        Returns:
+            Dictionary with `Camcorder` key and `LabeledFrame` value or `Set[Instance]` value if `return_instances_by_camera` is True.
+        """
+
+        logger.debug(
+            "Updating LabeledFrames for FrameGroup."
+            "\n\tPrevious LabeledFrames by Camcorder:"
+            f"\n\t{self._labeled_frames_by_cam}"
+        )
+
+        views: Dict[Camcorder, "LabeledFrame"] = {}
+        instances_by_camera: Dict[Camcorder, Set["Instance"]] = {}
+        videos = self.session.get_videos_from_selected_cameras(
+            cams_to_include=self.cams_to_include
+        )
+        for cam, video in videos.items():
+            lfs: List["LabeledFrame"] = self.session.labels.get(
+                (video, [self.frame_idx])
+            )
+            if len(lfs) == 0:
+                logger.debug(
+                    f"No LabeledFrames found for video {video} at {self.frame_idx}."
+                )
+                continue
+
+            lf = lfs[0]
+            if len(lf.instances) == 0:
+                logger.warning(
+                    f"No Instances found for {lf}."
+                    " There should not be empty LabeledFrames."
+                )
+                continue
+
+            views[cam] = lf
+
+            if return_instances_by_camera:
+                # Find instances in frame
+                insts = lf.find(track=-1, user=True)
+                if len(insts) > 0:
+                    instances_by_camera[cam] = set(insts)
+
+        # Update `_labeled_frames_by_cam` dictionary and return it
+        self._labeled_frames_by_cam = views.copy()
+        logger.debug(
+            f"\tUpdated LabeledFrames by Camcorder:\n\t{self._labeled_frames_by_cam}"
+        )
+        return (
+            instances_by_camera.copy()
+            if return_instances_by_camera
+            else self._labeled_frames_by_cam
+        )
+
+    def update_locked_instance_groups(self) -> List[InstanceGroup]:
+        """Updates locked `InstanceGroup`s in `FrameGroup`.
+
+        Returns:
+            List of locked `InstanceGroup`s.
+        """
+
+        self._locked_instance_groups: List[InstanceGroup] = [
+            instance_group
+            for instance_group in self.instance_groups
+            if instance_group.locked
+        ]
+
+        # Also update locked instances by cam
+        self.update_locked_instances_by_cam(self._locked_instance_groups)
+
+        return self._locked_instance_groups
+
+    def update_locked_instances_by_cam(
+        self, locked_instance_groups: List[InstanceGroup] = None
+    ) -> Dict[Camcorder, Set["Instance"]]:
+        """Updates locked `Instance`s in `FrameGroup`.
+
+        Args:
+            locked_instance_groups: List of locked `InstanceGroup`s. Default is None.
+                If None, then uses `self.locked_instance_groups`.
+
+        Returns:
+            Dictionary with `Camcorder` key and `Set[Instance]` value.
+        """
+
+        if locked_instance_groups is None:
+            locked_instance_groups = self.locked_instance_groups
+
+        locked_instances_by_cam: Dict[Camcorder, Set["Instance"]] = {}
+
+        # Loop through each camera and append locked instances in specific order
+        for cam in self.cams_to_include:
+            locked_instances_by_cam[cam] = set()
+            for instance_group in locked_instance_groups:
+                instance = instance_group.get_instance(cam)  # Returns None if not found
+
+                # TODO(LM): Should this be adding the dummy instance here?
+                # LM: No, since just using the number of locked instance groups will account for the dummy instances
+                if instance is not None:
+                    locked_instances_by_cam[cam].add(instance)
+
+        # Only update if there were no errors
+        self._locked_instances_by_cam = locked_instances_by_cam.copy()
+        return self._locked_instances_by_cam
+
+    # TODO(LM): Should we move this to TriangulateSession?
+    def generate_hypotheses(
+        self, as_matrix: bool = True
+    ) -> Union[np.ndarray, Dict[int, List[InstanceGroup]]]:
+        """Generates all possible hypotheses from the `FrameGroup`.
+
+        Args:
+            as_matrix: If True (defualt), then return as a matrix of
+                `Instance.points_array`. Else return as `Dict[int, List[InstanceGroup]]`
+                where `int` is the hypothesis identifier and `List[InstanceGroup]` is
+                the list of `InstanceGroup`s.
+
+        Returns:
+            Either a `np.ndarray` of shape M x F x T x N x 2 an array if as_matrix where
+            M: # views, F: # frames = 1, T: # tracks, N: # nodes, 2: x, y
+            or a dictionary with hypothesis ID key and list of `InstanceGroup`s value.
+        """
+
+        # Get all `Instance`s for this frame index across all views
+        instances_by_camera: Dict[
+            Camcorder, Set["Instance"]
+        ] = self._get_instances_by_camera()
+
+        # Get max number of instances across all views
+        all_instances_by_camera: List[Set["Instance"]] = instances_by_camera.values()
+        max_num_instances = max(
+            [len(instances) for instances in all_instances_by_camera], default=0
+        )
+
+        # Create a dummy instance of all nan values
+        example_instance: "Instance" = next(iter(all_instances_by_camera[0]))
+        skeleton: "Skeleton" = example_instance.skeleton
+        dummy_instance: "Instance" = example_instance.from_numpy(
+            np.full(
+                shape=(len(skeleton.nodes), 2),
+                fill_value=np.nan,
+            ),
+            skeleton=skeleton,
+        )
+
+        def _fill_in_missing_instances(
+            unlocked_instances_in_view: List["Instance"],
+        ):
+            """Fill in missing instances with dummy instances up to max number of instances.
+
+            Note that this function will mutate the input list in addition to returning the mutated list.
+
+            Args:
+                unlocked_instances_in_view: List of instances in a view that are not in a locked InstanceGroup.
+
+            Returns:
+                List of instances in a view that are not in a locked InstanceGroup with dummy instances appended.
+            """
+
+            # Subtracting the number of locked instance groups accounts for there being dummy instances in the locked instance groups.
+            num_instances_missing = (
+                max_num_instances
+                - len(unlocked_instances_in_view)
+                - len(
+                    self.locked_instance_groups
+                )  # TODO(LM): Make sure this property is getting updated properly
+            )
+
+            if num_instances_missing > 0:
+                # Extend the list of instances with dummy instances
+                unlocked_instances_in_view.extend(
+                    [dummy_instance] * num_instances_missing
+                )
+
+            return unlocked_instances_in_view
+
+        # For each view, get permutations of unlocked instances
+        unlocked_instance_permutations: Dict[
+            Camcorder, Iterator[Tuple["Instance"]]
+        ] = {}
+        for cam, instances_in_view in instances_by_camera.items():
+            # Gather all instances for this cam from locked `InstanceGroup`s
+            locked_instances_in_view: Set[
+                "Instance"
+            ] = self._locked_instances_by_cam.get(cam, set())
+
+            # Remove locked instances from instances in view
+            unlocked_instances_in_view: List["Instance"] = list(
+                instances_in_view - locked_instances_in_view
+            )
+
+            # Fill in missing instances with dummy instances up to max number of instances
+            unlocked_instances_in_view = _fill_in_missing_instances(
+                unlocked_instances_in_view
+            )
+
+            # Permuate all `Instance`s in the unlocked `InstanceGroup`s
+            unlocked_instance_permutations[cam] = permutations(
+                unlocked_instances_in_view
+            )
+
+        # Get products of instances from other views into all possible groupings
+        # Ordering of dict_values is preserved in Python 3.7+
+        products_of_unlocked_instances: Iterator[Iterator[Tuple]] = product(
+            *unlocked_instance_permutations.values()
+        )
+
+        # Reorganize products by cam and add selected instance to each permutation
+        grouping_hypotheses: Dict[int, List[InstanceGroup]] = {}
+        for frame_id, prod in enumerate(products_of_unlocked_instances):
+            grouping_hypotheses[frame_id] = {
+                cam: list(inst) for cam, inst in zip(self.cams_to_include, prod)
+            }
+
+        # TODO(LM): Should we return this as instance matrices or `InstanceGroup`s?
+        # Answer: Definitely not instance matrices since we need to keep track of the `Instance`s,
+        # but I kind of wonder if we could just return a list of `InstanceGroup`s instead of a dict
+        # then the `InstanceGroup`
+
+        return grouping_hypotheses
+
+    # TODO(LM): Replace with an instance attribute that is updated each time a LabeledFrame is added/removed
+    def _get_instances_by_camera(self) -> Dict[Camcorder, List["Instance"]]:
+        """Get all instances for this frame index across all `RecordingSession`s.
+
+        Returns:
+            Dictionary with `Camcorder` key and `List[Instance]` value.
+        """
+
+        return self.update_labeled_frames_by_cam(return_instances_by_camera=True)
+
+    @classmethod
+    def from_instances_by_view(
+        cls,
+        session: "RecordingSession",
+        instances_by_camera: Dict[Camcorder, List["Instance"]],
+    ) -> Optional["FrameGroup"]:
+        """Creates a `FrameGroup` object from a dictionary.
+
+        Args:
+            session: `RecordingSession` object.
+            instances_by_camera: Dictionary with `Camcorder` keys and `LabeledFrame` values.
+
+        Returns:
+            `FrameGroup` object or None if no "real" (determined by `frame_idx` other
+            than None) frames found.
+        """
+        ...
+
+    @classmethod
+    def from_instance_groups(
+        cls,
+        session: "RecordingSession",
+        instance_groups: List["InstanceGroup"],
+    ) -> Optional["FrameGroup"]:
+        """Creates a `FrameGroup` object from an `InstanceGroup` object.
+
+        Args:
+            session: `RecordingSession` object.
+            instance_groups: A list of `InstanceGroup` objects.
+
+        Returns:
+            `FrameGroup` object or None if no "real" (determined by `frame_idx` other
+            than None) frames found.
+        """
+
+        ...
+
+    @classmethod
+    def from_tensor(
+        cls, session: "RecordingSession", frame_idx: int, tensor: np.ndarray
+    ) -> Union["FrameGroup", List["FrameGroup"]]:
+        """Creates a `FrameGroup` object from a tensor.
+
+        Args:
+            session: `RecordingSession` object.
+            tensor: A tensor of shape M x F x T x N x 2 where
+                M: # views, F: # frames = 1, T: # tracks, N: # nodes, 2: x, y
+
+        Returns:
+            `FrameGroup` object.
+        """
+
+        # Check value of F and assert that it is 1
+        ...
+
+        # If F is 1, then return a single `FrameGroup`
+        ...
+
+    @classmethod
+    def enforce_frame_idx_unique(
+        cls, session: "RecordingSession", frame_idx: int
+    ) -> bool:
+        """Enforces that all frame indices are unique in `RecordingSession`.
+
+        Removes existing `FrameGroup` object from the `RecordingSession._frame_group_by_frame_idx`.
+
+        Args:
+            session: `RecordingSession` object.
+            frame_idx: Frame index.
+        """
+
+        if frame_idx in cls._frame_idx_registry.get(session, set()):
+            # Remove existing `FrameGroup` object from the `RecordingSession._frame_group_by_frame_idx`
+            logger.warning(
+                f"Frame index {frame_idx} for FrameGroup already exists in this RecordingSession. Overwriting."
+            )
+            session._frame_group_by_frame_idx.pop(frame_idx)
+
+
 @define(eq=False)
 class RecordingSession:
     """Class for storing information for a recording session.
@@ -566,7 +978,12 @@ class RecordingSession:
     metadata: dict = field(factory=dict)
     _video_by_camcorder: Dict[Camcorder, Video] = field(factory=dict)
     labels: Optional["Labels"] = None
+
+    # TODO(LM): Remove this, replace with `FrameGroup`s
     _instance_groups_by_frame_idx: Dict[int, InstanceGroup] = field(factory=dict)
+
+    # TODO(LM): We should serialize all locked instances in a FrameGroup (or the entire FrameGroup)
+    _frame_group_by_frame_idx: Dict[int, FrameGroup] = field(factory=dict)
 
     @property
     def videos(self) -> List[Video]:
@@ -576,21 +993,45 @@ class RecordingSession:
 
     @property
     def linked_cameras(self) -> List[Camcorder]:
-        """List of `Camcorder`s in `self.camera_cluster` that are linked to a video."""
+        """List of `Camcorder`s in `self.camera_cluster` that are linked to a video.
 
-        return list(self._video_by_camcorder.keys())
+        The list is ordered based on the order of the `Camcorder`s in the `CameraCluster`.
+        """
+
+        return sorted(
+            self._video_by_camcorder.keys(), key=self.camera_cluster.cameras.index
+        )
 
     @property
     def unlinked_cameras(self) -> List[Camcorder]:
-        """List of `Camcorder`s in `self.camera_cluster` that are not linked to a video."""
+        """List of `Camcorder`s in `self.camera_cluster` that are not linked to a video.
 
-        return list(set(self.camera_cluster.cameras) - set(self.linked_cameras))
+        The list is ordered based on the order of the `Camcorder`s in the `CameraCluster`.
+        """
 
+        return sorted(
+            set(self.camera_cluster.cameras) - set(self.linked_cameras),
+            key=self.camera_cluster.cameras.index,
+        )
+
+    # TODO(LM): Remove this
     @property
     def instance_groups(self) -> Dict[int, InstanceGroup]:
         """Dict of `InstanceGroup`s by frame index."""
 
         return self._instance_groups_by_frame_idx
+
+    @property
+    def frame_groups(self) -> Dict[int, FrameGroup]:
+        """Dict of `FrameGroup`s by frame index."""
+
+        return self._frame_group_by_frame_idx
+
+    @property
+    def frame_inds(self) -> List[int]:
+        """List of frame indices."""
+
+        return list(self.frame_groups.keys())
 
     def get_video(self, camcorder: Camcorder) -> Optional[Video]:
         """Retrieve `Video` linked to `Camcorder`.
@@ -677,6 +1118,11 @@ class RecordingSession:
 
         # Add camcorder-to-video (1-to-1) map to `RecordingSession`
         self._video_by_camcorder[camcorder] = video
+
+        # Sort `CameraCluster._videos_by_session` by `Camcorder._video_by_session` order
+        self.camera_cluster._videos_by_session[self].sort(
+            key=camcorder._video_by_session[self].index
+        )
 
         # Update labels cache
         if self.labels is not None:
