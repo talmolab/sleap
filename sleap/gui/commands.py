@@ -623,6 +623,10 @@ class CommandContext:
         """Open the current prerelease version."""
         self.execute(OpenPrereleaseVersion)
 
+    def showBulletin(self):
+        """Opens the latest bulletin"""
+        self.execute(ShowBulletin)
+
 
 # File Commands
 
@@ -3396,6 +3400,12 @@ class OpenPrereleaseVersion(AppCommand):
         rls = context.app.release_checker.latest_prerelease
         if rls is not None:
             context.openWebsite(rls.url)
+
+
+class ShowBulletin(AppCommand):
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        context.app.bulletin_dialog()
 
 
 def copy_to_clipboard(text: str):

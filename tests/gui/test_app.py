@@ -1,7 +1,7 @@
 import pytest
 from qtpy.QtWidgets import QApplication
 
-from sleap.gui.app import MainWindow
+from sleap.gui.app import *
 from sleap.gui.commands import *
 
 
@@ -9,6 +9,14 @@ def test_app_workflow(
     qtbot, centered_pair_vid, small_robot_mp4_vid, min_tracks_2node_labels: Labels
 ):
     app = MainWindow(no_usage_data=True)
+
+    # Check if the bulletin is shown or not
+    if not ONLINE_BULLETIN:
+        bulletin_dialog = app._child_windows.get("bulletin_worker", False)
+        if app.new_announcement_available:
+            assert isinstance(bulletin_dialog, BulletinWorker)
+        else:
+            assert bulletin_dialog == False
 
     # Add nodes
     app.commands.newNode()

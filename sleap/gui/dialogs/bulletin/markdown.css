@@ -1,0 +1,47 @@
+body {
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+    color: #636364;  
+    font-style: italic;  
+}
+
+#container {
+    display: flex;
+}
+
+#navbar {
+    width: 200px; /* Set the fixed width for the navbar */
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    background-color: #2e2e2e;
+    color: #fff;
+    padding: 12px;
+    box-sizing: border-box;
+    flex-grow: 1;
+    list-style: disc;
+}
+
+#navbar ul {
+    margin-left: 2px;
+    padding-left: 12px;
+    
+}
+
+#navbar a {
+    color: white;
+}
+
+#content {
+    flex-grow: 1;
+    padding: 20px;
+    box-sizing: border-box;
+    margin-left: 200px; /* Adjust margin to match navbar width */
+}

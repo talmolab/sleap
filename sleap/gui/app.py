@@ -53,6 +53,8 @@ import traceback
 from logging import getLogger
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
+from datetime import date
+import webbrowser
 
 from qtpy import QtCore, QtGui
 from qtpy.QtCore import QEvent, Qt
@@ -65,6 +67,14 @@ from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
 from sleap.gui.dialogs.metrics import MetricsTableDialog
 from sleap.gui.dialogs.shortcuts import ShortcutDialog
+
+# Open bulletin online if there is an ImportError (for MacOS)
+ONLINE_BULLETIN = False
+try:
+    from sleap.gui.dialogs.bulletin import BulletinWorker
+except ImportError:
+    ONLINE_BULLETIN = True
+
 from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.tracks import TrackListOverlay, TrackTrailOverlay
 from sleap.gui.shortcuts import Shortcuts
@@ -158,8 +168,7 @@ class MainWindow(QMainWindow):
         self.state["share usage data"] = prefs["share usage data"]
         self.state["skeleton_preview_image"] = None
         self.state["skeleton_description"] = "No skeleton loaded yet"
-        self.state["announcement last seen date"] = prefs["announcement last seen date"]
-        self.state["announcement"] = prefs["announcement"]
+
         if no_usage_data:
             self.state["share usage data"] = False
         self.state["clipboard_track"] = None
@@ -170,6 +179,10 @@ class MainWindow(QMainWindow):
         self.state.connect("show non-visible nodes", self.plotFrame)
 
         self.release_checker = ReleaseChecker()
+
+        self.state["announcement last seen date"] = prefs["announcement last seen date"]
+        self.state["announcement"] = prefs["announcement"]
+
         self.announcement_checker = AnnouncementChecker(state=self.state)
 
         if self.state["share usage data"]:
@@ -190,6 +203,29 @@ class MainWindow(QMainWindow):
             self.commands.loadLabelsObject(labels=labels)
         else:
             self.state["project_loaded"] = False
+
+        self.new_announcement_available = (
+            self.announcement_checker.new_announcement_available()
+        )
+        # Display announcement bulletin popup
+        if self.new_announcement_available:
+            self.announcement_checker.update_latest_announcement()
+            self.bulletin_dialog()
+
+    def bulletin_dialog(self):
+        """Displays bulletin dialog is new announcement is available."""
+        # TODO: Change the URL to the actual SLEAP website before merging to main
+        if ONLINE_BULLETIN:
+            webbrowser.open("https://sleap.ai/develop/bulletin.html")
+        else:
+            # Initialize the bulletin popup worker
+            popup_worker = BulletinWorker(
+                "".join(["# What's New? \n", self.state["announcement"]]), self
+            )
+            popup_worker.show_bulletin()
+
+            # Save the bulletin worker so we can close them later
+            self._child_windows["bulletin_worker"] = popup_worker  # Needed!
 
     def setWindowTitle(self, value):
         """Sets window title (if value is not None)."""
@@ -1000,6 +1036,9 @@ class MainWindow(QMainWindow):
 
         helpMenu.addSeparator()
         helpMenu.addAction("Keyboard Shortcuts", self._show_keyboard_shortcuts_window)
+
+        helpMenu.addSeparator()
+        helpMenu.addAction("What's New?", self.commands.showBulletin)
 
     def process_events_then(self, action: Callable):
         """Decorates a function with a call to first process events."""

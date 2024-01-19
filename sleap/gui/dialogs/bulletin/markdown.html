@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What's New?</title>
+  <link rel="stylesheet" href="pico.min.css">
+  <link rel="stylesheet" type="text/css" href="markdown.css">
+  <script src="marked.js"></script>
+  <script src="qrc:/qtwebchannel/qwebchannel.js"></script>
+</head>
+<body>
+  <div id="container">
+    <div id="content"></div>
+    <div id="navbar"></div>
+  </div>
+  <script>
+  'use strict';
+
+  var content = document.getElementById('content');
+  var navbar = document.getElementById('navbar');
+
+  var updateText = function(text) {
+      content.innerHTML = marked(text);
+      // Wait till the document is loaded to add navbar
+      setTimeout(function() {
+            generateNavbar();
+        }, 100);
+  }
+
+  new QWebChannel(qt.webChannelTransport,
+    function(channel) {
+      var content = channel.objects.content;
+      updateText(content.text);
+      content.textChanged.connect(updateText);
+    }
+  );
+  
+  function generateNavbar() {
+      const h2Tags = document.querySelectorAll('h2');
+      const ul = document.createElement('ul');
+      var uniqueIdCounter = 1;
+
+      h2Tags.forEach((h2, index) => {
+        const li = document.createElement('li');
+        const link = document.createElement('a');
+        if (!h2.id) {
+          h2.id = `generated-id-${uniqueIdCounter}`;
+          uniqueIdCounter++;
+        }
+        link.href = '#' + h2.id;
+        link.textContent = h2.textContent;
+        link.addEventListener('click', function(event) {
+          event.preventDefault();
+          scrollToSection(h2);
+        });
+        li.appendChild(link);
+        ul.appendChild(li);
+      });
+      navbar.appendChild(ul);
+      document.body.insertBefore(navbar, document.body.firstChild);
+    };
+
+    function scrollToSection(element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+
+  </script>
+</body>
+</html>
