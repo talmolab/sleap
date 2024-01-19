@@ -570,6 +570,7 @@ class FrameGroup:
     # TODO(LM): This dict should be updated each time a LabeledFrame is added/removed
     # from the Labels object. Or if a video is added/removed from the RecordingSession.
     _labeled_frames_by_cam: Dict[Camcorder, "LabeledFrame"] = field(factory=dict)
+    _instances_by_cam: Dict[Camcorder, Set["Instance"]] = field(factory=dict)
 
     # TODO(LM): This dict should be updated each time an InstanceGroup is
     # added/removed/locked/unlocked
@@ -598,7 +599,7 @@ class FrameGroup:
         self.session._frame_group_by_frame_idx[self.frame_idx] = self
 
         # Initialize `_labeled_frames_by_cam` dictionary
-        self.update_labeled_frames_by_cam()
+        self.update_labeled_frames_and_instances_by_cam()
 
         # Initialize `_locked_instance_groups` dictionary
         self.update_locked_instance_groups()
@@ -608,11 +609,8 @@ class FrameGroup:
         """List of `Camcorder`s to include in this `FrameGroup`."""
 
         if self._cams_to_include is None:
-            return self._cams_to_include.sort(
-                key=self.session.camera_cluster.cameras.index
-            )
-        else:
-            return self._cams_to_include
+            self._cams_to_include = self.session.camera_cluster.cameras.copy()
+        return self._cams_to_include
 
     @cams_to_include.setter
     def cams_to_include(self, cams_to_include: List[Camcorder]):
@@ -635,23 +633,32 @@ class FrameGroup:
         return list(self._labeled_frames_by_cam.keys())
 
     @property
+    def instances_by_cam_to_include(self) -> Dict[Camcorder, Set["Instance"]]:
+        """List of `Camcorder`s."""
+
+        return {cam: self._instances_by_cam[cam] for cam in self.cams_to_include}
+
+    @property
     def locked_instance_groups(self) -> List[InstanceGroup]:
         """List of locked `InstanceGroup`s."""
 
         return self._locked_instance_groups
 
-    def update_labeled_frames_by_cam(
+    def update_labeled_frames_and_instances_by_cam(
         self, return_instances_by_camera: bool = False
     ) -> Union[Dict[Camcorder, "LabeledFrame"], Dict[Camcorder, List["Instance"]]]:
-        """Get all views for this frame index across all `RecordingSession`s.
+        """Get all views and `Instance`s across all `RecordingSession`s.
 
-        Updates the `_labeled_frames_by_cam` dictionary attribute.
+        Updates the `_labeled_frames_by_cam` and `_instances_by_cam`
+        dictionary attributes.
 
         Args:
-            return_instances_by_camera: If true, then returns a dictionary with `Camcorder` key and `Set[Instance]` values instead. Default is False.
+            return_instances_by_camera: If true, then returns a dictionary with
+                `Camcorder` key and `Set[Instance]` values instead. Default is False.
 
         Returns:
-            Dictionary with `Camcorder` key and `LabeledFrame` value or `Set[Instance]` value if `return_instances_by_camera` is True.
+            Dictionary with `Camcorder` key and `LabeledFrame` value or `Set[Instance]`
+                value if `return_instances_by_camera` is True.
         """
 
         logger.debug(
@@ -661,10 +668,8 @@ class FrameGroup:
         )
 
         views: Dict[Camcorder, "LabeledFrame"] = {}
-        instances_by_camera: Dict[Camcorder, Set["Instance"]] = {}
-        videos = self.session.get_videos_from_selected_cameras(
-            cams_to_include=self.cams_to_include
-        )
+        instances_by_cam: Dict[Camcorder, Set["Instance"]] = {}
+        videos = self.session.get_videos_from_selected_cameras()
         for cam, video in videos.items():
             lfs: List["LabeledFrame"] = self.session.labels.get(
                 (video, [self.frame_idx])
@@ -685,19 +690,20 @@ class FrameGroup:
 
             views[cam] = lf
 
-            if return_instances_by_camera:
-                # Find instances in frame
-                insts = lf.find(track=-1, user=True)
-                if len(insts) > 0:
-                    instances_by_camera[cam] = set(insts)
+            # Find instances in frame
+            insts = lf.find(track=-1, user=True)
+            if len(insts) > 0:
+                instances_by_cam[cam] = set(insts)
 
         # Update `_labeled_frames_by_cam` dictionary and return it
         self._labeled_frames_by_cam = views.copy()
         logger.debug(
             f"\tUpdated LabeledFrames by Camcorder:\n\t{self._labeled_frames_by_cam}"
         )
+        # Update `_instances_by_camera` dictionary and return it
+        self._instances_by_cam = instances_by_cam.copy()
         return (
-            instances_by_camera.copy()
+            self._instances_by_cam
             if return_instances_by_camera
             else self._labeled_frames_by_cam
         )
@@ -771,10 +777,10 @@ class FrameGroup:
             or a dictionary with hypothesis ID key and list of `InstanceGroup`s value.
         """
 
-        # Get all `Instance`s for this frame index across all views
+        # Get all `Instance`s for this frame index across all views to include
         instances_by_camera: Dict[
             Camcorder, Set["Instance"]
-        ] = self._get_instances_by_camera()
+        ] = self.instances_by_cam_to_include
 
         # Get max number of instances across all views
         all_instances_by_camera: List[Set["Instance"]] = instances_by_camera.values()
@@ -859,7 +865,9 @@ class FrameGroup:
         grouping_hypotheses: Dict[int, List[InstanceGroup]] = {}
         for frame_id, prod in enumerate(products_of_unlocked_instances):
             grouping_hypotheses[frame_id] = {
-                cam: list(inst) for cam, inst in zip(self.cams_to_include, prod)
+                # TODO(LM): This is where we would create the `InstanceGroup` objects instead
+                cam: list(inst)
+                for cam, inst in zip(self.cams_to_include, prod)
             }
 
         # TODO(LM): Should we return this as instance matrices or `InstanceGroup`s?
@@ -868,16 +876,6 @@ class FrameGroup:
         # then the `InstanceGroup`
 
         return grouping_hypotheses
-
-    # TODO(LM): Replace with an instance attribute that is updated each time a LabeledFrame is added/removed
-    def _get_instances_by_camera(self) -> Dict[Camcorder, List["Instance"]]:
-        """Get all instances for this frame index across all `RecordingSession`s.
-
-        Returns:
-            Dictionary with `Camcorder` key and `List[Instance]` value.
-        """
-
-        return self.update_labeled_frames_by_cam(return_instances_by_camera=True)
 
     @classmethod
     def from_instances_by_view(
