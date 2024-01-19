@@ -32,7 +32,6 @@ from sleap.instance import LabeledFrame, Instance
 from sleap.skeleton import Skeleton
 
 
-# Todo: Vaibhav subclass this to create sessions table model
 class GenericTableModel(QtCore.QAbstractTableModel):
     """
     Generic Qt table model to show a list of properties for some items.
@@ -384,6 +383,17 @@ class GenericTableView(QtWidgets.QTableView):
         if not idx.isValid():
             return None
         return self.model().original_items[idx.row()]
+
+
+class SessionsTableModel(GenericTableModel):
+    properties = ("id", "videos", "cameras")
+
+    def item_to_data(self, obj, item):
+        res = {}
+        res["id"] = hash(item)
+        res["cameras"] = len(getattr(item, "cameras"))
+        res["videos"] = len(getattr(item, "videos"))
+        return res
 
 
 class VideosTableModel(GenericTableModel):

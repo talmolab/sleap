@@ -82,6 +82,7 @@ class UpdateTopic(Enum):
     frame = 8
     project = 9
     project_instances = 10
+    sessions = 11
 
 
 class AppCommand:
@@ -443,6 +444,10 @@ class CommandContext:
     def addSession(self):
         """Shows gui for adding `RecordingSession`s to the project."""
         self.execute(AddSession)
+
+    def removeSessions(self):
+        """Removes a session from the project and the sessions dock."""
+        self.execute(RemoveSession)
 
     def openSkeletonTemplate(self):
         """Shows gui for loading saved skeleton into project."""
@@ -1700,7 +1705,6 @@ class SelectToFrameGui(NavCommand):
 class GoAdjacentView(NavCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-
         operator = -1 if params["prev_or_next"] == "prev" else 1
 
         labels = context.labels
@@ -1971,7 +1975,7 @@ class RemoveVideo(EditCommand):
 
 
 class AddSession(EditCommand):
-    # topics = [UpdateTopic.session]
+    topics = [UpdateTopic.sessions]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):

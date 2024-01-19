@@ -31,6 +31,7 @@ from sleap.gui.dataviews import (
     SkeletonNodesTableModel,
     SuggestionsTableModel,
     VideosTableModel,
+    SessionsTableModel,
 )
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.widgets.views import CollapsibleWidget
@@ -367,7 +368,6 @@ class SkeletonDock(DockWidget):
         vb.addWidget(hbw)
 
         def updatePreviewImage(preview_image_bytes: bytes):
-
             # Decode the preview image
             preview_image = decode_preview_image(preview_image_bytes)
 
@@ -574,11 +574,9 @@ class InstancesDock(DockWidget):
 
 class SessionsDock(DockWidget):
     def __init__(self, main_window: Optional[QMainWindow]):
-        super().__init__(name="Sessions", main_window=main_window, model_type=None)
-
-    def lay_everything_out(self) -> None:
-        triangulation_options = self.create_triangulation_options()
-        self.wgt_layout.addWidget(triangulation_options)
+        super().__init__(
+            name="Sessions", main_window=main_window, model_type=SessionsTableModel
+        )
 
     def create_triangulation_options(self) -> QWidget:
         main_window = self.main_window
@@ -601,3 +599,45 @@ class SessionsDock(DockWidget):
         hbw = QWidget()
         hbw.setLayout(hb)
         return hbw
+
+    def create_models(self) -> SessionsTableModel:
+        main_window = self.main_window
+        self.sessions_model = self.model_type(
+            items=main_window.state["labels"].sessions, context=main_window.commands
+        )
+
+        return self.sessions_model
+
+    def create_tables(self) -> GenericTableView:
+        if self.sessions_model is None:
+            self.create_models()
+
+        self.table = GenericTableView(
+            state=self.main_window.state, row_name="session", model=self.sessions_model
+        )
+        return self.table
+
+    def create_table_edit_buttons(self) -> QWidget:
+        main_window = self.main_window
+
+        hb = QHBoxLayout()
+        self.add_button(hb, "Add Session", lambda x: main_window.commands.addSession())
+        self.add_button(
+            hb, "Remove Session", main_window.commands.deleteSelectedInstance
+        )
+
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        return hbw
+
+    def lay_everything_out(self) -> None:
+        if self.table is None:
+            self.create_tables()
+
+        self.wgt_layout.addWidget(self.table)
+
+        table_edit_buttons = self.create_table_edit_buttons()
+        self.wgt_layout.addWidget(table_edit_buttons)
+
+        triangulation_options = self.create_triangulation_options()
+        self.wgt_layout.addWidget(triangulation_options)

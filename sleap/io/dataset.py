@@ -1714,6 +1714,14 @@ class Labels(MutableSequence):
         if video in session.videos:
             session.remove_video(video)
 
+    def remove_session(self, session: RecordingSession):
+        """Remove a session from self.sessions.
+
+        Args:
+            session: `RecordingSession` instance
+        """
+        self._sessions.remove(session)
+
     @classmethod
     def from_json(cls, *args, **kwargs):
         from sleap.io.format.labels_json import LabelsJsonAdaptor
@@ -2854,7 +2862,6 @@ def find_path_using_paths(missing_path: Text, search_paths: List[Text]) -> Text:
 
     # Look for file with that name in each of the search path directories
     for search_path in search_paths:
-
         if os.path.isfile(search_path):
             path_dir = os.path.dirname(search_path)
         else:
