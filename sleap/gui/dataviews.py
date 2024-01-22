@@ -30,6 +30,7 @@ from sleap.gui.color import ColorManager
 from sleap.io.dataset import Labels
 from sleap.instance import LabeledFrame, Instance
 from sleap.skeleton import Skeleton
+from sleap.io.cameras import Camcorder, RecordingSession
 
 
 class GenericTableModel(QtCore.QAbstractTableModel):
@@ -652,3 +653,22 @@ class SkeletonNodeModel(QtCore.QStringListModel):
     def flags(self, index: QtCore.QModelIndex):
         """Overrides Qt method, returns flags (editable etc)."""
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+    
+class CamerasTableModel(GenericTableModel):
+    """
+    Table model for for multi-view, showing which cameras 
+    are assigned to which videos
+
+    Args: 
+        obj: 'RecordingSession' which has information of cameras 
+              and paired video
+    """
+
+    properties = ("camera, ""video")
+
+    def object_to_items(self, obj: RecordingSession):
+        items = obj.cameras
+        return items
+    
+    def item_to_data(self, obj: RecoderdingSession, item: Camcorder):
+        return {'camera': item.name, 'video': obj.get_video(item)}

@@ -31,6 +31,7 @@ from sleap.gui.dataviews import (
     SkeletonNodesTableModel,
     SuggestionsTableModel,
     VideosTableModel,
+    CamerasTableModel,
 )
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.widgets.views import CollapsibleWidget
@@ -574,7 +575,9 @@ class InstancesDock(DockWidget):
 
 class SessionsDock(DockWidget):
     def __init__(self, main_window: Optional[QMainWindow]):
-        super().__init__(name="Sessions", main_window=main_window, model_type=None)
+        self.camera_model_type = CamerasTableModel
+        super().__init__(name="Sessions", main_window=main_window, model_type=[self.camera_model_type])
+        
 
     def lay_everything_out(self) -> None:
         triangulation_options = self.create_triangulation_options()
@@ -601,3 +604,24 @@ class SessionsDock(DockWidget):
         hbw = QWidget()
         hbw.setLayout(hb)
         return hbw
+    
+    def create_models(self) -> GenericTableModel:
+        main_window = self.main_window
+        self.camera_model = self.camera_model_type(
+            items=main_window.state["selected_session"], context=main_window.commands
+        )
+        
+        return [self.camera_model]
+    
+    def create_tables(self) -> GenericTableView:
+        if self.model is None:
+            self.create_models()
+
+        main_window = self.main_window
+        self.camera_table = GenericTableView(
+            state=main_window.state,
+            row_name="camera",
+            model=self.camera_model,
+        )
+
+        return [self.camera_table]

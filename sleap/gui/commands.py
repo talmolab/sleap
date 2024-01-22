@@ -655,6 +655,9 @@ class CommandContext:
         """Open the current prerelease version."""
         self.execute(OpenPrereleaseVersion)
 
+    def unlink_video_from_camera(self):
+        """Unlinks video from a camera"""
+        self.execute(UnlinkVideo)
 
 # File Commands
 
@@ -3901,3 +3904,19 @@ def copy_to_clipboard(text: str):
     clipboard = QtWidgets.QApplication.clipboard()
     clipboard.clear(mode=clipboard.Clipboard)
     clipboard.setText(text, mode=clipboard.Clipboard)
+
+class UnlinkVideo(EditCommand):
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        video = params.get("video", None)
+        cam = params.get("Camcoder", None)
+        recording_session = params.get("RecordingSession", None)
+        
+        videos = cam._video_by_session[str(recording_session)]
+
+        videos.remove(video)
+
+        if len(videos) == 0:
+            del str(recording_session)
+        else:
+            cam._video_by_session[str(recording_session)] = videos                
