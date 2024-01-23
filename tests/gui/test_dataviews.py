@@ -92,3 +92,7 @@ def test_camera_table(qtbot):
         name_prefix="",
         model=CamerasTableModel(),
     )
+
+    assert table.columnCount() == 2
+
+    assert False
