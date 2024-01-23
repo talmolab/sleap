@@ -310,7 +310,6 @@ def create_instance_group(
     session = labels.sessions[0]
 
     lf = labels.labeled_frames[0]
-    frame_idx = lf.frame_idx
     instance = lf.instances[0]
 
     dummy_instance = Instance.from_numpy(
