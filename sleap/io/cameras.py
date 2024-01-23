@@ -406,6 +406,7 @@ class InstanceGroup:
 
     frame_idx: int = field(validator=instance_of(int))
     camera_cluster: Optional[CameraCluster] = None
+    locked: bool = field(default=False)
     _instance_by_camcorder: Dict[Camcorder, "Instance"] = field(factory=dict)
     _camcorder_by_instance: Dict["Instance", Camcorder] = field(factory=dict)
 
@@ -710,7 +711,7 @@ class RecordingSession:
 
         # Sort `_videos_by_session` by order of linked `Camcorder` in `CameraCluster.cameras`
         self.camera_cluster._videos_by_session[self].sort(
-            key=camcorder._video_by_session[self].index
+            key=lambda video: self.camera_cluster.cameras.index(self.get_camera(video))
         )
 
         # Update labels cache
@@ -984,9 +985,6 @@ class RecordingSession:
 class FrameGroup:
     """Defines a group of `InstanceGroups` across views at the same frame index."""
 
-    # Class attribute to keep track of frame indices across all `RecordingSession`s
-    _frame_idx_registry: Dict[RecordingSession, Set[int]] = {}
-
     # Instance attributes
     frame_idx: int = field(validator=instance_of(int))
     instance_groups: List[InstanceGroup] = field(
@@ -996,6 +994,9 @@ class FrameGroup:
         ),
     )  # Akin to `LabeledFrame.instances`
     session: RecordingSession = field(validator=instance_of(RecordingSession))
+
+    # Class attribute to keep track of frame indices across all `RecordingSession`s
+    _frame_idx_registry: Dict[RecordingSession, Set[int]] = {}
 
     # "Hidden" class attribute
     _cams_to_include: Optional[List[Camcorder]] = None
@@ -1329,11 +1330,16 @@ class FrameGroup:
             than None) frames found.
         """
 
+        if len(instance_groups) == 0:
+            raise ValueError("instance_groups must contain at least one InstanceGroup")
+
         # Get frame index from first instance group
-        ...
+        frame_idx = instance_groups[0].frame_idx
 
         # Create and return `FrameGroup` object
-        ...
+        return cls(
+            frame_idx=frame_idx, instance_groups=instance_groups, session=session
+        )
 
     def enforce_frame_idx_unique(
         self, session: RecordingSession, frame_idx: int

@@ -406,7 +406,9 @@ def test_frame_group(multiview_min_session_labels: Labels):
     frame_idx_1 = 0
     instance_group = create_instance_group(labels=labels, frame_idx=frame_idx_1)
     instance_groups: List[InstanceGroup] = [instance_group]
-    frame_group_1 = FrameGroup.from_instance_groups(instance_groups=instance_groups)
+    frame_group_1 = FrameGroup.from_instance_groups(
+        session=session, instance_groups=instance_groups
+    )
     assert isinstance(frame_group_1, FrameGroup)
     assert session in frame_group_1._frame_idx_registry
     assert len(frame_group_1._frame_idx_registry) == 1
@@ -416,7 +418,9 @@ def test_frame_group(multiview_min_session_labels: Labels):
     frame_idx_2 = 1
     instance_group = create_instance_group(labels=labels, frame_idx=frame_idx_2)
     instance_groups: List[InstanceGroup] = [instance_group]
-    frame_group_2 = FrameGroup.from_instance_groups(instance_groups=instance_groups)
+    frame_group_2 = FrameGroup.from_instance_groups(
+        session=session, instance_groups=instance_groups
+    )
     assert isinstance(frame_group_2, FrameGroup)
     assert session in frame_group_2._frame_idx_registry
     assert len(frame_group_2._frame_idx_registry) == 1
@@ -424,7 +428,3 @@ def test_frame_group(multiview_min_session_labels: Labels):
     assert frame_group_1._frame_idx_registry == frame_group_2._frame_idx_registry
 
     # TODO(LM): Test `generate_hypotheses`
-
-
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_instance_group"])
