@@ -84,3 +84,11 @@ def test_table_sort_string(qtbot):
     # Make sure we can sort with both numbers and strings (i.e., "")
     table.model().sort(0)
     table.model().sort(1)
+
+def test_camera_table(qtbot):
+    table = GenericTableView(
+        row_name="camera",
+        is_sortable=True,
+        name_prefix="",
+        model=CamerasTableModel(),
+    )

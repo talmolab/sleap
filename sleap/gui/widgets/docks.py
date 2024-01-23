@@ -583,7 +583,8 @@ class SessionsDock(DockWidget):
         if self.table is None:
             self.create_tables()
 
-        self.wgt_layout.addWidget(self.table)
+
+        self.wgt_layout.addWidget(self.camera_table)
 
         video_unlink_button = self.create_video_unlink_button()
         self.wgt_layout.addWidget(video_unlink_button)
@@ -638,7 +639,7 @@ class SessionsDock(DockWidget):
         main_window = self.main_window
 
         hb = QHBoxLayout()
-        self.add_button(hb, "Link Video", main_window.commands.unlink_video_from_camera())
+        self.add_button(hb, "Unlink Video", main_window.commands.unlink_video_from_camera())
 
         hbw = QWidget()
         hbw.setLayout(hb)
