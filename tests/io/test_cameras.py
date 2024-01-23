@@ -1,6 +1,6 @@
 """Module to test functions in `sleap.io.cameras`."""
 
-from typing import List
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import pytest
@@ -288,12 +288,26 @@ def test_recording_session_remove_video(multiview_min_session_labels: Labels):
     assert video not in session.videos
 
 
-def test_instance_group(multiview_min_session_labels: Labels):
-    """Test `InstanceGroup` data structure."""
+# TODO(LM): Remove after adding method to (de)seralize `InstanceGroup`
+def create_instance_group(
+    labels: Labels,
+    frame_idx: int,
+    add_dummy: bool = False,
+) -> Union[
+    InstanceGroup, Tuple[InstanceGroup, Dict[Camcorder, Instance], Instance, Camcorder]
+]:
+    """Create an `InstanceGroup` from a `Labels` object.
 
-    labels = multiview_min_session_labels
+    Args:
+        labels: The `Labels` object to use.
+        frame_idx: The frame index to use.
+        add_dummy: Whether to add a dummy instance to the `InstanceGroup`.
+
+    Returns:
+        The `InstanceGroup` object.
+    """
+
     session = labels.sessions[0]
-    camera_cluster = session.camera_cluster
 
     lf = labels.labeled_frames[0]
     frame_idx = lf.frame_idx
@@ -316,10 +330,31 @@ def test_instance_group(multiview_min_session_labels: Labels):
         instance_by_camera[cam] = instance
 
     # Add a dummy instance to make sure it gets ignored
-    instance_by_camera[cam] = dummy_instance
+    if add_dummy:
+        instance_by_camera[cam] = dummy_instance
+
+    instance_group = InstanceGroup.from_dict(d=instance_by_camera)
+    return (
+        (instance_group, instance_by_camera, instance, cam)
+        if add_dummy
+        else instance_group
+    )
+
+
+def test_instance_group(multiview_min_session_labels: Labels):
+    """Test `InstanceGroup` data structure."""
+
+    labels = multiview_min_session_labels
+    session = labels.sessions[0]
+    camera_cluster = session.camera_cluster
+
+    lf = labels.labeled_frames[0]
+    frame_idx = lf.frame_idx
 
     # Test `from_dict`
-    instance_group = InstanceGroup.from_dict(d=instance_by_camera)
+    instance_group, instance_by_camera, dummy_instance, cam = create_instance_group(
+        labels=labels, frame_idx=frame_idx, add_dummy=True
+    )
     assert isinstance(instance_group, InstanceGroup)
     assert instance_group.frame_idx == frame_idx
     assert instance_group.camera_cluster == camera_cluster
@@ -367,26 +402,30 @@ def test_frame_group(multiview_min_session_labels: Labels):
 
     labels = multiview_min_session_labels
     session = labels.sessions[0]
-    camera_cluster = session.camera_cluster
-
-    lf = labels.labeled_frames[0]
-    frame_idx = lf.frame_idx
 
     # Test `from_instance_groups` from list of instance groups
-    instance_groups: List[InstanceGroup] = ...
-    frame_group = FrameGroup.from_instance_groups(instance_groups=instance_groups)
-    assert isinstance(frame_group, FrameGroup)
+    frame_idx_1 = 0
+    instance_group = create_instance_group(labels=labels, frame_idx=frame_idx_1)
+    instance_groups: List[InstanceGroup] = [instance_group]
+    frame_group_1 = FrameGroup.from_instance_groups(instance_groups=instance_groups)
+    assert isinstance(frame_group_1, FrameGroup)
+    assert session in frame_group_1._frame_idx_registry
+    assert len(frame_group_1._frame_idx_registry) == 1
+    assert frame_group_1._frame_idx_registry[session] == {frame_idx_1}
 
-    # Test `from_dict`
-    instances_by_camera = {}
-    for cam in session.linked_cameras:
-        video = session.get_video(cam)
-        lfs_in_view = labels.find(video=video, frame_idx=frame_idx)
-        instances = lfs_in_view[0].instances
-        instances_by_camera[cam] = instances
-    frame_group = FrameGroup.from_instances_by_view(
-        instances_by_camera=instances_by_camera
-    )
-    assert isinstance(frame_group, FrameGroup)
+    # Test `_frame_idx_registry` property
+    frame_idx_2 = 1
+    instance_group = create_instance_group(labels=labels, frame_idx=frame_idx_2)
+    instance_groups: List[InstanceGroup] = [instance_group]
+    frame_group_2 = FrameGroup.from_instance_groups(instance_groups=instance_groups)
+    assert isinstance(frame_group_2, FrameGroup)
+    assert session in frame_group_2._frame_idx_registry
+    assert len(frame_group_2._frame_idx_registry) == 1
+    assert frame_group_2._frame_idx_registry[session] == {frame_idx_1, frame_idx_2}
+    assert frame_group_1._frame_idx_registry == frame_group_2._frame_idx_registry
 
-    # Test `generate_hypotheses`
+    # TODO(LM): Test `generate_hypotheses`
+
+
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::test_instance_group"])
