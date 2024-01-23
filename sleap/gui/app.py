@@ -1236,6 +1236,12 @@ class MainWindow(QMainWindow):
         if _has_topic([UpdateTopic.frame, UpdateTopic.project_instances]):
             self.state["last_interacted_frame"] = self.state["labeled_frame"]
 
+        if _has_topic([UpdateTopic.sessions]):
+            self.sessions_dock.table.model().items = self.labels.videos
+
+
+        
+
     def plotFrame(self, *args, **kwargs):
         """Plots (or replots) current frame."""
         if self.state["video"] is None:

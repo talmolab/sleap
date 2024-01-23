@@ -580,6 +580,14 @@ class SessionsDock(DockWidget):
         
 
     def lay_everything_out(self) -> None:
+        if self.table is None:
+            self.create_tables()
+
+        self.wgt_layout.addWidget(self.table)
+
+        video_unlink_button = self.create_video_unlink_button()
+        self.wgt_layout.addWidget(video_unlink_button)
+
         triangulation_options = self.create_triangulation_options()
         self.wgt_layout.addWidget(triangulation_options)
 
@@ -625,3 +633,13 @@ class SessionsDock(DockWidget):
         )
 
         return [self.camera_table]
+    
+    def create_video_unlink_button(self) -> QWidget:
+        main_window = self.main_window
+
+        hb = QHBoxLayout()
+        self.add_button(hb, "Link Video", main_window.commands.unlink_video_from_camera())
+
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        return hbw

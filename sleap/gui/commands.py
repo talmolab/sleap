@@ -82,6 +82,7 @@ class UpdateTopic(Enum):
     frame = 8
     project = 9
     project_instances = 10
+    sessions = 11
 
 
 class AppCommand:
@@ -3909,14 +3910,14 @@ class UnlinkVideo(EditCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         video = params.get("video", None)
-        cam = params.get("Camcoder", None)
+        cam = params.get("Camcorder", None)
         recording_session = params.get("RecordingSession", None)
+
+        if video is not None and recording_session is not None \
+            and cam is not None:
+
+            recording_session.remove_video(video)
+
+
         
-        videos = cam._video_by_session[str(recording_session)]
-
-        videos.remove(video)
-
-        if len(videos) == 0:
-            del str(recording_session)
-        else:
-            cam._video_by_session[str(recording_session)] = videos                
+                 
