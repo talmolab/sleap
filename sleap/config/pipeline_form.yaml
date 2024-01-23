@@ -287,7 +287,7 @@ inference:
   label: Training/Inference Pipeline Type
   type: stacked
   default: "multi-animal bottom-up "
-  options: "multi-animal bottom-up,multi-animal top-down,multi-animal bottom-up-id,multi-animal top-down-id,single animal,movenet-lightning,movenet-thunder,none"
+  options: "multi-animal bottom-up,multi-animal top-down,multi-animal bottom-up-id,multi-animal top-down-id,single animal,movenet-lightning,movenet-thunder,tracking-only"
 
   multi-animal bottom-up:
   - type: text
@@ -365,7 +365,7 @@ inference:
       Note that this model is intended for human pose estimation. There is no
       support for videos containing more than one instance'
 
-  none:
+  tracking-only:
 
 - name: tracking.tracker
   label: Tracker (cross-frame identity) Method
