@@ -564,8 +564,10 @@ class FrameGroup:
     )  # Akin to `LabeledFrame.instances`
     session: "RecordingSession" = field(validator=instance_of("RecordingSession"))
 
-    # Hidden attributes
+    # "Hidden" class attribute
     _cams_to_include: Optional[List[Camcorder]] = None
+
+    # "Hidden" instance attributes
 
     # TODO(LM): This dict should be updated each time a LabeledFrame is added/removed
     # from the Labels object. Or if a video is added/removed from the RecordingSession.
@@ -878,24 +880,6 @@ class FrameGroup:
         return grouping_hypotheses
 
     @classmethod
-    def from_instances_by_view(
-        cls,
-        session: "RecordingSession",
-        instances_by_camera: Dict[Camcorder, List["Instance"]],
-    ) -> Optional["FrameGroup"]:
-        """Creates a `FrameGroup` object from a dictionary.
-
-        Args:
-            session: `RecordingSession` object.
-            instances_by_camera: Dictionary with `Camcorder` keys and `LabeledFrame` values.
-
-        Returns:
-            `FrameGroup` object or None if no "real" (determined by `frame_idx` other
-            than None) frames found.
-        """
-        ...
-
-    @classmethod
     def from_instance_groups(
         cls,
         session: "RecordingSession",
@@ -912,32 +896,14 @@ class FrameGroup:
             than None) frames found.
         """
 
+        # Get frame index from first instance group
         ...
 
-    @classmethod
-    def from_tensor(
-        cls, session: "RecordingSession", frame_idx: int, tensor: np.ndarray
-    ) -> Union["FrameGroup", List["FrameGroup"]]:
-        """Creates a `FrameGroup` object from a tensor.
-
-        Args:
-            session: `RecordingSession` object.
-            tensor: A tensor of shape M x F x T x N x 2 where
-                M: # views, F: # frames = 1, T: # tracks, N: # nodes, 2: x, y
-
-        Returns:
-            `FrameGroup` object.
-        """
-
-        # Check value of F and assert that it is 1
+        # Create and return `FrameGroup` object
         ...
 
-        # If F is 1, then return a single `FrameGroup`
-        ...
-
-    @classmethod
     def enforce_frame_idx_unique(
-        cls, session: "RecordingSession", frame_idx: int
+        self, session: "RecordingSession", frame_idx: int
     ) -> bool:
         """Enforces that all frame indices are unique in `RecordingSession`.
 
@@ -948,7 +914,7 @@ class FrameGroup:
             frame_idx: Frame index.
         """
 
-        if frame_idx in cls._frame_idx_registry.get(session, set()):
+        if frame_idx in self._frame_idx_registry.get(session, set()):
             # Remove existing `FrameGroup` object from the `RecordingSession._frame_group_by_frame_idx`
             logger.warning(
                 f"Frame index {frame_idx} for FrameGroup already exists in this RecordingSession. Overwriting."
@@ -1117,7 +1083,7 @@ class RecordingSession:
         # Add camcorder-to-video (1-to-1) map to `RecordingSession`
         self._video_by_camcorder[camcorder] = video
 
-        # Sort `CameraCluster._videos_by_session` by `Camcorder._video_by_session` order
+        # Sort `_videos_by_session` by order of linked `Camcorder` in `CameraCluster.cameras`
         self.camera_cluster._videos_by_session[self].sort(
             key=camcorder._video_by_session[self].index
         )
