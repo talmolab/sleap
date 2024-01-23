@@ -335,7 +335,7 @@ def create_instance_group(
 
     instance_group = InstanceGroup.from_dict(d=instance_by_camera)
     return (
-        (instance_group, instance_by_camera, instance, cam)
+        (instance_group, instance_by_camera, dummy_instance, cam)
         if add_dummy
         else instance_group
     )
