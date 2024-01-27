@@ -3030,7 +3030,7 @@ class AddInstance(EditCommand):
             frame_to_copy_from: The last labeled frame from which we obtain the last user instance.
 
          Returns:
-          The last user instance in the previous frame (if present), otherwise null
+          The last user instance in the frame_to_copy_from (if present), otherwise null
         """
 
         user_instances = frame_to_copy_from.user_instances
@@ -3042,6 +3042,16 @@ class AddInstance(EditCommand):
         copy_instance: Optional[Union[Instance, PredictedInstance]],
         frame_to_copy_from: LabeledFrame,
     ):
+        """Replace copy_instance with user instance if needed.
+
+        Args:
+            copy_instance: The current copy instance.
+            frame_to_copy_from: The last labeled frame from which we obtain the last user instance.
+
+        Returns:
+        The current copy_instance or the user_instance it has been replaced with.
+        """
+
         if isinstance(copy_instance, PredictedInstance):
             # Set copy instance to last user instance in frame to copy from, if present
             user_instance = AddInstance.find_last_user_instance(frame_to_copy_from)
