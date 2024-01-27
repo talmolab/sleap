@@ -616,8 +616,12 @@ def test_CopyInstance(min_tracks_2node_labels: Labels):
     assert context.state["clipboard_instance"] == instance
 
 
-def test_CopyPriorFramePreviousUser(centered_pair_predictions: Labels):
-    """Test that we copy prior user frame when available."""
+def test_CopyPriorFrame_MoreInstancesInPreviousFrame(centered_pair_predictions: Labels):
+    """Test that we copy prior user frame when available.
+
+    This case is triggered when there are more user instances in the previous frame than the current frame in which
+    case we want to copy a user instances from the previous frame.
+    """
     context = CommandContext.from_labels(centered_pair_predictions)
     context.state["labeled_frame"] = centered_pair_predictions.find(
         centered_pair_predictions.videos[0], frame_idx=124
@@ -647,10 +651,16 @@ def test_CopyPriorFramePreviousUser(centered_pair_predictions: Labels):
         points={node: Point(1, 1) for node in skeleton.nodes},
         frame=prev_frame,
     )
-    prev_instances.append(user_inst)
+    prev_instances.insert(0, user_inst)
 
     # Confirm there is one user instance in previous frame
     assert len(prev_frame.user_instances) == 1
+
+    # Confirm that there are more instances and user instances in previous frame than current frame
+    assert len(prev_instances) > len(context.state["labeled_frame"].instances)
+    assert len(prev_frame.user_instances) > len(
+        context.state["labeled_frame"].user_instances
+    )
 
     context.newInstance(init_method="prior_frame")
 
@@ -661,30 +671,37 @@ def test_CopyPriorFramePreviousUser(centered_pair_predictions: Labels):
     assert newly_added_instance.track == user_inst.track
 
 
-def test_CopyPriorFramePreviousUser2(centered_pair_predictions: Labels):
-    """Test that we copy user instance in previous frame when the current frame has no instances."""
+def test_CopyPriorFrame_EquivalentInstancesInCurrentAndPreviousFrame(
+    centered_pair_predictions: Labels,
+):
+    """Copy user instance when same amount of instances in previous and current frame.
+
+    This case is triggered when there are the same amount of instancecs in the previous and current frame
+    and the copy method is "prior_frame". In this case, we want to take the last available user instance
+    from the previous frame when available.
+    """
     context = CommandContext.from_labels(centered_pair_predictions)
     context.state["labeled_frame"] = centered_pair_predictions.find(
         centered_pair_predictions.videos[0], frame_idx=124
     )[0]
-    context.state["labeled_frame"].instances = []
     context.state["video"] = centered_pair_predictions.videos[0]
     context.state["frame_idx"] = 124
     context.state["skeleton"] = centered_pair_predictions.skeleton
 
     # No instances in current frame
-    assert len(context.state["labeled_frame"].instances) == 0
+    assert len(context.state["labeled_frame"].instances) == 2
 
     # Get previous frame
     prev_idx = 123
     prev_frame = context.labels.find(context.state["video"], prev_idx, return_new=True)[
         0
     ]
+    prev_frame.instances.pop()
     prev_instances = prev_frame.instances
 
-    # Confirm that previous frame has 2 predicted instances
+    # Confirm that previous frame has 1 predicted instance
     assert len(prev_frame.user_instances) == 0
-    assert len(prev_frame.predicted_instances) == 2
+    assert len(prev_frame.predicted_instances) == 1
 
     # Add user instance to previous frame
     skeleton = centered_pair_predictions.skeleton
@@ -698,7 +715,10 @@ def test_CopyPriorFramePreviousUser2(centered_pair_predictions: Labels):
     # Confirm addition of user instance in previous frame
     assert len(prev_frame.user_instances) == 1
 
-    context.newInstance(init_method="best")
+    # Confirm same amount of instances in current and previous frame
+    assert len(prev_frame.instances) == len(context.state["labeled_frame"].instances)
+
+    context.newInstance(init_method="prior_frame")
 
     # Confirm that user instance in current frame is the same as the user instance in previous frame
     current_user_instance = context.state["labeled_frame"].user_instances[0]
@@ -707,9 +727,12 @@ def test_CopyPriorFramePreviousUser2(centered_pair_predictions: Labels):
     assert current_user_instance.track == user_inst.track
 
 
-def test_CopyPriorFrameCurrentUser(centered_pair_predictions: Labels):
-    """Test that we copy user instance in current frame when the current frame has >= amount of instances
-    as the previous frame."""
+def test_CopyPriorFrame_GetFromCurrentFrame(centered_pair_predictions: Labels):
+    """Get user instance from current frame when copy method is "best".
+
+    This case is triggered when the current frame has >= the amount of instances as the previous frame and the copy method
+    is "best". In this case we want to choose the last available user instance in the current frame.
+    """
     context = CommandContext.from_labels(centered_pair_predictions)
     context.state["labeled_frame"] = centered_pair_predictions.find(
         centered_pair_predictions.videos[0], frame_idx=124
@@ -725,7 +748,6 @@ def test_CopyPriorFrameCurrentUser(centered_pair_predictions: Labels):
     prev_frame = context.labels.find(context.state["video"], prev_idx, return_new=True)[
         0
     ]
-    prev_instances = prev_frame.instances
     assert len(prev_frame.user_instances) == 0
     assert len(prev_frame.predicted_instances) == 2
 
@@ -751,7 +773,7 @@ def test_CopyPriorFrameCurrentUser(centered_pair_predictions: Labels):
 
     context.newInstance(init_method="best")
 
-    # Confirm that both user instances in the current frame are the same+
+    # Confirm that both user instances in the current frame are the same
     previous_user_instance = context.state["labeled_frame"].user_instances[0]
     newly_added_instance = context.state["labeled_frame"].user_instances[1]
     assert newly_added_instance.video == previous_user_instance.video
