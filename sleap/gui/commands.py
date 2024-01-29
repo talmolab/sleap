@@ -3911,7 +3911,11 @@ class UnlinkVideo(EditCommand):
     def do_action(context: CommandContext, params: dict):
         video = params.get("selected_camera_table", None)
         recording_session = params.get("RecordingSession", None)
-        recording_session.remove_video(video)
+
+        print(video, recording_session)
+
+        if video is not None and recording_session is not None:
+            recording_session.remove_video(video)
 
 
         

@@ -1094,7 +1094,7 @@ class MainWindow(QMainWindow):
         has_selected_edge = self.state["selected_edge"] is not None
         has_selected_video = self.state["selected_video"] is not None
         has_video = self.state["video"] is not None
-        has_selected_camcorder = self.state["selected_camera"] is not None
+        has_selected_camcorder = self.state["selected_camera_table"] is not None
 
         has_frame_range = bool(self.state["has_frame_range"])
         has_unsaved_changes = bool(self.state["has_changes"])
@@ -1239,7 +1239,7 @@ class MainWindow(QMainWindow):
             self.state["last_interacted_frame"] = self.state["labeled_frame"]
 
         if _has_topic([UpdateTopic.sessions]):
-            self.sessions_dock.table.model()["camera_table"].items = self.labels.videos
+            self.sessions_dock.table["camera_table"].model().items = self.labels.sessions[0]
 
 
         

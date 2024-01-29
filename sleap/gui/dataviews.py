@@ -670,4 +670,4 @@ class CamerasTableModel(GenericTableModel):
         return obj.linked_cameras
     
     def item_to_data(self, obj: RecordingSession, item: Camcorder):
-        return {'camera': item.name, 'video': obj.get_video(item)}
+        return {'camera': item.name, 'video': obj.get_video(item).filename}
