@@ -620,7 +620,7 @@ class SessionsDock(DockWidget):
             items=main_window.state["selected_session"], context=main_window.commands
         )
         
-        return [self.camera_model]
+        return {"camera_model": self.camera_model}
     
     def create_tables(self) -> GenericTableView:
         if self.model is None:
@@ -629,11 +629,11 @@ class SessionsDock(DockWidget):
         main_window = self.main_window
         self.camera_table = GenericTableView(
             state=main_window.state,
-            row_name="camera",
+            row_name="camera_table",
             model=self.camera_model,
         )
 
-        return [self.camera_table]
+        return {"camera_table": self.camera_table}
     
     def create_video_unlink_button(self) -> QWidget:
         main_window = self.main_window

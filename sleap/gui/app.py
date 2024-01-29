@@ -1094,6 +1094,7 @@ class MainWindow(QMainWindow):
         has_selected_edge = self.state["selected_edge"] is not None
         has_selected_video = self.state["selected_video"] is not None
         has_video = self.state["video"] is not None
+        has_selected_camcorder = self.state["selected_camera"] is not None
 
         has_frame_range = bool(self.state["has_frame_range"])
         has_unsaved_changes = bool(self.state["has_changes"])
@@ -1148,6 +1149,7 @@ class MainWindow(QMainWindow):
         self._buttons["show video"].setEnabled(has_selected_video)
         self._buttons["remove video"].setEnabled(has_video)
         self._buttons["delete instance"].setEnabled(has_selected_instance)
+        self._buttons["unlink video"].setEnabled(has_selected_camcorder)
         self.suggestions_dock.suggestions_form_widget.buttons[
             "generate_button"
         ].setEnabled(has_videos)
@@ -1237,7 +1239,7 @@ class MainWindow(QMainWindow):
             self.state["last_interacted_frame"] = self.state["labeled_frame"]
 
         if _has_topic([UpdateTopic.sessions]):
-            self.sessions_dock.table.model().items = self.labels.videos
+            self.sessions_dock.table.model()["camera_table"].items = self.labels.videos
 
 
         
