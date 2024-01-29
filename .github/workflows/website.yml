@@ -8,7 +8,7 @@ on:
       # 'main' triggers updates to 'sleap.ai', all others to 'sleap.ai/develop'
       - main
       - develop
-      - liezl/add-pip-extras
+      - liezl/add-abl-2023-workshop-link
     paths:
       - "docs/**"
       - "README.rst"
