@@ -56,6 +56,8 @@ Developer API
    sleap.nn.data.resizing
    sleap.nn.data.training
    sleap.nn.data.utils
+   sleap.nn.tracker.components
+   sleap.nn.tracker.kalman
    sleap.nn.architectures.common
    sleap.nn.architectures.encoder_decoder
    sleap.nn.architectures.hourglass
@@ -65,8 +67,13 @@ Developer API
    sleap.nn.architectures.resnet
    sleap.nn.architectures.unet
    sleap.nn.architectures.upsampling
-   sleap.nn.tracker.components
-   sleap.nn.tracker.kalman
+   sleap.info.align
+   sleap.info.feature_suggestions
+   sleap.info.labels
+   sleap.info.metrics
+   sleap.info.summary
+   sleap.info.trackcleaner
+   sleap.info.write_tracking_h5
    sleap.io.asyncvideo
    sleap.io.convert
    sleap.io.dataset
@@ -92,10 +99,3 @@ Developer API
    sleap.io.format.nix
    sleap.io.format.sleap_analysis
    sleap.io.format.text
-   sleap.info.align
-   sleap.info.feature_suggestions
-   sleap.info.labels
-   sleap.info.metrics
-   sleap.info.summary
-   sleap.info.trackcleaner
-   sleap.info.write_tracking_h5
