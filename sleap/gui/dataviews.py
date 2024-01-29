@@ -663,12 +663,11 @@ class CamerasTableModel(GenericTableModel):
         obj: 'RecordingSession' which has information of cameras 
               and paired video
     """
-
+    
     properties = ("camera", "video")
-
+        
     def object_to_items(self, obj: RecordingSession):
-        items = obj.linked_cameras()
-        return items
+        return obj.linked_cameras
     
     def item_to_data(self, obj: RecordingSession, item: Camcorder):
         return {'camera': item.name, 'video': obj.get_video(item)}

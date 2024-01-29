@@ -2,6 +2,7 @@ import pytest
 import pytestqt
 
 from sleap.gui.dataviews import *
+from sleap.io.cameras import RecordingSession
 
 
 def test_skeleton_nodes(qtbot, centered_pair_predictions):
@@ -85,14 +86,19 @@ def test_table_sort_string(qtbot):
     table.model().sort(0)
     table.model().sort(1)
 
-def test_camera_table(qtbot):
+def test_camera_table(qtbot, multiview_min_session_labels):
+    table = CamerasTableModel(items=multiview_min_session_labels.sessions[0])
+    
+    assert table.columnCount() == 2
+    assert table.rowCount() == 8
+
     table = GenericTableView(
-        row_name="camera",
+        row_name="instance",
         is_sortable=True,
         name_prefix="",
-        model=CamerasTableModel(),
+        model=CamerasTableModel(items=multiview_min_session_labels.sessions[0]),
     )
 
-    assert table.columnCount() == 2
-
-    assert False
+    table.selectRow(1)
+    assert table.model().data(table.currentIndex()) == "backL"
+    
