@@ -19,6 +19,38 @@ Developer API
    sleap.message
    sleap.skeleton
    sleap.util
+   sleap.info.align
+   sleap.info.feature_suggestions
+   sleap.info.labels
+   sleap.info.metrics
+   sleap.info.summary
+   sleap.info.trackcleaner
+   sleap.info.write_tracking_h5
+   sleap.io.asyncvideo
+   sleap.io.convert
+   sleap.io.dataset
+   sleap.io.legacy
+   sleap.io.pathutils
+   sleap.io.video
+   sleap.io.videowriter
+   sleap.io.visuals
+   sleap.io.format.adaptor
+   sleap.io.format.alphatracker
+   sleap.io.format.coco
+   sleap.io.format.csv
+   sleap.io.format.deeplabcut
+   sleap.io.format.deepposekit
+   sleap.io.format.dispatch
+   sleap.io.format.filehandle
+   sleap.io.format.genericjson
+   sleap.io.format.hdf5
+   sleap.io.format.labels_json
+   sleap.io.format.leap_matlab
+   sleap.io.format.main
+   sleap.io.format.ndx_pose
+   sleap.io.format.nix
+   sleap.io.format.sleap_analysis
+   sleap.io.format.text
    sleap.nn.callbacks
    sleap.nn.evals
    sleap.nn.heads
@@ -67,35 +99,3 @@ Developer API
    sleap.nn.architectures.resnet
    sleap.nn.architectures.unet
    sleap.nn.architectures.upsampling
-   sleap.info.align
-   sleap.info.feature_suggestions
-   sleap.info.labels
-   sleap.info.metrics
-   sleap.info.summary
-   sleap.info.trackcleaner
-   sleap.info.write_tracking_h5
-   sleap.io.asyncvideo
-   sleap.io.convert
-   sleap.io.dataset
-   sleap.io.legacy
-   sleap.io.pathutils
-   sleap.io.video
-   sleap.io.videowriter
-   sleap.io.visuals
-   sleap.io.format.adaptor
-   sleap.io.format.alphatracker
-   sleap.io.format.coco
-   sleap.io.format.csv
-   sleap.io.format.deeplabcut
-   sleap.io.format.deepposekit
-   sleap.io.format.dispatch
-   sleap.io.format.filehandle
-   sleap.io.format.genericjson
-   sleap.io.format.hdf5
-   sleap.io.format.labels_json
-   sleap.io.format.leap_matlab
-   sleap.io.format.main
-   sleap.io.format.ndx_pose
-   sleap.io.format.nix
-   sleap.io.format.sleap_analysis
-   sleap.io.format.text
