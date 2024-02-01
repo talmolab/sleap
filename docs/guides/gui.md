@@ -98,7 +98,7 @@ Note that many of the menu command have keyboard shortcuts which can be configur
 
 "**Evaluate Metrics for Trained Models...**" provides you with information to evaluate all of your trained models. For example, you can see the recall and precision of predictions on frames with ground truth validation data (i.e., data withheld when training).
 
-"**Visualize Model Outputs...**" allows you to select a trained model and see the intermediate inference data plotted on the frame image. In particular, looking at the confidence maps used to predict each node can be helpful for understanding why and where your model isn't preforming well.
+"**Visualize Model Outputs...**" allows you to select a trained model and see the intermediate inference data plotted on the frame image. In particular, looking at the confidence maps used to predict each node can be helpful for understanding why and where your model isn't performing well.
 
 "**Add Instances from All Predictions on Current Frame**" converts ever predicted instance on the current frame into a user editable instance (which allows you to make corrections and/or use it for training).
 

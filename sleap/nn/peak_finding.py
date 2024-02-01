@@ -249,7 +249,7 @@ def find_global_peaks_rough(
 def find_local_peaks_rough(
     cms: tf.Tensor, threshold: float = 0.2
 ) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
-    """Find local maxima via non-maximum suppresion.
+    """Find local maxima via non-maximum suppression.
 
     Args:
         cms: Tensor of shape (samples, height, width, channels).

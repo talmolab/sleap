@@ -166,7 +166,7 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
     )
     centered_pair_predictions.add_instance(lf, user_instance)
 
-    # Add another predicted instance (same track) incase ordering matters
+    # Add another predicted instance (same track) in case ordering matters
     centered_pair_predictions.add_instance(lf, lf.predicted_instances[0])
 
     # Ensure user-instance is used in occupancy matrix instead of predicted-instance

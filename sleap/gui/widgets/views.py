@@ -93,7 +93,7 @@ class CollapsibleWidget(QWidget):
         for child in self.content_area.findChildren(QWidget):
             child.setVisible(checked)
 
-        # Collapse combo box (otherwise, visiblity opens combo)
+        # Collapse combo box (otherwise, visibility opens combo)
         if checked:
             combo = self.content_area.findChild(QComboBox)
             combo.hidePopup()

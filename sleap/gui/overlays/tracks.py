@@ -42,7 +42,7 @@ class TrackTrailOverlay(BaseOverlay):
     max_node_count: Optional[int] = None
 
     def __attrs_post_init__(self):
-        """Initialize the shade options attribute after initalizing the instance."""
+        """Initialize the shade options attribute after initializing the instance."""
 
         self.shade_options = self.get_shade_options()
 

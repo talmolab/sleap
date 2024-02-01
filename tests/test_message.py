@@ -25,7 +25,7 @@ def run_receive():
 
     success = receiver.receive_handshake()
 
-    # Make sure handshake was succesful
+    # Make sure handshake was successful
     assert success
 
     messages = []

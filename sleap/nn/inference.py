@@ -4976,7 +4976,7 @@ def _make_export_cli_parser() -> argparse.ArgumentParser:
         action="store_true",
         default=False,
         help=(
-            "Keep tensors ragged if present. If ommited, convert ragged tensors"
+            "Keep tensors ragged if present. If omitted, convert ragged tensors"
             " into regular tensors with NaN padding."
         ),
     )

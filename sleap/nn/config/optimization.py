@@ -33,7 +33,7 @@ class AugmentationConfig:
             See `imgaug.augmenters.arithmetic.AdditiveGaussianNoise`.
         gaussian_noise_mean: Mean of the distribution to sample from.
         gaussian_noise_stddev: Standard deviation of the distribution to sample from.
-        contrast: If True, gamma constrast adjustment will be applied to the image.
+        contrast: If True, gamma contrast adjustment will be applied to the image.
             This scales all pixel values by `x ** gamma` where `x` is the pixel value in
             the [0, 1] range. Values in [0, 255] are first scaled to [0, 1]. See
             `imgaug.augmenters.contrast.GammaContrast`.

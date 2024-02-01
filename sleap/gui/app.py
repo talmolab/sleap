@@ -175,7 +175,7 @@ class MainWindow(QMainWindow):
         self._initialize_gui()
 
         if reset:
-            print("Reseting GUI state and preferences...")
+            print("Resetting GUI state and preferences...")
             prefs.reset_to_default()
         elif len(prefs["window state"]) > 0:
             print("Restoring GUI state...")
@@ -1481,7 +1481,7 @@ class MainWindow(QMainWindow):
             return
 
         if self._child_windows.get(mode, None) is None:
-            # Re-use existing dialog widget.
+            # Reuse existing dialog widget.
             self._child_windows[mode] = LearningDialog(
                 mode,
                 self.state["filename"],

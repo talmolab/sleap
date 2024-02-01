@@ -791,7 +791,7 @@ def run_gui_inference(
             if gui:
                 QtWidgets.QMessageBox(
                     text=(
-                        "An error occcured during inference. Your command line "
+                        "An error occurred during inference. Your command line "
                         "terminal may have more information about the error."
                     )
                 ).exec_()

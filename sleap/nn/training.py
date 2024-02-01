@@ -404,7 +404,7 @@ def setup_zmq_callbacks(zmq_config: ZMQConfig) -> List[tf.keras.callbacks.Callba
                 poll_timeout=zmq_config.controller_polling_timeout,
             )
         )
-        logger.info(f"  ZMQ controller subcribed to: {zmq_config.controller_address}")
+        logger.info(f"  ZMQ controller subscribed to: {zmq_config.controller_address}")
     if zmq_config.publish_updates:
         callbacks.append(ProgressReporterZMQ(address=zmq_config.publish_address))
         logger.info(f"  ZMQ progress reporter publish on: {zmq_config.publish_address}")
@@ -745,7 +745,7 @@ class Trainer(ABC):
 
         # Resuming training if flagged
         if self.config.model.base_checkpoint is not None:
-            # TODO (AL): Add flexibilty to resume from any checkpoint (e.g.
+            # TODO (AL): Add flexibility to resume from any checkpoint (e.g.
             # latest_model, specific epoch, etc.)
 
             # Grab the 'best_model.h5' file from the previous training run

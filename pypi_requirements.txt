@@ -3,7 +3,7 @@
 # setup.py, the packages in requirements.txt will also be installed when running 
 # pip install sleap[pypi].
 
-# These are also distrubuted through conda and not pip installed when using conda.
+# These are also distributed through conda and not pip installed when using conda.
 attrs>=21.2.0,<=21.4.0
 cattrs==1.1.1
 # certifi>=2017.4.17,<=2021.10.8
