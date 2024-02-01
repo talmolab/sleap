@@ -373,6 +373,29 @@ class Predictor(ABC):
     def _initialize_inference_model(self):
         pass
 
+    def process_batch(self, ex):
+        # Run inference on current batch.
+        preds = self.inference_model.predict_on_batch(ex, numpy=True)
+
+        # Add model outputs to the input data example.
+        ex.update(preds)
+
+        # Convert to numpy arrays if not already.
+        if isinstance(ex["video_ind"], tf.Tensor):
+            ex["video_ind"] = ex["video_ind"].numpy().flatten()
+        if isinstance(ex["frame_ind"], tf.Tensor):
+            ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
+
+        # Adjust for potential SizeMatcher scaling.
+        offset_x = ex.get("offset_x", 0)
+        offset_y = ex.get("offset_y", 0)
+        ex["instance_peaks"] -= np.reshape([offset_x, offset_y], [-1, 1, 1, 2])
+        ex["instance_peaks"] /= np.expand_dims(
+            np.expand_dims(ex["scale"], axis=1), axis=1
+        )
+
+        return ex
+
     def _predict_generator(
         self, data_provider: Provider
     ) -> Iterator[Dict[str, np.ndarray]]:
@@ -394,29 +417,6 @@ class Predictor(ABC):
         if self.inference_model is None:
             self._initialize_inference_model()
 
-        def process_batch(ex):
-            # Run inference on current batch.
-            preds = self.inference_model.predict_on_batch(ex, numpy=True)
-
-            # Add model outputs to the input data example.
-            ex.update(preds)
-
-            # Convert to numpy arrays if not already.
-            if isinstance(ex["video_ind"], tf.Tensor):
-                ex["video_ind"] = ex["video_ind"].numpy().flatten()
-            if isinstance(ex["frame_ind"], tf.Tensor):
-                ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
-
-            # Adjust for potential SizeMatcher scaling.
-            offset_x = ex.get("offset_x", 0)
-            offset_y = ex.get("offset_y", 0)
-            ex["instance_peaks"] -= np.reshape([offset_x, offset_y], [-1, 1, 1, 2])
-            ex["instance_peaks"] /= np.expand_dims(
-                np.expand_dims(ex["scale"], axis=1), axis=1
-            )
-
-            return ex
-
         # Loop over data batches with optional progress reporting.
         if self.verbosity == "rich":
             with rich.progress.Progress(
@@ -433,7 +433,7 @@ class Predictor(ABC):
                 task = progress.add_task("Predicting...", total=len(data_provider))
                 last_report = time()
                 for ex in self.pipeline.make_dataset():
-                    ex = process_batch(ex)
+                    ex = self.process_batch(ex)
                     progress.update(task, advance=len(ex["frame_ind"]))
 
                     # Handle refreshing manually to support notebooks.
@@ -454,7 +454,7 @@ class Predictor(ABC):
             t0_batch = time()
             for ex in self.pipeline.make_dataset():
                 # Process batch of examples.
-                ex = process_batch(ex)
+                ex = self.process_batch(ex)
 
                 # Track timing and progress.
                 elapsed_batch = time() - t0_batch
@@ -490,7 +490,7 @@ class Predictor(ABC):
                 yield ex
         else:
             for ex in self.pipeline.make_dataset():
-                yield process_batch(ex)
+                yield self.process_batch(ex)
 
     def predict(
         self, data: Union[Provider, sleap.Labels, sleap.Video], make_labels: bool = True
