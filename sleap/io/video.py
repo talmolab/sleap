@@ -12,7 +12,7 @@ import cattr
 import logging
 import multiprocessing
 
-from typing import Iterable, List, Optional, Tuple, Union, Text
+from typing import Iterable, List, Optional, Tuple, Union
 
 from sleap.util import json_loads, json_dumps
 
@@ -999,8 +999,7 @@ class SingleImageVideo:
 
 @attr.s(auto_attribs=True, eq=False, order=False)
 class Video:
-    """
-    The top-level interface to any Video data used by SLEAP.
+    """The top-level interface to any Video data used by SLEAP.
 
     This class provides a common interface for various supported video data
     backends. It provides the bare minimum of properties and methods that

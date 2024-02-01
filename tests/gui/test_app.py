@@ -1,8 +1,17 @@
+import os
+
 import pytest
+from qtpy.QtCore import QLibraryInfo
 from qtpy.QtWidgets import QApplication
 
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
+
+# TODO(LM): Remove when sleap-anipose, aniposelib, and imgaug use headless opencv
+# https://github.com/pytest-dev/pytest-qt/issues/396#issuecomment-1060193720
+os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = QLibraryInfo.location(
+    QLibraryInfo.PluginsPath
+)
 
 
 def test_app_workflow(

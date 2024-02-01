@@ -91,6 +91,14 @@ jobs:
             bash
             powershell
           post-cleanup: all
+
+      # HACK(LM): Install correct version of opencv
+      - name: Reinstall opencv
+        shell: bash -l {0}
+        run: |
+          pip freeze | grep opencv | awk '{system("pip uninstall " $1 " -y")}'
+          pip install "opencv-contrib-python<4.7.0"
+
       
       # Print environment info
       - name: Print environment info
@@ -101,7 +109,7 @@ jobs:
           micromamba list
           pip freeze
       
-      # Test environment
+      # Test the code and the environment
       - name: Test with pytest
         shell: bash -l {0}
         run: |
