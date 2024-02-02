@@ -1714,13 +1714,14 @@ class Labels(MutableSequence):
         if video in session.videos:
             session.remove_video(video)
 
-    def remove_session(self, session: RecordingSession):
+    def remove_recording_session(self, session: RecordingSession):
         """Remove a session from self.sessions.
 
         Args:
             session: `RecordingSession` instance
         """
-        self._sessions.remove(session)
+        if session in self._sessions:
+            self._sessions.remove(session)
 
     @classmethod
     def from_json(cls, *args, **kwargs):

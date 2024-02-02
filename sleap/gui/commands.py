@@ -445,7 +445,7 @@ class CommandContext:
         """Shows gui for adding `RecordingSession`s to the project."""
         self.execute(AddSession)
 
-    def removeSessions(self):
+    def removeSelectedSession(self):
         """Removes a session from the project and the sessions dock."""
         self.execute(RemoveSession)
 
@@ -1974,12 +1974,20 @@ class RemoveVideo(EditCommand):
         return True
 
 
+class RemoveSession(EditCommand):
+    topics = [UpdateTopic.sessions]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        current_session = context.state["selected_session"]
+        context.labels.remove_recording_session(current_session)
+
+
 class AddSession(EditCommand):
     topics = [UpdateTopic.sessions]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-
         camera_calibration = params["camera_calibration"]
         session = RecordingSession.load(filename=camera_calibration)
 

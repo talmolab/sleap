@@ -623,7 +623,7 @@ class SessionsDock(DockWidget):
         hb = QHBoxLayout()
         self.add_button(hb, "Add Session", lambda x: main_window.commands.addSession())
         self.add_button(
-            hb, "Remove Session", main_window.commands.deleteSelectedInstance
+            hb, "Remove Session", main_window.commands.removeSelectedSession
         )
 
         hbw = QWidget()
