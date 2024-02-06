@@ -639,7 +639,7 @@ class SessionsDock(DockWidget):
         main_window = self.main_window
 
         hb = QHBoxLayout()
-        self.add_button(hb, "Unlink Video", main_window.commands.unlink_video_from_camera())
+        self.add_button(hb, "Unlink Video", main_window.commands.unlink_video_from_camera)
 
         hbw = QWidget()
         hbw.setLayout(hb)

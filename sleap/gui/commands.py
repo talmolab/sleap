@@ -3909,10 +3909,12 @@ def copy_to_clipboard(text: str):
 class UnlinkVideo(EditCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        video = params.get("selected_camera_table", None)
-        recording_session = params.get("RecordingSession", None)
+        camcorder = context.state["selected_camera_table"]
+        recording_session = camcorder.sessions[0] # potentially buggy
 
-        print(video, recording_session)
+        video = camcorder.get_video(recording_session)
+
+        print(video)
 
         if video is not None and recording_session is not None:
             recording_session.remove_video(video)

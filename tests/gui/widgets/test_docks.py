@@ -10,6 +10,7 @@ from sleap.gui.widgets.docks import (
     SuggestionsDock,
     VideosDock,
     SkeletonDock,
+    SessionsDock, 
 )
 
 
@@ -107,3 +108,25 @@ def test_instances_dock(qtbot):
     assert dock.name == "Instances"
     assert dock.main_window is main_window
     assert dock.wgt_layout is dock.widget().layout()
+
+def test_seesions_dock(gt_bot, multiview_min_session_labels):
+    main_window = MainWindow()
+    dock = SessionsDock(main_window)
+
+    assert dock.name == "Sessions"
+    assert dock.main_window is main_window
+    assert dock.wgt_layout is dock.widget().layout()
+        
+    video_to_remove = multiview_min_session_labels.videos[0]
+    main_window.state["selected_camera_table"] = video_to_remove
+    dock.main_window._buttons["unlink video"].click()
+    assert len(multiview_min_session_labels.videos) == 7
+
+    # video_to_remove = multiview_min_session_labels.videos[1]
+    # main_window.state["selected_camera_table"] = video_to_remove
+    # dock.main_window._buttons["unlink video"].click()
+    # assert len(multiview_min_session_labels.videos) == 6
+
+    # assert (video_to_remove[0] not in labels.videos and video_to_remove[1] not in label.videos)
+
+    # assert main_window.state["video"] == labels.videos[-1]

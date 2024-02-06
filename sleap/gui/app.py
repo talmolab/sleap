@@ -1095,7 +1095,7 @@ class MainWindow(QMainWindow):
         has_selected_video = self.state["selected_video"] is not None
         has_video = self.state["video"] is not None
         has_selected_camcorder = self.state["selected_camera_table"] is not None
-
+        
         has_frame_range = bool(self.state["has_frame_range"])
         has_unsaved_changes = bool(self.state["has_changes"])
         has_videos = self.labels is not None and len(self.labels.videos) > 0
