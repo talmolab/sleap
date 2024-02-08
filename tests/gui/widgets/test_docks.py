@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from sleap import Labels, Video
 from sleap.gui.app import MainWindow
-from sleap.gui.commands import OpenSkeleton
+from sleap.gui.commands import OpenSkeleton, UnlinkVideo
 from sleap.gui.widgets.docks import (
     InstancesDock,
     SuggestionsDock,
@@ -109,24 +109,38 @@ def test_instances_dock(qtbot):
     assert dock.main_window is main_window
     assert dock.wgt_layout is dock.widget().layout()
 
-def test_seesions_dock(gt_bot, multiview_min_session_labels):
+def test_sessions_dock(qtbot, multiview_min_session_labels):
     main_window = MainWindow()
     dock = SessionsDock(main_window)
 
+    # Testing if dock object loads corretly
     assert dock.name == "Sessions"
     assert dock.main_window is main_window
     assert dock.wgt_layout is dock.widget().layout()
-        
-    video_to_remove = multiview_min_session_labels.videos[0]
-    main_window.state["selected_camera_table"] = video_to_remove
-    dock.main_window._buttons["unlink video"].click()
-    assert len(multiview_min_session_labels.videos) == 7
 
-    # video_to_remove = multiview_min_session_labels.videos[1]
-    # main_window.state["selected_camera_table"] = video_to_remove
-    # dock.main_window._buttons["unlink video"].click()
-    # assert len(multiview_min_session_labels.videos) == 6
+    # loading label file
+    main_window.commands.loadLabelsObject(multiview_min_session_labels)
 
-    # assert (video_to_remove[0] not in labels.videos and video_to_remove[1] not in label.videos)
 
-    # assert main_window.state["video"] == labels.videos[-1]
+    # Testing if cameras_table is loaded correctly
+    camcorders = multiview_min_session_labels.sessions[0].linked_cameras
+
+    for i in range(8):
+        main_window.sessions_dock.camera_table.selectRow(i)
+        assert main_window.sessions_dock.camera_table.getSelectedRowItem() == camcorders[i]
+        assert main_window.sessions_dock.camera_table.model().data(main_window.sessions_dock.camera_table.currentIndex()) == camcorders[i].name
+    
+    # Testing if unlink video command works for camera table
+    idxs_to_remove = [0, 4, 7]
+    to_remove_camcorders = [cam for i, cam in enumerate(camcorders) if i in idxs_to_remove]
+    leftover_camcorder = [cam for i, cam in enumerate(camcorders) if i not in idxs_to_remove]
+    
+    for cam in to_remove_camcorders:
+        main_window.state["selected_camera_table"] = cam
+        main_window._buttons["unlink video"].click()
+
+    
+    for i in range(5):
+        main_window.sessions_dock.camera_table.selectRow(i)
+        assert main_window.sessions_dock.camera_table.getSelectedRowItem() == leftover_camcorder[i]
+        assert main_window.sessions_dock.camera_table.model().data(main_window.sessions_dock.camera_table.currentIndex()) == leftover_camcorder[i].name

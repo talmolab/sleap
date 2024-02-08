@@ -92,6 +92,8 @@ def test_camera_table(qtbot, multiview_min_session_labels):
     assert table.columnCount() == 2
     assert table.rowCount() == 8
 
+    num_rows = table.rowCount()
+
     table = GenericTableView(
         row_name="instance",
         is_sortable=True,
@@ -99,6 +101,29 @@ def test_camera_table(qtbot, multiview_min_session_labels):
         model=CamerasTableModel(items=multiview_min_session_labels.sessions[0]),
     )
 
-    table.selectRow(1)
-    assert table.model().data(table.currentIndex()) == "backL"
+    # Testing if all comcorders are presented in the correct row
+    camcorders = multiview_min_session_labels.sessions[0].linked_cameras
+
+    for i in range(num_rows):
+        table.selectRow(i)
+        assert table.getSelectedRowItem() == camcorders[i]
+        assert table.model().data(table.currentIndex()) == camcorders[i].name
+
+    # Testing if a comcorder change is reflected
+    idxs_to_remove = [1, 2, 7]
+    for idx in idxs_to_remove:
+        multiview_min_session_labels.sessions[0].remove_video(camcorders[idx].get_video(multiview_min_session_labels.sessions[0]))
+
+    removed_camcorder = [cam for i, cam in enumerate(camcorders) if i not in idxs_to_remove]
+
+    for i in range(num_rows-3):
+        table.selectRow(i)
+        assert table.getSelectedRowItem() == camcorders[i]
+        assert table.model().data(table.currentIndex()) == removed_camcorder[i].name
+    
+
+
+
+
+
     
