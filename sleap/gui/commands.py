@@ -3406,41 +3406,6 @@ class TriangulateSession(EditCommand):
                 ask_again: If True, then ask for views/instances again. Default is False.
         """
 
-        # Old: without FrameGroup
-
-        # # Check if we already ran ask
-        # ask_again = params.get("ask_again", False)
-
-        # # Add "instances" to params dict without GUI, otherwise taken care of in ask
-        # if ask_again:
-        #     params["show_dialog"] = False
-        #     enough_instances = cls.verify_views_and_instances(
-        #         context=context, params=params
-        #     )
-        #     if not enough_instances:
-        #         return
-
-        # # Get params
-        # video = params.get("video", None) or context.state["video"]
-        # session = params.get("session", None) or context.labels.get_session(video)
-        # instances: Dict[int, Dict[Camcorder, List[Instance]]] = params["instances"]
-        # frame_idx: int = params["frame_idx"]
-        # session = cast(RecordingSession, session)  # Could be None if no labels or video
-
-        # # Get best instance grouping and reprojected coords
-        # instances_and_reprojected_coords = (
-        #     TriangulateSession.get_instance_grouping_and_reprojected_coords(
-        #         session=session, frame_idx=frame_idx, instance_hypotheses=instances
-        #     )
-        # )
-
-        # # Update instances
-        # TriangulateSession.update_instances(
-        #     instances_and_coords=instances_and_reprojected_coords
-        # )
-
-        # New: with FrameGroup
-
         # Get `FrameGroup` for the current frame index
         video = params.get("video", None) or context.state["video"]
         session = params.get("session", None) or context.labels.get_session(video)
@@ -3475,12 +3440,6 @@ class TriangulateSession(EditCommand):
         Returns:
             True if enough views/instances for triangulation, False otherwise.
         """
-
-        # Old: without FrameGroups
-
-        # return cls.verify_views_and_instances(context=context, params=params)
-
-        # New: with FrameGroups
 
         # Get `FrameGroup` for the current frame index
         video = params.get("video", None) or context.state["video"]
