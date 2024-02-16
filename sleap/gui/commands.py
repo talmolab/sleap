@@ -54,7 +54,7 @@ from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
-from sleap.io.cameras import Camcorder, InstanceGroup, RecordingSession
+from sleap.io.cameras import Camcorder, InstanceGroup, FrameGroup, RecordingSession
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
@@ -3406,36 +3406,57 @@ class TriangulateSession(EditCommand):
                 ask_again: If True, then ask for views/instances again. Default is False.
         """
 
-        # Check if we already ran ask
-        ask_again = params.get("ask_again", False)
+        # Old: without FrameGroup
 
-        # Add "instances" to params dict without GUI, otherwise taken care of in ask
-        if ask_again:
-            params["show_dialog"] = False
-            enough_instances = cls.verify_views_and_instances(
-                context=context, params=params
-            )
-            if not enough_instances:
-                return
+        # # Check if we already ran ask
+        # ask_again = params.get("ask_again", False)
 
-        # Get params
+        # # Add "instances" to params dict without GUI, otherwise taken care of in ask
+        # if ask_again:
+        #     params["show_dialog"] = False
+        #     enough_instances = cls.verify_views_and_instances(
+        #         context=context, params=params
+        #     )
+        #     if not enough_instances:
+        #         return
+
+        # # Get params
+        # video = params.get("video", None) or context.state["video"]
+        # session = params.get("session", None) or context.labels.get_session(video)
+        # instances: Dict[int, Dict[Camcorder, List[Instance]]] = params["instances"]
+        # frame_idx: int = params["frame_idx"]
+        # session = cast(RecordingSession, session)  # Could be None if no labels or video
+
+        # # Get best instance grouping and reprojected coords
+        # instances_and_reprojected_coords = (
+        #     TriangulateSession.get_instance_grouping_and_reprojected_coords(
+        #         session=session, frame_idx=frame_idx, instance_hypotheses=instances
+        #     )
+        # )
+
+        # # Update instances
+        # TriangulateSession.update_instances(
+        #     instances_and_coords=instances_and_reprojected_coords
+        # )
+
+        # New: with FrameGroup
+
+        # Get `FrameGroup` for the current frame index
         video = params.get("video", None) or context.state["video"]
         session = params.get("session", None) or context.labels.get_session(video)
-        instances: Dict[int, Dict[Camcorder, List[Instance]]] = params["instances"]
         frame_idx: int = params["frame_idx"]
-        session = cast(RecordingSession, session)  # Could be None if no labels or video
-
-        # Get best instance grouping and reprojected coords
-        instances_and_reprojected_coords = (
-            TriangulateSession.get_instance_grouping_and_reprojected_coords(
-                session=session, frame_idx=frame_idx, instance_hypotheses=instances
-            )
+        frame_group: FrameGroup = (
+            params.get("frame_group", None) or session.frame_groups[frame_idx]
         )
 
-        # Update instances
-        TriangulateSession.update_instances(
-            instances_and_coords=instances_and_reprojected_coords
-        )
+        # Get the `InstanceGroup`
+        instance = params.get("instance", None) or context.state["instance"]
+        instance_group = params(
+            "instance_group", None
+        ) or frame_group.get_instance_group(instance)
+
+        # Get the `FrameGroup`
+        frame_group_tensor = frame_group.numpy(instance_group)
 
     @classmethod
     def ask(cls, context: CommandContext, params: dict) -> bool:
@@ -3455,7 +3476,44 @@ class TriangulateSession(EditCommand):
             True if enough views/instances for triangulation, False otherwise.
         """
 
-        return cls.verify_views_and_instances(context=context, params=params)
+        # Old: without FrameGroups
+
+        # return cls.verify_views_and_instances(context=context, params=params)
+
+        # New: with FrameGroups
+
+        # Get `FrameGroup` for the current frame index
+        video = params.get("video", None) or context.state["video"]
+        session = params.get("session", None) or context.labels.get_session(video)
+        frame_idx: int = params["frame_idx"]
+        frame_group: FrameGroup = session.frame_groups[frame_idx]
+
+        # Get the `Instance` object to triangulate accross views
+        instance = params.get("instance", None) or context.state["instance"]
+
+        # TODO(LM): Add an `get_instance_group` method on `FrameGroup`
+        # Find the `InstanceGroup` for the selected `Instance`
+        instance_group = frame_group.get_instance_group(instance)
+
+        # TODO(LM): This should triangulate all `InstanceGroup`s, not skip triangulation
+        if instance_group is None:
+            logger.warning(
+                f"No instance group found for instance {instance} at frame {frame_idx}."
+                f"\nSkipping triangulation."
+            )
+            return False  # No instance group found
+
+        # Assert that there are enough views and instances
+        instances = instance_group.get_instances(frame_group.cams_to_include)
+        if len(instances) < 2:
+            logger.warning(
+                f"Not enough instances for triangulation at frame {frame_idx}."
+                f"\nSkipping triangulation."
+            )
+            return False  # Not enough instances
+
+        params["instance_group"] = instance_group
+        return True  # Enough instances
 
     @classmethod
     def verify_views_and_instances(cls, context: CommandContext, params: dict) -> bool:
@@ -3553,13 +3611,13 @@ class TriangulateSession(EditCommand):
         """
 
         try:
-            instances: Dict[
-                int, Dict[Camcorder, List[Instance]]
-            ] = TriangulateSession.get_products_of_instances(
-                session=session,
-                frame_idx=frame_idx,
-                selected_cam=selected_cam,
-                cams_to_include=cams_to_include,
+            instances: Dict[int, Dict[Camcorder, List[Instance]]] = (
+                TriangulateSession.get_products_of_instances(
+                    session=session,
+                    frame_idx=frame_idx,
+                    selected_cam=selected_cam,
+                    cams_to_include=cams_to_include,
+                )
             )
             return instances
         except Exception as e:
@@ -3641,12 +3699,12 @@ class TriangulateSession(EditCommand):
             )
 
         # Get all views at this frame index
-        views: Dict[
-            Camcorder, "LabeledFrame"
-        ] = TriangulateSession.get_all_views_at_frame(
-            session=session,
-            frame_idx=frame_idx,
-            cams_to_include=cams_to_include,
+        views: Dict[Camcorder, "LabeledFrame"] = (
+            TriangulateSession.get_all_views_at_frame(
+                session=session,
+                frame_idx=frame_idx,
+                cams_to_include=cams_to_include,
+            )
         )
 
         # TODO(LM): Should we just skip this frame if not enough views?
@@ -4059,14 +4117,14 @@ class TriangulateSession(EditCommand):
         """
 
         # Get all instances accross views at this frame index, then remove selected
-        instances: Dict[
-            Camcorder, List[Instance]
-        ] = TriangulateSession.get_instances_across_views(
-            session=session,
-            frame_idx=frame_idx,
-            cams_to_include=cams_to_include,
-            track=-1,  # Get all instances regardless of track.
-            require_multiple_views=True,
+        instances: Dict[Camcorder, List[Instance]] = (
+            TriangulateSession.get_instances_across_views(
+                session=session,
+                frame_idx=frame_idx,
+                cams_to_include=cams_to_include,
+                track=-1,  # Get all instances regardless of track.
+                require_multiple_views=True,
+            )
         )
         # Possible race condition
         if selected_cam not in instances:
@@ -4107,9 +4165,9 @@ class TriangulateSession(EditCommand):
             return instances_in_view
 
         # The existing grouping of instances
-        instance_group: Optional[
-            Dict[Camcorder, List[Instance]]
-        ] = session.get_instance_group(frame_idx=frame_idx)
+        instance_group: Optional[Dict[Camcorder, List[Instance]]] = (
+            session.get_instance_group(frame_idx=frame_idx)
+        )
 
         instances_hypotheses: Dict[int, Dict[Camcorder, List[Instance]]] = {}
         # TODO(LM): This should be skipped if we are doing greedy matching, not if instance_group is None

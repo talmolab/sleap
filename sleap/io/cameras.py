@@ -1,4 +1,5 @@
 """Module for storing information for camera groups."""
+
 from itertools import permutations, product
 import logging
 import tempfile
@@ -409,12 +410,25 @@ class InstanceGroup:
     locked: bool = field(default=False)
     _instance_by_camcorder: Dict[Camcorder, "Instance"] = field(factory=dict)
     _camcorder_by_instance: Dict["Instance", Camcorder] = field(factory=dict)
+    _dummy_instance: Optional["Instance"] = field(default=None)
 
     def __attrs_post_init__(self):
         """Initialize `InstanceGroup` object."""
 
         for cam, instance in self._instance_by_camcorder.items():
             self._camcorder_by_instance[instance] = cam
+
+        # Create a dummy instance to fill in for missing instances
+        if self._dummy_instance is None:
+            example_instance: "Instance" = next(iter(self.instances))
+            skeleton: "Skeleton" = example_instance.skeleton
+            self._dummy_instance = example_instance.from_numpy(
+                np.full(
+                    shape=(len(skeleton.nodes), 2),
+                    fill_value=np.nan,
+                ),
+                skeleton=skeleton,
+            )
 
     @property
     def instances(self) -> List["Instance"]:
@@ -425,6 +439,28 @@ class InstanceGroup:
     def cameras(self) -> List[Camcorder]:
         """List of `Camcorder` objects."""
         return list(self._instance_by_camcorder.keys())
+
+    @property
+    def numpy(self) -> np.ndarray:
+        """Return instances as a numpy array of shape (n_views, n_nodes, 2).
+
+        The ordering of views is based on the ordering of `Camcorder`s in the
+        `self.camera_cluster: CameraCluster`.
+
+        If an instance is missing for a `Camcorder`, then the instance is filled in with
+        the dummy instance (all NaNs).
+
+        Returns:
+            Numpy array of shape (n_views, n_nodes, 2).
+        """
+
+        instance_numpys: List[np.ndarray] = []  # len(M) x N x 2
+        for cam in self.camera_cluster.cameras:
+            instance = self.get_instance(cam) or self._dummy_instance
+            instance_numpy: np.ndarray = instance.numpy()  # N x 2
+            instance_numpys.append(instance_numpy)
+
+        return np.stack(instance_numpys, axis=0)  # M x N x 2
 
     def get_instance(self, cam: Camcorder) -> Optional["Instance"]:
         """Retrieve `Instance` linked to `Camcorder`.
@@ -445,6 +481,13 @@ class InstanceGroup:
             return None
 
         return self._instance_by_camcorder[cam]
+
+    def get_instances(self, cams: List[Camcorder]) -> List["Instance"]:
+        instances = []
+        for cam in cams:
+            instance = self.get_instance(cam)
+            instances.append(instance)
+        return instance
 
     def get_cam(self, instance: "Instance") -> Optional[Camcorder]:
         """Retrieve `Camcorder` linked to `Instance`.
@@ -1080,6 +1123,46 @@ class FrameGroup:
 
         return self._locked_instance_groups
 
+    def numpy(self, instance_group: Optional[InstanceGroup] = None) -> np.ndarray:
+        """Numpy array of all `InstanceGroup`s in `FrameGroup.cams_to_include`."""
+
+        instance_group_numpys: List[np.ndarray] = []  # len(T) M x N x 2
+
+        instance_groups = (
+            self.instance_group if instance_group is None else [instance_group]
+        )
+        for instance_group in instance_groups:
+            instance_group_numpy = instance_group.numpy  # M x N x 2
+            instance_group_numpys.append(instance_group_numpy)
+
+        frame_group_numpy = np.stack(instance_group_numpys, axis=1)  # M x T x N x 2
+        cams_to_include_mask = np.array(
+            [1 if cam in self.cams_to_include else 0 for cam in self.cameras]
+        )  # M x 1
+
+        return frame_group_numpy[cams_to_include_mask]
+
+    def get_instance_group(self, instance: "Instance") -> Optional[InstanceGroup]:
+        """Get `InstanceGroup` that contains `Instance` if exists. Otherwise, None.
+
+        Args:
+            instance: `Instance`
+
+        Returns:
+            `InstanceGroup`
+        """
+
+        instance_group: Optional[InstanceGroup] = next(
+            (
+                instance_group
+                for instance_group in self.instance_groups
+                if instance in instance_group.instances
+            ),
+            None,
+        )
+
+        return instance_group
+
     def update_labeled_frames_and_instances_by_cam(
         self, return_instances_by_camera: bool = False
     ) -> Union[Dict[Camcorder, "LabeledFrame"], Dict[Camcorder, List["Instance"]]]:
@@ -1214,9 +1297,9 @@ class FrameGroup:
         """
 
         # Get all `Instance`s for this frame index across all views to include
-        instances_by_camera: Dict[
-            Camcorder, Set["Instance"]
-        ] = self.instances_by_cam_to_include
+        instances_by_camera: Dict[Camcorder, Set["Instance"]] = (
+            self.instances_by_cam_to_include
+        )
 
         # Get max number of instances across all views
         all_instances_by_camera: List[Set["Instance"]] = instances_by_camera.values()
@@ -1267,14 +1350,14 @@ class FrameGroup:
             return unlocked_instances_in_view
 
         # For each view, get permutations of unlocked instances
-        unlocked_instance_permutations: Dict[
-            Camcorder, Iterator[Tuple["Instance"]]
-        ] = {}
+        unlocked_instance_permutations: Dict[Camcorder, Iterator[Tuple["Instance"]]] = (
+            {}
+        )
         for cam, instances_in_view in instances_by_camera.items():
             # Gather all instances for this cam from locked `InstanceGroup`s
-            locked_instances_in_view: Set[
-                "Instance"
-            ] = self._locked_instances_by_cam.get(cam, set())
+            locked_instances_in_view: Set["Instance"] = (
+                self._locked_instances_by_cam.get(cam, set())
+            )
 
             # Remove locked instances from instances in view
             unlocked_instances_in_view: List["Instance"] = list(
