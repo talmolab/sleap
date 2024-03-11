@@ -1,6 +1,8 @@
 import pytest
 import pytestqt
 
+from sleap.io.video import *
+from sleap.io.cameras import *
 from sleap.gui.dataviews import *
 
 
@@ -82,8 +84,22 @@ def test_sessions_table(qtbot, min_session_session):
         name_prefix="",
         model=SessionsTableModel(items=sessions),
     )
-    table.selectRow(0) 
-    assert table.getSelectedRowItem().cameras == 8
+    table.selectRow(0)
+    assert len(table.getSelectedRowItem().videos) == 0
+    assert len(table.getSelectedRowItem().camera_cluster.cameras) == 8
+    assert len(table.getSelectedRowItem().camera_cluster.sessions) == 1
+
+    video = Video.from_hdf5(filename="test.h5", dataset="box")
+    min_session_session.add_video(
+        video,
+        table.getSelectedRowItem().camera_cluster.cameras[0],
+    )
+
+    # Verify that modification of the recording session is reflected in the recording session stored in the table
+    assert len(table.getSelectedRowItem().videos) == 1
+
+    min_session_session.remove_video(video)
+    assert len(table.getSelectedRowItem().videos) == 0
 
 
 def test_table_sort_string(qtbot):

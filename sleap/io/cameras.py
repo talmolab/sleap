@@ -1,4 +1,5 @@
 """Module for storing information for camera groups."""
+
 import logging
 import tempfile
 from pathlib import Path
@@ -499,7 +500,8 @@ class RecordingSession:
 
         # Ensure the `Camcorder` is in this `RecordingSession`'s `CameraCluster`
         try:
-            assert camcorder in self.camera_cluster
+            for camera in self.camera_cluster.cameras:
+                assert camcorder in self.camera_cluster
         except AssertionError:
             raise ValueError(
                 f"Camcorder {camcorder.name} is not in this RecordingSession's "
@@ -579,6 +581,9 @@ class RecordingSession:
                 videos[cam] = video
 
         return videos
+
+    def __bool__(self):
+        return True
 
     def __attrs_post_init__(self):
         self.camera_cluster.add_session(self)
