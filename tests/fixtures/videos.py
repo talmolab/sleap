@@ -51,12 +51,6 @@ def hdf5_affinity():
 
 TEST_SMALL_ROBOT_MP4_FILE = "tests/data/videos/small_robot.mp4"
 TEST_SMALL_CENTERED_PAIR_VID = "tests/data/videos/centered_pair_small.mp4"
-TEST_SINGLE_FLY = "tests/data/videos/single_fly.mp4"
-
-
-@pytest.fixture
-def single_fly_mp4_vid():
-    return Video.from_media(TEST_SINGLE_FLY)
 
 
 @pytest.fixture
