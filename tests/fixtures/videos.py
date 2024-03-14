@@ -1,12 +1,19 @@
 import pytest
 
 from sleap.io.video import Video
+from sleap.io.format.filehandle import FileHandle
 
 TEST_H5_FILE = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
 TEST_H5_DSET = "/box"
 TEST_H5_CONFMAPS = "/confmaps"
 TEST_H5_AFFINITY = "/pafs"
 TEST_H5_INPUT_FORMAT = "channels_first"
+TEST_SINGLE_FLY_H5 = "tests/data/hdf5_format_v1/single_fly.h5"
+
+
+@pytest.fixture
+def single_fly_hdf5():
+    return FileHandle(filename=TEST_SINGLE_FLY_H5)
 
 
 @pytest.fixture
@@ -42,6 +49,12 @@ def hdf5_affinity():
 
 TEST_SMALL_ROBOT_MP4_FILE = "tests/data/videos/small_robot.mp4"
 TEST_SMALL_CENTERED_PAIR_VID = "tests/data/videos/centered_pair_small.mp4"
+TEST_SINGLE_FLY = "tests/data/videos/single_fly.mp4"
+
+
+@pytest.fixture
+def single_fly_mp4_vid():
+    return Video.from_media(TEST_SINGLE_FLY)
 
 
 @pytest.fixture
