@@ -22,11 +22,11 @@ from sleap.info.write_tracking_h5 import get_nodes_as_np_strings
 from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 
 
-def test_sleap_analysis_read(single_fly_mp4_vid, single_fly_hdf5):
+def test_sleap_analysis_read(small_robot_3_frame_vid, small_robot_3_frame_hdf5):
 
     # Single instance hdf5 analysis file test
     read_labels = SleapAnalysisAdaptor.read(
-        file=single_fly_hdf5, video=single_fly_mp4_vid
+        file=small_robot_3_frame_hdf5, video=small_robot_3_frame_vid
     )
 
     assert len(read_labels.videos) == 1

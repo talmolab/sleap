@@ -8,12 +8,14 @@ TEST_H5_DSET = "/box"
 TEST_H5_CONFMAPS = "/confmaps"
 TEST_H5_AFFINITY = "/pafs"
 TEST_H5_INPUT_FORMAT = "channels_first"
-TEST_SINGLE_FLY_H5 = "tests/data/hdf5_format_v1/single_fly.h5"
+TEST_SMALL_ROBOT3_FRAME_H5 = (
+    "tests/data/hdf5_format_v1/small_robot.000_small_robot_3_frame.analysis.h5"
+)
 
 
 @pytest.fixture
-def single_fly_hdf5():
-    return FileHandle(filename=TEST_SINGLE_FLY_H5)
+def small_robot_3_frame_hdf5():
+    return FileHandle(filename=TEST_SMALL_ROBOT3_FRAME_H5)
 
 
 @pytest.fixture
