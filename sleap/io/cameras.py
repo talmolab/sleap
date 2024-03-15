@@ -500,8 +500,7 @@ class RecordingSession:
 
         # Ensure the `Camcorder` is in this `RecordingSession`'s `CameraCluster`
         try:
-            for camera in self.camera_cluster.cameras:
-                assert camcorder in self.camera_cluster
+            assert camcorder in self.camera_cluster
         except AssertionError:
             raise ValueError(
                 f"Camcorder {camcorder.name} is not in this RecordingSession's "
