@@ -12,8 +12,6 @@ from sleap.gui.widgets.docks import (
     SkeletonDock,
     SessionsDock,
 )
-from sleap.io.cameras import RecordingSession
-
 
 def test_videos_dock(
     qtbot,
@@ -111,29 +109,34 @@ def test_instances_dock(qtbot):
     assert dock.wgt_layout is dock.widget().layout()
 
 
+def test_sessions_dock(qtbot):
+    """Test the `SessionsDock` class."""
+    main_window = MainWindow()
+    dock = SessionsDock(main_window)
+
+    assert dock.name == "Sessions"
+    assert dock.main_window is main_window
+    assert dock.wgt_layout is dock.widget().layout()
+
 def test_sessions_dock_session_table(qtbot, multiview_min_session_labels):
+    """Test the SessionsDock.sessions_table."""
+
+    # Create dock
+    main_window = MainWindow()
+    SessionsDock(main_window)
+
+    # Loading label file
+    main_window.commands.loadLabelsObject(multiview_min_session_labels)
+
+    # Testing if sessions table is loaded correctly
+    sessions = multiview_min_session_labels.sessions
+    main_window.sessions_dock.sessions_table.selectRow(0)
+    assert main_window.sessions_dock.sessions_table.getSelectedRowItem() == sessions[0]
+
+    # Testing if removal of selected session is reflected in sessions dock
+    main_window.state["selected_session"] = sessions[0]
+    main_window._buttons["remove session"].click()
+    
     with pytest.raises(IndexError):
-        """Test the SessionsDock class."""
-
-        # Create dock
-        main_window = MainWindow()
-        dock = SessionsDock(main_window)
-
-        # Testing if dock object loads corretly
-        assert dock.name == "Sessions"
-        assert dock.main_window is main_window
-        assert dock.wgt_layout is dock.widget().layout()
-
-        # Loading label file
-        main_window.commands.loadLabelsObject(multiview_min_session_labels)
-
-        # Testing if sessions table is loaded correctly
-        sessions = multiview_min_session_labels.sessions
-        main_window.sessions_dock.table.selectRow(0)
-        assert main_window.sessions_dock.table.getSelectedRowItem() == sessions[0]
-
-        # Testing if removal of selected session is reflected in sessions dock
-        main_window.state["selected_session"] = sessions[0]
-        main_window._buttons["remove session"].click()
-        # The following line should raise an IndexError since there are no longer any sessions in the table
-        main_window.sessions_dock.table.selectRow(0)
+        # There are no longer any sessions in the table
+        main_window.sessions_dock.sessions_table.selectRow(0)
