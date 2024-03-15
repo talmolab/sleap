@@ -82,6 +82,7 @@ class UpdateTopic(Enum):
     frame = 8
     project = 9
     project_instances = 10
+    sessions = 11
 
 
 class AppCommand:
@@ -443,6 +444,10 @@ class CommandContext:
     def addSession(self):
         """Shows gui for adding `RecordingSession`s to the project."""
         self.execute(AddSession)
+
+    def removeSelectedSession(self):
+        """Removes a session from the project and the sessions dock."""
+        self.execute(RemoveSession)
 
     def openSkeletonTemplate(self):
         """Shows gui for loading saved skeleton into project."""
@@ -1700,7 +1705,6 @@ class SelectToFrameGui(NavCommand):
 class GoAdjacentView(NavCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-
         operator = -1 if params["prev_or_next"] == "prev" else 1
 
         labels = context.labels
@@ -1970,12 +1974,26 @@ class RemoveVideo(EditCommand):
         return True
 
 
-class AddSession(EditCommand):
-    # topics = [UpdateTopic.session]
+class RemoveSession(EditCommand):
+    topics = [UpdateTopic.sessions]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
+        current_session = context.state["selected_session"]
+        try:
+            context.labels.remove_recording_session(current_session)
+        except Exception as e:
+            raise e
+        finally:
+            # Always set the selected session to None, even if it wasn't removed
+            context.state["selected_session"] = None
 
+
+class AddSession(EditCommand):
+    topics = [UpdateTopic.sessions]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
         camera_calibration = params["camera_calibration"]
         session = RecordingSession.load(filename=camera_calibration)
 
@@ -1985,6 +2003,10 @@ class AddSession(EditCommand):
         # Load if no video currently loaded
         if context.state["session"] is None:
             context.state["session"] = session
+
+        # Reset since this action is also linked to a button in the SessionsDock and it
+        # is not visually apparent which session is selected after clicking the button
+        context.state["selected_session"] = None
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:

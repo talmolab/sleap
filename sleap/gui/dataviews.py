@@ -385,6 +385,17 @@ class GenericTableView(QtWidgets.QTableView):
         return self.model().original_items[idx.row()]
 
 
+class SessionsTableModel(GenericTableModel):
+    properties = ("id", "videos", "cameras")
+
+    def item_to_data(self, obj, item):
+        res = {}
+        res["id"] = hash(item)
+        res["cameras"] = len(getattr(item, "cameras"))
+        res["videos"] = len(getattr(item, "videos"))
+        return res
+
+
 class VideosTableModel(GenericTableModel):
     properties = ("filename", "frames", "height", "width", "channels")
 
@@ -538,7 +549,6 @@ class SuggestionsTableModel(GenericTableModel):
         if prop != "group":
             super(SuggestionsTableModel, self).sort(column_idx, order)
         else:
-
             if not reverse:
                 # Use group_int (int) instead of group (str).
                 self.beginResetModel()
