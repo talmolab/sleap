@@ -13,6 +13,7 @@ from sleap.gui.widgets.docks import (
     SessionsDock,
 )
 
+
 def test_videos_dock(
     qtbot,
     centered_pair_predictions: Labels,
@@ -118,6 +119,7 @@ def test_sessions_dock(qtbot):
     assert dock.main_window is main_window
     assert dock.wgt_layout is dock.widget().layout()
 
+
 def test_sessions_dock_session_table(qtbot, multiview_min_session_labels):
     """Test the SessionsDock.sessions_table."""
 
@@ -136,7 +138,7 @@ def test_sessions_dock_session_table(qtbot, multiview_min_session_labels):
     # Testing if removal of selected session is reflected in sessions dock
     main_window.state["selected_session"] = sessions[0]
     main_window._buttons["remove session"].click()
-    
+
     with pytest.raises(IndexError):
         # There are no longer any sessions in the table
         main_window.sessions_dock.sessions_table.selectRow(0)

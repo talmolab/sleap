@@ -2004,7 +2004,7 @@ class AddSession(EditCommand):
         if context.state["session"] is None:
             context.state["session"] = session
 
-        # Reset since this action is also linked to a button in the SessionsDock and it 
+        # Reset since this action is also linked to a button in the SessionsDock and it
         # is not visually apparent which session is selected after clicking the button
         context.state["selected_session"] = None
 
