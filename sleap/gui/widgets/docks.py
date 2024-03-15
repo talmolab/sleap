@@ -638,7 +638,7 @@ class SessionsDock(DockWidget):
         if self.table is None:
             self.create_tables()
 
-        self.wgt_layout.addWidget(self.table)
+        self.wgt_layout.addWidget(self.sessions_table)
 
         table_edit_buttons = self.create_table_edit_buttons()
         self.wgt_layout.addWidget(table_edit_buttons)
