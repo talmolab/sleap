@@ -1980,7 +1980,13 @@ class RemoveSession(EditCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         current_session = context.state["selected_session"]
-        context.labels.remove_recording_session(current_session)
+        try:
+            context.labels.remove_recording_session(current_session)
+        except Exception as e:
+            raise e
+        finally:
+            # Always set the selected session to None, even if it wasn't removed
+            context.state["selected_session"] = None
 
 
 class AddSession(EditCommand):
@@ -1997,6 +2003,10 @@ class AddSession(EditCommand):
         # Load if no video currently loaded
         if context.state["session"] is None:
             context.state["session"] = session
+
+        # Reset since this action is also linked to a button in the SessionsDock and it 
+        # is not visually apparent which session is selected after clicking the button
+        context.state["selected_session"] = None
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
