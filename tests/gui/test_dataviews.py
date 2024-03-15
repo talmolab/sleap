@@ -110,7 +110,5 @@ def test_table_sort_string(qtbot):
     table = GenericTableView(is_sortable=True, model=table_model)
 
     # Make sure we can sort with both numbers and strings (i.e., "")
-    # table.model().sort(0)
-    # table.model().sort(1)
-    table.selectRow(1)
-    assert table.getSelectedRowItem()["a"] == 1
+    table.model().sort(0)
+    table.model().sort(1)
