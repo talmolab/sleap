@@ -1,8 +1,3 @@
-import pytest
-import pytestqt
-
-from sleap.io.video import *
-from sleap.io.cameras import *
 from sleap.gui.dataviews import *
 
 
@@ -75,7 +70,7 @@ def test_table_sort(qtbot, centered_pair_predictions):
     assert table.getSelectedRowItem().score == inst.score
 
 
-def test_sessions_table(qtbot, min_session_session):
+def test_sessions_table(qtbot, min_session_session, hdf5_vid):
     sessions = []
     sessions.append(min_session_session)
     table = GenericTableView(
@@ -89,7 +84,7 @@ def test_sessions_table(qtbot, min_session_session):
     assert len(table.getSelectedRowItem().camera_cluster.cameras) == 8
     assert len(table.getSelectedRowItem().camera_cluster.sessions) == 1
 
-    video = Video.from_hdf5(filename="test.h5", dataset="box")
+    video = hdf5_vid
     min_session_session.add_video(
         video,
         table.getSelectedRowItem().camera_cluster.cameras[0],
