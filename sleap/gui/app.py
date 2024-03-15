@@ -1178,7 +1178,7 @@ class MainWindow(QMainWindow):
             self.plotFrame()
 
         if _has_topic([UpdateTopic.sessions]):
-            self.sessions_dock.table.model().items = self.labels.sessions
+            self.sessions_dock.sessions_table.model().items = self.labels.sessions
 
         if _has_topic(
             [

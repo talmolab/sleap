@@ -1,6 +1,6 @@
 """Module for creating dock widgets for the `MainWindow`."""
 
-from typing import Callable, Iterable, List, Optional, Type, Union
+from typing import Callable, Dict, Iterable, List, Optional, Type, Union
 
 from qtpy import QtGui
 from qtpy.QtCore import Qt
@@ -600,21 +600,25 @@ class SessionsDock(DockWidget):
         hbw.setLayout(hb)
         return hbw
 
-    def create_models(self) -> SessionsTableModel:
+    def create_models(self) -> Union[GenericTableModel, Dict[str, GenericTableModel]]:
         main_window = self.main_window
         self.sessions_model = self.model_type(
             items=main_window.state["labels"].sessions, context=main_window.commands
         )
 
-        return self.sessions_model
+        self.model = {"sessions_model": self.sessions_model}
+        return self.model
 
-    def create_tables(self) -> GenericTableView:
+    def create_tables(self) -> Union[GenericTableView, Dict[str, GenericTableView]]:
         if self.sessions_model is None:
             self.create_models()
 
-        self.table = GenericTableView(
-            state=self.main_window.state, row_name="session", model=self.sessions_model
+        main_window = self.main_window
+        self.sessions_table = GenericTableView(
+            state=main_window.state, row_name="session", model=self.sessions_model
         )
+
+        self.table = {"sessions_table": self.sessions_table}
         return self.table
 
     def create_table_edit_buttons(self) -> QWidget:
