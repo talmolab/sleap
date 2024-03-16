@@ -145,6 +145,7 @@ class MainWindow(QMainWindow):
         self.state["labeled_frame"] = None
         self.state["last_interacted_frame"] = None
         self.state["filename"] = None
+        self.state["session"] = None
         self.state["show non-visible nodes"] = prefs["show non-visible nodes"]
         self.state["show instances"] = True
         self.state["show labels"] = True
@@ -1095,7 +1096,7 @@ class MainWindow(QMainWindow):
         has_selected_video = self.state["selected_video"] is not None
         has_video = self.state["video"] is not None
         has_selected_camcorder = self.state["selected_camera_table"] is not None
-        
+
         has_frame_range = bool(self.state["has_frame_range"])
         has_unsaved_changes = bool(self.state["has_changes"])
         has_videos = self.labels is not None and len(self.labels.videos) > 0
@@ -1239,10 +1240,9 @@ class MainWindow(QMainWindow):
             self.state["last_interacted_frame"] = self.state["labeled_frame"]
 
         if _has_topic([UpdateTopic.sessions]):
-            self.sessions_dock.table["camera_table"].model().items = self.labels.sessions[0]
-
-
-        
+            self.sessions_dock.table["camera_table"].model().items = self.state[
+                "session"  # TODO(LM): Use "selected_session" here
+            ]
 
     def plotFrame(self, *args, **kwargs):
         """Plots (or replots) current frame."""
