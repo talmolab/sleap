@@ -660,6 +660,7 @@ class CommandContext:
         """Unlinks video from a camera"""
         self.execute(UnlinkVideo)
 
+
 # File Commands
 
 
@@ -700,8 +701,8 @@ class LoadLabelsObject(AppCommand):
         # Load first video
         if len(labels.videos):
             context.state["video"] = labels.videos[0]
-        
-        context.state["session"] = labels.sessions[0] if len(labels.sessions) else None 
+
+        context.state["session"] = labels.sessions[0] if len(labels.sessions) else None
 
         context.state["project_loaded"] = True
         context.state["has_changes"] = params.get("changed_on_load", False) or (
@@ -3908,19 +3909,17 @@ def copy_to_clipboard(text: str):
     clipboard.clear(mode=clipboard.Clipboard)
     clipboard.setText(text, mode=clipboard.Clipboard)
 
+
 class UnlinkVideo(EditCommand):
     topics = [UpdateTopic.sessions]
-    
+
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         camcorder = context.state["selected_camera_table"]
-        recording_session = camcorder.sessions[0] # potentially buggy
+        # TODO(LM): replace with state["selected_session"]
+        recording_session = context.state["session"]
 
         video = camcorder.get_video(recording_session)
 
         if video is not None and recording_session is not None:
             recording_session.remove_video(video)
-
-
-        
-                 
