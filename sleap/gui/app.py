@@ -1240,7 +1240,7 @@ class MainWindow(QMainWindow):
             self.state["last_interacted_frame"] = self.state["labeled_frame"]
 
         if _has_topic([UpdateTopic.sessions]):
-            self.sessions_dock.table["camera_table"].model().items = self.state[
+            self.sessions_dock.camera_table.model().items = self.state[
                 "session"  # TODO(LM): Use "selected_session" here
             ]
 
