@@ -666,7 +666,9 @@ class CamerasTableModel(GenericTableModel):
     properties = ("camera", "video")
 
     def object_to_items(self, obj: RecordingSession):
-        return obj.linked_cameras
+        return obj.camera_cluster.cameras
 
     def item_to_data(self, obj: RecordingSession, item: Camcorder):
-        return {"camera": item.name, "video": obj.get_video(item).filename}
+        
+        video = obj.get_video(item)
+        return {"camera": item.name, "video": video.filename if video else ""}

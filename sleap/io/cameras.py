@@ -462,7 +462,7 @@ class RecordingSession:
             )
 
         if camcorder not in self._video_by_camcorder:
-            logger.warning(
+            logger.debug(
                 f"Camcorder {camcorder.name} is not linked to a video in this "
                 f"RecordingSession."
             )
