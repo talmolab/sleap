@@ -629,7 +629,7 @@ class SessionsDock(DockWidget):
         main_window = self.main_window
         self.camera_table = GenericTableView(
             state=main_window.state,
-            row_name="camera_table",
+            row_name="camera",
             model=self.camera_model,
         )
 

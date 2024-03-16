@@ -136,7 +136,7 @@ def test_sessions_dock(qtbot, multiview_min_session_labels):
     leftover_camcorder = [cam for i, cam in enumerate(camcorders) if i not in idxs_to_remove]
     
     for cam in to_remove_camcorders:
-        main_window.state["selected_camera_table"] = cam
+        main_window.state["selected_camera"] = cam
         main_window._buttons["unlink video"].click()
 
     
