@@ -3923,3 +3923,6 @@ class UnlinkVideo(EditCommand):
 
         if video is not None and recording_session is not None:
             recording_session.remove_video(video)
+
+        # Reset the selected camera
+        context.state["selected_camera"] = None

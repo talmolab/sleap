@@ -42,7 +42,7 @@ class Camcorder:
 
     def get_video(self, session: "RecordingSession") -> Optional[Video]:
         if session not in self._video_by_session:
-            logger.warning(f"{session} not found in {self}.")
+            logger.debug(f"{session} not found in {self}.")
             return None
         return self._video_by_session[session]
 
