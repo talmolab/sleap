@@ -653,21 +653,20 @@ class SkeletonNodeModel(QtCore.QStringListModel):
     def flags(self, index: QtCore.QModelIndex):
         """Overrides Qt method, returns flags (editable etc)."""
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
-    
-class CamerasTableModel(GenericTableModel):
-    """
-    Table model for for multi-view, showing which cameras 
-    are assigned to which videos
 
-    Args: 
-        obj: 'RecordingSession' which has information of cameras 
+
+class CamerasTableModel(GenericTableModel):
+    """Table model for unlinking `Camcorder`s and `Video`s within a `RecordingSession`.
+
+    Args:
+        obj: 'RecordingSession' which has information of cameras
               and paired video
     """
-    
+
     properties = ("camera", "video")
-        
+
     def object_to_items(self, obj: RecordingSession):
         return obj.linked_cameras
-    
+
     def item_to_data(self, obj: RecordingSession, item: Camcorder):
-        return {'camera': item.name, 'video': obj.get_video(item).filename}
+        return {"camera": item.name, "video": obj.get_video(item).filename}
