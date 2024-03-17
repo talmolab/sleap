@@ -14,10 +14,9 @@ from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.learning import runners, scopedkeydict, configs, datagen, receptivefield
 
-from typing import Dict, List, Optional, Text, Optional, cast
+from typing import Dict, List, Text, Optional, cast
 
 from qtpy import QtWidgets, QtCore
-
 import json
 
 # List of fields which should show list of skeleton nodes
@@ -128,12 +127,25 @@ class LearningDialog(QtWidgets.QDialog):
         self.message_widget = QtWidgets.QLabel("")
 
         # Layout for entire dialog
-        layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(self.tab_widget)
-        layout.addWidget(self.message_widget)
-        layout.addWidget(buttons_layout_widget)
+        content_widget = QtWidgets.QWidget()
+        content_layout = QtWidgets.QVBoxLayout(content_widget)
 
-        self.setLayout(layout)
+        content_layout.addWidget(self.tab_widget)
+        content_layout.addWidget(self.message_widget)
+        content_layout.addWidget(buttons_layout_widget)
+
+        # Create the QScrollArea.
+        scroll_area = QtWidgets.QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(content_widget)
+
+        scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.addWidget(scroll_area)
+
+        self.adjust_initial_size()
 
         # Default to most recently trained pipeline (if there is one)
         self.set_default_pipeline_tab()
@@ -156,6 +168,20 @@ class LearningDialog(QtWidgets.QDialog):
             self.pipeline_form_widget.buttons["_view_datagen"].clicked.connect(
                 self.view_datagen
             )
+
+    def adjust_initial_size(self):
+        # Get screen size
+        screen = QtWidgets.QDesktopWidget().screenGeometry()
+
+        max_width = 1860
+        max_height = 1150
+        margin = 0.10
+
+        # Calculate target width and height
+        target_width = min(screen.width() - screen.width() * margin, max_width)
+        target_height = min(screen.height() - screen.height() * margin, max_height)
+        # Set the dialog's dimensions
+        self.resize(target_width, target_height)
 
     def update_file_lists(self):
         self._cfg_getter.update()
