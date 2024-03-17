@@ -7,6 +7,6 @@ export PIP_NO_INDEX=False
 export PIP_NO_DEPENDENCIES=False
 export PIP_IGNORE_INSTALLED=False
 
-pip install --no-cache-dir -r requirements.txt
+pip install --no-cache-dir -r requirements.txt --no-binary qudida,albumentations
 
 python setup.py install --single-version-externally-managed --record=record.txt
