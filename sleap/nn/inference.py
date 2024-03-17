@@ -1587,10 +1587,9 @@ class SingleInstancePredictor(Predictor):
             # Gracefully handle seeking errors by early termination.
             if "Unable to load frame" in str(e):
                 pass  # TODO: Print warning obeying verbosity? (This code path is also
-                      # called for interactive prediction where we don't want any spam.)
+                # called for interactive prediction where we don't want any spam.)
             else:
                 raise
-
 
         finally:
             prediction_queue.put(None)
@@ -2642,15 +2641,15 @@ class TopDownPredictor(Predictor):
         try:
             for ex in generator:
                 prediction_queue.put(ex)
-        
+
         except KeyError as e:
             # Gracefully handle seeking errors by early termination.
             if "Unable to load frame" in str(e):
                 pass  # TODO: Print warning obeying verbosity? (This code path is also
-                      # called for interactive prediction where we don't want any spam.)
+                # called for interactive prediction where we don't want any spam.)
             else:
                 raise
-            
+
         finally:
             prediction_queue.put(None)
             object_builder.join()
@@ -3289,7 +3288,7 @@ class BottomUpPredictor(Predictor):
             # Gracefully handle seeking errors by early termination.
             if "Unable to load frame" in str(e):
                 pass  # TODO: Print warning obeying verbosity? (This code path is also
-                      # called for interactive prediction where we don't want any spam.)
+                # called for interactive prediction where we don't want any spam.)
             else:
                 raise
 
@@ -3803,7 +3802,7 @@ class BottomUpMultiClassPredictor(Predictor):
             # Gracefully handle seeking errors by early termination.
             if "Unable to load frame" in str(e):
                 pass  # TODO: Print warning obeying verbosity? (This code path is also
-                      # called for interactive prediction where we don't want any spam.)
+                # called for interactive prediction where we don't want any spam.)
             else:
                 raise
 
@@ -4499,7 +4498,7 @@ class TopDownMultiClassPredictor(Predictor):
             # Gracefully handle seeking errors by early termination.
             if "Unable to load frame" in str(e):
                 pass  # TODO: Print warning obeying verbosity? (This code path is also
-                      # called for interactive prediction where we don't want any spam.)
+                # called for interactive prediction where we don't want any spam.)
             else:
                 raise
 
@@ -4785,7 +4784,7 @@ class MoveNetPredictor(Predictor):
             # Gracefully handle seeking errors by early termination.
             if "Unable to load frame" in str(e):
                 pass  # TODO: Print warning obeying verbosity? (This code path is also
-                      # called for interactive prediction where we don't want any spam.)
+                # called for interactive prediction where we don't want any spam.)
             else:
                 raise
 
