@@ -279,6 +279,66 @@ def test_ExportAnalysisFile(
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=2, labels_path=context.state["filename"])
 
+    # Test with all_videos True and all_frames True
+    params = {"all_videos": True, "all_frames": True, "csv": csv}
+    okay = ExportAnalysisFile_ask(context=context, params=params)
+    assert okay == True
+    ExportAnalysisFile.do_action(context=context, params=params)
+    assert_videos_written(num_videos=2, labels_path=context.state["filename"])
+
+    # Test with all_videos False and all_frames True
+    params = {"all_videos": False, "all_frames": True, "csv": csv}
+    okay = ExportAnalysisFile_ask(context=context, params=params)
+    assert okay == True
+    ExportAnalysisFile.do_action(context=context, params=params)
+    assert_videos_written(num_videos=1, labels_path=context.state["filename"])
+
+    # Test with all_videos False and all_frames False
+    params = {"all_videos": False, "all_frames": False, "csv": csv}
+    okay = ExportAnalysisFile_ask(context=context, params=params)
+    assert okay == True
+    ExportAnalysisFile.do_action(context=context, params=params)
+    assert_videos_written(num_videos=1, labels_path=context.state["filename"])
+
+    # Add labels path and test with all_videos True and all_frames True (single video)
+    context.state["filename"] = str(tmpdir.with_name("path.to.labels"))
+    params = {"all_videos": True, "all_frames": True, "csv": csv}
+    okay = ExportAnalysisFile_ask(context=context, params=params)
+    assert okay == True
+    ExportAnalysisFile.do_action(context=context, params=params)
+    assert_videos_written(num_videos=2, labels_path=context.state["filename"])
+
+    # Add a video (no labels) and test with all_videos True and all_frames True
+    labels.add_video(small_robot_mp4_vid)
+
+    params = {"all_videos": True, "all_frames": True, "csv": csv}
+    okay = ExportAnalysisFile_ask(context=context, params=params)
+    assert okay == True
+    ExportAnalysisFile.do_action(context=context, params=params)
+    assert_videos_written(num_videos=2, labels_path=context.state["filename"])
+
+    # Test with videos with the same filename
+    (tmpdir / "session1").mkdir()
+    (tmpdir / "session2").mkdir()
+    shutil.copy(
+        centered_pair_predictions.video.backend.filename,
+        tmpdir / "session1" / "video.mp4",
+    )
+    shutil.copy(small_robot_mp4_vid.backend.filename, tmpdir / "session2" / "video.mp4")
+    labels.videos[0].backend.filename = str(tmpdir / "session1" / "video.mp4")
+    labels.videos[1].backend.filename = str(tmpdir / "session2" / "video.mp4")
+    params = {"all_videos": True, "csv": csv}
+    okay = ExportAnalysisFile_ask(context=context, params=params)
+    assert okay == True
+    ExportAnalysisFile.do_action(context=context, params=params)
+    assert_videos_written(num_videos=2, labels_path=context.state["filename"])
+
+    # Remove all videos and test
+    all_videos = list(labels.videos)
+    for video in all_videos:
+        labels.remove_video(labels.videos[-1])
+
+    params = {"all_videos": True, "all_frames": True, "csv": csv}
     # Test with videos with the same filename
     (tmpdir / "session1").mkdir()
     (tmpdir / "session2").mkdir()
