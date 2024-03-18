@@ -651,6 +651,10 @@ class SessionsDock(DockWidget):
             model=self.camera_model,
         )
 
+        self.main_window.state.connect(
+            "selected_session", self.main_window.update_cameras_model
+        )
+
         self.table = {
             "sessions_table": self.sessions_table,
             "camera_table": self.camera_table,

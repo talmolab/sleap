@@ -1244,9 +1244,11 @@ class MainWindow(QMainWindow):
             self.state["last_interacted_frame"] = self.state["labeled_frame"]
 
         if _has_topic([UpdateTopic.sessions]):
-            self.sessions_dock.camera_table.model().items = self.state[
-                "session"  # TODO(LM): Use "selected_session" here
-            ]
+            self.update_cameras_model()
+
+    def update_cameras_model(self):
+        """Update the cameras model with the selected session."""
+        self.sessions_dock.camera_table.model().items = self.state["selected_session"]
 
     def plotFrame(self, *args, **kwargs):
         """Plots (or replots) current frame."""
