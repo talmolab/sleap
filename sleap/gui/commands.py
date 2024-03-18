@@ -3937,8 +3937,7 @@ class UnlinkVideo(EditCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         camcorder = context.state["selected_camera"]
-        # TODO(LM): replace with state["selected_session"]
-        recording_session = context.state["session"]
+        recording_session = context.state["selected_session"]
 
         video = camcorder.get_video(recording_session)
 
