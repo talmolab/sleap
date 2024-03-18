@@ -1,6 +1,9 @@
 """Module for testing dock widgets for the `MainWindow`."""
 
 from pathlib import Path
+
+import pytest
+
 from sleap import Labels, Video
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import OpenSkeleton
