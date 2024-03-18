@@ -1,4 +1,5 @@
 """Module for storing information for camera groups."""
+
 import logging
 import tempfile
 from pathlib import Path
@@ -579,6 +580,9 @@ class RecordingSession:
                 videos[cam] = video
 
         return videos
+
+    def __bool__(self):
+        return True
 
     def __attrs_post_init__(self):
         self.camera_cluster.add_session(self)

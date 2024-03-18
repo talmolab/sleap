@@ -9,6 +9,7 @@ from sleap.gui.widgets.docks import (
     SuggestionsDock,
     VideosDock,
     SkeletonDock,
+    SessionsDock,
 )
 
 
@@ -108,6 +109,16 @@ def test_instances_dock(qtbot):
     assert dock.wgt_layout is dock.widget().layout()
 
 
+def test_sessions_dock(qtbot):
+    """Test the `SessionsDock` class."""
+    main_window = MainWindow()
+    dock = SessionsDock(main_window)
+
+    assert dock.name == "Sessions"
+    assert dock.main_window is main_window
+    assert dock.wgt_layout is dock.widget().layout()
+
+
 def test_sessions_dock_cameras_table(qtbot, multiview_min_session_labels):
     labels = multiview_min_session_labels
     session = labels.sessions[0]
@@ -154,3 +165,24 @@ def test_sessions_dock_cameras_table(qtbot, multiview_min_session_labels):
         else:
             linked_video_filename = linked_video.filename
             assert table.model().data(index) == linked_video_filename
+
+
+def test_sessions_dock_session_table(qtbot, multiview_min_session_labels):
+    """Test the SessionsDock.sessions_table."""
+
+    # Create dock
+    labels = multiview_min_session_labels
+    main_window = MainWindow(labels=labels)
+
+    # Testing if sessions table is loaded correctly
+    sessions = multiview_min_session_labels.sessions
+    main_window.sessions_dock.sessions_table.selectRow(0)
+    assert main_window.sessions_dock.sessions_table.getSelectedRowItem() == sessions[0]
+
+    # Testing if removal of selected session is reflected in sessions dock
+    main_window.state["selected_session"] = sessions[0]
+    main_window._buttons["remove session"].click()
+
+    with pytest.raises(IndexError):
+        # There are no longer any sessions in the table
+        main_window.sessions_dock.sessions_table.selectRow(0)

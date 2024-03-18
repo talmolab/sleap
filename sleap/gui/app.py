@@ -44,7 +44,6 @@ ensures consistency (e.g.) between color of instances drawn on video
 frame and instances listed in data view table.
 """
 
-
 import os
 import platform
 import random
@@ -1094,6 +1093,7 @@ class MainWindow(QMainWindow):
         has_selected_node = self.state["selected_node"] is not None
         has_selected_edge = self.state["selected_edge"] is not None
         has_selected_video = self.state["selected_video"] is not None
+        has_selected_session = self.state["selected_session"] is not None
         has_video = self.state["video"] is not None
         has_selected_camcorder = self.state["selected_camera"] is not None
 
@@ -1154,6 +1154,7 @@ class MainWindow(QMainWindow):
         self.suggestions_dock.suggestions_form_widget.buttons[
             "generate_button"
         ].setEnabled(has_videos)
+        self._buttons["remove session"].setEnabled(has_selected_session)
 
         # Update overlays
         self.overlays["track_labels"].visible = (
@@ -1178,6 +1179,9 @@ class MainWindow(QMainWindow):
             ]
         ):
             self.plotFrame()
+
+        if _has_topic([UpdateTopic.sessions]):
+            self.sessions_dock.sessions_table.model().items = self.labels.sessions
 
         if _has_topic(
             [
