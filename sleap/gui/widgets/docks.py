@@ -1,6 +1,6 @@
 """Module for creating dock widgets for the `MainWindow`."""
 
-from typing import Callable, Iterable, List, Optional, Type, Union
+from typing import Callable, Dict, Iterable, List, Optional, Type, Union
 
 from qtpy import QtGui
 from qtpy.QtCore import Qt
@@ -12,6 +12,10 @@ from qtpy.QtWidgets import (
     QLabel,
     QLayout,
     QMainWindow,
+    QLabel,
+    QComboBox,
+    QCheckBox,
+    QGroupBox,
     QPushButton,
     QTabWidget,
     QVBoxLayout,
@@ -27,6 +31,8 @@ from sleap.gui.dataviews import (
     SkeletonNodesTableModel,
     SuggestionsTableModel,
     VideosTableModel,
+    CamerasTableModel,
+    SessionsTableModel,
 )
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.widgets.views import CollapsibleWidget
@@ -363,7 +369,6 @@ class SkeletonDock(DockWidget):
         vb.addWidget(hbw)
 
         def updatePreviewImage(preview_image_bytes: bytes):
-
             # Decode the preview image
             preview_image = decode_preview_image(preview_image_bytes)
 
@@ -566,3 +571,127 @@ class InstancesDock(DockWidget):
         hbw = QWidget()
         hbw.setLayout(hb)
         return hbw
+
+
+class SessionsDock(DockWidget):
+    def __init__(
+        self,
+        main_window: Optional[QMainWindow],
+        tab_with: Optional[QLayout] = None,
+    ):
+        self.sessions_model_type = SessionsTableModel
+        self.camera_model_type = CamerasTableModel
+        super().__init__(
+            name="Sessions",
+            main_window=main_window,
+            model_type=[self.sessions_model_type, self.camera_model_type],
+            tab_with=tab_with,
+        )
+
+    def create_triangulation_options(self) -> QWidget:
+        main_window = self.main_window
+        hb = QHBoxLayout()
+
+        # Add button to triangulate on demand
+        self.add_button(
+            hb,
+            "Triangulate",
+            main_window.process_events_then(main_window.commands.triangulateSession),
+        )
+
+        # Add checkbox and button for "Auto-triangulate"
+        self.auto_align_checkbox = QCheckBox("Auto-Triangulate")
+        self.auto_align_checkbox.stateChanged.connect(
+            lambda x: main_window.state.set("auto_triangulate", x == Qt.Checked)
+        )
+        hb.addWidget(self.auto_align_checkbox)
+
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        return hbw
+
+    def create_video_unlink_button(self) -> QWidget:
+        main_window = self.main_window
+
+        hb = QHBoxLayout()
+        self.add_button(
+            hb, "Unlink Video", main_window.commands.unlink_video_from_camera
+        )
+
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        return hbw
+
+    def create_models(self) -> Union[GenericTableModel, Dict[str, GenericTableModel]]:
+        main_window = self.main_window
+        self.sessions_model = self.sessions_model_type(
+            items=main_window.state["labels"].sessions, context=main_window.commands
+        )
+        self.camera_model = self.camera_model_type(
+            items=main_window.state["selected_session"], context=main_window.commands
+        )
+
+        self.model = {
+            "sessions_model": self.sessions_model,
+            "camera_model": self.camera_model,
+        }
+        return self.model
+
+    def create_tables(self) -> Union[GenericTableView, Dict[str, GenericTableView]]:
+        if self.sessions_model is None:
+            self.create_models()
+
+        main_window = self.main_window
+        self.sessions_table = GenericTableView(
+            state=main_window.state, row_name="session", model=self.sessions_model
+        )
+        self.camera_table = GenericTableView(
+            state=main_window.state,
+            row_name="camera",
+            model=self.camera_model,
+        )
+
+        self.main_window.state.connect(
+            "selected_session", self.main_window.update_cameras_model
+        )
+
+        self.table = {
+            "sessions_table": self.sessions_table,
+            "camera_table": self.camera_table,
+        }
+        return self.table
+
+    def create_table_edit_buttons(self) -> QWidget:
+        main_window = self.main_window
+
+        hb = QHBoxLayout()
+        self.add_button(hb, "Add Session", lambda x: main_window.commands.addSession())
+        self.add_button(
+            hb, "Remove Session", main_window.commands.removeSelectedSession
+        )
+
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        return hbw
+
+    def lay_everything_out(self) -> None:
+        if self.table is None:
+            self.create_tables()
+
+        # TODO(LM): Add this to a create method
+        # Add the sessions table to the dock
+        self.wgt_layout.addWidget(self.sessions_table)
+
+        table_edit_buttons = self.create_table_edit_buttons()
+        self.wgt_layout.addWidget(table_edit_buttons)
+
+        # TODO(LM): Add this to a create method
+        # Add the cameras table to the dock
+        self.wgt_layout.addWidget(self.camera_table)
+
+        video_unlink_button = self.create_video_unlink_button()
+        self.wgt_layout.addWidget(video_unlink_button)
+
+        # Add the triangulation options to the dock
+        triangulation_options = self.create_triangulation_options()
+        self.wgt_layout.addWidget(triangulation_options)

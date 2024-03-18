@@ -1,4 +1,5 @@
 """Module for storing information for camera groups."""
+
 import logging
 import tempfile
 from pathlib import Path
@@ -42,7 +43,7 @@ class Camcorder:
 
     def get_video(self, session: "RecordingSession") -> Optional[Video]:
         if session not in self._video_by_session:
-            logger.warning(f"{session} not found in {self}.")
+            logger.debug(f"{session} not found in {self}.")
             return None
         return self._video_by_session[session]
 
@@ -419,6 +420,14 @@ class RecordingSession:
     def videos(self) -> List[Video]:
         """List of `Video`s."""
 
+        # TODO(LM): Should these be in the same order as `self.labels.videos`?
+        # e.g. switching between views in GUI should keep the same order, but not enforced.
+        # We COULD implicitly enforce this by adding videos in the same order as
+        # `self.labels.videos`, but "explicit is better than implicit".
+        # Instead, we could sort the videos by their index in labels.videos. This might
+        # bottleneck switching between views for sessions with lots of cameras/videos.
+        # Unless! We do this (each time) when adding the videos to the session instead
+        # of when accessing the videos. This would be a good compromise.
         return self.camera_cluster._videos_by_session[self]
 
     @property
@@ -454,7 +463,7 @@ class RecordingSession:
             )
 
         if camcorder not in self._video_by_camcorder:
-            logger.warning(
+            logger.debug(
                 f"Camcorder {camcorder.name} is not linked to a video in this "
                 f"RecordingSession."
             )
@@ -571,6 +580,9 @@ class RecordingSession:
                 videos[cam] = video
 
         return videos
+
+    def __bool__(self):
+        return True
 
     def __attrs_post_init__(self):
         self.camera_cluster.add_session(self)

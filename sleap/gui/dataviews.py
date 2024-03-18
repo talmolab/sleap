@@ -30,6 +30,7 @@ from sleap.gui.color import ColorManager
 from sleap.io.dataset import Labels
 from sleap.instance import LabeledFrame, Instance
 from sleap.skeleton import Skeleton
+from sleap.io.cameras import Camcorder, RecordingSession
 
 
 class GenericTableModel(QtCore.QAbstractTableModel):
@@ -385,6 +386,17 @@ class GenericTableView(QtWidgets.QTableView):
         return self.model().original_items[idx.row()]
 
 
+class SessionsTableModel(GenericTableModel):
+    properties = ("id", "videos", "cameras")
+
+    def item_to_data(self, obj, item):
+        res = {}
+        res["id"] = hash(item)
+        res["cameras"] = len(getattr(item, "cameras"))
+        res["videos"] = len(getattr(item, "videos"))
+        return res
+
+
 class VideosTableModel(GenericTableModel):
     properties = ("filename", "frames", "height", "width", "channels")
 
@@ -538,7 +550,6 @@ class SuggestionsTableModel(GenericTableModel):
         if prop != "group":
             super(SuggestionsTableModel, self).sort(column_idx, order)
         else:
-
             if not reverse:
                 # Use group_int (int) instead of group (str).
                 self.beginResetModel()
@@ -652,3 +663,22 @@ class SkeletonNodeModel(QtCore.QStringListModel):
     def flags(self, index: QtCore.QModelIndex):
         """Overrides Qt method, returns flags (editable etc)."""
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
+
+class CamerasTableModel(GenericTableModel):
+    """Table model for unlinking `Camcorder`s and `Video`s within a `RecordingSession`.
+
+    Args:
+        obj: 'RecordingSession' which has information of cameras
+              and paired video
+    """
+
+    properties = ("camera", "video")
+
+    def object_to_items(self, obj: RecordingSession):
+        return obj.camera_cluster.cameras
+
+    def item_to_data(self, obj: RecordingSession, item: Camcorder):
+
+        video = obj.get_video(item)
+        return {"camera": item.name, "video": video.filename if video else ""}

@@ -1528,22 +1528,29 @@ class QtNode(QGraphicsEllipseItem):
             # Select instance this nodes belong to.
             self.parentObject().player.state["instance"] = self.parentObject().instance
 
+            # TODO(LM): Document this behavior
+            # Ctrl-click to toggle node(s) as incomplete
+            complete = False if (event.modifiers() & Qt.ControlModifier) else True
+
             # Alt-click to drag instance
-            if event.modifiers() == Qt.AltModifier:
+            if event.modifiers() & Qt.AltModifier:
                 self.dragParent = True
                 self.parentObject().setFlag(QGraphicsItem.ItemIsMovable)
                 # set origin to point clicked so that we can rotate around this point
                 self.parentObject().setTransformOriginPoint(self.scenePos())
                 self.parentObject().mousePressEvent(event)
-            # Shift-click to mark all points as complete
-            elif event.modifiers() == Qt.ShiftModifier:
-                self.parentObject().updatePoints(complete=True, user_change=True)
+            # Shift-click to mark all points as complete (or incomplete if ctrl is held)
+            elif event.modifiers() & Qt.ShiftModifier:
+                self.parentObject().updatePoints(
+                    complete=complete, incomplete=(not complete), user_change=True
+                )
             else:
                 self.dragParent = False
                 super(QtNode, self).mousePressEvent(event)
                 self.updatePoint()
 
-            self.point.complete = True  # FIXME: move to command
+            self.point.complete = complete  # FIXME: move to command
+
         elif event.button() == Qt.RightButton:
             # Select instance this nodes belong to.
             self.parentObject().player.state["instance"] = self.parentObject().instance
@@ -1904,14 +1911,21 @@ class QtInstance(QGraphicsObject):
     def __repr__(self) -> str:
         return f"QtInstance(pos()={self.pos()},instance={self.instance})"
 
-    def updatePoints(self, complete: bool = False, user_change: bool = False):
+    def updatePoints(
+        self,
+        complete: bool = False,
+        incomplete: bool = False,
+        user_change: bool = False,
+    ):
         """Update data and display for all points in skeleton.
 
         This is called any time the skeleton is manipulated as a whole.
 
         Args:
-            complete: Whether to update all nodes by setting "completed"
-                attribute.
+            complete: Whether to update all nodes to complete by setting "completed"
+                attribute. Overrides `incomplete`.
+            incomplete: Whether to update all nodes to incomplete by setting "complete"
+                attribute. Overridden by `complete`.
             user_change: Whether method is called because of change made by
                 user.
 
@@ -1936,6 +1950,8 @@ class QtInstance(QGraphicsObject):
             if complete:
                 # FIXME: move to command
                 node_item.point.complete = True
+            elif incomplete:
+                node_item.point.complete = False
         # Wait to run callbacks until all nodes are updated
         # Otherwise the label positions aren't correct since
         # they depend on the edge vectors to old node positions.

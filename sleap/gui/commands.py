@@ -82,6 +82,7 @@ class UpdateTopic(Enum):
     frame = 8
     project = 9
     project_instances = 10
+    sessions = 11
 
 
 class AppCommand:
@@ -410,6 +411,14 @@ class CommandContext:
         """Activates video and goes to frame."""
         NavCommand.go_to(self, frame_idx, video)
 
+    def nextView(self):
+        """Goes to next view."""
+        self.execute(GoAdjacentView, prev_or_next="next")
+
+    def prevView(self):
+        """Goes to previous view."""
+        self.execute(GoAdjacentView, prev_or_next="prev")
+
     # Editing Commands
 
     def toggleGrayscale(self):
@@ -435,6 +444,10 @@ class CommandContext:
     def addSession(self):
         """Shows gui for adding `RecordingSession`s to the project."""
         self.execute(AddSession)
+
+    def removeSelectedSession(self):
+        """Removes a session from the project and the sessions dock."""
+        self.execute(RemoveSession)
 
     def openSkeletonTemplate(self):
         """Shows gui for loading saved skeleton into project."""
@@ -647,6 +660,10 @@ class CommandContext:
         """Open the current prerelease version."""
         self.execute(OpenPrereleaseVersion)
 
+    def unlink_video_from_camera(self):
+        """Unlinks video from a camera"""
+        self.execute(UnlinkVideo)
+
 
 # File Commands
 
@@ -688,6 +705,8 @@ class LoadLabelsObject(AppCommand):
         # Load first video
         if len(labels.videos):
             context.state["video"] = labels.videos[0]
+
+        context.state["session"] = labels.sessions[0] if len(labels.sessions) else None
 
         context.state["project_loaded"] = True
         context.state["has_changes"] = params.get("changed_on_load", False) or (
@@ -1689,6 +1708,25 @@ class SelectToFrameGui(NavCommand):
         return okay
 
 
+class GoAdjacentView(NavCommand):
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        operator = -1 if params["prev_or_next"] == "prev" else 1
+
+        labels = context.labels
+        frame_idx = context.state["frame_idx"]
+        video = context.state["video"]
+        session = labels.get_session(video)
+
+        # Get the next view
+        current_video_idx = session.videos.index(video)
+        new_video_idx = (current_video_idx + operator) % len(session.videos)
+        new_video = session.videos[new_video_idx]
+
+        context.state["video"] = new_video
+        context.state["frame_idx"] = frame_idx
+
+
 # Editing Commands
 
 
@@ -1942,12 +1980,26 @@ class RemoveVideo(EditCommand):
         return True
 
 
-class AddSession(EditCommand):
-    # topics = [UpdateTopic.session]
+class RemoveSession(EditCommand):
+    topics = [UpdateTopic.sessions]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
+        current_session = context.state["selected_session"]
+        try:
+            context.labels.remove_recording_session(current_session)
+        except Exception as e:
+            raise e
+        finally:
+            # Always set the selected session to None, even if it wasn't removed
+            context.state["selected_session"] = None
 
+
+class AddSession(EditCommand):
+    topics = [UpdateTopic.sessions]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
         camera_calibration = params["camera_calibration"]
         session = RecordingSession.load(filename=camera_calibration)
 
@@ -1957,6 +2009,10 @@ class AddSession(EditCommand):
         # Load if no video currently loaded
         if context.state["session"] is None:
             context.state["session"] = session
+
+        # Reset since this action is also linked to a button in the SessionsDock and it
+        # is not visually apparent which session is selected after clicking the button
+        context.state["selected_session"] = None
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
@@ -3868,3 +3924,20 @@ def copy_to_clipboard(text: str):
     clipboard = QtWidgets.QApplication.clipboard()
     clipboard.clear(mode=clipboard.Clipboard)
     clipboard.setText(text, mode=clipboard.Clipboard)
+
+
+class UnlinkVideo(EditCommand):
+    topics = [UpdateTopic.sessions]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        camcorder = context.state["selected_camera"]
+        recording_session = context.state["selected_session"]
+
+        video = camcorder.get_video(recording_session)
+
+        if video is not None and recording_session is not None:
+            recording_session.remove_video(video)
+
+        # Reset the selected camera
+        context.state["selected_camera"] = None
