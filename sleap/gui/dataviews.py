@@ -679,6 +679,6 @@ class CamerasTableModel(GenericTableModel):
         return obj.camera_cluster.cameras
 
     def item_to_data(self, obj: RecordingSession, item: Camcorder):
-        
+
         video = obj.get_video(item)
         return {"camera": item.name, "video": video.filename if video else ""}
