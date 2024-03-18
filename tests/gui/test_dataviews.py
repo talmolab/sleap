@@ -107,3 +107,57 @@ def test_table_sort_string(qtbot):
     # Make sure we can sort with both numbers and strings (i.e., "")
     table.model().sort(0)
     table.model().sort(1)
+
+
+def test_camera_table(qtbot, multiview_min_session_labels):
+
+    session = multiview_min_session_labels.sessions[0]
+    camcorders = session.camera_cluster.cameras
+
+    table_model = CamerasTableModel(items=session)
+    num_rows = table_model.rowCount()
+
+    assert table_model.columnCount() == 2
+    assert num_rows == len(camcorders)
+
+    table = GenericTableView(
+        row_name="camera",
+        model=table_model,
+    )
+
+    # Test if all comcorders are presented in the correct row
+    for i in range(num_rows):
+        table.selectRow(i)
+
+        # Check first column
+        assert table.getSelectedRowItem() == camcorders[i]
+        assert table.model().data(table.currentIndex()) == camcorders[i].name
+
+        # Check second column
+        index = table.model().index(i, 1)
+        linked_video_filename = camcorders[i].get_video(session).filename
+        assert table.model().data(index) == linked_video_filename
+
+    # Test if a comcorder change is reflected
+    idxs_to_remove = [1, 2, 7]
+    for idx in idxs_to_remove:
+        multiview_min_session_labels.sessions[0].remove_video(
+            camcorders[idx].get_video(multiview_min_session_labels.sessions[0])
+        )
+    table.model().items = session
+
+    for i in range(num_rows):
+        table.selectRow(i)
+
+        # Check first column
+        assert table.getSelectedRowItem() == camcorders[i]
+        assert table.model().data(table.currentIndex()) == camcorders[i].name
+
+        # Check second column
+        index = table.model().index(i, 1)
+        linked_video = camcorders[i].get_video(session)
+        if i in idxs_to_remove:
+            assert table.model().data(index) == ""
+        else:
+            linked_video_filename = linked_video.filename
+            assert table.model().data(index) == linked_video_filename

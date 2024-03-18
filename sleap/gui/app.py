@@ -144,6 +144,7 @@ class MainWindow(QMainWindow):
         self.state["labeled_frame"] = None
         self.state["last_interacted_frame"] = None
         self.state["filename"] = None
+        self.state["session"] = None
         self.state["show non-visible nodes"] = prefs["show non-visible nodes"]
         self.state["show instances"] = True
         self.state["show labels"] = True
@@ -1029,7 +1030,7 @@ class MainWindow(QMainWindow):
         """Create dock windows and connect them to GUI."""
 
         self.videos_dock = VideosDock(self)
-        self.sessions_dock = SessionsDock(self)
+        self.sessions_dock = SessionsDock(self, tab_with=self.videos_dock)
         self.skeleton_dock = SkeletonDock(self, tab_with=self.videos_dock)
         self.suggestions_dock = SuggestionsDock(self, tab_with=self.videos_dock)
         self.instances_dock = InstancesDock(self, tab_with=self.videos_dock)
@@ -1094,6 +1095,7 @@ class MainWindow(QMainWindow):
         has_selected_video = self.state["selected_video"] is not None
         has_selected_session = self.state["selected_session"] is not None
         has_video = self.state["video"] is not None
+        has_selected_camcorder = self.state["selected_camera"] is not None
 
         has_frame_range = bool(self.state["has_frame_range"])
         has_unsaved_changes = bool(self.state["has_changes"])
@@ -1148,6 +1150,7 @@ class MainWindow(QMainWindow):
         self._buttons["show video"].setEnabled(has_selected_video)
         self._buttons["remove video"].setEnabled(has_video)
         self._buttons["delete instance"].setEnabled(has_selected_instance)
+        self._buttons["unlink video"].setEnabled(has_selected_camcorder)
         self.suggestions_dock.suggestions_form_widget.buttons[
             "generate_button"
         ].setEnabled(has_videos)
@@ -1239,6 +1242,13 @@ class MainWindow(QMainWindow):
 
         if _has_topic([UpdateTopic.frame, UpdateTopic.project_instances]):
             self.state["last_interacted_frame"] = self.state["labeled_frame"]
+
+        if _has_topic([UpdateTopic.sessions]):
+            self.update_cameras_model()
+
+    def update_cameras_model(self):
+        """Update the cameras model with the selected session."""
+        self.sessions_dock.camera_table.model().items = self.state["selected_session"]
 
     def plotFrame(self, *args, **kwargs):
         """Plots (or replots) current frame."""

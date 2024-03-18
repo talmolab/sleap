@@ -660,6 +660,10 @@ class CommandContext:
         """Open the current prerelease version."""
         self.execute(OpenPrereleaseVersion)
 
+    def unlink_video_from_camera(self):
+        """Unlinks video from a camera"""
+        self.execute(UnlinkVideo)
+
 
 # File Commands
 
@@ -701,6 +705,8 @@ class LoadLabelsObject(AppCommand):
         # Load first video
         if len(labels.videos):
             context.state["video"] = labels.videos[0]
+
+        context.state["session"] = labels.sessions[0] if len(labels.sessions) else None
 
         context.state["project_loaded"] = True
         context.state["has_changes"] = params.get("changed_on_load", False) or (
@@ -3923,3 +3929,20 @@ def copy_to_clipboard(text: str):
     clipboard = QtWidgets.QApplication.clipboard()
     clipboard.clear(mode=clipboard.Clipboard)
     clipboard.setText(text, mode=clipboard.Clipboard)
+
+
+class UnlinkVideo(EditCommand):
+    topics = [UpdateTopic.sessions]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        camcorder = context.state["selected_camera"]
+        recording_session = context.state["selected_session"]
+
+        video = camcorder.get_video(recording_session)
+
+        if video is not None and recording_session is not None:
+            recording_session.remove_video(video)
+
+        # Reset the selected camera
+        context.state["selected_camera"] = None

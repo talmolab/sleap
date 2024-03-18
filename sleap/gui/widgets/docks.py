@@ -31,6 +31,7 @@ from sleap.gui.dataviews import (
     SkeletonNodesTableModel,
     SuggestionsTableModel,
     VideosTableModel,
+    CamerasTableModel,
     SessionsTableModel,
 )
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
@@ -573,9 +574,18 @@ class InstancesDock(DockWidget):
 
 
 class SessionsDock(DockWidget):
-    def __init__(self, main_window: Optional[QMainWindow]):
+    def __init__(
+        self,
+        main_window: Optional[QMainWindow],
+        tab_with: Optional[QLayout] = None,
+    ):
+        self.sessions_model_type = SessionsTableModel
+        self.camera_model_type = CamerasTableModel
         super().__init__(
-            name="Sessions", main_window=main_window, model_type=SessionsTableModel
+            name="Sessions",
+            main_window=main_window,
+            model_type=[self.sessions_model_type, self.camera_model_type],
+            tab_with=tab_with,
         )
 
     def create_triangulation_options(self) -> QWidget:
@@ -600,13 +610,31 @@ class SessionsDock(DockWidget):
         hbw.setLayout(hb)
         return hbw
 
-    def create_models(self) -> Union[GenericTableModel, Dict[str, GenericTableModel]]:
+    def create_video_unlink_button(self) -> QWidget:
         main_window = self.main_window
-        self.sessions_model = self.model_type(
-            items=main_window.state["labels"].sessions, context=main_window.commands
+
+        hb = QHBoxLayout()
+        self.add_button(
+            hb, "Unlink Video", main_window.commands.unlink_video_from_camera
         )
 
-        self.model = {"sessions_model": self.sessions_model}
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        return hbw
+
+    def create_models(self) -> Union[GenericTableModel, Dict[str, GenericTableModel]]:
+        main_window = self.main_window
+        self.sessions_model = self.sessions_model_type(
+            items=main_window.state["labels"].sessions, context=main_window.commands
+        )
+        self.camera_model = self.camera_model_type(
+            items=main_window.state["selected_session"], context=main_window.commands
+        )
+
+        self.model = {
+            "sessions_model": self.sessions_model,
+            "camera_model": self.camera_model,
+        }
         return self.model
 
     def create_tables(self) -> Union[GenericTableView, Dict[str, GenericTableView]]:
@@ -617,8 +645,20 @@ class SessionsDock(DockWidget):
         self.sessions_table = GenericTableView(
             state=main_window.state, row_name="session", model=self.sessions_model
         )
+        self.camera_table = GenericTableView(
+            state=main_window.state,
+            row_name="camera",
+            model=self.camera_model,
+        )
 
-        self.table = {"sessions_table": self.sessions_table}
+        self.main_window.state.connect(
+            "selected_session", self.main_window.update_cameras_model
+        )
+
+        self.table = {
+            "sessions_table": self.sessions_table,
+            "camera_table": self.camera_table,
+        }
         return self.table
 
     def create_table_edit_buttons(self) -> QWidget:
@@ -638,10 +678,20 @@ class SessionsDock(DockWidget):
         if self.table is None:
             self.create_tables()
 
+        # TODO(LM): Add this to a create method
+        # Add the sessions table to the dock
         self.wgt_layout.addWidget(self.sessions_table)
 
         table_edit_buttons = self.create_table_edit_buttons()
         self.wgt_layout.addWidget(table_edit_buttons)
 
+        # TODO(LM): Add this to a create method
+        # Add the cameras table to the dock
+        self.wgt_layout.addWidget(self.camera_table)
+
+        video_unlink_button = self.create_video_unlink_button()
+        self.wgt_layout.addWidget(video_unlink_button)
+
+        # Add the triangulation options to the dock
         triangulation_options = self.create_triangulation_options()
         self.wgt_layout.addWidget(triangulation_options)

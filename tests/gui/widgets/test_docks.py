@@ -1,7 +1,9 @@
 """Module for testing dock widgets for the `MainWindow`."""
 
 from pathlib import Path
+
 import pytest
+
 from sleap import Labels, Video
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import OpenSkeleton
@@ -120,15 +122,60 @@ def test_sessions_dock(qtbot):
     assert dock.wgt_layout is dock.widget().layout()
 
 
+def test_sessions_dock_cameras_table(qtbot, multiview_min_session_labels):
+    labels = multiview_min_session_labels
+    session = labels.sessions[0]
+    camcorders = session.camera_cluster.cameras
+    main_window = MainWindow(labels=labels)
+    assert main_window.state["session"] == session
+
+    dock = main_window.sessions_dock
+    table = dock.camera_table
+
+    # Testing if cameras_table is loaded correctly
+
+    # Test if all comcorders are presented in the correct row
+    for i, cam in enumerate(camcorders):
+        table.selectRow(i)
+
+        # Check first column
+        assert table.getSelectedRowItem() == cam
+        assert table.model().data(table.currentIndex()) == cam.name
+
+        # Check second column
+        index = table.model().index(i, 1)
+        linked_video_filename = cam.get_video(session).filename
+        assert table.model().data(index) == linked_video_filename
+
+    # Test if a comcorder change is reflected
+    idxs_to_remove = [1, 2, 7]
+    for idx in idxs_to_remove:
+        main_window.state["selected_camera"] = camcorders[idx]
+        main_window._buttons["unlink video"].click()
+
+    for i, cam in enumerate(camcorders):
+        table.selectRow(i)
+
+        # Check first column
+        assert table.getSelectedRowItem() == camcorders[i]
+        assert table.model().data(table.currentIndex()) == camcorders[i].name
+
+        # Check second column
+        index = table.model().index(i, 1)
+        linked_video = camcorders[i].get_video(session)
+        if i in idxs_to_remove:
+            assert table.model().data(index) == ""
+        else:
+            linked_video_filename = linked_video.filename
+            assert table.model().data(index) == linked_video_filename
+
+
 def test_sessions_dock_session_table(qtbot, multiview_min_session_labels):
     """Test the SessionsDock.sessions_table."""
 
     # Create dock
-    main_window = MainWindow()
-    SessionsDock(main_window)
-
-    # Loading label file
-    main_window.commands.loadLabelsObject(multiview_min_session_labels)
+    labels = multiview_min_session_labels
+    main_window = MainWindow(labels=labels)
 
     # Testing if sessions table is loaded correctly
     sessions = multiview_min_session_labels.sessions
