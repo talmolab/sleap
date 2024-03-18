@@ -1,8 +1,4 @@
-import pytest
-import pytestqt
-
 from sleap.gui.dataviews import *
-from sleap.io.cameras import RecordingSession
 
 
 def test_skeleton_nodes(qtbot, centered_pair_predictions):
