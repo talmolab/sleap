@@ -613,6 +613,10 @@ class SessionsDock(DockWidget):
             hb, "Unlink Video", main_window.commands.unlink_video_from_camera
         )
 
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        return hbw
+
     def create_models(self) -> Union[GenericTableModel, Dict[str, GenericTableModel]]:
         main_window = self.main_window
         self.sessions_model = self.sessions_model_type(
