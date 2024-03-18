@@ -574,13 +574,18 @@ class InstancesDock(DockWidget):
 
 
 class SessionsDock(DockWidget):
-    def __init__(self, main_window: Optional[QMainWindow]):
+    def __init__(
+        self,
+        main_window: Optional[QMainWindow],
+        tab_with: Optional[QLayout] = None,
+    ):
         self.sessions_model_type = SessionsTableModel
         self.camera_model_type = CamerasTableModel
         super().__init__(
             name="Sessions",
             main_window=main_window,
             model_type=[self.sessions_model_type, self.camera_model_type],
+            tab_with=tab_with,
         )
 
     def create_triangulation_options(self) -> QWidget:
@@ -673,15 +678,15 @@ class SessionsDock(DockWidget):
         # Add the sessions table to the dock
         self.wgt_layout.addWidget(self.sessions_table)
 
-        video_unlink_button = self.create_video_unlink_button()
-        self.wgt_layout.addWidget(video_unlink_button)
+        table_edit_buttons = self.create_table_edit_buttons()
+        self.wgt_layout.addWidget(table_edit_buttons)
 
         # TODO(LM): Add this to a create method
         # Add the cameras table to the dock
         self.wgt_layout.addWidget(self.camera_table)
 
-        table_edit_buttons = self.create_table_edit_buttons()
-        self.wgt_layout.addWidget(table_edit_buttons)
+        video_unlink_button = self.create_video_unlink_button()
+        self.wgt_layout.addWidget(video_unlink_button)
 
         # Add the triangulation options to the dock
         triangulation_options = self.create_triangulation_options()

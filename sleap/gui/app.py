@@ -1030,7 +1030,7 @@ class MainWindow(QMainWindow):
         """Create dock windows and connect them to GUI."""
 
         self.videos_dock = VideosDock(self)
-        self.sessions_dock = SessionsDock(self)
+        self.sessions_dock = SessionsDock(self, tab_with=self.videos_dock)
         self.skeleton_dock = SkeletonDock(self, tab_with=self.videos_dock)
         self.suggestions_dock = SuggestionsDock(self, tab_with=self.videos_dock)
         self.instances_dock = InstancesDock(self, tab_with=self.videos_dock)
