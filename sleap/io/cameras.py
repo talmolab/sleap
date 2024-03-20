@@ -507,6 +507,45 @@ class InstanceGroup:
 
         return self._camcorder_by_instance[instance]
 
+    def update_points(
+        self,
+        points: np.ndarray,
+        cams_to_include: List[Camcorder],
+        exclude_complete: bool = True,
+    ):
+        """Update the points in the `Instance` for the specified `Camcorder`s.
+
+        Args:
+            points: Numpy array of shape (M, N, 2) where M is the number of views, N is
+                the number of Nodes, and 2 is for x, y.
+            cams_to_include: List of `Camcorder`s to include in the update. The order of
+                the `Camcorder`s in the list should match the order of the views in the
+                `points` array.
+            exclude_complete: If True, then do not update points that are marked as
+                complete. Default is True.
+        """
+
+        # Check that correct shape was passed in
+        n_views, n_nodes, _ = points.shape
+        assert n_views == len(cams_to_include), (
+            f"Number of views in `points` ({n_views}) does not match the number of "
+            f"Camcorders in `cams_to_include` ({len(cams_to_include)})."
+        )
+
+        for cam_idx, cam in enumerate(cams_to_include):
+            # Get the instance for the cam
+            instance: Optional["Instance"] = self.get_instance(cam)
+            if instance is None:
+                logger.warning(
+                    f"Camcorder {cam.name} not found in this InstanceGroup's instances."
+                )
+                continue
+
+            # Update the points for the instance
+            instance.update_points(
+                points=points[cam_idx, :, :], exclude_complete=exclude_complete
+            )
+
     def __getitem__(
         self, idx_or_key: Union[int, Camcorder, "Instance"]
     ) -> Union[Camcorder, "Instance"]:
@@ -1043,6 +1082,7 @@ class FrameGroup:
 
     # "Hidden" class attribute
     _cams_to_include: Optional[List[Camcorder]] = None
+    _excluded_views: Optional[Tuple[str]] = ()
 
     # "Hidden" instance attributes
 
@@ -1091,13 +1131,27 @@ class FrameGroup:
             self._cams_to_include = self.session.camera_cluster.cameras.copy()
         return self._cams_to_include
 
+    @property
+    def excluded_views(self) -> Optional[Tuple[str]]:
+        """List of excluded views (names of Camcorders)."""
+
+        return self._excluded_views
+
     @cams_to_include.setter
     def cams_to_include(self, cams_to_include: List[Camcorder]):
         """Setter for `cams_to_include` attribute that sorts by `CameraCluster` order."""
 
+        # Sort the `Camcorder`s to include based on the order of `CameraCluster` cameras
         self._cams_to_include = cams_to_include.sort(
             key=self.session.camera_cluster.cameras.index
         )
+
+        # Update the `excluded_views` attribute
+        excluded_cams = list(
+            set(self.session.camera_cluster.cameras) - set(cams_to_include)
+        )
+        excluded_cams.sort(key=self.session.camera_cluster.cameras.index)
+        self._excluded_views = (cam.name for cam in excluded_cams)
 
     @property
     def labeled_frames(self) -> List["LabeledFrame"]:
@@ -1162,6 +1216,51 @@ class FrameGroup:
         )
 
         return instance_group
+
+    def update_points(
+        self,
+        points: np.ndarray,
+        instance_groups: List[InstanceGroup],
+        exclude_complete: bool = True,
+    ):
+        """Update points for `Instance`s at included cams in specified `InstanceGroup`.
+
+        Included cams are specified by `FrameGroup.cams_to_include`.
+
+        Args:
+            points: Numpy array of shape (M, T, N, 2) where M is the number of views, T
+                is the number of Tracks, N is the number of Nodes, and 2 is for x, y.
+            instance_groups: List of `InstanceGroup` objects to update points for.
+            exclude_complete: If True, then only update points that are not marked as
+                complete. Default is True.
+        """
+
+        # Check that the correct shape was passed in
+        n_views, n_instances, n_nodes, n_coords = points.shape
+        assert n_views == len(
+            self.cams_to_include
+        ), f"Expected {len(self.cams_to_include)} views, got {n_views}."
+        assert n_instances == len(
+            instance_groups
+        ), f"Expected {len(instance_groups)} instances, got {n_instances}."
+        assert n_coords == 2, f"Expected 2 coordinates, got {n_coords}."
+
+        # Update points for each `InstanceGroup`
+        for ig_idx, instance_group in enumerate(instance_groups):
+            # Ensure that `InstanceGroup`s is in this `FrameGroup`
+            if instance_group not in self.locked_instance_groups:
+                raise ValueError(
+                    f"InstanceGroup {instance_group} is not in this FrameGroup: "
+                    f"{FrameGroup.locked_instance_groups}"
+                )
+
+            # Update points for each `Instance` in `InstanceGroup`
+            instance_points = points[:, ig_idx, :, :]  # M x N x 2
+            instance_group.update_points(
+                points=instance_points,
+                cams_to_include=self.cams_to_include,
+                exclude_complete=exclude_complete,
+            )
 
     def update_labeled_frames_and_instances_by_cam(
         self, return_instances_by_camera: bool = False
