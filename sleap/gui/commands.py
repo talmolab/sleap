@@ -3414,63 +3414,71 @@ class TriangulateSession(EditCommand):
             params.get("frame_group", None) or session.frame_groups[frame_idx]
         )
 
-        # Get the `InstanceGroup`
+        # Get the `InstanceGroup` from `Instance` if any
         instance = params.get("instance", None) or context.state["instance"]
         instance_group = frame_group.get_instance_group(instance)
 
-        # Check enough views/instances for triangulation
-        if not TriangulateSession.has_enough_instances(
+        # If instance_group is None, then we will try to triangulate entire frame_group
+        instance_groups = (
+            [instance_group]
+            if instance_group is not None
+            else frame_group.instance_groups
+        )
+
+        # Retain instance groups that have enough views/instances for triangulation
+        instance_groups = TriangulateSession.has_enough_instances(
             frame_group=frame_group,
-            instance_group=instance_group,
+            instance_groups=instance_groups,
             frame_idx=frame_idx,
             instance=instance,
-        ):
-            return
+        )
+        if instance_groups is None or len(instance_groups) == 0:
+            return  # Not enough instances for triangulation
 
-        # Get the `FrameGroup`
-        fg_tensor = frame_group.numpy(instance_group)  # M x T x N x 2
+        # Get the `FrameGroup` of shape  M=include x T x N x 2
+        fg_tensor = frame_group.numpy(instance_groups=instance_groups)
 
         # Add extra dimension for number of frames
-        frame_group_tensor = np.expand_dims(fg_tensor, axis=1)  # M x F=1 x T x N x 2
+        frame_group_tensor = np.expand_dims(fg_tensor, axis=1)  # M=include x F=1 xTxNx2
 
-        # Triangulate
+        # Triangulate to one 3D pose per instance
         points_3d = triangulate(
             p2d=frame_group_tensor,
             calib=session.camera_cluster,
             excluded_views=frame_group.excluded_views,
-        )  # F, T, N, 3
+        )  # F x T x N x 3
 
-        # Reproject
+        # Reproject onto all views
         pts_reprojected = reproject(
             points_3d,
             calib=session.camera_cluster,
             excluded_views=frame_group.excluded_views,
-        )  # M x F=1 x T x N x 2
+        )  # M=include x F=1 x T x N x 2
 
         # Sqeeze back to the original shape
-        points_reprojected = np.squeeze(pts_reprojected, axis=1)  # M x T x N x 2
+        points_reprojected = np.squeeze(pts_reprojected, axis=1)  # M=include x TxNx2
 
-        # Update instance points
-        frame_group.update_points(points_reprojected, instance_group)
+        # Update or create/insert ("upsert") instance points
+        frame_group.upsert_points(points=points_reprojected, instance_groups=instance_groups, exclude_complete=True)
 
     @classmethod
     def has_enough_instances(
         cls,
         frame_group: FrameGroup,
-        instance_group: Optional[InstanceGroup],
+        instance_groups: Optional[List[InstanceGroup]],
         frame_idx: Optional[int] = None,
         instance: Optional[Instance] = None,
-    ) -> bool:
-        """Return True if enough views/instances for triangulation, False otherwise.
+    ) -> Optional[List[InstanceGroup]]:
+        """Filters out instance groups without enough instances for triangulation.
 
         Args:
             frame_group: The `FrameGroup` object to use.
-            instance_group: The `InstanceGroup` object to use.
+            instance_groups: A list of `InstanceGroup` objects to use.
             frame_idx: The frame index to use.
             instance: The `Instance` object to use (only used in logging).
 
         Returns:
-            True if enough views/instances for triangulation, False otherwise.
+            A list of `InstanceGroup` objects with enough instances for triangulation.
         """
 
         if instance is None:
@@ -3479,24 +3487,29 @@ class TriangulateSession(EditCommand):
         if frame_idx is None:
             frame_idx = ""  # Just used for logging
 
-        # TODO(LM): This should triangulate all `InstanceGroup`s, not skip triangulation
-        if instance_group is None:
+        if len(instance_groups) < 1:
             logger.warning(
-                f"No instance group found for instance {instance} at frame {frame_idx}."
+                f"Require at least 1 instance group, but found "
+                f"{len(frame_group.instance_groups)} for frame group {frame_group} at "
+                f"frame {frame_idx}."
                 f"\nSkipping triangulation."
             )
-            return False  # No instance group found
+            return None  # No instance groups found
 
         # Assert that there are enough views and instances
-        instances = instance_group.get_instances(frame_group.cams_to_include)
-        if len(instances) < 2:
-            logger.warning(
-                f"Not enough instances for triangulation at frame {frame_idx}."
-                f"\nSkipping triangulation."
-            )
-            return False  # Not enough instances
+        instance_groups_to_tri = []
+        for instance_group in instance_groups:
+            instances = instance_group.get_instances(frame_group.cams_to_include)
+            if len(instances) < 2:
+                # Not enough instances
+                logger.warning(
+                    f"Not enough instances in {instance_group} for triangulation."
+                    f"\nSkipping instance group."
+                )
+                continue
+            instance_groups_to_tri.append(instance_group)
 
-        return True  # Enough instances
+        return instance_groups_to_tri  # `InstanceGroup`s with enough instances
 
 
 def open_website(url: str):
