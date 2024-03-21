@@ -165,6 +165,20 @@ def main(args: list = None):
                     NixAdaptor.write(outname, labels, args.input_path, video)
                 except ValueError as e:
                     print(e.args[0])
+
+        elif "csv" in args.format:
+            from sleap.info.write_tracking_h5 import main as write_analysis
+
+            for video, output_path in zip(vids, outnames):
+                write_analysis(
+                    labels,
+                    output_path=output_path,
+                    labels_path=args.input_path,
+                    all_frames=True,
+                    video=video,
+                    csv=True,
+                )
+
         else:
             from sleap.info.write_tracking_h5 import main as write_analysis
 
