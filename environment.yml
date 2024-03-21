@@ -42,7 +42,9 @@ dependencies:
     # "==" results in package not found
     - conda-forge::cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
+    - conda-forge::qudida
+    - conda-forge::albumentations
 
     - pip:  
         - "--editable=.[conda_dev]"
-        - "--no-binary qudida,albumentations"
+        # - "--no-binary qudida,albumentations"
