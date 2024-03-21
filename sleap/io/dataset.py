@@ -111,6 +111,7 @@ class LabelsDataCache:
         self._track_occupancy = dict()
         self._frame_count_cache = dict()
         self._session_by_video: Dict[Video, RecordingSession] = dict()
+        self.linkage_of_videos = {"linked": [], "unlinked": []}
 
         # Loop through labeled frames only once
         for lf in self.labels:
@@ -127,6 +128,13 @@ class LabelsDataCache:
         for session in self.labels.sessions:
             for video in session.videos:
                 self._session_by_video[video] = session
+        
+        # Build linkage of videos by session
+        for video in self.labels.videos:
+            if video not in self._session_by_video:
+                self.linkage_of_videos["unlinked"].append(video)
+            else:
+                self.linkage_of_videos["linked"].append(video)
 
     def add_labeled_frame(self, new_frame: LabeledFrame):
         """Add a new labeled frame to the cache.

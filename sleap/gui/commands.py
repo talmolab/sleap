@@ -448,6 +448,10 @@ class CommandContext:
     def removeSelectedSession(self):
         """Removes a session from the project and the sessions dock."""
         self.execute(RemoveSession)
+        
+    def linkVideoToSession(self):
+        """Links a video to a `RecordingSession`."""
+        self.execute(LinkVideoToSession)
 
     def openSkeletonTemplate(self):
         """Shows gui for loading saved skeleton into project."""
@@ -2029,6 +2033,34 @@ class AddSession(EditCommand):
 
         return len(filename) > 0
 
+class LinkVideoToSession(EditCommand):
+    topics = [UpdateTopic.video]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        video = context.state["video"]
+        session = context.state["session"]
+
+        if video is None:
+            raise ValueError("No video selected.")
+
+        if session is None:
+            raise ValueError("No session selected.")
+
+        video.recording_session = session
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        """Shows gui for adding video to project."""
+        if context.state["video"] is None:
+            QtWidgets.QMessageBox(text="No video selected.").exec_()
+            return False
+
+        if context.state["session"] is None:
+            QtWidgets.QMessageBox(text="No session selected.").exec_()
+            return False
+
+        return True
 
 class OpenSkeleton(EditCommand):
     topics = [UpdateTopic.skeleton]
