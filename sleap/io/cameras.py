@@ -426,7 +426,7 @@ class InstanceGroup:
             else:
                 # The example instance is an `Instance`
                 from_numpy = instance.__class__.from_numpy
-            
+
             skeleton: "Skeleton" = instance.skeleton
             self._dummy_instance = from_numpy(
                 points=np.full(
@@ -515,7 +515,7 @@ class InstanceGroup:
                 the number of Nodes, and 2 is for x, y.
             cams_to_include: List of `Camcorder`s to include in the update. The order of
                 the `Camcorder`s in the list should match the order of the views in the
-                `points` array. If None, then all `Camcorder`s in the `CameraCluster` 
+                `points` array. If None, then all `Camcorder`s in the `CameraCluster`
                 are included. Default is None.
             exclude_complete: If True, then do not update points that are marked as
                 complete. Default is True.
