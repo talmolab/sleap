@@ -106,6 +106,7 @@ def main(args: list = None):
     """
     parser = create_parser()
     args = parser.parse_args(args=args)
+    print(args)
 
     video_callback = Labels.make_video_callback([os.path.dirname(args.input_path)])
     try:
@@ -136,7 +137,12 @@ def main(args: list = None):
         outnames = [path for path in args.outputs]
         if len(outnames) < len(vids):
             # if there are less outnames provided than videos to convert...
-            out_suffix = "nix" if "nix" in args.format else "h5"
+            if "nix" in args.format:
+                out_suffix = "nix"
+            elif "csv" in args.format:
+                out_suffix = "csv"
+            else:
+                out_suffix = "h5"
             fn = args.input_path
             fn = re.sub("(\.json(\.zip)?|\.h5|\.slp)$", "", fn)
             fn = PurePath(fn)
