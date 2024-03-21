@@ -485,6 +485,13 @@ class InstanceGroup:
 
         return self._instance_by_camcorder[cam]
 
+    def get_instances(self, cams: List[Camcorder]) -> List["Instance"]:
+        instances = []
+        for cam in cams:
+            instance = self.get_instance(cam)
+            instances.append(instance)
+        return instance
+
     def get_cam(self, instance: "Instance") -> Optional[Camcorder]:
         """Retrieve `Camcorder` linked to `Instance`.
 
