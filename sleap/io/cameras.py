@@ -1185,24 +1185,42 @@ class FrameGroup:
 
         return self._locked_instance_groups
 
-    def numpy(self, instance_group: Optional[InstanceGroup] = None) -> np.ndarray:
-        """Numpy array of all `InstanceGroup`s in `FrameGroup.cams_to_include`."""
+    def numpy(self, instance_groups: Optional[List[InstanceGroup]] = None) -> np.ndarray:
+        """Numpy array of all `InstanceGroup`s in `FrameGroup.cams_to_include`.
+        
+        Args:
+            instance_groups: `InstanceGroup`s to include. Default is None and uses all 
+                self.instance_groups.
+        
+        Returns:
+            Numpy array of shape (M, T, N, 2) where M is the number of views (determined 
+            by self.cames_to_include), T is the number of `InstanceGroup`s, N is the 
+            number of Nodes, and 2 is for x, y.
+        """
 
-        instance_group_numpys: List[np.ndarray] = []  # len(T) M x N x 2
+        # Use all `InstanceGroup`s if not specified
+        if instance_groups is None:
+            instance_groups = self.instance_groups
+        else:
+            # Ensure that `InstanceGroup`s is in this `FrameGroup`
+            for instance_group in instance_groups:
+                if instance_group not in self.instance_groups:
+                    raise ValueError(
+                        f"InstanceGroup {instance_group} is not in this FrameGroup: "
+                        f"{self.instance_groups}"
+                    )
 
-        instance_groups = (
-            self.instance_group if instance_group is None else [instance_group]
-        )
+        instance_group_numpys: List[np.ndarray] = []  # len(T) M=all x N x 2
         for instance_group in instance_groups:
-            instance_group_numpy = instance_group.numpy  # M x N x 2
+            instance_group_numpy = instance_group.numpy()  # M=all x N x 2
             instance_group_numpys.append(instance_group_numpy)
 
-        frame_group_numpy = np.stack(instance_group_numpys, axis=1)  # M x T x N x 2
+        frame_group_numpy = np.stack(instance_group_numpys, axis=1)  # M=all x T x N x 2
         cams_to_include_mask = np.array(
             [1 if cam in self.cams_to_include else 0 for cam in self.cameras]
-        )  # M x 1
+        )  # M=include x 1
 
-        return frame_group_numpy[cams_to_include_mask]
+        return frame_group_numpy[cams_to_include_mask]  # M=include x T x N x 2
 
     def get_instance_group(self, instance: "Instance") -> Optional[InstanceGroup]:
         """Get `InstanceGroup` that contains `Instance` if exists. Otherwise, None.
@@ -1225,15 +1243,22 @@ class FrameGroup:
 
         return instance_group
 
-    def update_points(
+    def upsert_points(
         self,
         points: np.ndarray,
         instance_groups: List[InstanceGroup],
         exclude_complete: bool = True,
     ):
-        """Update points for `Instance`s at included cams in specified `InstanceGroup`.
+        """Upsert points for `Instance`s at included cams in specified `InstanceGroup`.
 
-        Included cams are specified by `FrameGroup.cams_to_include`.
+        This will update the points for existing `Instance`s in the `InstanceGroup`s and 
+        also add new `Instance`s if they do not exist.
+
+
+        Included cams are specified by `FrameGroup.cams_to_include`. 
+        
+        The ordering of the `InstanceGroup`s in `instance_groups` should match the 
+        ordering of the second dimension (T) in `points`.
 
         Args:
             points: Numpy array of shape (M, T, N, 2) where M is the number of views, T
