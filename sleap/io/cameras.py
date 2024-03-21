@@ -409,12 +409,33 @@ class InstanceGroup:
     locked: bool = field(default=False)
     _instance_by_camcorder: Dict[Camcorder, "Instance"] = field(factory=dict)
     _camcorder_by_instance: Dict["Instance", Camcorder] = field(factory=dict)
+    _dummy_instance: Optional["Instance"] = field(default=None)
 
     def __attrs_post_init__(self):
         """Initialize `InstanceGroup` object."""
 
         for cam, instance in self._instance_by_camcorder.items():
             self._camcorder_by_instance[instance] = cam
+
+        # Create a dummy instance to fill in for missing instances
+        if self._dummy_instance is None:
+
+            # Get `Instance.from_numpy` method
+            if hasattr(instance, "score"):
+                # The example instance is a `PredictedInstance`
+                from_numpy = instance.__class__.__bases__[0].from_numpy
+            else:
+                # The example instance is an `Instance`
+                from_numpy = instance.__class__.from_numpy
+
+            skeleton: "Skeleton" = instance.skeleton
+            self._dummy_instance = from_numpy(
+                points=np.full(
+                    shape=(len(skeleton.nodes), 2),
+                    fill_value=np.nan,
+                ),
+                skeleton=skeleton,
+            )
 
     @property
     def instances(self) -> List["Instance"]:
@@ -425,6 +446,24 @@ class InstanceGroup:
     def cameras(self) -> List[Camcorder]:
         """List of `Camcorder` objects."""
         return list(self._instance_by_camcorder.keys())
+
+    def numpy(self) -> np.ndarray:
+        """Return instances as a numpy array of shape (n_views, n_nodes, 2).
+        The ordering of views is based on the ordering of `Camcorder`s in the
+        `self.camera_cluster: CameraCluster`.
+        If an instance is missing for a `Camcorder`, then the instance is filled in with
+        the dummy instance (all NaNs).
+        Returns:
+            Numpy array of shape (n_views, n_nodes, 2).
+        """
+
+        instance_numpys: List[np.ndarray] = []  # len(M) x N x 2
+        for cam in self.camera_cluster.cameras:
+            instance = self.get_instance(cam) or self._dummy_instance
+            instance_numpy: np.ndarray = instance.numpy()  # N x 2
+            instance_numpys.append(instance_numpy)
+
+        return np.stack(instance_numpys, axis=0)  # M x N x 2
 
     def get_instance(self, cam: Camcorder) -> Optional["Instance"]:
         """Retrieve `Instance` linked to `Camcorder`.
@@ -467,7 +506,7 @@ class InstanceGroup:
     def update_points(
         self,
         points: np.ndarray,
-        cams_to_include: List[Camcorder],
+        cams_to_include: Optional[List[Camcorder]] = None,
         exclude_complete: bool = True,
     ):
         """Update the points in the `Instance` for the specified `Camcorder`s.
@@ -477,10 +516,15 @@ class InstanceGroup:
                 the number of Nodes, and 2 is for x, y.
             cams_to_include: List of `Camcorder`s to include in the update. The order of
                 the `Camcorder`s in the list should match the order of the views in the
-                `points` array.
+                `points` array. If None, then all `Camcorder`s in the `CameraCluster`
+                are included. Default is None.
             exclude_complete: If True, then do not update points that are marked as
                 complete. Default is True.
         """
+
+        # If no `Camcorder`s specified, then update `Instance`s for all `CameraCluster`
+        if cams_to_include is None:
+            cams_to_include = self.camera_cluster.cameras
 
         # Check that correct shape was passed in
         n_views, n_nodes, _ = points.shape
