@@ -1,9 +1,16 @@
 """Module to test functions in `sleap.io.cameras`."""
 
+from typing import Dict, Tuple, Union
+
 import numpy as np
 import pytest
 
-from sleap.io.cameras import Camcorder, CameraCluster, InstanceGroup, RecordingSession
+from sleap.io.cameras import (
+    Camcorder,
+    CameraCluster,
+    InstanceGroup,
+    RecordingSession,
+)
 from sleap.io.dataset import Instance, Labels
 from sleap.io.video import Video
 
@@ -280,6 +287,57 @@ def test_recording_session_remove_video(multiview_min_session_labels: Labels):
     assert video not in session.videos
 
 
+# TODO(LM): Remove after adding method to (de)seralize `InstanceGroup`
+def create_instance_group(
+    labels: Labels,
+    frame_idx: int,
+    add_dummy: bool = False,
+) -> Union[
+    InstanceGroup, Tuple[InstanceGroup, Dict[Camcorder, Instance], Instance, Camcorder]
+]:
+    """Create an `InstanceGroup` from a `Labels` object.
+
+    Args:
+        labels: The `Labels` object to use.
+        frame_idx: The frame index to use.
+        add_dummy: Whether to add a dummy instance to the `InstanceGroup`.
+
+    Returns:
+        The `InstanceGroup` object.
+    """
+
+    session = labels.sessions[0]
+
+    lf = labels.labeled_frames[0]
+    instance = lf.instances[0]
+
+    instance_by_camera = {}
+    for cam in session.linked_cameras:
+        video = session.get_video(cam)
+        lfs_in_view = labels.find(video=video, frame_idx=frame_idx)
+        if len(lfs_in_view) > 0:
+            instance = lfs_in_view[0].instances[0]
+            instance_by_camera[cam] = instance
+
+    # Add a dummy instance to make sure it gets ignored
+    if add_dummy:
+        dummy_instance = Instance.from_numpy(
+            np.full(
+                shape=(len(instance.skeleton.nodes), 2),
+                fill_value=np.nan,
+            ),
+            skeleton=instance.skeleton,
+        )
+        instance_by_camera[cam] = dummy_instance
+
+    instance_group = InstanceGroup.from_dict(d=instance_by_camera)
+    return (
+        (instance_group, instance_by_camera, dummy_instance, cam)
+        if add_dummy
+        else instance_group
+    )
+
+
 def test_instance_group(multiview_min_session_labels: Labels):
     """Test `InstanceGroup` data structure."""
 
@@ -289,29 +347,11 @@ def test_instance_group(multiview_min_session_labels: Labels):
 
     lf = labels.labeled_frames[0]
     frame_idx = lf.frame_idx
-    instance = lf.instances[0]
-
-    dummy_instance = Instance.from_numpy(
-        np.full(
-            shape=(len(instance.skeleton.nodes), 2),
-            fill_value=np.nan,
-        ),
-        skeleton=instance.skeleton,
-    )
-    instance_by_camera = {}
-    for cam in session.linked_cameras:
-        video = session.get_video(cam)
-        lfs_in_view = labels.find(video=video, frame_idx=frame_idx)
-        instance = (
-            lfs_in_view[0].instances[0] if len(lfs_in_view) > 0 else dummy_instance
-        )
-        instance_by_camera[cam] = instance
-
-    # Add a dummy instance to make sure it gets ignored
-    instance_by_camera[cam] = dummy_instance
 
     # Test `from_dict`
-    instance_group = InstanceGroup.from_dict(d=instance_by_camera)
+    instance_group, instance_by_camera, dummy_instance, cam = create_instance_group(
+        labels=labels, frame_idx=frame_idx, add_dummy=True
+    )
     assert isinstance(instance_group, InstanceGroup)
     assert instance_group.frame_idx == frame_idx
     assert instance_group.camera_cluster == camera_cluster
@@ -347,6 +387,26 @@ def test_instance_group(multiview_min_session_labels: Labels):
     assert isinstance(instance_group[0], Instance)
     with pytest.raises(KeyError):
         instance_group[len(instance_group)]
+
+    # Test `_dummy_instance` property
+    assert (
+        instance_group._dummy_instance.skeleton == instance_group.instances[0].skeleton
+    )
+    assert isinstance(instance_group._dummy_instance, Instance)
+
+    # Test `numpy` method
+    instance_group_numpy = instance_group.numpy()
+    assert isinstance(instance_group_numpy, np.ndarray)
+    n_views, n_nodes, n_coords = instance_group_numpy.shape
+    assert n_views == len(instance_group.camera_cluster.cameras)
+    assert n_nodes == len(instance_group._dummy_instance.skeleton.nodes)
+    assert n_coords == 2
+
+    # Test `update_points` method
+    instance_group.update_points(np.full((n_views, n_nodes, n_coords), 0))
+    instance_group_numpy = instance_group.numpy()
+    np.nan_to_num(instance_group_numpy, nan=0)
+    assert np.all(np.nan_to_num(instance_group_numpy, nan=0) == 0)
 
     # Populate with only dummy instance and test `from_dict`
     instance_by_camera = {cam: dummy_instance}
