@@ -70,7 +70,8 @@ def create_parser():
         help="Output format. Default ('slp') is SLEAP dataset; "
         "'analysis' results in analysis.h5 file; "
         "'analysis.nix' results in an analysis nix file;"
-        "'h5' 'csv' or 'json' results in SLEAP dataset "
+        "'analysis.csv' results in an analysis csv file;"
+        "'h5' or 'json' results in SLEAP dataset "
         "with specified file format.",
     )
     parser.add_argument(
