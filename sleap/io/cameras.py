@@ -1682,9 +1682,9 @@ class FrameGroup:
         """
 
         # Get all `Instance`s for this frame index across all views to include
-        instances_by_camera: Dict[
-            Camcorder, Set["Instance"]
-        ] = self.instances_by_cam_to_include
+        instances_by_camera: Dict[Camcorder, Set["Instance"]] = (
+            self.instances_by_cam_to_include
+        )
 
         # Get max number of instances across all views
         all_instances_by_camera: List[Set["Instance"]] = instances_by_camera.values()
@@ -1735,14 +1735,14 @@ class FrameGroup:
             return unlocked_instances_in_view
 
         # For each view, get permutations of unlocked instances
-        unlocked_instance_permutations: Dict[
-            Camcorder, Iterator[Tuple["Instance"]]
-        ] = {}
+        unlocked_instance_permutations: Dict[Camcorder, Iterator[Tuple["Instance"]]] = (
+            {}
+        )
         for cam, instances_in_view in instances_by_camera.items():
             # Gather all instances for this cam from locked `InstanceGroup`s
-            locked_instances_in_view: Set[
-                "Instance"
-            ] = self._locked_instances_by_cam.get(cam, set())
+            locked_instances_in_view: Set["Instance"] = (
+                self._locked_instances_by_cam.get(cam, set())
+            )
 
             # Remove locked instances from instances in view
             unlocked_instances_in_view: List["Instance"] = list(
