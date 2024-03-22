@@ -1,4 +1,5 @@
 """Module for storing information for camera groups."""
+
 import logging
 import tempfile
 from pathlib import Path
@@ -464,6 +465,129 @@ class InstanceGroup:
 
         return np.stack(instance_numpys, axis=0)  # M x N x 2
 
+    def create_and_add_instance(self, cam: Camcorder, labeled_frame: "LabeledFrame"):
+        """Create an `Instance` at a labeled_frame and add it to the `InstanceGroup`.
+
+        Args:
+            cam: `Camcorder` object that the `Instance` is for.
+            labeled_frame: `LabeledFrame` object that the `Instance` is contained in.
+
+        Returns:
+            `Instance` created and added to the `InstanceGroup`.
+        """
+
+        # Get the `Skeleton`
+        skeleton: "Skeleton" = self._dummy_instance.skeleton
+
+        # Create an all nan `Instance`
+        instance: "Instance" = self._dummy_instance.__class__(
+            skeleton=skeleton,
+            frame=labeled_frame,
+        )
+
+        # Add the instance to the `InstanceGroup`
+        self.add_instance(cam, instance)
+
+        return instance
+
+    def add_instance(self, cam: Camcorder, instance: "Instance"):
+        """Add an `Instance` to the `InstanceGroup`.
+
+        Args:
+            cam: `Camcorder` object that the `Instance` is for.
+            instance: `Instance` object to add.
+
+        Raises:
+            ValueError: If the `Camcorder` is not in the `CameraCluster`.
+            ValueError: If the `Instance` is already in the `InstanceGroup` at another
+                camera.
+        """
+
+        # Ensure the `Camcorder` is in the `CameraCluster`
+        self._raise_if_cam_not_in_cluster(cam=cam)
+
+        # Ensure the `Instance` is not already in the `InstanceGroup` at another camera
+        if (
+            instance in self._camcorder_by_instance
+            and self._camcorder_by_instance[instance] != cam
+        ):
+            raise ValueError(
+                f"Instance {instance} is already in this InstanceGroup at camera "
+                f"{self.get_instance(instance)}."
+            )
+
+        # Add the instance to the `InstanceGroup`
+        self.replace_instance(cam, instance)
+
+    def replace_instance(self, cam: Camcorder, instance: "Instance"):
+        """Replace an `Instance` in the `InstanceGroup`.
+
+        If the `Instance` is already in the `InstanceGroup`, then it is removed and
+        replaced. If the `Instance` is not already in the `InstanceGroup`, then it is
+        added.
+
+        Args:
+            cam: `Camcorder` object that the `Instance` is for.
+            instance: `Instance` object to replace.
+
+        Raises:
+            ValueError: If the `Camcorder` is not in the `CameraCluster`.
+        """
+
+        # Ensure the `Camcorder` is in the `CameraCluster`
+        self._raise_if_cam_not_in_cluster(cam=cam)
+
+        # Remove the instance if it already exists
+        self.remove_instance(instance_or_cam=instance)
+
+        # Replace the instance in the `InstanceGroup`
+        self._instance_by_camcorder[cam] = instance
+        self._camcorder_by_instance[instance] = cam
+
+    def remove_instance(self, instance_or_cam: Union["Instance", Camcorder]):
+        """Remove an `Instance` from the `InstanceGroup`.
+
+        Args:
+            instance_or_cam: `Instance` or `Camcorder` object to remove from
+                `InstanceGroup`.
+
+        Raises:
+            ValueError: If the `Camcorder` is not in the `CameraCluster`.
+        """
+
+        if isinstance(instance_or_cam, Camcorder):
+            cam = instance_or_cam
+
+            # Ensure the `Camcorder` is in the `CameraCluster`
+            self._raise_if_cam_not_in_cluster(cam=cam)
+
+            # Remove the instance from the `InstanceGroup`
+            if cam in self._instance_by_camcorder:
+                instance = self._instance_by_camcorder.pop(cam)
+                self._camcorder_by_instance.pop(instance)
+
+        else:
+            # The input is an `Instance`
+            instance = instance_or_cam
+
+            # Remove the instance from the `InstanceGroup`
+            if instance in self._camcorder_by_instance:
+                cam = self._camcorder_by_instance.pop(instance)
+                self._instance_by_camcorder.pop(cam)
+            else:
+                logger.debug(
+                    f"Instance {instance} not found in this InstanceGroup {self}."
+                )
+
+    def _raise_if_cam_not_in_cluster(self, cam: Camcorder):
+        """Raise a ValueError if the `Camcorder` is not in the `CameraCluster`."""
+
+        if cam not in self.camera_cluster:
+            raise ValueError(
+                f"Camcorder {cam} is not in this InstanceGroup's "
+                f"{self.camera_cluster}."
+            )
+
     def get_instance(self, cam: Camcorder) -> Optional["Instance"]:
         """Retrieve `Instance` linked to `Camcorder`.
 
@@ -476,13 +600,20 @@ class InstanceGroup:
         """
 
         if cam not in self._instance_by_camcorder:
-            logger.warning(
-                f"Camcorder {cam.name} is not linked to a video in this "
-                f"RecordingSession."
+            logger.debug(
+                f"Camcorder {cam} has no linked `Instance` in this `InstanceGroup` "
+                f"{self}."
             )
             return None
 
         return self._instance_by_camcorder[cam]
+
+    def get_instances(self, cams: List[Camcorder]) -> List["Instance"]:
+        instances = []
+        for cam in cams:
+            instance = self.get_instance(cam)
+            instances.append(instance)
+        return instance
 
     def get_cam(self, instance: "Instance") -> Optional[Camcorder]:
         """Retrieve `Camcorder` linked to `Instance`.
@@ -495,8 +626,9 @@ class InstanceGroup:
         """
 
         if instance not in self._camcorder_by_instance:
-            logger.warning(
-                f"{instance} is not in this InstanceGroup's Instances: \n\t{self.instances}."
+            logger.debug(
+                f"{instance} is not in this InstanceGroup.instances: "
+                f"\n\t{self.instances}."
             )
             return None
 
