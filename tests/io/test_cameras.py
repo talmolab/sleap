@@ -391,16 +391,16 @@ def test_instance_group(multiview_min_session_labels: Labels):
 
     # Test `_dummy_instance` property
     assert (
-        instance_group._dummy_instance.skeleton == instance_group.instances[0].skeleton
+        instance_group.dummy_instance.skeleton == instance_group.instances[0].skeleton
     )
-    assert isinstance(instance_group._dummy_instance, Instance)
+    assert isinstance(instance_group.dummy_instance, Instance)
 
     # Test `numpy` method
     instance_group_numpy = instance_group.numpy()
     assert isinstance(instance_group_numpy, np.ndarray)
     n_views, n_nodes, n_coords = instance_group_numpy.shape
     assert n_views == len(instance_group.camera_cluster.cameras)
-    assert n_nodes == len(instance_group._dummy_instance.skeleton.nodes)
+    assert n_nodes == len(instance_group.dummy_instance.skeleton.nodes)
     assert n_coords == 2
 
     # Test `update_points` method
