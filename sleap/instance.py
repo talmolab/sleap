@@ -500,7 +500,6 @@ class Instance:
                 )
             try:
                 parray[skeleton.node_to_index(node)] = point
-                # parray[skeleton.node_to_index(node.name)] = point
             except:
                 logger.debug(
                     f"Could not set point for node {node} in {skeleton} "
@@ -729,9 +728,31 @@ class Instance:
         for point_new, points_old, node_name in zip(
             points, self._points, self.skeleton.node_names
         ):
+
+            # Skip if new point is nan or old point is complete
             if np.isnan(point_new).any() or (exclude_complete and points_old.complete):
                 continue
-            points_dict[node_name] = Point(x=point_new[0], y=point_new[1])
+
+            # Grab the x, y from the new point and visible, complete from the old point
+            x, y = point_new
+            visible = points_old.visible
+            complete = points_old.complete
+
+            # Create a new point and add to the dict
+            if type(self._points) == PredictedPointArray:
+                # TODO(LM): The point score is meant to rate the confidence of the
+                # prediction, but this method updates from triangulation.
+                score = points_old.score
+                point_obj = PredictedPoint(
+                    x=x, y=y, visible=visible, complete=complete, score=score
+                )
+            else:
+                point_obj = Point(x=x, y=y, visible=visible, complete=complete)
+
+            # Update the points dict
+            points_dict[node_name] = point_obj
+
+        # Update the points
         if len(points_dict) > 0:
             Instance._points_dict_to_array(points_dict, self._points, self.skeleton)
 
