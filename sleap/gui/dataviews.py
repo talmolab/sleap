@@ -384,20 +384,6 @@ class GenericTableView(QtWidgets.QTableView):
         if not idx.isValid():
             return None
         return self.model().original_items[idx.row()]
-
-
-class UnlinkedVideosTableModel(GenericTableModel):
-    properties = ("path", "h", "w", "frames", "channels")
-    
-    def item_to_data(self, obj, item):
-        res = {}
-        res["path"] = item.filename 
-        res["h"] = item.height
-        res["w"] = item.width
-        res["frames"] = item.num_framesd
-        res["channels"] = item.channels
-        return res
-
         
 
 class SessionsTableModel(GenericTableModel):

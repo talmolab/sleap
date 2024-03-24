@@ -33,7 +33,6 @@ from sleap.gui.dataviews import (
     VideosTableModel,
     CamerasTableModel,
     SessionsTableModel,
-    UnlinkedVideosTableModel,
 )
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.widgets.views import CollapsibleWidget
@@ -582,7 +581,7 @@ class SessionsDock(DockWidget):
     ):
         self.sessions_model_type = SessionsTableModel
         self.camera_model_type = CamerasTableModel
-        self.unlinked_videos_model_type = UnlinkedVideosTableModel
+        self.unlinked_videos_model_type = VideosTableModel
         super().__init__(
             name="Sessions",
             main_window=main_window,
