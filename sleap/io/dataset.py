@@ -111,7 +111,7 @@ class LabelsDataCache:
         self._track_occupancy = dict()
         self._frame_count_cache = dict()
         self._session_by_video: Dict[Video, RecordingSession] = dict()
-        self.linkage_of_videos = {"linked": [], "unlinked": []}
+        self._linkage_of_videos = {"linked": [], "unlinked": []}
 
         # Loop through labeled frames only once
         for lf in self.labels:
