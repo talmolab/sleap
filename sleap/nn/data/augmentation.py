@@ -195,7 +195,7 @@ class AlbumentationsAugmenter:
 
         return cls(
             augmenter=A.Compose(
-                aug_stack, keypoint_params=A.KeypointParams(format="xy")
+                aug_stack, keypoint_params=A.KeypointParams(format="xy", remove_invisible=False)
             ),
             image_key=image_key,
             instances_key=instances_key,
