@@ -36,7 +36,8 @@ tensorflow-hub<=0.14.0
 # These dependencies are untested since we do not offer a wheel for apple silicon atm.
 tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
 tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64'
-albumentations # added 03212024
+albumentations
+ndx-pose
 
 # Dependencies of dependencies
 # google-auth 2.23.0 has requirement urllib3<2.0
