@@ -2034,33 +2034,19 @@ class AddSession(EditCommand):
         return len(filename) > 0
 
 class LinkVideoToSession(EditCommand):
-    topics = [UpdateTopic.video]
+    topics = [UpdateTopic.sessions]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        video = context.state["video"]
-        session = context.state["session"]
+        video = context.state["selected_unlinked_video"]
+        session = context.state["selected_session"]
+        camcorder = context.state["selected_camcorder"]
 
-        if video is None:
-            raise ValueError("No video selected.")
-
-        if session is None:
-            raise ValueError("No session selected.")
-
-        video.recording_session = session
-
-    @staticmethod
-    def ask(context: CommandContext, params: dict) -> bool:
-        """Shows gui for adding video to project."""
-        if context.state["video"] is None:
-            QtWidgets.QMessageBox(text="No video selected.").exec_()
-            return False
-
-        if context.state["session"] is None:
-            QtWidgets.QMessageBox(text="No session selected.").exec_()
-            return False
-
-        return True
+        session.add_video(video, camcorder)
+        
+        # Reset the selected camera and video
+        context.state["selected_camera"] = None
+        context.state["selected_unlinked_video"] = None
 
 class OpenSkeleton(EditCommand):
     topics = [UpdateTopic.skeleton]

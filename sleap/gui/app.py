@@ -1155,7 +1155,7 @@ class MainWindow(QMainWindow):
             "generate_button"
         ].setEnabled(has_videos)
         self._buttons["remove session"].setEnabled(has_selected_session)
-        self._buttons["link video"].setEnabled(has_selected_video)
+        self._buttons["link video"].setEnabled(has_selected_video and has_selected_camcorder and has_selected_session)
 
         # Update overlays
         self.overlays["track_labels"].visible = (
