@@ -448,6 +448,10 @@ class CommandContext:
     def removeSelectedSession(self):
         """Removes a session from the project and the sessions dock."""
         self.execute(RemoveSession)
+        
+    def linkVideoToSession(self):
+        """Links a video to a `RecordingSession`."""
+        self.execute(LinkVideoToSession)
 
     def openSkeletonTemplate(self):
         """Shows gui for loading saved skeleton into project."""
@@ -2029,6 +2033,20 @@ class AddSession(EditCommand):
 
         return len(filename) > 0
 
+class LinkVideoToSession(EditCommand):
+    topics = [UpdateTopic.sessions]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        video = context.state["selected_unlinked_video"]
+        session = context.state["selected_session"]
+        camcorder = context.state["selected_camcorder"]
+
+        session.add_video(video, camcorder)
+        
+        # Reset the selected camera and video
+        context.state["selected_camera"] = None
+        context.state["selected_unlinked_video"] = None
 
 class OpenSkeleton(EditCommand):
     topics = [UpdateTopic.skeleton]

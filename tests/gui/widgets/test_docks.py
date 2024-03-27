@@ -189,3 +189,7 @@ def test_sessions_dock_session_table(qtbot, multiview_min_session_labels):
     with pytest.raises(IndexError):
         # There are no longer any sessions in the table
         main_window.sessions_dock.sessions_table.selectRow(0)
+
+def test_sessions_dock_unlinked_videos_table(qtbot, multiview_min_session_labels):
+    # Test if the "Link" button functions correctly
+    

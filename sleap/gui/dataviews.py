@@ -384,7 +384,7 @@ class GenericTableView(QtWidgets.QTableView):
         if not idx.isValid():
             return None
         return self.model().original_items[idx.row()]
-
+        
 
 class SessionsTableModel(GenericTableModel):
     properties = ("id", "videos", "cameras")
