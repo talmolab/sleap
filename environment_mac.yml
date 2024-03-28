@@ -35,6 +35,8 @@ dependencies:
     - conda-forge::scikit-video
     - conda-forge::seaborn
     - conda-forge::tensorflow-hub
+    - conda-forge::qudida
+    - conda-forge::albumentations
+    - conda-forge::ndx-pose
     - pip:
         - "--editable=.[conda_dev]"
-        - "--no-binary qudida,albumentations"

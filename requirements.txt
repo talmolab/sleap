@@ -2,7 +2,6 @@
 
 # No conda packages for these
 imgstore<0.3.0  # 0.3.3 results in https://github.com/O365/python-o365/issues/591
-ndx-pose
 nixio>=1.5.3  # Constrain put on by @jgrewe from G-Node
 qimage2ndarray  # ==1.9.0
 segmentation-models
@@ -12,5 +11,3 @@ tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64
 # Conda installing results in https://github.com/h5py/h5py/issues/2037
 h5py<3.2; sys_platform == 'win32'  # Newer versions result in error above, linking issue in Linux
 pynwb>=2.3.3  # 2.0.0 required by ndx-pose, 2.3.3 fixes importlib-metadata incompatibility
-
-albumentations

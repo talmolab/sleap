@@ -37,7 +37,9 @@ dependencies:
     - conda-forge::seaborn
     - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
     - conda-forge::tensorflow-hub
+    - conda-forge::qudida
+    - conda-forge::albumentations
+    - conda-forge::ndx-pose
 
     - pip:  
         - "--editable=.[conda_dev]"
-        - "--no-binary qudida,albumentations"
