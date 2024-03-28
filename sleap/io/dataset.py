@@ -1,5 +1,5 @@
 """
-A SLEAP dataset collects labeled video frames, together with required metadata.
+A SLEAP dataset collects labeled video frames, together with required metadata. 
 
 This contains labeled frame data (user annotations and/or predictions),
 together with all the other data that is saved for a SLEAP project
@@ -131,7 +131,7 @@ class LabelsDataCache:
         
         # Build linkage of videos by session
         for video in self.labels.videos:
-            if video not in self._session_by_video:
+            if video not in self._session_by_video or self._session_by_video[video] is None:
                 self._linkage_of_videos["unlinked"].append(video)
             else:
                 self._linkage_of_videos["linked"].append(video)
@@ -160,6 +160,7 @@ class LabelsDataCache:
 
         for video in new_session.videos:
             self._session_by_video[video] = new_session
+            self._linkage_of_videos["linked"].append(video)
 
     def add_video_to_session(self, session: RecordingSession, new_video: Video):
         """Add a new video to a recording session in the cache.
@@ -169,9 +170,11 @@ class LabelsDataCache:
             session: The recording session to add the video to.
         """
 
-        self._session_by_video[new_video] = session
-        self._linkage_of_videos["linked"].append(new_video)
-        self._linkage_of_videos["unlinked"].remove(new_video)
+        self._session_by_video[new_video] = session 
+        if session is None:
+            self._linkage_of_videos["unlinked"].append(new_video)
+        else:
+            self._linkage_of_videos["linked"].append(new_video)
         
     
 
@@ -318,7 +321,7 @@ class LabelsDataCache:
     def add_track(self, video: Video, track: Track):
         """Add a track to the labels."""
         self.get_track_occupancy(video=video, track=track)
-
+ 
     def add_instance(self, frame: LabeledFrame, instance: Instance):
         """Add an instance to the labels."""
 

@@ -161,10 +161,3 @@ def test_camera_table(qtbot, multiview_min_session_labels):
         else:
             linked_video_filename = linked_video.filename
             assert table.model().data(index) == linked_video_filename
-
-def test_unlinked_videos_table(qtbot, multiview_min_session_labels, hdf5_vid):
-    # Test if the unlinked videos table is loaded correctly
-    
-    # Test if the linked videos are unlinked correctly
-    
-    # Test if the linked videos are linked correctly

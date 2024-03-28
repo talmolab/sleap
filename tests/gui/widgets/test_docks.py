@@ -190,6 +190,28 @@ def test_sessions_dock_session_table(qtbot, multiview_min_session_labels):
         # There are no longer any sessions in the table
         main_window.sessions_dock.sessions_table.selectRow(0)
 
-def test_sessions_dock_unlinked_videos_table(qtbot, multiview_min_session_labels):
+def test_sessions_dock_unlinked_videos_table(qtbot, multiview_min_session_labels, small_robot_mp4_vid):
+    # Create dock
+    label = multiview_min_session_labels
+    main_window = MainWindow(labels=label)
+    label_cache = label._cache
+    
+    # Testing if the unlinked videos table and its cache are loaded correctly
+    assert main_window.sessions_dock.unlinked_videos_table.model().rowCount() == 0
+    assert label_cache._linkage_of_videos["unlinked"] == []
+    assert len(label_cache._linkage_of_videos["linked"]) == len(label.videos)
+    assert label_cache._linkage_of_videos["linked"] == label.videos
+    
+    # Testing if the unlinked videos table and its cache are updated correctly
+    session = label.sessions[0]
+    camcorder = session.camera_cluster.cameras[0]
+    video = camcorder.get_video(session)
+    main_window.state["selected_camera"] = camcorder
+    main_window._buttons["unlink video"].click()
+    # assert len(label_cache._linkage_of_videos["unlinked"]) == 1
+    main_window.sessions_dock.sessions_table.selectRow(0)
+    assert main_window.sessions_dock.unlinked_videos_table.model().rowCount() == 1
+    
+    
     # Test if the "Link" button functions correctly
     

@@ -1096,6 +1096,7 @@ class MainWindow(QMainWindow):
         has_selected_session = self.state["selected_session"] is not None
         has_video = self.state["video"] is not None
         has_selected_camcorder = self.state["selected_camera"] is not None
+        has_selected_unlinked_video = self.state["selected_unlinked_video"] is not None
 
         has_frame_range = bool(self.state["has_frame_range"])
         has_unsaved_changes = bool(self.state["has_changes"])
@@ -1155,7 +1156,7 @@ class MainWindow(QMainWindow):
             "generate_button"
         ].setEnabled(has_videos)
         self._buttons["remove session"].setEnabled(has_selected_session)
-        self._buttons["link video"].setEnabled(has_selected_video and has_selected_camcorder and has_selected_session)
+        self._buttons["link video"].setEnabled(has_selected_unlinked_video and has_selected_camcorder and has_selected_session)
 
         # Update overlays
         self.overlays["track_labels"].visible = (
@@ -1201,6 +1202,7 @@ class MainWindow(QMainWindow):
 
         if _has_topic([UpdateTopic.video]):
             self.videos_dock.table.model().items = self.labels.videos
+            
 
         if _has_topic([UpdateTopic.skeleton]):
             self.skeleton_dock.nodes_table.model().items = self.state["skeleton"]
@@ -1246,7 +1248,12 @@ class MainWindow(QMainWindow):
 
         if _has_topic([UpdateTopic.sessions]):
             self.update_cameras_model()
-
+            self.update_unlinked_videos_model()
+    
+    def update_unlinked_videos_model(self):
+        """Update the unlinked videos model with the selected session."""
+        self.sessions_dock.unlinked_videos_table.model().items = self.labels._cache._linkage_of_videos["unlinked"]
+    
     def update_cameras_model(self):
         """Update the cameras model with the selected session."""
         self.sessions_dock.camera_table.model().items = self.state["selected_session"]
