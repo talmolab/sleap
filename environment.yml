@@ -36,15 +36,15 @@ dependencies:
     - conda-forge::seaborn
     - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
     - conda-forge::tensorflow-hub  # Pinned in meta.yml, but no problems here... yet
+    - conda-forge::qudida
+    - conda-forge::albumentations
+    - conda-forge::ndx-pose
 
     # Packages required by tensorflow to find/use GPUs
     - conda-forge::cudatoolkit ==11.3.1
     # "==" results in package not found
     - conda-forge::cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
-    - conda-forge::qudida
-    - conda-forge::albumentations
-    - conda-forge::ndx-pose
 
     - pip:  
         - "--editable=.[conda_dev]"
