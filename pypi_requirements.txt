@@ -33,11 +33,11 @@ scikit-video
 seaborn
 tensorflow>=2.6.3,<2.9; platform_machine != 'arm64'
 tensorflow-hub<=0.14.0
+albumentations
+ndx-pose
 # These dependencies are untested since we do not offer a wheel for apple silicon atm.
 tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
 tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64'
-albumentations
-ndx-pose
 
 # Dependencies of dependencies
 # google-auth 2.23.0 has requirement urllib3<2.0
