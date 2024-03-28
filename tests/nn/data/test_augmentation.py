@@ -144,10 +144,6 @@ def test_augmentation_with_no_instances(min_labels):
 
 def test_augmentation_edges(min_labels):
     # Tests 1722
-    # FAILED tests/nn/data/test_augmentation.py::test_augmentation_edges - 
-    # tensorflow.python.framework.errors_impl.InvalidArgumentError: ValueError: 
-    # Expected x for keypoint (384.0, 384.0, 0.0, 0.0) to be in the range [0.0, 384], 
-    # got 384.0.
     height, width = min_labels[0].video.shape[1:3]
     min_labels[0].instances.append(
         sleap.Instance.from_numpy(
