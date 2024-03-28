@@ -12,27 +12,33 @@ from sleap.nn.data import augmentation
 
 @pytest.fixture
 def dummy_instances_data_nans():
-    return np.full((2, 2), np.nan, dtype=np.float32)  # All NaNs
+    return np.full((2, 2), np.nan, dtype=np.float32)
+
 
 @pytest.fixture
 def dummy_instances_data_mixed():
     return np.array([[0.1, np.nan], [0.0, 0.8]], dtype=np.float32)
 
+
 @pytest.fixture
 def dummy_image_data():
     return np.zeros((100, 100, 3), dtype=np.uint8)
+
 
 @pytest.fixture
 def dummy_instances_data_zeros():
     return np.zeros((2, 2), dtype=np.float32)
 
+
 @pytest.fixture
 def rotation_min_angle():
     return 90
 
+
 @pytest.fixture
 def rotation_max_angle():
     return 90
+
 
 @pytest.fixture
 def augmentation_config(rotation_min_angle, rotation_max_angle):
@@ -42,6 +48,7 @@ def augmentation_config(rotation_min_angle, rotation_max_angle):
         rotation_max_angle=rotation_max_angle
     )
 
+
 @pytest.fixture
 def dummy_dataset(dummy_image_data, dummy_instances_data_zeros):
     dataset = tf.data.Dataset.from_tensor_slices({
@@ -50,9 +57,11 @@ def dummy_dataset(dummy_image_data, dummy_instances_data_zeros):
     })
     return dataset
 
+
 @pytest.fixture
 def augmenter(augmentation_config):
     return augmentation.AlbumentationsAugmenter.from_config(augmentation_config)
+
 
 # Test class instantiation and augmentation
 @pytest.mark.parametrize(
