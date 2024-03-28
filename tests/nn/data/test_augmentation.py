@@ -55,12 +55,17 @@ def augmenter(augmentation_config):
     return augmentation.AlbumentationsAugmenter.from_config(augmentation_config)
 
 # Test class instantiation and augmentation
-@pytest.mark.parametrize("dummy_instances_data", [
-    pytest.param("dummy_instances_data_zeros", id="zeros"),
-    pytest.param("dummy_instances_data_nans", id="nans"),
-    pytest.param("dummy_instances_data_mixed", id="mixed"),
-])
-def test_albumentations_augmenter(dummy_image_data, dummy_instances_data, augmenter, dummy_dataset):
+@pytest.mark.parametrize(
+    "dummy_instances_data",
+    [
+        pytest.param("dummy_instances_data_zeros", id="zeros"),
+        pytest.param("dummy_instances_data_nans", id="nans"),
+        pytest.param("dummy_instances_data_mixed", id="mixed"),
+    ],
+)
+def test_albumentations_augmenter(
+    dummy_image_data, dummy_instances_data, augmenter, dummy_dataset
+):
     # Apply augmentation
     augmented_dataset = augmenter.transform_dataset(dummy_dataset)
 
@@ -130,7 +135,10 @@ def test_augmentation_with_no_instances(min_labels):
 
 def test_augmentation_edges(min_labels):
     # Tests 1722
-    # FAILED tests/nn/data/test_augmentation.py::test_augmentation_edges - tensorflow.python.framework.errors_impl.InvalidArgumentError: ValueError: Expected x for keypoint (384.0, 384.0, 0.0, 0.0) to be in the range [0.0, 384], got 384.0.
+    # FAILED tests/nn/data/test_augmentation.py::test_augmentation_edges - 
+    # tensorflow.python.framework.errors_impl.InvalidArgumentError: ValueError: 
+    # Expected x for keypoint (384.0, 384.0, 0.0, 0.0) to be in the range [0.0, 384], 
+    # got 384.0.
     height, width = min_labels[0].video.shape[1:3]
     min_labels[0].instances.append(
         sleap.Instance.from_numpy(
