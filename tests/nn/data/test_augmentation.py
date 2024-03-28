@@ -59,6 +59,33 @@ def test_augmentation_with_no_instances(min_labels):
     assert exs[-1]["instances"].shape[0] == 0
 
 
+def test_augmentation_edges(min_labels):
+    # Tests 1722
+    # FAILED tests/nn/data/test_augmentation.py::test_augmentation_edges - tensorflow.python.framework.errors_impl.InvalidArgumentError: ValueError: Expected x for keypoint (384.0, 384.0, 0.0, 0.0) to be in the range [0.0, 384], got 384.0.
+    height, width = min_labels[0].video.shape[1:3]
+    min_labels[0].instances.append(
+        sleap.Instance.from_numpy(
+            [[0, 0], [width, height]],
+            skeleton=min_labels.skeleton,
+        )
+    )
+
+    labels_reader = providers.LabelsReader.from_user_instances(min_labels)
+    ds = labels_reader.make_dataset()
+    example_preaug = next(iter(ds))
+
+    augmenter = augmentation.AlbumentationsAugmenter.from_config(
+        augmentation.AugmentationConfig(
+            rotate=True, rotation_min_angle=90, rotation_max_angle=90
+        )
+    )
+    ds = augmenter.transform_dataset(ds)
+
+    example = next(iter(ds))
+
+    assert example["instances"].shape == (3, 2, 2)
+
+
 def test_random_cropper(min_labels):
     cropper = augmentation.RandomCropper(crop_height=64, crop_width=32)
     assert "image" in cropper.input_keys
