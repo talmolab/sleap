@@ -44,6 +44,7 @@ dependencies:
     - nvidia::cuda-nvcc=11.3
     - conda-forge::qudida
     - conda-forge::albumentations
+    - conda-forge::ndx-pose
 
     - pip:  
         - "--editable=.[conda_dev]"
