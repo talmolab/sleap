@@ -43,4 +43,3 @@ dependencies:
 
     - pip:  
         - "--editable=.[conda_dev]"
-        # - "--no-binary qudida,albumentations"
