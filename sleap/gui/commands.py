@@ -2040,7 +2040,7 @@ class LinkVideoToSession(EditCommand):
     def do_action(context: CommandContext, params: dict):
         video = context.state["selected_unlinked_video"]
         recording_session = context.state["selected_session"]
-        camcorder = context.state["selected_camcorder"]
+        camcorder = context.state["selected_camera"]
 
         recording_session.add_video(video=video, camcorder=camcorder)
         

@@ -642,7 +642,7 @@ class SessionsDock(DockWidget):
             items=main_window.state["selected_session"], context=main_window.commands
         )
         self.unlinked_videos_model = self.unlinked_videos_model_type(
-            items=main_window.state["unlinked_videos"], context=main_window.commands
+            items=main_window.state["selected_session"], context=main_window.commands
         )
 
         self.model = {

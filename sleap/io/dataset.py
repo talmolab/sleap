@@ -160,7 +160,6 @@ class LabelsDataCache:
 
         for video in new_session.videos:
             self._session_by_video[video] = new_session
-            self._linkage_of_videos["linked"].append(video)
 
     def add_video_to_session(self, session: RecordingSession, new_video: Video):
         """Add a new video to a recording session in the cache.
@@ -171,13 +170,17 @@ class LabelsDataCache:
         """
 
         self._session_by_video[new_video] = session 
-        if session is None:
-            self._linkage_of_videos["unlinked"].append(new_video)
-        else:
-            self._linkage_of_videos["linked"].append(new_video)
-        
     
-
+    def update_linkage_of_videos(self):
+        temp = {"linked": [], "unlinked": []}
+        for video in self.labels.videos:
+            if video not in self._session_by_video or self._session_by_video[video] is None:
+                temp["unlinked"].append(video)
+            else:
+                temp["linked"].append(video)
+        
+        self._linkage_of_videos = temp
+    
     def update(
         self,
         new_item: Optional[
@@ -197,7 +200,9 @@ class LabelsDataCache:
 
         elif isinstance(new_item, tuple):
             self.add_video_to_session(*new_item)
-            
+        
+        self.update_linkage_of_videos()
+        
 
     def find_frames(
         self, video: Video, frame_idx: Optional[Union[int, Iterable[int]]] = None
