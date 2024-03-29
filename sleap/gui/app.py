@@ -1184,6 +1184,7 @@ class MainWindow(QMainWindow):
 
         if _has_topic([UpdateTopic.sessions]):
             self.sessions_dock.sessions_table.model().items = self.labels.sessions
+            self.labels._cache.update()
 
         if _has_topic(
             [
@@ -1202,6 +1203,8 @@ class MainWindow(QMainWindow):
 
         if _has_topic([UpdateTopic.video]):
             self.videos_dock.table.model().items = self.labels.videos
+            self.labels._cache.update()
+            self.sessions_dock.unlinked_videos_table.model().items = self.labels._cache._linkage_of_videos["unlinked"]
             
 
         if _has_topic([UpdateTopic.skeleton]):
