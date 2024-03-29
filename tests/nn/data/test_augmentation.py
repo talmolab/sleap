@@ -164,8 +164,9 @@ def test_augmentation_edges(min_labels):
     ds = augmenter.transform_dataset(ds)
 
     example = next(iter(ds))
-
+    # TODO: check for correctness
     assert example["instances"].shape == (3, 2, 2)
+
 
 
 def test_random_cropper(min_labels):
