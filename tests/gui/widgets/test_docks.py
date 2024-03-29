@@ -136,6 +136,7 @@ def test_sessions_dock_cameras_table(qtbot, multiview_min_session_labels):
 
     # Test if all comcorders are presented in the correct row
     for i, cam in enumerate(camcorders):
+        main_window.state["selected_session"] = session
         table.selectRow(i)
 
         # Check first column
