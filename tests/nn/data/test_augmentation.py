@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 import tensorflow as tf
 import sleap
@@ -7,6 +8,87 @@ use_cpu_only()  # hide GPUs for test
 
 from sleap.nn.data import providers
 from sleap.nn.data import augmentation
+
+
+@pytest.fixture
+def dummy_instances_data_nans():
+    return np.full((2, 2), np.nan, dtype=np.float32)
+
+
+@pytest.fixture
+def dummy_instances_data_mixed():
+    return np.array([[0.1, np.nan], [0.0, 0.8]], dtype=np.float32)
+
+
+@pytest.fixture
+def dummy_image_data():
+    return np.zeros((100, 100, 3), dtype=np.uint8)
+
+
+@pytest.fixture
+def dummy_instances_data_zeros():
+    return np.zeros((2, 2), dtype=np.float32)
+
+
+@pytest.fixture
+def rotation_min_angle():
+    return 90
+
+
+@pytest.fixture
+def rotation_max_angle():
+    return 90
+
+
+@pytest.fixture
+def augmentation_config(rotation_min_angle, rotation_max_angle):
+    return augmentation.AugmentationConfig(
+        rotate=True,
+        rotation_min_angle=rotation_min_angle,
+        rotation_max_angle=rotation_max_angle,
+    )
+
+
+@pytest.fixture
+def dummy_dataset(dummy_image_data, dummy_instances_data_zeros):
+    dataset = tf.data.Dataset.from_tensor_slices(
+        {"image": [dummy_image_data], "instances": [dummy_instances_data_zeros]}
+    )
+    return dataset
+
+
+@pytest.fixture
+def augmenter(augmentation_config):
+    return augmentation.AlbumentationsAugmenter.from_config(augmentation_config)
+
+
+# Test class instantiation and augmentation
+@pytest.mark.parametrize(
+    "dummy_instances_data",
+    [
+        pytest.param("dummy_instances_data_zeros", id="zeros"),
+        pytest.param("dummy_instances_data_nans", id="nans"),
+        pytest.param("dummy_instances_data_mixed", id="mixed"),
+    ],
+)
+def test_albumentations_augmenter(
+    dummy_image_data, dummy_instances_data, augmenter, dummy_dataset
+):
+    # Apply augmentation
+    augmented_dataset = augmenter.transform_dataset(dummy_dataset)
+
+    # Check if augmentation is applied
+    augmented_example = next(iter(augmented_dataset))
+    assert augmented_example["image"].shape == (100, 100, 3)
+    assert augmented_example["instances"].shape == (2, 2)
+
+
+# Test class method from_config
+def test_albumentations_augmenter_from_config(augmentation_config):
+    augmenter = augmentation.AlbumentationsAugmenter.from_config(augmentation_config)
+    assert isinstance(augmenter, augmentation.AlbumentationsAugmenter)
+    assert augmenter.image_key == "image"
+    assert augmenter.instances_key == "instances"
 
 
 def test_augmentation(min_labels):
@@ -57,6 +139,32 @@ def test_augmentation_with_no_instances(min_labels):
     )
     exs = p.run()
     assert exs[-1]["instances"].shape[0] == 0
+
+
+def test_augmentation_edges(min_labels):
+    # Tests 1722
+    height, width = min_labels[0].video.shape[1:3]
+    min_labels[0].instances.append(
+        sleap.Instance.from_numpy(
+            [[0, 0], [width, height]],
+            skeleton=min_labels.skeleton,
+        )
+    )
+
+    labels_reader = providers.LabelsReader.from_user_instances(min_labels)
+    ds = labels_reader.make_dataset()
+    example_preaug = next(iter(ds))
+
+    augmenter = augmentation.AlbumentationsAugmenter.from_config(
+        augmentation.AugmentationConfig(
+            rotate=True, rotation_min_angle=90, rotation_max_angle=90
+        )
+    )
+    ds = augmenter.transform_dataset(ds)
+
+    example = next(iter(ds))
+    # TODO: check for correctness
+    assert example["instances"].shape == (3, 2, 2)
 
 
 def test_random_cropper(min_labels):
