@@ -45,16 +45,15 @@ def augmentation_config(rotation_min_angle, rotation_max_angle):
     return augmentation.AugmentationConfig(
         rotate=True,
         rotation_min_angle=rotation_min_angle,
-        rotation_max_angle=rotation_max_angle
+        rotation_max_angle=rotation_max_angle,
     )
 
 
 @pytest.fixture
 def dummy_dataset(dummy_image_data, dummy_instances_data_zeros):
-    dataset = tf.data.Dataset.from_tensor_slices({
-        "image": [dummy_image_data],
-        "instances": [dummy_instances_data_zeros]
-    })
+    dataset = tf.data.Dataset.from_tensor_slices(
+        {"image": [dummy_image_data], "instances": [dummy_instances_data_zeros]}
+    )
     return dataset
 
 
@@ -166,7 +165,6 @@ def test_augmentation_edges(min_labels):
     example = next(iter(ds))
     # TODO: check for correctness
     assert example["instances"].shape == (3, 2, 2)
-
 
 
 def test_random_cropper(min_labels):
