@@ -172,6 +172,8 @@ class LabelsDataCache:
         self._session_by_video[new_video] = session 
     
     def update_linkage_of_videos(self):
+        """Updates a dictionary of linked and unlinked videos.
+        """
         temp = {"linked": [], "unlinked": []}
         for video in self.labels.videos:
             if video not in self._session_by_video or self._session_by_video[video] is None:
