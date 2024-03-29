@@ -2042,7 +2042,8 @@ class LinkVideoToSession(EditCommand):
         recording_session = context.state["selected_session"]
         camcorder = context.state["selected_camera"]
 
-        recording_session.add_video(video=video, camcorder=camcorder)
+        if camcorder.get_video(recording_session) is None:
+            recording_session.add_video(video=video, camcorder=camcorder)
         
         # Reset the selected camera and video
         context.state["selected_camera"] = None

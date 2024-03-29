@@ -1732,6 +1732,7 @@ class Labels(MutableSequence):
         """
 
         self._cache._session_by_video.pop(video, None)
+        self._cache.update()
         if video in session.videos:
             session.remove_video(video)
 

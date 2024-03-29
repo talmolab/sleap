@@ -190,7 +190,7 @@ def test_sessions_dock_session_table(qtbot, multiview_min_session_labels):
         # There are no longer any sessions in the table
         main_window.sessions_dock.sessions_table.selectRow(0)
 
-def test_sessions_dock_unlinked_videos_table(qtbot, multiview_min_session_labels, ):
+def test_sessions_dock_unlinked_videos_table(qtbot, multiview_min_session_labels):
     # Create dock
     label = multiview_min_session_labels
     main_window = MainWindow(labels=label)
@@ -204,5 +204,9 @@ def test_sessions_dock_unlinked_videos_table(qtbot, multiview_min_session_labels
     assert label_cache._linkage_of_videos["linked"] == label.videos
     
     # Testing if the unlinked videos table and its cache are updated correctly
+    main_window.state["selected_camera"] = label.sessions[0].camera_cluster.cameras[0]
+    main_window._buttons["unlink video"].click()
+    assert len(label._cache._linkage_of_videos["unlinked"]) == 1
+    
     # Test if the "Link" button functions correctly
     
