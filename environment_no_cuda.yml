@@ -35,7 +35,8 @@ dependencies:
     - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
-    - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
+    # - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
+    - sleap/label/dev::tensorflow ==2.7.4
     - conda-forge::tensorflow-hub
     - conda-forge::qudida
     - conda-forge::albumentations
