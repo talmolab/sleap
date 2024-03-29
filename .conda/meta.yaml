@@ -52,6 +52,9 @@ requirements:
     - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
+    - conda-forge::qudida
+    - conda-forge::albumentations
+    - conda-forge::ndx-pose
   run:
     - conda-forge::python ==3.7.12  # Run into _MAX_WINDOWS_WORKERS not found if <
     - conda-forge::attrs ==21.4.0
@@ -82,6 +85,9 @@ requirements:
     - conda-forge::seaborn
     - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10, sleap channel has 2.6.3
     - conda-forge::tensorflow-hub <0.14.0  # Causes pynwb conflicts on linux GH-1446
+    - conda-forge::qudida
+    - conda-forge::albumentations
+    - conda-forge::ndx-pose
 
 test:
   imports:
