@@ -35,7 +35,7 @@ dependencies:
     - conda-forge::scikit-video
     - conda-forge::seaborn
     # - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
-    - sleap/label/dev::tensorflow ==2.7.4
+    - sleap/label/dev::tensorflow ==2.7.0
     - conda-forge::tensorflow-hub  # Pinned in meta.yml, but no problems here... yet
     - conda-forge::qudida
     - conda-forge::albumentations
