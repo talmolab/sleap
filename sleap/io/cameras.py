@@ -415,11 +415,33 @@ class InstanceGroup:
     def __attrs_post_init__(self):
         """Initialize `InstanceGroup` object."""
 
+        instance = None
         for cam, instance in self._instance_by_camcorder.items():
             self._camcorder_by_instance[instance] = cam
 
         # Create a dummy instance to fill in for missing instances
         if self._dummy_instance is None:
+            self._create_dummy_instance(instance=instance)
+
+    def _create_dummy_instance(self, instance: Optional["Instance"] = None):
+        """Create a dummy instance to fill in for missing instances.
+
+        Args:
+            instance: Optional `Instance` object to use as an example instance. If None,
+                then the first instance in the `InstanceGroup` is used.
+
+        Raises:
+            ValueError: If no instances are available to create a dummy instance.
+        """
+
+        if self._dummy_instance is None:
+            # Get an example instance
+            if instance is None:
+                if len(self.instances) < 1:
+                    raise ValueError(
+                        "Cannot create a dummy instance without any instances."
+                    )
+                instance = self.instances[0]
 
             # Get `Instance.from_numpy` method
             if hasattr(instance, "score"):
@@ -437,6 +459,20 @@ class InstanceGroup:
                 ),
                 skeleton=skeleton,
             )
+
+    @property
+    def dummy_instance(self) -> "Instance":
+        """Dummy `Instance` object to fill in for missing instances.
+
+        Also used to create instances that are not found in the `InstanceGroup`.
+
+        Returns:
+            `Instance` object or None if unable to create the dummy instance.
+        """
+
+        if self._dummy_instance is None:
+            self._create_dummy_instance()
+        return self._dummy_instance
 
     @property
     def instances(self) -> List["Instance"]:
@@ -460,7 +496,7 @@ class InstanceGroup:
 
         instance_numpys: List[np.ndarray] = []  # len(M) x N x 2
         for cam in self.camera_cluster.cameras:
-            instance = self.get_instance(cam) or self._dummy_instance
+            instance = self.get_instance(cam) or self.dummy_instance
             instance_numpy: np.ndarray = instance.numpy()  # N x 2
             instance_numpys.append(instance_numpy)
 
@@ -478,10 +514,10 @@ class InstanceGroup:
         """
 
         # Get the `Skeleton`
-        skeleton: "Skeleton" = self._dummy_instance.skeleton
+        skeleton: "Skeleton" = self.dummy_instance.skeleton
 
         # Create an all nan `Instance`
-        instance: "Instance" = self._dummy_instance.__class__(
+        instance: "Instance" = self.dummy_instance.__class__(
             skeleton=skeleton,
             frame=labeled_frame,
         )
@@ -982,6 +1018,7 @@ class RecordingSession:
 
         return videos
 
+    # TODO(LM): There can be multiple `InstanceGroup`s per frame index
     def get_instance_group(self, frame_idx: int) -> Optional[InstanceGroup]:
         """Get `InstanceGroup` from frame index.
 
@@ -1001,6 +1038,7 @@ class RecordingSession:
 
         return self.instance_groups[frame_idx]
 
+    # TODO(LM): There can be multiple `InstanceGroup`s per frame index
     def update_instance_group(self, frame_idx: int, instance_group: InstanceGroup):
         """Update `InstanceGroup` from frame index.
 
@@ -1361,6 +1399,87 @@ class FrameGroup:
 
         return frame_group_numpy[cams_to_include_mask]  # M=include x T x N x 2
 
+    def add_instance(
+        self,
+        instance: "Instance",
+        camera: Camcorder,
+        instance_group: Optional[InstanceGroup] = None,
+    ):
+        """Add an (existing) `Instance` to the `FrameGroup`.
+
+        If no `InstanceGroup` is provided, then check the `Instance` is already in an
+        `InstanceGroup` contained in the `FrameGroup`.
+
+        Args:
+            instance: `Instance` to add to the `FrameGroup`.
+            camera: `Camcorder` to link the `Instance` to.
+            instance_group: `InstanceGroup` to add the `Instance` to. If None, then
+                check the `Instance` is already in an `InstanceGroup`.
+
+        Raises:
+            ValueError: If the `InstanceGroup` is not in the `FrameGroup`.
+            ValueError: If the `Instance` is not linked to a `LabeledFrame`.
+            ValueError: If the frame index of the `Instance` does not match the frame index
+                of the `FrameGroup`.
+            ValueError: If the `LabeledFrame` of the `Instance` does not match the existing
+                `LabeledFrame` for the `Camcorder` in the `FrameGroup`.
+            ValueError: If the `Instance` is not in an `InstanceGroup` in the
+                `FrameGroup`.
+        """
+
+        # Ensure the `InstanceGroup` is in this `FrameGroup`
+        if instance_group is not None:
+            self._raise_if_instance_group_not_in_frame_group(
+                instance_group=instance_group
+            )
+
+        # Ensure `Instance` is compatible with `FrameGroup`
+        self._raise_if_instance_incompatibile(instance=instance, camera=camera)
+
+        # Add the `Instance` to the `InstanceGroup`
+        if instance_group is not None:
+            instance_group.add_instance(cam=camera, instance=instance)
+        else:
+            self._raise_if_instance_not_in_instance_group(instance=instance)
+
+        # Add the `Instance` to the `FrameGroup`
+        self._instances_by_cam[camera].add(instance)
+
+        # Update the labeled frames if necessary
+        labeled_frame = self.get_labeled_frame(camera=camera)
+        if labeled_frame is None:
+            labeled_frame = instance.frame
+            self.add_labeled_frame(labeled_frame=labeled_frame, camera=camera)
+
+    def add_instance_group(self, instance_group: Optional[InstanceGroup] = None):
+        """Add an `InstanceGroup` to the `FrameGroup`.
+
+        Args:
+            instance_group: `InstanceGroup` to add to the `FrameGroup`. If None, then
+                create a new `InstanceGroup` and add it to the `FrameGroup`.
+
+        Raises:
+            ValueError: If the `InstanceGroup` is already in the `FrameGroup`.
+        """
+
+        # Ensure the `InstanceGroup` is not already in this `FrameGroup`
+        self._raise_if_instance_group_in_frame_group(instance_group=instance_group)
+
+        # Ensure the `InstanceGroup` is compatible with the `FrameGroup`
+        self._raise_if_instance_group_incompatible(instance_group=instance_group)
+
+        # Add the `InstanceGroup` to the `FrameGroup`
+        self.instance_groups.append(instance_group)
+
+        # Add `Instance`s and `LabeledFrame`s to the `FrameGroup`
+        for instance in instance_group.instances:
+            camera = instance_group.get_cam(instance=instance)
+            self.add_instance(instance=instance, camera=camera)
+
+        # TODO(LM): Integrate with RecordingSession
+        # Add the `InstanceGroup` to the `RecordingSession`
+        ...
+
     def get_instance_group(self, instance: "Instance") -> Optional[InstanceGroup]:
         """Get `InstanceGroup` that contains `Instance` if exists. Otherwise, None.
 
@@ -1531,11 +1650,9 @@ class FrameGroup:
         # Update points for each `InstanceGroup`
         for ig_idx, instance_group in enumerate(instance_groups):
             # Ensure that `InstanceGroup`s is in this `FrameGroup`
-            if instance_group not in self.locked_instance_groups:
-                raise ValueError(
-                    f"InstanceGroup {instance_group} is not in this FrameGroup: "
-                    f"{FrameGroup.locked_instance_groups}"
-                )
+            self._raise_if_instance_group_not_in_frame_group(
+                instance_group=instance_group
+            )
 
             # Check that the `InstanceGroup` has `Instance`s for all cams_to_include
             self.create_and_add_missing_instances(instance_group=instance_group)
@@ -1546,6 +1663,106 @@ class FrameGroup:
                 points=instance_points,
                 cams_to_include=self.cams_to_include,
                 exclude_complete=exclude_complete,
+            )
+
+    def _raise_if_instance_not_in_instance_group(self, instance: "Instance"):
+        """Raise a ValueError if the `Instance` is not in an `InstanceGroup`.
+
+        Args:
+            instance: `Instance` to check if in an `InstanceGroup`.
+
+        Raises:
+            ValueError: If the `Instance` is not in an `InstanceGroup`.
+        """
+
+        instance_group = self.get_instance_group(instance=instance)
+        if instance_group is None:
+            raise ValueError(
+                f"Instance {instance} is not in an InstanceGroup within the FrameGroup."
+            )
+
+    def _raise_if_instance_incompatibile(self, instance: "Instance", camera: Camcorder):
+        """Raise a ValueError if the `Instance` is incompatible with the `FrameGroup`.
+
+        The `Instance` is incompatible if:
+        1. the `Instance` is not linked to a `LabeledFrame`.
+        2. the frame index of the `Instance` does not match the frame index of the
+            `FrameGroup`.
+        3. the `LabeledFrame` of the `Instance` does not match the existing
+            `LabeledFrame` for the `Camcorder` in the `FrameGroup`.
+
+        Args:
+            instance: `Instance` to check compatibility of.
+            camera: `Camcorder` to link the `Instance` to.
+        """
+
+        labeled_frame = instance.frame
+        if labeled_frame is None:
+            raise ValueError(
+                f"Instance {instance} is not linked to a LabeledFrame. "
+                "Cannot add to FrameGroup."
+            )
+
+        frame_idx = labeled_frame.frame_idx
+        if frame_idx != self.frame_idx:
+            raise ValueError(
+                f"Instance {instance} frame index {frame_idx} does not match "
+                f"FrameGroup frame index {self.frame_idx}."
+            )
+
+        labeled_frame_fg = self.get_labeled_frame(camera=camera)
+        if labeled_frame_fg is None:
+            pass
+        elif labeled_frame != labeled_frame_fg:
+            raise ValueError(
+                f"Instance's LabeledFrame {labeled_frame} is not the same as "
+                f"FrameGroup's LabeledFrame {labeled_frame_fg} for Camcorder {camera}."
+            )
+
+    def _raise_if_instance_group_in_frame_group(self, instance_group: InstanceGroup):
+        """Raise a ValueError if the `InstanceGroup` is already in the `FrameGroup`.
+
+        Args:
+            instance_group: `InstanceGroup` to check if already in the `FrameGroup`.
+
+        Raises:
+            ValueError: If the `InstanceGroup` is already in the `FrameGroup`.
+        """
+
+        if instance_group in self.instance_groups:
+            raise ValueError(
+                f"InstanceGroup {instance_group} is already in this FrameGroup "
+                f"{self.instance_groups}."
+            )
+
+    def _raise_if_instance_group_incompatible(self, instance_group: InstanceGroup):
+        """Raise a ValueError if `InstanceGroup` is incompatible with `FrameGroup`.
+
+        An `InstanceGroup` is incompatible if the `frame_idx` does not match the
+        `FrameGroup`'s `frame_idx`.
+
+        Args:
+            instance_group: `InstanceGroup` to check compatibility of.
+
+        Raises:
+            ValueError: If the `InstanceGroup` is incompatible with the `FrameGroup`.
+        """
+
+        if instance_group.frame_idx != self.frame_idx:
+            raise ValueError(
+                f"InstanceGroup {instance_group} frame index {instance_group.frame_idx} "
+                f"does not match FrameGroup frame index {self.frame_idx}."
+            )
+
+    def _raise_if_instance_group_not_in_frame_group(
+        self, instance_group: InstanceGroup
+    ):
+        """Raise a ValueError if `InstanceGroup` is not in this `FrameGroup`."""
+
+        if instance_group not in self.instance_groups:
+            raise ValueError(
+                f"InstanceGroup {instance_group} is not in this FrameGroup: "
+                f"{self.instance_groups}."
             )
 
     def update_labeled_frames_and_instances_by_cam(
@@ -1655,7 +1872,8 @@ class FrameGroup:
                 instance = instance_group.get_instance(cam)  # Returns None if not found
 
                 # TODO(LM): Should this be adding the dummy instance here?
-                # LM: No, since just using the number of locked instance groups will account for the dummy instances
+                # LM: No, since just using the number of locked instance groups will
+                # account for the dummy instances
                 if instance is not None:
                     locked_instances_by_cam[cam].add(instance)
 
@@ -1706,18 +1924,22 @@ class FrameGroup:
         def _fill_in_missing_instances(
             unlocked_instances_in_view: List["Instance"],
         ):
-            """Fill in missing instances with dummy instances up to max number of instances.
+            """Fill in missing instances with dummy instances up to max number.
 
-            Note that this function will mutate the input list in addition to returning the mutated list.
+            Note that this function will mutate the input list in addition to returning
+            the mutated list.
 
             Args:
-                unlocked_instances_in_view: List of instances in a view that are not in a locked InstanceGroup.
+                unlocked_instances_in_view: List of instances in a view that are not in
+                    a locked InstanceGroup.
 
             Returns:
-                List of instances in a view that are not in a locked InstanceGroup with dummy instances appended.
+                List of instances in a view that are not in a locked InstanceGroup with
+                    dummy instances appended.
             """
 
-            # Subtracting the number of locked instance groups accounts for there being dummy instances in the locked instance groups.
+            # Subtracting the number of locked instance groups accounts for there being
+            # dummy instances in the locked instance groups.
             num_instances_missing = (
                 max_num_instances
                 - len(unlocked_instances_in_view)
@@ -1749,7 +1971,7 @@ class FrameGroup:
                 instances_in_view - locked_instances_in_view
             )
 
-            # Fill in missing instances with dummy instances up to max number of instances
+            # Fill in missing instances with dummy instances up to max number
             unlocked_instances_in_view = _fill_in_missing_instances(
                 unlocked_instances_in_view
             )
@@ -1769,15 +1991,15 @@ class FrameGroup:
         grouping_hypotheses: Dict[int, List[InstanceGroup]] = {}
         for frame_id, prod in enumerate(products_of_unlocked_instances):
             grouping_hypotheses[frame_id] = {
-                # TODO(LM): This is where we would create the `InstanceGroup` objects instead
+                # TODO(LM): This is where we would create the `InstanceGroup`s instead
                 cam: list(inst)
                 for cam, inst in zip(self.cams_to_include, prod)
             }
 
         # TODO(LM): Should we return this as instance matrices or `InstanceGroup`s?
-        # Answer: Definitely not instance matrices since we need to keep track of the `Instance`s,
-        # but I kind of wonder if we could just return a list of `InstanceGroup`s instead of a dict
-        # then the `InstanceGroup`
+        # Answer: Definitely not instance matrices since we need to keep track of the
+        # `Instance`s, but I kind of wonder if we could just return a list of
+        # `InstanceGroup`s instead of a dict then the `InstanceGroup`
 
         return grouping_hypotheses
 
@@ -1814,7 +2036,8 @@ class FrameGroup:
     ) -> bool:
         """Enforces that all frame indices are unique in `RecordingSession`.
 
-        Removes existing `FrameGroup` object from the `RecordingSession._frame_group_by_frame_idx`.
+        Removes existing `FrameGroup` object from the
+        `RecordingSession._frame_group_by_frame_idx`.
 
         Args:
             session: `RecordingSession` object.
@@ -1822,8 +2045,10 @@ class FrameGroup:
         """
 
         if frame_idx in self._frame_idx_registry.get(session, set()):
-            # Remove existing `FrameGroup` object from the `RecordingSession._frame_group_by_frame_idx`
+            # Remove existing `FrameGroup` object from the
+            # `RecordingSession._frame_group_by_frame_idx`
             logger.warning(
-                f"Frame index {frame_idx} for FrameGroup already exists in this RecordingSession. Overwriting."
+                f"Frame index {frame_idx} for FrameGroup already exists in this "
+                "RecordingSession. Overwriting."
             )
             session._frame_group_by_frame_idx.pop(frame_idx)
