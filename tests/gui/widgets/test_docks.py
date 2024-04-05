@@ -136,6 +136,7 @@ def test_sessions_dock_cameras_table(qtbot, multiview_min_session_labels):
 
     # Test if all comcorders are presented in the correct row
     for i, cam in enumerate(camcorders):
+        main_window.state["selected_session"] = session
         table.selectRow(i)
 
         # Check first column
@@ -189,3 +190,62 @@ def test_sessions_dock_session_table(qtbot, multiview_min_session_labels):
     with pytest.raises(IndexError):
         # There are no longer any sessions in the table
         main_window.sessions_dock.sessions_table.selectRow(0)
+
+def test_sessions_dock_unlinked_videos_table(qtbot, multiview_min_session_labels):
+    """Test the SessionsDock.unlinked_videos_table."""
+    # Create dock
+    label = multiview_min_session_labels
+    main_window = MainWindow(labels=label)
+    dock = main_window.sessions_dock
+    assert main_window.state["session"] == label.sessions[0]
+    label_cache = label._cache
+    
+    # Selected Session 
+    main_window.state["selected_session"] = label.sessions[0]
+    
+    # Testing if the unlinked videos table and its cache are loaded correctly
+    assert dock.unlinked_videos_table.model().rowCount() == 0
+    assert label_cache._linkage_of_videos["unlinked"] == []
+    assert label_cache._linkage_of_videos["linked"] == label.videos
+    
+    # Testing if the unlinked videos table and its cache are updated correctly
+    main_window.state["selected_camera"] = label.sessions[0].camera_cluster.cameras[0]
+    camera = main_window.state["selected_camera"]
+    video = camera.get_video(label.sessions[0])
+    main_window._buttons["unlink video"].click()
+    
+    # Check unlinked videos tables
+    assert dock.unlinked_videos_table.model().rowCount() == 1
+    
+    # Check cache
+    assert len(label_cache._linkage_of_videos["unlinked"]) == 1
+    assert camera.get_video(label.sessions[0]) is None
+    assert video in label_cache._linkage_of_videos["unlinked"]
+    
+    # Test if the "Link" button functions correctly
+    main_window.state["selected_camera"] = label.sessions[0].camera_cluster.cameras[0]
+    main_window.state["selected_unlinked_video"] = video
+    main_window._buttons["link video"].click()
+    
+    # Check unlinked videos tables
+    assert dock.unlinked_videos_table.model().rowCount() == 0
+    
+    # Check cache
+    assert len(label_cache._linkage_of_videos["unlinked"]) == 0
+    assert video not in label_cache._linkage_of_videos["unlinked"]
+    
+    # Test multiple unlinked videos
+    indxs = [1, 3, 5]
+    original_length = len(label_cache._linkage_of_videos["linked"])
+    for indx in indxs:
+        main_window.state["selected_camera"] = label.sessions[0].camera_cluster.cameras[indx]
+        camera = main_window.state["selected_camera"]
+        video = camera.get_video(label.sessions[0])
+        main_window._buttons["unlink video"].click()
+    
+    # Check unlinked videos tables
+    assert dock.unlinked_videos_table.model().rowCount() == len(indxs)
+    
+    # Check cache
+    assert len(label_cache._linkage_of_videos["unlinked"]) == len(indxs)
+    assert len(label_cache._linkage_of_videos["linked"]) == original_length - len(indxs)

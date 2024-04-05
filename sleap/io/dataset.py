@@ -1,5 +1,5 @@
 """
-A SLEAP dataset collects labeled video frames, together with required metadata.
+A SLEAP dataset collects labeled video frames, together with required metadata. 
 
 This contains labeled frame data (user annotations and/or predictions),
 together with all the other data that is saved for a SLEAP project
@@ -111,6 +111,7 @@ class LabelsDataCache:
         self._track_occupancy = dict()
         self._frame_count_cache = dict()
         self._session_by_video: Dict[Video, RecordingSession] = dict()
+        self._linkage_of_videos = {"linked": [], "unlinked": []}
 
         # Loop through labeled frames only once
         for lf in self.labels:
@@ -127,6 +128,13 @@ class LabelsDataCache:
         for session in self.labels.sessions:
             for video in session.videos:
                 self._session_by_video[video] = session
+        
+        # Build linkage of videos by session
+        for video in self.labels.videos:
+            if video not in self._session_by_video or self._session_by_video[video] is None:
+                self._linkage_of_videos["unlinked"].append(video)
+            else:
+                self._linkage_of_videos["linked"].append(video)
 
     def add_labeled_frame(self, new_frame: LabeledFrame):
         """Add a new labeled frame to the cache.
@@ -161,8 +169,20 @@ class LabelsDataCache:
             session: The recording session to add the video to.
         """
 
-        self._session_by_video[new_video] = session
-
+        self._session_by_video[new_video] = session 
+    
+    def update_linkage_of_videos(self):
+        """Updates a dictionary of linked and unlinked videos.
+        """
+        temp = {"linked": [], "unlinked": []}
+        for video in self.labels.videos:
+            if video not in self._session_by_video or self._session_by_video[video] is None:
+                temp["unlinked"].append(video)
+            else:
+                temp["linked"].append(video)
+        
+        self._linkage_of_videos = temp
+    
     def update(
         self,
         new_item: Optional[
@@ -182,6 +202,9 @@ class LabelsDataCache:
 
         elif isinstance(new_item, tuple):
             self.add_video_to_session(*new_item)
+        
+        self.update_linkage_of_videos()
+        
 
     def find_frames(
         self, video: Video, frame_idx: Optional[Union[int, Iterable[int]]] = None
@@ -305,7 +328,7 @@ class LabelsDataCache:
     def add_track(self, video: Video, track: Track):
         """Add a track to the labels."""
         self.get_track_occupancy(video=video, track=track)
-
+ 
     def add_instance(self, frame: LabeledFrame, instance: Instance):
         """Add an instance to the labels."""
 
@@ -1711,6 +1734,7 @@ class Labels(MutableSequence):
         """
 
         self._cache._session_by_video.pop(video, None)
+        self._cache.update()
         if video in session.videos:
             session.remove_video(video)
 

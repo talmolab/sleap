@@ -581,10 +581,11 @@ class SessionsDock(DockWidget):
     ):
         self.sessions_model_type = SessionsTableModel
         self.camera_model_type = CamerasTableModel
+        self.unlinked_videos_model_type = VideosTableModel
         super().__init__(
             name="Sessions",
             main_window=main_window,
-            model_type=[self.sessions_model_type, self.camera_model_type],
+            model_type=[self.sessions_model_type, self.camera_model_type, self.unlinked_videos_model_type],
             tab_with=tab_with,
         )
 
@@ -622,6 +623,16 @@ class SessionsDock(DockWidget):
         hbw.setLayout(hb)
         return hbw
 
+    def create_video_link_button(self) -> QWidget:
+        main_window = self.main_window
+
+        hb = QHBoxLayout()
+        self.add_button(hb, "Link Video", main_window.commands.linkVideoToSession)
+
+        hbw = QWidget()
+        hbw.setLayout(hb)
+        return hbw
+
     def create_models(self) -> Union[GenericTableModel, Dict[str, GenericTableModel]]:
         main_window = self.main_window
         self.sessions_model = self.sessions_model_type(
@@ -630,10 +641,14 @@ class SessionsDock(DockWidget):
         self.camera_model = self.camera_model_type(
             items=main_window.state["selected_session"], context=main_window.commands
         )
+        self.unlinked_videos_model = self.unlinked_videos_model_type(
+            items=main_window.state["selected_session"], context=main_window.commands
+        )
 
         self.model = {
             "sessions_model": self.sessions_model,
             "camera_model": self.camera_model,
+            "unlink_videos_model": self.unlinked_videos_model,
         }
         return self.model
 
@@ -650,14 +665,24 @@ class SessionsDock(DockWidget):
             row_name="camera",
             model=self.camera_model,
         )
+        self.unlinked_videos_table = GenericTableView(
+            state=main_window.state,
+            row_name="unlinked_video",
+            model=self.unlinked_videos_model,
+        )
 
         self.main_window.state.connect(
             "selected_session", self.main_window.update_cameras_model
+        )
+        
+        self.main_window.state.connect(
+            "selected_session", self.main_window.update_unlinked_videos_model
         )
 
         self.table = {
             "sessions_table": self.sessions_table,
             "camera_table": self.camera_table,
+            "unlinked_videos_table": self.unlinked_videos_table,
         }
         return self.table
 
@@ -695,3 +720,8 @@ class SessionsDock(DockWidget):
         # Add the triangulation options to the dock
         triangulation_options = self.create_triangulation_options()
         self.wgt_layout.addWidget(triangulation_options)
+
+        # Add the unlinked videos table to the dock
+        self.wgt_layout.addWidget(self.unlinked_videos_table)
+        video_link_button = self.create_video_link_button()
+        self.wgt_layout.addWidget(video_link_button)
