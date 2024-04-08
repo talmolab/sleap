@@ -89,13 +89,13 @@ jobs:
               pip install '$wheel_path'[dev]
           - test_args: pytest --durations=-1 tests/
           - condarc: .conda/condarc.yaml
+          - pyver: 3.7
           # Use special condarc if macos
           - os: "macos-14"
             condarc: .conda_mac/condarc.yaml
             pyver: 3.10
           # Ubuntu specific values
           - os: ubuntu-22.04
-            pyver: 3.7
             # Otherwise core dumped in github actions
             test_args: |
               sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
@@ -104,7 +104,6 @@ jobs:
               pytest tests -k 'not exclude_from_linux_pip_test'
           # Windows specific values
           - os: windows-2022
-            pyver: 3.7
             venv_cmd: .\venv\Scripts\activate
 
     steps:

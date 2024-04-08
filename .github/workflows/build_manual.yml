@@ -26,9 +26,11 @@ jobs:
         include:
           # Use this condarc as default
           - condarc: .conda/condarc.yaml
+          - pyver: "3.7"
           # Use special condarc if macos
           - os: "macos-14"
             condarc: .conda_mac/condarc.yaml
+            pyver: "3.9"
     steps:
       # Setup
       - uses: actions/checkout@v2
@@ -40,20 +42,24 @@ jobs:
         with:
           path: ~/conda_pkgs_dir
           key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'requirements.txt') }}
+
       - name: Setup Miniconda
-        # https://github.com/conda-incubator/setup-miniconda
-        uses: conda-incubator/setup-miniconda@v2.0.1
+        uses: conda-incubator/setup-miniconda@v3.0.3
         with:
-          python-version: 3.7
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-          environment-file: environment_build.yml
+          miniforge-version: latest
           condarc-file: ${{ matrix.condarc }}
+          environment-file: environment_build.yml
           activate-environment: sleap_ci
+          python-version: ${{ matrix.pyver }}
+          conda-solver: "libmamba"
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+
       - name: Print environment info
         shell: bash -l {0}
         run: |
           which python
           conda info
+          conda list
 
       # Build pip wheel (Not Windows)
       - name: Build pip wheel (Not Windows)
