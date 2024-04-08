@@ -16,6 +16,7 @@ import pytest
 import subprocess
 import tensorflow as tf
 import shutil
+import platform
 
 
 def test_get_gpu_memory():
@@ -101,7 +102,7 @@ def test_gpu_device_order():
 
 
 @pytest.mark.skipif(
-    not (os.uname().sysname == "Darwin" and os.uname().machine == "arm64"),
+    not ("arm64" in platform.platform()),
     reason="Only test on macosx-arm64",
 )
 def test_reinitialize():
