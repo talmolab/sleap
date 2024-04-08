@@ -106,7 +106,6 @@ def main(args: list = None):
     """
     parser = create_parser()
     args = parser.parse_args(args=args)
-    print(args)
 
     video_callback = Labels.make_video_callback([os.path.dirname(args.input_path)])
     try:
