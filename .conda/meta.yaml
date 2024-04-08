@@ -56,6 +56,7 @@ requirements:
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose
+    - conda-forge::importlib-metadata ==4.11.4
   run:
     - conda-forge::python ==3.7.12  # Run into _MAX_WINDOWS_WORKERS not found if <
     - conda-forge::attrs ==21.4.0
@@ -91,6 +92,7 @@ requirements:
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose
+    - conda-forge::importlib-metadata ==4.11.4
 
 test:
   imports:
