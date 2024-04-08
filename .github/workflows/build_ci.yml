@@ -89,11 +89,11 @@ jobs:
               pip install '$wheel_path'[dev]
           - test_args: pytest --durations=-1 tests/
           - condarc: .conda/condarc.yaml
-          - pyver: 3.7
+          - pyver: "3.7"
           # Use special condarc if macos
           - os: "macos-14"
             condarc: .conda_mac/condarc.yaml
-            pyver: 3.10
+            pyver: "3.10"
           # Ubuntu specific values
           - os: ubuntu-22.04
             # Otherwise core dumped in github actions
