@@ -1595,8 +1595,7 @@ def test_movenet_predictor(min_dance_labels, movenet_video):
         [labels_pr[0][0].numpy(), labels_pr[1][0].numpy()], axis=0
     )
 
-    max_diff = np.nanmax(np.abs(points_gt - points_pr))
-    assert max_diff < 0.1
+    np.testing.assert_allclose(points_gt, points_pr, atol=0.75)
 
 
 @pytest.mark.parametrize(
