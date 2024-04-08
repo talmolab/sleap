@@ -13,8 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: ["ubuntu-22.04", "windows-2022", "macos-14"]
-        os: ["ubuntu-22.04", "windows-2022"]  # TODO: Fix mac tests
+        os: ["ubuntu-22.04", "windows-2022", "macos-14"]
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Use this condarc as default
