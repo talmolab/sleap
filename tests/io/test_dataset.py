@@ -1589,7 +1589,7 @@ def test_export_csv(labels_fixture_name, tmpdir, request):
 
 def test_exported_csv(tmpdir, min_labels_slp, minimal_instance_predictions_csv_path):
     # Construct the filename for the CSV file
-    filename_csv = str(tmpdir + "\\analysis.csv")
+    filename_csv = Path(tmpdir) / "minimal_instance_predictions_export.csv"
     labels = min_labels_slp
     # Export to CSV file
     labels.export_csv(filename_csv)
