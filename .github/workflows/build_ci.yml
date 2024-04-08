@@ -26,6 +26,7 @@ jobs:
           # Use this condarc as default
           - condarc: .conda/condarc.yaml
           - wheel_name: sleap-wheel-linux
+          - pyver: "3.7"
     steps:
       # Setup
       - uses: actions/checkout@v2
@@ -39,15 +40,16 @@ jobs:
           path: ~/conda_pkgs_dir
           key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'pyproject.toml') }}
 
-      - name: Setup Miniconda for Build
-        # https://github.com/conda-incubator/setup-miniconda
-        uses: conda-incubator/setup-miniconda@v2.0.1
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3.0.3
         with:
-          python-version: 3.7
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-          environment-file: environment_build.yml
+          miniforge-version: latest
           condarc-file: ${{ matrix.condarc }}
+          python-version: ${{ matrix.pyver }}
+          environment-file: environment_build.yml
           activate-environment: sleap_ci
+          conda-solver: "libmamba"
+          # use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
 
       - name: Print build environment info
         shell: bash -l {0}
