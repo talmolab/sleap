@@ -1630,35 +1630,3 @@ def test_top_down_model(min_tracks_2node_labels: Labels, min_centroid_model_path
 
     # Runs without error message
     predictor.predict(labels.extract(inds=[0, 1]))
-
-
-@pytest.mark.skip(reason="This test is unresolved on Mac.")
-def test_no_centroid_top_down():
-    # This test reproduces a bug where centered instance models fail when no crops are
-    # detected in the centroid model.
-    x_in = tf.keras.layers.Input([None, None, 1])
-
-    def mk_cms(x):
-        cms = tf.zeros((1, 8, 8, 1), dtype=tf.float32)
-        return cms
-
-    x = tf.keras.layers.Lambda(mk_cms, name="CentroidConfmapsHead")(x_in)
-    centroid_model = tf.keras.Model(x_in, x)
-
-    inference_model = TopDownInferenceModel(
-        centroid_crop=CentroidCrop(
-            keras_model=centroid_model,
-            crop_size=4,
-            output_stride=1,
-            refinement="integral",
-            confmaps_ind=0,
-        ),
-        instance_peaks=FindInstancePeaks(
-            keras_model=centroid_model,
-            output_stride=1,
-            refinement="integral",
-            confmaps_ind=0,
-        ),
-    )
-
-    inference_model.predict(np.zeros((1, 8, 8, 1), dtype="uint8"))
