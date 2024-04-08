@@ -140,12 +140,12 @@ jobs:
         if: matrix.os == 'macos-14' && !github.event.release.prerelease
         shell: bash -l {0}
         run: |
-          anaconda -v upload build/osx-64/*.tar.bz2 --label dev
+          anaconda -v upload build/osx-arm64/*.tar.bz2 --label dev
       - name: Upload conda package (Mac/dev)
         if: matrix.os == 'macos-14' && github.event.release.prerelease
         shell: bash -l {0}
         run: |
-          anaconda -v upload build/osx-64/*.tar.bz2 --label dev
+          anaconda -v upload build/osx-arm64/*.tar.bz2 --label dev
       
       # Logout
       - name: Logout from Anaconda
