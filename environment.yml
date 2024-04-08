@@ -16,7 +16,7 @@ dependencies:
     - conda-forge::jsonpickle ==1.2
     - conda-forge::networkx
     - anaconda::numpy >=1.19.5,<1.23.0
-    - conda-forge::opencv
+    - conda-forge::opencv <4.9.0
     - conda-forge::pandas
     - conda-forge::pip
     - conda-forge::pillow #>=8.3.1,<=8.4.0

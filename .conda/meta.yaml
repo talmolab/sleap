@@ -37,7 +37,7 @@ requirements:
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::networkx
-    - conda-forge::opencv
+    - conda-forge::opencv <4.9.0
     - conda-forge::pandas
     - conda-forge::pillow >=8.3.2
     - conda-forge::psutil
@@ -70,7 +70,7 @@ requirements:
     - conda-forge::jsonpickle ==1.2
     - conda-forge::networkx
     - numpy >=1.19.5,<1.23.0  # Linux likes anaconda, windows likes conda-forge
-    - conda-forge::opencv
+    - conda-forge::opencv <4.9.0
     - conda-forge::pandas
     - conda-forge::pillow >=8.3.2
     - conda-forge::psutil
