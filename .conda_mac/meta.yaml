@@ -16,7 +16,7 @@ about:
   summary: {{ data.get('description') }}
 
 build:
-  number: 1
+  number: 0
 
 source:
   path: ../
@@ -54,6 +54,9 @@ requirements:
     - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
+    - conda-forge::qudida
+    - conda-forge::albumentations
+    - conda-forge::ndx-pose
 
   run:
     - conda-forge::python ~=3.9
@@ -81,7 +84,10 @@ requirements:
     - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
-    - conda-forge::tensorflow-hub
+    # - conda-forge::tensorflow-hub  # pulls in tensorflow cpu from conda-forge
+    - conda-forge::qudida
+    - conda-forge::albumentations
+    - conda-forge::ndx-pose
 
 test:
   imports:
