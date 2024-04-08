@@ -54,13 +54,10 @@ jobs:
         include:
           # Default values
           - env_file: environment_no_cuda.yml
-          - test_args: --cov=sleap --cov-report=xml --durations=-1 tests/
           # Mac specific values
           - os: macos-14
             env_file: environment_mac.yml
-          # Ubuntu specific values
-          - os: ubuntu-22.04
-            test_args: --cov=sleap --cov-report=xml --durations=-1 tests/
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -72,7 +69,6 @@ jobs:
           conda-solver: "libmamba"
           environment-file: ${{ matrix.env_file }}
           activate-environment: sleap_ci
-          # use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
       
       # Print environment info
       - name: Print environment info
@@ -87,12 +83,11 @@ jobs:
       - name: Test with pytest
         shell: bash -l {0}
         run: |
-          pytest ${{ matrix.test_args }}
+          pytest --cov=sleap --cov-report=xml --durations=-1 tests/
 
       # Upload coverage
       - name: Upload coverage
         uses: codecov/codecov-action@v4
-        # if: matrix.os == 'ubuntu-22.04'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
