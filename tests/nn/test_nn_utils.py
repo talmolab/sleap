@@ -6,7 +6,7 @@ from numpy.testing import assert_array_equal, assert_allclose
 from sleap.nn.inference import TopDownPredictor
 from sleap.nn.utils import tf_linear_sum_assignment, match_points, reset_input_layer
 
-sleap.use_cpu_only()
+# sleap.use_cpu_only()
 
 
 def test_tf_linear_sum_assignment():

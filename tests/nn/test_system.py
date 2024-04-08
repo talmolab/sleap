@@ -4,8 +4,13 @@ Note: Most of this module cannot be tested effectively in CI since it expects GP
 be available.
 """
 
-from sleap.nn.system import get_gpu_memory
-from sleap.nn.system import get_all_gpus
+from sleap.nn.system import (
+    get_gpu_memory,
+    get_all_gpus,
+    use_cpu_only,
+    use_gpu,
+    is_gpu_system,
+)
 import os
 import pytest
 import subprocess
@@ -93,3 +98,17 @@ def test_gpu_device_order():
     """Indirectly tests GPU device order by ensuring environment variable is set."""
 
     assert os.environ["CUDA_DEVICE_ORDER"] == "PCI_BUS_ID"
+
+
+@pytest.mark.skipif(
+    not (os.uname().sysname == "Darwin" and os.uname().machine == "arm64"),
+    reason="Only test on macosx-arm64",
+)
+def test_reinitialize():
+    """This test tries to change the devices after they have been initialized."""
+    assert is_gpu_system()
+    use_gpu(0)
+    tf.zeros((1,)) + tf.ones((1,))
+    # The following would normally throw:
+    #   RuntimeError: Visible devices cannot be modified after being initialized
+    use_cpu_only()

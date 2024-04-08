@@ -25,7 +25,7 @@ from sleap.nn.training import (
     create_trainer_using_cli as sleap_train,
 )
 
-sleap.use_cpu_only()
+# sleap.use_cpu_only()
 
 
 @pytest.fixture

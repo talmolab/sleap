@@ -48,7 +48,6 @@ def get_current_gpu() -> tf.config.PhysicalDevice:
 
 def use_cpu_only():
     """Hide GPUs from TensorFlow to ensure only the CPU is available."""
-    # RuntimeError: Visible devices cannot be modified after being initialized
     try:
         tf.config.set_visible_devices([], "GPU")
     except RuntimeError as ex:
