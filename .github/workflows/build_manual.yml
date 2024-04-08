@@ -9,7 +9,8 @@ on:
       - '.conda/meta.yaml'
       - '.conda_mac/meta.yaml'
     branches:
-      - develop
+      # - develop
+      - fakebranch
 
 jobs:
   build:
@@ -18,13 +19,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "windows-2022", "macos-latest"]
+        os: ["ubuntu-22.04", "windows-2022", "macos-14"]
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Use this condarc as default
           - condarc: .conda/condarc.yaml
           # Use special condarc if macos
-          - os: "macos-latest"
+          - os: "macos-14"
             condarc: .conda_mac/condarc.yaml
     steps:
       # Setup
@@ -84,7 +85,7 @@ jobs:
 
       # Build conda package (Mac)
       - name: Build conda package (Mac)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-14'
         shell: bash -l {0}
         run: |
           conda build .conda_mac --output-folder build
@@ -109,7 +110,7 @@ jobs:
       
       # Login to conda (Mac)
       - name: Login to Anaconda (Mac)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-14'
         env:
           ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
         shell: bash -l {0}
@@ -132,10 +133,10 @@ jobs:
       
       # Upload conda package (Mac)
       - name: Upload conda package (Mac/dev)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-14'
         shell: bash -l {0}
         run: |
-          anaconda -v upload build/osx-64/*.tar.bz2 --label dev
+          anaconda -v upload build/osx-arm64/*.tar.bz2 --label dev
       
       - name: Logout from Anaconda
         shell: bash -l {0}
