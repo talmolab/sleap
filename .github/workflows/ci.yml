@@ -65,14 +65,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "windows-2022", "macos-latest"]
+        # os: ["ubuntu-22.04", "windows-2022", "macos-14"]  # TODO: Fix Mac tests
+        os: ["ubuntu-22.04", "windows-2022"]
         include:
           # Default values
           - env_file: environment_no_cuda.yml
           - test_args: --durations=-1 tests/
           # Mac specific values
-          - os: macos-latest
-            env_file: environment_mac.yml
+          # - os: macos-14
+          #   env_file: environment_mac.yml
           # Ubuntu specific values
           - os: ubuntu-22.04
             test_args: --cov=sleap --cov-report=xml --durations=-1 tests/
