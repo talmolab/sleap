@@ -72,7 +72,7 @@ jobs:
           conda-solver: "libmamba"
           environment-file: ${{ matrix.env_file }}
           activate-environment: sleap_ci
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+          # use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
       
       # Print environment info
       - name: Print environment info

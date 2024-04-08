@@ -52,7 +52,7 @@ jobs:
           activate-environment: sleap_ci
           python-version: ${{ matrix.pyver }}
           conda-solver: "libmamba"
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+          # use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
 
       - name: Print environment info
         shell: bash -l {0}
