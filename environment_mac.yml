@@ -9,12 +9,13 @@ channels:
 dependencies:
     # Packages SLEAP uses directly
     - conda-forge::attrs >=21.2.0
+    - conda-forge::importlib-metadata <7.1.0
     - conda-forge::cattrs ==1.1.1
     - conda-forge::h5py
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
-    - conda-forge::networkx
+    - conda-forge::networkx <3.3
     - anaconda::numpy >=1.19.5,<1.23.0
     - conda-forge::opencv
     - conda-forge::pandas
@@ -34,7 +35,7 @@ dependencies:
     - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
-    - conda-forge::tensorflow-hub
+    # - conda-forge::tensorflow-hub  # pulls in tensorflow cpu from conda-forge
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose

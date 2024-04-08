@@ -65,13 +65,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "windows-2022", "macos-latest"]
+        os: ["ubuntu-22.04", "windows-2022", "macos-14"]
         include:
           # Default values
           - env_file: environment_no_cuda.yml
           - test_args: --durations=-1 tests/
           # Mac specific values
-          - os: macos-latest
+          - os: macos-14
             env_file: environment_mac.yml
           # Ubuntu specific values
           - os: ubuntu-22.04
