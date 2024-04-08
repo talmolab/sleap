@@ -9,7 +9,8 @@ on:
       - '.conda/meta.yaml'
       - '.conda_mac/meta.yaml'
     branches:
-      - develop
+      # - develop
+      - fakebranch
 
 jobs:
   build:

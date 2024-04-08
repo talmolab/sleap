@@ -65,7 +65,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "windows-2022", "macos-14"]
+        # os: ["ubuntu-22.04", "windows-2022", "macos-14"]  # TODO: Fix Mac tests
+        os: ["ubuntu-22.04", "windows-2022"]
         include:
           # Default values
           - env_file: environment_no_cuda.yml

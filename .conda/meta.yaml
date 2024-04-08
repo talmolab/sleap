@@ -32,7 +32,6 @@ requirements:
     # unnecessary pypi packages are installed via the build script (bld.bat, build.sh)
     - conda-forge::attrs ==21.4.0
     - conda-forge::cattrs ==1.1.1
-    # - conda-forge::h5py ==3.1  # [not win]
     - conda-forge::h5py ==3.7.0
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
@@ -64,7 +63,6 @@ requirements:
     - conda-forge::cudatoolkit ==11.3.1
     - conda-forge::cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
-    # - conda-forge::h5py ==3.1  # [not win]
     - conda-forge::h5py ==3.7.0
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
@@ -86,8 +84,7 @@ requirements:
     - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
-    # - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10, sleap channel has 2.6.3
-    - sleap/label/dev::tensorflow ==2.7.0
+    - sleap/label/dev::tensorflow ==2.7.0  # TODO: Switch to main label when updated
     - conda-forge::tensorflow-hub <0.14.0  # Causes pynwb conflicts on linux GH-1446
     - conda-forge::qudida
     - conda-forge::albumentations
