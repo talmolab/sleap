@@ -1563,23 +1563,26 @@ def test_export_nwb(centered_pair_predictions: Labels, tmpdir):
     assert_read_labels_match(centered_pair_predictions, read_labels)
 
 
-@pytest.mark.parametrize("labels_fixture_name", [
-    "centered_pair_labels",
-    "centered_pair_predictions",
-    "min_labels",
-    "min_labels_slp",
-    "min_labels_robot"
-])
+@pytest.mark.parametrize(
+    "labels_fixture_name",
+    [
+        "centered_pair_labels",
+        "centered_pair_predictions",
+        "min_labels",
+        "min_labels_slp",
+        "min_labels_robot",
+    ],
+)
 def test_export_csv(labels_fixture_name, tmpdir, request):
     # Retrieve Labels fixture by name
     labels_fixture = request.getfixturevalue(labels_fixture_name)
-    
+
     # Generate the filename for the CSV file
     csv_filename = Path(tmpdir) / (labels_fixture_name + "_export.csv")
-    
+
     # Export to CSV file
     labels_fixture.export_csv(str(csv_filename))
-    
+
     # Assert that the CSV file was created
     assert csv_filename.is_file(), f"CSV file '{csv_filename}' was not created"
 
@@ -1592,7 +1595,7 @@ def test_exported_csv(tmpdir, min_labels_slp, minimal_instance_predictions_csv_p
     labels.export_csv(filename_csv)
     # Read the CSV file
     labels_csv = pd.read_csv(filename_csv)
-    
+
     # Read the csv file fixture
     csv_predictions = pd.read_csv(minimal_instance_predictions_csv_path)
 
@@ -1600,8 +1603,3 @@ def test_exported_csv(tmpdir, min_labels_slp, minimal_instance_predictions_csv_p
 
     # check number of cols
     assert len(labels_csv.columns) - 3 == len(get_nodes_as_np_strings(labels)) * 3
-
-
-
-
-
