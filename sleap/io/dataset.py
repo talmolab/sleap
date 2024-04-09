@@ -2055,6 +2055,19 @@ class Labels(MutableSequence):
 
         SleapAnalysisAdaptor.write(filename, self)
 
+    def export_csv(self, filename: str):
+        """Export labels to CSV format.
+
+        Args:
+            filename: Output path for the CSV format file.
+
+        Notes:
+            This will write the contents of the labels out as a CSV file.
+        """
+        from sleap.io.format.csv import CSVAdaptor
+
+        CSVAdaptor.write(filename, self)
+
     def export_nwb(
         self,
         filename: str,

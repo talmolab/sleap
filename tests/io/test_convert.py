@@ -8,7 +8,7 @@ import re
 import pytest
 
 
-@pytest.mark.parametrize("format", ["analysis", "analysis.nix"])
+@pytest.mark.parametrize("format", ["analysis", "analysis.nix", "analysis.csv"])
 def test_analysis_format(
     min_labels_slp: Labels,
     min_labels_slp_path: Labels,
@@ -27,7 +27,7 @@ def test_analysis_format(
         labels_path = str(slp_path)
         fn = re.sub("(\\.json(\\.zip)?|\\.h5|\\.slp)$", "", labels_path)
         fn = PurePath(fn)
-        out_suffix = "nix" if "nix" in format else "h5"
+        out_suffix = "nix" if "nix" in format else "csv" if "csv" in format else "h5"
         default_names = [
             default_analysis_filename(
                 labels=labels,
