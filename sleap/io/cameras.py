@@ -1462,11 +1462,19 @@ class FrameGroup:
             ValueError: If the `InstanceGroup` is already in the `FrameGroup`.
         """
 
-        # Ensure the `InstanceGroup` is not already in this `FrameGroup`
-        self._raise_if_instance_group_in_frame_group(instance_group=instance_group)
+        if instance_group is None:
+            # Create an empty `InstanceGroup` with the frame index of the `FrameGroup`
+            instance_group = InstanceGroup(
+                frame_idx=self.frame_idx,
+                camera_cluster=self.session.camera_cluster,
+            )
 
-        # Ensure the `InstanceGroup` is compatible with the `FrameGroup`
-        self._raise_if_instance_group_incompatible(instance_group=instance_group)
+        else:
+            # Ensure the `InstanceGroup` is not already in this `FrameGroup`
+            self._raise_if_instance_group_in_frame_group(instance_group=instance_group)
+
+            # Ensure the `InstanceGroup` is compatible with the `FrameGroup`
+            self._raise_if_instance_group_incompatible(instance_group=instance_group)
 
         # Add the `InstanceGroup` to the `FrameGroup`
         self.instance_groups.append(instance_group)
