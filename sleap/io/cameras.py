@@ -14,6 +14,7 @@ from attrs import define, field
 from attrs.validators import deep_iterable, instance_of
 
 # from sleap.io.dataset import Labels  # TODO(LM): Circular import, implement Observer
+from sleap.instance import PredictedInstance
 from sleap.io.video import Video
 from sleap.util import deep_iterable_converter
 
@@ -443,31 +444,29 @@ class InstanceGroup:
                     )
                 instance = self.instances[0]
 
-            # Get `Instance.from_numpy` method
-            if hasattr(instance, "score"):
-                # The example instance is a `PredictedInstance`
-                from_numpy = instance.__class__.__bases__[0].from_numpy
-            else:
-                # The example instance is an `Instance`
-                from_numpy = instance.__class__.from_numpy
-
+            # Use the example instance to create a dummy instance
             skeleton: "Skeleton" = instance.skeleton
-            self._dummy_instance = from_numpy(
+            self._dummy_instance = PredictedInstance.from_numpy(
                 points=np.full(
                     shape=(len(skeleton.nodes), 2),
                     fill_value=np.nan,
                 ),
+                point_confidences=np.full(
+                    shape=(len(skeleton.nodes),),
+                    fill_value=np.nan,
+                ),
+                instance_score=np.nan,
                 skeleton=skeleton,
             )
 
     @property
-    def dummy_instance(self) -> "Instance":
-        """Dummy `Instance` object to fill in for missing instances.
+    def dummy_instance(self) -> PredictedInstance:
+        """Dummy `PredictedInstance` object to fill in for missing instances.
 
         Also used to create instances that are not found in the `InstanceGroup`.
 
         Returns:
-            `Instance` object or None if unable to create the dummy instance.
+            `PredictedInstance` object or None if unable to create the dummy instance.
         """
 
         if self._dummy_instance is None:
@@ -510,17 +509,20 @@ class InstanceGroup:
             labeled_frame: `LabeledFrame` object that the `Instance` is contained in.
 
         Returns:
-            `Instance` created and added to the `InstanceGroup`.
+            All nan `PredictedInstance` created and added to the `InstanceGroup`.
         """
 
         # Get the `Skeleton`
         skeleton: "Skeleton" = self.dummy_instance.skeleton
 
         # Create an all nan `Instance`
-        instance: "Instance" = self.dummy_instance.__class__(
+        instance: PredictedInstance = PredictedInstance.from_numpy(
+            points=self.dummy_instance.points_array,
+            point_confidences=self.dummy_instance.scores,
+            instance_score=self.dummy_instance.score,
             skeleton=skeleton,
-            frame=labeled_frame,
         )
+        instance.frame = labeled_frame
 
         # Add the instance to the `InstanceGroup`
         self.add_instance(cam, instance)
@@ -710,7 +712,7 @@ class InstanceGroup:
                 )
                 continue
 
-            # Update the points for the instance
+            # Update the points (and scores) for the (predicted) instance
             instance.update_points(
                 points=points[cam_idx, :, :], exclude_complete=exclude_complete
             )
