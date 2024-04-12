@@ -3459,7 +3459,11 @@ class TriangulateSession(EditCommand):
         points_reprojected = np.squeeze(pts_reprojected, axis=1)  # M=include x TxNx2
 
         # Update or create/insert ("upsert") instance points
-        frame_group.upsert_points(points=points_reprojected, instance_groups=instance_groups, exclude_complete=True)
+        frame_group.upsert_points(
+            points=points_reprojected,
+            instance_groups=instance_groups,
+            exclude_complete=True,
+        )
 
     @classmethod
     def has_enough_instances(
