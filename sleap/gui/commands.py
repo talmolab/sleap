@@ -3436,7 +3436,7 @@ class TriangulateSession(EditCommand):
             return  # Not enough instances for triangulation
 
         # Get the `FrameGroup` of shape  M=include x T x N x 2
-        fg_tensor = frame_group.numpy(instance_groups=instance_groups)
+        fg_tensor = frame_group.numpy(instance_groups=instance_groups, pred_as_nan=True)
 
         # Add extra dimension for number of frames
         frame_group_tensor = np.expand_dims(fg_tensor, axis=1)  # M=include x F=1 xTxNx2

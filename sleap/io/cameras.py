@@ -483,19 +483,36 @@ class InstanceGroup:
         """List of `Camcorder` objects."""
         return list(self._instance_by_camcorder.keys())
 
-    def numpy(self) -> np.ndarray:
+    def numpy(self, pred_as_nan: bool = False) -> np.ndarray:
         """Return instances as a numpy array of shape (n_views, n_nodes, 2).
+
         The ordering of views is based on the ordering of `Camcorder`s in the
         `self.camera_cluster: CameraCluster`.
+
         If an instance is missing for a `Camcorder`, then the instance is filled in with
         the dummy instance (all NaNs).
+
+        Args:
+            pred_as_nan: If True, then replaces `PredictedInstance`s with all nan
+                self.dummy_instance. Default is False.
+
         Returns:
             Numpy array of shape (n_views, n_nodes, 2).
         """
 
         instance_numpys: List[np.ndarray] = []  # len(M) x N x 2
         for cam in self.camera_cluster.cameras:
-            instance = self.get_instance(cam) or self.dummy_instance
+            instance = self.get_instance(cam)
+
+            # Determine whether to use a dummy (all nan) instance
+            instance_is_missing = instance is None
+            instance_as_nan = pred_as_nan and isinstance(instance, PredictedInstance)
+            use_dummy_instance = instance_is_missing or instance_as_nan
+
+            # Add the dummy instance if the instance is missing
+            if use_dummy_instance:
+                instance = self.dummy_instance  # This is an all nan PredictedInstance
+
             instance_numpy: np.ndarray = instance.numpy()  # N x 2
             instance_numpys.append(instance_numpy)
 
@@ -1363,13 +1380,17 @@ class FrameGroup:
         return self._locked_instance_groups
 
     def numpy(
-        self, instance_groups: Optional[List[InstanceGroup]] = None
+        self,
+        instance_groups: Optional[List[InstanceGroup]] = None,
+        pred_as_nan: bool = False,
     ) -> np.ndarray:
         """Numpy array of all `InstanceGroup`s in `FrameGroup.cams_to_include`.
 
         Args:
             instance_groups: `InstanceGroup`s to include. Default is None and uses all
                 self.instance_groups.
+            pred_as_nan: If True, then replaces `PredictedInstance`s with all nan
+                self.dummy_instance. Default is False.
 
         Returns:
             Numpy array of shape (M, T, N, 2) where M is the number of views (determined
@@ -1391,7 +1412,9 @@ class FrameGroup:
 
         instance_group_numpys: List[np.ndarray] = []  # len(T) M=all x N x 2
         for instance_group in instance_groups:
-            instance_group_numpy = instance_group.numpy()  # M=all x N x 2
+            instance_group_numpy = instance_group.numpy(
+                pred_as_nan=pred_as_nan
+            )  # M=all x N x 2
             instance_group_numpys.append(instance_group_numpy)
 
         frame_group_numpy = np.stack(instance_group_numpys, axis=1)  # M=all x T x N x 2
