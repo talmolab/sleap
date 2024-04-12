@@ -1,6 +1,5 @@
 """Module for storing information for camera groups."""
 
-from itertools import permutations, product
 import logging
 import tempfile
 from pathlib import Path
@@ -1282,13 +1281,6 @@ class FrameGroup:
     _labeled_frames_by_cam: Dict[Camcorder, "LabeledFrame"] = field(factory=dict)
     _instances_by_cam: Dict[Camcorder, Set["Instance"]] = field(factory=dict)
 
-    # TODO(LM): This dict should be updated each time an InstanceGroup is
-    # added/removed/locked/unlocked
-    _locked_instance_groups: List[InstanceGroup] = field(factory=list)
-    _locked_instances_by_cam: Dict[Camcorder, Set["Instance"]] = field(
-        factory=dict
-    )  # Internally updated in `update_locked_instances_by_cam`
-
     def __attrs_post_init__(self):
         """Initialize `FrameGroup` object."""
 
@@ -1310,9 +1302,6 @@ class FrameGroup:
 
         # Initialize `_labeled_frames_by_cam` dictionary
         self.update_labeled_frames_and_instances_by_cam()
-
-        # Initialize `_locked_instance_groups` dictionary
-        self.update_locked_instance_groups()
 
         # The dummy labeled frame will only be set once for the first `FrameGroup` made
         if self._dummy_labeled_frame is None:
@@ -1366,18 +1355,6 @@ class FrameGroup:
         """List of `Camcorder`s."""
 
         return list(self._labeled_frames_by_cam.keys())
-
-    @property
-    def instances_by_cam_to_include(self) -> Dict[Camcorder, Set["Instance"]]:
-        """List of `Camcorder`s."""
-
-        return {cam: self._instances_by_cam[cam] for cam in self.cams_to_include}
-
-    @property
-    def locked_instance_groups(self) -> List[InstanceGroup]:
-        """List of locked `InstanceGroup`s."""
-
-        return self._locked_instance_groups
 
     def numpy(
         self,
@@ -1545,7 +1522,6 @@ class FrameGroup:
         # Add the `LabeledFrame` to the `FrameGroup`
         self._labeled_frames_by_cam[camera] = labeled_frame
 
-        # TODO(LM): Should this be an EditCommand instead?
         # Add the `LabeledFrame` to the `RecordingSession`'s `Labels` object
         if labeled_frame not in self.session.labels:
             self.session.labels.append(labeled_frame)
@@ -1845,7 +1821,7 @@ class FrameGroup:
             views[cam] = lf
 
             # Find instances in frame
-            insts = lf.find(track=-1, user=True)
+            insts = lf.find(track=-1)
             if len(insts) > 0:
                 instances_by_cam[cam] = set(insts)
 
@@ -1861,180 +1837,6 @@ class FrameGroup:
             if return_instances_by_camera
             else self._labeled_frames_by_cam
         )
-
-    def update_locked_instance_groups(self) -> List[InstanceGroup]:
-        """Updates locked `InstanceGroup`s in `FrameGroup`.
-
-        Returns:
-            List of locked `InstanceGroup`s.
-        """
-
-        self._locked_instance_groups: List[InstanceGroup] = [
-            instance_group
-            for instance_group in self.instance_groups
-            if instance_group.locked
-        ]
-
-        # Also update locked instances by cam
-        self.update_locked_instances_by_cam(self._locked_instance_groups)
-
-        return self._locked_instance_groups
-
-    def update_locked_instances_by_cam(
-        self, locked_instance_groups: List[InstanceGroup] = None
-    ) -> Dict[Camcorder, Set["Instance"]]:
-        """Updates locked `Instance`s in `FrameGroup`.
-
-        Args:
-            locked_instance_groups: List of locked `InstanceGroup`s. Default is None.
-                If None, then uses `self.locked_instance_groups`.
-
-        Returns:
-            Dictionary with `Camcorder` key and `Set[Instance]` value.
-        """
-
-        if locked_instance_groups is None:
-            locked_instance_groups = self.locked_instance_groups
-
-        locked_instances_by_cam: Dict[Camcorder, Set["Instance"]] = {}
-
-        # Loop through each camera and append locked instances in specific order
-        for cam in self.cams_to_include:
-            locked_instances_by_cam[cam] = set()
-            for instance_group in locked_instance_groups:
-                instance = instance_group.get_instance(cam)  # Returns None if not found
-
-                # TODO(LM): Should this be adding the dummy instance here?
-                # LM: No, since just using the number of locked instance groups will
-                # account for the dummy instances
-                if instance is not None:
-                    locked_instances_by_cam[cam].add(instance)
-
-        # Only update if there were no errors
-        self._locked_instances_by_cam = locked_instances_by_cam
-        return self._locked_instances_by_cam
-
-    # TODO(LM): Should we move this to TriangulateSession?
-    def generate_hypotheses(
-        self, as_matrix: bool = True
-    ) -> Union[np.ndarray, Dict[int, List[InstanceGroup]]]:
-        """Generates all possible hypotheses from the `FrameGroup`.
-
-        Args:
-            as_matrix: If True (defualt), then return as a matrix of
-                `Instance.points_array`. Else return as `Dict[int, List[InstanceGroup]]`
-                where `int` is the hypothesis identifier and `List[InstanceGroup]` is
-                the list of `InstanceGroup`s.
-
-        Returns:
-            Either a `np.ndarray` of shape M x F x T x N x 2 an array if as_matrix where
-            M: # views, F: # frames = 1, T: # tracks, N: # nodes, 2: x, y
-            or a dictionary with hypothesis ID key and list of `InstanceGroup`s value.
-        """
-
-        # Get all `Instance`s for this frame index across all views to include
-        instances_by_camera: Dict[
-            Camcorder, Set["Instance"]
-        ] = self.instances_by_cam_to_include
-
-        # Get max number of instances across all views
-        all_instances_by_camera: List[Set["Instance"]] = instances_by_camera.values()
-        max_num_instances = max(
-            [len(instances) for instances in all_instances_by_camera], default=0
-        )
-
-        # Create a dummy instance of all nan values
-        example_instance: "Instance" = next(iter(all_instances_by_camera[0]))
-        skeleton: "Skeleton" = example_instance.skeleton
-        dummy_instance: "Instance" = example_instance.from_numpy(
-            np.full(
-                shape=(len(skeleton.nodes), 2),
-                fill_value=np.nan,
-            ),
-            skeleton=skeleton,
-        )
-
-        def _fill_in_missing_instances(
-            unlocked_instances_in_view: List["Instance"],
-        ):
-            """Fill in missing instances with dummy instances up to max number.
-
-            Note that this function will mutate the input list in addition to returning
-            the mutated list.
-
-            Args:
-                unlocked_instances_in_view: List of instances in a view that are not in
-                    a locked InstanceGroup.
-
-            Returns:
-                List of instances in a view that are not in a locked InstanceGroup with
-                    dummy instances appended.
-            """
-
-            # Subtracting the number of locked instance groups accounts for there being
-            # dummy instances in the locked instance groups.
-            num_instances_missing = (
-                max_num_instances
-                - len(unlocked_instances_in_view)
-                - len(
-                    self.locked_instance_groups
-                )  # TODO(LM): Make sure this property is getting updated properly
-            )
-
-            if num_instances_missing > 0:
-                # Extend the list of instances with dummy instances
-                unlocked_instances_in_view.extend(
-                    [dummy_instance] * num_instances_missing
-                )
-
-            return unlocked_instances_in_view
-
-        # For each view, get permutations of unlocked instances
-        unlocked_instance_permutations: Dict[
-            Camcorder, Iterator[Tuple["Instance"]]
-        ] = {}
-        for cam, instances_in_view in instances_by_camera.items():
-            # Gather all instances for this cam from locked `InstanceGroup`s
-            locked_instances_in_view: Set[
-                "Instance"
-            ] = self._locked_instances_by_cam.get(cam, set())
-
-            # Remove locked instances from instances in view
-            unlocked_instances_in_view: List["Instance"] = list(
-                instances_in_view - locked_instances_in_view
-            )
-
-            # Fill in missing instances with dummy instances up to max number
-            unlocked_instances_in_view = _fill_in_missing_instances(
-                unlocked_instances_in_view
-            )
-
-            # Permuate all `Instance`s in the unlocked `InstanceGroup`s
-            unlocked_instance_permutations[cam] = permutations(
-                unlocked_instances_in_view
-            )
-
-        # Get products of instances from other views into all possible groupings
-        # Ordering of dict_values is preserved in Python 3.7+
-        products_of_unlocked_instances: Iterator[Iterator[Tuple]] = product(
-            *unlocked_instance_permutations.values()
-        )
-
-        # Reorganize products by cam and add selected instance to each permutation
-        grouping_hypotheses: Dict[int, List[InstanceGroup]] = {}
-        for frame_id, prod in enumerate(products_of_unlocked_instances):
-            grouping_hypotheses[frame_id] = {
-                # TODO(LM): This is where we would create the `InstanceGroup`s instead
-                cam: list(inst)
-                for cam, inst in zip(self.cams_to_include, prod)
-            }
-
-        # TODO(LM): Should we return this as instance matrices or `InstanceGroup`s?
-        # Answer: Definitely not instance matrices since we need to keep track of the
-        # `Instance`s, but I kind of wonder if we could just return a list of
-        # `InstanceGroup`s instead of a dict then the `InstanceGroup`
-
-        return grouping_hypotheses
 
     @classmethod
     def from_instance_groups(
