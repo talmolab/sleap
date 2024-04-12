@@ -1,6 +1,6 @@
 """Module to test functions in `sleap.io.cameras`."""
 
-from typing import Dict, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import pytest
@@ -9,6 +9,7 @@ from sleap.io.cameras import (
     Camcorder,
     CameraCluster,
     InstanceGroup,
+    FrameGroup,
     RecordingSession,
 )
 from sleap.io.dataset import Instance, Labels
@@ -390,16 +391,16 @@ def test_instance_group(multiview_min_session_labels: Labels):
 
     # Test `_dummy_instance` property
     assert (
-        instance_group._dummy_instance.skeleton == instance_group.instances[0].skeleton
+        instance_group.dummy_instance.skeleton == instance_group.instances[0].skeleton
     )
-    assert isinstance(instance_group._dummy_instance, Instance)
+    assert isinstance(instance_group.dummy_instance, Instance)
 
     # Test `numpy` method
     instance_group_numpy = instance_group.numpy()
     assert isinstance(instance_group_numpy, np.ndarray)
     n_views, n_nodes, n_coords = instance_group_numpy.shape
     assert n_views == len(instance_group.camera_cluster.cameras)
-    assert n_nodes == len(instance_group._dummy_instance.skeleton.nodes)
+    assert n_nodes == len(instance_group.dummy_instance.skeleton.nodes)
     assert n_coords == 2
 
     # Test `update_points` method
@@ -412,3 +413,37 @@ def test_instance_group(multiview_min_session_labels: Labels):
     instance_by_camera = {cam: dummy_instance}
     instance_group = InstanceGroup.from_dict(d=instance_by_camera)
     assert instance_group is None
+
+
+def test_frame_group(multiview_min_session_labels: Labels):
+    """Test `FrameGroup` data structure."""
+
+    labels = multiview_min_session_labels
+    session = labels.sessions[0]
+
+    # Test `from_instance_groups` from list of instance groups
+    frame_idx_1 = 0
+    instance_group = create_instance_group(labels=labels, frame_idx=frame_idx_1)
+    instance_groups: List[InstanceGroup] = [instance_group]
+    frame_group_1 = FrameGroup.from_instance_groups(
+        session=session, instance_groups=instance_groups
+    )
+    assert isinstance(frame_group_1, FrameGroup)
+    assert session in frame_group_1._frame_idx_registry
+    assert len(frame_group_1._frame_idx_registry) == 1
+    assert frame_group_1._frame_idx_registry[session] == {frame_idx_1}
+
+    # Test `_frame_idx_registry` property
+    frame_idx_2 = 1
+    instance_group = create_instance_group(labels=labels, frame_idx=frame_idx_2)
+    instance_groups: List[InstanceGroup] = [instance_group]
+    frame_group_2 = FrameGroup.from_instance_groups(
+        session=session, instance_groups=instance_groups
+    )
+    assert isinstance(frame_group_2, FrameGroup)
+    assert session in frame_group_2._frame_idx_registry
+    assert len(frame_group_2._frame_idx_registry) == 1
+    assert frame_group_2._frame_idx_registry[session] == {frame_idx_1, frame_idx_2}
+    assert frame_group_1._frame_idx_registry == frame_group_2._frame_idx_registry
+
+    # TODO(LM): Test `generate_hypotheses`
