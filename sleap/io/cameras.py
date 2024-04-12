@@ -14,6 +14,7 @@ from attrs import define, field
 from attrs.validators import deep_iterable, instance_of
 
 # from sleap.io.dataset import Labels  # TODO(LM): Circular import, implement Observer
+from sleap.instance import PredictedInstance
 from sleap.io.video import Video
 from sleap.util import deep_iterable_converter
 
@@ -443,31 +444,29 @@ class InstanceGroup:
                     )
                 instance = self.instances[0]
 
-            # Get `Instance.from_numpy` method
-            if hasattr(instance, "score"):
-                # The example instance is a `PredictedInstance`
-                from_numpy = instance.__class__.__bases__[0].from_numpy
-            else:
-                # The example instance is an `Instance`
-                from_numpy = instance.__class__.from_numpy
-
+            # Use the example instance to create a dummy instance
             skeleton: "Skeleton" = instance.skeleton
-            self._dummy_instance = from_numpy(
+            self._dummy_instance = PredictedInstance.from_numpy(
                 points=np.full(
                     shape=(len(skeleton.nodes), 2),
                     fill_value=np.nan,
                 ),
+                point_confidences=np.full(
+                    shape=(len(skeleton.nodes),),
+                    fill_value=np.nan,
+                ),
+                instance_score=np.nan,
                 skeleton=skeleton,
             )
 
     @property
-    def dummy_instance(self) -> "Instance":
-        """Dummy `Instance` object to fill in for missing instances.
+    def dummy_instance(self) -> PredictedInstance:
+        """Dummy `PredictedInstance` object to fill in for missing instances.
 
         Also used to create instances that are not found in the `InstanceGroup`.
 
         Returns:
-            `Instance` object or None if unable to create the dummy instance.
+            `PredictedInstance` object or None if unable to create the dummy instance.
         """
 
         if self._dummy_instance is None:
@@ -510,17 +509,20 @@ class InstanceGroup:
             labeled_frame: `LabeledFrame` object that the `Instance` is contained in.
 
         Returns:
-            `Instance` created and added to the `InstanceGroup`.
+            All nan `PredictedInstance` created and added to the `InstanceGroup`.
         """
 
         # Get the `Skeleton`
         skeleton: "Skeleton" = self.dummy_instance.skeleton
 
         # Create an all nan `Instance`
-        instance: "Instance" = self.dummy_instance.__class__(
+        instance: PredictedInstance = PredictedInstance.from_numpy(
+            points=self.dummy_instance.points_array,
+            point_confidences=self.dummy_instance.scores,
+            instance_score=self.dummy_instance.score,
             skeleton=skeleton,
-            frame=labeled_frame,
         )
+        instance.frame = labeled_frame
 
         # Add the instance to the `InstanceGroup`
         self.add_instance(cam, instance)
@@ -710,7 +712,7 @@ class InstanceGroup:
                 )
                 continue
 
-            # Update the points for the instance
+            # Update the points (and scores) for the (predicted) instance
             instance.update_points(
                 points=points[cam_idx, :, :], exclude_complete=exclude_complete
             )
@@ -1462,11 +1464,19 @@ class FrameGroup:
             ValueError: If the `InstanceGroup` is already in the `FrameGroup`.
         """
 
-        # Ensure the `InstanceGroup` is not already in this `FrameGroup`
-        self._raise_if_instance_group_in_frame_group(instance_group=instance_group)
+        if instance_group is None:
+            # Create an empty `InstanceGroup` with the frame index of the `FrameGroup`
+            instance_group = InstanceGroup(
+                frame_idx=self.frame_idx,
+                camera_cluster=self.session.camera_cluster,
+            )
 
-        # Ensure the `InstanceGroup` is compatible with the `FrameGroup`
-        self._raise_if_instance_group_incompatible(instance_group=instance_group)
+        else:
+            # Ensure the `InstanceGroup` is not already in this `FrameGroup`
+            self._raise_if_instance_group_in_frame_group(instance_group=instance_group)
+
+            # Ensure the `InstanceGroup` is compatible with the `FrameGroup`
+            self._raise_if_instance_group_incompatible(instance_group=instance_group)
 
         # Add the `InstanceGroup` to the `FrameGroup`
         self.instance_groups.append(instance_group)
@@ -1900,9 +1910,9 @@ class FrameGroup:
         """
 
         # Get all `Instance`s for this frame index across all views to include
-        instances_by_camera: Dict[Camcorder, Set["Instance"]] = (
-            self.instances_by_cam_to_include
-        )
+        instances_by_camera: Dict[
+            Camcorder, Set["Instance"]
+        ] = self.instances_by_cam_to_include
 
         # Get max number of instances across all views
         all_instances_by_camera: List[Set["Instance"]] = instances_by_camera.values()
@@ -1957,14 +1967,14 @@ class FrameGroup:
             return unlocked_instances_in_view
 
         # For each view, get permutations of unlocked instances
-        unlocked_instance_permutations: Dict[Camcorder, Iterator[Tuple["Instance"]]] = (
-            {}
-        )
+        unlocked_instance_permutations: Dict[
+            Camcorder, Iterator[Tuple["Instance"]]
+        ] = {}
         for cam, instances_in_view in instances_by_camera.items():
             # Gather all instances for this cam from locked `InstanceGroup`s
-            locked_instances_in_view: Set["Instance"] = (
-                self._locked_instances_by_cam.get(cam, set())
-            )
+            locked_instances_in_view: Set[
+                "Instance"
+            ] = self._locked_instances_by_cam.get(cam, set())
 
             # Remove locked instances from instances in view
             unlocked_instances_in_view: List["Instance"] = list(
