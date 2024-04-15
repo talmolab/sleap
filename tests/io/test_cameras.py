@@ -447,3 +447,7 @@ def test_frame_group(multiview_min_session_labels: Labels):
     assert frame_group_1._frame_idx_registry == frame_group_2._frame_idx_registry
 
     # TODO(LM): Test `generate_hypotheses`
+
+
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::test_frame_group"])

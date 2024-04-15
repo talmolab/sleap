@@ -408,9 +408,13 @@ class InstanceGroup:
     frame_idx: int = field(validator=instance_of(int))
     camera_cluster: Optional[CameraCluster] = None
     locked: bool = field(default=False)
+    _name: str = field(default="inst_group_0")
     _instance_by_camcorder: Dict[Camcorder, Instance] = field(factory=dict)
     _camcorder_by_instance: Dict[Instance, Camcorder] = field(factory=dict)
     _dummy_instance: Optional[Instance] = field(default=None)
+
+    # Class attributes
+    _name_registry: Set[str] = set()
 
     def __attrs_post_init__(self):
         """Initialize `InstanceGroup` object."""
@@ -473,6 +477,12 @@ class InstanceGroup:
         return self._dummy_instance
 
     @property
+    def name(self) -> str:
+        """Name of the `InstanceGroup`."""
+
+        return self._name
+
+    @property
     def instances(self) -> List[Instance]:
         """List of `Instance` objects."""
         return list(self._instance_by_camcorder.values())
@@ -481,6 +491,11 @@ class InstanceGroup:
     def cameras(self) -> List[Camcorder]:
         """List of `Camcorder` objects."""
         return list(self._instance_by_camcorder.keys())
+
+    @property
+    def instance_by_camcorder(self) -> Dict[Camcorder, Instance]:
+        """Dictionary of `Instance` objects by `Camcorder`."""
+        return self._instance_by_camcorder
 
     def numpy(self, pred_as_nan: bool = False) -> np.ndarray:
         """Return instances as a numpy array of shape (n_views, n_nodes, 2).
@@ -767,6 +782,9 @@ class InstanceGroup:
     def __repr__(self):
         return f"{self.__class__.__name__}(frame_idx={self.frame_idx}, instances={len(self)}, camera_cluster={self.camera_cluster})"
 
+    def __hash__(self) -> int:
+        return hash(self._name)
+
     @classmethod
     def from_dict(cls, d: dict) -> Optional["InstanceGroup"]:
         """Creates an `InstanceGroup` object from a dictionary.
@@ -1024,7 +1042,6 @@ class RecordingSession:
 
         return videos
 
-
     def __attrs_post_init__(self):
         self.camera_cluster.add_session(self)
 
@@ -1216,7 +1233,7 @@ class FrameGroup:
 
     # Instance attributes
     frame_idx: int = field(validator=instance_of(int))
-    instance_groups: List[InstanceGroup] = field(
+    _instance_groups: List[InstanceGroup] = field(
         validator=deep_iterable(
             member_validator=instance_of(InstanceGroup),
             iterable_validator=instance_of(list),
@@ -1235,7 +1252,8 @@ class FrameGroup:
 
     # TODO(LM): This dict should be updated each time a LabeledFrame is added/removed
     # from the Labels object. Or if a video is added/removed from the RecordingSession.
-    _labeled_frames_by_cam: Dict[Camcorder, LabeledFrame] = field(factory=dict)
+    _labeled_frame_by_cam: Dict[Camcorder, LabeledFrame] = field(factory=dict)
+    _cam_by_labeled_frame: Dict[LabeledFrame, Camcorder] = field(factory=dict)
     _instances_by_cam: Dict[Camcorder, Set[Instance]] = field(factory=dict)
 
     def __attrs_post_init__(self):
@@ -1257,8 +1275,30 @@ class FrameGroup:
         # Add `FrameGroup` to `RecordingSession`
         self.session._frame_group_by_frame_idx[self.frame_idx] = self
 
-        # Initialize `_labeled_frames_by_cam` and `_instances_by_cam` dictionary
-        self.update_labeled_frames_and_instances_by_cam()
+        # Build `_labeled_frame_by_cam` and `_instances_by_cam` dictionary
+        for camera in self.session.camera_cluster.cameras:
+            self._instances_by_cam[camera] = set()
+        self.instance_groups = self._instance_groups
+
+    @property
+    def instance_groups(self) -> List[InstanceGroup]:
+        """List of `InstanceGroup`s."""
+
+        return self._instance_groups
+
+    @instance_groups.setter
+    def instance_groups(self, instance_groups: List[InstanceGroup]):
+        """Setter for `instance_groups` that updates `LabeledFrame`s and `Instance`s."""
+
+        instance_groups_to_remove = set(self.instance_groups) - set(instance_groups)
+        instance_groups_to_add = set(instance_groups) - set(self.instance_groups)
+
+        # Update the `_labeled_frame_by_cam` and `_instances_by_cam` dictionary
+        for instance_group in instance_groups_to_remove:
+            self.remove_instance_group(instance_group=instance_group)
+
+        for instance_group in instance_groups_to_add:
+            self.add_instance_group(instance_group=instance_group)
 
     @property
     def cams_to_include(self) -> Optional[List[Camcorder]]:
@@ -1301,13 +1341,15 @@ class FrameGroup:
     def labeled_frames(self) -> List[LabeledFrame]:
         """List of `LabeledFrame`s."""
 
-        return list(self._labeled_frames_by_cam.values())
+        # TODO(LM): Revisit whether we need to return a list instead of a view object
+        return list(self._labeled_frame_by_cam.values())
 
     @property
     def cameras(self) -> List[Camcorder]:
         """List of `Camcorder`s."""
 
-        return list(self._labeled_frames_by_cam.keys())
+        # TODO(LM): Revisit whether we need to return a list instead of a view object
+        return list(self._labeled_frame_by_cam.keys())
 
     def numpy(
         self,
@@ -1406,6 +1448,33 @@ class FrameGroup:
             labeled_frame = instance.frame
             self.add_labeled_frame(labeled_frame=labeled_frame, camera=camera)
 
+    def remove_instance(self, instance: Instance):
+        """Removes an `Instance` from the `FrameGroup`.
+
+        Args:
+            instance: `Instance` to remove from the `FrameGroup`.
+        """
+
+        instance_group = self.get_instance_group(instance=instance)
+
+        if instance_group is None:
+            logger.warning(
+                f"Instance {instance} not found in this FrameGroup.instance_groups: "
+                f"{self.instance_groups}."
+            )
+            return
+
+        # Remove the `Instance` from the `InstanceGroup`
+        camera = instance_group.get_cam(instance=instance)
+        instance_group.remove_instance(instance=instance)
+
+        # Remove the `Instance` from the `FrameGroup`
+        self._instances_by_cam[camera].remove(instance)
+
+        # Remove "empty" `LabeledFrame`s from the `FrameGroup`
+        if len(self._instances_by_cam[camera]) < 1:
+            self.remove_labeled_frame(labeled_frame_or_camera=camera)
+
     def add_instance_group(self, instance_group: Optional[InstanceGroup] = None):
         """Add an `InstanceGroup` to the `FrameGroup`.
 
@@ -1435,13 +1504,30 @@ class FrameGroup:
         self.instance_groups.append(instance_group)
 
         # Add `Instance`s and `LabeledFrame`s to the `FrameGroup`
-        for instance in instance_group.instances:
-            camera = instance_group.get_cam(instance=instance)
+        for camera, instance in instance_group.instance_by_camcorder.items():
             self.add_instance(instance=instance, camera=camera)
 
-        # TODO(LM): Integrate with RecordingSession
-        # Add the `InstanceGroup` to the `RecordingSession`
-        ...
+    def remove_instance_group(self, instance_group: InstanceGroup):
+        """Remove an `InstanceGroup` from the `FrameGroup`."""
+
+        if instance_group not in self.instance_groups:
+            logger.warning(
+                f"InstanceGroup {instance_group} not found in this FrameGroup: "
+                f"{self.instance_groups}."
+            )
+            return
+
+        # Remove the `InstanceGroup` from the `FrameGroup`
+        self.instance_groups.remove(instance_group)
+
+        # Remove the `Instance`s from the `FrameGroup`
+        for camera, instance in instance_group.instance_by_camcorder.items():
+            self._instances_by_cam[camera].remove(instance)
+
+        # Remove the `LabeledFrame` from the `FrameGroup`
+        labeled_frame = self.get_labeled_frame(camera=camera)
+        if labeled_frame is not None:
+            self.remove_labeled_frame(camera=camera)
 
     def get_instance_group(self, instance: Instance) -> Optional[InstanceGroup]:
         """Get `InstanceGroup` that contains `Instance` if exists. Otherwise, None.
@@ -1470,14 +1556,61 @@ class FrameGroup:
         Args:
             labeled_frame: `LabeledFrame` to add to the `FrameGroup`.
             camera: `Camcorder` to link the `LabeledFrame` to.
+
+        Raises:
+            ValueError: If the `LabeledFrame` is not compatible with the `FrameGroup`.
         """
 
+        # Some checks to ensure the `LabeledFrame` is compatible with the `FrameGroup`
+        if not isinstance(labeled_frame, LabeledFrame):
+            raise ValueError(
+                f"Cannot add LabeledFrame: {labeled_frame} is not a LabeledFrame."
+            )
+        elif labeled_frame.frame_idx != self.frame_idx:
+            raise ValueError(
+                f"Cannot add LabeledFrame: Frame index {labeled_frame.frame_idx} does "
+                f"not match FrameGroup frame index {self.frame_idx}."
+            )
+        elif not isinstance(camera, Camcorder):
+            raise ValueError(f"Cannot add LabeledFrame: {camera} is not a Camcorder.")
+
         # Add the `LabeledFrame` to the `FrameGroup`
-        self._labeled_frames_by_cam[camera] = labeled_frame
+        self._labeled_frame_by_cam[camera] = labeled_frame
+        self._cam_by_labeled_frame[labeled_frame] = camera
 
         # Add the `LabeledFrame` to the `RecordingSession`'s `Labels` object
-        if labeled_frame not in self.session.labels:
+        if (self.session.labels is not None) and (
+            labeled_frame not in self.session.labels
+        ):
             self.session.labels.append(labeled_frame)
+
+    def remove_labeled_frame(
+        self, labeled_frame_or_camera: Union[LabeledFrame, Camcorder]
+    ):
+        """Remove a `LabeledFrame` from the `FrameGroup`.
+
+        Args:
+            labeled_frame_or_camera: `LabeledFrame` or `Camcorder` to remove the
+                `LabeledFrame` for.
+        """
+
+        if isinstance(labeled_frame_or_camera, LabeledFrame):
+            labeled_frame: LabeledFrame = labeled_frame_or_camera
+            camera = self.get_camera(labeled_frame=labeled_frame)
+
+        elif isinstance(labeled_frame_or_camera, Camcorder):
+            camera: Camcorder = labeled_frame_or_camera
+            labeled_frame = self.get_labeled_frame(camera=camera)
+
+        else:
+            logger.warning(
+                f"Cannot remove LabeledFrame: {labeled_frame_or_camera} is not a "
+                "LabeledFrame or Camcorder."
+            )
+
+        # Remove the `LabeledFrame` from the `FrameGroup`
+        self._labeled_frame_by_cam.pop(camera, None)
+        self._cam_by_labeled_frame.pop(labeled_frame, None)
 
     def get_labeled_frame(self, camera: Camcorder) -> Optional[LabeledFrame]:
         """Get `LabeledFrame` for `Camcorder` if exists. Otherwise, None.
@@ -1489,9 +1622,21 @@ class FrameGroup:
             `LabeledFrame`
         """
 
-        return self._labeled_frames_by_cam.get(camera, None)
+        return self._labeled_frame_by_cam.get(camera, None)
 
-    def create_and_add_labeled_frame(self, camera: Camcorder) -> LabeledFrame:
+    def get_camera(self, labeled_frame: LabeledFrame) -> Optional[Camcorder]:
+        """Get `Camcorder` for `LabeledFrame` if exists. Otherwise, None.
+
+        Args:
+            labeled_frame: `LabeledFrame`
+
+        Returns:
+            `Camcorder`
+        """
+
+        return self._cam_by_labeled_frame.get(labeled_frame, None)
+
+    def _create_and_add_labeled_frame(self, camera: Camcorder) -> LabeledFrame:
         """Create and add a `LabeledFrame` to the `FrameGroup`.
 
         This also adds the `LabeledFrame` to the `RecordingSession`'s `Labels` object.
@@ -1511,14 +1656,12 @@ class FrameGroup:
                 f"RecordingSession {self.session}."
             )
 
-        labeled_frame = LabeledFrame(
-            video=video, frame_idx=self.frame_idx
-        )
+        labeled_frame = LabeledFrame(video=video, frame_idx=self.frame_idx)
         self.add_labeled_frame(labeled_frame=labeled_frame)
 
         return labeled_frame
 
-    def create_and_add_instance(
+    def _create_and_add_instance(
         self,
         instance_group: InstanceGroup,
         camera: Camcorder,
@@ -1566,10 +1709,10 @@ class FrameGroup:
             labeled_frame = self.get_labeled_frame(camera=cam)
             if labeled_frame is None:
                 # There is no `LabeledFrame` for this view, so lets make one
-                labeled_frame = self.create_and_add_labeled_frame(camera=cam)
+                labeled_frame = self._create_and_add_labeled_frame(camera=cam)
 
             # Create an instance
-            self.create_and_add_instance(
+            self._create_and_add_instance(
                 instance_group=instance_group, cam=cam, labeled_frame=labeled_frame
             )
 
@@ -1725,70 +1868,6 @@ class FrameGroup:
                 f"InstanceGroup {instance_group} is not in this FrameGroup: "
                 f"{self.instance_groups}."
             )
-
-    def update_labeled_frames_and_instances_by_cam(
-        self, return_instances_by_camera: bool = False
-    ) -> Union[Dict[Camcorder, LabeledFrame], Dict[Camcorder, List[Instance]]]:
-        """Get all views and `Instance`s across all `RecordingSession`s.
-
-        Updates the `_labeled_frames_by_cam` and `_instances_by_cam`
-        dictionary attributes.
-
-        Args:
-            return_instances_by_camera: If true, then returns a dictionary with
-                `Camcorder` key and `Set[Instance]` values instead. Default is False.
-
-        Returns:
-            Dictionary with `Camcorder` key and `LabeledFrame` value or `Set[Instance]`
-                value if `return_instances_by_camera` is True.
-        """
-
-        logger.debug(
-            "Updating LabeledFrames for FrameGroup."
-            "\n\tPrevious LabeledFrames by Camcorder:"
-            f"\n\t{self._labeled_frames_by_cam}"
-        )
-
-        views: Dict[Camcorder, LabeledFrame] = {}
-        instances_by_cam: Dict[Camcorder, Set[Instance]] = {}
-        videos = self.session.get_videos_from_selected_cameras()
-        for cam, video in videos.items():
-            lfs: List[LabeledFrame] = self.session.labels.get(
-                (video, [self.frame_idx])
-            )
-            if len(lfs) == 0:
-                logger.debug(
-                    f"No LabeledFrames found for video {video} at {self.frame_idx}."
-                )
-                continue
-
-            lf = lfs[0]
-            if len(lf.instances) == 0:
-                logger.warning(
-                    f"No Instances found for {lf}."
-                    " There should not be empty LabeledFrames."
-                )
-                continue
-
-            views[cam] = lf
-
-            # Find instances in frame
-            insts = lf.find(track=-1)
-            if len(insts) > 0:
-                instances_by_cam[cam] = set(insts)
-
-        # Update `_labeled_frames_by_cam` dictionary and return it
-        self._labeled_frames_by_cam = views
-        logger.debug(
-            f"\tUpdated LabeledFrames by Camcorder:\n\t{self._labeled_frames_by_cam}"
-        )
-        # Update `_instances_by_camera` dictionary and return it
-        self._instances_by_cam = instances_by_cam
-        return (
-            self._instances_by_cam
-            if return_instances_by_camera
-            else self._labeled_frames_by_cam
-        )
 
     @classmethod
     def from_instance_groups(
