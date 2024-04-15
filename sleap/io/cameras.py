@@ -835,13 +835,8 @@ class RecordingSession:
     # TODO(LM): Consider implementing Observer pattern for `camera_cluster` and `labels`
     camera_cluster: CameraCluster = field(factory=CameraCluster)
     metadata: dict = field(factory=dict)
+    labels: Optional["Labels"] = field(default=None)
     _video_by_camcorder: Dict[Camcorder, Video] = field(factory=dict)
-    labels: Optional["Labels"] = None
-
-    # TODO(LM): Remove this, replace with `FrameGroup`s
-    _instance_groups_by_frame_idx: Dict[int, InstanceGroup] = field(factory=dict)
-
-    # TODO(LM): We should serialize all locked instances in a FrameGroup (or the entire FrameGroup)
     _frame_group_by_frame_idx: Dict[int, "FrameGroup"] = field(factory=dict)
 
     @property
@@ -872,13 +867,6 @@ class RecordingSession:
             set(self.camera_cluster.cameras) - set(self.linked_cameras),
             key=self.camera_cluster.cameras.index,
         )
-
-    # TODO(LM): Remove this
-    @property
-    def instance_groups(self) -> Dict[int, InstanceGroup]:
-        """Dict of `InstanceGroup`s by frame index."""
-
-        return self._instance_groups_by_frame_idx
 
     @property
     def frame_groups(self) -> Dict[int, "FrameGroup"]:
@@ -1036,36 +1024,6 @@ class RecordingSession:
 
         return videos
 
-    # TODO(LM): There can be multiple `InstanceGroup`s per frame index
-    def get_instance_group(self, frame_idx: int) -> Optional[InstanceGroup]:
-        """Get `InstanceGroup` from frame index.
-
-        Args:
-            frame_idx: Frame index.
-
-        Returns:
-            `InstanceGroup` object or `None` if not found.
-        """
-
-        if frame_idx not in self.instance_groups:
-            logger.warning(
-                f"Frame index {frame_idx} not found in this RecordingSession's "
-                f"InstanceGroup's keys: \n\t{self.instance_groups.keys()}."
-            )
-            return None
-
-        return self.instance_groups[frame_idx]
-
-    # TODO(LM): There can be multiple `InstanceGroup`s per frame index
-    def update_instance_group(self, frame_idx: int, instance_group: InstanceGroup):
-        """Update `InstanceGroup` from frame index.
-
-        Args:
-            frame_idx: Frame index.
-            instance_groups: `InstanceGroup` object.
-        """
-
-        self._instance_groups_by_frame_idx[frame_idx] = instance_group
 
     def __attrs_post_init__(self):
         self.camera_cluster.add_session(self)
@@ -1299,7 +1257,7 @@ class FrameGroup:
         # Add `FrameGroup` to `RecordingSession`
         self.session._frame_group_by_frame_idx[self.frame_idx] = self
 
-        # Initialize `_labeled_frames_by_cam` dictionary
+        # Initialize `_labeled_frames_by_cam` and `_instances_by_cam` dictionary
         self.update_labeled_frames_and_instances_by_cam()
 
     @property
