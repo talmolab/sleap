@@ -274,6 +274,11 @@ class LabelsDataCache:
             del self._lf_by_video[video]
         if video in self._frame_idx_map:
             del self._frame_idx_map[video]
+        self.remove_session_video(video=video)
+
+    def remove_session_video(self, video: Video):
+        """Remove video from session in cache."""
+        
         if video in self._session_by_video:
             del self._session_by_video[video]
 
@@ -442,8 +447,7 @@ class LabelsDataCache:
 
 @attr.s(auto_attribs=True, repr=False, str=False)
 class Labels(MutableSequence):
-    """
-    The :class:`Labels` class collects the data for a SLEAP project.
+    """The :class:`Labels` class collects the data for a SLEAP project.
 
     This class is front-end for all interactions with loading, writing,
     and modifying these labels. The actual storage backend for the data
@@ -1657,6 +1661,7 @@ class Labels(MutableSequence):
 
         # Delete video
         self.videos.remove(video)
+        self.remove_session_video(video)
         self._cache.remove_video(video)
 
     def add_session(self, session: RecordingSession):
@@ -1710,9 +1715,9 @@ class Labels(MutableSequence):
             video: `Video` instance
         """
 
-        self._cache._session_by_video.pop(video, None)
         if video in session.videos:
             session.remove_video(video)
+        self._cache.remove_session_video(video)
 
     @classmethod
     def from_json(cls, *args, **kwargs):
