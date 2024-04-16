@@ -414,7 +414,9 @@ def test_instance_group(multiview_min_session_labels: Labels):
     # Populate with only dummy instance and test `from_dict`
     instance_by_camera = {cam: dummy_instance}
     with pytest.raises(ValueError):
-        instance_group = InstanceGroup.from_dict(d=instance_by_camera, name="test_instance_group", name_registry={})
+        instance_group = InstanceGroup.from_dict(
+            d=instance_by_camera, name="test_instance_group", name_registry={}
+        )
 
 
 def test_frame_group(multiview_min_session_labels: Labels):
