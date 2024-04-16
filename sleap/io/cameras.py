@@ -405,16 +405,14 @@ class InstanceGroup:
 
     """
 
+    _name: str = field()
     frame_idx: int = field(validator=instance_of(int))
-    camera_cluster: Optional[CameraCluster] = None
-    locked: bool = field(default=False)
-    _name: str = field(default="inst_group_0")
     _instance_by_camcorder: Dict[Camcorder, Instance] = field(factory=dict)
     _camcorder_by_instance: Dict[Instance, Camcorder] = field(factory=dict)
     _dummy_instance: Optional[Instance] = field(default=None)
 
     # Class attributes
-    _name_registry: Set[str] = set()
+    camera_cluster: Optional[CameraCluster] = None
 
     def __attrs_post_init__(self):
         """Initialize `InstanceGroup` object."""
@@ -481,6 +479,63 @@ class InstanceGroup:
         """Name of the `InstanceGroup`."""
 
         return self._name
+
+    @name.setter
+    def name(self, name: str):
+        """Set the name of the `InstanceGroup`."""
+
+        raise ValueError(
+            "Cannot set name directly. Use `set_name` method instead (preferably "
+            "through FrameGroup.set_instance_group_name)."
+        )
+
+    def set_name(self, name: str, name_registry: Set[str]):
+        """Set the name of the `InstanceGroup`.
+
+        This function mutates the name_registry input (see side-effect).
+
+        Args:
+            name: Name to set for the `InstanceGroup`.
+            name_registry: Set of names to check for uniqueness.
+
+        Raises:
+            ValueError: If the name is already in use (in the name_registry).
+        """
+
+        # Check if the name is already in use
+        if name in name_registry:
+            raise ValueError(
+                f"Name {name} already in use. Please use a unique name not currently "
+                f"in the registry: {name_registry}"
+            )
+
+        # Remove the old name from the registry
+        if self._name in name_registry:
+            name_registry.remove(self._name)
+
+        self._name = name
+        name_registry.add(name)
+
+    @classmethod
+    def return_unique_name(cls, name_registry: Set[str]) -> str:
+        """Return a unique name for the `InstanceGroup`.
+
+        Args:
+            name_registry: Set of names to check for uniqueness.
+
+        Returns:
+            Unique name for the `InstanceGroup`.
+        """
+
+        base_name = "instance_group_"
+        count = len(name_registry)
+        new_name = f"{base_name}{count}"
+
+        while new_name in name_registry:
+            count += 1
+            new_name = f"{base_name}{count}"
+
+        return new_name
 
     @property
     def instances(self) -> List[Instance]:
@@ -786,11 +841,18 @@ class InstanceGroup:
         return hash(self._name)
 
     @classmethod
-    def from_dict(cls, d: dict) -> Optional["InstanceGroup"]:
+    def from_dict(
+        cls, d: dict, name: str, name_registry: Set[str]
+    ) -> Optional["InstanceGroup"]:
         """Creates an `InstanceGroup` object from a dictionary.
 
         Args:
             d: Dictionary with `Camcorder` keys and `Instance` values.
+            name: Name to use for the `InstanceGroup`.
+            name_registry: Set of names to check for uniqueness.
+
+        Raises:
+            ValueError: If the `InstanceGroup` name is already in use.
 
         Returns:
             `InstanceGroup` object or None if no "real" (determined by `frame_idx` other
@@ -811,24 +873,23 @@ class InstanceGroup:
             elif frame_idx is None:
                 frame_idx = instance.frame_idx
             # Ensure all instances have the same frame index
-            else:
-                try:
-                    assert frame_idx == instance.frame_idx
-                except AssertionError:
-                    logger.warning(
-                        f"Cannot create `InstanceGroup`: Frame index {frame_idx} "
-                        f"does not match instance frame index {instance.frame_idx}."
-                    )
+            elif frame_idx != instance.frame_idx:
+                raise ValueError(
+                    f"Cannot create `InstanceGroup`: Frame index {frame_idx} does "
+                    f"not match instance frame index {instance.frame_idx}."
+                )
 
         if len(d_copy) == 0:
-            logger.warning("Cannot create `InstanceGroup`: No real instances found.")
-            return None
+            raise ValueError("Cannot create `InstanceGroup`: No real instances found.")
 
-        frame_idx = cast(
-            int, frame_idx
-        )  # Could be None if no real instances in dictionary
+        if name in name_registry:
+            raise ValueError(
+                f"Cannot create `InstanceGroup`: Name {name} already in use. Please "
+                f"use a unique name that is not in the registry: {name_registry}."
+            )
 
         return cls(
+            name=name,
             frame_idx=frame_idx,
             camera_cluster=camera_cluster,
             instance_by_camcorder=d_copy,
@@ -1240,7 +1301,9 @@ class FrameGroup:
         ),
     )  # Akin to `LabeledFrame.instances`
     session: RecordingSession = field(validator=instance_of(RecordingSession))
+    _instance_group_name_registry: Set[str] = field(factory=set)
 
+    # TODO(LM): Should we move this to an instance attribute of `RecordingSession`?
     # Class attribute to keep track of frame indices across all `RecordingSession`s
     _frame_idx_registry: Dict[RecordingSession, Set[int]] = {}
 
@@ -1258,6 +1321,17 @@ class FrameGroup:
 
     def __attrs_post_init__(self):
         """Initialize `FrameGroup` object."""
+
+        # Check that `InstanceGroup` names unique (later added via add_instance_group)
+        instance_group_name_registry_copy = set(self._instance_group_name_registry)
+        for instance_group in self.instance_groups:
+            if instance_group.name in instance_group_name_registry_copy:
+                raise ValueError(
+                    f"InstanceGroup name {instance_group.name} already in use. "
+                    f"Please use a unique name not currently in the registry: "
+                    f"{self._instance_group_name_registry}"
+                )
+            instance_group_name_registry_copy.add(instance_group.name)
 
         # Remove existing `FrameGroup` object from the `RecordingSession._frame_group_by_frame_idx`
         self.enforce_frame_idx_unique(self.session, self.frame_idx)
@@ -1278,7 +1352,8 @@ class FrameGroup:
         # Build `_labeled_frame_by_cam` and `_instances_by_cam` dictionary
         for camera in self.session.camera_cluster.cameras:
             self._instances_by_cam[camera] = set()
-        self.instance_groups = self._instance_groups
+        for instance_group in self.instance_groups:
+            self.add_instance_group(instance_group)
 
     @property
     def instance_groups(self) -> List[InstanceGroup]:
@@ -1405,7 +1480,8 @@ class FrameGroup:
         """Add an (existing) `Instance` to the `FrameGroup`.
 
         If no `InstanceGroup` is provided, then check the `Instance` is already in an
-        `InstanceGroup` contained in the `FrameGroup`.
+        `InstanceGroup` contained in the `FrameGroup`. Otherwise, add the `Instance` to
+        the `InstanceGroup` and `FrameGroup`.
 
         Args:
             instance: `Instance` to add to the `FrameGroup`.
@@ -1478,6 +1554,11 @@ class FrameGroup:
     def add_instance_group(self, instance_group: Optional[InstanceGroup] = None):
         """Add an `InstanceGroup` to the `FrameGroup`.
 
+        This method updates the underlying dictionaries in calling add_instance:
+                - `_instances_by_cam`
+                - `_labeled_frame_by_cam`
+                - `_cam_by_labeled_frame`
+
         Args:
             instance_group: `InstanceGroup` to add to the `FrameGroup`. If None, then
                 create a new `InstanceGroup` and add it to the `FrameGroup`.
@@ -1487,21 +1568,29 @@ class FrameGroup:
         """
 
         if instance_group is None:
+
+            # Find a unique name for the `InstanceGroup`
+            instance_group_name = InstanceGroup.return_unique_name(
+                name_registry=self._instance_group_name_registry
+            )
+
             # Create an empty `InstanceGroup` with the frame index of the `FrameGroup`
             instance_group = InstanceGroup(
+                name=instance_group_name,
                 frame_idx=self.frame_idx,
                 camera_cluster=self.session.camera_cluster,
             )
-
         else:
-            # Ensure the `InstanceGroup` is not already in this `FrameGroup`
-            self._raise_if_instance_group_in_frame_group(instance_group=instance_group)
-
             # Ensure the `InstanceGroup` is compatible with the `FrameGroup`
             self._raise_if_instance_group_incompatible(instance_group=instance_group)
 
         # Add the `InstanceGroup` to the `FrameGroup`
-        self.instance_groups.append(instance_group)
+        # We only expect this to be false on initialization
+        if instance_group not in self.instance_groups:
+            self.instance_groups.append(instance_group)
+
+        # Add instance group name to the registry
+        self._instance_group_name_registry.add(instance_group.name)
 
         # Add `Instance`s and `LabeledFrame`s to the `FrameGroup`
         for camera, instance in instance_group.instance_by_camcorder.items():
@@ -1519,6 +1608,7 @@ class FrameGroup:
 
         # Remove the `InstanceGroup` from the `FrameGroup`
         self.instance_groups.remove(instance_group)
+        self._instance_group_name_registry.remove(instance_group.name)
 
         # Remove the `Instance`s from the `FrameGroup`
         for camera, instance in instance_group.instance_by_camcorder.items():
@@ -1549,6 +1639,15 @@ class FrameGroup:
         )
 
         return instance_group
+
+    def set_instance_group_name(self, instance_group: InstanceGroup, name: str):
+        """Set the name of an `InstanceGroup` in the `FrameGroup`."""
+
+        self._raise_if_instance_group_not_in_frame_group(instance_group=instance_group)
+
+        instance_group.set_name(
+            name=name, name_registry=self._instance_group_name_registry
+        )
 
     def add_labeled_frame(self, labeled_frame: LabeledFrame, camera: Camcorder):
         """Add a `LabeledFrame` to the `FrameGroup`.
@@ -1823,27 +1922,12 @@ class FrameGroup:
                 f"FrameGroup's LabeledFrame {labeled_frame_fg} for Camcorder {camera}."
             )
 
-    def _raise_if_instance_group_in_frame_group(self, instance_group: InstanceGroup):
-        """Raise a ValueError if the `InstanceGroup` is already in the `FrameGroup`.
-
-        Args:
-            instance_group: `InstanceGroup` to check if already in the `FrameGroup`.
-
-        Raises:
-            ValueError: If the `InstanceGroup` is already in the `FrameGroup`.
-        """
-
-        if instance_group in self.instance_groups:
-            raise ValueError(
-                f"InstanceGroup {instance_group} is already in this FrameGroup "
-                f"{self.instance_groups}."
-            )
-
     def _raise_if_instance_group_incompatible(self, instance_group: InstanceGroup):
         """Raise a ValueError if `InstanceGroup` is incompatible with `FrameGroup`.
 
-        An `InstanceGroup` is incompatible if the `frame_idx` does not match the
-        `FrameGroup`'s `frame_idx`.
+        An `InstanceGroup` is incompatible if
+            - the `frame_idx` does not match the `FrameGroup`'s `frame_idx`.
+            - the `InstanceGroup.name` is already used in the `FrameGroup`.
 
         Args:
             instance_group: `InstanceGroup` to check compatibility of.
@@ -1856,6 +1940,14 @@ class FrameGroup:
             raise ValueError(
                 f"InstanceGroup {instance_group} frame index {instance_group.frame_idx} "
                 f"does not match FrameGroup frame index {self.frame_idx}."
+            )
+
+        if instance_group.name in self._instance_group_name_registry:
+            raise ValueError(
+                f"InstanceGroup name {instance_group.name} is already registered in "
+                "this FrameGroup's list of names: "
+                f"{self._instance_group_name_registry}\n"
+                "Please use a unique name for the new InstanceGroup."
             )
 
     def _raise_if_instance_group_not_in_frame_group(

@@ -331,7 +331,9 @@ def create_instance_group(
         )
         instance_by_camera[cam] = dummy_instance
 
-    instance_group = InstanceGroup.from_dict(d=instance_by_camera)
+    instance_group = InstanceGroup.from_dict(
+        d=instance_by_camera, name="test_instance_group", name_registry={}
+    )
     return (
         (instance_group, instance_by_camera, dummy_instance, cam)
         if add_dummy
@@ -411,8 +413,8 @@ def test_instance_group(multiview_min_session_labels: Labels):
 
     # Populate with only dummy instance and test `from_dict`
     instance_by_camera = {cam: dummy_instance}
-    instance_group = InstanceGroup.from_dict(d=instance_by_camera)
-    assert instance_group is None
+    with pytest.raises(ValueError):
+        instance_group = InstanceGroup.from_dict(d=instance_by_camera, name="test_instance_group", name_registry={})
 
 
 def test_frame_group(multiview_min_session_labels: Labels):
@@ -446,8 +448,4 @@ def test_frame_group(multiview_min_session_labels: Labels):
     assert frame_group_2._frame_idx_registry[session] == {frame_idx_1, frame_idx_2}
     assert frame_group_1._frame_idx_registry == frame_group_2._frame_idx_registry
 
-    # TODO(LM): Test `generate_hypotheses`
-
-
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_frame_group"])
+    # TODO(LM): Test underlying dictionaries more thoroughly
