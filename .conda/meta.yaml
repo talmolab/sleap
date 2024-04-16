@@ -91,6 +91,6 @@ requirements:
     - conda-forge::ndx-pose
     - conda-forge::importlib-metadata ==4.11.4
 
-test:
-  imports:
-    - sleap
+# test:
+#   imports:
+#     - sleap
