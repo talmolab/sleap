@@ -78,24 +78,21 @@ jobs:
           twine upload -u __token__ -p "$PYPI_TOKEN" dist/* --non-interactive --skip-existing --disable-progress-bar
 
       # Build conda package (Ubuntu)
+      # echo "{environment_variable_name}={value}" >> "$GITHUB_ENV"
       - name: Build conda package (Ubuntu)
         if: matrix.os == 'ubuntu-22.04'
         shell: bash -l {0}
         run: |
           conda build .conda --output-folder build
-          echo "Listing contents of the build directory:"
-          ls -l $(pwd)/build
-          echo "BUILD_PATH=$(pwd)/build" >> $GITHUB_ENV
-          echo "Build path set for Ubuntu: $BUILD_PATH"
+          echo "BUILD_PATH=$(pwd)/build" >> "$GITHUB_ENV"
 
-      # # Build conda package (Windows) 
-      # - name: Build conda package (Windows)
-      #   if: matrix.os == 'windows-2022'
-      #   shell: powershell
-      #   run: |
-      #     conda build .conda --output-folder build
-      #     echo "BUILD_PATH=%(pwd)/build%"   
-
+      # Build conda package (Windows) 
+      - name: Build conda package (Windows)
+        if: matrix.os == 'windows-2022'
+        shell: powershell
+        run: |
+          conda build .conda --output-folder build
+          echo "BUILD_PATH=$(pwd)/build" >> "$env:GITHUB_ENV"
 
       # Build conda package (Mac)
       - name: Build conda package (Mac)
@@ -103,17 +100,15 @@ jobs:
         shell: bash -l {0}
         run: |
           conda build .conda_mac --output-folder build
-          echo "Listing contents of the build directory:"
-          ls -l $(pwd)/build
-          echo "BUILD_PATH=$(pwd)/build" >> $GITHUB_ENV
-          echo "Build path set for Mac: $BUILD_PATH"
+          echo "BUILD_PATH=$(pwd)/build" >> "$GITHUB_ENV"
 
       # Test
       - name: Test built conda package
         shell: bash -l {0}
         run: |
+          echo "$BUILD_PATH"
           conda deactivate
-          mamba create -y -n sleap_test -c conda-forge -c nvidia -c file://$BUILD_PATH -c sleap/label/dev -c anaconda sleap
+          mamba create -y -n sleap_test -c sleap/label/dev -c conda-forge -c nvidia -c file://$BUILD_PATH -c anaconda sleap
           conda activate sleap_test
           python -c "import sleap; print(sleap.__version__)"
           echo "Test completed using sleap version: $(python -c 'import sleap; print(sleap.__version__)')"
