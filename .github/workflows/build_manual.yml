@@ -11,8 +11,8 @@ on:
       - '.github/workflows/build_manual.yml'
     branches:
       # - develop
-      - fakebranch
-      # - talmo/fix-mac-v140
+      # - fakebranch
+      - elizabeth/Fix-ubuntu-conda-build
 
 jobs:
   build:
@@ -97,6 +97,15 @@ jobs:
         shell: bash -l {0}
         run: |
           conda build .conda_mac --output-folder build
+
+      # Test
+      - name: Test built conda package
+        shell: bash -l {0}
+        run: |
+          conda deactivate
+          mamba create -y -n sleap_test -c conda-forge -c nvidia -c file://$(pwd)/build -c sleap/label/dev -c anaconda sleap
+          conda activate sleap_test
+          python -c "import sleap; print(sleap.__version__)"
 
       # # Login to conda (Ubuntu)
       # - name: Login to Anaconda (Ubuntu)
