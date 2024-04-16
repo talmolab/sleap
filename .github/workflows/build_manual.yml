@@ -83,17 +83,19 @@ jobs:
         shell: bash -l {0}
         run: |
           conda build .conda --output-folder build
+          echo "Listing contents of the build directory:"
+          ls -l $(pwd)/build
           echo "BUILD_PATH=$(pwd)/build" >> $GITHUB_ENV
           echo "Build path set for Ubuntu: $BUILD_PATH"
 
-      # Build conda package (Windows)
-      - name: Build conda package (Windows)
-        if: matrix.os == 'windows-2022'
-        shell: powershell
-        run: |
-          conda build .conda --output-folder build
-          echo "BUILD_PATH=$(pwd -PathType Unix)/build" >> $GITHUB_ENV
-          echo "Build path set for Windows: $BUILD_PATH"
+      # # Build conda package (Windows) 
+      # - name: Build conda package (Windows)
+      #   if: matrix.os == 'windows-2022'
+      #   shell: powershell
+      #   run: |
+      #     conda build .conda --output-folder build
+      #     echo "BUILD_PATH=%(pwd)/build%"   
+
 
       # Build conda package (Mac)
       - name: Build conda package (Mac)
@@ -101,6 +103,8 @@ jobs:
         shell: bash -l {0}
         run: |
           conda build .conda_mac --output-folder build
+          echo "Listing contents of the build directory:"
+          ls -l $(pwd)/build
           echo "BUILD_PATH=$(pwd)/build" >> $GITHUB_ENV
           echo "Build path set for Mac: $BUILD_PATH"
 
