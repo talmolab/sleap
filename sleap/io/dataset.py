@@ -1729,7 +1729,8 @@ class Labels(MutableSequence):
 
         # Need to remove from cache first to avoid circular reference
         self._cache.remove_session_video(video=video)
-        session.remove_video(video)
+        if session.get_camera(video) is not None:
+            session.remove_video(video)
 
     @classmethod
     def from_json(cls, *args, **kwargs):
