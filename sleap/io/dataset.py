@@ -278,7 +278,7 @@ class LabelsDataCache:
 
     def remove_session_video(self, video: Video):
         """Remove video from session in cache."""
-        
+
         if video in self._session_by_video:
             del self._session_by_video[video]
 
@@ -1661,8 +1661,8 @@ class Labels(MutableSequence):
 
         # Delete video
         self.videos.remove(video)
-        self.remove_session_video(video)
-        self._cache.remove_video(video)
+        self.remove_session_video(video=video)
+        self._cache.remove_video(video=video)
 
     def add_session(self, session: RecordingSession):
         """Add a recording session to the labels.
@@ -1707,17 +1707,21 @@ class Labels(MutableSequence):
         """
         return self._cache._session_by_video.get(video, None)
 
-    def remove_session_video(self, session: RecordingSession, video: Video):
-        """Remove a video from a recording session.
+    def remove_session_video(self, video: Video):
+        """Remove a video from its linked recording session (if any).
 
         Args:
-            session: `RecordingSession` instance
             video: `Video` instance
         """
 
-        if video in session.videos:
-            session.remove_video(video)
-        self._cache.remove_session_video(video)
+        session = self.get_session(video)
+
+        if session is None:
+            return
+
+        # Need to remove from cache first to avoid circular reference
+        self._cache.remove_session_video(video=video)
+        session.remove_video(video)
 
     @classmethod
     def from_json(cls, *args, **kwargs):

@@ -1076,7 +1076,7 @@ class RecordingSession:
 
         # Update labels cache
         if self.labels is not None and self.labels.get_session(video) is not None:
-            self.labels.remove_session_video(self, video)
+            self.labels.remove_session_video(video=video)
 
     def get_videos_from_selected_cameras(
         self, cams_to_include: Optional[List[Camcorder]] = None
