@@ -170,6 +170,13 @@ def test_recording_session(
     # Test __repr__
     assert f"{session.__class__.__name__}(" in repr(session)
 
+    # Test new_frame_group
+    frame_group = session.new_frame_group(frame_idx=0)
+    assert isinstance(frame_group, FrameGroup)
+    assert frame_group.session == session
+    assert frame_group.frame_idx == 0
+    assert frame_group == session.frame_groups[0]
+
     # Test add_video
     camcorder = session.camera_cluster.cameras[0]
     session.add_video(centered_pair_vid, camcorder)
@@ -449,5 +456,18 @@ def test_frame_group(multiview_min_session_labels: Labels):
     assert len(frame_group_2._frame_idx_registry) == 1
     assert frame_group_2._frame_idx_registry[session] == {frame_idx_1, frame_idx_2}
     assert frame_group_1._frame_idx_registry == frame_group_2._frame_idx_registry
+
+    frame_idx_3 = 2
+    frame_group_3 = FrameGroup(frame_idx=frame_idx_3, session=session)
+    assert isinstance(frame_group_3, FrameGroup)
+    assert session in frame_group_3._frame_idx_registry
+    assert len(frame_group_3._frame_idx_registry) == 1
+    assert frame_group_3._frame_idx_registry[session] == {
+        frame_idx_1,
+        frame_idx_2,
+        frame_idx_3,
+    }
+    assert frame_group_1._frame_idx_registry == frame_group_3._frame_idx_registry
+    assert len(frame_group_3.instance_groups) == 0
 
     # TODO(LM): Test underlying dictionaries more thoroughly

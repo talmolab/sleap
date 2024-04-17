@@ -1016,9 +1016,7 @@ class RecordingSession:
         """
 
         # Ensure the `Camcorder` is in this `RecordingSession`'s `CameraCluster`
-        try:
-            assert camcorder in self.camera_cluster
-        except AssertionError:
+        if camcorder not in self.camera_cluster:
             raise ValueError(
                 f"Camcorder {camcorder.name} is not in this RecordingSession's "
                 f"{self.camera_cluster}."
@@ -1077,6 +1075,21 @@ class RecordingSession:
         # Update labels cache
         if self.labels is not None and self.labels.get_session(video) is not None:
             self.labels.remove_session_video(video=video)
+
+    def new_frame_group(self, frame_idx: int):
+        """Creates and adds an empty `FrameGroup` to the `RecordingSession`.
+
+        Args:
+            frame_idx: Frame index for the `FrameGroup`.
+
+        Returns:
+            `FrameGroup` object.
+        """
+
+        # `FrameGroup.__attrs_post_init` will manage `_frame_group_by_frame_idx`
+        frame_group = FrameGroup(frame_idx=frame_idx, session=self)
+
+        return frame_group
 
     def get_videos_from_selected_cameras(
         self, cams_to_include: Optional[List[Camcorder]] = None
@@ -1294,13 +1307,14 @@ class FrameGroup:
 
     # Instance attributes
     frame_idx: int = field(validator=instance_of(int))
+    session: RecordingSession = field(validator=instance_of(RecordingSession))
     _instance_groups: List[InstanceGroup] = field(
+        factory=list,
         validator=deep_iterable(
             member_validator=instance_of(InstanceGroup),
             iterable_validator=instance_of(list),
         ),
     )  # Akin to `LabeledFrame.instances`
-    session: RecordingSession = field(validator=instance_of(RecordingSession))
     _instance_group_name_registry: Set[str] = field(factory=set)
 
     # TODO(LM): Should we move this to an instance attribute of `RecordingSession`?
