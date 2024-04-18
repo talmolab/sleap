@@ -108,9 +108,13 @@ jobs:
         run: |
           echo "Build path is: $BUILD_PATH"
           conda deactivate
+          echo $(conda info)
+          echo "Testing conda package with numpy"
+          mamba create -y -n numpy_test numpy
+          echo "Testing conda package with sleap"
           mamba create -y -n sleap_test -c file://$BUILD_PATH -c sleap/label/dev -c conda-forge -c nvidia -c anaconda sleap
           conda activate sleap_test
-          echo conda list
+          echo $(conda list)
           python -c "import sleap; print(sleap.__version__)"
           echo "Test completed using sleap version: $(python -c 'import sleap; print(sleap.__version__)')"
 
