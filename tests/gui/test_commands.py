@@ -2,9 +2,8 @@ import shutil
 import sys
 import time
 from pathlib import Path, PurePath
-from typing import Dict, List
+from typing import List
 
-import numpy as np
 import pytest
 
 from sleap import PredictedInstance, Skeleton, Track
@@ -18,11 +17,9 @@ from sleap.gui.commands import (
     RemoveVideo,
     ReplaceVideo,
     SaveProjectAs,
-    TriangulateSession,
     get_new_version_filename,
 )
 from sleap.instance import Instance, LabeledFrame
-from sleap.io.cameras import Camcorder
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor

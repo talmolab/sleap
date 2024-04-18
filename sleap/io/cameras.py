@@ -3,7 +3,7 @@
 import logging
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union, cast, Set
+from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 import cattr
 import numpy as np
@@ -13,7 +13,7 @@ from attrs import define, field
 from attrs.validators import deep_iterable, instance_of
 
 # from sleap.io.dataset import Labels  # TODO(LM): Circular import, implement Observer
-from sleap.instance import LabeledFrame, Instance, PredictedInstance
+from sleap.instance import Instance, LabeledFrame, PredictedInstance
 from sleap.io.video import Video
 from sleap.util import deep_iterable_converter
 
