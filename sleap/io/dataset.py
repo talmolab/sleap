@@ -274,6 +274,12 @@ class LabelsDataCache:
             del self._lf_by_video[video]
         if video in self._frame_idx_map:
             del self._frame_idx_map[video]
+        self.remove_session_video(video=video)
+
+    def remove_session_video(self, video: Video):
+        """Remove video from session in cache."""
+
+        # TODO(LM): Also remove LabeledFrames from frame_group
         if video in self._session_by_video:
             del self._session_by_video[video]
 
@@ -442,8 +448,7 @@ class LabelsDataCache:
 
 @attr.s(auto_attribs=True, repr=False, str=False)
 class Labels(MutableSequence):
-    """
-    The :class:`Labels` class collects the data for a SLEAP project.
+    """The :class:`Labels` class collects the data for a SLEAP project.
 
     This class is front-end for all interactions with loading, writing,
     and modifying these labels. The actual storage backend for the data
@@ -967,6 +972,9 @@ class Labels(MutableSequence):
             update_cache: If True, update the internal frame cache. If False, cache
                 update can be postponed (useful when removing many frames).
         """
+
+        # TODO(LM): Remove LabeledFrame from any frame groups it's in.
+
         self.labeled_frames.remove(lf)
         if update_cache:
             self._cache.remove_frame(lf)
@@ -977,6 +985,8 @@ class Labels(MutableSequence):
         Args:
             lfs: A sequence of labeled frames to remove.
         """
+
+        # TODO(LM): Remove LabeledFrame from any frame groups it's in.
         to_remove = set(lfs)
         self.labeled_frames = [lf for lf in self.labeled_frames if lf not in to_remove]
         self.update_cache()
@@ -1000,6 +1010,8 @@ class Labels(MutableSequence):
 
     def remove_empty_frames(self):
         """Remove frames with no instances."""
+
+        # TODO(LM): Remove LabeledFrame from any frame groups it's in.
         self.labeled_frames = [
             lf for lf in self.labeled_frames if len(lf.instances) > 0
         ]
@@ -1657,7 +1669,8 @@ class Labels(MutableSequence):
 
         # Delete video
         self.videos.remove(video)
-        self._cache.remove_video(video)
+        self.remove_session_video(video=video)
+        self._cache.remove_video(video=video)
 
     def add_session(self, session: RecordingSession):
         """Add a recording session to the labels.
@@ -1702,16 +1715,21 @@ class Labels(MutableSequence):
         """
         return self._cache._session_by_video.get(video, None)
 
-    def remove_session_video(self, session: RecordingSession, video: Video):
-        """Remove a video from a recording session.
+    def remove_session_video(self, video: Video):
+        """Remove a video from its linked recording session (if any).
 
         Args:
-            session: `RecordingSession` instance
             video: `Video` instance
         """
 
-        self._cache._session_by_video.pop(video, None)
-        if video in session.videos:
+        session = self.get_session(video)
+
+        if session is None:
+            return
+
+        # Need to remove from cache first to avoid circular reference
+        self._cache.remove_session_video(video=video)
+        if session.get_camera(video) is not None:
             session.remove_video(video)
 
     @classmethod
@@ -1845,6 +1863,8 @@ class Labels(MutableSequence):
         # Keep only labeled frames with no conflicting predictions.
         self.labeled_frames = keep_lfs
 
+        # TODO(LM): Remove LabeledFrame from any frame groups it's in.
+
     def remove_predictions(self, new_labels: Optional["Labels"] = None):
         """Clear predicted instances from the labels.
 
@@ -1880,6 +1900,8 @@ class Labels(MutableSequence):
 
         # Keep only labeled frames with no conflicting predictions.
         self.labeled_frames = keep_lfs
+
+        # TODO(LM): Remove LabeledFrame from any frame groups it's in.
 
     def remove_untracked_instances(self, remove_empty_frames: bool = True):
         """Remove instances that do not have a track assignment.
@@ -1998,6 +2020,7 @@ class Labels(MutableSequence):
             for vid in {lf.video for lf in self.labeled_frames}:
                 self.merge_matching_frames(video=vid)
         else:
+            # TODO(LM): Remove LabeledFrame from any frame groups it's in.
             self.labeled_frames = LabeledFrame.merge_frames(
                 self.labeled_frames, video=video
             )
