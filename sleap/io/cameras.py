@@ -1317,10 +1317,6 @@ class FrameGroup:
     )  # Akin to `LabeledFrame.instances`
     _instance_group_name_registry: Set[str] = field(factory=set)
 
-    # TODO(LM): Should we move this to an instance attribute of `RecordingSession`?
-    # Class attribute to keep track of frame indices across all `RecordingSession`s
-    _frame_idx_registry: Dict[RecordingSession, Set[int]] = {}
-
     # "Hidden" class attribute
     _cams_to_include: Optional[List[Camcorder]] = None
     _excluded_views: Optional[Tuple[str]] = ()
@@ -1353,12 +1349,6 @@ class FrameGroup:
         # Reorder `cams_to_include` to match `CameraCluster` order (via setter method)
         if self._cams_to_include is not None:
             self.cams_to_include = self._cams_to_include
-
-        # Add frame index to registry
-        if self.session not in self._frame_idx_registry:
-            self._frame_idx_registry[self.session] = set()
-
-        self._frame_idx_registry[self.session].add(self.frame_idx)
 
         # Add `FrameGroup` to `RecordingSession`
         self.session._frame_group_by_frame_idx[self.frame_idx] = self
@@ -2016,11 +2006,11 @@ class FrameGroup:
             frame_idx: Frame index.
         """
 
-        if frame_idx in self._frame_idx_registry.get(session, set()):
+        if session.frame_groups.get(frame_idx, None) is not None:
             # Remove existing `FrameGroup` object from the
             # `RecordingSession._frame_group_by_frame_idx`
             logger.warning(
                 f"Frame index {frame_idx} for FrameGroup already exists in this "
                 "RecordingSession. Overwriting."
             )
-            session._frame_group_by_frame_idx.pop(frame_idx)
+            session.frame_groups.pop(frame_idx)

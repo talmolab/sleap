@@ -440,11 +440,12 @@ def test_frame_group(multiview_min_session_labels: Labels):
         session=session, instance_groups=instance_groups
     )
     assert isinstance(frame_group_1, FrameGroup)
-    assert session in frame_group_1._frame_idx_registry
-    assert len(frame_group_1._frame_idx_registry) == 1
-    assert frame_group_1._frame_idx_registry[session] == {frame_idx_1}
+    assert frame_idx_1 in session.frame_groups
+    assert len(session.frame_groups) == 1
+    assert frame_group_1 == session.frame_groups[frame_idx_1]
+    assert len(frame_group_1.instance_groups) == 1
 
-    # Test `_frame_idx_registry` property
+    # Test `RecordingSession.frame_groups` property
     frame_idx_2 = 1
     instance_group = create_instance_group(labels=labels, frame_idx=frame_idx_2)
     instance_groups: List[InstanceGroup] = [instance_group]
@@ -452,22 +453,17 @@ def test_frame_group(multiview_min_session_labels: Labels):
         session=session, instance_groups=instance_groups
     )
     assert isinstance(frame_group_2, FrameGroup)
-    assert session in frame_group_2._frame_idx_registry
-    assert len(frame_group_2._frame_idx_registry) == 1
-    assert frame_group_2._frame_idx_registry[session] == {frame_idx_1, frame_idx_2}
-    assert frame_group_1._frame_idx_registry == frame_group_2._frame_idx_registry
+    assert frame_idx_2 in session.frame_groups
+    assert len(session.frame_groups) == 2
+    assert frame_group_2 == session.frame_groups[frame_idx_2]
+    assert len(frame_group_2.instance_groups) == 1
 
     frame_idx_3 = 2
     frame_group_3 = FrameGroup(frame_idx=frame_idx_3, session=session)
     assert isinstance(frame_group_3, FrameGroup)
-    assert session in frame_group_3._frame_idx_registry
-    assert len(frame_group_3._frame_idx_registry) == 1
-    assert frame_group_3._frame_idx_registry[session] == {
-        frame_idx_1,
-        frame_idx_2,
-        frame_idx_3,
-    }
-    assert frame_group_1._frame_idx_registry == frame_group_3._frame_idx_registry
+    assert frame_idx_3 in session.frame_groups
+    assert len(session.frame_groups) == 3
+    assert frame_group_3 == session.frame_groups[frame_idx_3]
     assert len(frame_group_3.instance_groups) == 0
 
     # TODO(LM): Test underlying dictionaries more thoroughly
