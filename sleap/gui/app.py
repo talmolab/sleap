@@ -53,6 +53,7 @@ from logging import getLogger
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
 
+from PyQt5.QtCore import Qt # may be unnecessary
 from qtpy import QtCore, QtGui
 from qtpy.QtCore import QEvent, Qt
 from qtpy.QtWidgets import QApplication, QMainWindow, QMessageBox
@@ -85,7 +86,8 @@ from sleap.io.video import available_video_exts
 from sleap.prefs import prefs
 from sleap.skeleton import Skeleton
 from sleap.util import parse_uri_path
-
+from sleap.gui.commands import CommandContext
+from sleap import session
 
 logger = getLogger(__name__)
 
@@ -812,7 +814,31 @@ class MainWindow(QMainWindow):
 
         ### Tracks Menu ###
 
+        sessionsMenu = self.menuBar().addMenu("Sessions")
+        self.session_menu = sessionsMenu.addMenu("Set Session Instance")
+        add_menu_check_item(
+                sessionsMenu, "sync session", "Synchronize Session Settings"
+            ).setToolTip(
+                "If enabled, changes to the session settings will be synchronized across all instances."
+            )
+        add_menu_item(
+            sessionsMenu,
+            "clear session",
+            "Clear Current Session",
+            self.commands.clearCurrentSession,
+        )
+        
+        tracksMenu.addSeparator()
+
         tracksMenu = self.menuBar().addMenu("Tracks")
+        self.inst_groups_menu = sessionsMenu.addMenu("Set Instance Group")
+        add_menu_item(
+            self.inst_groups_menu,
+            "set group",
+            "Set Instance Group",
+        self.commands.setInstanceGroup 
+        )
+
         self.track_menu = tracksMenu.addMenu("Set Instance Track")
         add_menu_check_item(
             tracksMenu, "propagate track labels", "Propagate Track Labels"
@@ -826,6 +852,8 @@ class MainWindow(QMainWindow):
             "Transpose Instance Tracks",
             self.commands.transposeInstance,
         )
+        
+
 
         tracksMenu.addSeparator()
 
@@ -1120,6 +1148,35 @@ class MainWindow(QMainWindow):
 
         # Update menus
 
+        def _update_sessions_menu(self, frame_idx):
+            """Update the instance groups menu based on the selected frame index in the session."""
+            session = self.state.get("session")
+            if not session or frame_idx >= len(session.frame_groups):
+                return 
+
+            frame_group = session.frame_groups[frame_idx]
+
+        frame_idx = 0
+        frame_group = session.frame_groups[frame_idx]
+        for inst_group_ind, instance_group in enumerate(frame_group.instance_groups):
+            if inst_group_ind < 9:
+                key_command = Qt.SHIFT + Qt.Key_0 + inst_group_ind + 1
+            else:
+                key_command = ""
+
+            self.inst_groups_menu.addAction(
+                instance_group.name,
+                lambda x=instance_group: self.commands.setInstanceGroup(x),
+                shortcut=key_command
+            )
+
+        self.inst_groups_menu.addAction(
+            "New Instance Group",
+            self.commands.addInstanceGroup,
+            shortcut=Qt.SHIFT + Qt.Key_0
+        )
+
+        self.inst_groups_menu.setEnabled(has_selected_instance)
         self.track_menu.setEnabled(has_selected_instance)
         self.delete_tracks_menu.setEnabled(has_tracks)
         self._menu_actions["clear selection"].setEnabled(has_selected_instance)
