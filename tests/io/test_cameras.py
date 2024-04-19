@@ -338,8 +338,10 @@ def create_instance_group(
         )
         instance_by_camera[cam] = dummy_instance
 
-    instance_group = InstanceGroup.from_dict(
-        d=instance_by_camera, name="test_instance_group", name_registry={}
+    instance_group = InstanceGroup.from_instance_by_camcorder_dict(
+        instance_by_camcorder=instance_by_camera,
+        name="test_instance_group",
+        name_registry={},
     )
     return (
         (instance_group, instance_by_camera, dummy_instance, cam)
@@ -418,11 +420,13 @@ def test_instance_group(multiview_min_session_labels: Labels):
     np.nan_to_num(instance_group_numpy, nan=0)
     assert np.all(np.nan_to_num(instance_group_numpy, nan=0) == 0)
 
-    # Populate with only dummy instance and test `from_dict`
+    # Populate with only dummy instance and test `from_instance_by_camcorder_dict`
     instance_by_camera = {cam: dummy_instance}
     with pytest.raises(ValueError):
-        instance_group = InstanceGroup.from_dict(
-            d=instance_by_camera, name="test_instance_group", name_registry={}
+        instance_group = InstanceGroup.from_instance_by_camcorder_dict(
+            instance_by_camcorder=instance_by_camera,
+            name="test_instance_group",
+            name_registry={},
         )
 
 

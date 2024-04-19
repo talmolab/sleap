@@ -841,13 +841,16 @@ class InstanceGroup:
         return hash(self._name)
 
     @classmethod
-    def from_dict(
-        cls, d: dict, name: str, name_registry: Set[str]
+    def from_instance_by_camcorder_dict(
+        cls,
+        instance_by_camcorder: Dict[Camcorder, Instance],
+        name: str,
+        name_registry: Set[str],
     ) -> Optional["InstanceGroup"]:
         """Creates an `InstanceGroup` object from a dictionary.
 
         Args:
-            d: Dictionary with `Camcorder` keys and `Instance` values.
+            instance_by_camcorder: Dictionary with `Camcorder` keys and `Instance` values.
             name: Name to use for the `InstanceGroup`.
             name_registry: Set of names to check for uniqueness.
 
@@ -859,16 +862,22 @@ class InstanceGroup:
             than None) instances found.
         """
 
+        if name in name_registry:
+            raise ValueError(
+                f"Cannot create `InstanceGroup`: Name {name} already in use. Please "
+                f"use a unique name that is not in the registry: {name_registry}."
+            )
+
         # Ensure not to mutate the original dictionary
-        d_copy = d.copy()
+        instance_by_camcorder_copy = instance_by_camcorder.copy()
 
         frame_idx = None
-        for cam, instance in d_copy.copy().items():
+        for cam, instance in instance_by_camcorder_copy.copy().items():
             camera_cluster = cam.camera_cluster
 
             # Remove dummy instances (determined by not having a frame index)
             if instance.frame_idx is None:
-                d_copy.pop(cam)
+                instance_by_camcorder_copy.pop(cam)
             # Grab the frame index from non-dummy instances
             elif frame_idx is None:
                 frame_idx = instance.frame_idx
@@ -879,21 +888,40 @@ class InstanceGroup:
                     f"not match instance frame index {instance.frame_idx}."
                 )
 
-        if len(d_copy) == 0:
-            raise ValueError("Cannot create `InstanceGroup`: No real instances found.")
-
-        if name in name_registry:
-            raise ValueError(
-                f"Cannot create `InstanceGroup`: Name {name} already in use. Please "
-                f"use a unique name that is not in the registry: {name_registry}."
-            )
+        if len(instance_by_camcorder_copy) == 0:
+            raise ValueError("Cannot create `InstanceGroup`: No frame idx found.")
 
         return cls(
             name=name,
             frame_idx=frame_idx,
             camera_cluster=camera_cluster,
-            instance_by_camcorder=d_copy,
+            instance_by_camcorder=instance_by_camcorder_copy,
         )
+
+    def to_dict(self, instance_to_idx):
+        """Converts the `InstanceGroup` to a dictionary.
+
+        Args:
+            instance_to_idx: Dictionary mapping `Instance` objects to indices.
+
+        Returns:
+            Dictionary of the `InstanceGroup`.
+        """
+
+        instance_by_camcorder_dict = {
+            self.camera_cluster.cameras.index(cam.name): instance_to_idx[instance]
+            for cam, instance in self._instance_by_camcorder.items()
+        }
+
+        return {
+            "name": self.name,
+            "frame_idx": self.frame_idx,
+            "instance_to_camcorder_idx_map": instance_by_camcorder_dict,
+        }
+
+    @classmethod
+    def from_dict(cls):
+        pass
 
 
 @define(eq=False)
@@ -1271,7 +1299,7 @@ class RecordingSession:
         cls,
         session_dict,
         videos_list: List[Video],
-        labeled_frames_list: List[LabeledFrame],
+        instances_list: List[Instance],
     ) -> "RecordingSession":
         """Restructure `RecordingSession` from an invertible dictionary.
 
@@ -1279,8 +1307,8 @@ class RecordingSession:
             session_dict: Dictionary of "calibration" and "camcorder_to_video_idx_map"
                 needed to fully restructure a `RecordingSession`.
             videos_list: List containing `Video` objects (expected `Labels.videos`).
-            labeled_frames_list: List containing `LabeledFrame` objects (expected
-                `Labels.labeled_frames`).
+            instances_list: List containing `Instance` objects (expected
+                `Labels.instances`).
 
         Returns:
             `RecordingSession` object.
@@ -1306,8 +1334,8 @@ class RecordingSession:
             # Add `FrameGroup` to `RecordingSession`
             FrameGroup.from_dict(
                 frame_group_dict=frame_group_dict,
-                labeled_frames_list=labeled_frames_list,
                 session=session,
+                instances_list=instances_list,
             )
 
         return session
@@ -2024,12 +2052,65 @@ class FrameGroup:
 
         # Create and return `FrameGroup` object
         return cls(
-            frame_idx=frame_idx, instance_groups=instance_groups, session=session
+            frame_idx=frame_idx, session=session, instance_groups=instance_groups
         )
 
+    def to_dict(
+        self,
+        instance_to_idx: Dict[Instance, int],
+    ) -> Dict[str, Union[int, Any]]:
+        """Convert `FrameGroup` to a dictionary.
+
+        Args:
+            instance_to_idx: Dictionary of `Instance` to index in `Labels.instances`.
+        """
+
+        frame_group_dict = {
+            "frame_idx": self.frame_idx,
+            "instance_groups": [
+                instance_group.to_dict(
+                    instance_to_idx=instance_to_idx,
+                )
+                for instance_group in self.instance_groups
+            ],
+        }
+
+        return frame_group_dict
+
     @classmethod
-    def to_dict(labeled_frame_to_idx: Dict[LabeledFrame, int]) -> dict:
-        pass
+    def from_dict(
+        cls,
+        frame_group_dict: Dict[str, Any],
+        session: RecordingSession,
+        instances_list: List[Instance],
+    ):
+        """Convert dictionary to `FrameGroup` object.
+
+        Args:
+            frame_group_dict: Dictionary of `FrameGroup` object.
+            session: `RecordingSession` object.
+            instances_list: List of `Instance` objects (expecting `Labels.instances`).
+
+        Returns:
+            `FrameGroup` object.
+        """
+
+        # Get frame index
+        frame_idx = int(frame_group_dict["frame_idx"])
+
+        # Get `InstanceGroup` objects
+        instance_groups = [
+            InstanceGroup.from_dict(
+                instance_group_dict=instance_group_dict,
+                instances_list=instances_list,
+                camera_cluster=session.camera_cluster,
+            )
+            for instance_group_dict in frame_group_dict["instance_groups"]
+        ]
+
+        return cls.from_instance_groups(
+            frame_idx=frame_idx, session=session, instance_groups=instance_groups
+        )
 
     def enforce_frame_idx_unique(
         self, session: RecordingSession, frame_idx: int
