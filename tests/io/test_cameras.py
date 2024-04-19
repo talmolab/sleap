@@ -135,6 +135,7 @@ def test_recording_session(
     min_session_camera_cluster: CameraCluster,
     centered_pair_vid: Video,
     hdf5_vid: Video,
+    multiview_min_session_labels: Labels,
 ):
     """Test `RecordingSession` data structure."""
 
@@ -212,11 +213,15 @@ def test_recording_session(
     compare_cameras(session, session_2)
 
     # Test to_session_dict
+    labels = multiview_min_session_labels
     camcorder_2 = session.camera_cluster.cameras[2]
     session.add_video(hdf5_vid, camcorder_2)
     videos_list = [centered_pair_vid, hdf5_vid]
     video_to_idx = {video: idx for idx, video in enumerate(videos_list)}
-    session_dict = session.to_session_dict(video_to_idx)
+    instance_to_idx = {instance: idx for idx, instance in enumerate(labels.instances())}
+    session_dict = session.to_session_dict(
+        video_to_idx=video_to_idx, instance_to_idx=instance_to_idx
+    )
     assert isinstance(session_dict, dict)
     assert session_dict["calibration"] == calibration_dict
     assert session_dict["camcorder_to_video_idx_map"] == {
@@ -233,7 +238,12 @@ def test_recording_session(
         assert len(session_2.videos) == len(session_1.videos)
         assert np.array_equal(session_2.videos, session_1.videos)
 
-    session_2 = RecordingSession.from_session_dict(session_dict, videos_list)
+    instances_list = list(labels.instances())
+    session_2 = RecordingSession.from_session_dict(
+        session_dict=session_dict,
+        videos_list=videos_list,
+        instances_list=instances_list,
+    )
     compare_sessions(session, session_2)
 
     # Test remove_video
@@ -254,7 +264,9 @@ def test_recording_session(
     assert session[camcorder] is None
 
     # Test make_cattr
-    sessions_cattr = RecordingSession.make_cattr(videos_list)
+    sessions_cattr = RecordingSession.make_cattr(
+        videos_list=videos_list, instances_list=instances_list
+    )
     session_dict_2 = sessions_cattr.unstructure(session_2)
     assert session_dict_2 == session_dict
     session_3 = sessions_cattr.structure(session_dict_2, RecordingSession)
@@ -511,7 +523,7 @@ def test_frame_group(multiview_min_session_labels: Labels):
     frame_group_4 = FrameGroup.from_dict(
         frame_group_dict=frame_group_dict,
         session=session,
-        instances_list=list(labels.instances()),  # Slow...
+        instances_list=list(labels.instances()),  # TODO(LM): Slow...
     )
     assert isinstance(frame_group_4, FrameGroup)
     assert frame_group_4.frame_idx == frame_idx_1
@@ -526,4 +538,4 @@ def test_frame_group(multiview_min_session_labels: Labels):
 
 
 if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_frame_group"])
+    pytest.main([f"{__file__}::test_recording_session"])

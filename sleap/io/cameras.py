@@ -1327,14 +1327,14 @@ class RecordingSession:
     def to_session_dict(
         self,
         video_to_idx: Dict[Video, int],
-        labeled_frame_to_idx: Dict[LabeledFrame, int],
+        instance_to_idx: Dict[LabeledFrame, int],
     ) -> dict:
         """Unstructure `RecordingSession` to an invertible dictionary.
 
         Args:
             video_to_idx: Dictionary of `Video` to index in `Labels.videos`.
-            labeled_frame_to_idx: Dictionary of `LabeledFrame` to index in
-                `Labels.labeled_frames`.
+            instance_to_idx: Dictionary of `Instance` to index in
+                `Labels.instances()`.
 
         Returns:
             Dictionary of "calibration" and "camcorder_to_video_idx_map" needed to
@@ -1367,10 +1367,10 @@ class RecordingSession:
         # Store frame groups by frame index
         frame_group_dicts = []
         for frame_group in self._frame_group_by_frame_idx.values():
-            frame_group_dict = frame_group.to_dict(
-                labeled_frame_to_idx=labeled_frame_to_idx
-            )
-            frame_group_dicts.append(frame_group_dict)
+            # Only save `FrameGroup` if it has `InstanceGroup`s
+            if len(frame_group.instance_groups) > 0:
+                frame_group_dict = frame_group.to_dict(instance_to_idx=instance_to_idx)
+                frame_group_dicts.append(frame_group_dict)
 
         return {
             "calibration": calibration_dict,
@@ -1383,7 +1383,7 @@ class RecordingSession:
         cls,
         session_dict,
         videos_list: List[Video],
-        # instances_list: List[Instance],
+        instances_list: List[Instance],
     ) -> "RecordingSession":
         """Restructure `RecordingSession` from an invertible dictionary.
 
@@ -1411,25 +1411,33 @@ class RecordingSession:
             video = videos_list[int(video_idx)]
             session.add_video(video, camcorder)
 
-        # # Reconstruct all `FrameGroup` objects and add to `RecordingSession`
-        # frame_group_dicts = session_dict["frame_group_dicts"]
-        # for frame_group_dict in frame_group_dicts:
+        # Reconstruct all `FrameGroup` objects and add to `RecordingSession`
+        frame_group_dicts = session_dict["frame_group_dicts"]
+        for frame_group_dict in frame_group_dicts:
 
-        #     # Add `FrameGroup` to `RecordingSession`
-        #     FrameGroup.from_dict(
-        #         frame_group_dict=frame_group_dict,
-        #         session=session,
-        #         instances_list=instances_list,
-        #     )
+            try:
+                # Add `FrameGroup` to `RecordingSession`
+                FrameGroup.from_dict(
+                    frame_group_dict=frame_group_dict,
+                    session=session,
+                    instances_list=instances_list,
+                )
+            except ValueError as e:
+                logger.warning(
+                    f"Error reconstructing FrameGroup: {frame_group_dict}. Skipping..."
+                    f"\n{e}"
+                )
 
         return session
 
     @staticmethod
-    def make_cattr(videos_list: List[Video]):
+    def make_cattr(videos_list: List[Video], instances_list: List[Instance]):
         """Make a `cattr.Converter` for `RecordingSession` serialization.
 
         Args:
             videos_list: List containing `Video` objects (expected `Labels.videos`).
+            instances_list: List containing `Instance` objects (expected
+                `list(Labels.instances())`).
 
         Returns:
             `cattr.Converter` object.
@@ -1437,12 +1445,18 @@ class RecordingSession:
         sessions_cattr = cattr.Converter()
         sessions_cattr.register_structure_hook(
             RecordingSession,
-            lambda x, cls: RecordingSession.from_session_dict(x, videos_list),
+            lambda x, cls: RecordingSession.from_session_dict(
+                x, videos_list=videos_list, instances_list=instances_list
+            ),
         )
 
         video_to_idx = {video: i for i, video in enumerate(videos_list)}
+        instance_to_idx = {instance: i for i, instance in enumerate(instances_list)}
         sessions_cattr.register_unstructure_hook(
-            RecordingSession, lambda x: x.to_session_dict(video_to_idx)
+            RecordingSession,
+            lambda x: x.to_session_dict(
+                video_to_idx=video_to_idx, instance_to_idx=instance_to_idx
+            ),
         )
         return sessions_cattr
 
