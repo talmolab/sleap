@@ -1,19 +1,11 @@
 """Transformers for applying data augmentation."""
 
-# Monkey patch for: https://github.com/aleju/imgaug/issues/537
-# TODO: Fix when PyPI/conda packages are available for version fencing.
-import numpy
-
-if hasattr(numpy.random, "_bit_generator"):
-    numpy.random.bit_generator = numpy.random._bit_generator
-
 import sleap
 import numpy as np
 import tensorflow as tf
 import attr
 from typing import List, Text, Optional
-import imgaug as ia
-import imgaug.augmenters as iaa
+import albumentations as A
 from sleap.nn.config import AugmentationConfig
 from sleap.nn.data.instance_cropping import crop_bboxes
 
@@ -111,15 +103,15 @@ def flip_instances_ud(
 
 
 @attr.s(auto_attribs=True)
-class ImgaugAugmenter:
-    """Data transformer based on the `imgaug` library.
+class AlbumentationsAugmenter:
+    """Data transformer based on the `albumentations` library.
 
     This class can generate a `tf.data.Dataset` from an existing one that generates
     image and instance data. Element of the output dataset will have a set of
     augmentation transformations applied.
 
     Attributes:
-        augmenter: An instance of `imgaug.augmenters.Sequential` that will be applied to
+        augmenter: An instance of `albumentations.Compose` that will be applied to
             each element of the input dataset.
         image_key: Name of the example key where the image is stored. Defaults to
             "image".
@@ -127,7 +119,7 @@ class ImgaugAugmenter:
             Defaults to "instances".
     """
 
-    augmenter: iaa.Sequential
+    augmenter: A.Compose
     image_key: str = "image"
     instances_key: str = "instances"
 
@@ -137,7 +129,7 @@ class ImgaugAugmenter:
         config: AugmentationConfig,
         image_key: Text = "image",
         instances_key: Text = "instances",
-    ) -> "ImgaugAugmenter":
+    ) -> "AlbumentationsAugmenter":
         """Create an augmenter from a set of configuration parameters.
 
         Args:
@@ -148,52 +140,64 @@ class ImgaugAugmenter:
                 Defaults to "instances".
 
         Returns:
-            An instance of `ImgaugAugmenter` with the specified augmentation
+            An instance of `AlbumentationsAugmenter` with the specified augmentation
             configuration.
         """
         aug_stack = []
         if config.rotate:
             aug_stack.append(
-                iaa.Affine(
-                    rotate=(config.rotation_min_angle, config.rotation_max_angle)
+                A.Rotate(
+                    limit=(config.rotation_min_angle, config.rotation_max_angle), p=1.0
                 )
             )
         if config.translate:
             aug_stack.append(
-                iaa.Affine(
+                A.Affine(
                     translate_px={
                         "x": (config.translate_min, config.translate_max),
                         "y": (config.translate_min, config.translate_max),
-                    }
+                    },
+                    p=1.0,
                 )
             )
         if config.scale:
-            aug_stack.append(iaa.Affine(scale=(config.scale_min, config.scale_max)))
-        if config.uniform_noise:
             aug_stack.append(
-                iaa.AddElementwise(
-                    value=(config.uniform_noise_min_val, config.uniform_noise_max_val)
-                )
+                A.Affine(scale=(config.scale_min, config.scale_max), p=1.0)
             )
+        if config.uniform_noise:
+
+            def uniform_noise(image, **kwargs):
+                return image + np.random.uniform(
+                    config.uniform_noise_min_val, config.uniform_noise_max_val
+                )
+
+            aug_stack.append(A.Lambda(image=uniform_noise))
         if config.gaussian_noise:
             aug_stack.append(
-                iaa.AdditiveGaussianNoise(
-                    loc=config.gaussian_noise_mean, scale=config.gaussian_noise_stddev
+                A.GaussNoise(
+                    mean=config.gaussian_noise_mean,
+                    var_limit=config.gaussian_noise_stddev,
                 )
             )
         if config.contrast:
             aug_stack.append(
-                iaa.GammaContrast(
-                    gamma=(config.contrast_min_gamma, config.contrast_max_gamma)
+                A.RandomGamma(
+                    gamma_limit=(config.contrast_min_gamma, config.contrast_max_gamma),
+                    p=1.0,
                 )
             )
         if config.brightness:
             aug_stack.append(
-                iaa.Add(value=(config.brightness_min_val, config.brightness_max_val))
+                A.RandomBrightness(
+                    limit=(config.brightness_min_val, config.brightness_max_val), p=1.0
+                )
             )
 
         return cls(
-            augmenter=iaa.Sequential(aug_stack),
+            augmenter=A.Compose(
+                aug_stack,
+                keypoint_params=A.KeypointParams(format="xy", remove_invisible=False),
+            ),
             image_key=image_key,
             instances_key=instances_key,
         )
@@ -226,22 +230,16 @@ class ImgaugAugmenter:
         # Define augmentation function to map over each sample.
         def py_augment(image, instances):
             """Local processing function that will not be autographed."""
-            # Ensure that the transformations applied to all data within this
-            # example are kept consistent.
-            aug_det = self.augmenter.to_deterministic()
+            # Convert to numpy arrays.
+            img = image.numpy()
+            kps = instances.numpy()
+            original_shape = kps.shape
+            kps = kps.reshape(-1, 2)
 
-            # Augment the image.
-            aug_img = aug_det.augment_image(image.numpy())
-
-            # This will get converted to a rank 3 tensor (n_instances, n_nodes, 2).
-            aug_instances = np.full_like(instances, np.nan)
-
-            # Augment each set of points for each instance.
-            for i, instance in enumerate(instances):
-                kps = ia.KeypointsOnImage.from_xy_array(
-                    instance.numpy(), tuple(image.shape)
-                )
-                aug_instances[i] = aug_det.augment_keypoints(kps).to_xy_array()
+            # Augment.
+            augmented = self.augmenter(image=img, keypoints=kps)
+            aug_img = augmented["image"]
+            aug_instances = np.array(augmented["keypoints"]).reshape(original_shape)
 
             return aug_img, aug_instances
 
@@ -258,7 +256,6 @@ class ImgaugAugmenter:
             return frame_data
 
         # Apply the augmentation to each element.
-        # Note: We map sequentially since imgaug gets slower with tf.data parallelism.
         output_ds = input_ds.map(augment)
 
         return output_ds

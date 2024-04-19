@@ -10,7 +10,7 @@ from sleap.nn.data.identity import (
 )
 
 
-sleap.use_cpu_only()
+# sleap.use_cpu_only()
 
 
 def test_make_class_vectors():

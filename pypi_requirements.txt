@@ -3,7 +3,7 @@
 # setup.py, the packages in requirements.txt will also be installed when running 
 # pip install sleap[pypi].
 
-# These are also distrubuted through conda and not pip installed when using conda.
+# These are also distributed through conda and not pip installed when using conda.
 attrs>=21.2.0,<=21.4.0
 cattrs==1.1.1
 # certifi>=2017.4.17,<=2021.10.8
@@ -11,7 +11,7 @@ jsmin
 jsonpickle==1.2
 networkx
 numpy>=1.19.5,<1.23.0
-opencv-python>=4.2.0,<=4.6.0
+opencv-python>=4.2.0,<=4.7.0
 pandas
 pillow>=8.3.1,<=8.4.0
 psutil
@@ -32,7 +32,10 @@ scikit-learn ==1.0.*
 scikit-video
 seaborn
 tensorflow>=2.6.3,<2.9; platform_machine != 'arm64'
+# tensorflow ==2.7.4; platform_machine != 'arm64'
 tensorflow-hub<=0.14.0
+albumentations
+ndx-pose
 # These dependencies are untested since we do not offer a wheel for apple silicon atm.
 tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
 tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64'

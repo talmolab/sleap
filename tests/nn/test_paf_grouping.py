@@ -22,7 +22,7 @@ from sleap.nn.paf_grouping import (
     assign_connections_to_instances,
 )
 
-sleap.nn.system.use_cpu_only()
+# sleap.nn.system.use_cpu_only()
 
 
 def test_get_connection_candidates():

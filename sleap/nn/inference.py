@@ -1582,6 +1582,15 @@ class SingleInstancePredictor(Predictor):
         try:
             for ex in generator:
                 prediction_queue.put(ex)
+
+        except KeyError as e:
+            # Gracefully handle seeking errors by early termination.
+            if "Unable to load frame" in str(e):
+                pass  # TODO: Print warning obeying verbosity? (This code path is also
+                # called for interactive prediction where we don't want any spam.)
+            else:
+                raise
+
         finally:
             prediction_queue.put(None)
             object_builder.join()
@@ -2632,6 +2641,15 @@ class TopDownPredictor(Predictor):
         try:
             for ex in generator:
                 prediction_queue.put(ex)
+
+        except KeyError as e:
+            # Gracefully handle seeking errors by early termination.
+            if "Unable to load frame" in str(e):
+                pass  # TODO: Print warning obeying verbosity? (This code path is also
+                # called for interactive prediction where we don't want any spam.)
+            else:
+                raise
+
         finally:
             prediction_queue.put(None)
             object_builder.join()
@@ -3265,6 +3283,15 @@ class BottomUpPredictor(Predictor):
         try:
             for ex in generator:
                 prediction_queue.put(ex)
+
+        except KeyError as e:
+            # Gracefully handle seeking errors by early termination.
+            if "Unable to load frame" in str(e):
+                pass  # TODO: Print warning obeying verbosity? (This code path is also
+                # called for interactive prediction where we don't want any spam.)
+            else:
+                raise
+
         finally:
             prediction_queue.put(None)
             object_builder.join()
@@ -3770,6 +3797,15 @@ class BottomUpMultiClassPredictor(Predictor):
         try:
             for ex in generator:
                 prediction_queue.put(ex)
+
+        except KeyError as e:
+            # Gracefully handle seeking errors by early termination.
+            if "Unable to load frame" in str(e):
+                pass  # TODO: Print warning obeying verbosity? (This code path is also
+                # called for interactive prediction where we don't want any spam.)
+            else:
+                raise
+
         finally:
             prediction_queue.put(None)
             object_builder.join()
@@ -4457,6 +4493,15 @@ class TopDownMultiClassPredictor(Predictor):
         try:
             for ex in generator:
                 prediction_queue.put(ex)
+
+        except KeyError as e:
+            # Gracefully handle seeking errors by early termination.
+            if "Unable to load frame" in str(e):
+                pass  # TODO: Print warning obeying verbosity? (This code path is also
+                # called for interactive prediction where we don't want any spam.)
+            else:
+                raise
+
         finally:
             prediction_queue.put(None)
             object_builder.join()
@@ -4734,6 +4779,15 @@ class MoveNetPredictor(Predictor):
         try:
             for ex in generator:
                 prediction_queue.put(ex)
+
+        except KeyError as e:
+            # Gracefully handle seeking errors by early termination.
+            if "Unable to load frame" in str(e):
+                pass  # TODO: Print warning obeying verbosity? (This code path is also
+                # called for interactive prediction where we don't want any spam.)
+            else:
+                raise
+
         finally:
             prediction_queue.put(None)
             object_builder.join()

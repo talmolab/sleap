@@ -26,6 +26,7 @@ jobs:
           # Use this condarc as default
           - condarc: .conda/condarc.yaml
           - wheel_name: sleap-wheel-linux
+          - pyver: "3.7"
     steps:
       # Setup
       - uses: actions/checkout@v2
@@ -39,15 +40,16 @@ jobs:
           path: ~/conda_pkgs_dir
           key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'pyproject.toml') }}
 
-      - name: Setup Miniconda for Build
-        # https://github.com/conda-incubator/setup-miniconda
-        uses: conda-incubator/setup-miniconda@v2.0.1
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3.0.3
         with:
-          python-version: 3.7
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-          environment-file: environment_build.yml
+          miniforge-version: latest
           condarc-file: ${{ matrix.condarc }}
+          python-version: ${{ matrix.pyver }}
+          environment-file: environment_build.yml
           activate-environment: sleap_ci
+          conda-solver: "libmamba"
+          # use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
 
       - name: Print build environment info
         shell: bash -l {0}
@@ -77,7 +79,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "windows-2022", "macos-latest"]
+        os: ["ubuntu-22.04", "windows-2022", "macos-14"]
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Default values
@@ -89,9 +91,11 @@ jobs:
               pip install '$wheel_path'[dev]
           - test_args: pytest --durations=-1 tests/
           - condarc: .conda/condarc.yaml
+          - pyver: "3.7"
           # Use special condarc if macos
-          - os: "macos-latest"
+          - os: "macos-14"
             condarc: .conda_mac/condarc.yaml
+            pyver: "3.10"
           # Ubuntu specific values
           - os: ubuntu-22.04
             # Otherwise core dumped in github actions
@@ -108,10 +112,10 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
       
-      - name: Set up Python 3.7
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: ${{ matrix.pyver }}
       
       # Download wheel
       - name: Download wheel artifact

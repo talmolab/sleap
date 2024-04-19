@@ -18,7 +18,7 @@ import sleap
 from sleap.nn.data.providers import LabelsReader, VideoReader
 from sleap.nn.data.augmentation import (
     AugmentationConfig,
-    ImgaugAugmenter,
+    AlbumentationsAugmenter,
     RandomCropper,
     RandomFlipper,
 )
@@ -68,7 +68,7 @@ from sleap.nn.heads import (
 
 PROVIDERS = (LabelsReader, VideoReader)
 TRANSFORMERS = (
-    ImgaugAugmenter,
+    AlbumentationsAugmenter,
     RandomCropper,
     Normalizer,
     Resizer,
@@ -406,7 +406,7 @@ class SingleInstanceConfmapsPipeline:
                 self.data_config.labels.skeletons[0],
                 horizontal=self.optimization_config.augmentation_config.flip_horizontal,
             )
-        pipeline += ImgaugAugmenter.from_config(
+        pipeline += AlbumentationsAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
         if self.optimization_config.augmentation_config.random_crop:
@@ -550,7 +550,7 @@ class CentroidConfmapsPipeline:
                 self.data_config.labels.skeletons[0],
                 horizontal=self.optimization_config.augmentation_config.flip_horizontal,
             )
-        pipeline += ImgaugAugmenter.from_config(
+        pipeline += AlbumentationsAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
         if self.optimization_config.augmentation_config.random_crop:
@@ -713,7 +713,7 @@ class TopdownConfmapsPipeline:
                 self.data_config.labels.skeletons[0],
                 horizontal=self.optimization_config.augmentation_config.flip_horizontal,
             )
-        pipeline += ImgaugAugmenter.from_config(
+        pipeline += AlbumentationsAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
@@ -863,7 +863,7 @@ class BottomUpPipeline:
                 self.data_config.labels.skeletons[0],
                 horizontal=aug_config.flip_horizontal,
             )
-        pipeline += ImgaugAugmenter.from_config(aug_config)
+        pipeline += AlbumentationsAugmenter.from_config(aug_config)
         if aug_config.random_crop:
             pipeline += RandomCropper(
                 crop_height=aug_config.random_crop_height,
@@ -1028,7 +1028,7 @@ class BottomUpMultiClassPipeline:
                 horizontal=aug_config.flip_horizontal,
             )
 
-        pipeline += ImgaugAugmenter.from_config(aug_config)
+        pipeline += AlbumentationsAugmenter.from_config(aug_config)
         if aug_config.random_crop:
             pipeline += RandomCropper(
                 crop_height=aug_config.random_crop_height,
@@ -1186,7 +1186,7 @@ class TopDownMultiClassPipeline:
                 config=self.data_config.preprocessing,
                 provider=data_provider,
             )
-        pipeline += ImgaugAugmenter.from_config(
+        pipeline += AlbumentationsAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
