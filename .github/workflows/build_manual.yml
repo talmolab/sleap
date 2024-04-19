@@ -92,7 +92,7 @@ jobs:
         shell: powershell
         run: |
           conda build .conda --output-folder build
-          echo "BUILD_PATH=$(pwd)/build" >> "$env:GITHUB_ENV"
+          echo "BUILD_PATH=$\(pwd)\build" >> "$env:GITHUB_ENV"
 
       # Build conda package (Mac)
       - name: Build conda package (Mac)
