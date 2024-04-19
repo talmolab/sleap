@@ -2094,7 +2094,7 @@ class FrameGroup:
     def to_dict(
         self,
         instance_to_idx: Dict[Instance, int],
-    ) -> Dict[str, Union[int, Any]]:
+    ) -> Dict[str, Union[int, List[Dict[str, Any]]]]:
         """Convert `FrameGroup` to a dictionary.
 
         Args:
@@ -2102,7 +2102,6 @@ class FrameGroup:
         """
 
         frame_group_dict = {
-            "frame_idx": self.frame_idx,
             "instance_groups": [
                 instance_group.to_dict(
                     instance_to_idx=instance_to_idx,
@@ -2131,9 +2130,6 @@ class FrameGroup:
             `FrameGroup` object.
         """
 
-        # Get frame index
-        frame_idx = int(frame_group_dict["frame_idx"])
-
         # Get `InstanceGroup` objects
         name_registry = set()
         instance_groups = []
@@ -2148,7 +2144,7 @@ class FrameGroup:
             instance_groups.append(instance_group)
 
         return cls.from_instance_groups(
-            frame_idx=frame_idx, session=session, instance_groups=instance_groups
+            session=session, instance_groups=instance_groups
         )
 
     def enforce_frame_idx_unique(

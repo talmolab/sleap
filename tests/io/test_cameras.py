@@ -496,8 +496,34 @@ def test_frame_group(multiview_min_session_labels: Labels):
     assert frame_group_3 == session.frame_groups[frame_idx_3]
     assert len(frame_group_3.instance_groups) == 0
 
+    # Test `to_dict`
+    # TODO(LM): Is there a better way than using `labels.instances()`?
+    instance_to_idx = {instance: idx for idx, instance in enumerate(labels.instances())}
+    frame_group_dict = frame_group_1.to_dict(instance_to_idx=instance_to_idx)
+    assert isinstance(frame_group_dict, dict)
+    assert "instance_groups" in frame_group_dict
+    assert len(frame_group_dict["instance_groups"]) == 1
+    instance_group_dict = frame_group_dict["instance_groups"][0]
+    assert instance_group_dict["name"] == instance_group.name
+    assert "camcorder_to_instance_idx_map" in instance_group_dict
+
+    # Test `from_dict`
+    frame_group_4 = FrameGroup.from_dict(
+        frame_group_dict=frame_group_dict,
+        session=session,
+        instances_list=list(labels.instances()),  # Slow...
+    )
+    assert isinstance(frame_group_4, FrameGroup)
+    assert frame_group_4.frame_idx == frame_idx_1
+    assert frame_group_4.session == session
+    assert len(frame_group_4.instance_groups) == 1
+    assert (
+        frame_group_4._instance_group_name_registry
+        == frame_group_1._instance_group_name_registry
+    )
+
     # TODO(LM): Test underlying dictionaries more thoroughly
 
 
 if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_instance_group"])
+    pytest.main([f"{__file__}::test_frame_group"])
