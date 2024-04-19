@@ -1212,8 +1212,17 @@ class RecordingSession:
         )
         return cls(camera_cluster=camera_cluster)
 
-    def to_session_dict(self, video_to_idx: Dict[Video, int]) -> dict:
+    def to_session_dict(
+        self,
+        video_to_idx: Dict[Video, int],
+        labeled_frame_to_idx: Dict[LabeledFrame, int],
+    ) -> dict:
         """Unstructure `RecordingSession` to an invertible dictionary.
+
+        Args:
+            video_to_idx: Dictionary of `Video` to index in `Labels.videos`.
+            labeled_frame_to_idx: Dictionary of `LabeledFrame` to index in
+                `Labels.labeled_frames`.
 
         Returns:
             Dictionary of "calibration" and "camcorder_to_video_idx_map" needed to
@@ -1243,14 +1252,26 @@ class RecordingSession:
                     "Not saving to `RecordingSession` serialization."
                 )
 
+        # Store frame groups by frame index
+        frame_group_dicts = []
+        for frame_group in self._frame_group_by_frame_idx.values():
+            frame_group_dict = frame_group.to_dict(
+                labeled_frame_to_idx=labeled_frame_to_idx
+            )
+            frame_group_dicts.append(frame_group_dict)
+
         return {
             "calibration": calibration_dict,
             "camcorder_to_video_idx_map": camcorder_to_video_idx_map,
+            "frame_group_dicts": frame_group_dicts,
         }
 
     @classmethod
     def from_session_dict(
-        cls, session_dict, videos_list: List[Video]
+        cls,
+        session_dict,
+        videos_list: List[Video],
+        labeled_frames_list: List[LabeledFrame],
     ) -> "RecordingSession":
         """Restructure `RecordingSession` from an invertible dictionary.
 
@@ -1258,6 +1279,8 @@ class RecordingSession:
             session_dict: Dictionary of "calibration" and "camcorder_to_video_idx_map"
                 needed to fully restructure a `RecordingSession`.
             videos_list: List containing `Video` objects (expected `Labels.videos`).
+            labeled_frames_list: List containing `LabeledFrame` objects (expected
+                `Labels.labeled_frames`).
 
         Returns:
             `RecordingSession` object.
@@ -1275,6 +1298,17 @@ class RecordingSession:
             camcorder = session.camera_cluster.cameras[int(cam_idx)]
             video = videos_list[int(video_idx)]
             session.add_video(video, camcorder)
+
+        # Reconstruct all `FrameGroup` objects and add to `RecordingSession`
+        frame_group_dicts = session_dict["frame_group_dicts"]
+        for frame_group_dict in frame_group_dicts:
+
+            # Add `FrameGroup` to `RecordingSession`
+            FrameGroup.from_dict(
+                frame_group_dict=frame_group_dict,
+                labeled_frames_list=labeled_frames_list,
+                session=session,
+            )
 
         return session
 
@@ -1992,6 +2026,10 @@ class FrameGroup:
         return cls(
             frame_idx=frame_idx, instance_groups=instance_groups, session=session
         )
+
+    @classmethod
+    def to_dict(labeled_frame_to_idx: Dict[LabeledFrame, int]) -> dict:
+        pass
 
     def enforce_frame_idx_unique(
         self, session: RecordingSession, frame_idx: int
