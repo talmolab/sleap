@@ -415,9 +415,7 @@ class InstanceGroup:
     _instance_by_camcorder: Dict[Camcorder, Instance] = field(factory=dict)
     _camcorder_by_instance: Dict[Instance, Camcorder] = field(factory=dict)
     _dummy_instance: Optional[Instance] = field(default=None)
-
-    # Class attributes
-    camera_cluster: Optional[CameraCluster] = None
+    camera_cluster: Optional[CameraCluster] = field(default=None)
 
     def __attrs_post_init__(self):
         """Initialize `InstanceGroup` object."""
