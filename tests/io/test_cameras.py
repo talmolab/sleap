@@ -360,7 +360,7 @@ def test_instance_group(multiview_min_session_labels: Labels):
     lf = labels.labeled_frames[0]
     frame_idx = lf.frame_idx
 
-    # Test `from_dict`
+    # Test `from_instance_by_camcorder_dict`
     instance_group, instance_by_camera, dummy_instance, cam = create_instance_group(
         labels=labels, frame_idx=frame_idx, add_dummy=True
     )
@@ -376,6 +376,22 @@ def test_instance_group(multiview_min_session_labels: Labels):
             assert isinstance(instance, Instance)
             assert instance_group[camera] == instance_by_camera[camera]
             assert instance_group[instance] == camera
+
+    # Test `to_dict`
+    instance_to_idx = {instance: idx for idx, instance in enumerate(labels.instances())}
+    instance_group_dict = instance_group.to_dict(instance_to_idx=instance_to_idx)
+    assert isinstance(instance_group_dict, dict)
+    assert instance_group_dict["name"] == instance_group.name
+    assert "camcorder_to_instance_idx_map" in instance_group_dict
+
+    # Test `from_dict`
+    instance_group_2 = InstanceGroup.from_dict(
+        instance_group_dict=instance_group_dict,
+        name_registry={},
+        instances_list=labels.instances(),
+        camera_cluster=camera_cluster,
+    )
+    assert isinstance(instance_group_2, InstanceGroup)
 
     # Test `__repr__`
     print(instance_group)
@@ -471,3 +487,7 @@ def test_frame_group(multiview_min_session_labels: Labels):
     assert len(frame_group_3.instance_groups) == 0
 
     # TODO(LM): Test underlying dictionaries more thoroughly
+
+
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::test_instance_group"])

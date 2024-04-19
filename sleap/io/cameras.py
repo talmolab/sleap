@@ -898,30 +898,66 @@ class InstanceGroup:
             instance_by_camcorder=instance_by_camcorder_copy,
         )
 
-    def to_dict(self, instance_to_idx):
+    def to_dict(self, instance_to_idx) -> Dict[str, Union[str, Dict[str, str]]]:
         """Converts the `InstanceGroup` to a dictionary.
 
         Args:
-            instance_to_idx: Dictionary mapping `Instance` objects to indices.
+            instance_to_idx: Dictionary mapping `Instance` objects to indices in
+                `Labels.instances()`.
 
         Returns:
-            Dictionary of the `InstanceGroup`.
+            Dictionary of the `InstanceGroup` with items:
+                - name: Name of the `InstanceGroup`.
+                - camcorder_to_instance_idx_map: Dictionary mapping `Camcorder` indices
+                    (in `InstanceGroup.camera_cluster.cameras`) to `Instance` indices
+                    (from `instance_to_idx`).
         """
 
-        instance_by_camcorder_dict = {
-            self.camera_cluster.cameras.index(cam.name): instance_to_idx[instance]
+        camcorder_to_instance_idx_map: Dict[str, str] = {
+            str(self.camera_cluster.cameras.index(cam)): str(instance_to_idx[instance])
             for cam, instance in self._instance_by_camcorder.items()
         }
 
         return {
             "name": self.name,
-            "frame_idx": self.frame_idx,
-            "instance_to_camcorder_idx_map": instance_by_camcorder_dict,
+            "camcorder_to_instance_idx_map": camcorder_to_instance_idx_map,
         }
 
     @classmethod
-    def from_dict(cls):
-        pass
+    def from_dict(
+        cls,
+        instance_group_dict: dict,
+        name_registry: Set[str],
+        instances_list: List[Instance],
+        camera_cluster: CameraCluster,
+    ):
+        """Creates an `InstanceGroup` object from a dictionary.
+
+        Args:
+            instance_group_dict: Dictionary with keys for name and
+                camcorder_to_instance_idx_map.
+            name_registry: Set of names to check for uniqueness.
+            instances_list: List of `Instance` objects.
+            camera_cluster: `CameraCluster` object.
+
+        Returns:
+            `InstanceGroup` object.
+        """
+
+        # Get the `Instance` objects
+        camcorder_to_instance_idx_map: Dict[str, str] = instance_group_dict[
+            "camcorder_to_instance_idx_map"
+        ]
+        instance_by_camcorder = {
+            camera_cluster.cameras[int(cam_idx)]: instances_list[int(instance_idx)]
+            for cam_idx, instance_idx in camcorder_to_instance_idx_map.items()
+        }
+
+        return cls.from_instance_by_camcorder_dict(
+            instance_by_camcorder=instance_by_camcorder,
+            name=instance_group_dict["name"],
+            name_registry=name_registry,
+        )
 
 
 @define(eq=False)
@@ -1299,7 +1335,7 @@ class RecordingSession:
         cls,
         session_dict,
         videos_list: List[Video],
-        instances_list: List[Instance],
+        # instances_list: List[Instance],
     ) -> "RecordingSession":
         """Restructure `RecordingSession` from an invertible dictionary.
 
@@ -1307,8 +1343,8 @@ class RecordingSession:
             session_dict: Dictionary of "calibration" and "camcorder_to_video_idx_map"
                 needed to fully restructure a `RecordingSession`.
             videos_list: List containing `Video` objects (expected `Labels.videos`).
-            instances_list: List containing `Instance` objects (expected
-                `Labels.instances`).
+            # instances_list: List containing `Instance` objects (expected
+            #     `Labels.instances`).
 
         Returns:
             `RecordingSession` object.
@@ -1327,16 +1363,16 @@ class RecordingSession:
             video = videos_list[int(video_idx)]
             session.add_video(video, camcorder)
 
-        # Reconstruct all `FrameGroup` objects and add to `RecordingSession`
-        frame_group_dicts = session_dict["frame_group_dicts"]
-        for frame_group_dict in frame_group_dicts:
+        # # Reconstruct all `FrameGroup` objects and add to `RecordingSession`
+        # frame_group_dicts = session_dict["frame_group_dicts"]
+        # for frame_group_dict in frame_group_dicts:
 
-            # Add `FrameGroup` to `RecordingSession`
-            FrameGroup.from_dict(
-                frame_group_dict=frame_group_dict,
-                session=session,
-                instances_list=instances_list,
-            )
+        #     # Add `FrameGroup` to `RecordingSession`
+        #     FrameGroup.from_dict(
+        #         frame_group_dict=frame_group_dict,
+        #         session=session,
+        #         instances_list=instances_list,
+        #     )
 
         return session
 
@@ -2099,14 +2135,17 @@ class FrameGroup:
         frame_idx = int(frame_group_dict["frame_idx"])
 
         # Get `InstanceGroup` objects
-        instance_groups = [
-            InstanceGroup.from_dict(
+        name_registry = set()
+        instance_groups = []
+        for instance_group_dict in frame_group_dict["instance_groups"]:
+            instance_group = InstanceGroup.from_dict(
                 instance_group_dict=instance_group_dict,
+                name_registry=name_registry,
                 instances_list=instances_list,
                 camera_cluster=session.camera_cluster,
             )
-            for instance_group_dict in frame_group_dict["instance_groups"]
-        ]
+            name_registry.add(instance_group.name)
+            instance_groups.append(instance_group)
 
         return cls.from_instance_groups(
             frame_idx=frame_idx, session=session, instance_groups=instance_groups
