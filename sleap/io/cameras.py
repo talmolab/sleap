@@ -399,10 +399,15 @@ class CameraCluster(CameraGroup):
 class InstanceGroup:
     """Defines a group of instances across the same frame index.
 
-    Args:
-        camera_cluster: `CameraCluster` object.
+    Attributes:
+        name: Name of the `InstanceGroup`.
+        frame_idx: Frame index for the `InstanceGroup`.
+        dummy_instance: Optional `PredictedInstance` object to fill in for missing
+            instances.
+        camera_cluster: `CameraCluster` object that the `InstanceGroup` uses.
+        cameras: List of `Camcorder` objects that have an `Instance` associated.
         instances: List of `Instance` objects.
-
+        instance_by_camcorder: Dictionary of `Instance` objects by `Camcorder`.
     """
 
     _name: str = field()
@@ -967,12 +972,17 @@ class RecordingSession:
     Attributes:
         camera_cluster: `CameraCluster` object.
         metadata: Dictionary of metadata.
+        labels: `Labels` object.
         videos: List of `Video`s that have been linked to a `Camcorder` in the
             `self.camera_cluster`.
         linked_cameras: List of `Camcorder`s in the `self.camera_cluster` that are
             linked to a `Video`.
         unlinked_cameras: List of `Camcorder`s in the `self.camera_cluster` that are
             not linked to a `Video`.
+        frame_groups: Dictionary of `FrameGroup`s by frame index.
+        frame_inds: List of frame indices.
+        cams_to_include: List of `Camcorder`s to include in this `FrameGroup`.
+        excluded_views: List of excluded views (names of `Camcorder`s).
     """
 
     # TODO(LM): Consider implementing Observer pattern for `camera_cluster` and `labels`
@@ -981,6 +991,8 @@ class RecordingSession:
     labels: Optional["Labels"] = field(default=None)
     _video_by_camcorder: Dict[Camcorder, Video] = field(factory=dict)
     _frame_group_by_frame_idx: Dict[int, "FrameGroup"] = field(factory=dict)
+    _cams_to_include: Optional[List[Camcorder]] = field(default=None)
+    _excluded_views: Optional[Tuple[str]] = field(default=None)
 
     @property
     def videos(self) -> List[Video]:
@@ -1022,6 +1034,40 @@ class RecordingSession:
         """List of frame indices."""
 
         return list(self.frame_groups.keys())
+
+    @property
+    def cams_to_include(self) -> Optional[List[Camcorder]]:
+        """List of `Camcorder`s to include in this `FrameGroup`."""
+
+        if self._cams_to_include is None:
+            self._cams_to_include = self.camera_cluster.cameras
+
+        # Filter cams to include based on videos linked to the session
+        cams_to_include = [
+            cam for cam in self._cams_to_include if cam in self.linked_cameras
+        ]
+
+        return cams_to_include
+
+    @cams_to_include.setter
+    def cams_to_include(self, cams_to_include: List[Camcorder]):
+        """Setter for `cams_to_include` that sorts by `CameraCluster` order."""
+
+        # Sort the `Camcorder`s to include based on the order of `CameraCluster` cameras
+        self._cams_to_include = cams_to_include.sort(
+            key=self.camera_cluster.cameras.index
+        )
+
+        # Update the `excluded_views` attribute
+        excluded_cams = list(set(self.camera_cluster.cameras) - set(cams_to_include))
+        excluded_cams.sort(key=self.camera_cluster.cameras.index)
+        self._excluded_views = (cam.name for cam in excluded_cams)
+
+    @property
+    def excluded_views(self) -> Optional[Tuple[str]]:
+        """List of excluded views (names of Camcorders)."""
+
+        return self._excluded_views
 
     def get_video(self, camcorder: Camcorder) -> Optional[Video]:
         """Retrieve `Video` linked to `Camcorder`.
@@ -1182,6 +1228,10 @@ class RecordingSession:
 
     def __attrs_post_init__(self):
         self.camera_cluster.add_session(self)
+
+        # Reorder `cams_to_include` to match `CameraCluster` order (via setter method)
+        if self._cams_to_include is not None:
+            self.cams_to_include = self._cams_to_include
 
     def __iter__(self) -> Iterator[List[Camcorder]]:
         return iter(self.camera_cluster)
@@ -1401,7 +1451,15 @@ class RecordingSession:
 
 @define
 class FrameGroup:
-    """Defines a group of `InstanceGroups` across views at the same frame index."""
+    """Defines a group of `InstanceGroups` across views at the same frame index.
+
+    Attributes:
+        frame_idx: Frame index for the `FrameGroup`.
+        session: `RecordingSession` object that the `FrameGroup` is in.
+        instance_groups: List of `InstanceGroup`s in the `FrameGroup`.
+        labeled_frames: List of `LabeledFrame`s in the `FrameGroup`.
+        cameras: List of `Camcorder`s that have `LabeledFrame`s.
+    """
 
     # Instance attributes
     frame_idx: int = field(validator=instance_of(int))
@@ -1414,10 +1472,6 @@ class FrameGroup:
         ),
     )  # Akin to `LabeledFrame.instances`
     _instance_group_name_registry: Set[str] = field(factory=set)
-
-    # "Hidden" class attribute
-    _cams_to_include: Optional[List[Camcorder]] = None
-    _excluded_views: Optional[Tuple[str]] = ()
 
     # "Hidden" instance attributes
 
@@ -1443,10 +1497,6 @@ class FrameGroup:
 
         # Remove existing `FrameGroup` object from the `RecordingSession._frame_group_by_frame_idx`
         self.enforce_frame_idx_unique(self.session, self.frame_idx)
-
-        # Reorder `cams_to_include` to match `CameraCluster` order (via setter method)
-        if self._cams_to_include is not None:
-            self.cams_to_include = self._cams_to_include
 
         # Add `FrameGroup` to `RecordingSession`
         self.session._frame_group_by_frame_idx[self.frame_idx] = self
@@ -1481,38 +1531,22 @@ class FrameGroup:
     def cams_to_include(self) -> Optional[List[Camcorder]]:
         """List of `Camcorder`s to include in this `FrameGroup`."""
 
-        if self._cams_to_include is None:
-            self._cams_to_include = self.session.camera_cluster.cameras.copy()
-
-        # TODO(LM): Should we store this in another attribute?
-        # Filter cams to include based on videos linked to the session
-        cams_to_include = [
-            cam for cam in self._cams_to_include if cam in self.session.linked_cameras
-        ]
-
-        return cams_to_include
+        return self.session.cams_to_include
 
     @property
     def excluded_views(self) -> Optional[Tuple[str]]:
         """List of excluded views (names of Camcorders)."""
 
-        return self._excluded_views
+        return self.session.excluded_views
 
     @cams_to_include.setter
     def cams_to_include(self, cams_to_include: List[Camcorder]):
         """Setter for `cams_to_include` that sorts by `CameraCluster` order."""
 
-        # Sort the `Camcorder`s to include based on the order of `CameraCluster` cameras
-        self._cams_to_include = cams_to_include.sort(
-            key=self.session.camera_cluster.cameras.index
+        raise ValueError(
+            "Cannot set `cams_to_include` directly. Please set `RecordingSession` "
+            "attribute to update `FrameGroup`."
         )
-
-        # Update the `excluded_views` attribute
-        excluded_cams = list(
-            set(self.session.camera_cluster.cameras) - set(cams_to_include)
-        )
-        excluded_cams.sort(key=self.session.camera_cluster.cameras.index)
-        self._excluded_views = (cam.name for cam in excluded_cams)
 
     @property
     def labeled_frames(self) -> List[LabeledFrame]:
