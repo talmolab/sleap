@@ -388,10 +388,20 @@ def test_instance_group(multiview_min_session_labels: Labels):
     instance_group_2 = InstanceGroup.from_dict(
         instance_group_dict=instance_group_dict,
         name_registry={},
-        instances_list=labels.instances(),
+        instances_list=list(labels.instances()),  # TODO(LM): Slow...
         camera_cluster=camera_cluster,
     )
     assert isinstance(instance_group_2, InstanceGroup)
+    assert instance_group_2.camera_cluster == camera_cluster
+    assert instance_group_2.name == instance_group.name
+    assert instance_group_2.frame_idx == instance_group.frame_idx
+    assert (
+        instance_group_2._instance_by_camcorder == instance_group._instance_by_camcorder
+    )
+    assert (
+        instance_group_2._camcorder_by_instance == instance_group._camcorder_by_instance
+    )
+    assert instance_group_2.dummy_instance.matches(instance_group.dummy_instance)
 
     # Test `__repr__`
     print(instance_group)
