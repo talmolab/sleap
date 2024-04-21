@@ -91,6 +91,8 @@ requirements:
     - conda-forge::ndx-pose
     - conda-forge::importlib-metadata ==4.11.4
 
+# This no longer works so we have moved it to the build workflow
+# https://github.com/talmolab/sleap/pull/1744
 # test:
 #   imports:
 #     - sleap
