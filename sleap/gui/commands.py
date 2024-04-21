@@ -2481,7 +2481,16 @@ class TransposeInstances(EditCommand):
         # Swap tracks for current and subsequent frames when we have tracks
         old_track, new_track = instances[0].track, instances[1].track
         if old_track is not None and new_track is not None:
-            frame_range = (context.state["frame_idx"], context.state["video"].frames)
+            if context.state["propagate track labels"]:
+                frame_range = (
+                    context.state["frame_idx"],
+                    context.state["video"].frames,
+                )
+            else:
+                frame_range = (
+                    context.state["frame_idx"],
+                    context.state["frame_idx"] + 1,
+                )
             context.labels.track_swap(
                 context.state["video"], new_track, old_track, frame_range
             )
