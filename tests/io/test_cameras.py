@@ -218,9 +218,9 @@ def test_recording_session(
     session.add_video(hdf5_vid, camcorder_2)
     videos_list = [centered_pair_vid, hdf5_vid]
     video_to_idx = {video: idx for idx, video in enumerate(videos_list)}
-    instance_to_idx = {instance: idx for idx, instance in enumerate(labels.instances())}
+    labeled_frame_to_idx = {lf: idx for idx, lf in enumerate(labels.labeled_frames)}
     session_dict = session.to_session_dict(
-        video_to_idx=video_to_idx, instance_to_idx=instance_to_idx
+        video_to_idx=video_to_idx, labeled_frame_to_idx=labeled_frame_to_idx
     )
     assert isinstance(session_dict, dict)
     assert session_dict["calibration"] == calibration_dict
@@ -238,11 +238,11 @@ def test_recording_session(
         assert len(session_2.videos) == len(session_1.videos)
         assert np.array_equal(session_2.videos, session_1.videos)
 
-    instances_list = list(labels.instances())
+    labeled_frames_list = labels.labeled_frames
     session_2 = RecordingSession.from_session_dict(
         session_dict=session_dict,
         videos_list=videos_list,
-        instances_list=instances_list,
+        labeled_frames_list=labeled_frames_list,
     )
     compare_sessions(session, session_2)
 
@@ -264,8 +264,11 @@ def test_recording_session(
     assert session[camcorder] is None
 
     # Test make_cattr
+    labeled_frame_to_idx = {lf: idx for idx, lf in enumerate(labels.labeled_frames)}
     sessions_cattr = RecordingSession.make_cattr(
-        videos_list=videos_list, instances_list=instances_list
+        videos_list=videos_list,
+        labeled_frames_list=labels.labeled_frames,
+        labeled_frame_to_idx=labeled_frame_to_idx,
     )
     session_dict_2 = sessions_cattr.unstructure(session_2)
     assert session_dict_2 == session_dict
@@ -390,17 +393,24 @@ def test_instance_group(multiview_min_session_labels: Labels):
             assert instance_group[instance] == camera
 
     # Test `to_dict`
-    instance_to_idx = {instance: idx for idx, instance in enumerate(labels.instances())}
-    instance_group_dict = instance_group.to_dict(instance_to_idx=instance_to_idx)
+    labeled_frame_to_idx = {lf: idx for idx, lf in enumerate(labels.labeled_frames)}
+    instance_to_lf_and_inst_idx = {
+        instance: (labeled_frame_to_idx[lf], inst_idx)
+        for lf in labels.labeled_frames
+        for inst_idx, instance in enumerate(lf.instances)
+    }
+    instance_group_dict = instance_group.to_dict(
+        instance_to_lf_and_inst_idx=instance_to_lf_and_inst_idx
+    )
     assert isinstance(instance_group_dict, dict)
     assert instance_group_dict["name"] == instance_group.name
-    assert "camcorder_to_instance_idx_map" in instance_group_dict
+    assert "camcorder_to_lf_and_inst_idx_map" in instance_group_dict
 
     # Test `from_dict`
     instance_group_2 = InstanceGroup.from_dict(
         instance_group_dict=instance_group_dict,
         name_registry={},
-        instances_list=list(labels.instances()),  # TODO(LM): Slow...
+        labeled_frames_list=labels.labeled_frames,
         camera_cluster=camera_cluster,
     )
     assert isinstance(instance_group_2, InstanceGroup)
@@ -509,21 +519,20 @@ def test_frame_group(multiview_min_session_labels: Labels):
     assert len(frame_group_3.instance_groups) == 0
 
     # Test `to_dict`
-    # TODO(LM): Is there a better way than using `labels.instances()`?
-    instance_to_idx = {instance: idx for idx, instance in enumerate(labels.instances())}
-    frame_group_dict = frame_group_1.to_dict(instance_to_idx=instance_to_idx)
+    labeled_frame_to_idx = {lf: idx for idx, lf in enumerate(labels.labeled_frames)}
+    frame_group_dict = frame_group_1.to_dict(labeled_frame_to_idx=labeled_frame_to_idx)
     assert isinstance(frame_group_dict, dict)
     assert "instance_groups" in frame_group_dict
     assert len(frame_group_dict["instance_groups"]) == 1
     instance_group_dict = frame_group_dict["instance_groups"][0]
     assert instance_group_dict["name"] == instance_group.name
-    assert "camcorder_to_instance_idx_map" in instance_group_dict
+    assert "camcorder_to_lf_and_inst_idx_map" in instance_group_dict
 
     # Test `from_dict`
     frame_group_4 = FrameGroup.from_dict(
         frame_group_dict=frame_group_dict,
         session=session,
-        instances_list=list(labels.instances()),  # TODO(LM): Slow...
+        labeled_frames_list=labels.labeled_frames,
     )
     assert isinstance(frame_group_4, FrameGroup)
     assert frame_group_4.frame_idx == frame_idx_1
@@ -535,9 +544,3 @@ def test_frame_group(multiview_min_session_labels: Labels):
     )
 
     # TODO(LM): Test underlying dictionaries more thoroughly
-
-
-if __name__ == "__main__":
-    pytest.main(
-        [f"{__file__}::test_recording_session_get_videos_from_selected_cameras"]
-    )

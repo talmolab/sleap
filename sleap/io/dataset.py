@@ -2084,11 +2084,12 @@ class Labels(MutableSequence):
         # this can save a lot of space when there are lots of tracks.
         track_cattr = cattr.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
 
-        # Make converter for recording sessions
-        # labeled_frames_list = [] if skip_labels else self.labeled_frames
+        # Make serializer for recording sessions
+        labeled_frames_list = [] if skip_labels else self.labeled_frames
+        labeled_frame_to_idx = {lf: i for i, lf in enumerate(labeled_frames_list)}
         sessions_cattr = RecordingSession.make_cattr(
-            videos_list=self.videos, instances_list=list(self.instances())
-        )  # labeled_frames_list=labeled_frames_list)
+            videos_list=self.videos, labeled_frame_to_idx=labeled_frame_to_idx
+        )
 
         # Serialize the skeletons, videos, and labels
         dicts = {

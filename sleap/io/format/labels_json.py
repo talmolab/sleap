@@ -537,17 +537,20 @@ class LabelsJsonAdaptor(Adaptor):
         else:
             labels = []
 
-        instances_list = [inst for lf in labels for inst in lf.instances]
-        try:
-            sessions_cattr = RecordingSession.make_cattr(
-                videos_list=videos, instances_list=instances_list
-            )
-            sessions = sessions_cattr.structure(
-                dicts["sessions"], List[RecordingSession]
-            )
-        except Exception as e:
-            logger.warning("Error while loading `RecordingSession`s:")
-            logger.warning(e)
+        if "sessions" in dicts:
+            try:
+                # Make deserializer for `RecordingSession`
+                sessions_cattr = RecordingSession.make_cattr(
+                    videos_list=videos, labeled_frames_list=labels
+                )
+                sessions = sessions_cattr.structure(
+                    dicts["sessions"], List[RecordingSession]
+                )
+            except Exception as e:
+                logger.warning("Error while loading `RecordingSession`s:")
+                logger.warning(e)
+                sessions = []
+        else:
             sessions = []
 
         return Labels(
