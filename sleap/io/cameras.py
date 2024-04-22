@@ -1490,7 +1490,6 @@ class RecordingSession:
         # Create the unstructure hook for `RecordingSession`
         if labeled_frame_to_idx is not None:
             video_to_idx = {video: i for i, video in enumerate(videos_list)}
-            labeled_frame_to_idx = {lf: i for i, lf in enumerate(labeled_frames_list)}
             sessions_cattr.register_unstructure_hook(
                 RecordingSession,
                 lambda x: x.to_session_dict(
