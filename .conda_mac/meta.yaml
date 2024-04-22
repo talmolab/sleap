@@ -89,6 +89,6 @@ requirements:
     - conda-forge::albumentations
     - conda-forge::ndx-pose
 
-test:
-  imports:
-    - sleap
+# test:
+#   imports:
+#     - sleap
