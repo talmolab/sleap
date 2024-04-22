@@ -12,7 +12,7 @@ on:
     branches:
       # - develop
       # - fakebranch
-      - elizabeth/Fix-ubuntu-conda-build
+      - elizabeth/fix-mac-conda-build
 
 jobs:
   build:
