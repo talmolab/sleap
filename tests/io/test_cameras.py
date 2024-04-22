@@ -538,4 +538,6 @@ def test_frame_group(multiview_min_session_labels: Labels):
 
 
 if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_recording_session"])
+    pytest.main(
+        [f"{__file__}::test_recording_session_get_videos_from_selected_cameras"]
+    )

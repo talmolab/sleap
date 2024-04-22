@@ -1381,7 +1381,7 @@ class RecordingSession:
     @classmethod
     def from_session_dict(
         cls,
-        session_dict,
+        session_dict: dict,
         videos_list: List[Video],
         instances_list: List[Instance],
     ) -> "RecordingSession":
@@ -1412,7 +1412,7 @@ class RecordingSession:
             session.add_video(video, camcorder)
 
         # Reconstruct all `FrameGroup` objects and add to `RecordingSession`
-        frame_group_dicts = session_dict["frame_group_dicts"]
+        frame_group_dicts = session_dict.get("frame_group_dicts", [])
         for frame_group_dict in frame_group_dicts:
 
             try:

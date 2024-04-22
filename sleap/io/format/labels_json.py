@@ -389,7 +389,7 @@ class LabelsJsonAdaptor(Adaptor):
 
         dicts["tracks"] = dicts.get(
             "tracks", []
-        )  # don't break if json doesn't include tracks
+        )  # Don't break if json doesn't include tracks
 
         # First, deserialize the skeletons, videos, and nodes lists.
         # The labels reference these so we will need them while deserializing.
@@ -414,7 +414,7 @@ class LabelsJsonAdaptor(Adaptor):
             except:
                 raise ValueError("Unable to load tracks as tuple or dict!")
 
-        # if we're given a Labels object to match, use its objects when they match
+        # If we're given a Labels object to match, use its objects when they match
         if match_to is not None:
             if len(skeletons) > 1 or len(match_to.skeletons) > 1:
                 # Match full skeletons
@@ -503,16 +503,6 @@ class LabelsJsonAdaptor(Adaptor):
                     print(e)
                     pass
 
-        try:
-            sessions_cattr = RecordingSession.make_cattr(videos_list=videos)
-            sessions = sessions_cattr.structure(
-                dicts["sessions"], List[RecordingSession]
-            )
-        except Exception as e:
-            logger.warning("Error while loading `RecordingSession`s:")
-            logger.warning(e)
-            sessions = []
-
         if "negative_anchors" in dicts:
             negative_anchors_cattr = cattr.Converter()
             negative_anchors_cattr.register_structure_hook(
@@ -542,13 +532,23 @@ class LabelsJsonAdaptor(Adaptor):
             label_cattr.register_structure_hook(
                 Track, lambda x, type: None if x is None else tracks[int(x)]
             )
-            label_cattr.register_structure_hook(
-                RecordingSession, lambda x, type: sessions[int(x)]
-            )
 
             labels = label_cattr.structure(dicts["labels"], List[LabeledFrame])
         else:
             labels = []
+
+        instances_list = [inst for lf in labels for inst in lf.instances]
+        try:
+            sessions_cattr = RecordingSession.make_cattr(
+                videos_list=videos, instances_list=instances_list
+            )
+            sessions = sessions_cattr.structure(
+                dicts["sessions"], List[RecordingSession]
+            )
+        except Exception as e:
+            logger.warning("Error while loading `RecordingSession`s:")
+            logger.warning(e)
+            sessions = []
 
         return Labels(
             labeled_frames=labels,
