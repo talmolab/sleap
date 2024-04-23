@@ -102,8 +102,9 @@ jobs:
           conda build .conda_mac --output-folder build
           echo "BUILD_PATH=$(pwd)/build" >> "$GITHUB_ENV"
 
-      # Test
-      - name: Test built conda package
+      # Test built conda package (Ubuntu and Windows)
+      - name: Test built conda package (Ubuntu and Windows)
+        if: matrix.os != 'macos-14'
         shell: bash -l {0}
         run: |
           echo "Build path is: $BUILD_PATH"
@@ -111,6 +112,21 @@ jobs:
           echo $(conda info)
           echo "Testing conda package with sleap"
           conda create -y -n sleap_test -c file://$BUILD_PATH -c sleap/label/dev -c conda-forge -c nvidia -c anaconda sleap
+          conda activate sleap_test
+          echo $(conda list)
+          python -c "import sleap; print(sleap.__version__)"
+          echo "Test completed using sleap version: $(python -c 'import sleap; print(sleap.__version__)')"
+
+      # Test built conda package (Mac)
+      - name: Test built conda package (Mac)
+        if: matrix.os == 'macos-14'
+        shell: bash -l {0}
+        run: |
+          echo "Build path is: $BUILD_PATH"
+          conda deactivate
+          echo $(conda info)
+          echo "Testing conda package with sleap"
+          conda create -y -n sleap_test -c file://$BUILD_PATH -c conda-forge -c nvidia -c anaconda sleap
           conda activate sleap_test
           echo $(conda list)
           python -c "import sleap; print(sleap.__version__)"
