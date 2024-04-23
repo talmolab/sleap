@@ -310,6 +310,89 @@ def test_recording_session_remove_video(multiview_min_session_labels: Labels):
     assert video not in session.videos
 
 
+def test_recording_session_frame_group_integration(
+    multiview_min_session_user_labels: Labels,
+    tmp_path,
+):
+    """Test `RecordingSession` integration with `FrameGroup` and `InstanceGroup`.
+
+    Note: This is how the multiview_min_session_frame_groups fixture was created.
+    """
+
+    labels = multiview_min_session_user_labels
+    session = labels.sessions[0]
+
+    # Get all tracks
+    tracks = labels.tracks
+    frame_idxs = [0, 1, 2]
+
+    # Create a new `FrameGroup` for each frame_idx
+    for frame_idx in frame_idxs:
+
+        frame_group = session.new_frame_group(frame_idx=frame_idx)
+
+        # Create new instance group per track
+        inst_group_by_track = {}
+        for track in tracks:
+            instance_group = frame_group.add_instance_group()
+            inst_group_by_track[track] = instance_group
+
+        # Add instances to frame and instance groups
+        for camera in session.linked_cameras:
+
+            # Get video and labeled frame
+            video = session.get_video(camcorder=camera)
+            labeled_frames = labels.find(video=video, frame_idx=frame_idx)
+            if len(labeled_frames) < 1:
+                continue
+            else:
+                labeled_frame = labeled_frames[0]
+
+            # Add instances to frame and instance groups
+            for instance in labeled_frame.user_instances:
+                track = instance.track
+                instance_group: InstanceGroup = inst_group_by_track[track]
+                frame_group.add_instance(
+                    instance=instance, camera=camera, instance_group=instance_group
+                )
+
+    assert len(session.frame_groups) == len(frame_idxs)
+    for frame_idx in frame_idxs:
+        assert frame_idx in session.frame_groups
+        assert len(session.frame_groups[frame_idx].instance_groups) == len(tracks)
+        for instance_group in session.frame_groups[frame_idx].instance_groups:
+            assert (
+                len(instance_group.instances) == 6 or len(instance_group.instances) == 8
+            )
+
+    # Save the labels to a temporary file
+    ds_base = tmp_path
+    ds_base.mkdir(exist_ok=True)
+    ds_new = ds_base / "frame_groups.slp"
+    labels.save(filename=ds_new.as_posix())
+
+    # Load the labels from the temporary file
+    labels_new = Labels.load_file(ds_new.as_posix())
+    session_ln = labels_new.sessions[0]
+
+    # Check that the loaded labels are the same as the original labels
+    assert len(session_ln.frame_groups) == len(session.frame_groups)
+    for frame_idx in frame_idxs:
+        assert frame_idx in session_ln.frame_groups
+        assert len(session_ln.frame_groups[frame_idx].instance_groups) == len(
+            session.frame_groups[frame_idx].instance_groups
+        )
+        for instance_group_ln, instance_group in zip(
+            session_ln.frame_groups[frame_idx].instance_groups,
+            session.frame_groups[frame_idx].instance_groups,
+        ):
+            assert len(instance_group.instances) == len(instance_group.instances)
+            for instance_ln, instance in zip(
+                instance_group_ln.instances, instance_group.instances
+            ):
+                assert instance_ln.matches(instance)
+
+
 # TODO(LM): Remove after adding method to (de)seralize `InstanceGroup`
 def create_instance_group(
     labels: Labels,
@@ -477,6 +560,9 @@ def test_instance_group(multiview_min_session_labels: Labels):
             name_registry={},
         )
 
+    # Test __repr__
+    print(instance_group)
+
 
 def test_frame_group(multiview_min_session_labels: Labels):
     """Test `FrameGroup` data structure."""
@@ -544,3 +630,26 @@ def test_frame_group(multiview_min_session_labels: Labels):
     )
 
     # TODO(LM): Test underlying dictionaries more thoroughly
+
+    # Test `add_instance_group`
+    instance_group: InstanceGroup = frame_group_4.add_instance_group()
+    assert isinstance(instance_group, InstanceGroup)
+    assert instance_group.frame_idx == frame_idx_1
+    assert instance_group.name == "instance_group_1"
+    assert len(frame_group_4.instance_groups) == 2
+    assert len(instance_group.instances) == 0
+
+    # Test `add_instance`
+    video = session.videos[0]
+    camera = session.get_camera(video=video)
+    labeled_frame = labels.find(video=video, frame_idx=frame_group_4.frame_idx)[0]
+    instance = labeled_frame.instances[0]
+    frame_group_4.add_instance(
+        instance=instance,
+        camera=camera,
+        instance_group=instance_group,
+    )
+    assert len(instance_group.instances) == 1
+
+    # Test `__repr__`
+    print(frame_group_4)

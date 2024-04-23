@@ -424,10 +424,6 @@ class InstanceGroup:
         for cam, instance in self._instance_by_camcorder.items():
             self._camcorder_by_instance[instance] = cam
 
-        # Create a dummy instance to fill in for missing instances
-        if self._dummy_instance is None:
-            self._create_dummy_instance(instance=instance)
-
     def _create_dummy_instance(self, instance: Optional[Instance] = None):
         """Create a dummy instance to fill in for missing instances.
 
@@ -838,7 +834,10 @@ class InstanceGroup:
         return len(self.instances)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(frame_idx={self.frame_idx}, instances={len(self)}, camera_cluster={self.camera_cluster})"
+        return (
+            f"{self.__class__.__name__}(name={self.name}, frame_idx={self.frame_idx}, "
+            f"instances:{len(self)}, camera_cluster={self.camera_cluster})"
+        )
 
     def __hash__(self) -> int:
         return hash(self._name)
@@ -1297,7 +1296,7 @@ class RecordingSession:
     def __repr__(self):
         return (
             f"{self.__class__.__name__}(videos:{len(self.videos)},"
-            f"camera_cluster={self.camera_cluster})"
+            f"camera_cluster={self.camera_cluster},frame_groups:{len(self.frame_groups)})"
         )
 
     @classmethod
@@ -1738,7 +1737,9 @@ class FrameGroup:
         if len(self._instances_by_cam[camera]) < 1:
             self.remove_labeled_frame(labeled_frame_or_camera=camera)
 
-    def add_instance_group(self, instance_group: Optional[InstanceGroup] = None):
+    def add_instance_group(
+        self, instance_group: Optional[InstanceGroup] = None
+    ) -> InstanceGroup:
         """Add an `InstanceGroup` to the `FrameGroup`.
 
         This method updates the underlying dictionaries in calling add_instance:
@@ -1782,6 +1783,8 @@ class FrameGroup:
         # Add `Instance`s and `LabeledFrame`s to the `FrameGroup`
         for camera, instance in instance_group.instance_by_camcorder.items():
             self.add_instance(instance=instance, camera=camera)
+
+        return instance_group
 
     def remove_instance_group(self, instance_group: InstanceGroup):
         """Remove an `InstanceGroup` from the `FrameGroup`."""
@@ -2147,6 +2150,13 @@ class FrameGroup:
                 f"InstanceGroup {instance_group} is not in this FrameGroup: "
                 f"{self.instance_groups}."
             )
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(frame_idx={self.frame_idx}, instance_groups:"
+            f"{len(self.instance_groups)}, labeled_frames:{len(self.labeled_frames)}, "
+            f"cameras:{len(self.cameras)}, session={self.session})"
+        )
 
     @classmethod
     def from_instance_groups(
