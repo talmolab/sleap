@@ -23,7 +23,7 @@ source:
 
 requirements:
   host:  
-    - conda-forge::python =3.9
+    - conda-forge::python >=3.9.0, <3.10.0
     - anaconda::numpy >=1.19.5,<1.23.0
     - conda-forge::setuptools
     - conda-forge::packaging
@@ -59,7 +59,7 @@ requirements:
     - conda-forge::ndx-pose
 
   run:
-    - conda-forge::python =3.9
+    - conda-forge::python >=3.9.0, <3.10.0
     - conda-forge::attrs >=21.2.0
     - conda-forge::cattrs ==1.1.1
     - conda-forge::h5py
