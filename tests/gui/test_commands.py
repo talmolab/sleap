@@ -17,9 +17,11 @@ from sleap.gui.commands import (
     RemoveVideo,
     ReplaceVideo,
     SaveProjectAs,
+    TriangulateSession,
     get_new_version_filename,
 )
 from sleap.instance import Instance, LabeledFrame
+from sleap.io.cameras import RecordingSession
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
@@ -28,11 +30,11 @@ from sleap.io.pathutils import fix_path_separator
 from sleap.io.video import Video
 from sleap.util import get_package_file
 
-# These imports cause trouble when running `pytest.main()` from within the file
-# Comment out to debug tests file via VSCode's "Debug Python File"
-from tests.info.test_h5 import extract_meta_hdf5
-from tests.io.test_formats import read_nix_meta
-from tests.io.test_video import assert_video_params
+# # These imports cause trouble when running `pytest.main()` from within the file
+# # Comment out to debug tests file via VSCode's "Debug Python File"
+# from tests.info.test_h5 import extract_meta_hdf5
+# from tests.io.test_formats import read_nix_meta
+# from tests.io.test_video import assert_video_params
 
 
 def test_delete_user_dialog(centered_pair_predictions):
@@ -951,3 +953,40 @@ def test_AddSession(
     assert len(labels.sessions) == 2
     assert context.state["session"] is session
     assert labels.sessions[1] is not session
+
+
+def test_TriangulateSession_has_enough_instances(multiview_min_session_frame_groups):
+    """Test that `TriangulateSession.has_enough_instances` works."""
+
+    labels = multiview_min_session_frame_groups
+    session: RecordingSession = labels.sessions[0]
+    frame_group = session.frame_groups[0]
+
+    # Assure that all instance groups are selected
+    instance_groups_to_triangulate = TriangulateSession.has_enough_instances(
+        frame_group=frame_group
+    )
+    assert instance_groups_to_triangulate == frame_group.instance_groups
+
+    # Remove most instances from last instance group, ensure 2 instances left
+    instance_group = frame_group.instance_groups[-1]
+    for instance in instance_group.instances[:-2]:
+        frame_group.remove_instance(instance=instance)
+    assert len(instance_group.instances) == 2
+
+    # All instance groups should still be selected
+    instance_groups_to_triangulate = TriangulateSession.has_enough_instances(
+        frame_group=frame_group
+    )
+    assert instance_groups_to_triangulate == frame_group.instance_groups
+
+    # Remove one more instance from last instance group, ensure 1 instance left
+    for instance in instance_group.instances[:-1]:
+        frame_group.remove_instance(instance=instance)
+    assert len(instance_group.instances) == 1
+
+    # Last instance group should not be selected
+    instance_groups_to_triangulate = TriangulateSession.has_enough_instances(
+        frame_group=frame_group
+    )
+    assert instance_groups_to_triangulate == frame_group.instance_groups[:-1]
