@@ -1152,7 +1152,7 @@ class MainWindow(QMainWindow):
                 return 
 
 
-        frame_idx = 0
+            frame_idx = self.state["frame_idx"]
             frame_group = session.frame_groups.get(frame_idx, None)
             if frame_group is not None:
                 for inst_group_ind, instance_group in enumerate(frame_group.instance_groups):
