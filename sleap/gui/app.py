@@ -809,7 +809,7 @@ class MainWindow(QMainWindow):
             self.commands.deleteFrameLimitPredictions,
         )
 
-        ### Tracks Menu ###
+        ### Sessions Menu ###
 
         sessionsMenu = self.menuBar().addMenu("Sessions")
         self.session_menu = sessionsMenu.addMenu("Set Session Instance")
