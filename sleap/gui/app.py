@@ -1169,12 +1169,12 @@ class MainWindow(QMainWindow):
                 lambda x=instance_group: self.commands.setInstanceGroup(x),
                 shortcut=key_command
             )
-
-        self.inst_groups_menu.addAction(
-            "New Instance Group",
-            self.commands.addInstanceGroup,
-            shortcut=Qt.SHIFT + Qt.Key_0
-        )
+    
+            self.inst_groups_menu.addAction(
+                "New Instance Group",
+                self.commands.addInstanceGroup,
+                shortcut=Qt.SHIFT + Qt.Key_0
+            )
 
         self.inst_groups_menu.setEnabled(has_selected_instance)
         self.track_menu.setEnabled(has_selected_instance)
