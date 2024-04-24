@@ -668,11 +668,13 @@ class SessionsDock(DockWidget):
             state=main_window.state,
             row_name="camera",
             model=self.camera_model,
+            ellipsis_left=True,
         )
         self.unlinked_videos_table = GenericTableView(
             state=main_window.state,
             row_name="unlinked_video",
             model=self.unlinked_videos_model,
+            ellipsis_left=True,
         )
 
         self.main_window.state.connect(
