@@ -85,7 +85,6 @@ from sleap.io.video import available_video_exts
 from sleap.prefs import prefs
 from sleap.skeleton import Skeleton
 from sleap.util import parse_uri_path
-from sleap.gui.commands import CommandContext
 from sleap import session
 
 logger = getLogger(__name__)
