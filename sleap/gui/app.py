@@ -53,7 +53,6 @@ from logging import getLogger
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
 
-from PyQt5.QtCore import Qt # may be unnecessary
 from qtpy import QtCore, QtGui
 from qtpy.QtCore import QEvent, Qt
 from qtpy.QtWidgets import QApplication, QMainWindow, QMessageBox
@@ -86,8 +85,6 @@ from sleap.io.video import available_video_exts
 from sleap.prefs import prefs
 from sleap.skeleton import Skeleton
 from sleap.util import parse_uri_path
-from sleap.gui.commands import CommandContext
-from sleap import session
 
 logger = getLogger(__name__)
 
@@ -812,7 +809,7 @@ class MainWindow(QMainWindow):
             self.commands.deleteFrameLimitPredictions,
         )
 
-        ### Tracks Menu ###
+        ### Sessions Menu ###
 
         sessionsMenu = self.menuBar().addMenu("Sessions")
         self.session_menu = sessionsMenu.addMenu("Set Session Instance")
@@ -1148,34 +1145,6 @@ class MainWindow(QMainWindow):
 
         # Update menus
 
-        def _update_sessions_menu(self, frame_idx):
-            """Update the instance groups menu based on the selected frame index in the session."""
-            session = self.state.get("session")
-            if not session or frame_idx >= len(session.frame_groups):
-                return 
-
-            frame_group = session.frame_groups[frame_idx]
-
-        frame_idx = 0
-        frame_group = session.frame_groups[frame_idx]
-        for inst_group_ind, instance_group in enumerate(frame_group.instance_groups):
-            if inst_group_ind < 9:
-                key_command = Qt.SHIFT + Qt.Key_0 + inst_group_ind + 1
-            else:
-                key_command = ""
-
-            self.inst_groups_menu.addAction(
-                instance_group.name,
-                lambda x=instance_group: self.commands.setInstanceGroup(x),
-                shortcut=key_command
-            )
-
-        self.inst_groups_menu.addAction(
-            "New Instance Group",
-            self.commands.addInstanceGroup,
-            shortcut=Qt.SHIFT + Qt.Key_0
-        )
-
         self.inst_groups_menu.setEnabled(has_selected_instance)
         self.track_menu.setEnabled(has_selected_instance)
         self.delete_tracks_menu.setEnabled(has_tracks)
@@ -1213,11 +1182,7 @@ class MainWindow(QMainWindow):
             "generate_button"
         ].setEnabled(has_videos)
         self._buttons["remove session"].setEnabled(has_selected_session)
-        self._buttons["link video"].setEnabled(
-            has_selected_unlinked_video
-            and has_selected_camcorder
-            and has_selected_session
-        )
+        self._buttons["link video"].setEnabled(has_selected_unlinked_video and has_selected_camcorder and has_selected_session)
 
         # Update overlays
         self.overlays["track_labels"].visible = (
@@ -1265,9 +1230,8 @@ class MainWindow(QMainWindow):
         if _has_topic([UpdateTopic.video]):
             self.videos_dock.table.model().items = self.labels.videos
             self.labels._cache.update()
-            self.sessions_dock.unlinked_videos_table.model().items = (
-                self.labels._cache._linkage_of_videos["unlinked"]
-            )
+            self.sessions_dock.unlinked_videos_table.model().items = self.labels._cache._linkage_of_videos["unlinked"]
+            
 
         if _has_topic([UpdateTopic.skeleton]):
             self.skeleton_dock.nodes_table.model().items = self.state["skeleton"]
@@ -1314,13 +1278,11 @@ class MainWindow(QMainWindow):
         if _has_topic([UpdateTopic.sessions]):
             self.update_cameras_model()
             self.update_unlinked_videos_model()
-
+    
     def update_unlinked_videos_model(self):
         """Update the unlinked videos model with the selected session."""
-        self.sessions_dock.unlinked_videos_table.model().items = (
-            self.labels._cache._linkage_of_videos["unlinked"]
-        )
-
+        self.sessions_dock.unlinked_videos_table.model().items = self.labels._cache._linkage_of_videos["unlinked"]
+    
     def update_cameras_model(self):
         """Update the cameras model with the selected session."""
         self.sessions_dock.camera_table.model().items = self.state["selected_session"]
@@ -1447,6 +1409,34 @@ class MainWindow(QMainWindow):
         )
         msg.exec_()
 
+        def _update_sessions_menu(self, frame_idx):
+            """Update the instance groups menu based on the selected frame index in the session."""
+            session = self.state.get("session")
+            if session is None:
+                return 
+
+
+            frame_idx = self.state["frame_idx"]
+            frame_group = session.frame_groups.get(frame_idx, None)
+            if frame_group is not None:
+                for inst_group_ind, instance_group in enumerate(frame_group.instance_groups):
+                    if inst_group_ind < 9:
+                        key_command = Qt.SHIFT + Qt.Key_0 + inst_group_ind + 1
+                    else:
+                        key_command = ""
+        
+                    self.inst_groups_menu.addAction(
+                        instance_group.name,
+                        lambda x=instance_group: self.commands.setInstanceGroup(x),
+                        shortcut=key_command
+                    )
+    
+            self.inst_groups_menu.addAction(
+                "New Instance Group",
+                self.commands.addInstanceGroup,
+                shortcut=Qt.SHIFT + Qt.Key_0
+            )
+        
     def _update_track_menu(self):
         """Updates track menu options."""
         self.track_menu.clear()
