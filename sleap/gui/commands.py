@@ -593,6 +593,11 @@ class CommandContext:
         """Sets track for selected instance."""
         self.execute(SetSelectedInstanceTrack, new_track=new_track)
 
+    def setInstanceGroup(self, instance_group: Optional["InstanceGroup"]):
+        """Sets the instance group for selected instance."""
+        self.execute(SetSelectedInstanceGroup, instance_group=instance_group)
+
+
     def deleteTrack(self, track: "Track"):
         """Delete a track and remove from all instances."""
         self.execute(DeleteTrack, track=track)
@@ -2693,6 +2698,23 @@ class DeleteDialogCommand(EditCommand):
         if DeleteDialog(context).exec_():
             context.signal_update([UpdateTopic.project_instances])
 
+class AddInstanceGroup(EditCommand):
+    @staticmethod
+    def do_action(context, params):
+        frame_idx = context.state["frame_idx"]
+        session = context.state["session"]
+
+        if frame_idx in session.frame_groups:
+            frame_group = session.frame_groups[frame_idx]
+        else:
+            print(f"No frame group found for frame index {frame_idx}. Unable to add instance group.")
+            return
+        
+        new_instance_group = frame_group.add_instance_group(instance_group=None)
+        if new_instance_group:
+            print(f"New empty instance group added to frame group at frame {frame_idx}.")
+        else:
+            print("Failed to add a new instance group.")
 
 class AddTrack(EditCommand):
     topics = [UpdateTopic.tracks]
@@ -2709,6 +2731,27 @@ class AddTrack(EditCommand):
 
         context.execute(SetSelectedInstanceTrack, new_track=new_track)
 
+class SetSelectedInstanceGroup(EditCommand):
+    @staticmethod
+    def do_action(context, params):
+        selected_instance = context.state["selected_instance"]
+        frame_idx = context.state["frame_idx"]
+        video = context.state["video"]
+        session = context.state["session"]
+
+        frame_group = session.frame_groups.get(frame_idx, None)
+        if frame_group is None:
+            frame_group = session.new_frame_group(frame_idx=frame_idx)
+
+        camera = session.get_camera(video=video)
+
+        instance_group = params.get("instance_group")
+
+        if selected_instance and frame_group and instance_group:
+            frame_group.add_instance(instance=selected_instance, camera=camera, instance_group=instance_group)
+            print(f"Instance {selected_instance} added to group {instance_group} at frame {frame_idx}.")
+        else:
+            print("Error: Missing required components to add instance to group.")
 
 class SetSelectedInstanceTrack(EditCommand):
     topics = [UpdateTopic.tracks]
@@ -3360,6 +3403,7 @@ class AddMissingInstanceNodes(EditCommand):
     def add_force_directed_nodes(
         cls, context, instance, visible, center_point: QtCore.QPoint = None
     ):
+
         import networkx as nx
 
         center_point = center_point or context.app.player.getVisibleRect().center()
@@ -3601,6 +3645,23 @@ def open_website(url: str):
     """
     QtGui.QDesktopServices.openUrl(QtCore.QUrl(url))
 
+
+class AddInstanceGroup(AppCommand):
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+        group_name = params.get("group_name", "New Group")  
+        new_group = InstanceGroup(name=group_name)
+        context.app.instance_groups.append(new_group)
+        context.app.refresh_ui()
+        print(f"Added new instance group: {new_group.name}")
+
+    @staticmethod
+    def ask(context: "CommandContext", params: dict):
+        group_name = context.ui.prompt_user_input("Enter the name for the new instance group:")
+        if group_name:
+            params["group_name"] = group_name
+            return True
+        return False  
 
 class OpenWebsite(AppCommand):
     @staticmethod
