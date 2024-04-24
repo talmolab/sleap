@@ -1154,18 +1154,19 @@ class MainWindow(QMainWindow):
             frame_group = session.frame_groups[frame_idx]
 
         frame_idx = 0
-        frame_group = session.frame_groups[frame_idx]
-        for inst_group_ind, instance_group in enumerate(frame_group.instance_groups):
-            if inst_group_ind < 9:
-                key_command = Qt.SHIFT + Qt.Key_0 + inst_group_ind + 1
-            else:
-                key_command = ""
-
-            self.inst_groups_menu.addAction(
-                instance_group.name,
-                lambda x=instance_group: self.commands.setInstanceGroup(x),
-                shortcut=key_command
-            )
+            frame_group = session.frame_groups.get(frame_idx, None)
+            if frame_group is not None:
+                for inst_group_ind, instance_group in enumerate(frame_group.instance_groups):
+                    if inst_group_ind < 9:
+                        key_command = Qt.SHIFT + Qt.Key_0 + inst_group_ind + 1
+                    else:
+                        key_command = ""
+        
+                    self.inst_groups_menu.addAction(
+                        instance_group.name,
+                        lambda x=instance_group: self.commands.setInstanceGroup(x),
+                        shortcut=key_command
+                    )
     
             self.inst_groups_menu.addAction(
                 "New Instance Group",
