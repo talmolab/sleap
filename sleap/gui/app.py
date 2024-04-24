@@ -1151,7 +1151,6 @@ class MainWindow(QMainWindow):
             if session is None:
                 return 
 
-            frame_group = session.frame_groups[frame_idx]
 
         frame_idx = 0
             frame_group = session.frame_groups.get(frame_idx, None)
