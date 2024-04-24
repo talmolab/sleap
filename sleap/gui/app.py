@@ -1148,7 +1148,7 @@ class MainWindow(QMainWindow):
         def _update_sessions_menu(self, frame_idx):
             """Update the instance groups menu based on the selected frame index in the session."""
             session = self.state.get("session")
-            if not session or frame_idx >= len(session.frame_groups):
+            if session is None:
                 return 
 
             frame_group = session.frame_groups[frame_idx]
