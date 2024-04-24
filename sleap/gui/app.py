@@ -53,7 +53,6 @@ from logging import getLogger
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
 
-from PyQt5.QtCore import Qt # may be unnecessary
 from qtpy import QtCore, QtGui
 from qtpy.QtCore import QEvent, Qt
 from qtpy.QtWidgets import QApplication, QMainWindow, QMessageBox
