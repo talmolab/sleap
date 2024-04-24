@@ -37,6 +37,7 @@ If the filename has a supported extension (e.g., ".slp", ".h5", ".json") then
 the file will be saved in the corresponding format. You can also specify the
 default extension to use if none is provided in the filename.
 """
+
 import itertools
 import os
 from collections.abc import MutableSequence
@@ -128,10 +129,13 @@ class LabelsDataCache:
         for session in self.labels.sessions:
             for video in session.videos:
                 self._session_by_video[video] = session
-        
+
         # Build linkage of videos by session
         for video in self.labels.videos:
-            if video not in self._session_by_video or self._session_by_video[video] is None:
+            if (
+                video not in self._session_by_video
+                or self._session_by_video[video] is None
+            ):
                 self._linkage_of_videos["unlinked"].append(video)
             else:
                 self._linkage_of_videos["linked"].append(video)
@@ -169,20 +173,22 @@ class LabelsDataCache:
             session: The recording session to add the video to.
         """
 
-        self._session_by_video[new_video] = session 
-    
+        self._session_by_video[new_video] = session
+
     def update_linkage_of_videos(self):
-        """Updates a dictionary of linked and unlinked videos.
-        """
+        """Updates a dictionary of linked and unlinked videos."""
         temp = {"linked": [], "unlinked": []}
         for video in self.labels.videos:
-            if video not in self._session_by_video or self._session_by_video[video] is None:
+            if (
+                video not in self._session_by_video
+                or self._session_by_video[video] is None
+            ):
                 temp["unlinked"].append(video)
             else:
                 temp["linked"].append(video)
-        
+
         self._linkage_of_videos = temp
-    
+
     def update(
         self,
         new_item: Optional[
@@ -202,9 +208,8 @@ class LabelsDataCache:
 
         elif isinstance(new_item, tuple):
             self.add_video_to_session(*new_item)
-        
+
         self.update_linkage_of_videos()
-        
 
     def find_frames(
         self, video: Video, frame_idx: Optional[Union[int, Iterable[int]]] = None
@@ -297,6 +302,12 @@ class LabelsDataCache:
             del self._lf_by_video[video]
         if video in self._frame_idx_map:
             del self._frame_idx_map[video]
+        self.remove_session_video(video=video)
+
+    def remove_session_video(self, video: Video):
+        """Remove video from session in cache."""
+
+        # TODO(LM): Also remove LabeledFrames from frame_group
         if video in self._session_by_video:
             del self._session_by_video[video]
 
@@ -328,7 +339,7 @@ class LabelsDataCache:
     def add_track(self, video: Video, track: Track):
         """Add a track to the labels."""
         self.get_track_occupancy(video=video, track=track)
- 
+
     def add_instance(self, frame: LabeledFrame, instance: Instance):
         """Add an instance to the labels."""
 
@@ -465,8 +476,7 @@ class LabelsDataCache:
 
 @attr.s(auto_attribs=True, repr=False, str=False)
 class Labels(MutableSequence):
-    """
-    The :class:`Labels` class collects the data for a SLEAP project.
+    """The :class:`Labels` class collects the data for a SLEAP project.
 
     This class is front-end for all interactions with loading, writing,
     and modifying these labels. The actual storage backend for the data
@@ -990,6 +1000,9 @@ class Labels(MutableSequence):
             update_cache: If True, update the internal frame cache. If False, cache
                 update can be postponed (useful when removing many frames).
         """
+
+        # TODO(LM): Remove LabeledFrame from any frame groups it's in.
+
         self.labeled_frames.remove(lf)
         if update_cache:
             self._cache.remove_frame(lf)
@@ -1000,6 +1013,8 @@ class Labels(MutableSequence):
         Args:
             lfs: A sequence of labeled frames to remove.
         """
+
+        # TODO(LM): Remove LabeledFrame from any frame groups it's in.
         to_remove = set(lfs)
         self.labeled_frames = [lf for lf in self.labeled_frames if lf not in to_remove]
         self.update_cache()
@@ -1023,6 +1038,8 @@ class Labels(MutableSequence):
 
     def remove_empty_frames(self):
         """Remove frames with no instances."""
+
+        # TODO(LM): Remove LabeledFrame from any frame groups it's in.
         self.labeled_frames = [
             lf for lf in self.labeled_frames if len(lf.instances) > 0
         ]
@@ -1304,9 +1321,11 @@ class Labels(MutableSequence):
 
                 template_points = np.stack(
                     [
-                        node_positions[node]
-                        if node in node_positions
-                        else np.random.randint(0, 50, size=2)
+                        (
+                            node_positions[node]
+                            if node in node_positions
+                            else np.random.randint(0, 50, size=2)
+                        )
                         for node in skeleton.nodes
                     ]
                 )
@@ -1680,7 +1699,8 @@ class Labels(MutableSequence):
 
         # Delete video
         self.videos.remove(video)
-        self._cache.remove_video(video)
+        self.remove_session_video(video=video)
+        self._cache.remove_video(video=video)
 
     def add_session(self, session: RecordingSession):
         """Add a recording session to the labels.
@@ -1725,17 +1745,21 @@ class Labels(MutableSequence):
         """
         return self._cache._session_by_video.get(video, None)
 
-    def remove_session_video(self, session: RecordingSession, video: Video):
-        """Remove a video from a recording session.
+    def remove_session_video(self, video: Video):
+        """Remove a video from its linked recording session (if any).
 
         Args:
-            session: `RecordingSession` instance
             video: `Video` instance
         """
 
-        self._cache._session_by_video.pop(video, None)
-        self._cache.update()
-        if video in session.videos:
+        session = self.get_session(video)
+
+        if session is None:
+            return
+
+        # Need to remove from cache first to avoid circular reference
+        self._cache.remove_session_video(video=video)
+        if session.get_camera(video) is not None:
             session.remove_video(video)
 
     def remove_recording_session(self, session: RecordingSession):
@@ -1878,6 +1902,8 @@ class Labels(MutableSequence):
         # Keep only labeled frames with no conflicting predictions.
         self.labeled_frames = keep_lfs
 
+        # TODO(LM): Remove LabeledFrame from any frame groups it's in.
+
     def remove_predictions(self, new_labels: Optional["Labels"] = None):
         """Clear predicted instances from the labels.
 
@@ -1913,6 +1939,8 @@ class Labels(MutableSequence):
 
         # Keep only labeled frames with no conflicting predictions.
         self.labeled_frames = keep_lfs
+
+        # TODO(LM): Remove LabeledFrame from any frame groups it's in.
 
     def remove_untracked_instances(self, remove_empty_frames: bool = True):
         """Remove instances that do not have a track assignment.
@@ -2031,6 +2059,7 @@ class Labels(MutableSequence):
             for vid in {lf.video for lf in self.labeled_frames}:
                 self.merge_matching_frames(video=vid)
         else:
+            # TODO(LM): Remove LabeledFrame from any frame groups it's in.
             self.labeled_frames = LabeledFrame.merge_frames(
                 self.labeled_frames, video=video
             )
@@ -2052,9 +2081,10 @@ class Labels(MutableSequence):
               instances.
             * nodes - The nodes that the skeletons represent.
             * videos - The videos that that the instances occur on.
-            * labels - The labeled frames
+            * labels - The labeled frames if `skip_labels` is False.
             * tracks - The tracks associated with each instance.
             * suggestions - The suggested frames.
+            * sessions - The recording sessions.
             * negative_anchors - The negative training sample anchors.
         """
         # FIXME: Update list of nodes
@@ -2093,8 +2123,12 @@ class Labels(MutableSequence):
         # this can save a lot of space when there are lots of tracks.
         track_cattr = cattr.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
 
-        # Make converter for recording sessions
-        sessions_cattr = RecordingSession.make_cattr(videos_list=self.videos)
+        # Make serializer for recording sessions
+        labeled_frames_list = [] if skip_labels else self.labeled_frames
+        labeled_frame_to_idx = {lf: i for i, lf in enumerate(labeled_frames_list)}
+        sessions_cattr = RecordingSession.make_cattr(
+            videos_list=self.videos, labeled_frame_to_idx=labeled_frame_to_idx
+        )
 
         # Serialize the skeletons, videos, and labels
         dicts = {
@@ -2672,9 +2706,11 @@ class Labels(MutableSequence):
         # whether they're tracked.
         n_insts = max(
             [
-                lf.n_user_instances
-                if lf.n_user_instances > 0  # take user instances over predicted
-                else lf.n_predicted_instances
+                (
+                    lf.n_user_instances
+                    if lf.n_user_instances > 0  # take user instances over predicted
+                    else lf.n_predicted_instances
+                )
                 for lf in lfs
             ]
         )

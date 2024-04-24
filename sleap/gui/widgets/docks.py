@@ -585,7 +585,11 @@ class SessionsDock(DockWidget):
         super().__init__(
             name="Sessions",
             main_window=main_window,
-            model_type=[self.sessions_model_type, self.camera_model_type, self.unlinked_videos_model_type],
+            model_type=[
+                self.sessions_model_type,
+                self.camera_model_type,
+                self.unlinked_videos_model_type,
+            ],
             tab_with=tab_with,
         )
 
@@ -664,17 +668,19 @@ class SessionsDock(DockWidget):
             state=main_window.state,
             row_name="camera",
             model=self.camera_model,
+            ellipsis_left=True,
         )
         self.unlinked_videos_table = GenericTableView(
             state=main_window.state,
             row_name="unlinked_video",
             model=self.unlinked_videos_model,
+            ellipsis_left=True,
         )
 
         self.main_window.state.connect(
             "selected_session", self.main_window.update_cameras_model
         )
-        
+
         self.main_window.state.connect(
             "selected_session", self.main_window.update_unlinked_videos_model
         )
