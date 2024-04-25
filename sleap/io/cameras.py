@@ -1666,15 +1666,15 @@ class FrameGroup:
     ):
         """Add an (existing) `Instance` to the `FrameGroup`.
 
-        If no `InstanceGroup` is provided, then check the `Instance` is already in an
+        If no `InstanceGroup` is provided, then require the `Instance` is already in an
         `InstanceGroup` contained in the `FrameGroup`. Otherwise, add the `Instance` to
-        the `InstanceGroup` and `FrameGroup`.
+        the both the `FrameGroup` and provided `InstanceGroup`.
 
         Args:
             instance: `Instance` to add to the `FrameGroup`.
             camera: `Camcorder` to link the `Instance` to.
             instance_group: `InstanceGroup` to add the `Instance` to. If None, then
-                check the `Instance` is already in an `InstanceGroup`.
+                require the `Instance` is already in `FrameGroup.instance_groups`.
 
         Raises:
             ValueError: If the `InstanceGroup` is not in the `FrameGroup`.
@@ -1721,9 +1721,9 @@ class FrameGroup:
         instance_group = self.get_instance_group(instance=instance)
 
         if instance_group is None:
-            logger.warning(
-                f"Instance {instance} not found in this FrameGroup.instance_groups: "
-                f"{self.instance_groups}."
+            logger.debug(
+                f"Instance to remove {instance} not found in this "
+                f"FrameGroup.instance_groups: {self.instance_groups}."
             )
             return
 
@@ -1973,6 +1973,9 @@ class FrameGroup:
 
         # Add the `Instance` to the `FrameGroup`
         self._instances_by_cam[camera].add(instance)
+
+        # Add the `Instance` to the `RecordingSession`'s `Labels` (and `LabeledFrame`)
+        self.session.labels.add_instance(frame=labeled_frame, instance=instance)
 
     def create_and_add_missing_instances(self, instance_group: InstanceGroup):
         """Add missing instances to `FrameGroup` from `InstanceGroup`s.
