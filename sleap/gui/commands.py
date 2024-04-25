@@ -2928,6 +2928,26 @@ class AddInstance(EditCommand):
         if context.state["labeled_frame"] not in context.labels.labels:
             context.labels.append(context.state["labeled_frame"])
 
+        # Also add the instance to the frame group if it exists
+        video = context.state["video"]
+        session = context.labels.get_session(video=video)
+        if session is None:
+            return
+
+        frame_idx = context.state["frame_idx"]
+        frame_group = session.frame_groups.get(frame_idx, None)
+        if frame_group is None:
+            return
+
+        instance_group = frame_group.get_instance_group(instance=from_predicted)
+        if instance_group is None:
+            return
+
+        camera = session.get_camera(video=video)
+        frame_group.add_instance(
+            instance=new_instance, camera=camera, instance_group=instance_group
+        )
+
     @staticmethod
     def create_new_instance(
         context: CommandContext,
