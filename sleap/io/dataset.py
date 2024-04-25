@@ -2124,8 +2124,7 @@ class Labels(MutableSequence):
         track_cattr = cattr.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
 
         # Make serializer for recording sessions
-        labeled_frames_list = [] if skip_labels else self.labeled_frames
-        labeled_frame_to_idx = {lf: i for i, lf in enumerate(labeled_frames_list)}
+        labeled_frame_to_idx = {lf: i for i, lf in enumerate(self.labeled_frames)}
         sessions_cattr = RecordingSession.make_cattr(
             videos_list=self.videos, labeled_frame_to_idx=labeled_frame_to_idx
         )
@@ -2164,7 +2163,7 @@ class Labels(MutableSequence):
         video_search: Union[Callable, List[Text], None] = None,
         *args,
         **kwargs,
-    ):
+    ) -> "Labels":
         """Load file, detecting format from filename."""
         from .format import read
 

@@ -424,10 +424,6 @@ class InstanceGroup:
         for cam, instance in self._instance_by_camcorder.items():
             self._camcorder_by_instance[instance] = cam
 
-        # Create a dummy instance to fill in for missing instances
-        if self._dummy_instance is None:
-            self._create_dummy_instance(instance=instance)
-
     def _create_dummy_instance(self, instance: Optional[Instance] = None):
         """Create a dummy instance to fill in for missing instances.
 
@@ -740,8 +736,9 @@ class InstanceGroup:
         instances = []
         for cam in cams:
             instance = self.get_instance(cam)
-            instances.append(instance)
-        return instance
+            if instance is not None:
+                instances.append(instance)
+        return instances
 
     def get_cam(self, instance: Instance) -> Optional[Camcorder]:
         """Retrieve `Camcorder` linked to `Instance`.
@@ -838,7 +835,10 @@ class InstanceGroup:
         return len(self.instances)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(frame_idx={self.frame_idx}, instances={len(self)}, camera_cluster={self.camera_cluster})"
+        return (
+            f"{self.__class__.__name__}(name={self.name}, frame_idx={self.frame_idx}, "
+            f"instances:{len(self)}, camera_cluster={self.camera_cluster})"
+        )
 
     def __hash__(self) -> int:
         return hash(self._name)
@@ -1074,14 +1074,14 @@ class RecordingSession:
         """Setter for `cams_to_include` that sorts by `CameraCluster` order."""
 
         # Sort the `Camcorder`s to include based on the order of `CameraCluster` cameras
-        self._cams_to_include = cams_to_include.sort(
-            key=self.camera_cluster.cameras.index
+        self._cams_to_include = sorted(
+            cams_to_include, key=self.camera_cluster.cameras.index
         )
 
         # Update the `excluded_views` attribute
         excluded_cams = list(set(self.camera_cluster.cameras) - set(cams_to_include))
         excluded_cams.sort(key=self.camera_cluster.cameras.index)
-        self._excluded_views = (cam.name for cam in excluded_cams)
+        self._excluded_views = tuple([cam.name for cam in excluded_cams])
 
     @property
     def excluded_views(self) -> Optional[Tuple[str]]:
@@ -1308,7 +1308,7 @@ class RecordingSession:
     def __repr__(self):
         return (
             f"{self.__class__.__name__}(videos:{len(self.videos)},"
-            f"camera_cluster={self.camera_cluster})"
+            f"camera_cluster={self.camera_cluster},frame_groups:{len(self.frame_groups)})"
         )
 
     @classmethod
@@ -1664,8 +1664,8 @@ class FrameGroup:
 
         frame_group_numpy = np.stack(instance_group_numpys, axis=1)  # M=all x T x N x 2
         cams_to_include_mask = np.array(
-            [1 if cam in self.cams_to_include else 0 for cam in self.cameras]
-        )  # M=include x 1
+            [cam in self.cams_to_include for cam in self.cameras]
+        )  # M=all x 1
 
         return frame_group_numpy[cams_to_include_mask]  # M=include x T x N x 2
 
@@ -1740,7 +1740,7 @@ class FrameGroup:
 
         # Remove the `Instance` from the `InstanceGroup`
         camera = instance_group.get_cam(instance=instance)
-        instance_group.remove_instance(instance=instance)
+        instance_group.remove_instance(instance_or_cam=instance)
 
         # Remove the `Instance` from the `FrameGroup`
         self._instances_by_cam[camera].remove(instance)
@@ -1749,7 +1749,9 @@ class FrameGroup:
         if len(self._instances_by_cam[camera]) < 1:
             self.remove_labeled_frame(labeled_frame_or_camera=camera)
 
-    def add_instance_group(self, instance_group: Optional[InstanceGroup] = None):
+    def add_instance_group(
+        self, instance_group: Optional[InstanceGroup] = None
+    ) -> InstanceGroup:
         """Add an `InstanceGroup` to the `FrameGroup`.
 
         This method updates the underlying dictionaries in calling add_instance:
@@ -1794,6 +1796,8 @@ class FrameGroup:
         for camera, instance in instance_group.instance_by_camcorder.items():
             self.add_instance(instance=instance, camera=camera)
 
+        return instance_group
+
     def remove_instance_group(self, instance_group: InstanceGroup):
         """Remove an `InstanceGroup` from the `FrameGroup`."""
 
@@ -1817,6 +1821,7 @@ class FrameGroup:
         if labeled_frame is not None:
             self.remove_labeled_frame(camera=camera)
 
+    # TODO(LM): maintain this as a dictionary for quick lookups
     def get_instance_group(self, instance: Instance) -> Optional[InstanceGroup]:
         """Get `InstanceGroup` that contains `Instance` if exists. Otherwise, None.
 
@@ -1978,7 +1983,7 @@ class FrameGroup:
         )
 
         # Add the `Instance` to the `FrameGroup`
-        self._instances_by_cam[camera].add(instance=instance)
+        self._instances_by_cam[camera].add(instance)
 
     def create_and_add_missing_instances(self, instance_group: InstanceGroup):
         """Add missing instances to `FrameGroup` from `InstanceGroup`s.
@@ -2010,7 +2015,7 @@ class FrameGroup:
 
             # Create an instance
             self._create_and_add_instance(
-                instance_group=instance_group, cam=cam, labeled_frame=labeled_frame
+                instance_group=instance_group, camera=cam, labeled_frame=labeled_frame
             )
 
     def upsert_points(
@@ -2158,6 +2163,13 @@ class FrameGroup:
                 f"InstanceGroup {instance_group} is not in this FrameGroup: "
                 f"{self.instance_groups}."
             )
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(frame_idx={self.frame_idx}, instance_groups:"
+            f"{len(self.instance_groups)}, labeled_frames:{len(self.labeled_frames)}, "
+            f"cameras:{len(self.cameras)}, session={self.session})"
+        )
 
     @classmethod
     def from_instance_groups(
