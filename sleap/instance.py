@@ -1546,33 +1546,18 @@ class LabeledFrame:
         a corresponding :class:`Instance` in the same track in frame.
         """
         unused_predictions = []
-        any_tracks = [inst.track for inst in self._instances if inst.track is not None]
-        if len(any_tracks):
-            # use tracks to determine which predicted instances have been used
-            used_tracks = [
-                inst.track
-                for inst in self._instances
-                if type(inst) == Instance and inst.track is not None
-            ]
-            unused_predictions = [
-                inst
-                for inst in self._instances
-                if inst.track not in used_tracks and type(inst) == PredictedInstance
-            ]
 
-        else:
-            # use from_predicted to determine which predicted instances have been used
-            # TODO: should we always do this instead of using tracks?
-            used_instances = [
-                inst.from_predicted
-                for inst in self._instances
-                if inst.from_predicted is not None
-            ]
-            unused_predictions = [
-                inst
-                for inst in self._instances
-                if type(inst) == PredictedInstance and inst not in used_instances
-            ]
+        # Use from_predicted to determine which predicted instances have been used
+        used_instances = [
+            inst.from_predicted
+            for inst in self._instances
+            if inst.from_predicted is not None
+        ]
+        unused_predictions = [
+            inst
+            for inst in self._instances
+            if type(inst) == PredictedInstance and inst not in used_instances
+        ]
 
         return unused_predictions
 
@@ -1593,9 +1578,9 @@ class LabeledFrame:
             if type(inst) == Instance or inst in unused_predictions
         ]
         inst_to_show.sort(
-            key=lambda inst: inst.track.spawned_on
-            if inst.track is not None
-            else math.inf
+            key=lambda inst: (
+                inst.track.spawned_on if inst.track is not None else math.inf
+            )
         )
         return inst_to_show
 
