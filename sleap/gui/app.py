@@ -59,7 +59,7 @@ from qtpy.QtWidgets import QApplication, QMainWindow, QMessageBox
 
 import sleap
 from sleap.gui.color import ColorManager
-from sleap.gui.commands import CommandContext, UpdateTopic
+from sleap.gui.commands import CommandContext, UpdateTopic, DeleteInstanceGroup
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
 from sleap.gui.dialogs.metrics import MetricsTableDialog
@@ -1145,34 +1145,6 @@ class MainWindow(QMainWindow):
 
         # Update menus
 
-        def _update_sessions_menu(self, frame_idx):
-            """Update the instance groups menu based on the selected frame index in the session."""
-            session = self.state.get("session")
-            if session is None:
-                return 
-
-
-            frame_idx = self.state["frame_idx"]
-            frame_group = session.frame_groups.get(frame_idx, None)
-            if frame_group is not None:
-                for inst_group_ind, instance_group in enumerate(frame_group.instance_groups):
-                    if inst_group_ind < 9:
-                        key_command = Qt.SHIFT + Qt.Key_0 + inst_group_ind + 1
-                    else:
-                        key_command = ""
-        
-                    self.inst_groups_menu.addAction(
-                        instance_group.name,
-                        lambda x=instance_group: self.commands.setInstanceGroup(x),
-                        shortcut=key_command
-                    )
-    
-            self.inst_groups_menu.addAction(
-                "New Instance Group",
-                self.commands.addInstanceGroup,
-                shortcut=Qt.SHIFT + Qt.Key_0
-            )
-
         self.inst_groups_menu.setEnabled(has_selected_instance)
         self.track_menu.setEnabled(has_selected_instance)
         self.delete_tracks_menu.setEnabled(has_tracks)
@@ -1463,6 +1435,65 @@ class MainWindow(QMainWindow):
         self.track_menu.addAction(
             "New Track", self.commands.addTrack, Qt.CTRL + Qt.Key_0
         )
+
+    def _update_sessions_menu(self, frame_idx):
+            """Update the instance groups menu based on the selected frame index in the session."""
+            session = self.state.get("session")
+            if session is None:
+                return 
+
+
+            frame_idx = self.state["frame_idx"]
+            frame_group = session.frame_groups.get(frame_idx, None)
+            if frame_group is not None:
+                for inst_group_ind, instance_group in enumerate(frame_group.instance_groups):
+                    if inst_group_ind < 9:
+                        key_command = Qt.SHIFT + Qt.Key_0 + inst_group_ind + 1
+                    else:
+                        key_command = ""
+        
+                    self.inst_groups_menu.addAction(
+                        instance_group.name,
+                        lambda x=instance_group: self.commands.setInstanceGroup(x),
+                        shortcut=key_command
+                    )
+    
+            self.inst_groups_menu.addAction(
+                "New Instance Group",
+                self.commands.addInstanceGroup,
+                shortcut=Qt.SHIFT + Qt.Key_0
+            )
+
+    def setup_menus(self):
+        self.inst_groups_delete_menu = QMenu("Delete Instance Group", self.sessionsMenu)
+        self.sessionsMenu.addMenu(self.inst_groups_delete_menu)
+
+        self.inst_groups_delete_menu.aboutToShow.connect(self.update_delete_instance_group_menu)
+
+    def update_delete_instance_group_menu(self):
+        self.inst_groups_delete_menu.clear()
+        session = self.state["session"]
+        frame_idx = self.state["frame_idx"]
+        frame_group = session.frame_groups[frame_idx]
+
+        for index, instance_group in enumerate(frame_group.instance_groups):
+            if index < 9:
+                shortcut = QKeySequence(Qt.SHIFT + Qt.Key_0 + index + 1)
+            else:
+                shortcut = ""
+            action = QAction(instance_group.name, self.inst_groups_delete_menu, shortcut=shortcut)
+            action.triggered.connect(lambda x, ig=instance_group: self.delete_instance_group(ig))
+            self.inst_groups_delete_menu.addAction(action)
+
+        new_action = QAction("New Instance Group", self.inst_groups_delete_menu, shortcut=QKeySequence(Qt.SHIFT + Qt.Key_0))
+        new_action.triggered.connect(self.commands.addInstanceGroup)
+        self.inst_groups_delete_menu.addAction(new_action)
+
+    def delete_instance_group(self, instance_group):
+        if QMessageBox.question(self, "Delete Instance Group",
+                                f"Are you sure you want to delete the instance group '{instance_group.name}'?",
+                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No) == QMessageBox.Yes:
+            self.commands.execute(DeleteInstanceGroup, instance_group=instance_group)
 
     def _update_seekbar_marks(self):
         """Updates marks on seekbar."""

@@ -2704,17 +2704,9 @@ class AddInstanceGroup(EditCommand):
         frame_idx = context.state["frame_idx"]
         session = context.state["session"]
 
-        if frame_idx in session.frame_groups:
-            frame_group = session.frame_groups[frame_idx]
-        else:
-            print(f"No frame group found for frame index {frame_idx}. Unable to add instance group.")
-            return
+        frame_group = session.frame_groups.get(frame_idx, None) or session.new_frame_group(frame_idx=frame_idx)
         
         new_instance_group = frame_group.add_instance_group(instance_group=None)
-        if new_instance_group:
-            print(f"New empty instance group added to frame group at frame {frame_idx}.")
-        else:
-            print("Failed to add a new instance group.")
 
 class AddTrack(EditCommand):
     topics = [UpdateTopic.tracks]
@@ -2734,7 +2726,7 @@ class AddTrack(EditCommand):
 class SetSelectedInstanceGroup(EditCommand):
     @staticmethod
     def do_action(context, params):
-        selected_instance = context.state["selected_instance"]
+        selected_instance = context.state["instance"]
         frame_idx = context.state["frame_idx"]
         video = context.state["video"]
         session = context.state["session"]
@@ -2749,9 +2741,6 @@ class SetSelectedInstanceGroup(EditCommand):
 
         if selected_instance and frame_group and instance_group:
             frame_group.add_instance(instance=selected_instance, camera=camera, instance_group=instance_group)
-            print(f"Instance {selected_instance} added to group {instance_group} at frame {frame_idx}.")
-        else:
-            print("Error: Missing required components to add instance to group.")
 
 class SetSelectedInstanceTrack(EditCommand):
     topics = [UpdateTopic.tracks]
@@ -2841,6 +2830,17 @@ class DeleteMultipleTracks(EditCommand):
         else:
             context.labels.remove_unused_tracks()
 
+class DeleteInstanceGroup(EditCommand):
+    @staticmethod
+    def do_action(context, params):
+        instance_group = params['instance_group']
+        frame_idx = context.state["frame_idx"]
+        session = context.state["session"]
+        frame_group = session.frame_groups.get(frame_idx)
+
+        if instance_group in frame_group.instance_groups:
+            frame_group.instance_groups.remove(instance_group)
+            context.app.refresh_ui()
 
 class CopyInstanceTrack(EditCommand):
     @staticmethod
@@ -3643,25 +3643,7 @@ def open_website(url: str):
     Args:
         url: URL to open.
     """
-    QtGui.QDesktopServices.openUrl(QtCore.QUrl(url))
-
-
-class AddInstanceGroup(AppCommand):
-    @staticmethod
-    def do_action(context: "CommandContext", params: dict):
-        group_name = params.get("group_name", "New Group")  
-        new_group = InstanceGroup(name=group_name)
-        context.app.instance_groups.append(new_group)
-        context.app.refresh_ui()
-        print(f"Added new instance group: {new_group.name}")
-
-    @staticmethod
-    def ask(context: "CommandContext", params: dict):
-        group_name = context.ui.prompt_user_input("Enter the name for the new instance group:")
-        if group_name:
-            params["group_name"] = group_name
-            return True
-        return False  
+    QtGui.QDesktopServices.openUrl(QtCore.QUrl(url)) 
 
 class OpenWebsite(AppCommand):
     @staticmethod
