@@ -1152,7 +1152,7 @@ class MainWindow(QMainWindow):
         self._buttons["remove video"].setEnabled(has_video)
         self._buttons["delete instance"].setEnabled(has_selected_instance)
         self._buttons["unlink video"].setEnabled(has_selected_camcorder)
-        self.suggestions_dock.suggestions_form_widget.buttons[
+        self.suggestions_dock.suggestions_form_widget.buttons[  
             "generate_button"
         ].setEnabled(has_videos)
         self._buttons["remove session"].setEnabled(has_selected_session)
@@ -1166,6 +1166,10 @@ class MainWindow(QMainWindow):
         self.overlays["track_labels"].visible = (
             control_key_down and has_selected_instance
         )
+        
+        # Update session state
+        if (has_video):
+            self.state["session"] = self.labels.get_session(self.state["video"])
 
     def on_data_update(self, what: List[UpdateTopic]):
         def _has_topic(topic_list):
