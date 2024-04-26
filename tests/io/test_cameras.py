@@ -310,6 +310,89 @@ def test_recording_session_remove_video(multiview_min_session_labels: Labels):
     assert video not in session.videos
 
 
+def test_recording_session_frame_group_integration(
+    multiview_min_session_user_labels: Labels,
+    tmp_path,
+):
+    """Test `RecordingSession` integration with `FrameGroup` and `InstanceGroup`.
+
+    Note: This is how the multiview_min_session_frame_groups fixture was created.
+    """
+
+    labels = multiview_min_session_user_labels
+    session = labels.sessions[0]
+
+    # Get all tracks
+    tracks = labels.tracks
+    frame_idxs = [0, 1, 2]
+
+    # Create a new `FrameGroup` for each frame_idx
+    for frame_idx in frame_idxs:
+
+        frame_group = session.new_frame_group(frame_idx=frame_idx)
+
+        # Create new instance group per track
+        inst_group_by_track = {}
+        for track in tracks:
+            instance_group = frame_group.add_instance_group()
+            inst_group_by_track[track] = instance_group
+
+        # Add instances to frame and instance groups
+        for camera in session.linked_cameras:
+
+            # Get video and labeled frame
+            video = session.get_video(camcorder=camera)
+            labeled_frames = labels.find(video=video, frame_idx=frame_idx)
+            if len(labeled_frames) < 1:
+                continue
+            else:
+                labeled_frame = labeled_frames[0]
+
+            # Add instances to frame and instance groups
+            for instance in labeled_frame.user_instances:
+                track = instance.track
+                instance_group: InstanceGroup = inst_group_by_track[track]
+                frame_group.add_instance(
+                    instance=instance, camera=camera, instance_group=instance_group
+                )
+
+    assert len(session.frame_groups) == len(frame_idxs)
+    for frame_idx in frame_idxs:
+        assert frame_idx in session.frame_groups
+        assert len(session.frame_groups[frame_idx].instance_groups) == len(tracks)
+        for instance_group in session.frame_groups[frame_idx].instance_groups:
+            assert (
+                len(instance_group.instances) == 6 or len(instance_group.instances) == 8
+            )
+
+    # Save the labels to a temporary file
+    ds_base = tmp_path
+    ds_base.mkdir(exist_ok=True)
+    ds_new = ds_base / "frame_groups.slp"
+    labels.save(filename=ds_new.as_posix())
+
+    # Load the labels from the temporary file
+    labels_new = Labels.load_file(ds_new.as_posix())
+    session_ln = labels_new.sessions[0]
+
+    # Check that the loaded labels are the same as the original labels
+    assert len(session_ln.frame_groups) == len(session.frame_groups)
+    for frame_idx in frame_idxs:
+        assert frame_idx in session_ln.frame_groups
+        assert len(session_ln.frame_groups[frame_idx].instance_groups) == len(
+            session.frame_groups[frame_idx].instance_groups
+        )
+        for instance_group_ln, instance_group in zip(
+            session_ln.frame_groups[frame_idx].instance_groups,
+            session.frame_groups[frame_idx].instance_groups,
+        ):
+            assert len(instance_group.instances) == len(instance_group.instances)
+            for instance_ln, instance in zip(
+                instance_group_ln.instances, instance_group.instances
+            ):
+                assert instance_ln.matches(instance)
+
+
 # TODO(LM): Remove after adding method to (de)seralize `InstanceGroup`
 def create_instance_group(
     labels: Labels,
@@ -365,7 +448,9 @@ def create_instance_group(
     )
 
 
-def test_instance_group(multiview_min_session_labels: Labels):
+def test_instance_group(
+    multiview_min_session_labels: Labels, multiview_min_session_frame_groups: Labels
+):
     """Test `InstanceGroup` data structure."""
 
     labels = multiview_min_session_labels
@@ -477,8 +562,41 @@ def test_instance_group(multiview_min_session_labels: Labels):
             name_registry={},
         )
 
+    # Test `__repr__`
+    print(instance_group)
 
-def test_frame_group(multiview_min_session_labels: Labels):
+    # Switch Labels files to one that already contains populated `InstanceGroup`s
+    labels = multiview_min_session_frame_groups
+    session: RecordingSession = labels.sessions[0]
+    frame_idx = 0
+    frame_group = session.frame_groups[frame_idx]
+    instance_group = frame_group.instance_groups[0]
+
+    # Test `numpy` method
+    instance_group_numpy = instance_group.numpy()
+    n_views, n_nodes, n_coords = instance_group_numpy.shape
+    assert n_views == len(instance_group.camera_cluster.cameras)
+    assert n_nodes == len(instance_group.dummy_instance.skeleton.nodes)
+    assert n_coords == 2
+    # Different instance groups should have different coordinates
+    for inst_idx, _ in enumerate(instance_group.instances[:-1]):
+        assert not np.allclose(
+            instance_group_numpy[:, inst_idx],
+            instance_group_numpy[:, inst_idx + 1],
+            equal_nan=True,
+        )
+    # Different views should have different coordinates
+    for view_idx, _ in enumerate(instance_group.camera_cluster.cameras[:-1]):
+        assert not np.allclose(
+            instance_group_numpy[view_idx],
+            instance_group_numpy[view_idx + 1],
+            equal_nan=True,
+        )
+
+
+def test_frame_group(
+    multiview_min_session_labels: Labels, multiview_min_session_frame_groups: Labels
+):
     """Test `FrameGroup` data structure."""
 
     labels = multiview_min_session_labels
@@ -544,3 +662,55 @@ def test_frame_group(multiview_min_session_labels: Labels):
     )
 
     # TODO(LM): Test underlying dictionaries more thoroughly
+
+    # Test `add_instance_group`
+    instance_group: InstanceGroup = frame_group_4.add_instance_group()
+    assert isinstance(instance_group, InstanceGroup)
+    assert instance_group.frame_idx == frame_idx_1
+    assert instance_group.name == "instance_group_1"
+    assert len(frame_group_4.instance_groups) == 2
+    assert len(instance_group.instances) == 0
+
+    # Test `add_instance`
+    video = session.videos[0]
+    camera = session.get_camera(video=video)
+    labeled_frame = labels.find(video=video, frame_idx=frame_group_4.frame_idx)[0]
+    instance = labeled_frame.instances[0]
+    frame_group_4.add_instance(
+        instance=instance,
+        camera=camera,
+        instance_group=instance_group,
+    )
+    assert len(instance_group.instances) == 1
+
+    # Test `__repr__`
+    print(frame_group_4)
+
+    # Switch Labels files to one that already contains populated `FrameGroup`s
+    labels = multiview_min_session_frame_groups
+    session: RecordingSession = labels.sessions[0]
+    frame_idx = 0
+    frame_group = session.frame_groups[frame_idx]
+
+    # Test `cams_to_include`
+    session.cams_to_include = session.cams_to_include[1:]
+    assert frame_group.cams_to_include == session.cams_to_include
+    assert len(frame_group.cams_to_include) == len(session.linked_cameras) - 1
+
+    # Test `numpy` method
+    frame_group_np = frame_group.numpy()
+    n_views, n_inst_groups, n_nodes, n_coords = frame_group_np.shape
+    assert n_views == len(frame_group.cams_to_include)
+    assert n_inst_groups == len(frame_group.instance_groups)
+    assert n_nodes == len(labels.skeleton.nodes)
+    assert n_coords == 2
+    # Different instance groups should have different coordinates
+    assert not np.allclose(frame_group_np[:, 0], frame_group_np[:, 1], equal_nan=True)
+    # Different views should have different coordinates
+    assert not np.allclose(frame_group_np[0], frame_group_np[1], equal_nan=True)
+
+    # Test `get_instace_group`
+    instance_group = frame_group.instance_groups[0]
+    camera = session.cameras[0]
+    instance = instance_group.get_instance(cam=camera)
+    assert frame_group.get_instance_group(instance=instance) == instance_group

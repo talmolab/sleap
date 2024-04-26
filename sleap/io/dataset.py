@@ -63,7 +63,7 @@ import h5py as h5
 import numpy as np
 import datetime
 from sklearn.model_selection import train_test_split
-from sleap.io.cameras import RecordingSession
+from sleap.io.cameras import FrameGroup, RecordingSession
 
 try:
     from typing import ForwardRef
@@ -1435,10 +1435,40 @@ class Labels(MutableSequence):
     def remove_instance(
         self, frame: LabeledFrame, instance: Instance, in_transaction: bool = False
     ):
-        """Remove instance from frame, updating track occupancy."""
+        """Remove instance from frame, updating track occupancy and `FrameGroup`."""
+
         frame.instances.remove(instance)
         if not in_transaction:
             self._cache.remove_instance(frame, instance)
+
+        # Also remove instance from `InstanceGroup` if any
+        session = self.get_session(frame.video)
+        if session is None:
+            return  # No session, so no `FrameGroup` to update
+        frame_group: FrameGroup = session.frame_groups.get(frame.frame_idx, None)
+        if frame_group is None:
+            return  # No `FrameGroup` for this frame
+        video = frame.video
+        camera = session.get_camera(video=video)
+        if camera is None:
+            return  # No camera, so no `InstanceGroup` to update
+
+        # If `Instance.from_predicted`, then replace with `PredictedInstance`
+        instance_group = frame_group.get_instance_group(instance=instance)
+        replace_instance = (instance.from_predicted is not None) and (
+            instance_group is not None
+        )
+
+        # Add the new instance to the `FrameGroup` and replace the old one
+        if replace_instance:
+            frame_group.add_instance(
+                instance=instance.from_predicted,
+                camera=camera,
+                instance_group=instance_group,
+            )
+        # Otherwise just remove the instance
+        else:
+            frame_group.remove_instance(instance=instance)
 
     def add_instance(self, frame: LabeledFrame, instance: Instance):
         """Add instance to frame, updating track occupancy."""
@@ -2124,8 +2154,7 @@ class Labels(MutableSequence):
         track_cattr = cattr.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
 
         # Make serializer for recording sessions
-        labeled_frames_list = [] if skip_labels else self.labeled_frames
-        labeled_frame_to_idx = {lf: i for i, lf in enumerate(labeled_frames_list)}
+        labeled_frame_to_idx = {lf: i for i, lf in enumerate(self.labeled_frames)}
         sessions_cattr = RecordingSession.make_cattr(
             videos_list=self.videos, labeled_frame_to_idx=labeled_frame_to_idx
         )
@@ -2164,7 +2193,7 @@ class Labels(MutableSequence):
         video_search: Union[Callable, List[Text], None] = None,
         *args,
         **kwargs,
-    ):
+    ) -> "Labels":
         """Load file, detecting format from filename."""
         from .format import read
 

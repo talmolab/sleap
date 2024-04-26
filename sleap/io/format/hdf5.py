@@ -5,26 +5,30 @@ Note that this is not the adaptor for reading/writing the "analysis" HDF5
 format.
 """
 
-from sleap.io import format
-from . import labels_json
-
-from sleap.instance import (
-    PointArray,
-    PredictedPointArray,
-    Instance,
-    PredictedInstance,
-    LabeledFrame,
-    PredictedPoint,
-    Point,
-)
-from sleap.util import json_loads, json_dumps
-from sleap import Labels, Video
+import logging
+import os
+from typing import Callable, List, Optional, Text, Union
 
 import h5py
 import numpy as np
-import os
 
-from typing import Optional, Callable, List, Text, Union
+from sleap import Labels, Video
+from sleap.instance import (
+    Instance,
+    LabeledFrame,
+    Point,
+    PointArray,
+    PredictedInstance,
+    PredictedPoint,
+    PredictedPointArray,
+)
+from sleap.io import format
+from sleap.io.cameras import RecordingSession
+from sleap.util import json_dumps, json_loads
+
+from . import labels_json
+
+logger = logging.getLogger(__name__)
 
 
 class LabelsV1Adaptor(format.adaptor.Adaptor):
@@ -85,7 +89,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
 
         # These items are stored in separate lists because the metadata group got to be
         # too big.
-        for key in ("videos", "tracks", "suggestions", "sessions"):
+        for key in ("videos", "tracks", "suggestions"):
             hdf5_key = f"{key}_json"
             if hdf5_key in f:
                 items = [json_loads(item_json) for item_json in f[hdf5_key]]
@@ -213,6 +217,32 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
         ]
 
         labels.labeled_frames = frames
+
+        # RecordingSessions (namely `FrameGroup`s and `InstanceGroup`s) require the
+        # labeled frames to be reconstructed before they can be deserialized.
+        key = "sessions"
+        hdf5_key = f"{key}_json"
+        sessions_dict = {}
+        if hdf5_key in f:
+            items = [json_loads(item_json) for item_json in f[hdf5_key]]
+            sessions_dict = items
+            try:
+                # Make deserializer for `RecordingSession`
+                sessions_cattr = RecordingSession.make_cattr(
+                    videos_list=labels.videos, labeled_frames_list=labels.labeled_frames
+                )
+                sessions = sessions_cattr.structure(
+                    sessions_dict, List[RecordingSession]
+                )
+            except Exception as e:
+                logger.warning("Error while loading `RecordingSession`s:")
+                logger.warning(e)
+                sessions = []
+        else:
+            sessions = []
+
+        for session in sessions:
+            labels.add_session(session)
 
         # Do the stuff that should happen after we have labeled frames
         labels.update_cache()

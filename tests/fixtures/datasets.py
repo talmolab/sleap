@@ -286,3 +286,11 @@ def multiview_min_session_user_labels():
         "tests/data/cameras/minimal_session/min_session_user_labeled.slp",
         video_search=["tests/data/videos/"],
     )
+
+
+@pytest.fixture
+def multiview_min_session_frame_groups():
+    return Labels.load_file(
+        "tests/data/cameras/minimal_session/min_session_frame_groups.slp",
+        video_search=["tests/data/videos/"],
+    )

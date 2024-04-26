@@ -637,20 +637,16 @@ class CommandContext:
 
     def triangulateSession(
         self,
-        frame_idx: Optional[int] = None,
-        video: Optional[Video] = None,
-        instance: Optional[Instance] = None,
         session: Optional[RecordingSession] = None,
-        cams_to_include: Optional[List[Camcorder]] = None,
+        frame_idx: Optional[int] = None,
+        instance: Optional[Instance] = None,
     ):
         """Triangulates `Instance`s for selected views in a `RecordingSession`."""
         self.execute(
             TriangulateSession,
-            frame_idx=frame_idx,
-            video=video,
-            instance=instance,
             session=session,
-            cams_to_include=cams_to_include,
+            frame_idx=frame_idx,
+            instance=instance,
         )
 
     def openWebsite(self, url):
@@ -3052,6 +3048,26 @@ class AddInstance(EditCommand):
         if context.state["labeled_frame"] not in context.labels.labels:
             context.labels.append(context.state["labeled_frame"])
 
+        # Also add the instance to the frame group if it exists
+        video = context.state["video"]
+        session = context.labels.get_session(video=video)
+        if session is None:
+            return
+
+        frame_idx = context.state["frame_idx"]
+        frame_group = session.frame_groups.get(frame_idx, None)
+        if frame_group is None:
+            return
+
+        instance_group = frame_group.get_instance_group(instance=from_predicted)
+        if instance_group is None:
+            return
+
+        camera = session.get_camera(video=video)
+        frame_group.add_instance(
+            instance=new_instance, camera=camera, instance_group=instance_group
+        )
+
     @staticmethod
     def create_new_instance(
         context: CommandContext,
@@ -3518,7 +3534,6 @@ class TriangulateSession(EditCommand):
         Args:
             context: The command context.
             params: The command parameters.
-                video: The `Video` object to use. Default is current video.
                 session: The `RecordingSession` object to use. Default is current
                     video's session.
                 frame_idx: The frame index to use. Default is current frame index.
@@ -3527,13 +3542,19 @@ class TriangulateSession(EditCommand):
                 ask_again: If True, then ask for views/instances again. Default is False.
         """
 
-        # Get `FrameGroup` for the current frame index
-        video = params.get("video", None) or context.state["video"]
-        session = params.get("session", None) or context.labels.get_session(video)
-        frame_idx: int = params["frame_idx"]
-        frame_group: FrameGroup = (
-            params.get("frame_group", None) or session.frame_groups[frame_idx]
+        session: RecordingSession = (
+            params.get("session", None) or context.state["session"]
         )
+        if session is None:
+            return
+
+        # Get `FrameGroup` for the current frame index
+        frame_idx: int = params.get("frame_idx", None)
+        if frame_idx is None:
+            frame_idx = context.state["frame_idx"]
+        frame_group: FrameGroup = session.frame_groups.get(frame_idx, None)
+        if frame_group is None:
+            return
 
         # Get the `InstanceGroup` from `Instance` if any
         instance = params.get("instance", None) or context.state["instance"]
@@ -3590,7 +3611,7 @@ class TriangulateSession(EditCommand):
     def has_enough_instances(
         cls,
         frame_group: FrameGroup,
-        instance_groups: Optional[List[InstanceGroup]],
+        instance_groups: Optional[List[InstanceGroup]] = None,
         frame_idx: Optional[int] = None,
         instance: Optional[Instance] = None,
     ) -> Optional[List[InstanceGroup]]:
@@ -3598,9 +3619,9 @@ class TriangulateSession(EditCommand):
 
         Args:
             frame_group: The `FrameGroup` object to use.
-            instance_groups: A list of `InstanceGroup` objects to use.
-            frame_idx: The frame index to use.
-            instance: The `Instance` object to use (only used in logging).
+            instance_groups: A list of `InstanceGroup` objects to use. Default is None.
+            frame_idx: The frame index to use (only used in logging). Default is None.
+            instance: The `Instance` object to use (only used in logging). Default None.
 
         Returns:
             A list of `InstanceGroup` objects with enough instances for triangulation.
@@ -3611,6 +3632,9 @@ class TriangulateSession(EditCommand):
 
         if frame_idx is None:
             frame_idx = ""  # Just used for logging
+
+        if instance_groups is None:
+            instance_groups = frame_group.instance_groups
 
         if len(instance_groups) < 1:
             logger.warning(
