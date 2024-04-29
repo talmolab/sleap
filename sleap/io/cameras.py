@@ -551,7 +551,7 @@ class InstanceGroup:
         """Dictionary of `Instance` objects by `Camcorder`."""
         return self._instance_by_camcorder
 
-    def numpy(self, pred_as_nan: bool = False) -> np.ndarray:
+    def numpy(self, pred_as_nan: bool = False, invisible_as_nan=True) -> np.ndarray:
         """Return instances as a numpy array of shape (n_views, n_nodes, 2).
 
         The ordering of views is based on the ordering of `Camcorder`s in the
@@ -563,6 +563,8 @@ class InstanceGroup:
         Args:
             pred_as_nan: If True, then replaces `PredictedInstance`s with all nan
                 self.dummy_instance. Default is False.
+            invisible_as_nan: If True, then replaces invisible points with nan. Default
+                is True.
 
         Returns:
             Numpy array of shape (n_views, n_nodes, 2).
@@ -581,7 +583,9 @@ class InstanceGroup:
             if use_dummy_instance:
                 instance = self.dummy_instance  # This is an all nan PredictedInstance
 
-            instance_numpy: np.ndarray = instance.numpy()  # N x 2
+            instance_numpy: np.ndarray = instance.get_points_array(
+                invisible_as_nan=invisible_as_nan
+            )  # N x 2
             instance_numpys.append(instance_numpy)
 
         return np.stack(instance_numpys, axis=0)  # M x N x 2
@@ -806,7 +810,7 @@ class InstanceGroup:
     def __getitem__(
         self, idx_or_key: Union[int, Camcorder, Instance]
     ) -> Union[Camcorder, Instance]:
-        """Grab a `Camcorder` of `Instance` from the `InstanceGroup`."""
+        """Grab a `Camcorder` or `Instance` from the `InstanceGroup`."""
 
         def _raise_key_error():
             raise KeyError(f"Key {idx_or_key} not found in {self.__class__.__name__}.")

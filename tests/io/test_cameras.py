@@ -1,6 +1,6 @@
 """Module to test functions in `sleap.io.cameras`."""
 
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pytest
@@ -12,7 +12,7 @@ from sleap.io.cameras import (
     FrameGroup,
     RecordingSession,
 )
-from sleap.io.dataset import Instance, Labels
+from sleap.io.dataset import Instance, Labels, PredictedInstance
 from sleap.io.video import Video
 
 
@@ -398,6 +398,7 @@ def create_instance_group(
     labels: Labels,
     frame_idx: int,
     add_dummy: bool = False,
+    name: Optional[str] = None,
 ) -> Union[
     InstanceGroup, Tuple[InstanceGroup, Dict[Camcorder, Instance], Instance, Camcorder]
 ]:
@@ -411,6 +412,9 @@ def create_instance_group(
     Returns:
         The `InstanceGroup` object.
     """
+
+    if name is None:
+        name = "test_instance_group"
 
     session = labels.sessions[0]
 
@@ -460,9 +464,15 @@ def test_instance_group(
     lf = labels.labeled_frames[0]
     frame_idx = lf.frame_idx
 
+    # Test `_create_dummy_instance` (fail)
+    instance_group = InstanceGroup(name="test_instance_group", frame_idx=frame_idx)
+    with pytest.raises(ValueError):
+        dummy_instance = instance_group._create_dummy_instance()
+
     # Test `from_instance_by_camcorder_dict`
+    name = "test_instance_group"
     instance_group, instance_by_camera, dummy_instance, cam = create_instance_group(
-        labels=labels, frame_idx=frame_idx, add_dummy=True
+        labels=labels, frame_idx=frame_idx, add_dummy=True, name=name
     )
     assert isinstance(instance_group, InstanceGroup)
     assert instance_group.frame_idx == frame_idx
@@ -476,6 +486,40 @@ def test_instance_group(
             assert isinstance(instance, Instance)
             assert instance_group[camera] == instance_by_camera[camera]
             assert instance_group[instance] == camera
+
+    # Test `_create_dummy_instance` (pass)
+    dummy_instance = instance_group.dummy_instance
+    assert isinstance(dummy_instance, PredictedInstance)
+    matched_instance = instance_group.instances[0]
+    assert dummy_instance.skeleton == matched_instance.skeleton
+    assert np.all(np.isnan(dummy_instance.points))
+    assert np.isnan(
+        dummy_instance.score
+    )  # TODO(LM): Should be OKS (g.t. vs reprojection)
+    assert dummy_instance.tracking_score == 0.0
+
+    # Test `name` property
+    assert instance_group.name == name
+
+    # Test `name.setter`
+    with pytest.raises(ValueError):
+        instance_group.name = "test_instance_group_2"
+
+    # Test `set_name`
+    new_name = "test_instance_group_2"
+    name_registry = {instance_group.name}
+    instance_group.set_name(name=new_name, name_registry=name_registry)
+    assert instance_group.name == new_name
+    assert instance_group.name in name_registry
+    assert name not in name_registry
+    with pytest.raises(ValueError):  # Name already in registry
+        instance_group.set_name(name=new_name, name_registry=name_registry)
+
+    # Test `return_unique_name`
+    name_registry = {"instance_group_1"}
+    new_name = instance_group.return_unique_name(name_registry=name_registry)
+    assert new_name not in name_registry
+    assert new_name == "instance_group_2"
 
     # Test `to_dict`
     labeled_frame_to_idx = {lf: idx for idx, lf in enumerate(labels.labeled_frames)}
@@ -533,26 +577,6 @@ def test_instance_group(
     with pytest.raises(KeyError):
         instance_group[len(instance_group)]
 
-    # Test `_dummy_instance` property
-    assert (
-        instance_group.dummy_instance.skeleton == instance_group.instances[0].skeleton
-    )
-    assert isinstance(instance_group.dummy_instance, Instance)
-
-    # Test `numpy` method
-    instance_group_numpy = instance_group.numpy()
-    assert isinstance(instance_group_numpy, np.ndarray)
-    n_views, n_nodes, n_coords = instance_group_numpy.shape
-    assert n_views == len(instance_group.camera_cluster.cameras)
-    assert n_nodes == len(instance_group.dummy_instance.skeleton.nodes)
-    assert n_coords == 2
-
-    # Test `update_points` method
-    instance_group.update_points(np.full((n_views, n_nodes, n_coords), 0))
-    instance_group_numpy = instance_group.numpy()
-    np.nan_to_num(instance_group_numpy, nan=0)
-    assert np.all(np.nan_to_num(instance_group_numpy, nan=0) == 0)
-
     # Populate with only dummy instance and test `from_instance_by_camcorder_dict`
     instance_by_camera = {cam: dummy_instance}
     with pytest.raises(ValueError):
@@ -592,6 +616,12 @@ def test_instance_group(
             instance_group_numpy[view_idx + 1],
             equal_nan=True,
         )
+
+    # Test `update_points` method
+    assert not np.all(instance_group.numpy(invisible_as_nan=False) == 72317)
+    instance_group.update_points(np.full((n_views, n_nodes, n_coords), 72317))
+    instance_group_numpy = instance_group.numpy(invisible_as_nan=False)
+    assert np.all(instance_group_numpy == 72317)
 
 
 def test_frame_group(
@@ -696,6 +726,8 @@ def test_frame_group(
     session.cams_to_include = session.cams_to_include[1:]
     assert frame_group.cams_to_include == session.cams_to_include
     assert len(frame_group.cams_to_include) == len(session.linked_cameras) - 1
+    with pytest.raises(ValueError):
+        frame_group.cams_to_include = session.linked_cameras
 
     # Test `numpy` method
     frame_group_np = frame_group.numpy()
@@ -709,8 +741,20 @@ def test_frame_group(
     # Different views should have different coordinates
     assert not np.allclose(frame_group_np[0], frame_group_np[1], equal_nan=True)
 
-    # Test `get_instace_group`
+    # Test `get_instance_group`
     instance_group = frame_group.instance_groups[0]
     camera = session.cameras[0]
     instance = instance_group.get_instance(cam=camera)
     assert frame_group.get_instance_group(instance=instance) == instance_group
+
+    # Test `instance_groups.setter`
+
+    # Test `remove_instance_group`
+
+    # Test `set_instance_group_name`
+
+    # Test `remove_labeled_frame`
+
+    # Test `get_camera`
+
+    # Test `_create_and_add_labeled_frame`
