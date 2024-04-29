@@ -748,13 +748,68 @@ def test_frame_group(
     assert frame_group.get_instance_group(instance=instance) == instance_group
 
     # Test `instance_groups.setter`
+    inst_group_to_remove = frame_group.instance_groups[0]
+    len_instance_groups = len(frame_group.instance_groups)
+    frame_group.instance_groups = frame_group.instance_groups[1:]
+    assert inst_group_to_remove not in frame_group.instance_groups
+    assert len(frame_group.instance_groups) == len_instance_groups - 1
+    # # TODO(LM): Create custom class for `frame_group.instance_groups`
+    # frame_group.instance_groups.append(inst_group_to_remove)
+    # assert inst_group_to_remove not in frame_group.instance_groups
+    frame_group.instance_groups = frame_group.instance_groups + [inst_group_to_remove]
+    assert inst_group_to_remove in frame_group.instance_groups
 
     # Test `remove_instance_group`
+    len_instance_groups = len(frame_group.instance_groups)
+    frame_group.remove_instance_group(instance_group=inst_group_to_remove)
+    assert inst_group_to_remove not in frame_group.instance_groups
+    assert len(frame_group.instance_groups) == len_instance_groups - 1
+    assert inst_group_to_remove.name not in frame_group._instance_group_name_registry
+    for camera, instance in inst_group_to_remove.instance_by_camcorder.items():
+        assert instance not in frame_group._instances_by_cam[camera]
 
     # Test `set_instance_group_name`
+    new_name = "instance_group_2"
+    with pytest.raises(ValueError):  # `InstanceGroup` not in this `FrameGroup`
+        frame_group.set_instance_group_name(
+            instance_group=inst_group_to_remove, name=new_name
+        )
+    instance_group = frame_group.instance_groups[0]
+    old_name = instance_group.name
+    frame_group.set_instance_group_name(instance_group=instance_group, name=new_name)
+    assert instance_group.name == new_name
+    assert new_name in frame_group._instance_group_name_registry
+    assert old_name not in frame_group._instance_group_name_registry
 
-    # Test `remove_labeled_frame`
+    # Test `get_labeled_frame` and `get_camera`
+    camera = session.cameras[0]
+    labeled_frame = frame_group.get_labeled_frame(camera=camera)
+    assert frame_group.get_camera(labeled_frame=labeled_frame) == camera
 
-    # Test `get_camera`
+    # Test `remove_labeled_frame` method and `cameras` and `labeled_frames` properties
+    assert camera in frame_group._labeled_frame_by_cam
+    assert labeled_frame in frame_group._cam_by_labeled_frame
+    assert camera in frame_group.cameras
+    assert labeled_frame in frame_group.labeled_frames
+    # Test with neither `LabeledFrame` nor `Camera` input
+    frame_group.remove_labeled_frame(labeled_frame_or_camera="neither")  # Does nothing
+    # Test with `LabeledFrame` input
+    frame_group.remove_labeled_frame(labeled_frame_or_camera=labeled_frame)
+    assert camera not in frame_group._labeled_frame_by_cam
+    assert labeled_frame not in frame_group._cam_by_labeled_frame
+    assert camera not in frame_group.cameras
+    assert labeled_frame not in frame_group.labeled_frames
+    # Test with `Camera` input
+    camera = frame_group.cameras[0]
+    labeled_frame = frame_group.get_labeled_frame(camera=camera)
+    frame_group.remove_labeled_frame(labeled_frame_or_camera=camera)
+    assert camera not in frame_group.cameras
+    assert labeled_frame not in frame_group.labeled_frames
 
     # Test `_create_and_add_labeled_frame`
+    labeled_frame_created = frame_group._create_and_add_labeled_frame(camera=camera)
+    assert labeled_frame.video == session.get_video(camera)
+    assert labeled_frame.frame_idx == frame_group.frame_idx
+    assert camera in frame_group.cameras
+    assert labeled_frame_created in frame_group.labeled_frames
+    assert labeled_frame in frame_group.session.labels.labeled_frames
