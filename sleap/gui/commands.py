@@ -606,6 +606,10 @@ class CommandContext:
         """Delete all tracks."""
         self.execute(DeleteMultipleTracks, delete_all=delete_all)
 
+    def deleteInstanceGroup(self, instance_group: "InstanceGroup"):
+        """Delete an instance group."""
+        self.execute(DeleteInstanceGroup, instance_group=instance_group)
+
     def copyInstanceTrack(self):
         """Copies the selected instance's track to the track clipboard."""
         self.execute(CopyInstanceTrack)
