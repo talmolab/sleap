@@ -1167,9 +1167,6 @@ class MainWindow(QMainWindow):
             control_key_down and has_selected_instance
         )
         
-        # Update session state
-        if (has_video):
-            self.state["session"] = self.labels.get_session(self.state["video"])
 
     def on_data_update(self, what: List[UpdateTopic]):
         def _has_topic(topic_list):
