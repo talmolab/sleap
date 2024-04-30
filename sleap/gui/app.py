@@ -1308,9 +1308,10 @@ class MainWindow(QMainWindow):
         overlay.redraw(video, frame_idx)
 
         # Replot connected views for multi-camera projects
-        cams_to_include = None  # TODO: make this configurable via GUI
+        # TODO(LM): Use context.state["session"] in command instead (when implemented)
+        session = self.labels.get_session(video)
         if self.state.get("auto_triangulate", False):
-            self.commands.triangulateSession(cams_to_include=cams_to_include)
+            self.commands.triangulateSession(session=session)
 
     def _after_plot_change(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""

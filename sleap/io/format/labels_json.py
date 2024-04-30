@@ -7,7 +7,6 @@ a single HDF5 file which include both the SLEAP dataset (i.e., `Labels`) and
 also the videos/frames as HDF5 datasets.
 """
 import atexit
-import logging
 import os
 import re
 import shutil
@@ -16,8 +15,6 @@ import zipfile
 from typing import Optional, Union, Dict, List, Callable, Text
 
 import cattr
-
-from sleap.io.cameras import RecordingSession
 
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
@@ -32,8 +29,6 @@ from sleap.instance import (
 from sleap.io.legacy import load_labels_json_old
 from sleap.skeleton import Node, Skeleton
 from sleap.util import json_loads, json_dumps, weak_filename_match
-
-logger = logging.getLogger(__name__)
 
 
 class LabelsJsonAdaptor(Adaptor):
@@ -365,8 +360,7 @@ class LabelsJsonAdaptor(Adaptor):
     def from_json_data(
         cls, data: Union[str, dict], match_to: Optional["Labels"] = None
     ) -> "Labels":
-        """
-        Create instance of class from data in dictionary.
+        """Create instance of class from data in dictionary.
 
         Method is used by other methods that load from JSON.
 
@@ -537,29 +531,12 @@ class LabelsJsonAdaptor(Adaptor):
         else:
             labels = []
 
-        if "sessions" in dicts:
-            try:
-                # Make deserializer for `RecordingSession`
-                sessions_cattr = RecordingSession.make_cattr(
-                    videos_list=videos, labeled_frames_list=labels
-                )
-                sessions = sessions_cattr.structure(
-                    dicts["sessions"], List[RecordingSession]
-                )
-            except Exception as e:
-                logger.warning("Error while loading `RecordingSession`s:")
-                logger.warning(e)
-                sessions = []
-        else:
-            sessions = []
-
         return Labels(
             labeled_frames=labels,
             videos=videos,
             skeletons=skeletons,
             nodes=nodes,
             suggestions=suggestions,
-            sessions=sessions,
             negative_anchors=negative_anchors,
             tracks=tracks,
             provenance=provenance,
