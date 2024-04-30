@@ -1812,7 +1812,7 @@ class FrameGroup:
         # Remove the `LabeledFrame` from the `FrameGroup`
         labeled_frame = self.get_labeled_frame(camera=camera)
         if labeled_frame is not None:
-            self.remove_labeled_frame(camera=camera)
+            self.remove_labeled_frame(labeled_frame_or_camera=camera)
 
     # TODO(LM): maintain this as a dictionary for quick lookups
     def get_instance_group(self, instance: Instance) -> Optional[InstanceGroup]:
@@ -1902,6 +1902,7 @@ class FrameGroup:
                 f"Cannot remove LabeledFrame: {labeled_frame_or_camera} is not a "
                 "LabeledFrame or Camcorder."
             )
+            return
 
         # Remove the `LabeledFrame` from the `FrameGroup`
         self._labeled_frame_by_cam.pop(camera, None)
@@ -1931,6 +1932,8 @@ class FrameGroup:
 
         return self._cam_by_labeled_frame.get(labeled_frame, None)
 
+    # TODO(LM): Add a remove_camera method (for when we UnlinkVideo)
+
     def _create_and_add_labeled_frame(self, camera: Camcorder) -> LabeledFrame:
         """Create and add a `LabeledFrame` to the `FrameGroup`.
 
@@ -1952,7 +1955,7 @@ class FrameGroup:
             )
 
         labeled_frame = LabeledFrame(video=video, frame_idx=self.frame_idx)
-        self.add_labeled_frame(labeled_frame=labeled_frame)
+        self.add_labeled_frame(labeled_frame=labeled_frame, camera=camera)
 
         return labeled_frame
 

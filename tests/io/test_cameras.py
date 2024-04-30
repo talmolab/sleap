@@ -853,7 +853,3 @@ def test_frame_group(
     assert camera in frame_group.cameras
     assert labeled_frame_created in frame_group.labeled_frames
     assert labeled_frame in frame_group.session.labels.labeled_frames
-
-
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_frame_group"])
