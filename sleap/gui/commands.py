@@ -705,7 +705,7 @@ class LoadLabelsObject(AppCommand):
         # Load first video
         if len(labels.videos):
             context.state["video"] = labels.videos[0]
-            context.state["video"] = labels.get_session(context.state["video"])
+            context.state["session"] = labels.get_session(context.state["video"])
 
         context.state["session"] = labels.sessions[0] if len(labels.sessions) else None
 
@@ -1602,6 +1602,7 @@ class NavCommand(AppCommand):
     def go_to(context, frame_idx: int, video: Optional[Video] = None):
         if video is not None:
             context.state["video"] = video
+            context.state["session"] = context.labels.get_session(video)
         context.state["frame_idx"] = frame_idx
 
 
@@ -1725,6 +1726,7 @@ class GoAdjacentView(NavCommand):
         new_video = session.videos[new_video_idx]
 
         context.state["video"] = new_video
+        context.state["session"] = session
         context.state["frame_idx"] = frame_idx
 
 
@@ -1792,6 +1794,7 @@ class AddVideo(EditCommand):
         # Load if no video currently loaded
         if context.state["video"] is None:
             context.state["video"] = video
+            context.state["session"] = context.labels.get_session(video)
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
@@ -1818,6 +1821,7 @@ class ShowImportVideos(EditCommand):
         # Load if no video currently loaded
         if context.state["video"] is None:
             context.state["video"] = video
+            context.state["session"] = context.labels.get_session(video)
 
 
 class ReplaceVideo(EditCommand):
@@ -1940,6 +1944,7 @@ class RemoveVideo(EditCommand):
         if context.state["video"] in videos_to_be_removed:
             if len(context.labels.videos):
                 context.state["video"] = context.labels.videos[-1]
+                context.state["session"] = context.labels.get_session(context.state["video"])
             else:
                 context.state["video"] = None
 
