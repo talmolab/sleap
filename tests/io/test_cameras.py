@@ -623,6 +623,24 @@ def test_instance_group(
     instance_group_numpy = instance_group.numpy(invisible_as_nan=False)
     assert np.all(instance_group_numpy == 72317)
 
+    # Test `add_instance`, `replace_instance`, and `remove_instance`
+    cam = instance_group.cameras[0]
+    instance = instance_group.instances[1]
+    assert instance_group.get_instance(cam) != instance
+    with pytest.raises(ValueError):  # `Instance` already in this `InstanceGroup`
+        instance_group.add_instance(instance=instance, cam=cam)
+    # Let's replace an instance
+    instance_being_replaced = instance_group.get_instance(cam=cam)
+    old_instance_cam = instance_group.get_cam(instance=instance)
+    instance_group.replace_instance(instance=instance, cam=cam)
+    assert instance_group.get_instance(cam=cam) == instance
+    assert instance_being_replaced not in instance_group.instances
+    assert old_instance_cam not in instance_group.cameras
+    # Let's remove an instance (using `Camcorder` input)
+    instance_group.remove_instance(instance_or_cam=cam)
+    assert instance not in instance_group.instances
+    assert cam not in instance_group.cameras
+
 
 def test_frame_group(
     multiview_min_session_labels: Labels, multiview_min_session_frame_groups: Labels
@@ -767,6 +785,28 @@ def test_frame_group(
     assert inst_group_to_remove.name not in frame_group._instance_group_name_registry
     for camera, instance in inst_group_to_remove.instance_by_camcorder.items():
         assert instance not in frame_group._instances_by_cam[camera]
+    instance_removed = inst_group_to_remove.instances[0]
+
+    # Test `remove_instance`
+    frame_group.remove_instance(instance=instance_removed)  # Does nothing
+    instance_to_remove = frame_group.instance_groups[0].instances[0]
+    labeled_frame_to_remove = instance_to_remove.frame
+    camera_to_remove = frame_group.get_camera(labeled_frame=labeled_frame_to_remove)
+    for instance_to_remove in labeled_frame_to_remove.instances:
+        instance_group = frame_group.get_instance_group(instance=instance_to_remove)
+        frame_group.remove_instance(instance=instance_to_remove)
+        if instance_group is not None:
+            assert camera_to_remove not in instance_group.cameras
+            assert instance_to_remove not in instance_group.instances
+            assert (
+                instance_to_remove
+                not in frame_group._instances_by_cam[camera_to_remove]
+            )
+    assert camera_to_remove not in frame_group.cameras
+    assert camera_to_remove not in frame_group._labeled_frame_by_cam
+    assert camera_to_remove not in frame_group._cam_by_labeled_frame
+    assert labeled_frame_to_remove not in frame_group.labeled_frames
+    assert labeled_frame_to_remove not in frame_group._cam_by_labeled_frame
 
     # Test `set_instance_group_name`
     new_name = "instance_group_2"
@@ -782,7 +822,7 @@ def test_frame_group(
     assert old_name not in frame_group._instance_group_name_registry
 
     # Test `get_labeled_frame` and `get_camera`
-    camera = session.cameras[0]
+    camera = frame_group.cameras[0]
     labeled_frame = frame_group.get_labeled_frame(camera=camera)
     assert frame_group.get_camera(labeled_frame=labeled_frame) == camera
 
@@ -813,3 +853,7 @@ def test_frame_group(
     assert camera in frame_group.cameras
     assert labeled_frame_created in frame_group.labeled_frames
     assert labeled_frame in frame_group.session.labels.labeled_frames
+
+
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::test_frame_group"])
