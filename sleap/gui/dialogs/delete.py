@@ -238,7 +238,6 @@ if __name__ == "__main__":
     context = CommandContext.from_labels(labels)
     context.state["frame_idx"] = 123
     context.state["video"] = labels.videos[0]
-    context.state["session"] = labels.get_session(context.state["video"])
     context.state["has_frame_range"] = True
     context.state["frame_range"] = (10, 20)
 
