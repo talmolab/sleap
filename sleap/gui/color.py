@@ -19,6 +19,7 @@ from sleap.util import get_config_file
 from sleap.instance import Instance, Track, Node
 from sleap.io.dataset import Labels
 from sleap.prefs import prefs
+from sleap.io.cameras import InstanceGroup, RecordingSession
 
 
 ColorTupleStringType = Text
@@ -26,7 +27,7 @@ ColorTupleType = Tuple[int, int, int]
 
 
 class ColorManager:
-    """Class to determine color to use for track.
+    """Class to determine color to use for track and instance groups.
 
     The color depends on the order of the tracks in `Labels` object,
     so we need to initialize with `Labels`.
@@ -35,9 +36,14 @@ class ColorManager:
         labels: The :class:`Labels` dataset which contains the tracks for
             which we want colors.
         palette: String with the color palette name to use.
+        session: The :class:`RecordingSession` object which contains the
+            instance groups for which we want colors.
+        frame_indx: The index of the frame in the session for which we want
+            instance group colors.
+        
     """
 
-    def __init__(self, labels: Labels = None, palette: str = "standard"):
+    def __init__(self, labels: Labels = None, palette: str = "standard", session: RecordingSession = None, frame_indx: int = None):
         self.labels = labels
 
         with open(get_config_file("colors.yaml"), "r") as f:
@@ -63,6 +69,9 @@ class ColorManager:
 
         self.medium_pen_width = self.thick_pen_width // 2
         self.default_pen_width = max(1, self.thick_pen_width // 4)
+        
+        self.session = session
+        self.frame_indx = frame_indx
 
     @property
     def labels(self):
@@ -106,6 +115,15 @@ class ColorManager:
         if self.labels:
             return self.labels.tracks
         return []
+    
+    # TODO: Find a way to get instance groups for project
+    @property
+    def InstanceGroups(self) -> Iterable[InstanceGroup]:
+        """Gets instance groups for project."""
+        if (self.session and self.frame_indx):
+            return self.session.frame_groups[self.frame_indx].instance_groups
+        return []
+        
 
     def set_palette(self, palette: Union[Text, Iterable[ColorTupleStringType]]):
         """Functional alias for palette property setter."""
@@ -178,6 +196,22 @@ class ColorManager:
 
         return self.get_color_by_idx(track_idx)
 
+    def get_instance_grouup_color(self, instanceGroup: InstanceGroup) -> ColorTupleType: 
+        """Returns the color to use for a given instance group.
+
+        Args:
+            instanceGroup: `InstanceGroup` object
+        Returns:
+            (r, g, b)-tuple
+        """
+        instanceGroup_idx = instanceGroup
+        if isinstance(instanceGroup, InstanceGroup):
+            instanceGroup_idx = self.InstanceGroups.index(instanceGroup) if instanceGroup in self.InstanceGroups else None
+        if instanceGroup_idx is None:
+            return (0, 0, 0)
+
+        return self.get_color_by_idx(instanceGroup_idx)
+
     @classmethod
     def is_sequence(cls, item) -> bool:
         """Returns whether item is a tuple or list."""
@@ -238,6 +272,8 @@ class ColorManager:
         item: Any,
         parent_instance: Optional[Instance] = None,
         parent_skeleton: Optional["Skeleton"] = None,
+        parent_session: Optional[RecordingSession] = None,
+        parent_frame_indx: Optional[int] = None,
     ) -> ColorTupleType:
         """Gets (r, g, b) tuple of color to use for drawing item."""
 
@@ -295,5 +331,10 @@ class ColorManager:
                         break
 
             return self.get_color_by_idx(edge_idx)
+        
+        # TODO (AP): Color the instance group by index)
+        if self.distinctly_color == "InstanceGroups" and parent_session and parent_frame_indx: 
+            frame_group = parent_session.frame_groups[parent_frame_indx]
+            instance_group = frame_group.get_instance_group(instance=parent_instance)
 
         return (0, 0, 0)
