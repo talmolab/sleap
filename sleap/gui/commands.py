@@ -2712,7 +2712,7 @@ class AddInstanceGroup(EditCommand):
         frame_idx = context.state["frame_idx"]
         session: RecordingSession = context.state["session"]
         if session is None:
-            return
+            raise ValueError("Cannot add instance group without session.")
 
         # Get or create frame group
         frame_group = session.frame_groups.get(frame_idx, None)
@@ -2745,29 +2745,50 @@ class AddTrack(EditCommand):
 class SetSelectedInstanceGroup(EditCommand):
     @staticmethod
     def do_action(context, params):
+        """Set the `selected_instance` to the `instance_group`.
 
-        base_message = "Cannot set instance group for selected instance."
+        Args:
+            context: The command context.
+                state: The context state.
+                    instance: The selected instance.
+                    frame_idx: The frame index.
+                    video: The video.
+                    session: The recording session.
+
+            params: The command parameters.
+                instance_group: The `InstanceGroup` to set the selected instance to.
+
+        Raises:
+            ValueError: If the `RecordingSession` is None.
+            ValueError: If the `FrameGroup` does not exist for the frame index.
+            ValueError: If the `Video` is not linked to a `Camcorder`.
+        """
+
         selected_instance = context.state["instance"]
         frame_idx = context.state["frame_idx"]
         video = context.state["video"]
 
+        base_message = (
+            f"Cannot set instance group for selected instance [{selected_instance}]."
+        )
+
         # `RecordingSession` should not be None
         session: RecordingSession = context.state["session"]
         if session is None:
-            raise ValueError(f"{base_message} No session for video {video}")
+            raise ValueError(f"{base_message} No session for video [{video}]")
 
         # `FrameGroup` should already exist
         frame_group = session.frame_groups.get(frame_idx, None)
         if frame_group is None:
             raise ValueError(
-                f"{base_message} Frame group does not exist for frame {frame_idx} in "
+                f"{base_message} Frame group does not exist for frame [{frame_idx}] in "
                 f"{session}."
             )
 
         # We need the camera and instance group to set the instance group
         camera = session.get_camera(video=video)
         if camera is None:
-            raise ValueError(f"{base_message} No camera linked to video {video}")
+            raise ValueError(f"{base_message} No camera linked to video [{video}]")
         instance_group = params["instance_group"]
 
         # Set the instance group
