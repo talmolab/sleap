@@ -705,7 +705,9 @@ class LoadLabelsObject(AppCommand):
         # Load first video
         if len(labels.videos):
             context.state["video"] = labels.videos[0]
-            context.state["session"] = labels.get_session(context.state["video"]) if labels.sessions else None
+            context.state["session"] = (
+                labels.get_session(context.state["video"]) if labels.sessions else None
+            )
 
         context.state["session"] = labels.sessions[0] if len(labels.sessions) else None
 
@@ -1822,6 +1824,7 @@ class ShowImportVideos(EditCommand):
         if context.state["video"] is None:
             context.state["video"] = video
 
+
 class ReplaceVideo(EditCommand):
     topics = [UpdateTopic.video, UpdateTopic.frame]
 
@@ -1942,7 +1945,11 @@ class RemoveVideo(EditCommand):
         if context.state["video"] in videos_to_be_removed:
             if len(context.labels.videos):
                 context.state["video"] = context.labels.videos[-1]
-                context.state["session"] = context.labels.get_session(context.labels.videos[-1]) if context.labels.get_session(context.labels.videos[-1]) is not None else None
+                context.state["session"] = (
+                    context.labels.get_session(context.labels.videos[-1])
+                    if context.labels.get_session(context.labels.videos[-1]) is not None
+                    else None
+                )
             else:
                 context.state["video"] = None
                 context.state["session"] = None
