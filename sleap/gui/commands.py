@@ -593,10 +593,13 @@ class CommandContext:
         """Sets track for selected instance."""
         self.execute(SetSelectedInstanceTrack, new_track=new_track)
 
+    def addInstanceGroup(self):
+        """Sets the instance group for selected instance."""
+        self.execute(AddInstanceGroup)
+
     def setInstanceGroup(self, instance_group: Optional["InstanceGroup"]):
         """Sets the instance group for selected instance."""
         self.execute(SetSelectedInstanceGroup, instance_group=instance_group)
-
 
     def deleteTrack(self, track: "Track"):
         """Delete a track and remove from all instances."""
@@ -2698,15 +2701,30 @@ class DeleteDialogCommand(EditCommand):
         if DeleteDialog(context).exec_():
             context.signal_update([UpdateTopic.project_instances])
 
+
 class AddInstanceGroup(EditCommand):
+    topics = [UpdateTopic.sessions]
+
     @staticmethod
     def do_action(context, params):
-        frame_idx = context.state["frame_idx"]
-        session = context.state["session"]
 
-        frame_group = session.frame_groups.get(frame_idx, None) or session.new_frame_group(frame_idx=frame_idx)
-        
-        new_instance_group = frame_group.add_instance_group(instance_group=None)
+        # Get session and frame index
+        frame_idx = context.state["frame_idx"]
+        session: RecordingSession = context.state["session"]
+        if session is None:
+            return
+
+        # Get or create frame group
+        frame_group = session.frame_groups.get(frame_idx, None)
+        if frame_group is None:
+            frame_group = session.new_frame_group(frame_idx=frame_idx)
+
+        # Create and add instance group
+        instance_group = frame_group.add_instance_group(instance_group=None)
+
+        # Now add the selected instance to the `InstanceGroup`
+        context.execute(SetSelectedInstanceGroup, instance_group=instance_group)
+
 
 class AddTrack(EditCommand):
     topics = [UpdateTopic.tracks]
@@ -2723,24 +2741,40 @@ class AddTrack(EditCommand):
 
         context.execute(SetSelectedInstanceTrack, new_track=new_track)
 
+
 class SetSelectedInstanceGroup(EditCommand):
     @staticmethod
     def do_action(context, params):
+
+        base_message = "Cannot set instance group for selected instance."
         selected_instance = context.state["instance"]
         frame_idx = context.state["frame_idx"]
         video = context.state["video"]
-        session = context.state["session"]
 
+        # `RecordingSession` should not be None
+        session: RecordingSession = context.state["session"]
+        if session is None:
+            raise ValueError(f"{base_message} No session for video {video}")
+
+        # `FrameGroup` should already exist
         frame_group = session.frame_groups.get(frame_idx, None)
         if frame_group is None:
-            frame_group = session.new_frame_group(frame_idx=frame_idx)
+            raise ValueError(
+                f"{base_message} Frame group does not exist for frame {frame_idx} in "
+                f"{session}."
+            )
 
+        # We need the camera and instance group to set the instance group
         camera = session.get_camera(video=video)
+        if camera is None:
+            raise ValueError(f"{base_message} No camera linked to video {video}")
+        instance_group = params["instance_group"]
 
-        instance_group = params.get("instance_group")
+        # Set the instance group
+        frame_group.add_instance(
+            instance=selected_instance, camera=camera, instance_group=instance_group
+        )
 
-        if selected_instance and frame_group and instance_group:
-            frame_group.add_instance(instance=selected_instance, camera=camera, instance_group=instance_group)
 
 class SetSelectedInstanceTrack(EditCommand):
     topics = [UpdateTopic.tracks]
@@ -2830,17 +2864,31 @@ class DeleteMultipleTracks(EditCommand):
         else:
             context.labels.remove_unused_tracks()
 
+
 class DeleteInstanceGroup(EditCommand):
+    topics = [UpdateTopic.sessions]
+
     @staticmethod
     def do_action(context, params):
-        instance_group = params['instance_group']
-        frame_idx = context.state["frame_idx"]
-        session = context.state["session"]
-        frame_group = session.frame_groups.get(frame_idx)
 
-        if instance_group in frame_group.instance_groups:
-            frame_group.instance_groups.remove(instance_group)
-            context.app.refresh_ui()
+        base_message = "Cannot delete instance group."
+
+        instance_group = params["instance_group"]
+        frame_idx = context.state["frame_idx"]
+
+        # `RecordingSession` should not be None
+        session: RecordingSession = context.state["session"]
+        if session is None:
+            raise ValueError(f"{base_message} No session in context state.")
+
+        # `FrameGroup` should already exist
+        frame_group = session.frame_groups.get(frame_idx, None)
+        if frame_group is None:
+            raise ValueError(f"{base_message} No frame group for frame {frame_idx}.")
+
+        # Remove the instance group
+        frame_group.remove_instance_group(instance_group=instance_group)
+
 
 class CopyInstanceTrack(EditCommand):
     @staticmethod
@@ -3671,7 +3719,8 @@ def open_website(url: str):
     Args:
         url: URL to open.
     """
-    QtGui.QDesktopServices.openUrl(QtCore.QUrl(url)) 
+    QtGui.QDesktopServices.openUrl(QtCore.QUrl(url))
+
 
 class OpenWebsite(AppCommand):
     @staticmethod

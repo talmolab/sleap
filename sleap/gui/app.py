@@ -812,26 +812,14 @@ class MainWindow(QMainWindow):
         ### Sessions Menu ###
 
         sessionsMenu = self.menuBar().addMenu("Sessions")
-        self.session_menu = sessionsMenu.addMenu("Set Session Instance")
-        
-        tracksMenu.addSeparator()
+
+        self.inst_groups_menu = sessionsMenu.addMenu("Set Instance Group")
+        self.inst_groups_delete_menu = sessionsMenu.addMenu("Delete Instance Group")
+        self.state.connect("frame_idx", self._update_sessions_menu)
+
+        ### Tracks Menu ###
 
         tracksMenu = self.menuBar().addMenu("Tracks")
-        self.inst_groups_menu = sessionsMenu.addMenu("Set Instance Group")
-        add_menu_item(
-            self.inst_groups_menu,
-            "set group",
-            "Set Instance Group",
-        self.commands.setInstanceGroup 
-        )
-
-        self.inst_groups_delete_menu = sessionsMenu.addMenu("Delete Instance Group")
-        add_menu_item(
-            self.inst_groups_delete_menu,
-            "delete group",
-            "Delete Instance Group",
-            self.commands.deleteInstanceGroup
-        )
 
         self.track_menu = tracksMenu.addMenu("Set Instance Track")
         add_menu_check_item(
@@ -846,8 +834,6 @@ class MainWindow(QMainWindow):
             "Transpose Instance Tracks",
             self.commands.transposeInstance,
         )
-        
-
 
         tracksMenu.addSeparator()
 
@@ -1276,10 +1262,12 @@ class MainWindow(QMainWindow):
 
         if _has_topic([UpdateTopic.frame, UpdateTopic.project_instances]):
             self.state["last_interacted_frame"] = self.state["labeled_frame"]
+            self._update_sessions_menu()
 
         if _has_topic([UpdateTopic.sessions]):
             self.update_cameras_model()
             self.update_unlinked_videos_model()
+            self._update_sessions_menu()
 
     def update_unlinked_videos_model(self):
         """Update the unlinked videos model with the selected session."""
@@ -1434,57 +1422,50 @@ class MainWindow(QMainWindow):
             "New Track", self.commands.addTrack, Qt.CTRL + Qt.Key_0
         )
 
-    def _update_sessions_menu(self, frame_idx):
-        """Update the instance groups menu based on the selected frame index in the session."""
+    def _update_sessions_menu(self):
+        """Update the instance groups menu based on the frame index."""
+
+        # Clear menus before adding more items
+        self.inst_groups_menu.clear()
+        self.inst_groups_delete_menu.clear()
+
+        # Get the session
         session = self.state.get("session")
         if session is None:
-            return 
+            return
 
-
+        # Get the frame group for the current frame
         frame_idx = self.state["frame_idx"]
         frame_group = session.frame_groups.get(frame_idx, None)
         if frame_group is not None:
-            for inst_group_ind, instance_group in enumerate(frame_group.instance_groups):
+            for inst_group_ind, instance_group in enumerate(
+                frame_group.instance_groups
+            ):
+                # Create shortcut key for first 9 groups
+                key_command = ""
                 if inst_group_ind < 9:
                     key_command = Qt.SHIFT + Qt.Key_0 + inst_group_ind + 1
-                else:
-                    key_command = ""
-    
+
+                # Update the Set Instance Group menu
                 self.inst_groups_menu.addAction(
                     instance_group.name,
                     lambda x=instance_group: self.commands.setInstanceGroup(x),
-                    shortcut=key_command
+                    key_command,
+                )
+
+                # Update the Delete Instance Group menu
+                self.inst_groups_delete_menu.addAction(
+                    instance_group.name,
+                    lambda x=instance_group: self.commands.deleteInstanceGroup(
+                        instance_group=x
+                    ),
                 )
 
         self.inst_groups_menu.addAction(
             "New Instance Group",
             self.commands.addInstanceGroup,
-            shortcut=Qt.SHIFT + Qt.Key_0
+            Qt.SHIFT + Qt.Key_0,
         )
-
-        self.inst_groups_delete_menu = QMenu("Delete Instance Group", self.sessionsMenu)
-        self.sessionsMenu.addMenu(self.inst_groups_delete_menu)
-
-        self.inst_groups_delete_menu.aboutToShow.connect(self.update_delete_instance_group_menu)
-
-    def update_delete_instance_group_menu(self):
-        self.inst_groups_delete_menu.clear()
-        session = self.state["session"]
-        frame_idx = self.state["frame_idx"]
-        frame_group = session.frame_groups[frame_idx]
-
-        for index, instance_group in enumerate(frame_group.instance_groups):
-            if index < 9:
-                shortcut = QKeySequence(Qt.SHIFT + Qt.Key_0 + index + 1)
-            else:
-                shortcut = ""
-            action = QAction(instance_group.name, self.inst_groups_delete_menu, shortcut=shortcut)
-            action.triggered.connect(lambda x, ig=instance_group: self.commands.deleteInstanceGroup(instance_group = ig))
-            self.inst_groups_delete_menu.addAction(action)
-
-        new_action = QAction("New Instance Group", self.inst_groups_delete_menu, shortcut=QKeySequence(Qt.SHIFT + Qt.Key_0))
-        new_action.triggered.connect(self.commands.addInstanceGroup)
-        self.inst_groups_delete_menu.addAction(new_action)
 
     def _update_seekbar_marks(self):
         """Updates marks on seekbar."""
