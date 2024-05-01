@@ -705,9 +705,6 @@ class LoadLabelsObject(AppCommand):
         # Load first video
         if len(labels.videos):
             context.state["video"] = labels.videos[0]
-            context.state["session"] = (
-                labels.get_session(context.state["video"]) if labels.sessions else None
-            )
 
         context.state["session"] = labels.sessions[0] if len(labels.sessions) else None
 
