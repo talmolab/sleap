@@ -1387,3 +1387,67 @@ def test_AddInstanceGroup(multiview_min_session_frame_groups: Labels):
     assert len(instance_group_3.instances) == 0
     assert len(instance_group_4.instances) == 0
     assert len(instance_group_5.instances) == 1
+
+
+def test_DeleteInstanceGroup(multiview_min_session_frame_groups: Labels):
+    """Test that deleting an instance group works."""
+
+    labels = multiview_min_session_frame_groups
+    session: RecordingSession = labels.sessions[0]
+    frame_idx = 2
+    frame_group: FrameGroup = session.frame_groups[frame_idx]
+    instance_group_0: InstanceGroup = frame_group.instance_groups[0]
+    instance_group_1: InstanceGroup = frame_group.instance_groups[1]
+    labeled_frame: LabeledFrame = frame_group.labeled_frames[0]
+    video = labeled_frame.video
+    camera = session.get_camera(video=video)
+
+    # Set-up CommandContext
+    context: CommandContext = CommandContext.from_labels(labels)
+
+    # No session
+    with pytest.raises(ValueError):
+        context.deleteInstanceGroup(instance_group=instance_group_0)
+    # Check FrameGroup._instances_by_camcorder
+    assert len(frame_group._instances_by_cam[camera]) == 2
+    # Check FrameGroup.instance_groups
+    assert len(frame_group.instance_groups) == 2
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 8
+    assert len(instance_group_1.instances) == 6
+
+    # No frame_idx
+    context.state["session"] = session
+    with pytest.raises(ValueError):
+        context.deleteInstanceGroup(instance_group=instance_group_0)
+    # Check FrameGroup._instances_by_camcorder
+    assert len(frame_group._instances_by_cam[camera]) == 2
+    # Check FrameGroup.instance_groups
+    assert len(frame_group.instance_groups) == 2
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 8
+    assert len(instance_group_1.instances) == 6
+
+    # Everything, let's delete an `InstanceGroup`
+    context.state["frame_idx"] = frame_idx
+    context.deleteInstanceGroup(instance_group=instance_group_0)
+    # Check FrameGroup._instances_by_camcorder
+    assert len(frame_group._instances_by_cam[camera]) == 1
+    # Check FrameGroup.instance_groups
+    assert len(frame_group.instance_groups) == 1
+    assert instance_group_0 not in frame_group.instance_groups
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 8
+    assert len(instance_group_1.instances) == 6
+
+    # Everything, let's delete the last `InstanceGroup`
+    context.state["frame_idx"] = frame_idx
+    context.deleteInstanceGroup(instance_group=instance_group_1)
+    # Check FrameGroup._instances_by_camcorder
+    assert len(frame_group._instances_by_cam[camera]) == 0
+    # Check FrameGroup.instance_groups
+    assert len(frame_group.instance_groups) == 0
+    assert instance_group_1 not in frame_group.instance_groups
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 8
+    assert len(instance_group_1.instances) == 6
