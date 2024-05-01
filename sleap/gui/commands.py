@@ -2892,10 +2892,10 @@ class DeleteInstanceGroup(EditCommand):
     @staticmethod
     def do_action(context, params):
 
-        base_message = "Cannot delete instance group."
-
         instance_group = params["instance_group"]
         frame_idx = context.state["frame_idx"]
+
+        base_message = f"Cannot delete instance group [{instance_group}]."
 
         # `RecordingSession` should not be None
         session: RecordingSession = context.state["session"]
