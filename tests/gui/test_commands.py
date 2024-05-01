@@ -1103,3 +1103,182 @@ def test_TriangulateSession_do_action(multiview_min_session_frame_groups):
             assert np.allclose(inst_group_np, inst_group_np_post_tri, equal_nan=True)
 
     # TODO(LM): Test with `PredictedInstance`s
+
+
+def test_SetSelectedInstanceGroup(multiview_min_session_frame_groups: Labels):
+    """Test that setting a new instance group works."""
+
+    labels = multiview_min_session_frame_groups
+    session: RecordingSession = labels.sessions[0]
+    frame_idx = 0
+    frame_group: FrameGroup = session.frame_groups[frame_idx]
+    labeled_frame: LabeledFrame = frame_group.labeled_frames[0]
+    video = labeled_frame.video
+    camera = session.get_camera(video=video)
+
+    # We want to replace `instance_0` with `instance_1` in the `InstanceGroup`
+    instance_0 = labeled_frame.user_instances[0]
+    instance_group_0 = frame_group.get_instance_group(instance=instance_0)
+    instance_1 = labeled_frame.user_instances[1]
+    instance_group_1 = frame_group.get_instance_group(instance=instance_1)
+
+    # Set-up CommandContext
+    context: CommandContext = CommandContext.from_labels(labels)
+    context.state["instance"] = instance_1
+    context.state["video"] = video
+
+    # No session
+    with pytest.raises(ValueError):
+        context.setInstanceGroup(instance_group=instance_group_0)
+    # Check FrameGroup._instances_by_camcorder
+    assert instance_0 in frame_group._instances_by_cam[camera]
+    assert instance_1 in frame_group._instances_by_cam[camera]
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 8
+    assert len(instance_group_1.instances) == 6
+
+    # No frame_idx
+    context.state["session"] = session
+    with pytest.raises(ValueError):
+        context.setInstanceGroup(instance_group=instance_group_0)
+    # Check FrameGroup._instances_by_camcorder
+    assert instance_0 in frame_group._instances_by_cam[camera]
+    assert instance_1 in frame_group._instances_by_cam[camera]
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 8
+    assert len(instance_group_1.instances) == 6
+
+    # With session and frame_idx
+    context.state["frame_idx"] = frame_idx
+    context.setInstanceGroup(instance_group=instance_group_0)
+    # Check FrameGroup.instance_groups
+    assert len(frame_group.instance_groups) == 2
+    assert instance_group_0 in frame_group.instance_groups
+    assert instance_group_1 in frame_group.instance_groups
+    # Check FrameGroup._instances_by_camcorder
+    assert instance_0 not in frame_group._instances_by_cam[camera]
+    assert instance_1 in frame_group._instances_by_cam[camera]
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 8
+    assert len(instance_group_1.instances) == 5
+    assert instance_0 not in instance_group_0.instances
+    assert instance_0 not in instance_group_1.instances
+    assert instance_1 in instance_group_0.instances
+    assert instance_1 not in instance_group_1.instances
+    # Check InstanceGroup._camcorder_by_instance
+    assert instance_0 not in instance_group_0._camcorder_by_instance
+    assert instance_0 not in instance_group_1._camcorder_by_instance
+    assert instance_1 in instance_group_0._camcorder_by_instance
+    assert instance_1 not in instance_group_1._camcorder_by_instance
+    # Check InstanceGroup._instance_by_camcorder
+    assert instance_0 not in instance_group_0._instance_by_camcorder.values()
+    assert instance_0 not in instance_group_1._instance_by_camcorder.values()
+    assert instance_1 in instance_group_0._instance_by_camcorder.values()
+    assert instance_1 not in instance_group_1._instance_by_camcorder.values()
+
+    # Let's move the instance to the other `InstanceGroup`
+    context.setInstanceGroup(instance_group=instance_group_1)
+    # Check FrameGroup.instance_groups
+    assert len(frame_group.instance_groups) == 2
+    assert instance_group_0 in frame_group.instance_groups
+    assert instance_group_1 in frame_group.instance_groups
+    # Check FrameGroup._instances_by_camcorder
+    assert instance_0 not in frame_group._instances_by_cam[camera]
+    assert instance_1 in frame_group._instances_by_cam[camera]
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 7
+    assert len(instance_group_1.instances) == 6
+    assert instance_0 not in instance_group_0.instances
+    assert instance_0 not in instance_group_1.instances
+    assert instance_1 not in instance_group_0.instances
+    assert instance_1 in instance_group_1.instances
+    # Check InstanceGroup._camcorder_by_instance
+    assert instance_0 not in instance_group_0._camcorder_by_instance
+    assert instance_0 not in instance_group_1._camcorder_by_instance
+    assert instance_1 not in instance_group_0._camcorder_by_instance
+    assert instance_1 in instance_group_1._camcorder_by_instance
+    # Check InstanceGroup._instance_by_camcorder
+    assert instance_0 not in instance_group_0._instance_by_camcorder.values()
+    assert instance_0 not in instance_group_1._instance_by_camcorder.values()
+    assert instance_1 not in instance_group_0._instance_by_camcorder.values()
+    assert instance_1 in instance_group_1._instance_by_camcorder.values()
+
+    # Let's move the other instance back to its original `InstanceGroup`
+    context.state["instance"] = instance_0
+    context.setInstanceGroup(instance_group=instance_group_0)
+    # Check FrameGroup.instance_groups
+    assert len(frame_group.instance_groups) == 2
+    assert instance_group_0 in frame_group.instance_groups
+    assert instance_group_1 in frame_group.instance_groups
+    # Check FrameGroup._instances_by_camcorder
+    assert instance_0 in frame_group._instances_by_cam[camera]
+    assert instance_1 in frame_group._instances_by_cam[camera]
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 8
+    assert len(instance_group_1.instances) == 6
+    assert instance_0 in instance_group_0.instances
+    assert instance_0 not in instance_group_1.instances
+    assert instance_1 not in instance_group_0.instances
+    assert instance_1 in instance_group_1.instances
+    # Check InstanceGroup._camcorder_by_instance
+    assert instance_0 in instance_group_0._camcorder_by_instance
+    assert instance_0 not in instance_group_1._camcorder_by_instance
+    assert instance_1 not in instance_group_0._camcorder_by_instance
+    assert instance_1 in instance_group_1._camcorder_by_instance
+    # Check InstanceGroup._instance_by_camcorder
+    assert instance_0 in instance_group_0._instance_by_camcorder.values()
+    assert instance_0 not in instance_group_1._instance_by_camcorder.values()
+    assert instance_1 not in instance_group_0._instance_by_camcorder.values()
+    assert instance_1 in instance_group_1._instance_by_camcorder.values()
+
+    # Let's remove all but one instance from an `InstanceGroup`
+    for instance in instance_group_0.instances:
+        if instance == instance_0:
+            continue
+        frame_group.remove_instance(instance=instance)
+    assert len(instance_group_0.instances) == 1
+    context.setInstanceGroup(instance_group=instance_group_0)
+    # Check FrameGroup.instance_groups
+    assert len(frame_group.instance_groups) == 2
+    assert instance_group_0 in frame_group.instance_groups
+    assert instance_group_1 in frame_group.instance_groups
+    # Check FrameGroup._instances_by_camcorder
+    assert instance_0 in frame_group._instances_by_cam[camera]
+    assert instance_1 in frame_group._instances_by_cam[camera]
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 1
+    assert len(instance_group_1.instances) == 6
+    assert instance_0 in instance_group_0.instances
+    assert instance_0 not in instance_group_1.instances
+    assert instance_1 not in instance_group_0.instances
+    assert instance_1 in instance_group_1.instances
+    # Check InstanceGroup._camcorder_by_instance
+    assert instance_0 in instance_group_0._camcorder_by_instance
+    assert instance_0 not in instance_group_1._camcorder_by_instance
+    assert instance_1 not in instance_group_0._camcorder_by_instance
+    assert instance_1 in instance_group_1._camcorder_by_instance
+    # Check InstanceGroup._instance_by_camcorder
+    assert instance_0 in instance_group_0._instance_by_camcorder.values()
+    assert instance_0 not in instance_group_1._instance_by_camcorder.values()
+    assert instance_1 not in instance_group_0._instance_by_camcorder.values()
+    assert instance_1 in instance_group_1._instance_by_camcorder.values()
+
+    # Let's switch the last instance to a different `InstanceGroup`
+    context.setInstanceGroup(instance_group=instance_group_1)
+    # Check FrameGroup.instance_groups
+    assert len(frame_group.instance_groups) == 1
+    assert instance_group_1 in frame_group.instance_groups
+    # Check FrameGroup._instances_by_camcorder
+    assert instance_0 in frame_group._instances_by_cam[camera]
+    assert instance_1 not in frame_group._instances_by_cam[camera]
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 0
+    assert len(instance_group_1.instances) == 6
+    assert instance_0 in instance_group_1.instances
+    assert instance_1 not in instance_group_1.instances
+    # Check InstanceGroup._camcorder_by_instance
+    assert instance_0 in instance_group_1._camcorder_by_instance
+    assert instance_1 not in instance_group_1._camcorder_by_instance
+    # Check InstanceGroup._instance_by_camcorder
+    assert instance_0 in instance_group_1._instance_by_camcorder.values()
+    assert instance_1 not in instance_group_1._instance_by_camcorder.values()
