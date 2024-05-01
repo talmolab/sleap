@@ -1282,3 +1282,108 @@ def test_SetSelectedInstanceGroup(multiview_min_session_frame_groups: Labels):
     # Check InstanceGroup._instance_by_camcorder
     assert instance_0 in instance_group_1._instance_by_camcorder.values()
     assert instance_1 not in instance_group_1._instance_by_camcorder.values()
+
+
+def test_AddInstanceGroup(multiview_min_session_frame_groups: Labels):
+    """Test that adding an instance group works."""
+
+    labels = multiview_min_session_frame_groups
+    session: RecordingSession = labels.sessions[0]
+    frame_idx = 1
+    frame_group: FrameGroup = session.frame_groups[frame_idx]
+    instance_group_0: InstanceGroup = frame_group.instance_groups[0]
+    instance_group_1: InstanceGroup = frame_group.instance_groups[1]
+    labeled_frame: LabeledFrame = frame_group.labeled_frames[0]
+    video = labeled_frame.video
+    camera = session.get_camera(video=video)
+
+    # Set-up CommandContext
+    context: CommandContext = CommandContext.from_labels(labels)
+
+    # No session
+    with pytest.raises(ValueError):
+        context.addInstanceGroup()
+    # Check FrameGroup._instances_by_camcorder
+    assert len(frame_group._instances_by_cam[camera]) == 2
+    # Check FrameGroup.instance_groups
+    assert len(frame_group.instance_groups) == 2
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 8
+    assert len(instance_group_1.instances) == 6
+
+    # No frame_idx
+    context.state["session"] = session
+    with pytest.raises(TypeError):
+        context.addInstanceGroup()
+    # Check FrameGroup._instances_by_camcorder
+    assert len(frame_group._instances_by_cam[camera]) == 2
+    # Check FrameGroup.instance_groups
+    assert len(frame_group.instance_groups) == 2
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 8
+    assert len(instance_group_1.instances) == 6
+
+    # No instance
+    context.state["frame_idx"] = frame_idx
+    with pytest.raises(ValueError):
+        context.addInstanceGroup()
+    # Check FrameGroup._instances_by_camcorder
+    assert len(frame_group._instances_by_cam[camera]) == 2
+    # Check FrameGroup.instance_groups
+    instance_group_2 = frame_group.instance_groups[-1]
+    assert len(frame_group.instance_groups) == 3
+    assert instance_group_2 in frame_group.instance_groups
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 8
+    assert len(instance_group_1.instances) == 6
+    assert len(instance_group_2.instances) == 0
+
+    # No video
+    context.state["instance"] = instance_group_0.get_instance(cam=camera)
+    with pytest.raises(ValueError):
+        context.addInstanceGroup()
+    # Check FrameGroup._instances_by_camcorder
+    assert len(frame_group._instances_by_cam[camera]) == 2
+    # Check FrameGroup.instance_groups
+    instance_group_3 = frame_group.instance_groups[-1]
+    assert len(frame_group.instance_groups) == 4
+    assert instance_group_3 in frame_group.instance_groups
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 8
+    assert len(instance_group_1.instances) == 6
+    assert len(instance_group_2.instances) == 0
+    assert len(instance_group_3.instances) == 0
+
+    # Everything, let's add an `InstanceGroup` and set the `Instance` to it
+    context.state["video"] = video
+    context.addInstanceGroup()
+    # Check FrameGroup._instances_by_camcorder
+    assert len(frame_group._instances_by_cam[camera]) == 2
+    # Check FrameGroup.instance_groups
+    instance_group_4 = frame_group.instance_groups[-1]
+    assert len(frame_group.instance_groups) == 5
+    assert instance_group_4 in frame_group.instance_groups
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 7
+    assert len(instance_group_1.instances) == 6
+    assert len(instance_group_2.instances) == 0
+    assert len(instance_group_3.instances) == 0
+    assert len(instance_group_4.instances) == 1
+
+    # Everything, let's add an `InstanceGroup` and set the last `Instance` to it
+    context.state["video"] = video
+    context.addInstanceGroup()
+    # Check FrameGroup._instances_by_camcorder
+    assert len(frame_group._instances_by_cam[camera]) == 2
+    # Check FrameGroup.instance_groups
+    instance_group_5 = frame_group.instance_groups[-1]
+    assert len(frame_group.instance_groups) == 5
+    assert instance_group_4 not in frame_group.instance_groups
+    assert instance_group_5 in frame_group.instance_groups
+    # Check InstanceGroup.instances
+    assert len(instance_group_0.instances) == 7
+    assert len(instance_group_1.instances) == 6
+    assert len(instance_group_2.instances) == 0
+    assert len(instance_group_3.instances) == 0
+    assert len(instance_group_4.instances) == 0
+    assert len(instance_group_5.instances) == 1
