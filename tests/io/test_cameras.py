@@ -1,6 +1,6 @@
 """Module to test functions in `sleap.io.cameras`."""
 
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pytest
@@ -12,7 +12,7 @@ from sleap.io.cameras import (
     FrameGroup,
     RecordingSession,
 )
-from sleap.io.dataset import Instance, Labels
+from sleap.io.dataset import Instance, Labels, PredictedInstance
 from sleap.io.video import Video
 
 
@@ -398,6 +398,7 @@ def create_instance_group(
     labels: Labels,
     frame_idx: int,
     add_dummy: bool = False,
+    name: Optional[str] = None,
 ) -> Union[
     InstanceGroup, Tuple[InstanceGroup, Dict[Camcorder, Instance], Instance, Camcorder]
 ]:
@@ -411,6 +412,9 @@ def create_instance_group(
     Returns:
         The `InstanceGroup` object.
     """
+
+    if name is None:
+        name = "test_instance_group"
 
     session = labels.sessions[0]
 
@@ -460,9 +464,15 @@ def test_instance_group(
     lf = labels.labeled_frames[0]
     frame_idx = lf.frame_idx
 
+    # Test `_create_dummy_instance` (fail)
+    instance_group = InstanceGroup(name="test_instance_group", frame_idx=frame_idx)
+    with pytest.raises(ValueError):
+        dummy_instance = instance_group._create_dummy_instance()
+
     # Test `from_instance_by_camcorder_dict`
+    name = "test_instance_group"
     instance_group, instance_by_camera, dummy_instance, cam = create_instance_group(
-        labels=labels, frame_idx=frame_idx, add_dummy=True
+        labels=labels, frame_idx=frame_idx, add_dummy=True, name=name
     )
     assert isinstance(instance_group, InstanceGroup)
     assert instance_group.frame_idx == frame_idx
@@ -476,6 +486,40 @@ def test_instance_group(
             assert isinstance(instance, Instance)
             assert instance_group[camera] == instance_by_camera[camera]
             assert instance_group[instance] == camera
+
+    # Test `_create_dummy_instance` (pass)
+    dummy_instance = instance_group.dummy_instance
+    assert isinstance(dummy_instance, PredictedInstance)
+    matched_instance = instance_group.instances[0]
+    assert dummy_instance.skeleton == matched_instance.skeleton
+    assert np.all(np.isnan(dummy_instance.points))
+    assert np.isnan(
+        dummy_instance.score
+    )  # TODO(LM): Should be OKS (g.t. vs reprojection)
+    assert dummy_instance.tracking_score == 0.0
+
+    # Test `name` property
+    assert instance_group.name == name
+
+    # Test `name.setter`
+    with pytest.raises(ValueError):
+        instance_group.name = "test_instance_group_2"
+
+    # Test `set_name`
+    new_name = "test_instance_group_2"
+    name_registry = {instance_group.name}
+    instance_group.set_name(name=new_name, name_registry=name_registry)
+    assert instance_group.name == new_name
+    assert instance_group.name in name_registry
+    assert name not in name_registry
+    with pytest.raises(ValueError):  # Name already in registry
+        instance_group.set_name(name=new_name, name_registry=name_registry)
+
+    # Test `return_unique_name`
+    name_registry = {"instance_group_1"}
+    new_name = instance_group.return_unique_name(name_registry=name_registry)
+    assert new_name not in name_registry
+    assert new_name == "instance_group_2"
 
     # Test `to_dict`
     labeled_frame_to_idx = {lf: idx for idx, lf in enumerate(labels.labeled_frames)}
@@ -533,26 +577,6 @@ def test_instance_group(
     with pytest.raises(KeyError):
         instance_group[len(instance_group)]
 
-    # Test `_dummy_instance` property
-    assert (
-        instance_group.dummy_instance.skeleton == instance_group.instances[0].skeleton
-    )
-    assert isinstance(instance_group.dummy_instance, Instance)
-
-    # Test `numpy` method
-    instance_group_numpy = instance_group.numpy()
-    assert isinstance(instance_group_numpy, np.ndarray)
-    n_views, n_nodes, n_coords = instance_group_numpy.shape
-    assert n_views == len(instance_group.camera_cluster.cameras)
-    assert n_nodes == len(instance_group.dummy_instance.skeleton.nodes)
-    assert n_coords == 2
-
-    # Test `update_points` method
-    instance_group.update_points(np.full((n_views, n_nodes, n_coords), 0))
-    instance_group_numpy = instance_group.numpy()
-    np.nan_to_num(instance_group_numpy, nan=0)
-    assert np.all(np.nan_to_num(instance_group_numpy, nan=0) == 0)
-
     # Populate with only dummy instance and test `from_instance_by_camcorder_dict`
     instance_by_camera = {cam: dummy_instance}
     with pytest.raises(ValueError):
@@ -592,6 +616,30 @@ def test_instance_group(
             instance_group_numpy[view_idx + 1],
             equal_nan=True,
         )
+
+    # Test `update_points` method
+    assert not np.all(instance_group.numpy(invisible_as_nan=False) == 72317)
+    instance_group.update_points(np.full((n_views, n_nodes, n_coords), 72317))
+    instance_group_numpy = instance_group.numpy(invisible_as_nan=False)
+    assert np.all(instance_group_numpy == 72317)
+
+    # Test `add_instance`, `replace_instance`, and `remove_instance`
+    cam = instance_group.cameras[0]
+    instance = instance_group.instances[1]
+    assert instance_group.get_instance(cam) != instance
+    with pytest.raises(ValueError):  # `Instance` already in this `InstanceGroup`
+        instance_group.add_instance(instance=instance, cam=cam)
+    # Let's replace an instance
+    instance_being_replaced = instance_group.get_instance(cam=cam)
+    old_instance_cam = instance_group.get_cam(instance=instance)
+    instance_group.replace_instance(instance=instance, cam=cam)
+    assert instance_group.get_instance(cam=cam) == instance
+    assert instance_being_replaced not in instance_group.instances
+    assert old_instance_cam not in instance_group.cameras
+    # Let's remove an instance (using `Camcorder` input)
+    instance_group.remove_instance(instance_or_cam=cam)
+    assert instance not in instance_group.instances
+    assert cam not in instance_group.cameras
 
 
 def test_frame_group(
@@ -696,6 +744,8 @@ def test_frame_group(
     session.cams_to_include = session.cams_to_include[1:]
     assert frame_group.cams_to_include == session.cams_to_include
     assert len(frame_group.cams_to_include) == len(session.linked_cameras) - 1
+    with pytest.raises(ValueError):
+        frame_group.cams_to_include = session.linked_cameras
 
     # Test `numpy` method
     frame_group_np = frame_group.numpy()
@@ -709,8 +759,97 @@ def test_frame_group(
     # Different views should have different coordinates
     assert not np.allclose(frame_group_np[0], frame_group_np[1], equal_nan=True)
 
-    # Test `get_instace_group`
+    # Test `get_instance_group`
     instance_group = frame_group.instance_groups[0]
     camera = session.cameras[0]
     instance = instance_group.get_instance(cam=camera)
     assert frame_group.get_instance_group(instance=instance) == instance_group
+
+    # Test `instance_groups.setter`
+    inst_group_to_remove = frame_group.instance_groups[0]
+    len_instance_groups = len(frame_group.instance_groups)
+    frame_group.instance_groups = frame_group.instance_groups[1:]
+    assert inst_group_to_remove not in frame_group.instance_groups
+    assert len(frame_group.instance_groups) == len_instance_groups - 1
+    # # TODO(LM): Create custom class for `frame_group.instance_groups`
+    # frame_group.instance_groups.append(inst_group_to_remove)
+    # assert inst_group_to_remove not in frame_group.instance_groups
+    frame_group.instance_groups = frame_group.instance_groups + [inst_group_to_remove]
+    assert inst_group_to_remove in frame_group.instance_groups
+
+    # Test `remove_instance_group`
+    len_instance_groups = len(frame_group.instance_groups)
+    frame_group.remove_instance_group(instance_group=inst_group_to_remove)
+    assert inst_group_to_remove not in frame_group.instance_groups
+    assert len(frame_group.instance_groups) == len_instance_groups - 1
+    assert inst_group_to_remove.name not in frame_group._instance_group_name_registry
+    for camera, instance in inst_group_to_remove.instance_by_camcorder.items():
+        assert instance not in frame_group._instances_by_cam[camera]
+    instance_removed = inst_group_to_remove.instances[0]
+
+    # Test `remove_instance`
+    frame_group.remove_instance(instance=instance_removed)  # Does nothing
+    instance_to_remove = frame_group.instance_groups[0].instances[0]
+    labeled_frame_to_remove = instance_to_remove.frame
+    camera_to_remove = frame_group.get_camera(labeled_frame=labeled_frame_to_remove)
+    for instance_to_remove in labeled_frame_to_remove.instances:
+        instance_group = frame_group.get_instance_group(instance=instance_to_remove)
+        frame_group.remove_instance(instance=instance_to_remove)
+        if instance_group is not None:
+            assert camera_to_remove not in instance_group.cameras
+            assert instance_to_remove not in instance_group.instances
+            assert (
+                instance_to_remove
+                not in frame_group._instances_by_cam[camera_to_remove]
+            )
+    assert camera_to_remove not in frame_group.cameras
+    assert camera_to_remove not in frame_group._labeled_frame_by_cam
+    assert camera_to_remove not in frame_group._cam_by_labeled_frame
+    assert labeled_frame_to_remove not in frame_group.labeled_frames
+    assert labeled_frame_to_remove not in frame_group._cam_by_labeled_frame
+
+    # Test `set_instance_group_name`
+    new_name = "instance_group_2"
+    with pytest.raises(ValueError):  # `InstanceGroup` not in this `FrameGroup`
+        frame_group.set_instance_group_name(
+            instance_group=inst_group_to_remove, name=new_name
+        )
+    instance_group = frame_group.instance_groups[0]
+    old_name = instance_group.name
+    frame_group.set_instance_group_name(instance_group=instance_group, name=new_name)
+    assert instance_group.name == new_name
+    assert new_name in frame_group._instance_group_name_registry
+    assert old_name not in frame_group._instance_group_name_registry
+
+    # Test `get_labeled_frame` and `get_camera`
+    camera = frame_group.cameras[0]
+    labeled_frame = frame_group.get_labeled_frame(camera=camera)
+    assert frame_group.get_camera(labeled_frame=labeled_frame) == camera
+
+    # Test `remove_labeled_frame` method and `cameras` and `labeled_frames` properties
+    assert camera in frame_group._labeled_frame_by_cam
+    assert labeled_frame in frame_group._cam_by_labeled_frame
+    assert camera in frame_group.cameras
+    assert labeled_frame in frame_group.labeled_frames
+    # Test with neither `LabeledFrame` nor `Camera` input
+    frame_group.remove_labeled_frame(labeled_frame_or_camera="neither")  # Does nothing
+    # Test with `LabeledFrame` input
+    frame_group.remove_labeled_frame(labeled_frame_or_camera=labeled_frame)
+    assert camera not in frame_group._labeled_frame_by_cam
+    assert labeled_frame not in frame_group._cam_by_labeled_frame
+    assert camera not in frame_group.cameras
+    assert labeled_frame not in frame_group.labeled_frames
+    # Test with `Camera` input
+    camera = frame_group.cameras[0]
+    labeled_frame = frame_group.get_labeled_frame(camera=camera)
+    frame_group.remove_labeled_frame(labeled_frame_or_camera=camera)
+    assert camera not in frame_group.cameras
+    assert labeled_frame not in frame_group.labeled_frames
+
+    # Test `_create_and_add_labeled_frame`
+    labeled_frame_created = frame_group._create_and_add_labeled_frame(camera=camera)
+    assert labeled_frame.video == session.get_video(camera)
+    assert labeled_frame.frame_idx == frame_group.frame_idx
+    assert camera in frame_group.cameras
+    assert labeled_frame_created in frame_group.labeled_frames
+    assert labeled_frame in frame_group.session.labels.labeled_frames

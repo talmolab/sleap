@@ -593,6 +593,14 @@ class CommandContext:
         """Sets track for selected instance."""
         self.execute(SetSelectedInstanceTrack, new_track=new_track)
 
+    def addInstanceGroup(self):
+        """Sets the instance group for selected instance."""
+        self.execute(AddInstanceGroup)
+
+    def setInstanceGroup(self, instance_group: Optional["InstanceGroup"]):
+        """Sets the instance group for selected instance."""
+        self.execute(SetSelectedInstanceGroup, instance_group=instance_group)
+
     def deleteTrack(self, track: "Track"):
         """Delete a track and remove from all instances."""
         self.execute(DeleteTrack, track=track)
@@ -600,6 +608,10 @@ class CommandContext:
     def deleteMultipleTracks(self, delete_all: bool = False):
         """Delete all tracks."""
         self.execute(DeleteMultipleTracks, delete_all=delete_all)
+
+    def deleteInstanceGroup(self, instance_group: "InstanceGroup"):
+        """Delete an instance group."""
+        self.execute(DeleteInstanceGroup, instance_group=instance_group)
 
     def copyInstanceTrack(self):
         """Copies the selected instance's track to the track clipboard."""
@@ -2699,6 +2711,30 @@ class DeleteDialogCommand(EditCommand):
             context.signal_update([UpdateTopic.project_instances])
 
 
+class AddInstanceGroup(EditCommand):
+    topics = [UpdateTopic.sessions]
+
+    @staticmethod
+    def do_action(context, params):
+
+        # Get session and frame index
+        frame_idx = context.state["frame_idx"]
+        session: RecordingSession = context.state["session"]
+        if session is None:
+            raise ValueError("Cannot add instance group without session.")
+
+        # Get or create frame group
+        frame_group = session.frame_groups.get(frame_idx, None)
+        if frame_group is None:
+            frame_group = session.new_frame_group(frame_idx=frame_idx)
+
+        # Create and add instance group
+        instance_group = frame_group.add_instance_group(instance_group=None)
+
+        # Now add the selected instance to the `InstanceGroup`
+        context.execute(SetSelectedInstanceGroup, instance_group=instance_group)
+
+
 class AddTrack(EditCommand):
     topics = [UpdateTopic.tracks]
 
@@ -2713,6 +2749,61 @@ class AddTrack(EditCommand):
         context.labels.add_track(context.state["video"], new_track)
 
         context.execute(SetSelectedInstanceTrack, new_track=new_track)
+
+
+class SetSelectedInstanceGroup(EditCommand):
+    @staticmethod
+    def do_action(context, params):
+        """Set the `selected_instance` to the `instance_group`.
+
+        Args:
+            context: The command context.
+                state: The context state.
+                    instance: The selected instance.
+                    frame_idx: The frame index.
+                    video: The video.
+                    session: The recording session.
+
+            params: The command parameters.
+                instance_group: The `InstanceGroup` to set the selected instance to.
+
+        Raises:
+            ValueError: If the `RecordingSession` is None.
+            ValueError: If the `FrameGroup` does not exist for the frame index.
+            ValueError: If the `Video` is not linked to a `Camcorder`.
+        """
+
+        selected_instance = context.state["instance"]
+        frame_idx = context.state["frame_idx"]
+        video = context.state["video"]
+
+        base_message = (
+            f"Cannot set instance group for selected instance [{selected_instance}]."
+        )
+
+        # `RecordingSession` should not be None
+        session: RecordingSession = context.state["session"]
+        if session is None:
+            raise ValueError(f"{base_message} No session for video [{video}]")
+
+        # `FrameGroup` should already exist
+        frame_group = session.frame_groups.get(frame_idx, None)
+        if frame_group is None:
+            raise ValueError(
+                f"{base_message} Frame group does not exist for frame [{frame_idx}] in "
+                f"{session}."
+            )
+
+        # We need the camera and instance group to set the instance group
+        camera = session.get_camera(video=video)
+        if camera is None:
+            raise ValueError(f"{base_message} No camera linked to video [{video}]")
+        instance_group = params["instance_group"]
+
+        # Set the instance group
+        frame_group.add_instance(
+            instance=selected_instance, camera=camera, instance_group=instance_group
+        )
 
 
 class SetSelectedInstanceTrack(EditCommand):
@@ -2802,6 +2893,31 @@ class DeleteMultipleTracks(EditCommand):
             context.labels.remove_all_tracks()
         else:
             context.labels.remove_unused_tracks()
+
+
+class DeleteInstanceGroup(EditCommand):
+    topics = [UpdateTopic.sessions]
+
+    @staticmethod
+    def do_action(context, params):
+
+        instance_group = params["instance_group"]
+        frame_idx = context.state["frame_idx"]
+
+        base_message = f"Cannot delete instance group [{instance_group}]."
+
+        # `RecordingSession` should not be None
+        session: RecordingSession = context.state["session"]
+        if session is None:
+            raise ValueError(f"{base_message} No session in context state.")
+
+        # `FrameGroup` should already exist
+        frame_group = session.frame_groups.get(frame_idx, None)
+        if frame_group is None:
+            raise ValueError(f"{base_message} No frame group for frame {frame_idx}.")
+
+        # Remove the instance group
+        frame_group.remove_instance_group(instance_group=instance_group)
 
 
 class CopyInstanceTrack(EditCommand):
@@ -3385,6 +3501,7 @@ class AddMissingInstanceNodes(EditCommand):
     def add_force_directed_nodes(
         cls, context, instance, visible, center_point: QtCore.QPoint = None
     ):
+
         import networkx as nx
 
         center_point = center_point or context.app.player.getVisibleRect().center()
