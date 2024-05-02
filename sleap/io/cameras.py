@@ -1671,7 +1671,7 @@ class FrameGroup:
 
         frame_group_numpy = np.stack(instance_group_numpys, axis=1)  # M=all x T x N x 2
         cams_to_include_mask = np.array(
-            [cam in self.cams_to_include for cam in self.cameras]
+            [cam in self.cams_to_include for cam in self.session.cameras]
         )  # M=all x 1
 
         return frame_group_numpy[cams_to_include_mask]  # M=include x T x N x 2
@@ -1988,8 +1988,12 @@ class FrameGroup:
                 f"Camcorder {camera} is not linked to a video in this "
                 f"RecordingSession {self.session}."
             )
-
-        labeled_frame = LabeledFrame(video=video, frame_idx=self.frame_idx)
+        # First try to find the `LabeledFrame` in the `RecordingSession`'s `Labels`
+        labeled_frames = self.session.labels.find(video=video, frame_idx=self.frame_idx)
+        if len(labeled_frames) > 0:
+            labeled_frame = labeled_frames[0]
+        else:
+            labeled_frame = LabeledFrame(video=video, frame_idx=self.frame_idx)
         self.add_labeled_frame(labeled_frame=labeled_frame, camera=camera)
 
         return labeled_frame
