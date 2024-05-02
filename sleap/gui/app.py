@@ -1231,8 +1231,17 @@ class MainWindow(QMainWindow):
 
     def _after_plot_update(self, frame_idx):
         """Run after plot is updated, but stay on same frame."""
+
+        video = self.state["video"]
+
+        # Redraw trails
         overlay: TrackTrailOverlay = self.overlays["trails"]
-        overlay.redraw(self.state["video"], frame_idx)
+        overlay.redraw(video, frame_idx)
+
+        # Replot connected views for multi-camera projects
+        # TODO(LM): Use context.state["session"] in command instead (when implemented)
+        session = self.labels.get_session(video)
+        self.commands.triangulateSession(session=session)
 
     def _after_plot_change(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""

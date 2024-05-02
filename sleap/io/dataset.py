@@ -62,7 +62,7 @@ import h5py as h5
 import numpy as np
 import datetime
 from sklearn.model_selection import train_test_split
-from sleap.io.cameras import RecordingSession
+from sleap.io.cameras import FrameGroup, RecordingSession
 
 try:
     from typing import ForwardRef
@@ -274,6 +274,12 @@ class LabelsDataCache:
             del self._lf_by_video[video]
         if video in self._frame_idx_map:
             del self._frame_idx_map[video]
+        self.remove_session_video(video=video)
+
+    def remove_session_video(self, video: Video):
+        """Remove video from session in cache."""
+
+        # TODO(LM): Also remove LabeledFrames from frame_group
         if video in self._session_by_video:
             del self._session_by_video[video]
 
@@ -442,8 +448,7 @@ class LabelsDataCache:
 
 @attr.s(auto_attribs=True, repr=False, str=False)
 class Labels(MutableSequence):
-    """
-    The :class:`Labels` class collects the data for a SLEAP project.
+    """The :class:`Labels` class collects the data for a SLEAP project.
 
     This class is front-end for all interactions with loading, writing,
     and modifying these labels. The actual storage backend for the data
@@ -671,6 +676,7 @@ class Labels(MutableSequence):
             "Labels("
             f"labeled_frames={len(self.labeled_frames)}, "
             f"videos={len(self.videos)}, "
+            f"sessions={len(self.sessions)}, "
             f"skeletons={len(self.skeletons)}, "
             f"tracks={len(self.tracks)}"
             ")"
@@ -966,6 +972,9 @@ class Labels(MutableSequence):
             update_cache: If True, update the internal frame cache. If False, cache
                 update can be postponed (useful when removing many frames).
         """
+
+        # TODO(LM): Remove LabeledFrame from any frame groups it's in.
+
         self.labeled_frames.remove(lf)
         if update_cache:
             self._cache.remove_frame(lf)
@@ -976,6 +985,8 @@ class Labels(MutableSequence):
         Args:
             lfs: A sequence of labeled frames to remove.
         """
+
+        # TODO(LM): Remove LabeledFrame from any frame groups it's in.
         to_remove = set(lfs)
         self.labeled_frames = [lf for lf in self.labeled_frames if lf not in to_remove]
         self.update_cache()
@@ -999,6 +1010,8 @@ class Labels(MutableSequence):
 
     def remove_empty_frames(self):
         """Remove frames with no instances."""
+
+        # TODO(LM): Remove LabeledFrame from any frame groups it's in.
         self.labeled_frames = [
             lf for lf in self.labeled_frames if len(lf.instances) > 0
         ]
@@ -1392,10 +1405,40 @@ class Labels(MutableSequence):
     def remove_instance(
         self, frame: LabeledFrame, instance: Instance, in_transaction: bool = False
     ):
-        """Remove instance from frame, updating track occupancy."""
+        """Remove instance from frame, updating track occupancy and `FrameGroup`."""
+
         frame.instances.remove(instance)
         if not in_transaction:
             self._cache.remove_instance(frame, instance)
+
+        # Also remove instance from `InstanceGroup` if any
+        session = self.get_session(frame.video)
+        if session is None:
+            return  # No session, so no `FrameGroup` to update
+        frame_group: FrameGroup = session.frame_groups.get(frame.frame_idx, None)
+        if frame_group is None:
+            return  # No `FrameGroup` for this frame
+        video = frame.video
+        camera = session.get_camera(video=video)
+        if camera is None:
+            return  # No camera, so no `InstanceGroup` to update
+
+        # If `Instance.from_predicted`, then replace with `PredictedInstance`
+        instance_group = frame_group.get_instance_group(instance=instance)
+        replace_instance = (instance.from_predicted is not None) and (
+            instance_group is not None
+        )
+
+        # Add the new instance to the `FrameGroup` and replace the old one
+        if replace_instance:
+            frame_group.add_instance(
+                instance=instance.from_predicted,
+                camera=camera,
+                instance_group=instance_group,
+            )
+        # Otherwise just remove the instance
+        else:
+            frame_group.remove_instance(instance=instance)
 
     def add_instance(self, frame: LabeledFrame, instance: Instance):
         """Add instance to frame, updating track occupancy."""
@@ -1656,7 +1699,8 @@ class Labels(MutableSequence):
 
         # Delete video
         self.videos.remove(video)
-        self._cache.remove_video(video)
+        self.remove_session_video(video=video)
+        self._cache.remove_video(video=video)
 
     def add_session(self, session: RecordingSession):
         """Add a recording session to the labels.
@@ -1701,16 +1745,21 @@ class Labels(MutableSequence):
         """
         return self._cache._session_by_video.get(video, None)
 
-    def remove_session_video(self, session: RecordingSession, video: Video):
-        """Remove a video from a recording session.
+    def remove_session_video(self, video: Video):
+        """Remove a video from its linked recording session (if any).
 
         Args:
-            session: `RecordingSession` instance
             video: `Video` instance
         """
 
-        self._cache._session_by_video.pop(video, None)
-        if video in session.videos:
+        session = self.get_session(video)
+
+        if session is None:
+            return
+
+        # Need to remove from cache first to avoid circular reference
+        self._cache.remove_session_video(video=video)
+        if session.get_camera(video) is not None:
             session.remove_video(video)
 
     @classmethod
@@ -1844,6 +1893,8 @@ class Labels(MutableSequence):
         # Keep only labeled frames with no conflicting predictions.
         self.labeled_frames = keep_lfs
 
+        # TODO(LM): Remove LabeledFrame from any frame groups it's in.
+
     def remove_predictions(self, new_labels: Optional["Labels"] = None):
         """Clear predicted instances from the labels.
 
@@ -1879,6 +1930,8 @@ class Labels(MutableSequence):
 
         # Keep only labeled frames with no conflicting predictions.
         self.labeled_frames = keep_lfs
+
+        # TODO(LM): Remove LabeledFrame from any frame groups it's in.
 
     def remove_untracked_instances(self, remove_empty_frames: bool = True):
         """Remove instances that do not have a track assignment.
@@ -1997,6 +2050,7 @@ class Labels(MutableSequence):
             for vid in {lf.video for lf in self.labeled_frames}:
                 self.merge_matching_frames(video=vid)
         else:
+            # TODO(LM): Remove LabeledFrame from any frame groups it's in.
             self.labeled_frames = LabeledFrame.merge_frames(
                 self.labeled_frames, video=video
             )
@@ -2018,9 +2072,10 @@ class Labels(MutableSequence):
               instances.
             * nodes - The nodes that the skeletons represent.
             * videos - The videos that that the instances occur on.
-            * labels - The labeled frames
+            * labels - The labeled frames if `skip_labels` is False.
             * tracks - The tracks associated with each instance.
             * suggestions - The suggested frames.
+            * sessions - The recording sessions.
             * negative_anchors - The negative training sample anchors.
         """
         # FIXME: Update list of nodes
@@ -2059,8 +2114,11 @@ class Labels(MutableSequence):
         # this can save a lot of space when there are lots of tracks.
         track_cattr = cattr.Converter(unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE)
 
-        # Make converter for recording sessions
-        sessions_cattr = RecordingSession.make_cattr(videos_list=self.videos)
+        # Make serializer for recording sessions
+        labeled_frame_to_idx = {lf: i for i, lf in enumerate(self.labeled_frames)}
+        sessions_cattr = RecordingSession.make_cattr(
+            videos_list=self.videos, labeled_frame_to_idx=labeled_frame_to_idx
+        )
 
         # Serialize the skeletons, videos, and labels
         dicts = {
@@ -2096,7 +2154,7 @@ class Labels(MutableSequence):
         video_search: Union[Callable, List[Text], None] = None,
         *args,
         **kwargs,
-    ):
+    ) -> "Labels":
         """Load file, detecting format from filename."""
         from .format import read
 

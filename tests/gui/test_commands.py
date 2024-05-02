@@ -4,6 +4,7 @@ import time
 from pathlib import Path, PurePath
 from typing import List
 
+import numpy as np
 import pytest
 
 from sleap import PredictedInstance, Skeleton, Track
@@ -17,9 +18,11 @@ from sleap.gui.commands import (
     RemoveVideo,
     ReplaceVideo,
     SaveProjectAs,
+    TriangulateSession,
     get_new_version_filename,
 )
 from sleap.instance import Instance, LabeledFrame
+from sleap.io.cameras import InstanceGroup, FrameGroup, RecordingSession
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
@@ -217,7 +220,6 @@ def test_ExportAnalysisFile(
     context.state["filename"] = None
 
     if csv:
-
         context.state["filename"] = centered_pair_predictions_hdf5_path
 
         params = {"all_videos": True, "csv": csv}
@@ -952,3 +954,152 @@ def test_AddSession(
     assert len(labels.sessions) == 2
     assert context.state["session"] is session
     assert labels.sessions[1] is not session
+
+
+def test_TriangulateSession_has_enough_instances(multiview_min_session_frame_groups):
+    """Test that `TriangulateSession.has_enough_instances` works."""
+
+    labels = multiview_min_session_frame_groups
+    session: RecordingSession = labels.sessions[0]
+    frame_group = session.frame_groups[0]
+
+    # Assure that all instance groups are selected
+    instance_groups_to_triangulate = TriangulateSession.has_enough_instances(
+        frame_group=frame_group
+    )
+    assert instance_groups_to_triangulate == frame_group.instance_groups
+
+    # Remove most instances from last instance group, ensure 2 instances left
+    instance_group = frame_group.instance_groups[-1]
+    for instance in instance_group.instances[:-2]:
+        frame_group.remove_instance(instance=instance)
+    assert len(instance_group.instances) == 2
+
+    # All instance groups should still be selected
+    instance_groups_to_triangulate = TriangulateSession.has_enough_instances(
+        frame_group=frame_group
+    )
+    assert instance_groups_to_triangulate == frame_group.instance_groups
+
+    # Remove one more instance from last instance group, ensure 1 instance left
+    for instance in instance_group.instances[:-1]:
+        frame_group.remove_instance(instance=instance)
+    assert len(instance_group.instances) == 1
+
+    # Last instance group should not be selected
+    instance_groups_to_triangulate = TriangulateSession.has_enough_instances(
+        frame_group=frame_group
+    )
+    assert instance_groups_to_triangulate == frame_group.instance_groups[:-1]
+
+
+def test_TriangulateSession_do_action(multiview_min_session_frame_groups):
+    """Test that `TriangulateSession.do_action` works."""
+
+    labels: Labels = multiview_min_session_frame_groups
+
+    # Test triangulate session without selected instance (all instances triangulated)
+
+    # Get all the info for `params``
+    video: Video = labels.videos[0]
+    session: RecordingSession = labels.sessions[0]
+    frame_idx: int = 0
+    frame_group: FrameGroup = session.frame_groups[frame_idx]
+
+    # Get `FrameGroup` numpy before triangulation
+    frame_group_np = frame_group.numpy()
+
+    # Set-up CommandContext
+    context = CommandContext.from_labels(labels)
+    params = {
+        "session": session,
+        "frame_idx": frame_idx,
+        "frame_group": frame_group,
+    }
+    TriangulateSession.do_action(context, params)
+
+    # Expect all instances to be triangulated
+    for inst_group_idx, instance_group in enumerate(frame_group.instance_groups):
+        inst_group_np = frame_group_np[:, inst_group_idx]
+        inst_group_np_triangulated = instance_group.numpy()
+        assert not np.allclose(
+            inst_group_np, inst_group_np_triangulated, equal_nan=True
+        )
+
+    # Test triangulate session with selected instance (only selected IG triangulated)
+
+    # Let's be thorough and select an `Instance` in the correct `Video`
+    instance_group_to_tri: InstanceGroup = frame_group.instance_groups[0]
+    camera = session.get_camera(video=video)
+    instance = instance_group_to_tri.get_instance(cam=camera)
+    assert instance is not None
+
+    # Get `FrameGroup` numpy before triangulation
+    frame_group_np = frame_group.numpy()
+
+    # Test with `Instance` passed in `params`
+    params = {
+        "session": session,
+        "frame_idx": frame_idx,
+        "frame_group": frame_group,
+        "instance": instance,
+    }
+    TriangulateSession.do_action(context, params)
+
+    # Expect only `Instance`s in instance's `InstanceGroup` to be triangulated
+    for inst_group_idx, instance_group in enumerate(frame_group.instance_groups):
+        inst_group_np = frame_group_np[:, inst_group_idx]
+        inst_group_np_post_tri = instance_group.numpy()
+        if instance_group == instance_group_to_tri:
+            assert not np.allclose(
+                inst_group_np, inst_group_np_post_tri, equal_nan=True
+            )
+        else:
+            assert np.allclose(inst_group_np, inst_group_np_post_tri, equal_nan=True)
+
+    # Test triangulate session using GuiState
+    context.state["session"] = session
+    context.state["frame_idx"] = frame_idx
+    context.state["frame_group"] = frame_group
+    params = {}
+
+    # Get `FrameGroup` numpy before triangulation
+    frame_group_np = frame_group.numpy()
+
+    TriangulateSession.do_action(context, params)
+
+    # Expect all instances to be triangulated
+    for inst_group_idx, instance_group in enumerate(frame_group.instance_groups):
+        inst_group_np = frame_group_np[:, inst_group_idx]
+        inst_group_np_triangulated = instance_group.numpy()
+        assert not np.allclose(
+            inst_group_np, inst_group_np_triangulated, equal_nan=True
+        )
+
+    # Test triangulate session with selected instance (only selected IG triangulated)
+
+    # Let's be thorough and select an `Instance` in the correct `Video`
+    instance_group_to_tri: InstanceGroup = frame_group.instance_groups[0]
+    camera = session.get_camera(video=video)
+    instance = instance_group_to_tri.get_instance(cam=camera)
+    assert instance is not None
+
+    # Get `FrameGroup` numpy before triangulation
+    frame_group_np = frame_group.numpy()
+
+    # Test with `Instance` passed in `context`
+    context.state["instance"] = instance
+    TriangulateSession.do_action(context, params)
+
+    # Expect only `Instance`s in instance's `InstanceGroup` to be triangulated
+    for inst_group_idx, instance_group in enumerate(frame_group.instance_groups):
+        inst_group_np = frame_group_np[:, inst_group_idx]
+        inst_group_np_post_tri = instance_group.numpy()
+        if instance_group == instance_group_to_tri:
+            assert not np.allclose(
+                inst_group_np, inst_group_np_post_tri, equal_nan=True
+            )
+        else:
+            assert np.allclose(inst_group_np, inst_group_np_post_tri, equal_nan=True)
+
+    # TODO(LM): Test with `PredictedInstance`s
