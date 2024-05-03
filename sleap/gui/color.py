@@ -38,12 +38,12 @@ class ColorManager:
         palette: String with the color palette name to use.
         session: The :class:`RecordingSession` object which contains the
             instance groups for which we want colors.
-        frame_indx: The index of the frame in the session for which we want
+        frame_idx: The index of the frame in the session for which we want
             instance group colors.
         
     """
 
-    def __init__(self, labels: Labels = None, palette: str = "standard", session: RecordingSession = None, frame_indx: int = None):
+    def __init__(self, labels: Labels = None, palette: str = "standard", session: RecordingSession = None, frame_idx: int = None):
         self.labels = labels
 
         with open(get_config_file("colors.yaml"), "r") as f:
@@ -71,7 +71,7 @@ class ColorManager:
         self.default_pen_width = max(1, self.thick_pen_width // 4)
         
         self.session = session
-        self.frame_indx = frame_indx
+        self.frame_idx = frame_idx
 
     @property
     def labels(self):
@@ -116,12 +116,11 @@ class ColorManager:
             return self.labels.tracks
         return []
     
-    # TODO: Find a way to get instance groups for project
     @property
     def InstanceGroups(self) -> Iterable[InstanceGroup]:
         """Gets instance groups for project."""
-        if (self.session and self.frame_indx):
-            return self.session.frame_groups[self.frame_indx].instance_groups
+        if (self.session and self.frame_idx):
+            return self.session.frame_groups[self.frame_idx].instance_groups
         return []
         
 
@@ -196,7 +195,7 @@ class ColorManager:
 
         return self.get_color_by_idx(track_idx)
 
-    def get_instance_grouup_color(self, instanceGroup: InstanceGroup) -> ColorTupleType: 
+    def get_instance_group_color(self, instanceGroup: InstanceGroup) -> ColorTupleType: 
         """Returns the color to use for a given instance group.
 
         Args:
@@ -273,7 +272,7 @@ class ColorManager:
         parent_instance: Optional[Instance] = None,
         parent_skeleton: Optional["Skeleton"] = None,
         parent_session: Optional[RecordingSession] = None,
-        parent_frame_indx: Optional[int] = None,
+        parent_frame_idx: Optional[int] = None,
     ) -> ColorTupleType:
         """Gets (r, g, b) tuple of color to use for drawing item."""
 
@@ -332,9 +331,10 @@ class ColorManager:
 
             return self.get_color_by_idx(edge_idx)
         
-        # TODO (AP): Color the instance group by index)
-        if self.distinctly_color == "InstanceGroups" and parent_session and parent_frame_indx: 
-            frame_group = parent_session.frame_groups[parent_frame_indx]
-            instance_group = frame_group.get_instance_group(instance=parent_instance)
+        if self.distinctly_color == "InstanceGroups" and parent_session and parent_frame_idx:
+            if isinstance(item, Instance):
+                frame_group = parent_session.frame_groups[parent_frame_idx]
+                instance_group = frame_group.get_instance_group(instance=parent_instance)
+                return self.get_instance_group_color(instance_group)
 
         return (0, 0, 0)
