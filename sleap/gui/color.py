@@ -117,7 +117,7 @@ class ColorManager:
         return []
     
     @property
-    def InstanceGroups(self) -> Iterable[InstanceGroup]:
+    def instanceGroups(self) -> Iterable[InstanceGroup]:
         """Gets instance groups for project."""
         if (self.session and self.frame_idx):
             return self.session.frame_groups[self.frame_idx].instance_groups
@@ -179,6 +179,7 @@ class ColorManager:
             untracked_user_instances + untracked_predicted_instances
         ).index(instance)
 
+    
     def get_track_color(self, track: Union[Track, int]) -> ColorTupleType:
         """Returns the color to use for a given track.
 
@@ -194,8 +195,8 @@ class ColorManager:
             return (0, 0, 0)
 
         return self.get_color_by_idx(track_idx)
-
-    def get_instance_group_color(self, instanceGroup: InstanceGroup) -> ColorTupleType: 
+    
+    def get_instance_group_color(self, instanceGroup: Union[InstanceGroup, int]) -> ColorTupleType: 
         """Returns the color to use for a given instance group.
 
         Args:
@@ -205,10 +206,10 @@ class ColorManager:
         """
         instanceGroup_idx = instanceGroup
         if isinstance(instanceGroup, InstanceGroup):
-            instanceGroup_idx = self.InstanceGroups.index(instanceGroup) if instanceGroup in self.InstanceGroups else None
+            instanceGroup_idx = self.instanceGroups.index(instanceGroup) if instanceGroup in self.instanceGroups else None
         if instanceGroup_idx is None:
             return (0, 0, 0)
-
+        
         return self.get_color_by_idx(instanceGroup_idx)
 
     @classmethod
