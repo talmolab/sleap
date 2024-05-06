@@ -276,6 +276,7 @@ class QtVideoPlayer(QWidget):
         self.state.connect("show labels", self.plot)
         self.state.connect("show edges", self.plot)
         self.state.connect("video", self.load_video)
+        self.state.connect("unlinked_video", self.load_video)
         self.state.connect("fit", self.setFitZoom)
 
         self.view.show()

@@ -671,6 +671,7 @@ class SessionsDock(DockWidget):
             ellipsis_left=True,
         )
         self.unlinked_videos_table = GenericTableView(
+            is_activatable= True,
             state=main_window.state,
             row_name="unlinked_video",
             model=self.unlinked_videos_model,
