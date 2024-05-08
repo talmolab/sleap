@@ -17,9 +17,9 @@ import yaml
 
 from sleap.util import get_config_file
 from sleap.instance import Instance, Track, Node
+from sleap.io.cameras import InstanceGroup, RecordingSession
 from sleap.io.dataset import Labels
 from sleap.prefs import prefs
-from sleap.io.cameras import InstanceGroup, RecordingSession
 
 
 ColorTupleStringType = Text
@@ -117,10 +117,11 @@ class ColorManager:
         return []
     
     @property
-    def instanceGroups(self) -> Iterable[InstanceGroup]:
+    def instance_groups(self) -> Iterable[InstanceGroup]:
         """Gets instance groups for project."""
-        if (self.session and self.frame_idx):
-            return self.session.frame_groups[self.frame_idx].instance_groups
+        frame_group = self.session.frame_groups.get(self.frame_idx, None)
+        if (frame_group is not None):
+            return frame_group.instance_groups
         return []
         
 
@@ -196,21 +197,21 @@ class ColorManager:
 
         return self.get_color_by_idx(track_idx)
     
-    def get_instance_group_color(self, instanceGroup: Union[InstanceGroup, int]) -> ColorTupleType: 
+    def get_instance_group_color(self, instance_group: Union[InstanceGroup, int]) -> ColorTupleType: 
         """Returns the color to use for a given instance group.
 
         Args:
-            instanceGroup: `InstanceGroup` object
+            instance_group: `InstanceGroup` object
         Returns:
             (r, g, b)-tuple
         """
-        instanceGroup_idx = instanceGroup
-        if isinstance(instanceGroup, InstanceGroup):
-            instanceGroup_idx = self.instanceGroups.index(instanceGroup) if instanceGroup in self.instanceGroups else None
-        if instanceGroup_idx is None:
+        instance_group_idx = instance_group
+        if isinstance(instance_group, InstanceGroup):
+            instance_group_idx = self.instance_groups.index(instance_group) if instance_group in self.instance_groups else None
+        if instance_group_idx is None:
             return (0, 0, 0)
         
-        return self.get_color_by_idx(instanceGroup_idx)
+        return self.get_color_by_idx(instance_group_idx)
 
     @classmethod
     def is_sequence(cls, item) -> bool:
@@ -305,6 +306,19 @@ class ColorManager:
                 track = self.get_pseudo_track_index(parent_instance)
 
             return self.get_track_color(track=track)
+        
+        if self.distinctly_color == "instances" and parent_instance and parent_session and parent_frame_idx:
+            instance_group = None
+            if isinstance(item, InstanceGroup):
+                instance_group = item
+            elif parent_instance:
+                instance_group = parent_instance.instance_group
+
+            if instance_group:
+                frame_group = parent_session.frame_groups.get(parent_frame_idx, None)
+                if frame_group is not None:
+                    instance_group_idx = frame_group.instance_groups.index(instance_group)
+                return self.get_color_by_idx(instance_group_idx)
 
         if self.distinctly_color == "nodes" and parent_skeleton:
             node = None
@@ -331,11 +345,5 @@ class ColorManager:
                         break
 
             return self.get_color_by_idx(edge_idx)
-        
-        if self.distinctly_color == "InstanceGroups" and parent_session and parent_frame_idx:
-            if isinstance(item, Instance):
-                frame_group = parent_session.frame_groups[parent_frame_idx]
-                instance_group = frame_group.get_instance_group(instance=parent_instance)
-                return self.get_instance_group_color(instance_group)
 
         return (0, 0, 0)
