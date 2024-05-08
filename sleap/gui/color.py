@@ -307,7 +307,7 @@ class ColorManager:
 
             return self.get_track_color(track=track)
         
-        if self.distinctly_color == "instances" and parent_instance and parent_session and parent_frame_idx:
+        if self.distinctly_color == "instances" and parent_session and parent_frame_idx:
             instance_group = None
             if isinstance(item, InstanceGroup):
                 instance_group = item
@@ -318,7 +318,7 @@ class ColorManager:
                 frame_group = parent_session.frame_groups.get(parent_frame_idx, None)
                 if frame_group is not None:
                     instance_group_idx = frame_group.instance_groups.index(instance_group)
-                return self.get_color_by_idx(instance_group_idx)
+                    return self.get_color_by_idx(instance_group_idx)
 
         if self.distinctly_color == "nodes" and parent_skeleton:
             node = None

@@ -93,3 +93,7 @@ def test_instance_group_color(multiview_min_session_frame_groups):
     # Test instance group colors
     assert color_manager.get_instance_group_color(instance_group) == color_manager.get_color_by_idx(0)
     assert list(color_manager.get_instance_group_color(instance_group)) != [0, 0, 0]
+    
+    # Test whether if the instance group color is the same as the instance color
+    instance = instance_group.instances[0]
+    assert color_manager.get_item_color(item=instance, parent_session=session, parent_frame_idx=0) == color_manager.get_instance_group_color(instance_group)
