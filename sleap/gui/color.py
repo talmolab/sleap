@@ -40,10 +40,16 @@ class ColorManager:
             instance groups for which we want colors.
         frame_idx: The index of the frame in the session for which we want
             instance group colors.
-        
+
     """
 
-    def __init__(self, labels: Labels = None, palette: str = "standard", session: RecordingSession = None, frame_idx: int = None):
+    def __init__(
+        self,
+        labels: Labels = None,
+        palette: str = "standard",
+        session: RecordingSession = None,
+        frame_idx: int = None,
+    ):
         self.labels = labels
 
         with open(get_config_file("colors.yaml"), "r") as f:
@@ -69,7 +75,7 @@ class ColorManager:
 
         self.medium_pen_width = self.thick_pen_width // 2
         self.default_pen_width = max(1, self.thick_pen_width // 4)
-        
+
         self.session = session
         self.frame_idx = frame_idx
 
@@ -115,15 +121,14 @@ class ColorManager:
         if self.labels:
             return self.labels.tracks
         return []
-    
+
     @property
     def instance_groups(self) -> Iterable[InstanceGroup]:
         """Gets instance groups for project."""
         frame_group = self.session.frame_groups.get(self.frame_idx, None)
-        if (frame_group is not None):
+        if frame_group is not None:
             return frame_group.instance_groups
         return []
-        
 
     def set_palette(self, palette: Union[Text, Iterable[ColorTupleStringType]]):
         """Functional alias for palette property setter."""
@@ -180,7 +185,6 @@ class ColorManager:
             untracked_user_instances + untracked_predicted_instances
         ).index(instance)
 
-    
     def get_track_color(self, track: Union[Track, int]) -> ColorTupleType:
         """Returns the color to use for a given track.
 
@@ -196,8 +200,10 @@ class ColorManager:
             return (0, 0, 0)
 
         return self.get_color_by_idx(track_idx)
-    
-    def get_instance_group_color(self, instance_group: Union[InstanceGroup, int]) -> ColorTupleType: 
+
+    def get_instance_group_color(
+        self, instance_group: Union[InstanceGroup, int]
+    ) -> ColorTupleType:
         """Returns the color to use for a given instance group.
 
         Args:
@@ -207,10 +213,14 @@ class ColorManager:
         """
         instance_group_idx = instance_group
         if isinstance(instance_group, InstanceGroup):
-            instance_group_idx = self.instance_groups.index(instance_group) if instance_group in self.instance_groups else None
+            instance_group_idx = (
+                self.instance_groups.index(instance_group)
+                if instance_group in self.instance_groups
+                else None
+            )
         if instance_group_idx is None:
             return (0, 0, 0)
-        
+
         return self.get_color_by_idx(instance_group_idx)
 
     @classmethod
@@ -306,7 +316,7 @@ class ColorManager:
                 track = self.get_pseudo_track_index(parent_instance)
 
             return self.get_track_color(track=track)
-        
+
         if self.distinctly_color == "instances" and parent_session and parent_frame_idx:
             instance_group = None
             if isinstance(item, InstanceGroup):
@@ -317,7 +327,9 @@ class ColorManager:
             if instance_group:
                 frame_group = parent_session.frame_groups.get(parent_frame_idx, None)
                 if frame_group is not None:
-                    instance_group_idx = frame_group.instance_groups.index(instance_group)
+                    instance_group_idx = frame_group.instance_groups.index(
+                        instance_group
+                    )
                     return self.get_color_by_idx(instance_group_idx)
 
         if self.distinctly_color == "nodes" and parent_skeleton:
