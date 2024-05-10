@@ -1114,8 +1114,12 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
     @classmethod
-    def from_trained_config(cls, cfg_info: configs.ConfigFileInfo):
-        widget = cls(require_trained=True, head=cfg_info.head_name)
+    def from_trained_config(
+        cls, cfg_info: configs.ConfigFileInfo, cfg_getter: configs.TrainingConfigsGetter
+    ):
+        widget = cls(
+            require_trained=True, head=cfg_info.head_name, cfg_getter=cfg_getter
+        )
         widget.acceptSelectedConfigInfo(cfg_info)
         widget.setWindowTitle(cfg_info.path_dir)
         return widget
