@@ -58,6 +58,7 @@ class ColorManager:
         self._color_map = []
         self.distinctly_color = "instances"
         self.color_predicted = True
+        self.instance_group_selected = False
 
         self.index_mode = "cycle"
         self._index_mode_functions = dict(
@@ -317,7 +318,7 @@ class ColorManager:
 
             return self.get_track_color(track=track)
 
-        if self.distinctly_color == "instances" and parent_session and parent_frame_idx:
+        if self.distinctly_color == "instances" and self.instance_group_selected and parent_session and parent_frame_idx and self.color_by_instance_group:
             instance_group = None
             if isinstance(item, InstanceGroup):
                 instance_group = item

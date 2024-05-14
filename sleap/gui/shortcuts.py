@@ -48,6 +48,7 @@ class Shortcuts(object):
         "show edges",
         "show trails",
         "color predicted",
+        "color instance groups",
         "fit",
         "learning",
         "export clip",
