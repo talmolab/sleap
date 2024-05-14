@@ -629,10 +629,12 @@ class MainWindow(QMainWindow):
         viewMenu.addSeparator()
         add_menu_check_item(viewMenu, "fit", "Fit Instances to View")
 
-        viewMenu.addSeparator()        
+        viewMenu.addSeparator()
         add_menu_check_item(viewMenu, "color predicted", "Color Predicted Instances")
-        
-        add_menu_check_item(viewMenu, "color instance groups", "Color By Instance Groups")
+
+        add_menu_check_item(
+            viewMenu, "color instance groups", "Color By Instance Groups"
+        )
 
         add_submenu_choices(
             menu=viewMenu,
@@ -1075,7 +1077,9 @@ class MainWindow(QMainWindow):
         overlay_state_connect(self.color_manager, "palette")
         overlay_state_connect(self.color_manager, "distinctly_color")
         overlay_state_connect(self.color_manager, "color predicted", "color_predicted")
-        overlay_state_connect(self.color_manager, "color instance groups", "instance_group_selected")
+        overlay_state_connect(
+            self.color_manager, "color instance groups", "color_by_instance_group"
+        )
         self.state.connect("palette", lambda x: self._update_seekbar_marks())
 
         # update the skeleton tables since we may want to redraw colors
@@ -1780,3 +1784,9 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
         app.exec_()
 
     pass
+
+
+if __name__ == "__main__":
+    ds = "tests/data/cameras/minimal_session/min_session_frame_groups.slp"
+    # ds = os.environ["dsmview"]
+    main([ds])
