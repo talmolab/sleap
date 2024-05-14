@@ -11,6 +11,7 @@ on the `ColorManager` object:
 Initial color palette (and other settings, like default line width) is read
 from user preferences but can be changed after object is created.
 """
+
 from typing import Any, Iterable, Optional, Union, Text, Tuple
 
 import yaml
@@ -58,7 +59,7 @@ class ColorManager:
         self._color_map = []
         self.distinctly_color = "instances"
         self.color_predicted = True
-        self.instance_group_selected = False
+        self.color_by_instance_group = False
 
         self.index_mode = "cycle"
         self._index_mode_functions = dict(
@@ -295,6 +296,30 @@ class ColorManager:
         if not parent_skeleton and hasattr(parent_instance, "skeleton"):
             parent_skeleton = parent_instance.skeleton
 
+        if parent_frame_idx is None:
+            parent_frame = parent_instance.frame
+            if parent_frame:
+                parent_frame_idx = parent_frame.frame_idx
+
+        if parent_session is None and parent_frame:
+            parent_session = self.labels.get_session(video=parent_frame.video)
+
+        if (
+            self.distinctly_color == "instances"
+            and parent_session
+            and parent_frame_idx
+            and self.color_by_instance_group
+        ):
+            frame_group = parent_session.frame_groups.get(parent_frame_idx, None)
+            if frame_group is not None:
+                instance_group = frame_group.get_instance_group(
+                    instance=parent_instance
+                )
+
+            if instance_group is not None:
+                instance_group_idx = frame_group.instance_groups.index(instance_group)
+                return self.get_color_by_idx(instance_group_idx)
+
         is_predicted = False
         if parent_instance and self.is_predicted(parent_instance):
             is_predicted = True
@@ -317,21 +342,6 @@ class ColorManager:
                 track = self.get_pseudo_track_index(parent_instance)
 
             return self.get_track_color(track=track)
-
-        if self.distinctly_color == "instances" and self.instance_group_selected and parent_session and parent_frame_idx and self.color_by_instance_group:
-            instance_group = None
-            if isinstance(item, InstanceGroup):
-                instance_group = item
-            elif parent_instance:
-                instance_group = parent_instance.instance_group
-
-            if instance_group:
-                frame_group = parent_session.frame_groups.get(parent_frame_idx, None)
-                if frame_group is not None:
-                    instance_group_idx = frame_group.instance_groups.index(
-                        instance_group
-                    )
-                    return self.get_color_by_idx(instance_group_idx)
 
         if self.distinctly_color == "nodes" and parent_skeleton:
             node = None
