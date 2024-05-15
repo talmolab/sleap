@@ -1171,7 +1171,7 @@ class MainWindow(QMainWindow):
             and has_selected_camcorder
             and has_selected_session
         )
-        
+
         # Update overlays
         self.overlays["track_labels"].visible = (
             control_key_down and has_selected_instance
