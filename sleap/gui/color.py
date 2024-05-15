@@ -296,12 +296,12 @@ class ColorManager:
         if not parent_skeleton and hasattr(parent_instance, "skeleton"):
             parent_skeleton = parent_instance.skeleton
 
-        if parent_frame_idx is None:
+        if parent_frame_idx is None and parent_instance:
             parent_frame = parent_instance.frame
             if parent_frame:
                 parent_frame_idx = parent_frame.frame_idx
 
-        if parent_session is None and parent_frame:
+        if parent_session is None and self.labels:
             parent_session = self.labels.get_session(video=parent_frame.video)
 
         if (
