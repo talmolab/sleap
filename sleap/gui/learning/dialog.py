@@ -605,6 +605,7 @@ class LearningDialog(QtWidgets.QDialog):
 
     def get_items_for_inference(self, pipeline_form_data) -> runners.ItemsForInference:
         predict_frames_choice = pipeline_form_data.get("_predict_frames", "")
+        batch_size = pipeline_form_data.get("batch_size")
 
         frame_selection = self.get_selected_frames_to_predict(pipeline_form_data)
         frame_count = self.count_total_frames_for_selection_option(frame_selection)
@@ -617,6 +618,7 @@ class LearningDialog(QtWidgets.QDialog):
                     )
                 ],
                 total_frame_count=frame_count,
+                batch_size=batch_size,
             )
         elif predict_frames_choice.startswith("suggested"):
             items_for_inference = runners.ItemsForInference(
@@ -626,6 +628,7 @@ class LearningDialog(QtWidgets.QDialog):
                     )
                 ],
                 total_frame_count=frame_count,
+                batch_size=batch_size,
             )
         else:
             items_for_inference = runners.ItemsForInference.from_video_frames_dict(
@@ -633,6 +636,7 @@ class LearningDialog(QtWidgets.QDialog):
                 total_frame_count=frame_count,
                 labels_path=self.labels_filename,
                 labels=self.labels,
+                batch_size=batch_size,
             )
         return items_for_inference
 
@@ -1114,8 +1118,12 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
     @classmethod
-    def from_trained_config(cls, cfg_info: configs.ConfigFileInfo):
-        widget = cls(require_trained=True, head=cfg_info.head_name)
+    def from_trained_config(
+        cls, cfg_info: configs.ConfigFileInfo, cfg_getter: configs.TrainingConfigsGetter
+    ):
+        widget = cls(
+            require_trained=True, head=cfg_info.head_name, cfg_getter=cfg_getter
+        )
         widget.acceptSelectedConfigInfo(cfg_info)
         widget.setWindowTitle(cfg_info.path_dir)
         return widget

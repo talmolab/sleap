@@ -1142,6 +1142,7 @@ class InferenceModel(tf.keras.Model):
 
         info["frozen_model_inputs"] = frozen_func.inputs
         info["frozen_model_outputs"] = frozen_func.outputs
+        info["unragged_outputs"] = unrag_outputs
 
         with (Path(save_path) / "info.json").open("w") as fp:
             json.dump(
