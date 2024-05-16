@@ -11,8 +11,8 @@ on:
       - '.github/workflows/build_manual.yml'
     branches:
       # - develop
-      - fakebranch
-      # - talmo/fix-mac-v140
+      # - fakebranch
+      - elizabeth/Fix-ubuntu-conda-build
 
 jobs:
   build:
@@ -78,18 +78,21 @@ jobs:
           twine upload -u __token__ -p "$PYPI_TOKEN" dist/* --non-interactive --skip-existing --disable-progress-bar
 
       # Build conda package (Ubuntu)
+      # echo "{environment_variable_name}={value}" >> "$GITHUB_ENV"
       - name: Build conda package (Ubuntu)
         if: matrix.os == 'ubuntu-22.04'
         shell: bash -l {0}
         run: |
           conda build .conda --output-folder build
+          echo "BUILD_PATH=$(pwd)/build" >> "$GITHUB_ENV"
 
-      # Build conda package (Windows)
+      # Build conda package (Windows) 
       - name: Build conda package (Windows)
         if: matrix.os == 'windows-2022'
         shell: powershell
         run: |
           conda build .conda --output-folder build
+          echo "BUILD_PATH=\$(pwd)\build" >> "$env:GITHUB_ENV"
 
       # Build conda package (Mac)
       - name: Build conda package (Mac)
@@ -97,6 +100,21 @@ jobs:
         shell: bash -l {0}
         run: |
           conda build .conda_mac --output-folder build
+          echo "BUILD_PATH=$(pwd)/build" >> "$GITHUB_ENV"
+
+      # Test
+      - name: Test built conda package
+        shell: bash -l {0}
+        run: |
+          echo "Build path is: $BUILD_PATH"
+          conda deactivate
+          echo $(conda info)
+          echo "Testing conda package with sleap"
+          conda create -y -n sleap_test -c file://$BUILD_PATH -c sleap/label/dev -c conda-forge -c nvidia -c anaconda sleap
+          conda activate sleap_test
+          echo $(conda list)
+          python -c "import sleap; print(sleap.__version__)"
+          echo "Test completed using sleap version: $(python -c 'import sleap; print(sleap.__version__)')"
 
       # # Login to conda (Ubuntu)
       # - name: Login to Anaconda (Ubuntu)
