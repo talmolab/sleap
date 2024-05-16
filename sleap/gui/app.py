@@ -152,7 +152,6 @@ class MainWindow(QMainWindow):
         self.state["edge style"] = prefs["edge style"]
         self.state["fit"] = False
         self.state["color predicted"] = prefs["color predicted"]
-        self.state["color instance groups"] = prefs["color instance groups"]
         self.state["trail_shade"] = prefs["trail shade"]
         self.state["marker size"] = prefs["marker size"]
         self.state["propagate track labels"] = prefs["propagate track labels"]
@@ -223,7 +222,6 @@ class MainWindow(QMainWindow):
         prefs["edge style"] = self.state["edge style"]
         prefs["propagate track labels"] = self.state["propagate track labels"]
         prefs["color predicted"] = self.state["color predicted"]
-        prefs["color instance groups"] = self.state["color instance groups"]
         prefs["trail shade"] = self.state["trail_shade"]
         prefs["share usage data"] = self.state["share usage data"]
 
@@ -632,10 +630,6 @@ class MainWindow(QMainWindow):
         viewMenu.addSeparator()
         add_menu_check_item(viewMenu, "color predicted", "Color Predicted Instances")
 
-        add_menu_check_item(
-            viewMenu, "color instance groups", "Color By Instance Groups"
-        )
-
         add_submenu_choices(
             menu=viewMenu,
             title="Color Palette",
@@ -643,7 +637,7 @@ class MainWindow(QMainWindow):
             key="palette",
         )
 
-        distinctly_color_options = ("instances", "nodes", "edges")
+        distinctly_color_options = ("instance_groups", "instances", "nodes", "edges")
 
         add_submenu_choices(
             menu=viewMenu,
@@ -1077,9 +1071,6 @@ class MainWindow(QMainWindow):
         overlay_state_connect(self.color_manager, "palette")
         overlay_state_connect(self.color_manager, "distinctly_color")
         overlay_state_connect(self.color_manager, "color predicted", "color_predicted")
-        overlay_state_connect(
-            self.color_manager, "color instance groups", "color_by_instance_group"
-        )
         self.state.connect("palette", lambda x: self._update_seekbar_marks())
 
         # update the skeleton tables since we may want to redraw colors
@@ -1095,7 +1086,6 @@ class MainWindow(QMainWindow):
         self.state.emit("palette")
         self.state.emit("distinctly_color")
         self.state.emit("color predicted")
-        self.state.emit("color instance groups")
 
     def _update_gui_state(self):
         """Enable/disable gui items based on current state."""
@@ -1171,6 +1161,10 @@ class MainWindow(QMainWindow):
             and has_selected_camcorder
             and has_selected_session
         )
+
+        # Update color predicted
+        if self.state["distinctly_color"] == "instance_groups":
+            self.state["color predicted"] = False
 
         # Update overlays
         self.overlays["track_labels"].visible = (

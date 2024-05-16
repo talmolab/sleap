@@ -15,7 +15,6 @@ class Preferences(object):
         "medium step size": 10,
         "large step size": 100,
         "color predicted": False,
-        "color instance groups": False,
         "propagate track labels": True,
         "palette": "standard",
         "bold lines": False,

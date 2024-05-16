@@ -59,7 +59,6 @@ class ColorManager:
         self._color_map = []
         self.distinctly_color = "instances"
         self.color_predicted = True
-        self.color_by_instance_group = False
 
         self.index_mode = "cycle"
         self._index_mode_functions = dict(
@@ -301,14 +300,13 @@ class ColorManager:
             if parent_frame:
                 parent_frame_idx = parent_frame.frame_idx
 
-        if parent_session is None and self.labels:
+        if parent_session is None and self.labels and parent_frame:
             parent_session = self.labels.get_session(video=parent_frame.video)
 
         if (
-            self.distinctly_color == "instances"
+            self.distinctly_color == "instance_groups"
             and parent_session
             and parent_frame_idx
-            and self.color_by_instance_group
         ):
             frame_group = parent_session.frame_groups.get(parent_frame_idx, None)
             if frame_group is not None:
