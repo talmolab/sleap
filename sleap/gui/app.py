@@ -75,6 +75,7 @@ from sleap.gui.widgets.docks import (
     SkeletonDock,
     SuggestionsDock,
     VideosDock,
+    InstanceGroupDock,
 )
 from sleap.gui.widgets.slider import set_slider_marks_from_labels
 from sleap.gui.widgets.video import QtVideoPlayer
@@ -85,6 +86,7 @@ from sleap.io.video import available_video_exts
 from sleap.prefs import prefs
 from sleap.skeleton import Skeleton
 from sleap.util import parse_uri_path
+from sleap.io.cameras import RecordingSession, InstanceGroup, FrameGroup
 
 
 logger = getLogger(__name__)
@@ -1034,6 +1036,7 @@ class MainWindow(QMainWindow):
         self.skeleton_dock = SkeletonDock(self, tab_with=self.videos_dock)
         self.suggestions_dock = SuggestionsDock(self, tab_with=self.videos_dock)
         self.instances_dock = InstancesDock(self, tab_with=self.videos_dock)
+        self.instance_groups_dock = InstanceGroupDock(self, tab_with=self.videos_dock)
 
         # Bring videos tab forward.
         self.videos_dock.wgt_layout.parent().parent().raise_()
@@ -1257,12 +1260,23 @@ class MainWindow(QMainWindow):
         if _has_topic([UpdateTopic.sessions]):
             self.update_cameras_model()
             self.update_unlinked_videos_model()
+            self.update_instance_group_model()
 
     def update_unlinked_videos_model(self):
         """Update the unlinked videos model with the selected session."""
         self.sessions_dock.unlinked_videos_table.model().items = (
             self.labels._cache._linkage_of_videos["unlinked"]
         )
+
+    def update_instance_group_model(self):
+        session: RecordingSession = self.state["session"]
+        if session is not None:
+            frame_idx: int = self.state["frame_idx"]
+            frame_group: FrameGroup = session.frame_groups.get(frame_idx, None)
+            if frame_group is not None:
+                self.instance_groups_dock.table.model().items = (
+                    frame_group.instance_groups
+                )
 
     def update_cameras_model(self):
         """Update the cameras model with the selected session."""

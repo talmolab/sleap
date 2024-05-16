@@ -30,7 +30,7 @@ from sleap.gui.color import ColorManager
 from sleap.io.dataset import Labels
 from sleap.instance import LabeledFrame, Instance
 from sleap.skeleton import Skeleton
-from sleap.io.cameras import Camcorder, RecordingSession
+from sleap.io.cameras import Camcorder, RecordingSession, InstanceGroup
 
 
 class GenericTableModel(QtCore.QAbstractTableModel):
@@ -682,3 +682,23 @@ class CamerasTableModel(GenericTableModel):
 
         video = obj.get_video(item)
         return {"camera": item.name, "video": video.filename if video else ""}
+
+
+class InstanceGroupTableModel(GenericTableModel):
+    """Table model for displaying all instance groups in a given frame.
+
+    Args:
+        item: 'InstanceGroup' which has information about the instance group
+    """
+
+    properties = ("name", "frame_idx", "cameras", "instances")
+
+    def item_to_data(self, obj, item: InstanceGroup):
+        print("this is item: ", item)
+
+        return {
+            "name": item.name,
+            "frame_idx": item.frame_idx,
+            "cameras": len(item.camera_cluster.cameras),
+            "instances": len(item.instances),
+        }
