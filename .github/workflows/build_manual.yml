@@ -11,8 +11,7 @@ on:
       - '.github/workflows/build_manual.yml'
     branches:
       # - develop
-      # - fakebranch
-      - elizabeth/fix-mac-conda-build
+      - fakebranch
 
 jobs:
   build:

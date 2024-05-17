@@ -1,4 +1,4 @@
-# Run tests using built conda packages and wheels.
+# Run tests using built wheels.
 name: Build CI (no upload)
 
 # Run when changes to pip wheel
