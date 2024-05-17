@@ -79,7 +79,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "windows-2022", "macos-14"]
+        os: ["ubuntu-22.04", "windows-2022"]
+        # os: ["ubuntu-22.04", "windows-2022", "macos-14"]  # removing macos-14 for now since the setup-python action only support py>=3.10, which is breaking this CI.
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Default values
