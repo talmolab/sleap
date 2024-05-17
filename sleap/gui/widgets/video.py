@@ -406,7 +406,7 @@ class QtVideoPlayer(QWidget):
         """
 
         self.video = video
-
+        
         if self.video is None:
             self.reset()
         else:

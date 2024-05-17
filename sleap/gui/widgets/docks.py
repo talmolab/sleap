@@ -671,6 +671,7 @@ class SessionsDock(DockWidget):
             ellipsis_left=True,
         )
         self.unlinked_videos_table = GenericTableView(
+            #self.unlinked_videos_table.doubleClicked.connect(self.on_unlinked_video_double_clicked),
             is_activatable= True,
             state=main_window.state,
             row_name="unlinked_video",
@@ -732,3 +733,21 @@ class SessionsDock(DockWidget):
         self.wgt_layout.addWidget(self.unlinked_videos_table)
         video_link_button = self.create_video_link_button()
         self.wgt_layout.addWidget(video_link_button)
+
+    # def on_unlinked_video_double_clicked(self, index):
+    #     # retrieve video object from model using index 
+    #     video = self.unlinked_videos_table.model().data(index, role=Qt.UserRole)
+
+    #     # to check if video is valid
+    #     if video:
+    #         # print to console for debugging purposes 
+    #         print(f"Switching to video: {video.filename}")
+
+    #         # set the current video in the main window to the video object (is there already a method to update current video?)
+    #         self.main_window.set_current_video(video)
+
+    #         # update the video in the main window
+    #         self.main_window.player.set_video(video)
+
+    #         # reset views, may not be necessary
+    #         self.main_window.reset_views()

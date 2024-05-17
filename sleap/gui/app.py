@@ -1716,6 +1716,40 @@ class MainWindow(QMainWindow):
         else:
             self.commands.completeInstanceNodes(instance)
 
+    # # Sessions menu double click
+    # def set_current_video(self, video):
+    #     """Sets the current video and updates the video player and other related UI components."""
+    #     self.state['video'] = video
+    #     self.update_video_player(video)  # Make sure this method exists in the player
+    #     self.update_related_views(video)  # Update other views that might depend on the video
+        
+    # def update_video_player(self, video):
+    #     """Updates the video player with a new video."""
+    #     if hasattr(self, 'player') and self.player:
+    #         self.player.set_video(video)  # Make sure the video player has this method
+
+    # def update_related_views(self, video):
+    #     """Updates other views in the UI that might depend on the video being changed."""
+    #     self.plotFrame()  # Refresh the frame view if necessary
+
+    # def set_video(self, video):
+    #     """Load video into the video player."""
+    #     self.video_source = video  # Store the video source for later use
+    #     self.load_video()  # Make sure this method exists in the player
+
+    # def set_current_video(self, video):
+    #     """Sets the current video in the state and updates the GUI accordingly."""
+    #     self.state["video"] = video
+    #     self.on_data_update([UpdateTopic.video])
+
+    # def reset_views(self):
+    #     """Resets views to their default state."""
+    #     self.player.reset_zoom()
+
+    # def _initialize_gui(self):
+    #     """Initial setup for GUI components."""
+    #     self.player = QtVideoPlayer(self)
+
     def _show_keyboard_shortcuts_window(self):
         """Shows gui for viewing/modifying keyboard shortucts."""
         ShortcutDialog().exec_()
@@ -1830,3 +1864,7 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
         app.exec_()
 
     pass
+
+if __name__ == "__main__":
+    ds = os.environ["dsmview"]
+    main([ds])
