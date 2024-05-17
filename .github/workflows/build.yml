@@ -84,9 +84,75 @@ jobs:
         run: |
           conda build .conda_mac --output-folder build
 
-      #TODO: ADD TESTS BEFORE UPLOADING
+      # Test built conda package (Ubuntu and Windows)
+      - name: Test built conda package (Ubuntu and Windows)
+        if: matrix.os != 'macos-14'
+        shell: bash -l {0}
+        run: |
+          echo "Current build path: $BUILD_PATH"
+          conda deactivate
+
+          echo "Python executable before activating environment:"
+          which python
+          echo "Python version before activating environment:"
+          python --version
+          echo "Conda info before activating environment:"
+          conda info
+
+          echo "Creating and testing conda environment with sleap package..."
+          conda create -y -n sleap_test -c file://$BUILD_PATH -c sleap/label/dev -c conda-forge -c nvidia -c anaconda sleap
+          conda activate sleap_test
+
+          echo "Python executable after activating sleap_test environment:"
+          which python
+          echo "Python version after activating sleap_test environment:"
+          python --version
+          echo "Conda info after activating sleap_test environment:"
+          conda info
+          echo "List of installed conda packages in the sleap_test environment:"
+          conda list
+          echo "List of installed pip packages in the sleap_test environment:"
+          pip list
+
+          echo "Testing sleap package installation..."
+          sleap_version=$(python -c "import sleap; print(sleap.__version__)")
+          echo "Test completed using sleap version: $sleap_version"
+
+      # Test built conda package (Mac)
+      - name: Test built conda package (Mac)
+        if: matrix.os == 'macos-14'
+        shell: bash -l {0}
+        run: |
+          echo "Current build path: $BUILD_PATH"
+          conda deactivate
+
+          echo "Python executable before activating environment:"
+          which python
+          echo "Python version before activating environment:"
+          python --version
+          echo "Conda info before activating environment:"
+          conda info
+
+          echo "Creating and testing conda environment with sleap package..."
+          conda create -y -n sleap_test -c file://$BUILD_PATH -c conda-forge -c anaconda sleap
+          conda activate sleap_test
+
+          echo "Python executable after activating sleap_test environment:"
+          which python
+          echo "Python version after activating sleap_test environment:"
+          python --version
+          echo "Conda info after activating sleap_test environment:"
+          conda info
+          echo "List of installed conda packages in the sleap_test environment:"
+          conda list
+          echo "List of installed pip packages in the sleap_test environment:"
+          pip list
+
+          echo "Testing sleap package installation..."
+          sleap_version=$(python -c "import sleap; print(sleap.__version__)")
+          echo "Test completed using sleap version: $sleap_version"
       
-          # Login to conda (Ubuntu)
+      # Login to conda (Ubuntu)
       - name: Login to Anaconda (Ubuntu)
         if: matrix.os == 'ubuntu-22.04'
         env:
