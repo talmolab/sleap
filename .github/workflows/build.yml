@@ -18,9 +18,11 @@ jobs:
         include:
           # Use this condarc as default
           - condarc: .conda/condarc.yaml
+          - pyver: "3.7"
           # Use special condarc if macos
           - os: "macos-14"
             condarc: .conda_mac/condarc.yaml
+            pyver: "3.9"
     steps:
       # Setup
       - uses: actions/checkout@v2
@@ -32,20 +34,24 @@ jobs:
         with:
           path: ~/conda_pkgs_dir
           key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'requirements.txt') }}
+      
       - name: Setup Miniconda
-        # https://github.com/conda-incubator/setup-miniconda
-        uses: conda-incubator/setup-miniconda@v2.0.1
+        uses: conda-incubator/setup-miniconda@v3.0.3
         with:
-          python-version: 3.7
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-          environment-file: environment_build.yml
+          miniforge-version: latest
           condarc-file: ${{ matrix.condarc }}
+          python-version: ${{ matrix.pyver }}
+          environment-file: environment_build.yml
           activate-environment: sleap_ci
+          conda-solver: "libmamba"
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+
       - name: Print environment info
         shell: bash -l {0}
         run: |
           which python
           conda info
+          conda list
 
       # Build pip wheel (Ubuntu)
       - name: Build pip wheel (Ubuntu)
@@ -69,6 +75,7 @@ jobs:
         shell: bash -l {0}
         run: |
           conda build .conda --output-folder build
+          echo "BUILD_PATH=$(pwd)/build" >> "$GITHUB_ENV"
 
       # Build conda package (Windows)
       - name: Build conda package (Windows)
@@ -76,6 +83,7 @@ jobs:
         shell: powershell
         run: |
           conda build .conda --output-folder build
+          echo "BUILD_PATH=\$(pwd)\build" >> "$env:GITHUB_ENV"
 
       # Build conda package (Mac)
       - name: Build conda package (Mac)
@@ -83,6 +91,7 @@ jobs:
         shell: bash -l {0}
         run: |
           conda build .conda_mac --output-folder build
+          echo "BUILD_PATH=$(pwd)/build" >> "$GITHUB_ENV"
 
       # Test built conda package (Ubuntu and Windows)
       - name: Test built conda package (Ubuntu and Windows)
