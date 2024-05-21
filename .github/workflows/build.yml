@@ -43,7 +43,7 @@ jobs:
         with:
           path: ~/conda_pkgs_dir
           key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'requirements.txt') }}
-      
+
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v3.0.3
         with:
@@ -53,7 +53,7 @@ jobs:
           environment-file: environment_build.yml
           activate-environment: sleap_ci
           conda-solver: "libmamba"
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+          # use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
 
       - name: Print environment info
         shell: bash -l {0}
@@ -62,9 +62,9 @@ jobs:
           conda info
           conda list
 
-      # Build pip wheel (Ubuntu)
-      - name: Build pip wheel (Ubuntu)
-        if: matrix.os == 'ubuntu-22.04'
+      # Build pip wheel (Not Windows)
+      - name: Build pip wheel (Not Windows)
+        if: matrix.os != 'windows-2022'
         shell: bash -l {0}
         run: |
           python setup.py bdist_wheel
@@ -86,7 +86,7 @@ jobs:
           conda build .conda --output-folder build
           echo "BUILD_PATH=$(pwd)/build" >> "$GITHUB_ENV"
 
-      # Build conda package (Windows)
+      # Build conda package (Windows) 
       - name: Build conda package (Windows)
         if: matrix.os == 'windows-2022'
         shell: powershell
@@ -109,7 +109,7 @@ jobs:
         run: |
           echo "Current build path: $BUILD_PATH"
           conda deactivate
-
+    
           echo "Python executable before activating environment:"
           which python
           echo "Python version before activating environment:"
@@ -131,7 +131,7 @@ jobs:
           conda list
           echo "List of installed pip packages in the sleap_test environment:"
           pip list
-
+    
           echo "Testing sleap package installation..."
           sleap_version=$(python -c "import sleap; print(sleap.__version__)")
           echo "Test completed using sleap version: $sleap_version"
@@ -143,18 +143,18 @@ jobs:
         run: |
           echo "Current build path: $BUILD_PATH"
           conda deactivate
-
+    
           echo "Python executable before activating environment:"
           which python
           echo "Python version before activating environment:"
           python --version
           echo "Conda info before activating environment:"
           conda info
-
+    
           echo "Creating and testing conda environment with sleap package..."
           conda create -y -n sleap_test -c file://$BUILD_PATH -c conda-forge -c anaconda sleap
           conda activate sleap_test
-
+    
           echo "Python executable after activating sleap_test environment:"
           which python
           echo "Python version after activating sleap_test environment:"
@@ -165,7 +165,7 @@ jobs:
           conda list
           echo "List of installed pip packages in the sleap_test environment:"
           pip list
-
+    
           echo "Testing sleap package installation..."
           sleap_version=$(python -c "import sleap; print(sleap.__version__)")
           echo "Test completed using sleap version: $sleap_version"
