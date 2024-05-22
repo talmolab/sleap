@@ -212,6 +212,19 @@ training:
   type: list
 
 - type: text
+  text: '<b>ZMQ Options</b>'
+
+- name: controller_port
+  label: Controller Port
+  type: int
+  default: 9000 
+
+- name: publish_port
+  label: Publish Port
+  type: int
+  default: 9001
+
+- type: text
   text: '<b>Output Options</b>'
 
 - default: ''

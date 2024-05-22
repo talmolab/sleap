@@ -6,7 +6,7 @@ from sleap.nn.config.training_job import TrainingJobConfig
 import zmq
 import jsonpickle
 import logging
-from typing import Optional
+from typing import Optional, Dict
 from qtpy import QtCore, QtWidgets, QtGui
 from qtpy.QtCharts import QtCharts
 import attr
@@ -22,6 +22,7 @@ class LossViewer(QtWidgets.QMainWindow):
 
     def __init__(
         self,
+        zmq_ports: Dict = None,
         zmq_context: Optional[zmq.Context] = None,
         show_controller=True,
         parent=None,
@@ -32,6 +33,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.stop_button = None
         self.cancel_button = None
         self.canceled = False
+        self.zmq_ports = zmq_ports
 
         self.batches_to_show = -1  # -1 to show all
         self.ignore_outliers = False
@@ -302,16 +304,28 @@ class LossViewer(QtWidgets.QMainWindow):
         self.ctx_given = zmq_context is not None
         self.ctx = zmq.Context() if zmq_context is None else zmq_context
 
+        # Publish and control address
+        controller_address = "tcp://127.0.0.1:9000"
+        publish_address = "tcp://127.0.0.1:9001"
+
+        if self.zmq_ports:
+            controller_address = "tcp://127.0.0.1:" + str(
+                self.zmq_ports["controller_address"]
+            )
+            publish_address = "tcp://127.0.0.1:" + str(
+                self.zmq_ports["publisher_address"]
+            )
+
         # Progress monitoring, SUBSCRIBER
         self.sub = self.ctx.socket(zmq.SUB)
         self.sub.subscribe("")
-        self.sub.bind("tcp://127.0.0.1:9001")
+        self.sub.bind(publish_address)
 
         # Controller, PUBLISHER
         self.zmq_ctrl = None
         if self.show_controller:
             self.zmq_ctrl = self.ctx.socket(zmq.PUB)
-            self.zmq_ctrl.bind("tcp://127.0.0.1:9000")
+            self.zmq_ctrl.bind(controller_address)
 
         # Set timer to poll for messages.
         self.timer = QtCore.QTimer()
