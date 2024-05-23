@@ -73,32 +73,3 @@ def test_track_color(centered_pair_predictions):
         assert color_manager.get_item_color(
             inst_0.skeleton.edges[edge_idx], inst_0
         ) == color_manager.get_color_by_idx(edge_idx)
-
-
-def test_instance_group_color(multiview_min_session_frame_groups):
-    labels = multiview_min_session_frame_groups
-    session = labels.sessions[0]
-    frame_idx = 0
-    frame_group = session.frame_groups[frame_idx]
-    instance_group = frame_group.instance_groups[0]
-
-    # Test instance group colors
-    color_manager = ColorManager(labels=labels, session=session, frame_idx=frame_idx)
-
-    # Test instance groups are stored correctly
-    assert color_manager.labels == labels
-    assert color_manager.session == session
-    assert color_manager.frame_idx == frame_idx
-    assert color_manager.instance_groups == frame_group.instance_groups
-
-    # Test instance group colors
-    assert color_manager.get_instance_group_color(
-        instance_group
-    ) == color_manager.get_color_by_idx(0)
-    assert list(color_manager.get_instance_group_color(instance_group)) != [0, 0, 0]
-
-    # Test whether if the instance group color is the same as the instance color
-    instance = instance_group.instances[0]
-    assert color_manager.get_item_color(
-        item=instance, parent_session=session, parent_frame_idx=0
-    ) == color_manager.get_instance_group_color(instance_group)

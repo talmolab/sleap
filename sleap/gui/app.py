@@ -1162,10 +1162,6 @@ class MainWindow(QMainWindow):
             and has_selected_session
         )
 
-        # Update color predicted
-        if self.state["distinctly_color"] == "instance_groups":
-            self.state["color predicted"] = False
-
         # Update overlays
         self.overlays["track_labels"].visible = (
             control_key_down and has_selected_instance

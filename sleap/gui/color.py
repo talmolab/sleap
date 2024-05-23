@@ -37,19 +37,12 @@ class ColorManager:
         labels: The :class:`Labels` dataset which contains the tracks for
             which we want colors.
         palette: String with the color palette name to use.
-        session: The :class:`RecordingSession` object which contains the
-            instance groups for which we want colors.
-        frame_idx: The index of the frame in the session for which we want
-            instance group colors.
-
     """
 
     def __init__(
         self,
         labels: Labels = None,
         palette: str = "standard",
-        session: RecordingSession = None,
-        frame_idx: int = None,
     ):
         self.labels = labels
 
@@ -76,9 +69,6 @@ class ColorManager:
 
         self.medium_pen_width = self.thick_pen_width // 2
         self.default_pen_width = max(1, self.thick_pen_width // 4)
-
-        self.session = session
-        self.frame_idx = frame_idx
 
     @property
     def labels(self):
@@ -121,14 +111,6 @@ class ColorManager:
         """Gets tracks for project."""
         if self.labels:
             return self.labels.tracks
-        return []
-
-    @property
-    def instance_groups(self) -> Iterable[InstanceGroup]:
-        """Gets instance groups for project."""
-        frame_group = self.session.frame_groups.get(self.frame_idx, None)
-        if frame_group is not None:
-            return frame_group.instance_groups
         return []
 
     def set_palette(self, palette: Union[Text, Iterable[ColorTupleStringType]]):
@@ -202,28 +184,6 @@ class ColorManager:
 
         return self.get_color_by_idx(track_idx)
 
-    def get_instance_group_color(
-        self, instance_group: Union[InstanceGroup, int]
-    ) -> ColorTupleType:
-        """Returns the color to use for a given instance group.
-
-        Args:
-            instance_group: `InstanceGroup` object
-        Returns:
-            (r, g, b)-tuple
-        """
-        instance_group_idx = instance_group
-        if isinstance(instance_group, InstanceGroup):
-            instance_group_idx = (
-                self.instance_groups.index(instance_group)
-                if instance_group in self.instance_groups
-                else None
-            )
-        if instance_group_idx is None:
-            return (0, 0, 0)
-
-        return self.get_color_by_idx(instance_group_idx)
-
     @classmethod
     def is_sequence(cls, item) -> bool:
         """Returns whether item is a tuple or list."""
@@ -295,6 +255,16 @@ class ColorManager:
         if not parent_skeleton and hasattr(parent_instance, "skeleton"):
             parent_skeleton = parent_instance.skeleton
 
+        is_predicted = False
+        if parent_instance and self.is_predicted(parent_instance):
+            is_predicted = True
+
+        if is_predicted and not self.color_predicted:
+            if isinstance(item, Node):
+                return self.uncolored_prediction_color
+
+            return (128, 128, 128)
+
         if parent_frame_idx is None and parent_instance:
             parent_frame = parent_instance.frame
             if parent_frame:
@@ -317,16 +287,6 @@ class ColorManager:
             if instance_group is not None:
                 instance_group_idx = frame_group.instance_groups.index(instance_group)
                 return self.get_color_by_idx(instance_group_idx)
-
-        is_predicted = False
-        if parent_instance and self.is_predicted(parent_instance):
-            is_predicted = True
-
-        if is_predicted and not self.color_predicted:
-            if isinstance(item, Node):
-                return self.uncolored_prediction_color
-
-            return (128, 128, 128)
 
         if self.distinctly_color == "instances" or hasattr(item, "track"):
             track = None
