@@ -346,7 +346,6 @@ class GenericTableView(QtWidgets.QTableView):
         """
         if self.is_activatable:
             self.state[self.row_name] = self.getSelectedRowItem()
-            print("Activated:", self.row_name, self.state[self.row_name])
 
     def selectRowItem(self, item: Any):
         """Select row corresponding to item.

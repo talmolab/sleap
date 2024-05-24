@@ -3808,5 +3808,3 @@ class UnlinkVideo(EditCommand):
 
         # Reset the selected camera
         context.state["selected_camera"] = None
-
-        
