@@ -5292,9 +5292,9 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
     # Figure out which input path to use.
     labels_path = getattr(args, "labels", None)
     if labels_path is not None:
-        data_path = labels_path
+        data_path = Path(labels_path)
     else:
-        data_path = args.data_path
+        data_path = Path(args.data_path)
         
     # Check for multiple video inputs
     # Compile file(s) into a list for later itteration
@@ -5479,8 +5479,11 @@ def main(args: Optional[list] = None):
     tracker = _make_tracker_from_cli(args)
     
     output_path = args.output
+    if output_path is not None:
+        output_path_obj = Path(output_path)
+        
     # Output path given is a file, but multiple inputs were given
-    if output_path is not None and (Path.is_file(output_path) and data_path_list.len() > 1):
+    if output_path is not None and (Path.is_file(output_path_obj) and data_path_list.len() > 1):
             raise ValueError(
                 "output_path argument must be a directory if multiple video inputs are given"
             )
@@ -5502,6 +5505,7 @@ def main(args: Optional[list] = None):
 
             if output_path is None:
                 output_path = data_path + ".predictions.slp"
+            
 
             labels_pr.provenance["model_paths"] = predictor.model_paths
             labels_pr.provenance["predictor"] = type(predictor).__name__
@@ -5545,7 +5549,7 @@ def main(args: Optional[list] = None):
 
     # running tracking on existing prediction file
     elif getattr(args, "tracking.tracker") is not None:
-        for data_path in data_path_list:
+        for data_path, provider in zip(data_path_list, provider_list):
             # Load predictions
             print("Loading predictions...")
             labels_pr = sleap.load_file(args.data_path)
