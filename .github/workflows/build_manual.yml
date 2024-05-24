@@ -11,8 +11,7 @@ on:
       - '.github/workflows/build_manual.yml'
     branches:
       # - develop
-      # - fakebranch
-      - elizabeth/upgrade-actions-for-release
+      - fakebranch
 
 jobs:
   build:
