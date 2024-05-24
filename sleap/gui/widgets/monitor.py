@@ -10,6 +10,7 @@ from typing import Optional, Dict
 from qtpy import QtCore, QtWidgets, QtGui
 from qtpy.QtCharts import QtCharts
 import attr
+from sleap.nn import training
 
 
 logger = logging.getLogger(__name__)
@@ -304,17 +305,21 @@ class LossViewer(QtWidgets.QMainWindow):
         self.ctx_given = zmq_context is not None
         self.ctx = zmq.Context() if zmq_context is None else zmq_context
 
-        # Publish and control address
+        # Default publish and control address
         controller_address = "tcp://127.0.0.1:9000"
         publish_address = "tcp://127.0.0.1:9001"
 
         if self.zmq_ports:
+            for port, port_value in self.zmq_ports.items():
+                need_port = training.is_port_free(port=port_value, zmq_context=self.ctx)
+                if need_port:
+                    self.zmq_ports[port] = training.select_zmq_port(
+                        zmq_context=self.ctx
+                    )
             controller_address = "tcp://127.0.0.1:" + str(
-                self.zmq_ports["controller_address"]
+                self.zmq_ports["controller_port"]
             )
-            publish_address = "tcp://127.0.0.1:" + str(
-                self.zmq_ports["publisher_address"]
-            )
+            publish_address = "tcp://127.0.0.1:" + str(self.zmq_ports["publish_port"])
 
         # Progress monitoring, SUBSCRIBER
         self.sub = self.ctx.socket(zmq.SUB)

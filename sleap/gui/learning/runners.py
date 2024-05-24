@@ -603,12 +603,16 @@ def run_gui_training(
 
         if all(key in inference_params for key in ["controller_port", "publish_port"]):
             zmq_ports = {
-                "controller_address": inference_params["controller_port"],
-                "publisher_address": inference_params["publish_port"],
+                "controller_port": inference_params["controller_port"],
+                "publish_port": inference_params["publish_port"],
             }
 
         # open training monitor window
         win = LossViewer(zmq_ports=zmq_ports)
+
+        # Reassign the values in the inference parameters in case the ports were changed
+        inference_params["controller_port"] = win.zmq_ports["controller_port"]
+        inference_params["publish_port"] = win.zmq_ports["publish_port"]
         win.resize(600, 400)
         win.show()
 
