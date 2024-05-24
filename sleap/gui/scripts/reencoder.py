@@ -23,7 +23,7 @@ def encode_directory(directory):
     for filename in os.listdir(directory):
         if filename.endswith(".mp4"):
             input_file = os.path.join(directory, filename)
-            output_file = os.path.join(directory, os.path.splitext(filename)[0] + '_encoded.mp4')
+            output_file = os.path.join(directory, os.path.splitext(filename)[0] + '.mp4')
             print(f"Starting encoding: {input_file}")
             encode_video(input_file, output_file)
 
