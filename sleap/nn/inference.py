@@ -5296,6 +5296,8 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
     else:
         data_path = args.data_path
         
+    # Check for multiple video inputs
+    # Compile file(s) into a list for later itteration
     if Path.is_dir(data_path):
         data_path_list = []
         for file_path in data_path.iterdir():
@@ -5309,8 +5311,10 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
             "Run 'sleap-track -h' to see full command documentation."
         )
 
+    # Provider list to accomodate multiple video inputs
     provider_list = []
     for data_path_file in data_path_list:
+        # Create a provider for each file
         if data_path_file.endswith(".slp"):
             labels = sleap.load_file(data_path_file)
 
@@ -5479,8 +5483,9 @@ def main(args: Optional[list] = None):
     if args.models is not None and "movenet" in args.models[0]:
         args.models = args.models[0]
 
-    # Either run inference (and tracking) or just run tracking
+    # Either run inference (and tracking) or just run tracking (if using an existing prediction where inference has already been run)
     if args.models is not None:
+        # Run inference on all files inputed
         for data_path, provider in zip(data_path_list, provider_list):
             # Setup models.
             predictor = _make_predictor_from_cli(args)
@@ -5528,8 +5533,10 @@ def main(args: Optional[list] = None):
             if args.open_in_gui:
                 subprocess.call(["sleap-label", output_path])
             
+            # Reset output_path for next iteration
             output_path = None
 
+    # running tracking on existing prediction file
     elif getattr(args, "tracking.tracker") is not None:
         for data_path in data_path_list:
             # Load predictions
@@ -5578,6 +5585,9 @@ def main(args: Optional[list] = None):
 
             if args.open_in_gui:
                 subprocess.call(["sleap-label", output_path])
+                
+            # Reset output_path for next iteration
+            output_path = None
 
     else:
         raise ValueError(
