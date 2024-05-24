@@ -49,13 +49,7 @@ jobs:
           environment-file: environment_build.yml
           activate-environment: sleap_ci
           conda-solver: "libmamba"
-          # `use-only-tar-bz2: true` is breaking the build across all platforms. The environment is not able to resolve. Turned off for now.
-          # Error message:
-          # """...
-          #   File "/home/runner/miniconda3/envs/sleap_ci/lib/python3.7/site-packages/conda_build/environ.py", line 801, in get_install_actions
-          #   raise DependencyNeedsBuildingError(exc, subdir=subdir)
-          #   conda_build.exceptions.DependencyNeedsBuildingError: Unsatisfiable dependencies for platform linux-64: {'conda-forge::ndx-pose'}
-          # """"
+          # Increase the cache number if build dependencies change! Otherwise, the cache will not be invalidated.
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
 
       - name: Print environment info
