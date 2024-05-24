@@ -5288,46 +5288,56 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
         A tuple of `(provider, data_path)` with the data `Provider` and path to the data
         that was specified in the args.
     """
+    
     # Figure out which input path to use.
     labels_path = getattr(args, "labels", None)
     if labels_path is not None:
         data_path = labels_path
     else:
         data_path = args.data_path
-
-    if data_path is None or data_path == "":
+        
+    if Path.is_dir(data_path):
+        data_path_list = []
+        for file_path in data_path.iterdir():
+            if file_path.is_file():
+                data_path_list.append(file_path)
+    elif Path.is_file(data_path):
+        data_path_list = [args.data_path]
+    else:
         raise ValueError(
             "You must specify a path to a video or a labels dataset. "
             "Run 'sleap-track -h' to see full command documentation."
         )
 
-    if data_path.endswith(".slp"):
-        labels = sleap.load_file(data_path)
+    provider_list = []
+    for data_path_file in data_path_list:
+        if data_path_file.endswith(".slp"):
+            labels = sleap.load_file(data_path_file)
 
-        if args.only_labeled_frames:
-            provider = LabelsReader.from_user_labeled_frames(labels)
-        elif args.only_suggested_frames:
-            provider = LabelsReader.from_unlabeled_suggestions(labels)
-        elif getattr(args, "video.index") != "":
-            provider = VideoReader(
-                video=labels.videos[int(getattr(args, "video.index"))],
-                example_indices=frame_list(args.frames),
-            )
+            if args.only_labeled_frames:
+                provider_list.append(LabelsReader.from_user_labeled_frames(labels))
+            elif args.only_suggested_frames:
+                provider_list.append(LabelsReader.from_unlabeled_suggestions(labels))
+            elif getattr(args, "video.index") != "":
+                provider_list.append(VideoReader(
+                    video=labels.videos[int(getattr(args, "video.index"))],
+                    example_indices=frame_list(args.frames),
+                ))
+            else:
+                provider_list.append(LabelsReader(labels))
+
         else:
-            provider = LabelsReader(labels)
+            print(f"Video: {data_path_file}")
+            # TODO: Clean this up.
+            video_kwargs = dict(
+                dataset=vars(args).get("video.dataset"),
+                input_format=vars(args).get("video.input_format"),
+            )
+            provider_list.append(VideoReader.from_filepath(
+                filename=data_path_file, example_indices=frame_list(args.frames), **video_kwargs
+            ))
 
-    else:
-        print(f"Video: {data_path}")
-        # TODO: Clean this up.
-        video_kwargs = dict(
-            dataset=vars(args).get("video.dataset"),
-            input_format=vars(args).get("video.input_format"),
-        )
-        provider = VideoReader.from_filepath(
-            filename=data_path, example_indices=frame_list(args.frames), **video_kwargs
-        )
-
-    return provider, data_path
+    return provider_list, data_path_list
 
 
 def _make_predictor_from_cli(args: argparse.Namespace) -> Predictor:
@@ -5461,7 +5471,7 @@ def main(args: Optional[list] = None):
     print()
 
     # Setup data loader.
-    provider, data_path = _make_provider_from_cli(args)
+    provider_list, data_path_list = _make_provider_from_cli(args)
 
     # Setup tracker.
     tracker = _make_tracker_from_cli(args)
@@ -5471,33 +5481,103 @@ def main(args: Optional[list] = None):
 
     # Either run inference (and tracking) or just run tracking
     if args.models is not None:
-        # Setup models.
-        predictor = _make_predictor_from_cli(args)
-        predictor.tracker = tracker
+        for data_path, provider in zip(data_path_list, provider_list):
+            # Setup models.
+            predictor = _make_predictor_from_cli(args)
+            predictor.tracker = tracker
 
-        # Run inference!
-        labels_pr = predictor.predict(provider)
+            # Run inference!
+            labels_pr = predictor.predict(provider)
 
-        if output_path is None:
-            output_path = data_path + ".predictions.slp"
+            if output_path is None:
+                output_path = data_path + ".predictions.slp"
 
-        labels_pr.provenance["model_paths"] = predictor.model_paths
-        labels_pr.provenance["predictor"] = type(predictor).__name__
+            labels_pr.provenance["model_paths"] = predictor.model_paths
+            labels_pr.provenance["predictor"] = type(predictor).__name__
+            
+            if args.no_empty_frames:
+                # Clear empty frames if specified.
+                labels_pr.remove_empty_frames()
+
+            finish_timestamp = str(datetime.now())
+            total_elapsed = time() - t0
+            print("Finished inference at:", finish_timestamp)
+            print(f"Total runtime: {total_elapsed} secs")
+            print(f"Predicted frames: {len(labels_pr)}/{len(provider)}")
+
+            # Add provenance metadata to predictions.
+            labels_pr.provenance["sleap_version"] = sleap.__version__
+            labels_pr.provenance["platform"] = platform.platform()
+            labels_pr.provenance["command"] = " ".join(sys.argv)
+            labels_pr.provenance["data_path"] = data_path
+            labels_pr.provenance["output_path"] = output_path
+            labels_pr.provenance["total_elapsed"] = total_elapsed
+            labels_pr.provenance["start_timestamp"] = start_timestamp
+            labels_pr.provenance["finish_timestamp"] = finish_timestamp
+
+            print("Provenance:")
+            print(labels_pr.provenance)
+            print()
+
+            labels_pr.provenance["args"] = vars(args)
+
+            # Save results.
+            labels_pr.save(output_path)
+            print("Saved output:", output_path)
+
+            if args.open_in_gui:
+                subprocess.call(["sleap-label", output_path])
+            
+            output_path = None
 
     elif getattr(args, "tracking.tracker") is not None:
-        # Load predictions
-        print("Loading predictions...")
-        labels_pr = sleap.load_file(args.data_path)
-        frames = sorted(labels_pr.labeled_frames, key=lambda lf: lf.frame_idx)
+        for data_path in data_path_list:
+            # Load predictions
+            print("Loading predictions...")
+            labels_pr = sleap.load_file(args.data_path)
+            frames = sorted(labels_pr.labeled_frames, key=lambda lf: lf.frame_idx)
 
-        print("Starting tracker...")
-        frames = run_tracker(frames=frames, tracker=tracker)
-        tracker.final_pass(frames)
+            print("Starting tracker...")
+            frames = run_tracker(frames=frames, tracker=tracker)
+            tracker.final_pass(frames)
 
-        labels_pr = Labels(labeled_frames=frames)
+            labels_pr = Labels(labeled_frames=frames)
 
-        if output_path is None:
-            output_path = f"{data_path}.{tracker.get_name()}.slp"
+            if output_path is None:
+                output_path = f"{data_path}.{tracker.get_name()}.slp"
+                
+            if args.no_empty_frames:
+                # Clear empty frames if specified.
+                labels_pr.remove_empty_frames()
+
+            finish_timestamp = str(datetime.now())
+            total_elapsed = time() - t0
+            print("Finished inference at:", finish_timestamp)
+            print(f"Total runtime: {total_elapsed} secs")
+            print(f"Predicted frames: {len(labels_pr)}/{len(provider)}")
+
+            # Add provenance metadata to predictions.
+            labels_pr.provenance["sleap_version"] = sleap.__version__
+            labels_pr.provenance["platform"] = platform.platform()
+            labels_pr.provenance["command"] = " ".join(sys.argv)
+            labels_pr.provenance["data_path"] = data_path
+            labels_pr.provenance["output_path"] = output_path
+            labels_pr.provenance["total_elapsed"] = total_elapsed
+            labels_pr.provenance["start_timestamp"] = start_timestamp
+            labels_pr.provenance["finish_timestamp"] = finish_timestamp
+
+            print("Provenance:")
+            pprint(labels_pr.provenance)
+            print()
+
+            labels_pr.provenance["args"] = vars(args)
+
+            # Save results.
+            labels_pr.save(output_path)
+            print("Saved output:", output_path)
+
+            if args.open_in_gui:
+                subprocess.call(["sleap-label", output_path])
 
     else:
         raise ValueError(
@@ -5507,35 +5587,4 @@ def main(args: Optional[list] = None):
             "Use \"sleap-track --tracking.tracker ...' to specify tracker to use."
         )
 
-    if args.no_empty_frames:
-        # Clear empty frames if specified.
-        labels_pr.remove_empty_frames()
-
-    finish_timestamp = str(datetime.now())
-    total_elapsed = time() - t0
-    print("Finished inference at:", finish_timestamp)
-    print(f"Total runtime: {total_elapsed} secs")
-    print(f"Predicted frames: {len(labels_pr)}/{len(provider)}")
-
-    # Add provenance metadata to predictions.
-    labels_pr.provenance["sleap_version"] = sleap.__version__
-    labels_pr.provenance["platform"] = platform.platform()
-    labels_pr.provenance["command"] = " ".join(sys.argv)
-    labels_pr.provenance["data_path"] = data_path
-    labels_pr.provenance["output_path"] = output_path
-    labels_pr.provenance["total_elapsed"] = total_elapsed
-    labels_pr.provenance["start_timestamp"] = start_timestamp
-    labels_pr.provenance["finish_timestamp"] = finish_timestamp
-
-    print("Provenance:")
-    pprint(labels_pr.provenance)
-    print()
-
-    labels_pr.provenance["args"] = vars(args)
-
-    # Save results.
-    labels_pr.save(output_path)
-    print("Saved output:", output_path)
-
-    if args.open_in_gui:
-        subprocess.call(["sleap-label", output_path])
+   
