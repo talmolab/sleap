@@ -278,6 +278,7 @@ class ColorManager:
             and parent_session
             and parent_frame_idx
         ):
+            instance_group = None
             frame_group = parent_session.frame_groups.get(parent_frame_idx, None)
             if frame_group is not None:
                 instance_group = frame_group.get_instance_group(
@@ -287,6 +288,9 @@ class ColorManager:
             if instance_group is not None:
                 instance_group_idx = frame_group.instance_groups.index(instance_group)
                 return self.get_color_by_idx(instance_group_idx)
+
+            else:
+                return (128, 128, 128)
 
         if self.distinctly_color == "instances" or hasattr(item, "track"):
             track = None
