@@ -1391,6 +1391,8 @@ class MainWindow(QMainWindow):
             else:
                 self.statusBar().setStyleSheet("color: black")
 
+            # TODO(JS): Add Camera indicator test here
+
         self.statusBar().showMessage(message)
 
     def resetPrefs(self):
