@@ -5436,8 +5436,6 @@ def main(args: Optional[list] = None):
     pprint(vars(args))
     print()
 
-    output_path = args.output
-
     # Setup devices.
     if args.cpu or not sleap.nn.system.is_gpu_system():
         sleap.nn.system.use_cpu_only()
@@ -5479,12 +5477,20 @@ def main(args: Optional[list] = None):
 
     # Setup tracker.
     tracker = _make_tracker_from_cli(args)
+    
+    output_path = args.output
+    # Output path given is a file, but multiple inputs were given
+    if output_path is not None and (Path.is_file(output_path) and data_path_list.len() > 1):
+            raise ValueError(
+                "output_path argument must be a directory if multiple video inputs are given"
+            )
 
     if args.models is not None and "movenet" in args.models[0]:
         args.models = args.models[0]
 
     # Either run inference (and tracking) or just run tracking (if using an existing prediction where inference has already been run)
     if args.models is not None:
+            
         # Run inference on all files inputed
         for data_path, provider in zip(data_path_list, provider_list):
             # Setup models.
@@ -5534,7 +5540,8 @@ def main(args: Optional[list] = None):
                 subprocess.call(["sleap-label", output_path])
             
             # Reset output_path for next iteration
-            output_path = None
+            output_path = args.output
+
 
     # running tracking on existing prediction file
     elif getattr(args, "tracking.tracker") is not None:
@@ -5587,7 +5594,7 @@ def main(args: Optional[list] = None):
                 subprocess.call(["sleap-label", output_path])
                 
             # Reset output_path for next iteration
-            output_path = None
+            output_path = args.output
 
     else:
         raise ValueError(
