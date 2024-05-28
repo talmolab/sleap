@@ -382,6 +382,12 @@ inference:
 
   tracking-only:
 
+- name: batch_size
+  label: Batch Size 
+  type: int
+  default: 4
+  range: 1,512
+
 - name: tracking.tracker
   label: Tracker (cross-frame identity) Method
   type: stacked
