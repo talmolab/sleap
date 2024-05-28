@@ -3,6 +3,7 @@
 import numpy as np
 from time import perf_counter
 from sleap.nn.config.training_job import TrainingJobConfig
+from sleap.gui.utils import is_port_free, select_zmq_port
 import zmq
 import jsonpickle
 import logging
@@ -10,7 +11,6 @@ from typing import Optional, Dict
 from qtpy import QtCore, QtWidgets, QtGui
 from qtpy.QtCharts import QtCharts
 import attr
-from sleap.nn import training
 
 
 logger = logging.getLogger(__name__)
@@ -313,12 +313,10 @@ class LossViewer(QtWidgets.QMainWindow):
         self.sub = self.ctx.socket(zmq.SUB)
         self.sub.subscribe("")
 
-        if self.zmq_ports and not training.is_port_free(
+        if self.zmq_ports and not is_port_free(
             port=self.zmq_ports["publish_port"], zmq_context=self.ctx
         ):
-            self.zmq_ports["publish_port"] = training.select_zmq_port(
-                zmq_context=self.ctx
-            )
+            self.zmq_ports["publish_port"] = select_zmq_port(zmq_context=self.ctx)
             publish_address = "tcp://127.0.0.1:" + str(self.zmq_ports["publish_port"])
 
         self.sub.bind(publish_address)
@@ -328,10 +326,10 @@ class LossViewer(QtWidgets.QMainWindow):
         if self.show_controller:
             self.zmq_ctrl = self.ctx.socket(zmq.PUB)
 
-            if self.zmq_ports and not training.is_port_free(
+            if self.zmq_ports and not is_port_free(
                 port=self.zmq_ports["controller_port"], zmq_context=self.ctx
             ):
-                self.zmq_ports["controller_port"] = training.select_zmq_port(
+                self.zmq_ports["controller_port"] = select_zmq_port(
                     zmq_context=self.ctx
                 )
                 controller_address = "tcp://127.0.0.1:" + str(

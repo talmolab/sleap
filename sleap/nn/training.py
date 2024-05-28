@@ -11,7 +11,6 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from time import time
 from typing import Callable, List, Optional, Text, TypeVar, Union
-import zmq
 
 import attr
 import cattr
@@ -392,30 +391,6 @@ def setup_new_run_folder(
         run_path = config.run_path
 
     return run_path
-
-
-def is_port_free(port: int, zmq_context: Optional[zmq.Context] = None) -> bool:
-    """Checks if a port is free."""
-    ctx = zmq.Context.instance() if zmq_context is None else zmq_context
-    socket = ctx.socket(zmq.REP)
-    address = f"tcp://127.0.0.1:{port}"
-    try:
-        socket.bind(address)
-        socket.unbind(address)
-        return True
-    except zmq.error.ZMQError:
-        return False
-    finally:
-        socket.close()
-
-
-def select_zmq_port(zmq_context: Optional[zmq.Context] = None) -> int:
-    """Select a port that is free to connect within the given context."""
-    ctx = zmq.Context.instance() if zmq_context is None else zmq_context
-    socket = ctx.socket(zmq.REP)
-    port = socket.bind_to_random_port("tcp://127.0.0.1")
-    socket.close()
-    return port
 
 
 def setup_zmq_callbacks(zmq_config: ZMQConfig) -> List[tf.keras.callbacks.Callback]:
