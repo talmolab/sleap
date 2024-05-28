@@ -218,11 +218,13 @@ training:
   label: Controller Port
   type: int
   default: 9000 
+  range: 1024,65535
 
 - name: publish_port
   label: Publish Port
   type: int
   default: 9001
+  range: 1024,65535
 
 - type: text
   text: '<b>Output Options</b>'

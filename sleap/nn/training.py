@@ -403,7 +403,7 @@ def is_port_free(port: int, zmq_context: Optional[zmq.Context] = None) -> bool:
         socket.bind(address)
         socket.unbind(address)
         return True
-    except zmq.ZMQError:
+    except zmq.error.ZMQError:
         return False
     finally:
         socket.close()
