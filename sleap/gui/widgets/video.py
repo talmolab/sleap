@@ -279,6 +279,7 @@ class QtVideoPlayer(QWidget):
 
         def set_video(video: Video):
             self.state["video"] = video
+
         self.state.connect("unlinked_video", lambda video: set_video(video))
 
         self.state.connect("fit", self.setFitZoom)
