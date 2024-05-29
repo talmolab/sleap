@@ -18,7 +18,7 @@ import yaml
 
 from sleap.util import get_config_file
 from sleap.instance import Instance, Track, Node
-from sleap.io.cameras import InstanceGroup, RecordingSession
+from sleap.io.cameras import RecordingSession
 from sleap.io.dataset import Labels
 from sleap.prefs import prefs
 
