@@ -2798,8 +2798,6 @@ class SetSelectedInstanceGroup(EditCommand):
             instance=selected_instance, camera=camera, instance_group=instance_group
         )
 
-        # TODO(LM): Call back to update the instance coloring in the GUI
-
 
 class SetSelectedInstanceTrack(EditCommand):
     topics = [UpdateTopic.tracks]
