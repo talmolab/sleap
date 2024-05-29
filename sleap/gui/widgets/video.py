@@ -276,7 +276,11 @@ class QtVideoPlayer(QWidget):
         self.state.connect("show labels", self.plot)
         self.state.connect("show edges", self.plot)
         self.state.connect("video", self.load_video)
-        self.state.connect("unlinked_video", self.load_video)
+
+        def set_video(video: Video):
+            self.state["video"] = video
+        self.state.connect("unlinked_video", lambda video: set_video(video))
+
         self.state.connect("fit", self.setFitZoom)
 
         self.view.show()
