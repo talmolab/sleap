@@ -34,14 +34,6 @@ jobs:
     steps:
       # Setup
       - uses: actions/checkout@v2
-      # - name: Cache conda
-      #   uses: actions/cache@v1
-      #   env:
-      #     # Increase this value to reset cache if environment_build.yml has not changed
-      #     CACHE_NUMBER: 0
-      #   with:
-      #     path: ~/conda_pkgs_dir
-      #     key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'requirements.txt') }}
 
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v3.0.3
@@ -52,7 +44,6 @@ jobs:
           environment-file: environment_build.yml
           activate-environment: sleap_ci
           conda-solver: "libmamba"
-          # use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
 
       - name: Print environment info
         shell: bash -l {0}
