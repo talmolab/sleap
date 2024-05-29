@@ -637,7 +637,7 @@ class MainWindow(QMainWindow):
             key="palette",
         )
 
-        distinctly_color_options = ("instances", "nodes", "edges")
+        distinctly_color_options = ("instance_groups", "instances", "nodes", "edges")
 
         add_submenu_choices(
             menu=viewMenu,

@@ -2743,6 +2743,8 @@ class AddTrack(EditCommand):
 
 
 class SetSelectedInstanceGroup(EditCommand):
+    topics = [UpdateTopic.project_instances]
+
     @staticmethod
     def do_action(context, params):
         """Set the `selected_instance` to the `instance_group`.
