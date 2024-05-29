@@ -691,14 +691,13 @@ class InstanceGroupTableModel(GenericTableModel):
         item: 'InstanceGroup' which has information about the instance group
     """
 
-    properties = ("name", "frame_idx", "cameras", "instances")
+    properties = ("name", "frame index", "cameras", "instances")
 
     def item_to_data(self, obj, item: InstanceGroup):
-        print("this is item: ", item)
 
         return {
             "name": item.name,
-            "frame_idx": item.frame_idx,
+            "frame index": item.frame_idx,
             "cameras": len(item.camera_cluster.cameras),
             "instances": len(item.instances),
         }
