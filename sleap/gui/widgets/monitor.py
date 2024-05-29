@@ -3,10 +3,11 @@
 import numpy as np
 from time import perf_counter
 from sleap.nn.config.training_job import TrainingJobConfig
+from sleap.gui.utils import is_port_free, select_zmq_port
 import zmq
 import jsonpickle
 import logging
-from typing import Optional
+from typing import Optional, Dict
 from qtpy import QtCore, QtWidgets, QtGui
 from qtpy.QtCharts import QtCharts
 import attr
@@ -22,6 +23,7 @@ class LossViewer(QtWidgets.QMainWindow):
 
     def __init__(
         self,
+        zmq_ports: Dict = None,
         zmq_context: Optional[zmq.Context] = None,
         show_controller=True,
         parent=None,
@@ -32,6 +34,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.stop_button = None
         self.cancel_button = None
         self.canceled = False
+        self.zmq_ports = zmq_ports
 
         self.batches_to_show = -1  # -1 to show all
         self.ignore_outliers = False
@@ -302,16 +305,38 @@ class LossViewer(QtWidgets.QMainWindow):
         self.ctx_given = zmq_context is not None
         self.ctx = zmq.Context() if zmq_context is None else zmq_context
 
+        # Default publish and control address
+        controller_address = "tcp://127.0.0.1:9000"
+        publish_address = "tcp://127.0.0.1:9001"
+
         # Progress monitoring, SUBSCRIBER
         self.sub = self.ctx.socket(zmq.SUB)
         self.sub.subscribe("")
-        self.sub.bind("tcp://127.0.0.1:9001")
+
+        if self.zmq_ports and not is_port_free(
+            port=self.zmq_ports["publish_port"], zmq_context=self.ctx
+        ):
+            self.zmq_ports["publish_port"] = select_zmq_port(zmq_context=self.ctx)
+            publish_address = "tcp://127.0.0.1:" + str(self.zmq_ports["publish_port"])
+
+        self.sub.bind(publish_address)
 
         # Controller, PUBLISHER
         self.zmq_ctrl = None
         if self.show_controller:
             self.zmq_ctrl = self.ctx.socket(zmq.PUB)
-            self.zmq_ctrl.bind("tcp://127.0.0.1:9000")
+
+            if self.zmq_ports and not is_port_free(
+                port=self.zmq_ports["controller_port"], zmq_context=self.ctx
+            ):
+                self.zmq_ports["controller_port"] = select_zmq_port(
+                    zmq_context=self.ctx
+                )
+                controller_address = "tcp://127.0.0.1:" + str(
+                    self.zmq_ports["controller_port"]
+                )
+
+            self.zmq_ctrl.bind(controller_address)
 
         # Set timer to poll for messages.
         self.timer = QtCore.QTimer()
