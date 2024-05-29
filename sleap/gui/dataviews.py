@@ -30,7 +30,7 @@ from sleap.gui.color import ColorManager
 from sleap.io.dataset import Labels
 from sleap.instance import LabeledFrame, Instance
 from sleap.skeleton import Skeleton
-from sleap.io.cameras import Camcorder, RecordingSession
+from sleap.io.cameras import Camcorder, RecordingSession, InstanceGroup
 
 
 class GenericTableModel(QtCore.QAbstractTableModel):
@@ -682,3 +682,42 @@ class CamerasTableModel(GenericTableModel):
 
         video = obj.get_video(item)
         return {"camera": item.name, "video": video.filename if video else ""}
+
+
+class InstanceGroupTableModel(GenericTableModel):
+    """Table model for displaying all instance groups in a given frame.
+
+    Args:
+        item: 'InstanceGroup' which has information about the instance group
+    """
+
+    properties = ("name", "frame index", "cameras", "instances")
+
+    def item_to_data(self, obj, item: InstanceGroup):
+
+        return {
+            "name": item.name,
+            "frame index": item.frame_idx,
+            "cameras": len(item.camera_cluster.cameras),
+            "instances": len(item.instances),
+        }
+
+    def get_item_color(self, instance_group: InstanceGroup, key: str):
+        color_manager = self.context.app.color_manager
+        if color_manager.distinctly_color == "instance_groups" and key == "name":
+
+            # Get the RecordingSession
+            state = self.context.state
+            session = state["session"]
+            if session is None:
+                return
+
+            # Get the FrameGroup
+            frame_idx = state["frame_idx"]
+            frame_group = session.frame_groups.get(frame_idx, None)
+            if frame_group is None:
+                return
+
+            # Get the InstanceGroup and color
+            color = color_manager.get_instance_group_color(instance_group, frame_group)
+            return QtGui.QColor(*color)

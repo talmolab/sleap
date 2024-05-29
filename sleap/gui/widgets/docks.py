@@ -33,7 +33,9 @@ from sleap.gui.dataviews import (
     VideosTableModel,
     CamerasTableModel,
     SessionsTableModel,
+    InstanceGroupTableModel,
 )
+from sleap.io.cameras import RecordingSession, FrameGroup, InstanceGroup
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.widgets.views import CollapsibleWidget
 from sleap.skeleton import Skeleton
@@ -732,3 +734,48 @@ class SessionsDock(DockWidget):
         self.wgt_layout.addWidget(self.unlinked_videos_table)
         video_link_button = self.create_video_link_button()
         self.wgt_layout.addWidget(video_link_button)
+
+
+class InstanceGroupDock(DockWidget):
+    """Dock widget for displaying instance groups."""
+
+    def __init__(self, main_window: QMainWindow, tab_with: Optional[QLayout] = None):
+        super().__init__(
+            name="Instance Groups",
+            main_window=main_window,
+            model_type=InstanceGroupTableModel,
+            tab_with=tab_with,
+        )
+
+    def create_models(self) -> InstanceGroupTableModel:
+        session: RecordingSession = self.main_window.state["session"]
+        instance_groups = []
+        if session is not None:
+            frame_idx: int = self.main_window.state["frame_idx"]
+            frame_group: FrameGroup = session.frame_groups.get(frame_idx, None)
+            if frame_group is not None:
+                instance_groups: List[InstanceGroup] = frame_group.instance_groups
+
+        self.model = self.model_type(
+            items=instance_groups,
+            context=self.main_window.commands,
+        )
+        return self.model
+
+    def create_tables(self) -> GenericTableView:
+        if self.model is None:
+            self.create_models()
+
+        self.table = GenericTableView(
+            state=self.main_window.state,
+            row_name="instance_group",
+            name_prefix="",
+            model=self.model,
+        )
+        return self.table
+
+    def lay_everything_out(self) -> None:
+        if self.table is None:
+            self.create_tables()
+
+        self.wgt_layout.addWidget(self.table)
