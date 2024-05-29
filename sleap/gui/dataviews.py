@@ -701,3 +701,23 @@ class InstanceGroupTableModel(GenericTableModel):
             "cameras": len(item.camera_cluster.cameras),
             "instances": len(item.instances),
         }
+
+    def get_item_color(self, instance_group: InstanceGroup, key: str):
+        color_manager = self.context.app.color_manager
+        if color_manager.distinctly_color == "instance_groups" and key == "name":
+
+            # Get the RecordingSession
+            state = self.context.state
+            session = state["session"]
+            if session is None:
+                return
+
+            # Get the FrameGroup
+            frame_idx = state["frame_idx"]
+            frame_group = session.frame_groups.get(frame_idx, None)
+            if frame_group is None:
+                return
+
+            # Get the InstanceGroup and color
+            color = color_manager.get_instance_group_color(instance_group, frame_group)
+            return QtGui.QColor(*color)
