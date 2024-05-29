@@ -61,6 +61,7 @@ class ColorManager:
         self.set_palette(palette)
 
         self.uncolored_prediction_color = (250, 250, 10)
+        self.ungrouped_instance_color = (250, 250, 10)
 
         if prefs["bold lines"]:
             self.thick_pen_width = 6
@@ -245,6 +246,7 @@ class ColorManager:
         parent_instance: Optional[Instance] = None,
         parent_skeleton: Optional["Skeleton"] = None,
         parent_session: Optional[RecordingSession] = None,
+        parent_frame: Optional["LabeledFrame"] = None,
         parent_frame_idx: Optional[int] = None,
     ) -> ColorTupleType:
         """Gets (r, g, b) tuple of color to use for drawing item."""
@@ -265,32 +267,38 @@ class ColorManager:
 
             return (128, 128, 128)
 
-        if parent_frame_idx is None and parent_instance:
-            parent_frame = parent_instance.frame
-            if parent_frame:
+        if self.distinctly_color == "instance_groups":
+
+            if parent_frame is None and parent_instance:
+                parent_frame = parent_instance.frame
+
+            if parent_frame_idx is None and parent_frame:
                 parent_frame_idx = parent_frame.frame_idx
 
-        if parent_session is None and self.labels and parent_frame:
-            parent_session = self.labels.get_session(video=parent_frame.video)
+            if parent_session is None and self.labels and parent_frame:
+                parent_session = self.labels.get_session(video=parent_frame.video)
 
-        if (
-            self.distinctly_color == "instance_groups"
-            and parent_session
-            and parent_frame_idx
-        ):
-            instance_group = None
-            frame_group = parent_session.frame_groups.get(parent_frame_idx, None)
-            if frame_group is not None:
-                instance_group = frame_group.get_instance_group(
-                    instance=parent_instance
-                )
+            can_retrieve_instance_group = (
+                parent_instance is not None
+                and parent_frame_idx is not None
+                and parent_session is not None
+            )
 
-            if instance_group is not None:
-                instance_group_idx = frame_group.instance_groups.index(instance_group)
-                return self.get_color_by_idx(instance_group_idx)
+            if can_retrieve_instance_group:
+                instance_group = None
+                frame_group = parent_session.frame_groups.get(parent_frame_idx, None)
+                if frame_group is not None:
+                    instance_group = frame_group.get_instance_group(
+                        instance=parent_instance
+                    )
 
-            else:
-                return (128, 128, 128)
+                if instance_group is not None:
+                    instance_group_idx = frame_group.instance_groups.index(
+                        instance_group
+                    )
+                    return self.get_color_by_idx(instance_group_idx)
+
+            return self.uncolored_prediction_color
 
         if self.distinctly_color == "instances" or hasattr(item, "track"):
             track = None
