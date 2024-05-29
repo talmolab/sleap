@@ -25,7 +25,8 @@ jobs:
             pyver: "3.9"
     steps:
       # Setup
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v3.0.3

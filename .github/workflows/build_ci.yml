@@ -29,7 +29,8 @@ jobs:
           - pyver: "3.7"
     steps:
       # Setup
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
       # - name: Cache conda
       #   uses: actions/cache@v1
