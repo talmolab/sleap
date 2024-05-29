@@ -2743,6 +2743,8 @@ class AddTrack(EditCommand):
 
 
 class SetSelectedInstanceGroup(EditCommand):
+    topics = [UpdateTopic.project_instances]
+
     @staticmethod
     def do_action(context, params):
         """Set the `selected_instance` to the `instance_group`.
@@ -2795,6 +2797,8 @@ class SetSelectedInstanceGroup(EditCommand):
         frame_group.add_instance(
             instance=selected_instance, camera=camera, instance_group=instance_group
         )
+
+        # TODO(LM): Call back to update the instance coloring in the GUI
 
 
 class SetSelectedInstanceTrack(EditCommand):
