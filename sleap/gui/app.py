@@ -1849,8 +1849,3 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
         app.exec_()
 
     pass
-
-
-if __name__ == "__main__":
-    ds = os.environ["dsmview"]
-    main([ds])
