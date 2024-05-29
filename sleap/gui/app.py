@@ -1392,7 +1392,9 @@ class MainWindow(QMainWindow):
                 self.statusBar().setStyleSheet("color: black")
 
             # TODO(JS): Add Camera indicator test here
-
+            if self.state["session"] is not None and current_video is not None:
+                message += f'{spacer}Camera: {self.state["session"].get_camera(video=self.state["video"])}'
+        
         self.statusBar().showMessage(message)
 
     def resetPrefs(self):
