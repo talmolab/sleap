@@ -185,6 +185,22 @@ class ColorManager:
 
         return self.get_color_by_idx(track_idx)
 
+    def get_instance_group_color(self, instance_group, frame_group):
+        """Returns the color to use for a given instance group.
+
+        Args:
+            instance_group: `InstanceGroup` object
+            frame_group: `FrameGroup` object
+        Returns:
+            (r, g, b)-tuple
+        """
+        if frame_group is None or instance_group is None:
+            return (0, 0, 0)
+
+        if instance_group in frame_group.instance_groups:
+            instance_group_idx = frame_group.instance_groups.index(instance_group)
+            return self.get_color_by_idx(instance_group_idx)
+
     @classmethod
     def is_sequence(cls, item) -> bool:
         """Returns whether item is a tuple or list."""
@@ -292,11 +308,9 @@ class ColorManager:
                         instance=parent_instance
                     )
 
-                if instance_group is not None:
-                    instance_group_idx = frame_group.instance_groups.index(
-                        instance_group
-                    )
-                    return self.get_color_by_idx(instance_group_idx)
+                return self.get_instance_group_color(
+                    instance_group=instance_group, frame_group=frame_group
+                )
 
             return self.uncolored_prediction_color
 
