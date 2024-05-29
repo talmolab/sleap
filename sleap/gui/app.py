@@ -1240,6 +1240,7 @@ class MainWindow(QMainWindow):
 
         if _has_topic([UpdateTopic.project, UpdateTopic.on_frame]):
             self.instances_dock.table.model().items = self.state["labeled_frame"]
+            self._update_instance_group_model()
 
         if _has_topic([UpdateTopic.suggestions]):
             self.suggestions_dock.table.model().items = self.labels.suggestions
@@ -1270,7 +1271,7 @@ class MainWindow(QMainWindow):
             self.update_cameras_model()
             self.update_unlinked_videos_model()
             self._update_sessions_menu()
-            self.update_instance_group_model()
+            self._update_instance_group_model()
 
     def update_unlinked_videos_model(self):
         """Update the unlinked videos model with the selected session."""
@@ -1278,7 +1279,9 @@ class MainWindow(QMainWindow):
             self.labels._cache._linkage_of_videos["unlinked"]
         )
 
-    def update_instance_group_model(self):
+    def _update_instance_group_model(self):
+        """Update the instance group model with the `InstanceGroup`s in current frame."""
+
         session = self.state["session"]
         if session is not None:
             frame_idx: int = self.state["frame_idx"]
@@ -1287,6 +1290,9 @@ class MainWindow(QMainWindow):
                 self.instance_groups_dock.table.model().items = (
                     frame_group.instance_groups
                 )
+                return
+
+        self.instance_groups_dock.table.model().items = []
 
     def update_cameras_model(self):
         """Update the cameras model with the selected session."""
