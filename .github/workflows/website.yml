@@ -9,6 +9,7 @@ on:
       - main
       - develop
       - liezl/add-abl-2023-workshop-link
+      - shrivaths/bonsai-guide
     paths:
       - "docs/**"
       - "README.rst"
