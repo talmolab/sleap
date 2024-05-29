@@ -86,7 +86,6 @@ from sleap.prefs import prefs
 from sleap.skeleton import Skeleton
 from sleap.util import parse_uri_path
 
-
 logger = getLogger(__name__)
 
 
@@ -810,9 +809,18 @@ class MainWindow(QMainWindow):
             self.commands.deleteFrameLimitPredictions,
         )
 
+        ### Sessions Menu ###
+
+        sessionsMenu = self.menuBar().addMenu("Sessions")
+
+        self.inst_groups_menu = sessionsMenu.addMenu("Set Instance Group")
+        self.inst_groups_delete_menu = sessionsMenu.addMenu("Delete Instance Group")
+        self.state.connect("frame_idx", self._update_sessions_menu)
+
         ### Tracks Menu ###
 
         tracksMenu = self.menuBar().addMenu("Tracks")
+
         self.track_menu = tracksMenu.addMenu("Set Instance Track")
         add_menu_check_item(
             tracksMenu, "propagate track labels", "Propagate Track Labels"
@@ -1120,6 +1128,7 @@ class MainWindow(QMainWindow):
 
         # Update menus
 
+        self.inst_groups_menu.setEnabled(has_selected_instance)
         self.track_menu.setEnabled(has_selected_instance)
         self.delete_tracks_menu.setEnabled(has_tracks)
         self._menu_actions["clear selection"].setEnabled(has_selected_instance)
@@ -1253,10 +1262,12 @@ class MainWindow(QMainWindow):
 
         if _has_topic([UpdateTopic.frame, UpdateTopic.project_instances]):
             self.state["last_interacted_frame"] = self.state["labeled_frame"]
+            self._update_sessions_menu()
 
         if _has_topic([UpdateTopic.sessions]):
             self.update_cameras_model()
             self.update_unlinked_videos_model()
+            self._update_sessions_menu()
 
     def update_unlinked_videos_model(self):
         """Update the unlinked videos model with the selected session."""
@@ -1409,6 +1420,51 @@ class MainWindow(QMainWindow):
             )
         self.track_menu.addAction(
             "New Track", self.commands.addTrack, Qt.CTRL + Qt.Key_0
+        )
+
+    def _update_sessions_menu(self):
+        """Update the instance groups menu based on the frame index."""
+
+        # Clear menus before adding more items
+        self.inst_groups_menu.clear()
+        self.inst_groups_delete_menu.clear()
+
+        # Get the session
+        session = self.state.get("session")
+        if session is None:
+            return
+
+        # Get the frame group for the current frame
+        frame_idx = self.state["frame_idx"]
+        frame_group = session.frame_groups.get(frame_idx, None)
+        if frame_group is not None:
+            for inst_group_ind, instance_group in enumerate(
+                frame_group.instance_groups
+            ):
+                # Create shortcut key for first 9 groups
+                key_command = ""
+                if inst_group_ind < 9:
+                    key_command = Qt.SHIFT + Qt.Key_0 + inst_group_ind + 1
+
+                # Update the Set Instance Group menu
+                self.inst_groups_menu.addAction(
+                    instance_group.name,
+                    lambda x=instance_group: self.commands.setInstanceGroup(x),
+                    key_command,
+                )
+
+                # Update the Delete Instance Group menu
+                self.inst_groups_delete_menu.addAction(
+                    instance_group.name,
+                    lambda x=instance_group: self.commands.deleteInstanceGroup(
+                        instance_group=x
+                    ),
+                )
+
+        self.inst_groups_menu.addAction(
+            "New Instance Group",
+            self.commands.addInstanceGroup,
+            Qt.SHIFT + Qt.Key_0,
         )
 
     def _update_seekbar_marks(self):

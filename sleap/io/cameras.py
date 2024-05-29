@@ -645,7 +645,7 @@ class InstanceGroup:
             )
 
         # Add the instance to the `InstanceGroup`
-        self.replace_instance(cam, instance)
+        self.replace_instance(cam=cam, instance=instance)
 
     def replace_instance(self, cam: Camcorder, instance: Instance):
         """Replace an `Instance` in the `InstanceGroup`.
@@ -667,6 +667,9 @@ class InstanceGroup:
 
         # Remove the instance if it already exists
         self.remove_instance(instance_or_cam=instance)
+
+        # Remove the instance currently at the cam (if any)
+        self.remove_instance(instance_or_cam=cam)
 
         # Replace the instance in the `InstanceGroup`
         self._instance_by_camcorder[cam] = instance
@@ -1571,7 +1574,7 @@ class FrameGroup:
         for camera in self.session.camera_cluster.cameras:
             self._instances_by_cam[camera] = set()
         for instance_group in self.instance_groups:
-            self.add_instance_group(instance_group)
+            self.add_instance_group(instance_group=instance_group)
 
     @property
     def instance_groups(self) -> List[InstanceGroup]:
@@ -1668,7 +1671,7 @@ class FrameGroup:
 
         frame_group_numpy = np.stack(instance_group_numpys, axis=1)  # M=all x T x N x 2
         cams_to_include_mask = np.array(
-            [cam in self.cams_to_include for cam in self.cameras]
+            [cam in self.cams_to_include for cam in self.session.cameras]
         )  # M=all x 1
 
         return frame_group_numpy[cams_to_include_mask]  # M=include x T x N x 2
@@ -1713,6 +1716,15 @@ class FrameGroup:
 
         # Add the `Instance` to the `InstanceGroup`
         if instance_group is not None:
+            # Remove any existing `Instance` in given `InstanceGroup` at same `Camcorder`
+            preexisting_instance = instance_group.get_instance(camera)
+            if preexisting_instance is not None:
+                self.remove_instance(instance=preexisting_instance)
+
+            # Remove the `Instance` from the `FrameGroup` if it is already exists
+            self.remove_instance(instance=instance, remove_empty_instance_group=True)
+
+            # Add the `Instance` to the `InstanceGroup`
             instance_group.add_instance(cam=camera, instance=instance)
         else:
             self._raise_if_instance_not_in_instance_group(instance=instance)
@@ -1726,11 +1738,15 @@ class FrameGroup:
             labeled_frame = instance.frame
             self.add_labeled_frame(labeled_frame=labeled_frame, camera=camera)
 
-    def remove_instance(self, instance: Instance):
+    def remove_instance(
+        self, instance: Instance, remove_empty_instance_group: bool = False
+    ):
         """Removes an `Instance` from the `FrameGroup`.
 
         Args:
             instance: `Instance` to remove from the `FrameGroup`.
+            remove_empty_instance_group: If True, then remove the `InstanceGroup` if it
+                is empty. Default is False.
         """
 
         instance_group = self.get_instance_group(instance=instance)
@@ -1747,11 +1763,21 @@ class FrameGroup:
         instance_group.remove_instance(instance_or_cam=instance)
 
         # Remove the `Instance` from the `FrameGroup`
-        self._instances_by_cam[camera].remove(instance)
+        if instance in self._instances_by_cam[camera]:
+            self._instances_by_cam[camera].remove(instance)
+        else:
+            logger.debug(
+                f"Instance {instance} not found in this FrameGroup: "
+                f"{self._instances_by_cam[camera]}."
+            )
 
         # Remove "empty" `LabeledFrame`s from the `FrameGroup`
         if len(self._instances_by_cam[camera]) < 1:
             self.remove_labeled_frame(labeled_frame_or_camera=camera)
+
+        # Remove the `InstanceGroup` if it is empty
+        if remove_empty_instance_group and len(instance_group.instances) < 1:
+            self.remove_instance_group(instance_group=instance_group)
 
     def add_instance_group(
         self, instance_group: Optional[InstanceGroup] = None
@@ -1819,11 +1845,9 @@ class FrameGroup:
         # Remove the `Instance`s from the `FrameGroup`
         for camera, instance in instance_group.instance_by_camcorder.items():
             self._instances_by_cam[camera].remove(instance)
-
-        # Remove the `LabeledFrame` from the `FrameGroup`
-        labeled_frame = self.get_labeled_frame(camera=camera)
-        if labeled_frame is not None:
-            self.remove_labeled_frame(labeled_frame_or_camera=camera)
+            # Remove the `LabeledFrame` if no more grouped instances
+            if len(self._instances_by_cam[camera]) < 1:
+                self.remove_labeled_frame(labeled_frame_or_camera=camera)
 
     # TODO(LM): maintain this as a dictionary for quick lookups
     def get_instance_group(self, instance: Instance) -> Optional[InstanceGroup]:
@@ -1964,8 +1988,12 @@ class FrameGroup:
                 f"Camcorder {camera} is not linked to a video in this "
                 f"RecordingSession {self.session}."
             )
-
-        labeled_frame = LabeledFrame(video=video, frame_idx=self.frame_idx)
+        # First try to find the `LabeledFrame` in the `RecordingSession`'s `Labels`
+        labeled_frames = self.session.labels.find(video=video, frame_idx=self.frame_idx)
+        if len(labeled_frames) > 0:
+            labeled_frame = labeled_frames[0]
+        else:
+            labeled_frame = LabeledFrame(video=video, frame_idx=self.frame_idx)
         self.add_labeled_frame(labeled_frame=labeled_frame, camera=camera)
 
         return labeled_frame
