@@ -1393,8 +1393,10 @@ class MainWindow(QMainWindow):
 
             # TODO(JS): Add Camera indicator test here
             if self.state["session"] is not None and current_video is not None:
-                message += f'{spacer}Camera: {self.state["session"].get_camera(video=self.state["video"])}'
-        
+                camera = self.state["session"].get_camera(video=self.state["video"])
+                if camera is not None:
+                    message += f"{spacer}Camera: {camera.name}"
+
         self.statusBar().showMessage(message)
 
     def resetPrefs(self):
