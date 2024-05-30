@@ -348,12 +348,19 @@ class MainWindow(QMainWindow):
                 frame_to_spinbox.setMaximum(video.num_frames)
                 frame_from_spinbox.setMaximum(video.num_frames)
 
+        def update_session(video):
+            """Update session state for current video."""
+            if video is not None and len(self.labels.sessions) > 0:
+                session = self.labels.get_session(video=video)
+                self.state["session"] = session
+
         self.state.connect(
             "video",
             callbacks=[
                 switch_frame,
                 lambda x: self._update_seekbar_marks(),
                 update_frame_chunk_suggestions,
+                update_session,
             ],
         )
 
