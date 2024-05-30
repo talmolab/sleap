@@ -2025,6 +2025,32 @@ class AddSession(EditCommand):
         # Reset since this action is also linked to a button in the SessionsDock and it
         # is not visually apparent which session is selected after clicking the button
         context.state["selected_session"] = None
+        
+        # Find parent of calibration file
+        parent_dir = os.path.dirname(camera_calibration)
+        
+        # Use camcorder names in session to find camera folders
+        cameras = session.camera_cluster.cameras
+        camera_names = [camera.name for camera in cameras]
+        
+        # Find videos inside camera folders
+        video_paths = []
+        for camera_name in camera_names:
+            camera_folder = os.path.join(parent_dir, camera_name)
+            
+            # Skip if camera folder does not exist
+            if (not os.path.exists(camera_folder)):
+                continue
+            
+            # Append all videos in camera folder
+            video_path = None;
+            for file in os.listdir(camera_folder):
+                if file.endswith(".mp4"): 
+                    video_path = os.path.join(camera_folder, file)
+                    video_paths.append(video_path)
+        
+        # Show import video dialog if any videos are found
+        ImportVideos().ask(filenames=[video_paths])
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
