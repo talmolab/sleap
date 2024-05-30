@@ -75,6 +75,7 @@ from sleap.gui.widgets.docks import (
     SkeletonDock,
     SuggestionsDock,
     VideosDock,
+    InstanceGroupDock,
 )
 from sleap.gui.widgets.slider import set_slider_marks_from_labels
 from sleap.gui.widgets.video import QtVideoPlayer
@@ -347,12 +348,19 @@ class MainWindow(QMainWindow):
                 frame_to_spinbox.setMaximum(video.num_frames)
                 frame_from_spinbox.setMaximum(video.num_frames)
 
+        def update_session(video):
+            """Update session state for current video."""
+            if video is not None and len(self.labels.sessions) > 0:
+                session = self.labels.get_session(video=video)
+                self.state["session"] = session
+
         self.state.connect(
             "video",
             callbacks=[
                 switch_frame,
                 lambda x: self._update_seekbar_marks(),
                 update_frame_chunk_suggestions,
+                update_session,
             ],
         )
 
@@ -636,7 +644,7 @@ class MainWindow(QMainWindow):
             key="palette",
         )
 
-        distinctly_color_options = ("instances", "nodes", "edges")
+        distinctly_color_options = ("instance_groups", "instances", "nodes", "edges")
 
         add_submenu_choices(
             menu=viewMenu,
@@ -1042,6 +1050,7 @@ class MainWindow(QMainWindow):
         self.skeleton_dock = SkeletonDock(self, tab_with=self.videos_dock)
         self.suggestions_dock = SuggestionsDock(self, tab_with=self.videos_dock)
         self.instances_dock = InstancesDock(self, tab_with=self.videos_dock)
+        self.instance_groups_dock = InstanceGroupDock(self, tab_with=self.videos_dock)
 
         # Bring videos tab forward.
         self.videos_dock.wgt_layout.parent().parent().raise_()
@@ -1238,6 +1247,7 @@ class MainWindow(QMainWindow):
 
         if _has_topic([UpdateTopic.project, UpdateTopic.on_frame]):
             self.instances_dock.table.model().items = self.state["labeled_frame"]
+            self._update_instance_group_model()
 
         if _has_topic([UpdateTopic.suggestions]):
             self.suggestions_dock.table.model().items = self.labels.suggestions
@@ -1268,12 +1278,28 @@ class MainWindow(QMainWindow):
             self.update_cameras_model()
             self.update_unlinked_videos_model()
             self._update_sessions_menu()
+            self._update_instance_group_model()
 
     def update_unlinked_videos_model(self):
         """Update the unlinked videos model with the selected session."""
         self.sessions_dock.unlinked_videos_table.model().items = (
             self.labels._cache._linkage_of_videos["unlinked"]
         )
+
+    def _update_instance_group_model(self):
+        """Update the instance group model with the `InstanceGroup`s in current frame."""
+
+        session = self.state["session"]
+        if session is not None:
+            frame_idx: int = self.state["frame_idx"]
+            frame_group = session.frame_groups.get(frame_idx, None)
+            if frame_group is not None:
+                self.instance_groups_dock.table.model().items = (
+                    frame_group.instance_groups
+                )
+                return
+
+        self.instance_groups_dock.table.model().items = []
 
     def update_cameras_model(self):
         """Update the cameras model with the selected session."""
