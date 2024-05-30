@@ -357,10 +357,10 @@ class MainWindow(QMainWindow):
         self.state.connect(
             "video",
             callbacks=[
+                update_session,  # Important to update session before other callbacks
                 switch_frame,
                 lambda x: self._update_seekbar_marks(),
                 update_frame_chunk_suggestions,
-                update_session,
             ],
         )
 
@@ -1417,7 +1417,6 @@ class MainWindow(QMainWindow):
             else:
                 self.statusBar().setStyleSheet("color: black")
 
-            # TODO(JS): Add Camera indicator test here
             if self.state["session"] is not None and current_video is not None:
                 camera = self.state["session"].get_camera(video=self.state["video"])
                 if camera is not None:
