@@ -195,7 +195,7 @@ class ColorManager:
             (r, g, b)-tuple
         """
         if frame_group is None or instance_group is None:
-            return (0, 0, 0)
+            return self.ungrouped_instance_color
 
         if instance_group in frame_group.instance_groups:
             instance_group_idx = frame_group.instance_groups.index(instance_group)
