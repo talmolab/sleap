@@ -326,12 +326,21 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.player)
 
         def switch_frame(video):
-            """Jump to last labeled frame"""
-            last_label = self.labels.find_last(video)
-            if last_label is not None:
-                self.state["frame_idx"] = last_label.frame_idx
+            """Maintain the same frame or jump to the last labeled frame."""
+            # get current frame index
+            current_frame_idx = self.state["frame_idx"]
+            # check to see if new video has enough frames 
+            if video.num_frames >= current_frame_idx:
+                # stay on same frame if video is long enough
+                self.state["frame_idx"] = current_frame_idx
             else:
-                self.state["frame_idx"] = 0
+                # if video is not long enough, jump to last labeled frame (old logic)
+                last_label = self.labels.find_last(video)
+                if last_label is not None:
+                    self.state["frame_idx"] = last_label.frame_idx
+                else:
+                    self.state["frame_idx"] = 0
+                
 
         def update_frame_chunk_suggestions(video):
             """Set upper limit of frame_chunk spinbox to number frames in video."""
@@ -1830,3 +1839,4 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
         app.exec_()
 
     pass
+
