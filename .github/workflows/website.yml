@@ -39,6 +39,7 @@ jobs:
       - name: Build
         shell: bash -l {0}
         run: |
+          pip install lxml[html_clean]
           cd docs
           python make_api_doctree.py
           make html
