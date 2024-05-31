@@ -9,7 +9,6 @@ on:
       - main
       - develop
       - fakebranch
-      - elizabeth/Fix-website-build-and-remove-build-cache-across-workflows
     paths:
       - "docs/**"
       - "README.rst"
