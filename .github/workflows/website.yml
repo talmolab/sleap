@@ -37,6 +37,9 @@ jobs:
           conda info
 
       - name: Build
+        # """Could not import extension myst_nb (exception: lxml.html.clean module is now 
+        # a separate project lxml_html_clean. Install lxml[html_clean] or 
+        # lxml_html_clean directly.)"""
         shell: bash -l {0}
         run: |
           pip install lxml[html_clean]
