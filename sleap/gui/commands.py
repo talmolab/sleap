@@ -490,9 +490,9 @@ class CommandContext:
         """Gui for deleting instances below some score threshold."""
         self.execute(DeleteLowScorePredictions)
 
-    def deleteFrameLimitPredictions(self):
+    def deleteInstanceLimitPredictions(self):
         """Gui for deleting instances beyond some number in each frame."""
-        self.execute(DeleteFrameLimitPredictions)
+        self.execute(DeleteInstanceLimitPredictions)
 
     def completeInstanceNodes(self, instance: Instance):
         """Adds missing nodes to given instance."""
@@ -2438,7 +2438,7 @@ class DeleteLowScorePredictions(InstanceDeleteCommand):
             return super().ask(context, params)
 
 
-class DeleteFrameLimitPredictions(InstanceDeleteCommand):
+class DeleteInstanceLimitPredictions(InstanceDeleteCommand):
     @staticmethod
     def get_frame_instance_list(context: CommandContext, params: dict):
         count_thresh = params["count_threshold"]
