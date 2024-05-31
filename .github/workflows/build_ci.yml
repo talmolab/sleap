@@ -29,16 +29,8 @@ jobs:
           - pyver: "3.7"
     steps:
       # Setup
-      - uses: actions/checkout@v2
-
-      - name: Cache conda
-        uses: actions/cache@v1
-        env:
-          # Increase this value to reset cache if environment_build.yml has not changed
-          CACHE_NUMBER: 0
-        with:
-          path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'pyproject.toml') }}
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v3.0.3
@@ -66,7 +58,7 @@ jobs:
       
       # Upload artifact "tests" can use it
       - name: Upload wheel artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.wheel_name }}
           path: dist/*.whl
@@ -111,16 +103,16 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.pyver }}
       
       # Download wheel
       - name: Download wheel artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         id: download
         with:
           name: ${{ matrix.wheel_name }}

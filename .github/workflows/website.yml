@@ -8,7 +8,7 @@ on:
       # 'main' triggers updates to 'sleap.ai', all others to 'sleap.ai/develop'
       - main
       - develop
-      - liezl/add-abl-2023-workshop-link
+      - fakebranch
     paths:
       - "docs/**"
       - "README.rst"
@@ -20,21 +20,13 @@ jobs:
     steps:
       # Setup
       - name: Checkout
-        uses: actions/checkout@v2
-      - name: Cache conda
-        uses: actions/cache@v1
-        env:
-          # Increase this value to reset cache if environment_build.yml has not changed
-          CACHE_NUMBER: 0
-        with:
-          path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'requirements.txt') }}
+        uses: actions/checkout@v4
+
       - name: Setup Miniconda
         # https://github.com/conda-incubator/setup-miniconda
-        uses: conda-incubator/setup-miniconda@v2.0.1
+        uses: conda-incubator/setup-miniconda@v3.0.3
         with:
           python-version: 3.7
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
           environment-file: environment_no_cuda.yml
           activate-environment: sleap_ci
       - name: Print environment info
@@ -44,14 +36,18 @@ jobs:
           conda info
 
       - name: Build
+        # """Could not import extension myst_nb (exception: lxml.html.clean module is now 
+        # a separate project lxml_html_clean. Install lxml[html_clean] or 
+        # lxml_html_clean directly.)"""
         shell: bash -l {0}
         run: |
+          pip install lxml[html_clean]
           cd docs
           python make_api_doctree.py
           make html
 
       - name: Deploy (sleap.ai)
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         if: github.ref == 'refs/heads/main'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -60,7 +56,7 @@ jobs:
           keep_files: true
 
       - name: Deploy (test)
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         if: github.ref != 'refs/heads/main'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
