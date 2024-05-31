@@ -1740,7 +1740,8 @@ class GoAdjacentView(NavCommand):
 
         # suggestion, do we need this?
         context.switch_frame(new_video)
-        
+
+
 # Editing Commands
 
 

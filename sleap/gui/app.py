@@ -329,9 +329,9 @@ class MainWindow(QMainWindow):
             """Maintain the same frame or jump to the last labeled frame."""
             # get current frame index
             current_frame_idx = self.state["frame_idx"]
-            # check to see if new video has enough frames 
+            # check to see if new video has enough frames
             if video.num_frames >= current_frame_idx:
-                # stay on same frame if video is long enough
+                # stay on same frame if video is has enough frames
                 self.state["frame_idx"] = current_frame_idx
             else:
                 # if video is not long enough, jump to last labeled frame (old logic)
@@ -340,7 +340,6 @@ class MainWindow(QMainWindow):
                     self.state["frame_idx"] = last_label.frame_idx
                 else:
                     self.state["frame_idx"] = 0
-                
 
         def update_frame_chunk_suggestions(video):
             """Set upper limit of frame_chunk spinbox to number frames in video."""
@@ -1839,4 +1838,3 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
         app.exec_()
 
     pass
-
