@@ -399,6 +399,8 @@ document.write(`
 </li>
       <li><a href="api/sleap.nn.architectures.hrnet.html#sleap.nn.architectures.hrnet.adjust_prefix">adjust_prefix() (in module sleap.nn.architectures.hrnet)</a>
 </li>
+      <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.AlbumentationsAugmenter">AlbumentationsAugmenter (class in sleap.nn.data.augmentation)</a>
+</li>
       <li><a href="api/sleap.info.align.html#sleap.info.align.align_instance_points">align_instance_points() (in module sleap.info.align)</a>
 </li>
       <li><a href="api/sleap.info.align.html#sleap.info.align.align_instances">align_instances() (in module sleap.info.align)</a>
@@ -487,7 +489,7 @@ document.write(`
 </li>
       <li><a href="api/sleap.nn.config.optimization.html#sleap.nn.config.optimization.AugmentationConfig">AugmentationConfig (class in sleap.nn.config.optimization)</a>
 </li>
-      <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter.augmenter">augmenter (sleap.nn.data.augmentation.ImgaugAugmenter attribute)</a>
+      <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.AlbumentationsAugmenter.augmenter">augmenter (sleap.nn.data.augmentation.AlbumentationsAugmenter attribute)</a>
 </li>
       <li><a href="api/sleap.io.video.html#sleap.io.video.available_video_exts">available_video_exts() (in module sleap.io.video)</a>
 </li>
@@ -1437,6 +1439,8 @@ document.write(`
 </li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.export_cli">export_cli() (in module sleap.nn.inference)</a>
 </li>
+      <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.export_csv">export_csv() (sleap.io.dataset.Labels method)</a>
+</li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.export_model">export_model() (in module sleap.nn.inference)</a>
 
       <ul>
@@ -1714,7 +1718,7 @@ document.write(`
 </li>
         <li><a href="api/sleap.nn.architectures.upsampling.html#sleap.nn.architectures.upsampling.UpsamplingStack.from_config">(sleap.nn.architectures.upsampling.UpsamplingStack class method)</a>
 </li>
-        <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter.from_config">(sleap.nn.data.augmentation.ImgaugAugmenter class method)</a>
+        <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.AlbumentationsAugmenter.from_config">(sleap.nn.data.augmentation.AlbumentationsAugmenter class method)</a>
 </li>
         <li><a href="api/sleap.nn.data.instance_centroids.html#sleap.nn.data.instance_centroids.InstanceCentroidFinder.from_config">(sleap.nn.data.instance_centroids.InstanceCentroidFinder class method)</a>
 </li>
@@ -2161,7 +2165,7 @@ document.write(`
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.image">image (sleap.instance.LabeledFrame property)</a>
 </li>
-      <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter.image_key">image_key (sleap.nn.data.augmentation.ImgaugAugmenter attribute)</a>
+      <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.AlbumentationsAugmenter.image_key">image_key (sleap.nn.data.augmentation.AlbumentationsAugmenter attribute)</a>
 
       <ul>
         <li><a href="api/sleap.nn.data.instance_cropping.html#sleap.nn.data.instance_cropping.InstanceCropper.image_key">(sleap.nn.data.instance_cropping.InstanceCropper attribute)</a>
@@ -2184,8 +2188,6 @@ document.write(`
       <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.FlowCandidateMaker.img_scale">img_scale (sleap.nn.tracking.FlowCandidateMaker attribute)</a>
 </li>
       <li><a href="api/sleap.io.visuals.html#sleap.io.visuals.img_to_cv">img_to_cv() (in module sleap.io.visuals)</a>
-</li>
-      <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter">ImgaugAugmenter (class in sleap.nn.data.augmentation)</a>
 </li>
       <li><a href="api/sleap.nn.viz.html#sleap.nn.viz.imgfig">imgfig() (in module sleap.nn.viz)</a>
 </li>
@@ -2237,7 +2239,7 @@ document.write(`
 </li>
       <li><a href="api/sleap.nn.data.general.html#sleap.nn.data.general.LambdaMap.input_key_names">input_key_names (sleap.nn.data.general.LambdaMap attribute)</a>
 </li>
-      <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter.input_keys">input_keys (sleap.nn.data.augmentation.ImgaugAugmenter property)</a>
+      <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.AlbumentationsAugmenter.input_keys">input_keys (sleap.nn.data.augmentation.AlbumentationsAugmenter property)</a>
 
       <ul>
         <li><a href="api/sleap.nn.data.confidence_maps.html#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.input_keys">(sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator property)</a>
@@ -2363,7 +2365,7 @@ document.write(`
 </li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.instances">instances() (sleap.io.dataset.Labels method)</a>
 </li>
-      <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter.instances_key">instances_key (sleap.nn.data.augmentation.ImgaugAugmenter attribute)</a>
+      <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.AlbumentationsAugmenter.instances_key">instances_key (sleap.nn.data.augmentation.AlbumentationsAugmenter attribute)</a>
 
       <ul>
         <li><a href="api/sleap.nn.data.instance_centroids.html#sleap.nn.data.instance_centroids.InstanceCentroidFinder.instances_key">(sleap.nn.data.instance_centroids.InstanceCentroidFinder attribute)</a>
@@ -3512,7 +3514,7 @@ document.write(`
 </li>
       <li><a href="api/sleap.nn.data.general.html#sleap.nn.data.general.LambdaMap.output_key_names">output_key_names (sleap.nn.data.general.LambdaMap attribute)</a>
 </li>
-      <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter.output_keys">output_keys (sleap.nn.data.augmentation.ImgaugAugmenter property)</a>
+      <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.AlbumentationsAugmenter.output_keys">output_keys (sleap.nn.data.augmentation.AlbumentationsAugmenter property)</a>
 
       <ul>
         <li><a href="api/sleap.nn.data.confidence_maps.html#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.output_keys">(sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator property)</a>
@@ -5314,7 +5316,7 @@ document.write(`
 </li>
       <li><a href="api/sleap.nn.config.training_job.html#sleap.nn.config.training_job.TrainingJobConfig">TrainingJobConfig (class in sleap.nn.config.training_job)</a>
 </li>
-      <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.ImgaugAugmenter.transform_dataset">transform_dataset() (sleap.nn.data.augmentation.ImgaugAugmenter method)</a>
+      <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.AlbumentationsAugmenter.transform_dataset">transform_dataset() (sleap.nn.data.augmentation.AlbumentationsAugmenter method)</a>
 
       <ul>
         <li><a href="api/sleap.nn.data.augmentation.html#sleap.nn.data.augmentation.RandomCropper.transform_dataset">(sleap.nn.data.augmentation.RandomCropper method)</a>
