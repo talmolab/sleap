@@ -32,15 +32,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # - name: Cache conda
-      #   uses: actions/cache@v1
-      #   env:
-      #     # Increase this value to reset cache if environment_build.yml has not changed
-      #     CACHE_NUMBER: 0
-      #   with:
-      #     path: ~/conda_pkgs_dir
-      #     key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'pyproject.toml') }}
-
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v3.0.3
         with:
