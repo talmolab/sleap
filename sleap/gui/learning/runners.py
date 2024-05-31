@@ -554,6 +554,7 @@ def run_learning_pipeline(
             labels_filename=labels_filename,
             labels=labels,
             config_info_list=config_info_list,
+            inference_params=inference_params,
             gui=True,
             save_viz=save_viz,
         )
@@ -581,6 +582,7 @@ def run_gui_training(
     labels_filename: str,
     labels: Labels,
     config_info_list: List[ConfigFileInfo],
+    inference_params: Dict[str, Any],
     gui: bool = True,
     save_viz: bool = False,
 ) -> Dict[Text, Text]:
@@ -598,13 +600,23 @@ def run_gui_training(
     """
 
     trained_job_paths = dict()
-
+    zmq_ports = None
     if gui:
         from sleap.gui.widgets.monitor import LossViewer
         from sleap.gui.widgets.imagedir import QtImageDirectoryWidget
 
+        if all(key in inference_params for key in ["controller_port", "publish_port"]):
+            zmq_ports = {
+                "controller_port": inference_params["controller_port"],
+                "publish_port": inference_params["publish_port"],
+            }
+
         # open training monitor window
-        win = LossViewer()
+        win = LossViewer(zmq_ports=zmq_ports)
+
+        # Reassign the values in the inference parameters in case the ports were changed
+        inference_params["controller_port"] = win.zmq_ports["controller_port"]
+        inference_params["publish_port"] = win.zmq_ports["publish_port"]
         win.resize(600, 400)
         win.show()
 
@@ -668,6 +680,7 @@ def run_gui_training(
             # Run training
             trained_job_path, ret = train_subprocess(
                 job_config=job,
+                inference_params=inference_params,
                 labels_filename=labels_filename,
                 video_paths=video_path_list,
                 waiting_callback=waiting,
@@ -810,6 +823,7 @@ def run_gui_inference(
 def train_subprocess(
     job_config: TrainingJobConfig,
     labels_filename: str,
+    inference_params: Dict[str, Any],
     video_paths: Optional[List[Text]] = None,
     waiting_callback: Optional[Callable] = None,
     save_viz: bool = False,
@@ -833,6 +847,10 @@ def train_subprocess(
             training_job_path,
             labels_filename,
             "--zmq",
+            "--controller_port",
+            str(inference_params["controller_port"]),
+            "--publish_port",
+            str(inference_params["publish_port"]),
         ]
 
         if save_viz:
