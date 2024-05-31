@@ -25,7 +25,7 @@ jobs:
 
       - name: Setup Miniconda
         # https://github.com/conda-incubator/setup-miniconda
-        uses: conda-incubator/setup-miniconda@v2.0.1
+        uses: conda-incubator/setup-miniconda@v3.0.3
         with:
           python-version: 3.7
           environment-file: environment_no_cuda.yml
