@@ -60,7 +60,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3.0.3
