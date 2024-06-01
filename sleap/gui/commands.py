@@ -2027,8 +2027,8 @@ class AddSession(EditCommand):
         context.state["selected_session"] = None
         
         # Find parent of calibration file
-        parent_dir = os.path.dirname(camera_calibration)
-        
+        calibration_path = Path(camera_calibration)
+        parent_dir = calibration_path.parent        
         # Use camcorder names in session to find camera folders
         cameras = session.camera_cluster.cameras
         camera_names = [camera.name for camera in cameras]
@@ -2036,17 +2036,17 @@ class AddSession(EditCommand):
         # Find videos inside camera folders
         video_paths = []
         for camera_name in camera_names:
-            camera_folder = os.path.join(parent_dir, camera_name)
+            camera_folder = parent_dir / camera_name
             
             # Skip if camera folder does not exist
-            if (not os.path.exists(camera_folder)):
+            if (not camera_folder.exists()):
                 continue
             
             # Append all videos in camera folder
             video_path = None;
-            for file in os.listdir(camera_folder):
+            for file in camera_folder.iterdir():
                 if file.endswith(".mp4"): 
-                    video_path = os.path.join(camera_folder, file)
+                    video_path = camera_folder / file
                     video_paths.append(video_path)
         
         # Show import video dialog if any videos are found
