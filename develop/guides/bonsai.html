@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Importing predictions for labeling &#8212; SLEAP (v1.3.3)</title>
+    <title>Using Bonsai with SLEAP’ &#8212; SLEAP (v1.3.3)</title>
   
   
   
@@ -51,13 +51,13 @@
     <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'guides/merging';</script>
-    <link rel="canonical" href="/develop/guides/merging.html" />
+    <script>DOCUMENTATION_OPTIONS.pagename = 'guides/bonsai';</script>
+    <link rel="canonical" href="/develop/guides/bonsai.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Tracking and proofreading" href="proofreading.html" />
-    <link rel="prev" title="Configuring models" href="choosing-models.html" />
+    <link rel="next" title="Notebooks" href="../notebooks/index.html" />
+    <link rel="prev" title="Running SLEAP remotely" href="remote.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="None"/>
   </head>
@@ -160,12 +160,12 @@
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting-workflows.html">Troubleshooting workflows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="skeletons.html">Skeleton design</a></li>
 <li class="toctree-l2"><a class="reference internal" href="choosing-models.html">Configuring models</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Importing predictions for labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="merging.html">Importing predictions for labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="proofreading.html">Tracking and proofreading</a></li>
 <li class="toctree-l2"><a class="reference internal" href="colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="remote.html">Running SLEAP remotely</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bonsai.html">Using Bonsai with SLEAP’</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Using Bonsai with SLEAP’</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -260,7 +260,7 @@
       
       
       
-      <li><a href="https://github.com/talmolab/sleap/issues/new?title=Issue%20on%20page%20%2Fguides/merging.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/talmolab/sleap/issues/new?title=Issue%20on%20page%20%2Fguides/bonsai.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -306,7 +306,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Importing predictions for labeling</h1>
+    <h1>Using Bonsai with SLEAP’</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -320,20 +320,44 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section id="importing-predictions-for-labeling">
-<span id="merging"></span><h1>Importing predictions for labeling<a class="headerlink" href="#importing-predictions-for-labeling" title="Permalink to this headline">#</a></h1>
-<p><em>Case: You have predictions that aren’t in the same project as your original training data and you want to correct some of the predictions and use these corrections to train a better model.</em></p>
-<p>All of your training data must be in a single SLEAP project file (or labels package), so if you have data in multiple files, you’ll need to merge them before you can train on the entire set of data.</p>
-<p>When you run inference from the GUI, the predictions will be added to the same project as your training data (they’ll also be saved in a separate file). When you run inference from the command-line, they’ll only be in a separate file.</p>
-<p>If you open a separate predictions file, make corrections there and train a new model from that file, then new models will be trained from scratch using only those corrections. The new models will not be trained on any of the original data that was used to train the previous models—i.e., the models used to generate these predictions. Usually you’ll want to include both the original data and the new corrections.</p>
-<p><strong>Note</strong> that uncorrected predictions will never be used for training. Only predictions which you’ve “converted” into an editable instance will be used for training. To convert a predicted instance into an editable instance, you can <strong>double-click</strong> on the predicted instance or use the “<strong>Add Instance</strong>” command in the “Labels” menu (there’s also a keyboard shortcut). As you might guess, once you have an editable instance you can move nodes and toggle their “visibility” (see the <a class="reference internal" href="../tutorials/tutorial.html#tutorial"><span class="std std-ref">Tutorial</span></a> if you’re not familiar with how to do this). When you’ve created an editable instance from a predicted instance, the predicted instance will no longer be shown, although it will re-appear if you delete the editable instance.</p>
-<p>Let’s suppose we have a project file and a predictions file with corrections, and we’d like to merge the corrections into the original project file.</p>
-<p>If you want to merge <em>only</em> the corrections, then you should first make a copy of the predictions file. You can either just copy the file itself, or make a copy from the GUI using “<strong>Save As..</strong>” in the “File” menu. Open the copy of the file in the GUI and use the “<strong>Delete All Predictions…</strong>” command in the “Predictions” menu to remove all of the predicted instances from the file. Save and you’ll be left with a file which just contains your corrections.</p>
-<p>Open the original project file (or whatever file you want to merge <strong>into</strong>). Then, use the “<strong>Merge Data From…</strong>” command in the “File” menu. You’ll need to select the file <strong>from which</strong> you are getting the data to merge—this would be the file with your corrected predictions.</p>
-<p>You’ll then see a window with information about the merge:</p>
-<p><img alt="clean-merge" src="../_images/clean-merge.jpg" /></p>
-<p>If there are no merge conflicts, then you can click “<strong>Finish Merge</strong>. If the two files contain conflicts—frames from the same video which both have editable instances or both have predicted instances—then you’ll need to decide how to resolve the conflicts. You can choose to use the “base” version (i.e., the original project file <strong>into which</strong> you are merging), the “new” version (i.e., from the predictions file with the data which you’re adding to the original project), or neither. Whichever you choose, you’ll also get all of the frames which can be merged without conflicts.</p>
-<p>After merging you should save (or save a copy of the project with the “<strong>Save As…</strong>” command). Once you have a single project file which contains both your old and new training data, you can train new models.</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="using-bonsai-with-sleap">
+<span id="bonsai"></span><h1>Using Bonsai with SLEAP’<a class="headerlink" href="#using-bonsai-with-sleap" title="Permalink to this headline">#</a></h1>
+<p>Bonsai is a visual language for reactive programming and currently supports SLEAP models.</p>
+<p><strong>Exporting a SLEAP trained model:</strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently Bonsai supports only single instance, top-down and top-down-id SLEAP models.</p>
+</div>
+<p>In order to import the trained model into Bonsai, we need to export the model using the <code class="code docutils literal notranslate"><span class="pre">sleap-export</span></code> cli command to convert the trained model to a Protocol buffer(.pb) format. For example, for the top-down-id model, the command is as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sleap</span><span class="o">-</span><span class="n">export</span> <span class="o">-</span><span class="n">m</span> <span class="n">centroid_model_folder_path</span> <span class="o">-</span><span class="n">m</span> <span class="n">top_down_id_model_folder_path</span> <span class="n">exported_model</span>
+</pre></div>
+</div>
+<p>(for further details please refer {ref} <code class="docutils literal notranslate"><span class="pre">sleap-export</span></code> docs for more details.)</p>
+<p>This will generate the necessary <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file and other information files to be used in Bonsai in the <code class="docutils literal notranslate"><span class="pre">exported_model</span></code> folder.</p>
+<p><strong>Installing Bonsai and necessary packages:</strong></p>
+<ul class="simple">
+<li><p>Install bonsai by following the instructions provided in their <a class="reference external" href="https://bonsai-rx.org/docs/articles/installation.html">installation page</a>.</p></li>
+<li><p>Add the necessary packages including the <code class="docutils literal notranslate"><span class="pre">Bonsai.SLEAP</span></code> and <code class="docutils literal notranslate"><span class="pre">Bonsai.SLEAP.Design</span></code> packages for SLEAP to run with Bonsai and to access the SLEAP-Bonsai modules. For more information on other dependency installations, please refer to the official <a class="reference external" href="https://github.com/bonsai-rx/sleap?tab=readme-ov-file#bonsai---sleap">bonsai sleap documentation</a>.</p></li>
+</ul>
+<p><strong>Using Bonsai SLEAP modules:</strong></p>
+<p>Once you have Bonsai installed with the required packages, you should be able to open the bonsai application.</p>
+<ul class="simple">
+<li><p>The workflow must have an source module <code class="docutils literal notranslate"><span class="pre">FileCapture</span></code> which can be found in the toolbox search in the workflow editor. Provide the path to the video that was used to train the SLEAP model in the <code class="docutils literal notranslate"><span class="pre">FileName</span></code> field of the module.</p></li>
+<li><p>For the top-down model,</p>
+<ul>
+<li><p>To predict the centroids, add the <code class="docutils literal notranslate"><span class="pre">PredictCentroid</span></code> module and provide the path to the training config JSON file for the centroid model in the <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field and the path to the <code class="docutils literal notranslate"><span class="pre">exported_model</span></code> folder containing the <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file in the <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field of the module.</p></li>
+<li><p>To predict the instances, add the <code class="docutils literal notranslate"><span class="pre">PredictPoses</span></code> module and provide the path to the training config JSON file for the centered instance model in the <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field and the path to the <code class="docutils literal notranslate"><span class="pre">exported_model</span></code> folder containing the <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file in the <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field of the module.</p></li>
+</ul>
+</li>
+<li><p>For the top-down-id model, to predict the instances with identities, add <code class="docutils literal notranslate"><span class="pre">PredictPoseIdentities</span></code> module and provide the path to the training config JSON file for the top-down-id model in the <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field and the path to the <code class="docutils literal notranslate"><span class="pre">exported_model</span></code> folder containing the <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file in the <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field of the module.</p></li>
+<li><p>For Single instance models, add the <code class="docutils literal notranslate"><span class="pre">PredictSinglePose</span></code> module and provide the path to the training config JSOn file for the single instance model in the <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field and the path to the <code class="docutils literal notranslate"><span class="pre">exported_model</span></code> folder containing the <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file in the <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field of the module.</p></li>
+</ul>
+<p>The workflow in Bonsai will look something like the following:</p>
+<p><img alt="Bonsai.SLEAP workflow" src="../_images/bonsai-workflow.jpg" /></p>
+<ul class="simple">
+<li><p>Once you have the basic workflow for Bonsai.SLEAP created and running successfully, you can add more modules to analyze and visualize the results in Bonsai.</p></li>
+</ul>
+<p>For more documentation on various modules and workflows, please refer to the <a class="reference external" href="https://bonsai-rx.org/docs/articles/editor.html">official Bonsai docs</a>.</p>
 </section>
 
 
@@ -349,20 +373,20 @@ document.write(`
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
-       href="choosing-models.html"
+       href="remote.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Configuring models</p>
+        <p class="prev-next-title">Running SLEAP remotely</p>
       </div>
     </a>
     <a class="right-next"
-       href="proofreading.html"
+       href="../notebooks/index.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Tracking and proofreading</p>
+        <p class="prev-next-title">Notebooks</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
