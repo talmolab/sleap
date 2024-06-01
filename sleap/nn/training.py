@@ -1873,6 +1873,18 @@ def create_trainer_using_cli(args: Optional[List] = None):
         ),
     )
     parser.add_argument(
+        "--publish_port",
+        type=int,
+        default=9001,
+        help="Port to set up the publish address while using ZMQ, defaults to 9001.",
+    )
+    parser.add_argument(
+        "--controller_port",
+        type=int,
+        default=9000,
+        help="Port to set up the controller address while using ZMQ, defaults to 9000.",
+    )
+    parser.add_argument(
         "--run_name",
         default="",
         help="Run name to use when saving file, overrides other run name settings.",
@@ -1926,6 +1938,10 @@ def create_trainer_using_cli(args: Optional[List] = None):
     job_config.outputs.tensorboard.write_logs |= args.tensorboard
     job_config.outputs.zmq.publish_updates |= args.zmq
     job_config.outputs.zmq.subscribe_to_controller |= args.zmq
+    job_config.outputs.zmq.controller_address = "tcp://127.0.0.1:" + str(
+        args.controller_port
+    )
+    job_config.outputs.zmq.publish_address = "tcp://127.0.0.1:" + str(args.publish_port)
     if args.run_name != "":
         job_config.outputs.run_name = args.run_name
     if args.prefix != "":
