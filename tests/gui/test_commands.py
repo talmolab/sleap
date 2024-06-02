@@ -3,6 +3,8 @@ import sys
 import time
 from pathlib import Path, PurePath
 from typing import List
+import tempfile
+import pathlib
 
 import numpy as np
 import pytest
@@ -1451,3 +1453,20 @@ def test_DeleteInstanceGroup(multiview_min_session_frame_groups: Labels):
     # Check InstanceGroup.instances
     assert len(instance_group_0.instances) == 8
     assert len(instance_group_1.instances) == 6
+
+def test_automatic_addition_videos(min_session_calibration_toml_path):
+    """Test if the automatic addition of videos works."""
+    # Create a new RecordingSession object
+    camera_calibration_path = min_session_calibration_toml_path
+    
+    # Create temporary directory with the structured video files
+    test_path = Path(camera_calibration_path)
+    data_path = test_path.parent.parent.parent
+    
+    # Copy and paste the videos and the toml_path
+    
+    # Create a new Label()
+    
+    # Create and add a new RecordingSession object
+    
+    # Check if the videos were added to the Label object
