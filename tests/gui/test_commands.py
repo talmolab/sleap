@@ -4,7 +4,6 @@ import time
 from pathlib import Path, PurePath
 from typing import List
 import tempfile
-import pathlib
 
 import numpy as np
 import pytest
