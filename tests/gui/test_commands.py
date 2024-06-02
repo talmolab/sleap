@@ -1454,19 +1454,66 @@ def test_DeleteInstanceGroup(multiview_min_session_frame_groups: Labels):
     assert len(instance_group_0.instances) == 8
     assert len(instance_group_1.instances) == 6
 
+
 def test_automatic_addition_videos(min_session_calibration_toml_path):
     """Test if the automatic addition of videos works."""
     # Create a new RecordingSession object
     camera_calibration_path = min_session_calibration_toml_path
-    
+
     # Create temporary directory with the structured video files
     test_path = Path(camera_calibration_path)
-    data_path = test_path.parent.parent.parent
-    
-    # Copy and paste the videos and the toml_path
-    
+    data_path = test_path.parent.parent.parent  # tests/data/cameras
+
+    with tempfile.TemporaryDirectory(dir=data_path) as temp_dir:
+        # Copy and paste the videos and the toml_path
+        shutil.copy(camera_calibration_path, temp_dir)
+        files_in_directory = [
+            file for file in Path(temp_dir).iterdir() if file.is_file()
+        ]
+        assert len(files_in_directory) == 1
+
+        # Create directories for each camera
+        directory_names = [
+            "back",
+            "backL",
+            "mid",
+            "midL",
+            "side",
+            "sideL",
+            "top",
+            "topL",
+        ]
+
+        for directory_name in directory_names:
+            new_dir = Path(temp_dir, directory_name)
+            new_dir.mkdir()
+
+        assert len([file for file in Path(temp_dir).iterdir() if file.is_dir()]) == 8
+
+        # Copy and paste the videos in the directories (only min_session_[camera_name].mp4)
+        test_directory = test_path.parent.parent.parent
+        test_directory = Path(test_directory, "videos")
+        for file in test_directory.iterdir():
+            if file.suffix == ".mp4" and "min_session" in file.stem:
+                camera_name = file.stem.split("_")[2]
+                if camera_name in directory_names:
+                    shutil.copy(file, Path(temp_dir, camera_name))
+
+        # Check if the videos were added to the temporary directory under each camera directory
+        for directory_name in directory_names:
+            assert (
+                len(
+                    [
+                        file
+                        for file in Path(temp_dir, directory_name).iterdir()
+                        if file.is_file()
+                    ]
+                )
+                == 1
+            )
+
     # Create a new Label()
-    
+
     # Create and add a new RecordingSession object
-    
+
     # Check if the videos were added to the Label object
