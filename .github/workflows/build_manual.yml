@@ -11,8 +11,7 @@ on:
       - '.github/workflows/build_manual.yml'
     branches:
       # - develop
-      # - fakebranch
-      - elizabeth/Fix-windows-build-and-build-CI
+      - fakebranch
 
 jobs:
   build:
