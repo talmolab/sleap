@@ -41,7 +41,6 @@ jobs:
           environment-file: environment_build.yml
           activate-environment: sleap_ci
           conda-solver: "libmamba"
-          # use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
 
       - name: Print build environment info
         shell: bash -l {0}
