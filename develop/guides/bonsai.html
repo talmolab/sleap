@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>sleap.info.trackcleaner &#8212; SLEAP (v1.3.3)</title>
+    <title>Using Bonsai with SLEAP &#8212; SLEAP (v1.3.3)</title>
   
   
   
@@ -51,11 +51,13 @@
     <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
     <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/sleap.info.trackcleaner';</script>
-    <link rel="canonical" href="/develop/api/sleap.info.trackcleaner.html" />
+    <script>DOCUMENTATION_OPTIONS.pagename = 'guides/bonsai';</script>
+    <link rel="canonical" href="/develop/guides/bonsai.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Notebooks" href="../notebooks/index.html" />
+    <link rel="prev" title="Running SLEAP remotely" href="remote.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="None"/>
   </head>
@@ -138,7 +140,7 @@
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <ul class="nav bd-sidenav">
+        <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
@@ -152,18 +154,18 @@
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/analysis.html">Export Data For Analysis</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../guides/gui.html">GUI</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/cli.html">Command line interfaces</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/troubleshooting-workflows.html">Troubleshooting workflows</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/skeletons.html">Skeleton design</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/choosing-models.html">Configuring models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/merging.html">Importing predictions for labeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/proofreading.html">Tracking and proofreading</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../guides/bonsai.html">Using Bonsai with SLEAP</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Guides</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gui.html">GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html">Command line interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting-workflows.html">Troubleshooting workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="skeletons.html">Skeleton design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="choosing-models.html">Configuring models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="merging.html">Importing predictions for labeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proofreading.html">Tracking and proofreading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="colab.html">Run training and inference on Colab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom-training.html">Creating a custom training profile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Using Bonsai with SLEAP</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -258,7 +260,7 @@
       
       
       
-      <li><a href="https://github.com/talmolab/sleap/issues/new?title=Issue%20on%20page%20%2Fapi/sleap.info.trackcleaner.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/talmolab/sleap/issues/new?title=Issue%20on%20page%20%2Fguides/bonsai.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -304,7 +306,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>sleap.info.trackcleaner</h1>
+    <h1>Using Bonsai with SLEAP</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -318,21 +320,44 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section id="module-sleap.info.trackcleaner">
-<span id="sleap-info-trackcleaner"></span><h1>sleap.info.trackcleaner<a class="headerlink" href="#module-sleap.info.trackcleaner" title="Permalink to this headline">#</a></h1>
-<p>CLI for TrackCleaner (mostly deprecated).</p>
-<p>This runs the track cleaner to (i) cull instances and (ii) connect track breaks
-in predictions which have already been tracked.</p>
-<p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap-track</span></code> CLI lets you run (or re-run) tracking on predictions, and
-includes options to cull instances <em>before</em> tracking (with more control over
-how instances are selected for culling) and connect track breaks. In most cases
-it will be better to use the <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap-track</span></code> CLI.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="sleap.info.trackcleaner.fit_tracks">
-<span class="sig-prename descclassname"><span class="pre">sleap.info.trackcleaner.</span></span><span class="sig-name descname"><span class="pre">fit_tracks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/info/trackcleaner.py#L20-L48"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.trackcleaner.fit_tracks" title="Permalink to this definition">#</a></dt>
-<dd><p>Wraps <code class="xref py py-obj docutils literal notranslate"><span class="pre">TrackCleaner</span></code> for easier cli api.</p>
-</dd></dl>
-
+  <section class="tex2jax_ignore mathjax_ignore" id="using-bonsai-with-sleap">
+<span id="bonsai"></span><h1>Using Bonsai with SLEAP<a class="headerlink" href="#using-bonsai-with-sleap" title="Permalink to this headline">#</a></h1>
+<p>Bonsai is a visual language for reactive programming and currently supports SLEAP models.</p>
+<p><strong>Exporting a SLEAP trained model:</strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently Bonsai supports only single instance, top-down and top-down-id SLEAP models.</p>
+</div>
+<p>In order to import the trained model into Bonsai, we need to export the model using the <code class="code docutils literal notranslate"><span class="pre">sleap-export</span></code> cli command to convert the trained model to a Protocol buffer(.pb) format. For example, for the top-down-id model, the command is as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sleap</span><span class="o">-</span><span class="n">export</span> <span class="o">-</span><span class="n">m</span> <span class="n">centroid_model_folder_path</span> <span class="o">-</span><span class="n">m</span> <span class="n">top_down_id_model_folder_path</span> <span class="n">exported_model</span>
+</pre></div>
+</div>
+<p>(for further details please refer {ref} <code class="docutils literal notranslate"><span class="pre">sleap-export</span></code> docs for more details.)</p>
+<p>This will generate the necessary <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file and other information files to be used in Bonsai in the <code class="docutils literal notranslate"><span class="pre">exported_model</span></code> folder.</p>
+<p><strong>Installing Bonsai and necessary packages:</strong></p>
+<ul class="simple">
+<li><p>Install bonsai by following the instructions provided in their <a class="reference external" href="https://bonsai-rx.org/docs/articles/installation.html">installation page</a>.</p></li>
+<li><p>Add the necessary packages including the <code class="docutils literal notranslate"><span class="pre">Bonsai.SLEAP</span></code> and <code class="docutils literal notranslate"><span class="pre">Bonsai.SLEAP.Design</span></code> packages for SLEAP to run with Bonsai and to access the SLEAP-Bonsai modules. For more information on other dependency installations, please refer to the official <a class="reference external" href="https://github.com/bonsai-rx/sleap?tab=readme-ov-file#bonsai---sleap">bonsai sleap documentation</a>.</p></li>
+</ul>
+<p><strong>Using Bonsai SLEAP modules:</strong></p>
+<p>Once you have Bonsai installed with the required packages, you should be able to open the bonsai application.</p>
+<ul class="simple">
+<li><p>The workflow must have an source module <code class="docutils literal notranslate"><span class="pre">FileCapture</span></code> which can be found in the toolbox search in the workflow editor. Provide the path to the video that was used to train the SLEAP model in the <code class="docutils literal notranslate"><span class="pre">FileName</span></code> field of the module.</p></li>
+<li><p>For the top-down model,</p>
+<ul>
+<li><p>To predict the centroids, add the <code class="docutils literal notranslate"><span class="pre">PredictCentroid</span></code> module and provide the path to the training config JSON file for the centroid model in the <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field and the path to the <code class="docutils literal notranslate"><span class="pre">exported_model</span></code> folder containing the <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file in the <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field of the module.</p></li>
+<li><p>To predict the instances, add the <code class="docutils literal notranslate"><span class="pre">PredictPoses</span></code> module and provide the path to the training config JSON file for the centered instance model in the <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field and the path to the <code class="docutils literal notranslate"><span class="pre">exported_model</span></code> folder containing the <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file in the <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field of the module.</p></li>
+</ul>
+</li>
+<li><p>For the top-down-id model, to predict the instances with identities, add <code class="docutils literal notranslate"><span class="pre">PredictPoseIdentities</span></code> module and provide the path to the training config JSON file for the top-down-id model in the <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field and the path to the <code class="docutils literal notranslate"><span class="pre">exported_model</span></code> folder containing the <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file in the <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field of the module.</p></li>
+<li><p>For Single instance models, add the <code class="docutils literal notranslate"><span class="pre">PredictSinglePose</span></code> module and provide the path to the training config JSOn file for the single instance model in the <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field and the path to the <code class="docutils literal notranslate"><span class="pre">exported_model</span></code> folder containing the <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file in the <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field of the module.</p></li>
+</ul>
+<p>The workflow in Bonsai will look something like the following:</p>
+<p><img alt="Bonsai.SLEAP workflow" src="../_images/bonsai-workflow.jpg" /></p>
+<ul class="simple">
+<li><p>Once you have the basic workflow for Bonsai.SLEAP created and running successfully, you can add more modules to analyze and visualize the results in Bonsai.</p></li>
+</ul>
+<p>For more documentation on various modules and workflows, please refer to the <a class="reference external" href="https://bonsai-rx.org/docs/articles/editor.html">official Bonsai docs</a>.</p>
 </section>
 
 
@@ -347,6 +372,24 @@ it will be better to use the <code class="xref py py-obj docutils literal notran
   
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="remote.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Running SLEAP remotely</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../notebooks/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Notebooks</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div></div>
   
 </div>
