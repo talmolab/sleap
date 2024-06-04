@@ -1,6 +1,6 @@
 (bonsai)=
 
-# Using Bonsai with SLEAP'
+# Using Bonsai with SLEAP
 
 Bonsai is a visual language for reactive programming and currently supports SLEAP models.
 

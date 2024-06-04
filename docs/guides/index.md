@@ -30,7 +30,9 @@
 
 {ref}`remote-inference` when you trained models and you want to run inference on a different machine using a **command-line interface**.
 
-{ref}`bonsai` when you want to analyze the trained SLEAP model to visualize the poses, centroids and identities for further analysis.
+## SLEAP with Bonsai
+
+{ref}`bonsai` when you want to analyze the trained SLEAP model to visualize the poses, centroids and identities for further visual analysis.
 
 ```{toctree}
 :hidden: true
