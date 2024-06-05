@@ -70,10 +70,6 @@ class Shortcuts(object):
         self._shortcuts = self._process_shortcut_dict(shortcuts)
         self._defaults = self._process_shortcut_dict(defaults)
 
-        # TODO: Add switch view hotkey
-        self._shortcuts["goto next view"] = QKeySequence.fromString("V")
-        self._shortcuts["goto prev view"] = QKeySequence.fromString("Shift+V")
-
     def _process_shortcut_dict(self, shortcuts: dict) -> dict:
         for action in shortcuts.keys():
 
