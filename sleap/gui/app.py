@@ -325,7 +325,7 @@ class MainWindow(QMainWindow):
         self.player.seekbar.selectionChanged.connect(lambda: self.updateStatusMessage())
         self.setCentralWidget(self.player)
 
-        def switch_frame(video):
+        def switch_frame(self, video):
             """Maintain the same frame or jump to the last labeled frame."""
             # get current frame index
             current_frame_idx = self.state["frame_idx"]
@@ -334,12 +334,14 @@ class MainWindow(QMainWindow):
                 # stay on same frame if video is has enough frames
                 self.state["frame_idx"] = current_frame_idx
             else:
-                # if video is not long enough, jump to last labeled frame (old logic)
-                last_label = self.labels.find_last(video)
-                if last_label is not None:
-                    self.state["frame_idx"] = last_label.frame_idx
-                else:
-                    self.state["frame_idx"] = 0
+                self.state["frame_idx"] = 0
+
+            # if video is not long enough, jump to last labeled frame (old logic)
+            last_label = self.labels.find_last(video)
+            if last_label is not None:
+                self.state["frame_idx"] = last_label.frame_idx
+            else:
+                self.state["frame_idx"] = 0
 
         def update_frame_chunk_suggestions(video):
             """Set upper limit of frame_chunk spinbox to number frames in video."""
@@ -1838,3 +1840,8 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
         app.exec_()
 
     pass
+
+
+if __name__ == "__main__":
+    ds = os.environ["dsmview"]
+    main([ds])
