@@ -16,7 +16,7 @@ In order to import the trained model into Bonsai, we need to export the model us
 sleap-export -m centroid_model_folder_path -m top_down_id_model_folder_path exported_model
 ```
 
-(for further details please refer {ref} `sleap-export` docs for more details.)
+(for further details please refer {ref}`sleap-export` docs for more details.)
 
 This will generate the necessary `.pb` file and other information files to be used in Bonsai in the `exported_model` folder.
 
