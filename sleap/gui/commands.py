@@ -494,6 +494,10 @@ class CommandContext:
         """Gui for deleting instances beyond some number in each frame."""
         self.execute(DeleteInstanceLimitPredictions)
 
+    def deleteFrameLimitPredictions(self):
+        """Gui for deleting instances beyond some frame number."""
+        self.execute(DeleteFrameLimitPredictions)
+
     def completeInstanceNodes(self, instance: Instance):
         """Adds missing nodes to given instance."""
         self.execute(AddMissingInstanceNodes, instance=instance)
@@ -2465,6 +2469,34 @@ class DeleteInstanceLimitPredictions(InstanceDeleteCommand):
         )
         if okay:
             params["count_threshold"] = count_thresh
+            return super().ask(context, params)
+
+
+class DeleteFrameLimitPredictions(InstanceDeleteCommand):
+    @staticmethod
+    def get_frame_instance_list(context: CommandContext, params: Dict):
+        predicted_instances = []
+        # Select the instances to be deleted
+        for lf in context.labels.find(context.state["video"]):
+            if lf.frame_idx >= params["frame_idx_threshold"]:
+                predicted_instances.extend(
+                    [(lf, inst) for inst in lf.predicted_instances]
+                )
+        return predicted_instances
+
+    @classmethod
+    def ask(cls, context: CommandContext, params: Dict) -> bool:
+        current_video = context.state["video"]
+        frame_idx_thresh, okay = QtWidgets.QInputDialog.getInt(
+            context.app,
+            "Delete Instance beyond Frame Number...",
+            "Frame number after which instances to be deleted:",
+            1,
+            1,
+            len(current_video),
+        )
+        if okay:
+            params["frame_idx_threshold"] = frame_idx_thresh
             return super().ask(context, params)
 
 
