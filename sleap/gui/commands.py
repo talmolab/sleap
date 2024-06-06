@@ -2037,7 +2037,7 @@ class AddSession(EditCommand):
         video_paths = []
         for camera_name in camera_names:
             camera_folder = parent_dir / camera_name
-            print(camera_folder)
+            
 
             # Skip if camera folder does not exist
             if not camera_folder.exists():
@@ -2046,13 +2046,13 @@ class AddSession(EditCommand):
             # Append all videos in camera folder
             video_path = None
             for file in camera_folder.iterdir():
-                if file.endswith(".mp4"):
+                if str(file).endswith(".mp4") or str(file).endswith(".avi") or str(file).endswith(".mov"):
                     video_path = camera_folder / file
-                    video_paths.append(video_path)
+                    video_paths.append(str(video_path))
 
         # Show import video dialog if any videos are found
         if len(video_paths) > 0:
-            ImportVideos().ask(filenames=[video_paths])
+            context.showImportVideos(filenames=video_paths)
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
