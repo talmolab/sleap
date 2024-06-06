@@ -1511,8 +1511,13 @@ def test_automatic_addition_videos(min_session_calibration_toml_path):
                 == 1
             )
 
-    # Create a new Label()
+    # Create a new Label() object
+    labels = Labels()
+    context = CommandContext.from_labels(labels)
+    camera_calibration_path = min_session_calibration_toml_path
 
     # Create and add a new RecordingSession object
+    params = {"camera_calibration": camera_calibration_path}
+    AddSession.do_action(context, params)
 
-    # Check if the videos were added to the Label object
+    # Check if the videos were asked to be added to the Label object``

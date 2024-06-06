@@ -2049,6 +2049,7 @@ class AddSession(EditCommand):
                     str(file).endswith(".mp4")
                     or str(file).endswith(".avi")
                     or str(file).endswith(".mov")
+                    or str(file).endswith(".mkv")
                 ):
                     video_path = camera_folder / file
                     video_paths.append(str(video_path))
