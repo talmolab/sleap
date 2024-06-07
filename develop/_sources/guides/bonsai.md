@@ -4,41 +4,47 @@
 
 Bonsai is a visual language for reactive programming and currently supports SLEAP models.
 
-**Exporting a SLEAP trained model:**
-
 :::{note}
 Currently Bonsai supports only single instance, top-down and top-down-id SLEAP models.
 :::
 
-In order to import the trained model into Bonsai, we need to export the model using the {code}`sleap-export` cli command to convert the trained model to a Protocol buffer(.pb) format. For example, for the top-down-id model, the command is as follows:
+### Exporting a SLEAP trained model:
+
+Before we can import a trained model into Bonsai, we need to use the {code}`sleap-export` command to convert the model to a format supported by Bonsai. For example, for the top-down-id model, the command is as follows:
 
 ```
 sleap-export -m centroid_model_folder_path -m top_down_id_model_folder_path exported_model
 ```
 
-(for further details please refer {ref}`sleap-export` docs for more details.)
+Please refer to the {ref}`sleap-export` docs for more details on using the command.
 
-This will generate the necessary `.pb` file and other information files to be used in Bonsai in the `exported_model` folder.
+This will generate the necessary `.pb` file and other information files required by Bonsai. In this example, these files were saved to the specified `exported_model` folder.
 
-**Installing Bonsai and necessary packages:**
+### Installing Bonsai and necessary packages:
 
-- Install bonsai by following the instructions provided in their [installation page](https://bonsai-rx.org/docs/articles/installation.html). 
+1. Install Bonsai. See the [Bonsai installation instructions](https://bonsai-rx.org/docs/articles/installation.html). 
 
-- Add the necessary packages including the `Bonsai.SLEAP` and `Bonsai.SLEAP.Design` packages for SLEAP to run with Bonsai and to access the SLEAP-Bonsai modules. For more information on other dependency installations, please refer to the official [bonsai sleap documentation](https://github.com/bonsai-rx/sleap?tab=readme-ov-file#bonsai---sleap).
+2. Download and add the necessary packages for Bonsai to run with SLEAP. See the official [Bonsai SLEAP documentation](https://github.com/bonsai-rx/sleap?tab=readme-ov-file#bonsai---sleap) for more information.
 
-**Using Bonsai SLEAP modules:**
+### Using Bonsai SLEAP modules:
 
-Once you have Bonsai installed with the required packages, you should be able to open the bonsai application. 
+Once you have Bonsai installed with the required packages, you should be able to open the Bonsai application.  
 
 - The workflow must have an source module `FileCapture` which can be found in the toolbox search in the workflow editor. Provide the path to the video that was used to train the SLEAP model in the `FileName` field of the module.
 
-- For the top-down model,
-    - To predict the centroids, add the `PredictCentroid` module and provide the path to the training config JSON file for the centroid model in the `ModelFileName` field and the path to the `exported_model` folder containing the `.pb` file in the `TrainingConfig` field of the module.
-    - To predict the instances, add the `PredictPoses` module and provide the path to the training config JSON file for the centered instance model in the `ModelFileName` field and the path to the `exported_model` folder containing the `.pb` file in the `TrainingConfig` field of the module.
+#### Top-down model:
+The top-down model requires both the `PredictCentroid` and the `PredictPoses` modules.
 
-- For the top-down-id model, to predict the instances with identities, add `PredictPoseIdentities` module and provide the path to the training config JSON file for the top-down-id model in the `ModelFileName` field and the path to the `exported_model` folder containing the `.pb` file in the `TrainingConfig` field of the module.
+The `PredictCentroid` module will predict the centroids of detections. There are two fields inside the `PredictCentroid` module: the `ModelFileName` field and the `TrainingConfig` field. The `TrainingConfig` field expects the path to the training config JSON file for the centroid model. The `ModelFileName` field expects the path to the `exported_model` folder (which contains the exported `.pb` file).
 
-- For Single instance models, add the `PredictSinglePose` module and provide the path to the training config JSOn file for the single instance model in the `ModelFileName` field and the path to the `exported_model` folder containing the `.pb` file in the `TrainingConfig` field of the module.
+The `PredictPoses` module will predict the instances of detections. Similar to the `PredictCentroid` module, there are two fields inside the `PredictPoses` module: the `ModelFileName` field and the `TrainingConfig` field. The `TrainingConfig` field expects the path to the training config JSON file for the centered instance model. The `ModelFileName` field expects the path to the `exported_model` folder (which contains the exported `.pb` file).
+
+#### Top-Down-ID model:
+The `PredictPoseIdentities` module will predict the instances with identities. This module has two fields: the `ModelFileName` field and the `TrainingConfig` field. The `TrainingConfig` field expects the path to the training config JSON file for the top-down-id model. The `ModelFileName` field expects the path to the `exported_model` folder (which contains the exported `.pb` file).
+
+#### Single instance model:
+The `PredictSinglePose` module will predict the poses for single instance models. This module also has two fields: the `ModelFileName` field and the `TrainingConfig` field. The `TrainingConfig` field expects the path to the training config JSON file for the single instance model. The `ModelFileName` field expects the path to the `exported_model` folder (which contains the exported `.pb` file).
+
 
 The workflow in Bonsai will look something like the following:
 
