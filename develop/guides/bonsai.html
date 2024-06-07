@@ -318,14 +318,15 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exporting-a-sleap-trained-model">Exporting a SLEAP trained model:</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-bonsai-and-necessary-packages">Installing Bonsai and necessary packages:</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-bonsai-sleap-modules">Using Bonsai SLEAP modules:</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#top-down-model">Top-down model:</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#top-down-id-model">Top-Down-ID model:</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#single-instance-model">Single instance model:</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exporting-a-sleap-trained-model">Exporting a SLEAP trained model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-bonsai-and-necessary-packages">Installing Bonsai and necessary packages</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-bonsai-sleap-modules">Using Bonsai SLEAP modules</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#top-down-model">Top-down model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#top-down-id-model">Top-Down-ID model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#single-instance-model">Single instance model</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connecting-the-modules">Connecting the modules</a></li>
 </ul>
             </nav>
         </div>
@@ -345,47 +346,60 @@ document.write(`
 <p>Currently Bonsai supports only single instance, top-down and top-down-id SLEAP models.</p>
 </div>
 <section id="exporting-a-sleap-trained-model">
-<h2>Exporting a SLEAP trained model:<a class="headerlink" href="#exporting-a-sleap-trained-model" title="Permalink to this headline">#</a></h2>
-<p>Before we can import a trained model into Bonsai, we need to use the <code class="code docutils literal notranslate"><span class="pre">sleap-export</span></code> command to convert the model to a format supported by Bonsai. For example, for the top-down-id model, the command is as follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sleap</span><span class="o">-</span><span class="n">export</span> <span class="o">-</span><span class="n">m</span> <span class="n">centroid_model_folder_path</span> <span class="o">-</span><span class="n">m</span> <span class="n">top_down_id_model_folder_path</span> <span class="n">exported_model</span>
+<h2>Exporting a SLEAP trained model<a class="headerlink" href="#exporting-a-sleap-trained-model" title="Permalink to this headline">#</a></h2>
+<p>Before we can import a trained model into Bonsai, we need to use the <code class="code docutils literal notranslate"><span class="pre">sleap-export</span></code> command to convert the model to a format supported by Bonsai. For example, to export a top-down-id model, the command is as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sleap-export<span class="w"> </span>-m<span class="w"> </span>centroid/model/folder/path<span class="w"> </span>-m<span class="w"> </span>top_down_id/model/folder/path<span class="w"> </span>-e<span class="w"> </span>exported/model/path
 </pre></div>
 </div>
 <p>Please refer to the <a class="reference internal" href="cli.html#sleap-export"><span class="std std-ref">sleap-export</span></a> docs for more details on using the command.</p>
-<p>This will generate the necessary <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file and other information files required by Bonsai. In this example, these files were saved to the specified <code class="docutils literal notranslate"><span class="pre">exported_model</span></code> folder.</p>
+<p>This will generate the necessary <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file and other information files required by Bonsai. In this example, these files were saved to the specified <code class="docutils literal notranslate"><span class="pre">exported/model/path</span></code> folder.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">exported/model/path</span></code> folder will have a structure like the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>exported/model/path
+├── centroid_config.json
+├── confmap_config.json
+├── frozen_graph.pb
+└── info.json
+</pre></div>
+</div>
 </section>
 <section id="installing-bonsai-and-necessary-packages">
-<h2>Installing Bonsai and necessary packages:<a class="headerlink" href="#installing-bonsai-and-necessary-packages" title="Permalink to this headline">#</a></h2>
+<h2>Installing Bonsai and necessary packages<a class="headerlink" href="#installing-bonsai-and-necessary-packages" title="Permalink to this headline">#</a></h2>
 <ol class="simple">
 <li><p>Install Bonsai. See the <a class="reference external" href="https://bonsai-rx.org/docs/articles/installation.html">Bonsai installation instructions</a>.</p></li>
 <li><p>Download and add the necessary packages for Bonsai to run with SLEAP. See the official <a class="reference external" href="https://github.com/bonsai-rx/sleap?tab=readme-ov-file#bonsai---sleap">Bonsai SLEAP documentation</a> for more information.</p></li>
 </ol>
 </section>
 <section id="using-bonsai-sleap-modules">
-<h2>Using Bonsai SLEAP modules:<a class="headerlink" href="#using-bonsai-sleap-modules" title="Permalink to this headline">#</a></h2>
+<h2>Using Bonsai SLEAP modules<a class="headerlink" href="#using-bonsai-sleap-modules" title="Permalink to this headline">#</a></h2>
 <p>Once you have Bonsai installed with the required packages, you should be able to open the Bonsai application.</p>
-<ul class="simple">
-<li><p>The workflow must have an source module <code class="docutils literal notranslate"><span class="pre">FileCapture</span></code> which can be found in the toolbox search in the workflow editor. Provide the path to the video that was used to train the SLEAP model in the <code class="docutils literal notranslate"><span class="pre">FileName</span></code> field of the module.</p></li>
-</ul>
+<p>The workflow must have a source module <code class="docutils literal notranslate"><span class="pre">FileCapture</span></code> which can be found in the toolbox search in the workflow editor. Provide the path to the video that was used to train the SLEAP model in the <code class="docutils literal notranslate"><span class="pre">FileName</span></code> field of the module.</p>
+<p><img alt="Bonsai FileCapture module" src="../_images/bonsai-filecapture.jpg" /></p>
 <section id="top-down-model">
-<h3>Top-down model:<a class="headerlink" href="#top-down-model" title="Permalink to this headline">#</a></h3>
-<p>The top-down model requires both the <code class="docutils literal notranslate"><span class="pre">PredictCentroid</span></code> and the <code class="docutils literal notranslate"><span class="pre">PredictPoses</span></code> modules.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">PredictCentroid</span></code> module will predict the centroids of detections. There are two fields inside the <code class="docutils literal notranslate"><span class="pre">PredictCentroid</span></code> module: the <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field and the <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field. The <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field expects the path to the training config JSON file for the centroid model. The <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field expects the path to the <code class="docutils literal notranslate"><span class="pre">exported_model</span></code> folder (which contains the exported <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file).</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">PredictPoses</span></code> module will predict the instances of detections. Similar to the <code class="docutils literal notranslate"><span class="pre">PredictCentroid</span></code> module, there are two fields inside the <code class="docutils literal notranslate"><span class="pre">PredictPoses</span></code> module: the <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field and the <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field. The <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field expects the path to the training config JSON file for the centered instance model. The <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field expects the path to the <code class="docutils literal notranslate"><span class="pre">exported_model</span></code> folder (which contains the exported <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file).</p>
+<h3>Top-down model<a class="headerlink" href="#top-down-model" title="Permalink to this headline">#</a></h3>
+<p>The top-down model requires both the <code class="docutils literal notranslate"><span class="pre">PredictCentroids</span></code> and the <code class="docutils literal notranslate"><span class="pre">PredictPoses</span></code> modules.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">PredictCentroids</span></code> module will predict the centroids of detections. There are two fields inside the <code class="docutils literal notranslate"><span class="pre">PredictCentroids</span></code> module: the <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field and the <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field. The <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field expects the path to the training config JSON file for the centroid model. The <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field expects the path to the <code class="docutils literal notranslate"><span class="pre">frozen_graph.pb</span></code> file in the <code class="docutils literal notranslate"><span class="pre">exported/model/path</span></code> folder.</p>
+<p><img alt="Bonsai PredictCentroids module" src="../_images/bonsai-predictcentroids.jpg" /></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">PredictPoses</span></code> module will predict the instances of detections. Similar to the <code class="docutils literal notranslate"><span class="pre">PredictCentroid</span></code> module, there are two fields inside the <code class="docutils literal notranslate"><span class="pre">PredictPoses</span></code> module: the <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field and the <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field. The <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field expects the path to the training config JSON file for the centered instance model. The <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field expects the path to the <code class="docutils literal notranslate"><span class="pre">frozen_graph.pb</span></code> file in the <code class="docutils literal notranslate"><span class="pre">exported/model/path</span></code> folder.</p>
+<p><img alt="Bonsai PredictPoses module" src="../_images/bonsai-predictposes.jpg" /></p>
 </section>
 <section id="top-down-id-model">
-<h3>Top-Down-ID model:<a class="headerlink" href="#top-down-id-model" title="Permalink to this headline">#</a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">PredictPoseIdentities</span></code> module will predict the instances with identities. This module has two fields: the <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field and the <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field. The <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field expects the path to the training config JSON file for the top-down-id model. The <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field expects the path to the <code class="docutils literal notranslate"><span class="pre">exported_model</span></code> folder (which contains the exported <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file).</p>
+<h3>Top-Down-ID model<a class="headerlink" href="#top-down-id-model" title="Permalink to this headline">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">PredictPoseIdentities</span></code> module will predict the instances with identities. This module has two fields: the <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field and the <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field. The <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field expects the path to the training config JSON file for the top-down-id model. The <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field expects the path to the <code class="docutils literal notranslate"><span class="pre">frozen_graph.pb</span></code> file in the <code class="docutils literal notranslate"><span class="pre">exported/model/path</span></code> folder.</p>
+<p><img alt="Bonsai PredictPoseIdentities module" src="../_images/bonsai-predictposeidentities.jpg" /></p>
 </section>
 <section id="single-instance-model">
-<h3>Single instance model:<a class="headerlink" href="#single-instance-model" title="Permalink to this headline">#</a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">PredictSinglePose</span></code> module will predict the poses for single instance models. This module also has two fields: the <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field and the <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field. The <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field expects the path to the training config JSON file for the single instance model. The <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field expects the path to the <code class="docutils literal notranslate"><span class="pre">exported_model</span></code> folder (which contains the exported <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file).</p>
-<p>The workflow in Bonsai will look something like the following:</p>
-<p><img alt="Bonsai.SLEAP workflow" src="../_images/bonsai-workflow.jpg" /></p>
-<ul class="simple">
-<li><p>Once you have the basic workflow for Bonsai.SLEAP created and running successfully, you can add more modules to analyze and visualize the results in Bonsai.</p></li>
-</ul>
-<p>For more documentation on various modules and workflows, please refer to the <a class="reference external" href="https://bonsai-rx.org/docs/articles/editor.html">official Bonsai docs</a>.</p>
+<h3>Single instance model<a class="headerlink" href="#single-instance-model" title="Permalink to this headline">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">PredictSinglePose</span></code> module will predict the poses for single instance models. This module also has two fields: the <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field and the <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field. The <code class="docutils literal notranslate"><span class="pre">TrainingConfig</span></code> field expects the path to the training config JSON file for the single instance model. The <code class="docutils literal notranslate"><span class="pre">ModelFileName</span></code> field expects the path to the <code class="docutils literal notranslate"><span class="pre">frozen_graph.pb</span></code> file in the <code class="docutils literal notranslate"><span class="pre">exported/model/path</span></code> folder.</p>
 </section>
+</section>
+<section id="connecting-the-modules">
+<h2>Connecting the modules<a class="headerlink" href="#connecting-the-modules" title="Permalink to this headline">#</a></h2>
+<p>Right click on the <code class="docutils literal notranslate"><span class="pre">FileCapture</span></code> module and select <strong>Create Connection</strong>. Now click on the required SLEAP module to complete the connection.</p>
+<p><img alt="Bonsai module connection " src="../_images/bonsai-connection.jpg" /></p>
+<p>Once it is done, the workflow in Bonsai will look something like the following:</p>
+<p><img alt="Bonsai.SLEAP workflow" src="../_images/bonsai-workflow.jpg" /></p>
+<p>Now you can click the green start button to run the workflow and you can add more modules to analyze and visualize the results in Bonsai.</p>
+<p>For more documentation on various modules and workflows, please refer to the <a class="reference external" href="https://bonsai-rx.org/docs/articles/editor.html">official Bonsai docs</a>.</p>
 </section>
 </section>
 
@@ -437,14 +451,15 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exporting-a-sleap-trained-model">Exporting a SLEAP trained model:</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-bonsai-and-necessary-packages">Installing Bonsai and necessary packages:</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-bonsai-sleap-modules">Using Bonsai SLEAP modules:</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#top-down-model">Top-down model:</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#top-down-id-model">Top-Down-ID model:</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#single-instance-model">Single instance model:</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exporting-a-sleap-trained-model">Exporting a SLEAP trained model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-bonsai-and-necessary-packages">Installing Bonsai and necessary packages</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-bonsai-sleap-modules">Using Bonsai SLEAP modules</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#top-down-model">Top-down model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#top-down-id-model">Top-Down-ID model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#single-instance-model">Single instance model</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connecting-the-modules">Connecting the modules</a></li>
 </ul>
   </nav></div>
 
