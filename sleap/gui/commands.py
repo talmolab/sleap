@@ -33,6 +33,7 @@ import re
 import subprocess
 import sys
 import traceback
+import toml
 from enum import Enum
 from glob import glob
 from pathlib import Path, PurePath
@@ -53,7 +54,7 @@ from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
-from sleap.io.cameras import Camcorder, FrameGroup, InstanceGroup, RecordingSession
+from sleap.io.cameras import FrameGroup, InstanceGroup, RecordingSession
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
@@ -2024,10 +2025,8 @@ class AddSession(EditCommand):
     def do_action(context: CommandContext, params: dict):
         camera_calibration = params["camera_calibration"]
 
-        # Create session from camera calibration file if not already loaded
-        session = params.get("session", None)
-        if session is None:
-            session = RecordingSession.load(filename=camera_calibration)
+        # Create session from camera calibration file
+        session = RecordingSession.load(filename=camera_calibration)
 
         # Add session
         context.labels.add_session(session)
@@ -2045,17 +2044,17 @@ class AddSession(EditCommand):
         context.state["selected_session"] = None
 
     @staticmethod
-    def find_video_paths(
-        camera_calibration: str, session: RecordingSession
-    ) -> List[str]:
+    def find_video_paths(camera_calibration: str) -> List[str]:
 
         # Find parent of calibration file
         calibration_path = Path(camera_calibration)
         parent_dir = calibration_path.parent
 
         # Use camcorder names in session to find camera folders
-        cameras = session.camera_cluster.cameras
-        camera_names = [camera.name for camera in cameras]
+        calibration_data = toml.load(camera_calibration)
+        camera_names = [
+            value["name"] for value in calibration_data.values() if "name" in value
+        ]
 
         # Find videos inside camera folders
         video_paths = []
@@ -2091,13 +2090,7 @@ class AddSession(EditCommand):
         if len(filename) == 0:
             return False
 
-        # Load the session
-        session = RecordingSession.load(filename=filename)
-        params["session"] = session
-
-        video_paths = AddSession.find_video_paths(
-            camera_calibration=filename, session=session
-        )
+        video_paths = AddSession.find_video_paths(camera_calibration=filename)
 
         # Show import video dialog if any videos are found
         if len(video_paths) > 0:
