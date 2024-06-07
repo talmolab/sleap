@@ -59,7 +59,7 @@ from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
-from sleap.io.video import Video
+from sleap.io.video import Video, MediaVideo
 from sleap.skeleton import Node, Skeleton
 from sleap.util import get_package_file
 
@@ -1816,9 +1816,19 @@ class ShowImportVideos(EditCommand):
     topics = [UpdateTopic.video]
 
     @staticmethod
-    def do_action(context: CommandContext, params: dict):
+    def ask(context: CommandContext, params: dict) -> bool:
         filenames = params["filenames"]
         import_list = ImportVideos().ask(filenames=filenames)
+
+        if len(import_list) > 0:
+            params["import_list"] = import_list
+            return True
+
+        return False
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        import_list = params["import_list"]
         new_videos = ImportVideos.create_videos(import_list)
         video = None
         for video in new_videos:
@@ -2008,15 +2018,23 @@ class RemoveSession(EditCommand):
 
 
 class AddSession(EditCommand):
-    topics = [UpdateTopic.sessions]
+    topics = [UpdateTopic.sessions, UpdateTopic.video]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         camera_calibration = params["camera_calibration"]
-        session = RecordingSession.load(filename=camera_calibration)
+
+        # Create session from camera calibration file if not already loaded
+        session = params.get("session", None)
+        if session is None:
+            session = RecordingSession.load(filename=camera_calibration)
 
         # Add session
         context.labels.add_session(session)
+
+        # Show import video dialog
+        if "import_list" in params:
+            ShowImportVideos().do_action(context=context, params=params)
 
         # Load if no video currently loaded
         if context.state["session"] is None:
@@ -2026,9 +2044,15 @@ class AddSession(EditCommand):
         # is not visually apparent which session is selected after clicking the button
         context.state["selected_session"] = None
 
+    @staticmethod
+    def find_video_paths(
+        camera_calibration: str, session: RecordingSession
+    ) -> List[str]:
+
         # Find parent of calibration file
         calibration_path = Path(camera_calibration)
         parent_dir = calibration_path.parent
+
         # Use camcorder names in session to find camera folders
         cameras = session.camera_cluster.cameras
         camera_names = [camera.name for camera in cameras]
@@ -2042,21 +2066,15 @@ class AddSession(EditCommand):
             if not camera_folder.exists():
                 continue
 
-            # Append all videos in camera folder
+            # Find and append all videos in camera folder
             video_path = None
+            video_extensions = MediaVideo.EXTS
             for file in camera_folder.iterdir():
-                if (
-                    str(file).endswith(".mp4")
-                    or str(file).endswith(".avi")
-                    or str(file).endswith(".mov")
-                    or str(file).endswith(".mkv")
-                ):
+                if file.suffix[1:] in video_extensions:
                     video_path = camera_folder / file
-                    video_paths.append(str(video_path))
+                    video_paths.append(video_path.as_posix())
 
-        # Show import video dialog if any videos are found
-        if len(video_paths) > 0:
-            context.showImportVideos(filenames=video_paths)
+        return video_paths
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
@@ -2070,8 +2088,23 @@ class AddSession(EditCommand):
         )
 
         params["camera_calibration"] = filename
+        if len(filename) == 0:
+            return False
 
-        return len(filename) > 0
+        # Load the session
+        session = RecordingSession.load(filename=filename)
+        params["session"] = session
+
+        video_paths = AddSession.find_video_paths(
+            camera_calibration=filename, session=session
+        )
+
+        # Show import video dialog if any videos are found
+        if len(video_paths) > 0:
+            params["filenames"] = video_paths
+            ShowImportVideos().ask(context=context, params=params)
+
+        return True
 
 
 class LinkVideoToSession(EditCommand):
