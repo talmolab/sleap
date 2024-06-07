@@ -1454,70 +1454,56 @@ def test_DeleteInstanceGroup(multiview_min_session_frame_groups: Labels):
     assert len(instance_group_1.instances) == 6
 
 
-def test_automatic_addition_videos(min_session_calibration_toml_path):
+def test_automatic_addition_videos(min_session_directory):
     """Test if the automatic addition of videos works."""
     # Create a new RecordingSession object
-    camera_calibration_path = min_session_calibration_toml_path
+    session_dir = Path(min_session_directory)
+    session_dir_video_paths = [
+        video_path.as_posix() for video_path in session_dir.rglob("*.mp4")
+    ]
+    calibration_path = Path(session_dir, "calibration.toml")
 
-    # Create temporary directory with the structured video files
-    test_path = Path(camera_calibration_path)
-    data_path = test_path.parent.parent.parent  # tests/data/cameras
-
-    with tempfile.TemporaryDirectory(dir=data_path) as temp_dir:
-        # Copy and paste the videos and the toml_path
-        shutil.copy(camera_calibration_path, temp_dir)
-        files_in_directory = [
-            file for file in Path(temp_dir).iterdir() if file.is_file()
-        ]
-        assert len(files_in_directory) == 1
-
-        # Create directories for each camera
-        directory_names = [
-            "back",
-            "backL",
-            "mid",
-            "midL",
-            "side",
-            "sideL",
-            "top",
-            "topL",
-        ]
-
-        for directory_name in directory_names:
-            new_dir = Path(temp_dir, directory_name)
-            new_dir.mkdir()
-
-        assert len([file for file in Path(temp_dir).iterdir() if file.is_dir()]) == 8
-
-        # Copy and paste the videos in the directories (only min_session_[camera_name].mp4)
-        test_directory = test_path.parent.parent.parent
-        test_directory = Path(test_directory, "videos")
-        for file in test_directory.iterdir():
-            if file.suffix == ".mp4" and "min_session" in file.stem:
-                camera_name = file.stem.split("_")[2]
-                if camera_name in directory_names:
-                    shutil.copy(file, Path(temp_dir, camera_name))
-
-        # Check if the videos were added to the temporary directory under each camera directory
-        for directory_name in directory_names:
-            assert (
-                len(
-                    [
-                        file
-                        for file in Path(temp_dir, directory_name).iterdir()
-                        if file.is_file()
-                    ]
-                )
-                == 1
-            )
+    # Test find_video_paths
+    video_paths = AddSession.find_video_paths(camera_calibration=calibration_path)
+    assert len(video_paths) == 8
+    assert all([p in session_dir_video_paths for p in video_paths])
 
     # Create a new Label() object
     labels = Labels()
     context = CommandContext.from_labels(labels)
-    camera_calibration_path = min_session_calibration_toml_path
 
-    # Create and add a new RecordingSession object
-    params = {"camera_calibration": camera_calibration_path}
+    # Case 1: No videos imported
+    params = {"camera_calibration": calibration_path}
     AddSession.do_action(context, params)
 
-    # Check if the videos were asked to be added to the Label object``
+    # Check if the session was added to the Label object
+    assert len(labels.sessions) == 1
+    assert isinstance(context.state["session"], RecordingSession)
+
+    # Check that no videos were added
+    assert len(labels.videos) == 0
+
+    # Case 2: Videos imported
+    template_import_item = {
+        "params": {
+            "filename": "D:/social-leap-estimates-animal-poses/datasets/mview/back/min_session_back.mp4",
+            "grayscale": True,
+        },
+        "video_type": "mp4",
+        "video_class": Video.from_media,
+    }
+    import_list = []
+    for video_path in video_paths:
+        import_item = dict(template_import_item)
+        import_item["params"]["filename"] = video_path
+
+    import_list.append(import_item)
+    params = {"camera_calibration": calibration_path, "import_list": import_list}
+    AddSession.do_action(context, params)
+
+    # Check if the session was added to the Label object
+    assert len(labels.sessions) == 2
+    assert isinstance(context.state["session"], RecordingSession)
+
+    # Check that no videos were added
+    assert len(labels.videos) == len(import_list)
