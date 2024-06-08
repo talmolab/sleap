@@ -34,6 +34,14 @@ class LossViewer(QtWidgets.QMainWindow):
         self.stop_button = None
         self.cancel_button = None
         self.canceled = False
+
+        # Set up ZMQ ports for communication.
+        if zmq_ports is None:
+            zmq_ports = dict(publish_port=9001, controller_port=9000)
+        elif "publish_port" not in zmq_ports:
+            zmq_ports["publish_port"] = 9001
+        elif "controller_port" not in zmq_ports:
+            zmq_ports["controller_port"] = 9000
         self.zmq_ports = zmq_ports
 
         self.batches_to_show = -1  # -1 to show all
@@ -313,12 +321,14 @@ class LossViewer(QtWidgets.QMainWindow):
         self.sub = self.ctx.socket(zmq.SUB)
         self.sub.subscribe("")
 
-        if self.zmq_ports and not is_port_free(
-            port=self.zmq_ports["publish_port"], zmq_context=self.ctx
-        ):
-            self.zmq_ports["publish_port"] = select_zmq_port(zmq_context=self.ctx)
+        if self.zmq_ports:
+            while not is_port_free(
+                port=self.zmq_ports["publish_port"], zmq_context=self.ctx
+            ):
+                self.zmq_ports["publish_port"] = select_zmq_port(zmq_context=self.ctx)
             publish_address = "tcp://127.0.0.1:" + str(self.zmq_ports["publish_port"])
 
+        # Port is free, so bind to it.
         self.sub.bind(publish_address)
 
         # Controller, PUBLISHER
