@@ -64,9 +64,3 @@ def test_monitor_release(qtbot, min_centroid_model_path):
     assert win3.zmq_ports["publish_port"] == publish_port
 
     win3.close()
-
-
-if __name__ == "__main__":
-    import pytest
-
-    pytest.main([f"{__file__}::test_monitor_release"])
