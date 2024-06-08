@@ -322,9 +322,15 @@ class LossViewer(QtWidgets.QMainWindow):
         self.sub.subscribe("")
 
         # Find a free port to bind to.
+        attempts = 0
+        max_attempts = 10
         while not is_port_free(
             port=self.zmq_ports["publish_port"], zmq_context=self.ctx
         ):
+            if attempts >= max_attempts:
+                raise ValueError(
+                    f"Could not find free port after {max_attempts} attempts."
+                )
             self.zmq_ports["publish_port"] = select_zmq_port(zmq_context=self.ctx)
         publish_address = "tcp://127.0.0.1:" + str(self.zmq_ports["publish_port"])
 
