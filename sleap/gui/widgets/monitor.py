@@ -313,10 +313,6 @@ class LossViewer(QtWidgets.QMainWindow):
         self.ctx_given = zmq_context is not None
         self.ctx = zmq.Context() if zmq_context is None else zmq_context
 
-        # Default publish and control address
-        controller_address = f"tcp://127.0.0.1:{self.zmq_ports['controller_port']}"
-        publish_address = f"tcp://127.0.0.1:{self.zmq_ports['publish_port']}"
-
         # Progress monitoring, SUBSCRIBER
         self.sub = self.ctx.socket(zmq.SUB)
         self.sub.subscribe("")
@@ -332,9 +328,10 @@ class LossViewer(QtWidgets.QMainWindow):
                     f"Could not find free port after {max_attempts} attempts."
                 )
             self.zmq_ports["publish_port"] = select_zmq_port(zmq_context=self.ctx)
-        publish_address = "tcp://127.0.0.1:" + str(self.zmq_ports["publish_port"])
+            attempts += 1
 
-        # Port is free, so bind to it.
+        # Set up the address to bind to and bind to it.
+        publish_address = f"tcp://127.0.0.1:{self.zmq_ports['publish_port']}"
         self.sub.bind(publish_address)
 
         # Controller, PUBLISHER
@@ -342,16 +339,23 @@ class LossViewer(QtWidgets.QMainWindow):
         if self.show_controller:
             self.zmq_ctrl = self.ctx.socket(zmq.PUB)
 
-            if self.zmq_ports and not is_port_free(
+            # Find a free port to bind to.
+            attempts = 0
+            max_attempts = 10
+            while not is_port_free(
                 port=self.zmq_ports["controller_port"], zmq_context=self.ctx
             ):
+                if attempts >= max_attempts:
+                    raise ValueError(
+                        f"Could not find free port after {max_attempts} attempts."
+                    )
                 self.zmq_ports["controller_port"] = select_zmq_port(
                     zmq_context=self.ctx
                 )
-                controller_address = "tcp://127.0.0.1:" + str(
-                    self.zmq_ports["controller_port"]
-                )
+                attempts += 1
 
+            # Set up the address to bind to and bind to it.
+            controller_address = f"tcp://127.0.0.1:{self.zmq_ports['controller_port']}"
             self.zmq_ctrl.bind(controller_address)
 
         # Set timer to poll for messages.
