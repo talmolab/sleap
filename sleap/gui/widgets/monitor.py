@@ -328,8 +328,10 @@ class LossViewer(QtWidgets.QMainWindow):
             max_attempts = 10
             while not is_port_free(port=port, zmq_context=zmq_context):
                 if attempts >= max_attempts:
-                    raise OSError(
-                        f"Could not find free port after {max_attempts} attempts."
+                    raise RuntimeError(
+                        f"Could not find free port to display training progress after "
+                        f"{max_attempts} attempts. Please check your network settings "
+                        "or use the CLI `sleap-train` command."
                     )
                 port = select_zmq_port(zmq_context=self.ctx)
                 attempts += 1
