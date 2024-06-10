@@ -316,26 +316,24 @@ class LossViewer(QtWidgets.QMainWindow):
 
         def find_free_port(port: int, zmq_context: zmq.Context):
             """Find free port to bind to.
-            
+
             Args:
                 port: The port to start searching from.
                 zmq_context: The ZMQ context to use.
-            
+
             Returns:
                 The free port.
             """
             attempts = 0
             max_attempts = 10
-            while not is_port_free(
-                port=port, zmq_context=zmq_context
-            ):
+            while not is_port_free(port=port, zmq_context=zmq_context):
                 if attempts >= max_attempts:
                     raise OSError(
                         f"Could not find free port after {max_attempts} attempts."
                     )
                 port = select_zmq_port(zmq_context=self.ctx)
                 attempts += 1
-            
+
             return port
 
         # Find a free port and bind to it.
