@@ -36,12 +36,9 @@ class LossViewer(QtWidgets.QMainWindow):
         self.canceled = False
 
         # Set up ZMQ ports for communication.
-        if zmq_ports is None:
-            zmq_ports = dict(publish_port=9001, controller_port=9000)
-        elif "publish_port" not in zmq_ports:
-            zmq_ports["publish_port"] = 9001
-        elif "controller_port" not in zmq_ports:
-            zmq_ports["controller_port"] = 9000
+        zmq_ports = zmq_ports or dict()
+        zmq_ports["publish_port"] = zmq_ports.get("publish_port", 9001)
+        zmq_ports["controller_port"] = zmq_ports.get("controller_port", 9000)
         self.zmq_ports = zmq_ports
 
         self.batches_to_show = -1  # -1 to show all
@@ -317,20 +314,34 @@ class LossViewer(QtWidgets.QMainWindow):
         self.sub = self.ctx.socket(zmq.SUB)
         self.sub.subscribe("")
 
-        # Find a free port to bind to.
-        attempts = 0
-        max_attempts = 10
-        while not is_port_free(
-            port=self.zmq_ports["publish_port"], zmq_context=self.ctx
-        ):
-            if attempts >= max_attempts:
-                raise ValueError(
-                    f"Could not find free port after {max_attempts} attempts."
-                )
-            self.zmq_ports["publish_port"] = select_zmq_port(zmq_context=self.ctx)
-            attempts += 1
+        def find_free_port(port: int, zmq_context: zmq.Context):
+            """Find free port to bind to.
+            
+            Args:
+                port: The port to start searching from.
+                zmq_context: The ZMQ context to use.
+            
+            Returns:
+                The free port.
+            """
+            attempts = 0
+            max_attempts = 10
+            while not is_port_free(
+                port=port, zmq_context=zmq_context
+            ):
+                if attempts >= max_attempts:
+                    raise OSError(
+                        f"Could not find free port after {max_attempts} attempts."
+                    )
+                port = select_zmq_port(zmq_context=self.ctx)
+                attempts += 1
+            
+            return port
 
-        # Set up the address to bind to and bind to it.
+        # Find a free port and bind to it.
+        self.zmq_ports["publish_port"] = find_free_port(
+            port=self.zmq_ports["publish_port"], zmq_context=self.ctx
+        )
         publish_address = f"tcp://127.0.0.1:{self.zmq_ports['publish_port']}"
         self.sub.bind(publish_address)
 
@@ -339,22 +350,10 @@ class LossViewer(QtWidgets.QMainWindow):
         if self.show_controller:
             self.zmq_ctrl = self.ctx.socket(zmq.PUB)
 
-            # Find a free port to bind to.
-            attempts = 0
-            max_attempts = 10
-            while not is_port_free(
+            # Find a free port and bind to it.
+            self.zmq_ports["controller_port"] = find_free_port(
                 port=self.zmq_ports["controller_port"], zmq_context=self.ctx
-            ):
-                if attempts >= max_attempts:
-                    raise ValueError(
-                        f"Could not find free port after {max_attempts} attempts."
-                    )
-                self.zmq_ports["controller_port"] = select_zmq_port(
-                    zmq_context=self.ctx
-                )
-                attempts += 1
-
-            # Set up the address to bind to and bind to it.
+            )
             controller_address = f"tcp://127.0.0.1:{self.zmq_ports['controller_port']}"
             self.zmq_ctrl.bind(controller_address)
 
