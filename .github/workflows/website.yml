@@ -9,7 +9,6 @@ on:
       - main
       - develop
       - fakebranch
-      - shrivaths/bonsai-guide
     paths:
       - "docs/**"
       - "README.rst"
