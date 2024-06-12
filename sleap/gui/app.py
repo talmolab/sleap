@@ -790,8 +790,8 @@ class MainWindow(QMainWindow):
         )
         add_menu_item(
             labelMenu,
-            "delete frame limit predictions new item",
-            "Delete Predictions beyond Frame Limit new item...",
+            "delete frame limit predictions",
+            "Delete Predictions beyond Frame Limit...",
             self.commands.deleteFrameLimitPredictions,
         )
 

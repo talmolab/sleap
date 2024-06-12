@@ -16,6 +16,7 @@ from sleap.gui.commands import (
     ReplaceVideo,
     OpenSkeleton,
     SaveProjectAs,
+    DeleteFrameLimitPredictions,
     get_new_version_filename,
 )
 from sleap.instance import Instance, LabeledFrame
@@ -845,6 +846,27 @@ def test_LoadProjectFile(
         load_and_assert_changes(search_path)
     finally:  # Move video back to original location - for ease of re-testing
         shutil.move(new_video_path, expected_video_path)
+
+
+def test_DeleteFrameLimitPredictions(
+    centered_pair_predictions: Labels, centered_pair_vid: Video
+):
+    """Test deleting instances beyond a certain frame limit."""
+    labels = centered_pair_predictions
+
+    # Set-up command context
+    context = CommandContext.from_labels(labels)
+    context.state["video"] = centered_pair_vid
+
+    # Set-up params for the command
+    params = {"frame_idx_threshold": 900}
+
+    expected_instances = 423
+    predicted_instances = DeleteFrameLimitPredictions.get_frame_instance_list(
+        context, params
+    )
+
+    assert len(predicted_instances) == expected_instances
 
 
 @pytest.mark.parametrize("export_extension", [".json.zip", ".slp"])
