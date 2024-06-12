@@ -5313,11 +5313,14 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
 
     # Provider list to accomodate multiple video inputs
     provider_list = []
+    tmp_data_path_list = []
     for data_path_file in data_path_list:
+        data_path_file = Path(data_path_file)
         # Create a provider for each file
-        if data_path_file.endswith(".slp"):
-            labels = sleap.load_file(data_path_file)
-
+        if data_path_file.as_posix().endswith(".slp"):
+            print(f"Sleap file: {data_path_file}")
+            labels = sleap.load_file(data_path_file.as_posix())
+            
             if args.only_labeled_frames:
                 provider_list.append(LabelsReader.from_user_labeled_frames(labels))
             elif args.only_suggested_frames:
@@ -5329,17 +5332,26 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
                 ))
             else:
                 provider_list.append(LabelsReader(labels))
+                
+            tmp_data_path_list.append(data_path_file)
 
         else:
-            print(f"Video: {data_path_file}")
-            # TODO: Clean this up.
-            video_kwargs = dict(
-                dataset=vars(args).get("video.dataset"),
-                input_format=vars(args).get("video.input_format"),
-            )
-            provider_list.append(VideoReader.from_filepath(
-                filename=data_path_file, example_indices=frame_list(args.frames), **video_kwargs
-            ))
+            try:
+                video_kwargs = dict(
+                    dataset=vars(args).get("video.dataset"),
+                    input_format=vars(args).get("video.input_format"),
+                )
+                provider_list.append(VideoReader.from_filepath(
+                    filename=data_path_file.as_posix(), example_indices=frame_list(args.frames), **video_kwargs
+                ))
+                print(f"Video: {data_path_file}")
+                tmp_data_path_list.append(data_path_file)
+                # TODO: Clean this up.
+            except Exception as e:
+                print(f"Error reading file: {data_path_file}")
+                
+        data_path_list = tmp_data_path_list
+            
 
     return provider_list, data_path_list
 
@@ -5433,7 +5445,7 @@ def main(args: Optional[list] = None):
     # Parse inputs.
     args, _ = parser.parse_known_args(args)
     print("Args:")
-    pprint(vars(args))
+    print(vars(args))
     print()
 
     # Setup devices.
@@ -5498,13 +5510,17 @@ def main(args: Optional[list] = None):
         for data_path, provider in zip(data_path_list, provider_list):
             # Setup models.
             predictor = _make_predictor_from_cli(args)
+            print(f"predictor.tracker: {tracker}")
             predictor.tracker = tracker
 
             # Run inference!
             labels_pr = predictor.predict(provider)
 
             if output_path is None:
-                output_path = data_path + ".predictions.slp"
+                #if data_path.as_posix().endswith(".slp"):
+                #    output_path = data_path
+                #else:
+                output_path = data_path.parent / (data_path.stem + ".predictions.slp")
             
 
             labels_pr.provenance["model_paths"] = predictor.model_paths
@@ -5524,8 +5540,8 @@ def main(args: Optional[list] = None):
             labels_pr.provenance["sleap_version"] = sleap.__version__
             labels_pr.provenance["platform"] = platform.platform()
             labels_pr.provenance["command"] = " ".join(sys.argv)
-            labels_pr.provenance["data_path"] = data_path
-            labels_pr.provenance["output_path"] = output_path
+            labels_pr.provenance["data_path"] = data_path.as_posix()
+            labels_pr.provenance["output_path"] = output_path.as_posix()
             labels_pr.provenance["total_elapsed"] = total_elapsed
             labels_pr.provenance["start_timestamp"] = start_timestamp
             labels_pr.provenance["finish_timestamp"] = finish_timestamp
@@ -5552,7 +5568,7 @@ def main(args: Optional[list] = None):
         for data_path, provider in zip(data_path_list, provider_list):
             # Load predictions
             print("Loading predictions...")
-            labels_pr = sleap.load_file(args.data_path)
+            labels_pr = sleap.load_file(args.data_path.as_posix())
             frames = sorted(labels_pr.labeled_frames, key=lambda lf: lf.frame_idx)
 
             print("Starting tracker...")
