@@ -1348,6 +1348,39 @@ class InstancesList(list):
         for instance in instances:
             self.append(instance)
 
+    def __delitem__(self, index):
+        """Remove instance (by index), and set instance.frame to None."""
+
+        instance: Instance = self.__getitem__(index)
+        super().__delitem__(index)
+
+        # Modify the instance to remove reference to the frame
+        instance.frame = None
+
+    def insert(self, index: int, instance: Union[Instance, PredictedInstance]) -> None:
+        super().insert(index, instance)
+        instance.frame = self.labeled_frame
+
+    def __setitem__(self, index, instance: Union[Instance, PredictedInstance]):
+        """Set nth instance in frame to the given instance.
+
+        Args:
+            index: The index of instance to replace with new instance.
+            value: The new instance to associate with frame.
+
+        Returns:
+            None.
+        """
+        super().__setitem__(index, instance)
+        instance.frame = self.labeled_frame
+
+    def pop(self, index: int) -> Union[Instance, PredictedInstance]:
+        """Remove and return instance at index, setting instance.frame to None."""
+
+        instance = super().pop(index)
+        instance.frame = None
+        return instance
+
 
 @attr.s(auto_attribs=True, eq=False, repr=False, str=False)
 class LabeledFrame:
@@ -1387,12 +1420,7 @@ class LabeledFrame:
 
     def __delitem__(self, index):
         """Remove instance (by index) from frame."""
-        value = self.instances.__getitem__(index)
-
         self.instances.__delitem__(index)
-
-        # Modify the instance to remove reference to this frame
-        value.frame = None
 
     def __repr__(self) -> str:
         """Return a readable representation of the LabeledFrame."""
@@ -1416,9 +1444,6 @@ class LabeledFrame:
         """
         self.instances.insert(index, value)
 
-        # Modify the instance to have a reference back to this frame
-        value.frame = self
-
     def __setitem__(self, index, value: Instance):
         """Set nth instance in frame to the given instance.
 
@@ -1430,9 +1455,6 @@ class LabeledFrame:
             None.
         """
         self.instances.__setitem__(index, value)
-
-        # Modify the instance to have a reference back to this frame
-        value.frame = self
 
     def find(
         self, track: Optional[Union[Track, int]] = -1, user: bool = False
