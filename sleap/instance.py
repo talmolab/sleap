@@ -1278,6 +1278,61 @@ def make_instance_cattr() -> cattr.Converter:
     return converter
 
 
+class InstancesList(list):
+    """A list of `Instance`s associated with a `LabeledFrame`."""
+
+    def __init__(self, *args, labeled_frame: Optional["LabeledFrame"] = None):
+        super(InstancesList, self).__init__(*args)
+        self.labeled_frame = labeled_frame
+
+    @property
+    def labeled_frame(self) -> "LabeledFrame":
+        """Return the `LabeledFrame` associated with this list of instances."""
+
+        return self._labeled_frame
+    
+    @labeled_frame.setter
+    def labeled_frame(self, labeled_frame: "LabeledFrame"):
+        """Set the `LabeledFrame` associated with this list of instances.
+
+        This updates the `frame` attribute on each instance.
+        
+        Args:
+            labeled_frame: The `LabeledFrame` to associate with this list of instances.
+        """
+
+        self._labeled_frame = labeled_frame
+        for instance in self:
+            instance.frame = labeled_frame
+
+    def append(self, instance: Union[Instance, PredictedInstance]):
+        """Append an `Instance` or `PredictedInstance` to the list, setting the frame.
+        
+        Args:
+            item: The `Instance` or `PredictedInstance` to append to the list.
+        """
+
+        if not isinstance(instance, (Instance, PredictedInstance)):
+            raise ValueError(
+                f"InstancesList can only contain Instance or PredictedInstance objects,"
+                f" but got {type(instance)}."
+            )
+        instance.frame = self.labeled_frame
+        super().append(instance)
+
+    def extend(self, instances: List[Union[PredictedInstance, Instance]]):
+        """Extend the list with a list of `Instance`s or `PredictedInstance`s.
+
+        Args:
+            instances: A list of `Instance` or `PredictedInstance` objects to add to the 
+                list.
+        
+        Returns:
+            None
+        """
+        for instance in instances:
+            self.append(instance)
+
 @attr.s(auto_attribs=True, eq=False, repr=False, str=False)
 class LabeledFrame:
     """Holds labeled data for a single frame of a video.
@@ -1290,8 +1345,8 @@ class LabeledFrame:
 
     video: Video = attr.ib()
     frame_idx: int = attr.ib(converter=int)
-    _instances: Union[List[Instance], List[PredictedInstance]] = attr.ib(
-        default=attr.Factory(list)
+    _instances: InstancesList = attr.ib(
+        default=attr.Factory(InstancesList)
     )
 
     def __attrs_post_init__(self):
@@ -1302,8 +1357,7 @@ class LabeledFrame:
         """
 
         # Make sure all instances have a reference to this frame
-        for instance in self.instances:
-            instance.frame = self
+        self.instances = self._instances
 
     def __len__(self) -> int:
         """Return number of instances associated with frame."""
@@ -1393,7 +1447,7 @@ class LabeledFrame:
         return self._instances
 
     @instances.setter
-    def instances(self, instances: List[Instance]):
+    def instances(self, instances: Union[InstancesList, List[Instance]]):
         """Set the list of instances associated with this frame.
 
         Updates the `frame` attribute on each instance to the
@@ -1408,9 +1462,11 @@ class LabeledFrame:
             None
         """
 
-        # Make sure to set the frame for each instance to this LabeledFrame
-        for instance in instances:
-            instance.frame = self
+        # Make sure to set the LabeledFrame for each instance to this frame
+        if isinstance(instances, InstancesList):
+            instances.labeled_frame = self
+        else:
+            instances = InstancesList(instances, labeled_frame=self)
 
         self._instances = instances
 
