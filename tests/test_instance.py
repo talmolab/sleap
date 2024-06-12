@@ -535,7 +535,7 @@ def test_instance_structuring_from_predicted(centered_pair_predictions):
 
 def test_instances_list(centered_pair_predictions):
 
-    labels = centered_pair_predictions.copy()
+    labels = centered_pair_predictions
 
     def test_extend(instances: InstancesList, list_of_instances: List[Instance]):
         instances.extend(list_of_instances)
@@ -621,6 +621,28 @@ def test_instances_list(centered_pair_predictions):
     for instance in instances:
         assert instance.frame == labeled_frame
 
+    # Test InstancesList.__delitem__
+    instance_to_remove = instances[0]
+    del instances[0]
+    assert instance_to_remove not in instances
+    assert instance_to_remove.frame is None
+
+    # Test InstancesList.insert
+    instances.insert(0, instance_to_remove)
+    assert instances[0] == instance_to_remove
+    assert instance_to_remove.frame == labeled_frame
+
+    # Test InstancesList.__setitem__
+    new_instance = list_of_instances[1]
+    new_instance.frame = None
+    instances[0] = new_instance
+    assert instances[0] == new_instance
+    assert new_instance.frame == labeled_frame
+
+    # Test InstancesList.pop
+    popped_instance = instances.pop(0)
+    assert popped_instance.frame is None
+
     # Case 5: Create an instances list from an instances list
     instances_1 = InstancesList(list_of_instances, labeled_frame=labeled_frame_1)
     instances = InstancesList(instances_1)
@@ -631,5 +653,73 @@ def test_instances_list(centered_pair_predictions):
         assert instance.frame is None
 
 
-if __name__ == "__main__":
-    pytest.main([f"{__file__}::test_instances_list"])
+def test_instances_list_with_labeled_frame(centered_pair_predictions):
+    labels: Labels = centered_pair_predictions
+    labels_lf_0: LabeledFrame = labels.labeled_frames[0]
+    video = labels_lf_0.video
+    frame_idx = labels_lf_0.frame_idx
+
+    def test_post_init(labeled_frame: LabeledFrame):
+        for instance in labeled_frame.instances:
+            assert instance.frame == labeled_frame
+
+    # Create labeled frame from list of instances
+    instances = list(labels_lf_0.instances)
+    for instance in instances:
+        instance.frame = None  # Change frame to None to test if it is set correctly
+    labeled_frame = LabeledFrame(video=video, frame_idx=frame_idx, instances=instances)
+    assert isinstance(labeled_frame.instances, InstancesList)
+    assert len(labeled_frame.instances) == len(instances)
+    test_post_init(labeled_frame)
+
+    # Create labeled frame from instances list
+    instances = InstancesList(labels_lf_0.instances)
+    labeled_frame = LabeledFrame(video=video, frame_idx=frame_idx, instances=instances)
+    assert isinstance(labeled_frame.instances, InstancesList)
+    assert len(labeled_frame.instances) == len(instances)
+    test_post_init(labeled_frame)
+
+    # Test LabeledFrame.__len__
+    assert len(labeled_frame.instances) == len(instances)
+
+    # Test LabeledFrame.__getitem__
+    assert labeled_frame[0] == instances[0]
+
+    # Test LabeledFrame.index
+    assert labeled_frame.index(instances[0]) == instances.index(instances[0]) == 0
+
+    # Test LabeledFrame.__delitem__
+    instance_to_remove = labeled_frame[0]
+    del labeled_frame[0]
+    assert instance_to_remove not in labeled_frame.instances
+    assert instance_to_remove.frame is None
+
+    # Test LabeledFrame.__repr__
+    print(labeled_frame)
+
+    # Test LabeledFrame.insert
+    labeled_frame.insert(0, instance_to_remove)
+    assert labeled_frame[0] == instance_to_remove
+    assert instance_to_remove.frame == labeled_frame
+
+    # Test LabeledFrame.__setitem__
+    new_instance = instances[1]
+    new_instance.frame = None
+    labeled_frame[0] = new_instance
+    assert labeled_frame[0] == new_instance
+    assert new_instance.frame == labeled_frame
+
+    # Test instances.setter
+    labeled_frame.instances = []
+    assert len(labeled_frame.instances) == 0
+    assert labeled_frame.instances.labeled_frame == labeled_frame
+    labeled_frame.instances = labels.labeled_frames[1].instances
+    assert len(labeled_frame.instances) == len(labels.labeled_frames[1].instances)
+    assert labeled_frame.instances.labeled_frame == labeled_frame
+    for instance in labeled_frame.instances:
+        assert instance.frame == labeled_frame
+    labeled_frame.instances = list(labels.labeled_frames[1].instances)
+    assert len(labeled_frame.instances) == len(labels.labeled_frames[1].instances)
+    assert labeled_frame.instances.labeled_frame == labeled_frame
+    for instance in labeled_frame.instances:
+        assert instance.frame == labeled_frame
