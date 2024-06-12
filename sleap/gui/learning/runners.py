@@ -605,13 +605,11 @@ def run_gui_training(
         from sleap.gui.widgets.monitor import LossViewer
         from sleap.gui.widgets.imagedir import QtImageDirectoryWidget
 
-        if all(key in inference_params for key in ["controller_port", "publish_port"]):
-            zmq_ports = {
-                "controller_port": inference_params["controller_port"],
-                "publish_port": inference_params["publish_port"],
-            }
+        zmq_ports = dict()
+        zmq_ports["controller_port"] = inference_params.get("controller_port", 9000)
+        zmq_ports["publish_port"] = inference_params.get("publish_port", 9001)
 
-        # open training monitor window
+        # Open training monitor window
         win = LossViewer(zmq_ports=zmq_ports)
 
         # Reassign the values in the inference parameters in case the ports were changed
