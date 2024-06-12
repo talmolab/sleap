@@ -1214,6 +1214,9 @@ def make_instance_cattr() -> cattr.Converter:
 
     converter.register_unstructure_hook(Instance, unstructure_instance)
     converter.register_unstructure_hook(PredictedInstance, unstructure_instance)
+    converter.register_unstructure_hook(
+        InstancesList, lambda x: [converter.unstructure(inst) for inst in x]
+    )
 
     ## STRUCTURE HOOKS
 
@@ -1247,6 +1250,7 @@ def make_instance_cattr() -> cattr.Converter:
     converter.register_structure_hook(
         Union[List[Instance], List[PredictedInstance]], structure_instances_list
     )
+    converter.register_structure_hook(InstancesList, structure_instances_list)
 
     # Structure forward reference for PredictedInstance for the Instance.from_predicted
     # attribute.
@@ -1290,13 +1294,13 @@ class InstancesList(list):
         """Return the `LabeledFrame` associated with this list of instances."""
 
         return self._labeled_frame
-    
+
     @labeled_frame.setter
     def labeled_frame(self, labeled_frame: "LabeledFrame"):
         """Set the `LabeledFrame` associated with this list of instances.
 
         This updates the `frame` attribute on each instance.
-        
+
         Args:
             labeled_frame: The `LabeledFrame` to associate with this list of instances.
         """
@@ -1307,7 +1311,7 @@ class InstancesList(list):
 
     def append(self, instance: Union[Instance, PredictedInstance]):
         """Append an `Instance` or `PredictedInstance` to the list, setting the frame.
-        
+
         Args:
             item: The `Instance` or `PredictedInstance` to append to the list.
         """
@@ -1324,14 +1328,15 @@ class InstancesList(list):
         """Extend the list with a list of `Instance`s or `PredictedInstance`s.
 
         Args:
-            instances: A list of `Instance` or `PredictedInstance` objects to add to the 
+            instances: A list of `Instance` or `PredictedInstance` objects to add to the
                 list.
-        
+
         Returns:
             None
         """
         for instance in instances:
             self.append(instance)
+
 
 @attr.s(auto_attribs=True, eq=False, repr=False, str=False)
 class LabeledFrame:
@@ -1345,9 +1350,7 @@ class LabeledFrame:
 
     video: Video = attr.ib()
     frame_idx: int = attr.ib(converter=int)
-    _instances: InstancesList = attr.ib(
-        default=attr.Factory(InstancesList)
-    )
+    _instances: InstancesList = attr.ib(default=attr.Factory(InstancesList))
 
     def __attrs_post_init__(self):
         """Called by attrs.
