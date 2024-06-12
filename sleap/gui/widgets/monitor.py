@@ -34,6 +34,11 @@ class LossViewer(QtWidgets.QMainWindow):
         self.stop_button = None
         self.cancel_button = None
         self.canceled = False
+
+        # Set up ZMQ ports for communication.
+        zmq_ports = zmq_ports or dict()
+        zmq_ports["publish_port"] = zmq_ports.get("publish_port", 9001)
+        zmq_ports["controller_port"] = zmq_ports.get("controller_port", 9000)
         self.zmq_ports = zmq_ports
 
         self.batches_to_show = -1  # -1 to show all
@@ -305,20 +310,39 @@ class LossViewer(QtWidgets.QMainWindow):
         self.ctx_given = zmq_context is not None
         self.ctx = zmq.Context() if zmq_context is None else zmq_context
 
-        # Default publish and control address
-        controller_address = "tcp://127.0.0.1:9000"
-        publish_address = "tcp://127.0.0.1:9001"
-
         # Progress monitoring, SUBSCRIBER
         self.sub = self.ctx.socket(zmq.SUB)
         self.sub.subscribe("")
 
-        if self.zmq_ports and not is_port_free(
-            port=self.zmq_ports["publish_port"], zmq_context=self.ctx
-        ):
-            self.zmq_ports["publish_port"] = select_zmq_port(zmq_context=self.ctx)
-            publish_address = "tcp://127.0.0.1:" + str(self.zmq_ports["publish_port"])
+        def find_free_port(port: int, zmq_context: zmq.Context):
+            """Find free port to bind to.
 
+            Args:
+                port: The port to start searching from.
+                zmq_context: The ZMQ context to use.
+
+            Returns:
+                The free port.
+            """
+            attempts = 0
+            max_attempts = 10
+            while not is_port_free(port=port, zmq_context=zmq_context):
+                if attempts >= max_attempts:
+                    raise RuntimeError(
+                        f"Could not find free port to display training progress after "
+                        f"{max_attempts} attempts. Please check your network settings "
+                        "or use the CLI `sleap-train` command."
+                    )
+                port = select_zmq_port(zmq_context=self.ctx)
+                attempts += 1
+
+            return port
+
+        # Find a free port and bind to it.
+        self.zmq_ports["publish_port"] = find_free_port(
+            port=self.zmq_ports["publish_port"], zmq_context=self.ctx
+        )
+        publish_address = f"tcp://127.0.0.1:{self.zmq_ports['publish_port']}"
         self.sub.bind(publish_address)
 
         # Controller, PUBLISHER
@@ -326,16 +350,11 @@ class LossViewer(QtWidgets.QMainWindow):
         if self.show_controller:
             self.zmq_ctrl = self.ctx.socket(zmq.PUB)
 
-            if self.zmq_ports and not is_port_free(
+            # Find a free port and bind to it.
+            self.zmq_ports["controller_port"] = find_free_port(
                 port=self.zmq_ports["controller_port"], zmq_context=self.ctx
-            ):
-                self.zmq_ports["controller_port"] = select_zmq_port(
-                    zmq_context=self.ctx
-                )
-                controller_address = "tcp://127.0.0.1:" + str(
-                    self.zmq_ports["controller_port"]
-                )
-
+            )
+            controller_address = f"tcp://127.0.0.1:{self.zmq_ports['controller_port']}"
             self.zmq_ctrl.bind(controller_address)
 
         # Set timer to poll for messages.
