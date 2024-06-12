@@ -312,6 +312,8 @@ def test_frame_merge_predicted_and_user(skeleton, centered_pair_vid):
     # and we want to retain both even though they perfectly match.
     assert user_inst in user_frame.instances
     assert pred_inst in user_frame.instances
+    assert user_inst.frame == user_frame
+    assert pred_inst.frame == user_frame
     assert len(user_frame.instances) == 2
 
 
@@ -709,15 +711,17 @@ def test_instances_list_with_labeled_frame(centered_pair_predictions):
     assert labeled_frame[0] == new_instance
     assert new_instance.frame == labeled_frame
 
-    # Test instances.setter
+    # Test instances.setter (empty list)
     labeled_frame.instances = []
     assert len(labeled_frame.instances) == 0
     assert labeled_frame.instances.labeled_frame == labeled_frame
+    # Test instances.setter (InstancesList)
     labeled_frame.instances = labels.labeled_frames[1].instances
     assert len(labeled_frame.instances) == len(labels.labeled_frames[1].instances)
     assert labeled_frame.instances.labeled_frame == labeled_frame
     for instance in labeled_frame.instances:
         assert instance.frame == labeled_frame
+    # Test instances.setter (populated list)
     labeled_frame.instances = list(labels.labeled_frames[1].instances)
     assert len(labeled_frame.instances) == len(labels.labeled_frames[1].instances)
     assert labeled_frame.instances.labeled_frame == labeled_frame
