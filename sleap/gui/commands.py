@@ -2475,7 +2475,7 @@ class DeleteInstanceLimitPredictions(InstanceDeleteCommand):
 class DeleteFrameLimitPredictions(InstanceDeleteCommand):
     @staticmethod
     def get_frame_instance_list(context: CommandContext, params: Dict):
-        """Called from the parent `InstanceDeleteCommand` class. Returns a list of
+        """Called from the parent `InstanceDeleteCommand.ask` class. Returns a list of
         instances to be deleted."""
         predicted_instances = []
         # Select the instances to be deleted
