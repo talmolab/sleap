@@ -1287,6 +1287,8 @@ class InstancesList(list):
 
     def __init__(self, *args, labeled_frame: Optional["LabeledFrame"] = None):
         super(InstancesList, self).__init__(*args)
+
+        # Set the labeled frame for each instance
         self.labeled_frame = labeled_frame
 
     @property
@@ -1305,6 +1307,15 @@ class InstancesList(list):
             labeled_frame: The `LabeledFrame` to associate with this list of instances.
         """
 
+        try:
+            # If the labeled frame is the same as the one we're setting, then skip
+            if self._labeled_frame == labeled_frame:
+                return
+        except AttributeError:
+            # Only happens on init and updates each instance.frame (even if None)
+            pass
+
+        # Otherwise, update the frame for each instance
         self._labeled_frame = labeled_frame
         for instance in self:
             instance.frame = labeled_frame
