@@ -3014,8 +3014,14 @@ class AddInstance(EditCommand):
                 # We don't want to copy a PredictedPoint or score attribute.
                 x_old = copy_instance[node].x
                 y_old = copy_instance[node].y
-                x_new = x_old * scale_width
-                y_new = y_old * scale_height
+                if (x_old + 10) * scale_width <= new_size_width:
+                    x_new = (x_old + 10) * scale_width
+                else:
+                    x_new = x_old
+                if (y_old + 10) * scale_width <= new_size_width:
+                    y_new = (y_old + 10) * scale_width
+                else:
+                    y_new = y_old
 
                 new_instance[node] = Point(
                     x=x_new,
