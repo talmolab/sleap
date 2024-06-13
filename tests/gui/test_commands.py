@@ -3,6 +3,7 @@ import sys
 import time
 from pathlib import Path, PurePath
 from typing import List
+import tempfile
 
 import numpy as np
 import pytest
@@ -1451,3 +1452,58 @@ def test_DeleteInstanceGroup(multiview_min_session_frame_groups: Labels):
     # Check InstanceGroup.instances
     assert len(instance_group_0.instances) == 8
     assert len(instance_group_1.instances) == 6
+
+
+def test_automatic_addition_videos(min_session_directory):
+    """Test if the automatic addition of videos works."""
+    # Create a new RecordingSession object
+    session_dir = Path(min_session_directory)
+    session_dir_video_paths = [
+        video_path.as_posix() for video_path in session_dir.rglob("*.mp4")
+    ]
+    calibration_path = Path(session_dir, "calibration.toml")
+
+    # Test find_video_paths
+    video_paths = AddSession.find_video_paths(camera_calibration=calibration_path)
+    assert len(video_paths) == 8
+    assert all([p in session_dir_video_paths for p in video_paths])
+
+    # Create a new Label() object
+    labels = Labels()
+    context = CommandContext.from_labels(labels)
+
+    # Case 1: No videos imported
+    params = {"camera_calibration": calibration_path}
+    AddSession.do_action(context, params)
+
+    # Check if the session was added to the Label object
+    assert len(labels.sessions) == 1
+    assert isinstance(context.state["session"], RecordingSession)
+
+    # Check that no videos were added
+    assert len(labels.videos) == 0
+
+    # Case 2: Videos imported
+    template_import_item = {
+        "params": {
+            "filename": "D:/social-leap-estimates-animal-poses/datasets/mview/back/min_session_back.mp4",
+            "grayscale": True,
+        },
+        "video_type": "mp4",
+        "video_class": Video.from_media,
+    }
+    import_list = []
+    for video_path in video_paths:
+        import_item = dict(template_import_item)
+        import_item["params"]["filename"] = video_path
+
+    import_list.append(import_item)
+    params = {"camera_calibration": calibration_path, "import_list": import_list}
+    AddSession.do_action(context, params)
+
+    # Check if the session was added to the Label object
+    assert len(labels.sessions) == 2
+    assert isinstance(context.state["session"], RecordingSession)
+
+    # Check that no videos were added
+    assert len(labels.videos) == len(import_list)

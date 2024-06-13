@@ -75,6 +75,7 @@ from sleap.gui.widgets.docks import (
     SkeletonDock,
     SuggestionsDock,
     VideosDock,
+    InstanceGroupDock,
 )
 from sleap.gui.widgets.slider import set_slider_marks_from_labels
 from sleap.gui.widgets.video import QtVideoPlayer
@@ -657,7 +658,7 @@ class MainWindow(QMainWindow):
             key="palette",
         )
 
-        distinctly_color_options = ("instances", "nodes", "edges")
+        distinctly_color_options = ("instance_groups", "instances", "nodes", "edges")
 
         add_submenu_choices(
             menu=viewMenu,
@@ -1063,6 +1064,7 @@ class MainWindow(QMainWindow):
         self.skeleton_dock = SkeletonDock(self, tab_with=self.videos_dock)
         self.suggestions_dock = SuggestionsDock(self, tab_with=self.videos_dock)
         self.instances_dock = InstancesDock(self, tab_with=self.videos_dock)
+        self.instance_groups_dock = InstanceGroupDock(self, tab_with=self.videos_dock)
 
         # Bring videos tab forward.
         self.videos_dock.wgt_layout.parent().parent().raise_()
@@ -1259,6 +1261,7 @@ class MainWindow(QMainWindow):
 
         if _has_topic([UpdateTopic.project, UpdateTopic.on_frame]):
             self.instances_dock.table.model().items = self.state["labeled_frame"]
+            self._update_instance_group_model()
 
         if _has_topic([UpdateTopic.suggestions]):
             self.suggestions_dock.table.model().items = self.labels.suggestions
@@ -1289,12 +1292,28 @@ class MainWindow(QMainWindow):
             self.update_cameras_model()
             self.update_unlinked_videos_model()
             self._update_sessions_menu()
+            self._update_instance_group_model()
 
     def update_unlinked_videos_model(self):
         """Update the unlinked videos model with the selected session."""
         self.sessions_dock.unlinked_videos_table.model().items = (
             self.labels._cache._linkage_of_videos["unlinked"]
         )
+
+    def _update_instance_group_model(self):
+        """Update the instance group model with the `InstanceGroup`s in current frame."""
+
+        session = self.state["session"]
+        if session is not None:
+            frame_idx: int = self.state["frame_idx"]
+            frame_group = session.frame_groups.get(frame_idx, None)
+            if frame_group is not None:
+                self.instance_groups_dock.table.model().items = (
+                    frame_group.instance_groups
+                )
+                return
+
+        self.instance_groups_dock.table.model().items = []
 
     def update_cameras_model(self):
         """Update the cameras model with the selected session."""
@@ -1411,6 +1430,11 @@ class MainWindow(QMainWindow):
                 self.statusBar().setStyleSheet("color: red")
             else:
                 self.statusBar().setStyleSheet("color: black")
+
+            if self.state["session"] is not None and current_video is not None:
+                camera = self.state["session"].get_camera(video=self.state["video"])
+                if camera is not None:
+                    message += f"{spacer}Camera: {camera.name}"
 
         self.statusBar().showMessage(message)
 
