@@ -545,7 +545,7 @@ def test_instances_list(centered_pair_predictions):
         for instance in instances:
             assert isinstance(instance, PredictedInstance)
             if instances.labeled_frame is None:
-                instance.frame is None
+                assert instance.frame is None
             else:
                 assert instance.frame == instances.labeled_frame
 
@@ -632,18 +632,24 @@ def test_instances_list(centered_pair_predictions):
     # Test InstancesList.insert
     instances.insert(0, instance_to_remove)
     assert instances[0] == instance_to_remove
-    assert instance_to_remove.frame == labeled_frame
+    assert instance_to_remove.frame == instances.labeled_frame
 
     # Test InstancesList.__setitem__
-    new_instance = list_of_instances[1]
+    new_instance = labeled_frame_1.instances[0]
     new_instance.frame = None
     instances[0] = new_instance
     assert instances[0] == new_instance
-    assert new_instance.frame == labeled_frame
+    assert new_instance.frame == instances.labeled_frame
 
     # Test InstancesList.pop
     popped_instance = instances.pop(0)
     assert popped_instance.frame is None
+
+    # Test InstancesList.remove
+    instance_to_remove = instances[0]
+    instances.remove(instance_to_remove)
+    assert instance_to_remove.frame is None
+    assert instance_to_remove not in instances
 
     # Case 5: Create an instances list from an instances list
     instances_1 = InstancesList(list_of_instances, labeled_frame=labeled_frame_1)
