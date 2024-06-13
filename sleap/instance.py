@@ -1283,7 +1283,10 @@ def make_instance_cattr() -> cattr.Converter:
 
 
 class InstancesList(list):
-    """A list of `Instance`s associated with a `LabeledFrame`."""
+    """A list of `Instance`s associated with a `LabeledFrame`.
+
+    This class should only be used for the `LabeledFrame.instances` attribute.
+    """
 
     def __init__(self, *args, labeled_frame: Optional["LabeledFrame"] = None):
         super(InstancesList, self).__init__(*args)
@@ -1385,6 +1388,19 @@ class InstancesList(list):
         """Remove instance from list, setting instance.frame to None."""
         super().remove(instance)
         instance.frame = None
+
+    def clear(self) -> None:
+        """Remove all instances from list, setting instance.frame to None."""
+        for instance in self:
+            instance.frame = None
+        super().clear()
+
+    def copy(self) -> list:
+        """Return a shallow copy of the list of instances as a list.
+
+        Note: This will not return an `InstancesList` object, but a normal list.
+        """
+        return list(self)
 
 
 @attr.s(auto_attribs=True, eq=False, repr=False, str=False)
@@ -1783,11 +1799,9 @@ class LabeledFrame:
             * list of conflicting instances from new
         """
         merged_instances: List[Instance] = []  # Only used for informing user
-        redundant_instances: InstancesList = InstancesList()
-        extra_base_instances: InstancesList = InstancesList(
-            base_frame.instances, labeled_frame=base_frame
-        )
-        extra_new_instances: InstancesList = InstancesList()
+        redundant_instances: List[Instance] = []
+        extra_base_instances: List[Instance] = list(base_frame.instances)
+        extra_new_instances: List[Instance] = []
 
         for new_inst in new_frame:
             redundant = False
