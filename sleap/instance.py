@@ -364,7 +364,7 @@ class Instance:
     from_predicted: Optional["PredictedInstance"] = attr.ib(default=None)
     _points: PointArray = attr.ib(default=None)
     _nodes: List = attr.ib(default=None)
-    frame: Union["LabeledFrame", None] = attr.ib(default=None)
+    frame: Union["LabeledFrame", None] = attr.ib(default=None)  # TODO(LM): Make private
 
     # The underlying Point array type that this instances point array should be.
     _point_array_type = PointArray
@@ -1380,6 +1380,11 @@ class InstancesList(list):
         instance = super().pop(index)
         instance.frame = None
         return instance
+    
+    def remove(self, instance: Union[Instance, PredictedInstance]) -> None:
+        """Remove instance from list, setting instance.frame to None."""
+        super().remove(instance)
+        instance.frame = None
 
 
 @attr.s(auto_attribs=True, eq=False, repr=False, str=False)
@@ -1777,22 +1782,20 @@ class LabeledFrame:
             * list of conflicting instances from base
             * list of conflicting instances from new
         """
-        merged_instances = []
-        redundant_instances = []
-        extra_base_instances = copy(base_frame.instances)
-        extra_new_instances = []
+        merged_instances = InstancesList(labeled_frame=base_frame)
+        redundant_instances = InstancesList()
+        extra_base_instances = InstancesList(base_frame.instances, labeled_frame=base_frame)
+        extra_new_instances = InstancesList()
 
         for new_inst in new_frame:
             redundant = False
             for base_inst in base_frame.instances:
                 if new_inst.matches(base_inst):
-                    base_inst.frame = None
                     extra_base_instances.remove(base_inst)
                     redundant_instances.append(base_inst)
                     redundant = True
                     continue
             if not redundant:
-                new_inst.frame = None
                 extra_new_instances.append(new_inst)
 
         conflict = False
