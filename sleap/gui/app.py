@@ -326,15 +326,21 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.player)
 
         def switch_frame(self, video):
-            """Jump to the last labeled frame or maintain the same frame index if the video is long enough."""
+            """Maintain the same frame index if available.
+
+            If the video is shorter than the current frame index, find the last labeled
+            frame. If no labeled frame is found, set the frame index to 0.
+
+            Args:
+                video: The new video to switch to.
+            """
             current_frame_idx = self.state["frame_idx"]
 
             if video.num_frames > current_frame_idx:
-                # if the new video is long enough, stay on the same frame
+                # If the new video is long enough, stay on the same frame
                 self.state["frame_idx"] = current_frame_idx
-                # old logic
             else:
-                # if the new video is not long enough, find the last labeled frame
+                # If the new video is not long enough, find the last labeled frame
                 last_label = self.labels.find_last(video)
                 if last_label is not None:
                     self.state["frame_idx"] = last_label.frame_idx
