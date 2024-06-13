@@ -1738,9 +1738,6 @@ class GoAdjacentView(NavCommand):
         context.state["video"] = new_video
         context.state["frame_idx"] = frame_idx
 
-        context.switch_frame(new_video)
-
-
 # Editing Commands
 
 

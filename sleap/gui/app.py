@@ -325,23 +325,23 @@ class MainWindow(QMainWindow):
         self.player.seekbar.selectionChanged.connect(lambda: self.updateStatusMessage())
         self.setCentralWidget(self.player)
 
-        def switch_frame(self, video):
-            """Maintain the same frame or jump to the last labeled frame."""
-            # get current frame index
-            current_frame_idx = self.state["frame_idx"]
-            # check to see if new video has enough frames
-            if video.num_frames >= current_frame_idx:
-                # stay on same frame if video is has enough frames
-                self.state["frame_idx"] = current_frame_idx
-            else:
-                self.state["frame_idx"] = 0
 
-            # if video is not long enough, jump to last labeled frame (old logic)
-            last_label = self.labels.find_last(video)
-            if last_label is not None:
-                self.state["frame_idx"] = last_label.frame_idx
+        def switch_frame(self, video):
+            """Jump to the last labeled frame or maintain the same frame index if the video is long enough."""
+            current_frame_idx = self.state["frame_idx"]
+
+            if video.num_frames > current_frame_idx:
+                # if the new video is long enough, stay on the same frame
+                self.state["frame_idx"] = current_frame_idx
+                # old logic
             else:
-                self.state["frame_idx"] = 0
+                # if the new video is not long enough, find the last labeled frame
+                last_label = self.labels.find_last(video)
+                if last_label is not None:
+                    self.state["frame_idx"] = last_label.frame_idx
+                else:
+                    self.state["frame_idx"] = 0
+
 
         def update_frame_chunk_suggestions(video):
             """Set upper limit of frame_chunk spinbox to number frames in video."""
@@ -357,14 +357,22 @@ class MainWindow(QMainWindow):
                 frame_to_spinbox.setMaximum(video.num_frames)
                 frame_from_spinbox.setMaximum(video.num_frames)
 
+        def update_session(video):
+            """Update session state for current video."""
+            if video is not None and len(self.labels.sessions) > 0:
+                session = self.labels.get_session(video=video)
+                self.state["session"] = session
+
         self.state.connect(
             "video",
             callbacks=[
+                update_session,  # Important to update session before other callbacks
                 switch_frame,
                 lambda x: self._update_seekbar_marks(),
                 update_frame_chunk_suggestions,
             ],
         )
+
 
     def _create_color_manager(self):
         self.color_manager = ColorManager(self.labels)
@@ -1842,6 +1850,6 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
     pass
 
 
-if __name__ == "__main__":
-    ds = os.environ["dsmview"]
-    main([ds])
+# if __name__ == "__main__":
+#     ds = os.environ["dsmview"]
+#     main([ds])
