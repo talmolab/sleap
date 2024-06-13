@@ -3,7 +3,6 @@ import json
 import zipfile
 from pathlib import Path
 from typing import cast
-import os
 
 import numpy as np
 import pytest
@@ -65,12 +64,16 @@ from sleap.instance import Track
 # sleap.nn.system.use_cpu_only()
 
 @pytest.fixture
-def test_sleap_track_mult_inputs_folder_slp_files():
-    return "tests/data/videos/slp_multiple_inputs"
+def test_sleap_track_mult_inputs_folder_slp():
+    return "tests/data/videos/multiple_inputs_slp"
 
 @pytest.fixture
-def test_sleap_track_mult_inputs_folder():
-    return "tests/data/videos/multiple_inputs"
+def test_sleap_track_mult_inputs_folder_slp_mp4():
+    return "tests/data/videos/multiple_inputs_slp_mp4"
+
+@pytest.fixture
+def test_sleap_track_mult_inputs_folder_mp4():
+    return "tests/data/videos/multiple_inputs_mp4"
 
 
 @pytest.fixture
@@ -1483,19 +1486,115 @@ def test_sleap_track_single_input(
     with pytest.raises(ValueError):
         sleap_track(args=args)
         
-#@pytest.mark.parametrize("tracking", ["simple", "flow", "simplemaxtracks", "flowmaxtracks", "None"])
-def test_sleap_track_mult_input(
+@pytest.mark.parametrize("tracking", ["simple", "flow", "None"])
+def test_sleap_track_mult_input_slp(
     centered_pair_predictions: Labels,
     min_centroid_model_path: str,
     min_centered_instance_model_path: str,
-    #test_sleap_track_mult_inputs_folder: str,
-    test_sleap_track_mult_inputs_folder_slp_files: str,
+    test_sleap_track_mult_inputs_folder_slp: str,
+    tracking
+):
+    slp_path  = test_sleap_track_mult_inputs_folder_slp
+    slp_path_obj = Path(slp_path)
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker {tracking} "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+    
+    if Path.is_dir(slp_path_obj):
+        slp_path_list = []
+        for file_path in slp_path_obj.iterdir():
+            if file_path.is_file():
+                slp_path_list.append(file_path)
+    elif Path.is_file(slp_path_obj):
+        slp_path_list = [args.data_path]
+    
+    for output_path in slp_path_list:
+        assert Path(output_path).exists()
+    
+    # Run inference
+    sleap_track(args=args)
+    slp_path = Path(slp_path)
+    
+    # Assert predictions file exists
+    if Path.is_dir(slp_path_obj):
+        new_slp_path_list = []
+        for file_path in slp_path_obj.iterdir():
+            if file_path.is_file():
+                new_slp_path_list.append(file_path)
+    elif Path.is_file(slp_path):
+        new_slp_path_list = [args.data_path]
+    
+    for output_path in slp_path_list:
+        assert Path(output_path).exists()
+        
+    files_to_remove = set(new_slp_path_list) - set(slp_path_list)
+    for file in files_to_remove:
+        file.unlink()
+
+
+@pytest.mark.parametrize("tracking", ["simple", "flow", "None"])
+def test_sleap_track_mult_input_slp_mp4(
+    centered_pair_predictions: Labels,
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    test_sleap_track_mult_inputs_folder_slp_mp4: str,
+    tracking
+):
+    slp_path  = test_sleap_track_mult_inputs_folder_slp_mp4
+    slp_path_obj = Path(slp_path)
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker {tracking} "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+    
+    if Path.is_dir(slp_path_obj):
+        slp_path_list = []
+        for file_path in slp_path_obj.iterdir():
+            if file_path.is_file():
+                slp_path_list.append(file_path)
+    elif Path.is_file(slp_path_obj):
+        slp_path_list = [args.data_path]
+    
+    for output_path in slp_path_list:
+        assert Path(output_path).exists()
+    
+    # Run inference
+    sleap_track(args=args)
+    slp_path = Path(slp_path)
+    
+    # Assert predictions file exists
+    if Path.is_dir(slp_path_obj):
+        new_slp_path_list = []
+        for file_path in slp_path_obj.iterdir():
+            if file_path.is_file():
+                new_slp_path_list.append(file_path)
+    elif Path.is_file(slp_path):
+        new_slp_path_list = [args.data_path]
+    
+    for output_path in slp_path_list:
+        assert Path(output_path).exists()
+        
+    files_to_remove = set(new_slp_path_list) - set(slp_path_list)
+    for file in files_to_remove:
+        file.unlink()
+        
+#@pytest.mark.parametrize("tracking", ["simple", "flow", "None"])
+def test_sleap_track_mult_input_mp4(
+    centered_pair_predictions: Labels,
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    test_sleap_track_mult_inputs_folder_mp4: str,
     #tracking
 ):
-    slp_path  = test_sleap_track_mult_inputs_folder_slp_files
-    #slp_path  = test_sleap_track_mult_inputs_folder
+    slp_path  = test_sleap_track_mult_inputs_folder_mp4
     slp_path_obj = Path(slp_path)
-    Labels.save(centered_pair_predictions, slp_path)
 
     # Create sleap-track command
     args = (
@@ -1532,9 +1631,9 @@ def test_sleap_track_mult_input(
     for output_path in slp_path_list:
         assert Path(output_path).exists()
         
-    files_to_remove = set(new_slp_path_list) - set(slp_path_list)
-    for file in files_to_remove:
-        file.unlink()
+    #files_to_remove = set(new_slp_path_list) - set(slp_path_list)
+    #for file in files_to_remove:
+    #    file.unlink()
 
 
 def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):

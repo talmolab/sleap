@@ -5495,7 +5495,7 @@ def main(args: Optional[list] = None):
         output_path_obj = Path(output_path)
         
     # Output path given is a file, but multiple inputs were given
-    if output_path is not None and (Path.is_file(output_path_obj) and data_path_list.len() > 1):
+    if output_path is not None and (Path.is_file(output_path_obj) and len(data_path_list) > 1):
             raise ValueError(
                 "output_path argument must be a directory if multiple video inputs are given"
             )
@@ -5517,9 +5517,7 @@ def main(args: Optional[list] = None):
             labels_pr = predictor.predict(provider)
 
             if output_path is None:
-                #if data_path.as_posix().endswith(".slp"):
-                #    output_path = data_path
-                #else:
+                
                 output_path = data_path.parent / (data_path.stem + ".predictions.slp")
             
 
