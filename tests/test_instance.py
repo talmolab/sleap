@@ -598,6 +598,19 @@ def test_instances_list(centered_pair_predictions):
     # Set the labeled frame
     test_labeled_frame_setter(instances, labeled_frame)
 
+    # Test InstancesList.copy
+    instances_copy = instances.copy()
+    assert len(instances_copy) == len(instances)
+    assert not isinstance(instances_copy, InstancesList)
+    assert isinstance(instances_copy, list)
+
+    # Test InstancesList.clear
+    instances_in_instances = list(instances)
+    instances.clear()
+    assert len(instances) == 0
+    for instance in instances_in_instances:
+        assert instance.frame is None
+
     # Case 3: Create an instances list with a list of instances
     labeled_frame = labels.labeled_frames[0]
     list_of_instances = list(labeled_frame.instances)
