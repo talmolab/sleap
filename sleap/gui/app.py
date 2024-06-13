@@ -325,7 +325,6 @@ class MainWindow(QMainWindow):
         self.player.seekbar.selectionChanged.connect(lambda: self.updateStatusMessage())
         self.setCentralWidget(self.player)
 
-
         def switch_frame(self, video):
             """Jump to the last labeled frame or maintain the same frame index if the video is long enough."""
             current_frame_idx = self.state["frame_idx"]
@@ -341,7 +340,6 @@ class MainWindow(QMainWindow):
                     self.state["frame_idx"] = last_label.frame_idx
                 else:
                     self.state["frame_idx"] = 0
-
 
         def update_frame_chunk_suggestions(video):
             """Set upper limit of frame_chunk spinbox to number frames in video."""
@@ -372,7 +370,6 @@ class MainWindow(QMainWindow):
                 update_frame_chunk_suggestions,
             ],
         )
-
 
     def _create_color_manager(self):
         self.color_manager = ColorManager(self.labels)
