@@ -1380,7 +1380,7 @@ class InstancesList(list):
         instance = super().pop(index)
         instance.frame = None
         return instance
-    
+
     def remove(self, instance: Union[Instance, PredictedInstance]) -> None:
         """Remove instance from list, setting instance.frame to None."""
         super().remove(instance)
@@ -1782,10 +1782,12 @@ class LabeledFrame:
             * list of conflicting instances from base
             * list of conflicting instances from new
         """
-        merged_instances = InstancesList(labeled_frame=base_frame)
-        redundant_instances = InstancesList()
-        extra_base_instances = InstancesList(base_frame.instances, labeled_frame=base_frame)
-        extra_new_instances = InstancesList()
+        merged_instances: List[Instance] = []  # Only used for informing user
+        redundant_instances: InstancesList = InstancesList()
+        extra_base_instances: InstancesList = InstancesList(
+            base_frame.instances, labeled_frame=base_frame
+        )
+        extra_new_instances: InstancesList = InstancesList()
 
         for new_inst in new_frame:
             redundant = False
@@ -1827,7 +1829,7 @@ class LabeledFrame:
         else:
             # No conflict, so include all instances in base
             base_frame.instances.extend(extra_new_instances)
-            merged_instances = copy(extra_new_instances)
+            merged_instances: List[Instance] = copy(extra_new_instances)
             extra_base_instances = []
             extra_new_instances = []
 
