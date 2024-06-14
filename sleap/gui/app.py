@@ -326,14 +326,11 @@ class MainWindow(QMainWindow):
         self.player.seekbar.selectionChanged.connect(lambda: self.updateStatusMessage())
         self.setCentralWidget(self.player)
 
-        def switch_frame(self, video):
+        def switch_frame(video):
             """Maintain the same frame index if available.
 
             If the video is shorter than the current frame index, find the last labeled
             frame. If no labeled frame is found, set the frame index to 0.
-
-            Args:
-                video: The new video to switch to.
             """
             current_frame_idx = self.state["frame_idx"]
 
