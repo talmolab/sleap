@@ -449,3 +449,33 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
 
     # Toggle instance visibility with shortcut, showing instances
     toggle_and_verify_visibility(True)
+
+
+def test_switch_frame(qtbot, min_labels: Labels, small_robot_mp4_vid: Video):
+
+    labels = min_labels
+    new_video = small_robot_mp4_vid
+    old_video = labels.videos[0]
+    labels.add_video(new_video)
+
+    app = MainWindow(no_usage_data=True, labels=labels)
+
+    # Case 1: Both videos have the same frame index
+    frame_idx = 150
+    assert new_video.num_frames > frame_idx
+    assert old_video.num_frames > frame_idx
+    app.state["frame_idx"] = frame_idx
+    app.state["video"] = new_video
+    assert app.state["frame_idx"] == frame_idx
+
+    # Case 2: Frame is way out of range of smaller video
+    frame_idx = 500
+    assert new_video.num_frames < frame_idx + 1
+    assert old_video.num_frames > frame_idx
+    app.state["frame_idx"] = frame_idx
+    app.state["video"] = old_video
+    assert app.state["frame_idx"] == 0
+
+
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::test_switch_frame"])
