@@ -3024,8 +3024,8 @@ class AddInstance(EditCommand):
                 if isinstance(copy_instance, PredictedInstance):
                     y_new = y_old
                 else:     
-                    if (y_old + 10) * scale_width <= new_size_width:
-                        y_new = (y_old + 10) * scale_width
+                    if (y_old + 10) * scale_height <= new_size_width:
+                        y_new = (y_old + 10) * scale_height
                     else:
                         y_new = y_old
 
