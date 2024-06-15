@@ -1,8 +1,8 @@
 # Installation
 
-SLEAP can be installed as a Python package on Windows, Linux, Mac OS X, and Mac OS Apple Silicon.
+SLEAP can be installed as a Python package on Windows, Linux, and Mac OS.
 
-SLEAP requires many complex dependencies, so we **strongly** recommend using [Mambaforge](https://mamba.readthedocs.io/en/latest/installation.html) to install it in its own isolated environment. See {ref}`Installing Mambaforge<mambaforge>` below for more instructions.
+SLEAP requires many complex dependencies, so we **strongly** recommend using a package manager such as [Miniconda](https://docs.anaconda.com/free/miniconda/) to install SLEAP in its own isolated environment. See the [Miniconda website](https://docs.anaconda.com/free/miniconda/) for installation instructions. The Anaconda or Mamba package managers will also work well; however, take care not to install multiple different conda-based package managers - choose one and stick with it.
 
 The newest version of SLEAP can always be found in the [Releases page](https://github.com/talmolab/sleap/releases).
 
@@ -26,52 +26,8 @@ On Windows, our personal preference is to use alternative terminal apps like [Cm
 
 ````
 
-(apple-silicon)=
-
-### Macs Pre-M1 (Pre-Installation)
-
-SLEAP can be installed on Macs by following these instructions:
-
-1. Make sure you're on **macOS Monterey** or later, i.e., version 12+.
-
-2. If you don't have it yet, [install **homebrew**](https://brew.sh/), a convenient package manager for Macs (skip this if you can run `brew` from the terminal):
-
-   ```bash
-   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-   ```
-
-   This might take a little while since it'll also install Xcode (which we'll need later). Once it's finished, your terminal should give you two extra commands to run listed under **Next Steps**.
-
-   ````{note}
-   We recommend running the commands given in your terminal which will be similar to (but may differ slightly) from the commands below:
-   ```bash
-   echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
-   ```
-
-   ```bash
-   eval "$(/opt/homebrew/bin/brew shellenv)"
-   ```
-
-   ````
-
-   Then, close and re-open the terminal for it to take effect.
-
-3. Install wget, a CLI downloading utility (also makes sure your homebrew setup worked):
-
-   ```bash
-   brew install wget
-   ```
-
-(mambaforge)=
-
-## Installing Mambaforge
-
-**Anaconda** is a Python environment manager that makes it easy to install SLEAP and its necessary dependencies without affecting other Python software on your computer.
-
-[**Mambaforge**](https://mamba.readthedocs.io/en/latest/installation.html) is a lightweight installer of Anaconda with speedy package resolution that we recommend.
-
 ````{note}
-If you already have Anaconda on your computer, then you can [set the solver to `libmamba`](https://www.anaconda.com/blog/a-faster-conda-for-a-growing-community) in the `base` environment (and skip the Mambaforge installation):
+If you already have Anaconda on your computer (and it is an [older installation](https://conda.org/blog/2023-11-06-conda-23-10-0-release/)), then make sure to [set the solver to `libmamba`](https://www.anaconda.com/blog/a-faster-conda-for-a-growing-community) in the `base` environment.
 
 ```bash
 conda update -n base conda
@@ -85,47 +41,6 @@ Any subsequent `mamba` commands in the docs will need to be replaced with `conda
 
 ````
 
-Otherwise, to install Mamba:
-
-**On Windows**, just click through the installation steps.
-
-1.  Go to: https://github.com/conda-forge/miniforge#mambaforge
-2.  Download the latest version for your OS.
-3.  Follow the installer instructions.
-
-We recommend using the following settings:
-
-- Install for: All Users (requires admin privileges)
-- Destination folder: `C:\mambaforge`
-- Advanced Options: Add MambaForge to the system PATH environment variable
-- Advanced Options: Register MambaForge as the system Python 3.X
-  These will make sure that MambaForge is easily accessible from most places on your computer.
-
-**On Linux**, it might be easier to do this straight from the terminal (<kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>) with this one-liner:
-
-```bash
-wget -nc https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh && bash Mambaforge-Linux-x86_64.sh -b && ~/mambaforge/bin/conda init bash
-```
-
-Restart the terminal after running this command.
-
-```{note}
-For other Linux architectures (arm64 and POWER8/9), replace the `.sh` filenames above with the correct installer name for your architecture. See the Download column in [this table](https://github.com/conda-forge/miniforge#mambaforge) for the correct filename.
-
-```
-
-**On Macs (pre-M1)**, you can run the installer using this terminal command:
-
-```bash
-wget -nc https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-MacOSX-x86_64.sh && bash Mambaforge-MacOSX-x86_64.sh -b && ~/mambaforge/bin/conda init zsh
-```
-
-**On Macs (Apple Silicon)**, use this terminal command:
-
-```bash
-curl -fsSL --compressed https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-MacOSX-arm64.sh -o Mambaforge3-MacOSX-arm64.sh && chmod +x Mambaforge3-MacOSX-arm64.sh && ./Mambaforge3-MacOSX-arm64.sh -b -p ~/mambaforge3 && rm Mambaforge3-MacOSX-arm64.sh && ~/mambaforge3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
-```
-
 ## Installation methods
 
 SLEAP can be installed three different ways: via {ref}`conda package<condapackage>`, {ref}`conda from source<condasource>`, or {ref}`pip package<pippackage>`. Select one of the methods below to install SLEAP. We recommend {ref}`conda package<condapackage>`.
@@ -134,25 +49,39 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
 
 ### `conda` package
 
-**Windows** and **Linux**
+````{tabs}
 
-```bash
-mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a1
-```
+   ```{tab} Windows and Linux
 
-**Mac OS X** and **Apple Silicon**
 
-```bash
-mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a1
-```
+      ```bash
+      mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a1
+      ```
+
+      
+      ```{note}
+      - This comes with CUDA to enable GPU support. All you need is to have an NVIDIA GPU and [updated drivers](https://nvidia.com/drivers).
+      - If you already have CUDA installed on your system, this will not conflict with it.
+      - This will also work in CPU mode if you don't have a GPU on your machine.
+      ```
+
+   ```
+
+   ```{tab} Mac OS
+
+      ```bash
+      mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a1
+      ```
+
+      ```{note}
+      This will also work in CPU mode if you don't have a GPU on your machine.
+      ```
+   
+   ```
+
+````
 
 **This is the recommended installation method**.
-
-```{note}
-- This comes with CUDA to enable GPU support. All you need is to have an NVIDIA GPU and [updated drivers](https://nvidia.com/drivers).
-- If you already have CUDA installed on your system, this will not conflict with it.
-- This will also work in CPU mode if you don't have a GPU on your machine.
-```
 
 (condasource)=
 
@@ -172,25 +101,45 @@ mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a1
    git clone https://github.com/talmolab/sleap && cd sleap
    ```
 
-3. Finally, install from the environment file (differs based on OS and GPU):
+3. Finally, install SLEAP from the environment file:
 
-   **Windows** and **Linux**
 
-   ```bash
-   mamba env create -f environment.yml -n sleap
-   ```
+   ````{tabs}
 
-   If you do not have a NVIDIA GPU, then you should use the no CUDA environment file:
+      ```{tab} Windows and Linux
 
-   ```bash
-   mamba env create -f environment_no_cuda.yml -n sleap
-   ```
+      
+         ````{tabs}
 
-   **Mac OS X** and **Apple Silicon**
+            ```{tab} NVIDIA GPU
 
-   ```bash
-   mamba env create -f environment_mac.yml -n sleap
-   ```
+               ```bash
+               mamba env create -f environment.yml -n sleap
+               ```
+
+            ```
+
+            ```{tab} CPU or other GPU
+
+               ```bash
+               mamba env create -f environment_no_cuda.yml -n sleap
+               ```
+            
+            ```
+
+         ````
+
+      ```
+
+      ```{tab} Mac OS
+
+         ```bash
+         mamba env create -f environment_mac.yml -n sleap
+         ```
+      ```
+
+   ````
+
 
    This is the **recommended method for development**.
 
@@ -203,21 +152,31 @@ mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a1
 
 ### `pip` package
 
-Although you do not need Mambaforge installed to perform a `pip install`, we recommend {ref}`installing Mambaforge<mambaforge>` to create a new environment where we can isolate the `pip install`. Alternatively, you can use a venv if you have an existing python installation. If you are working on **Google Colab**, skip to step 3 to perform the `pip install` without using a conda environment.
+Although you do not need Mambaforge installed to perform a `pip install`, we recommend [installing Miniconda](https://docs.anaconda.com/free/miniconda/) to create a new environment where we can isolate the `pip install`. Alternatively, you can use a venv if you have an existing python installation. If you are working on **Google Colab**, skip to step 3 to perform the `pip install` without using a conda environment.
 
 1. Otherwise, create a new conda environment where we will `pip install sleap`:
 
-   either without GPU support:
+   ````{tabs}
 
-   ```bash
-   mamba create --name sleap pip python=3.7.12
-   ```
+      ```{tab} NVIDIA GPU
 
-   or with GPU support:
 
-   ```bash
-   mamba create --name sleap pip python=3.7.12 cudatoolkit=11.3 cudnn=8.2
-   ```
+         ```bash
+         mamba create --name sleap pip python=3.7.12 cudatoolkit=11.3 cudnn=8.2
+         ```
+
+      ```
+
+      ```{tab} CPU or other GPU
+
+         ```bash
+         mamba create --name sleap pip python=3.7.12
+         ```
+
+         
+      ```
+
+   ````
 
 2. Then activate the environment to isolate the `pip install` from other environments on your computer:
 
