@@ -8,7 +8,7 @@ on:
       # 'main' triggers updates to 'sleap.ai', all others to 'sleap.ai/develop'
       - main
       - develop
-      - fakebranch
+      - liezl/update-intallation-docs-1.4.1
     paths:
       - "docs/**"
       - "README.rst"
@@ -42,6 +42,7 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install lxml[html_clean]
+          pip install sphinx-tabs
           cd docs
           python make_api_doctree.py
           make html

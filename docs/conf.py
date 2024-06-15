@@ -59,6 +59,7 @@ extensions = [
     "sphinx.ext.linkcode",
     "sphinx.ext.napoleon",
     "sphinx_copybutton",
+    "sphinx_tabs.tabs",  # For tabs inside docs
     # https://myst-nb.readthedocs.io/en/latest/
     "myst_nb",
 ]
