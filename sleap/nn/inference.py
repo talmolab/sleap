@@ -5298,12 +5298,12 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
         
     # Check for multiple video inputs
     # Compile file(s) into a list for later itteration
-    if Path.is_dir(data_path):
+    if data_path.is_dir:
         data_path_list = []
         for file_path in data_path.iterdir():
             if file_path.is_file():
                 data_path_list.append(file_path)
-    elif Path.is_file(data_path):
+    elif data_path.is_file:
         data_path_list = [args.data_path]
     else:
         raise ValueError(
@@ -5365,6 +5365,7 @@ def _make_predictor_from_cli(args: argparse.Namespace) -> Predictor:
     Returns:
         The `Predictor` created from loaded models.
     """
+    print(args)
     peak_threshold = None
     for deprecated_arg in [
         "single.peak_threshold",
@@ -5519,6 +5520,10 @@ def main(args: Optional[list] = None):
             if output_path is None:
                 
                 output_path = data_path.parent / (data_path.stem + ".predictions.slp")
+                output_path_obj = Path(output_path)
+                
+            else:
+                output_path = output_path + "/" + (data_path.stem + ".predictions.slp")
             
 
             labels_pr.provenance["model_paths"] = predictor.model_paths
@@ -5533,13 +5538,14 @@ def main(args: Optional[list] = None):
             print("Finished inference at:", finish_timestamp)
             print(f"Total runtime: {total_elapsed} secs")
             print(f"Predicted frames: {len(labels_pr)}/{len(provider)}")
+            
 
             # Add provenance metadata to predictions.
             labels_pr.provenance["sleap_version"] = sleap.__version__
             labels_pr.provenance["platform"] = platform.platform()
             labels_pr.provenance["command"] = " ".join(sys.argv)
             labels_pr.provenance["data_path"] = data_path.as_posix()
-            labels_pr.provenance["output_path"] = output_path.as_posix()
+            labels_pr.provenance["output_path"] = output_path_obj.as_posix()
             labels_pr.provenance["total_elapsed"] = total_elapsed
             labels_pr.provenance["start_timestamp"] = start_timestamp
             labels_pr.provenance["finish_timestamp"] = finish_timestamp

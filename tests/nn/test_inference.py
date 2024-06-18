@@ -68,6 +68,10 @@ def test_sleap_track_mult_inputs_folder_slp():
     return "tests/data/videos/multiple_inputs_slp"
 
 @pytest.fixture
+def test_sleap_track_output_folder():
+    return "tests/data/output_folder"
+
+@pytest.fixture
 def test_sleap_track_mult_inputs_folder_slp_mp4():
     return "tests/data/videos/multiple_inputs_slp_mp4"
 
@@ -1458,6 +1462,37 @@ def test_make_predictor_from_cli(
         elif isinstance(predictor, BottomUpPredictor):
             assert predictor.max_instances == 5
 
+def test_make_predictor_from_cli_mult_input(
+    centered_pair_predictions: Labels,
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    min_bottomup_model_path: str,
+    test_sleap_track_mult_inputs_folder_slp: str,
+):
+    slp_path = str(Path(test_sleap_track_mult_inputs_folder_slp))
+    Labels.save(centered_pair_predictions, slp_path)
+
+    # Create sleap-track command
+    model_args = [
+        f"--model {min_centroid_model_path} --model {min_centered_instance_model_path}",
+        f"--model {min_bottomup_model_path}",
+    ]
+    for model_arg in model_args:
+        #print(model_arg)
+        args = (
+            f"{slp_path} {model_arg} --video.index 0 --frames 1-3 "
+            "--cpu --max_instances 5"
+        ).split()
+        parser = _make_cli_parser()
+        args, _ = parser.parse_known_args(args=args)
+
+        # Create predictor
+        predictor = _make_predictor_from_cli(args=args)
+        if isinstance(predictor, TopDownPredictor):
+            assert predictor.inference_model.centroid_crop.max_instances == 5
+        elif isinstance(predictor, BottomUpPredictor):
+            assert predictor.max_instances == 5
+
 
 def test_sleap_track_single_input(
     centered_pair_predictions: Labels,
@@ -1488,7 +1523,6 @@ def test_sleap_track_single_input(
         
 @pytest.mark.parametrize("tracking", ["simple", "flow", "None"])
 def test_sleap_track_mult_input_slp(
-    centered_pair_predictions: Labels,
     min_centroid_model_path: str,
     min_centered_instance_model_path: str,
     test_sleap_track_mult_inputs_folder_slp: str,
@@ -1504,41 +1538,29 @@ def test_sleap_track_mult_input_slp(
         f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
     ).split()
     
-    if Path.is_dir(slp_path_obj):
-        slp_path_list = []
-        for file_path in slp_path_obj.iterdir():
-            if file_path.is_file():
-                slp_path_list.append(file_path)
-    elif Path.is_file(slp_path_obj):
-        slp_path_list = [args.data_path]
-    
-    for output_path in slp_path_list:
-        assert Path(output_path).exists()
+    slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
     
     # Run inference
     sleap_track(args=args)
     slp_path = Path(slp_path)
     
     # Assert predictions file exists
-    if Path.is_dir(slp_path_obj):
-        new_slp_path_list = []
-        for file_path in slp_path_obj.iterdir():
-            if file_path.is_file():
-                new_slp_path_list.append(file_path)
-    elif Path.is_file(slp_path):
-        new_slp_path_list = [args.data_path]
-    
-    for output_path in slp_path_list:
-        assert Path(output_path).exists()
+    expected_extensions = {'.slp', '.mp4', '.avi'}  # Add other video formats if necessary
+
+    for file_path in slp_path_list:
+        if file_path.suffix in expected_extensions:
+            expected_output_file = file_path.parent / (file_path.stem + ".predictions.slp")
+            print(f"PATH: {expected_output_file}")
+            assert Path(expected_output_file).exists()
+        
+    new_slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
         
     files_to_remove = set(new_slp_path_list) - set(slp_path_list)
     for file in files_to_remove:
         file.unlink()
 
-
 @pytest.mark.parametrize("tracking", ["simple", "flow", "None"])
 def test_sleap_track_mult_input_slp_mp4(
-    centered_pair_predictions: Labels,
     min_centroid_model_path: str,
     min_centered_instance_model_path: str,
     test_sleap_track_mult_inputs_folder_slp_mp4: str,
@@ -1554,44 +1576,33 @@ def test_sleap_track_mult_input_slp_mp4(
         f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
     ).split()
     
-    if Path.is_dir(slp_path_obj):
-        slp_path_list = []
-        for file_path in slp_path_obj.iterdir():
-            if file_path.is_file():
-                slp_path_list.append(file_path)
-    elif Path.is_file(slp_path_obj):
-        slp_path_list = [args.data_path]
-    
-    for output_path in slp_path_list:
-        assert Path(output_path).exists()
+    slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
     
     # Run inference
     sleap_track(args=args)
     slp_path = Path(slp_path)
     
     # Assert predictions file exists
-    if Path.is_dir(slp_path_obj):
-        new_slp_path_list = []
-        for file_path in slp_path_obj.iterdir():
-            if file_path.is_file():
-                new_slp_path_list.append(file_path)
-    elif Path.is_file(slp_path):
-        new_slp_path_list = [args.data_path]
-    
-    for output_path in slp_path_list:
-        assert Path(output_path).exists()
+    expected_extensions = {'.slp', '.mp4', '.avi'}  # Add other video formats if necessary
+
+    for file_path in slp_path_list:
+        if file_path.suffix in expected_extensions:
+            expected_output_file = file_path.parent / (file_path.stem + ".predictions.slp")
+            print(f"PATH: {expected_output_file}")
+            assert Path(expected_output_file).exists()
+        
+    new_slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
         
     files_to_remove = set(new_slp_path_list) - set(slp_path_list)
     for file in files_to_remove:
         file.unlink()
         
-#@pytest.mark.parametrize("tracking", ["simple", "flow", "None"])
+@pytest.mark.parametrize("tracking", ["simple", "flow", "None"])
 def test_sleap_track_mult_input_mp4(
-    centered_pair_predictions: Labels,
     min_centroid_model_path: str,
     min_centered_instance_model_path: str,
     test_sleap_track_mult_inputs_folder_mp4: str,
-    #tracking
+    tracking
 ):
     slp_path  = test_sleap_track_mult_inputs_folder_mp4
     slp_path_obj = Path(slp_path)
@@ -1599,41 +1610,74 @@ def test_sleap_track_mult_input_mp4(
     # Create sleap-track command
     args = (
         f"{slp_path} --model {min_centroid_model_path} "
-        #f"--tracking.tracker {tracking} "
-        f"--tracking.tracker simple "
+        f"--tracking.tracker {tracking} "
         f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
     ).split()
     
-    if Path.is_dir(slp_path_obj):
-        slp_path_list = []
-        for file_path in slp_path_obj.iterdir():
-            if file_path.is_file():
-                slp_path_list.append(file_path)
-    elif Path.is_file(slp_path_obj):
-        slp_path_list = [args.data_path]
-    
-    for output_path in slp_path_list:
-        assert Path(output_path).exists()
+    slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
     
     # Run inference
     sleap_track(args=args)
     slp_path = Path(slp_path)
     
     # Assert predictions file exists
-    if Path.is_dir(slp_path_obj):
-        new_slp_path_list = []
-        for file_path in slp_path_obj.iterdir():
-            if file_path.is_file():
-                new_slp_path_list.append(file_path)
-    elif Path.is_file(slp_path):
-        new_slp_path_list = [args.data_path]
+    expected_extensions = {'.slp', '.mp4', '.avi'}  # Add other video formats if necessary
     
-    for output_path in slp_path_list:
-        assert Path(output_path).exists()
+    for file_path in slp_path_list:
+        if file_path.suffix in expected_extensions:
+            expected_output_file = file_path.parent / (file_path.stem + ".predictions.slp")
+            print(f"PATH: {expected_output_file}")
+            assert Path(expected_output_file).exists()
         
-    #files_to_remove = set(new_slp_path_list) - set(slp_path_list)
-    #for file in files_to_remove:
-    #    file.unlink()
+    new_slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
+        
+    files_to_remove = set(new_slp_path_list) - set(slp_path_list)
+    for file in files_to_remove:
+        file.unlink()
+
+def test_sleap_track_output_mult(
+    test_sleap_track_output_folder: str,
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    test_sleap_track_mult_inputs_folder_mp4: str,
+):
+    slp_path  = test_sleap_track_mult_inputs_folder_mp4
+    slp_path_obj = Path(slp_path)
+    output_path = test_sleap_track_output_folder
+    output_path_obj = Path(output_path)
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker simple "
+        f"-o {output_path} "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+    
+    slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
+    
+    output_path_list = [file for file in output_path_obj.iterdir() if file.is_file()]
+    
+    # Run inference
+    sleap_track(args=args)
+    slp_path = Path(slp_path)
+    
+    # Assert predictions file exists
+    new_output_path_list = [file for file in output_path_obj.iterdir() if file.is_file()]
+    
+    # Check if there are any files in the directory
+    expected_extensions = {'.slp', '.mp4', '.avi'}  # Add other video formats if necessary
+    
+    for file_path in slp_path_list:
+        if file_path.suffix in expected_extensions:
+            expected_output_file = Path(output_path) / (file_path.stem + ".predictions.slp")
+            print(f"PATH: {expected_output_file}")
+            assert Path(expected_output_file).exists()
+
+        
+    files_to_remove = set(new_output_path_list) - set(output_path_list)
+    for file in files_to_remove:
+        file.unlink()
 
 
 def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
