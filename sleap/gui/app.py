@@ -332,18 +332,18 @@ class MainWindow(QMainWindow):
             If the video is shorter than the current frame index, find the last labeled
             frame. If no labeled frame is found, set the frame index to 0.
             """
-            current_frame_idx = self.state["frame_idx"]
 
+            # If the new video is long enough, stay on the current frame index
+            current_frame_idx = self.state["frame_idx"]
             if video.num_frames > current_frame_idx:
-                # If the new video is long enough, stay on the same frame
-                self.state["frame_idx"] = current_frame_idx
+                return
+
+            # If the new video is not long enough, find last labeled frame or set to 0
+            last_label = self.labels.find_last(video)
+            if last_label is not None:
+                self.state["frame_idx"] = last_label.frame_idx
             else:
-                # If the new video is not long enough, find the last labeled frame
-                last_label = self.labels.find_last(video)
-                if last_label is not None:
-                    self.state["frame_idx"] = last_label.frame_idx
-                else:
-                    self.state["frame_idx"] = 0
+                self.state["frame_idx"] = 0
 
         def update_frame_chunk_suggestions(video):
             """Set upper limit of frame_chunk spinbox to number frames in video."""
