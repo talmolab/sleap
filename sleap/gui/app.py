@@ -189,6 +189,15 @@ class MainWindow(QMainWindow):
         else:
             self.state["project_loaded"] = False
 
+    def create_and_assign_instance_group(self):
+        """Creates a new instance group and assigns the selected instance."""
+        instance = self.state["instance"]
+        self.commands.addInstanceGroup()  # Create a new instance group
+        if instance is not None:
+            new_group = self.state["session"].frame_groups
+            [self.state["frame_idx"]].instance_groups[-1]
+            self.commands.setInstanceGroup(instance_group=new_group)
+
     def setWindowTitle(self, value):
         """Sets window title (if value is not None)."""
         if value is not None:
@@ -835,6 +844,12 @@ class MainWindow(QMainWindow):
         self.inst_groups_menu = sessionsMenu.addMenu("Set Instance Group")
         self.inst_groups_delete_menu = sessionsMenu.addMenu("Delete Instance Group")
         self.state.connect("frame_idx", self._update_sessions_menu)
+
+        self.inst_groups_menu.addAction(
+            "New Instance Group and Assign (Shift + 0)",
+            self.create_and_assign_instance_group,
+            Qt.SHIFT + Qt.Key_0
+        )
 
         ### Tracks Menu ###
 
