@@ -84,7 +84,6 @@ class UpdateTopic(Enum):
     project_instances = 10
     sessions = 11
 
-
 class AppCommand:
     """Base class for specific commands.
 
@@ -600,6 +599,10 @@ class CommandContext:
     def setInstanceGroup(self, instance_group: Optional["InstanceGroup"]):
         """Sets the instance group for selected instance."""
         self.execute(SetSelectedInstanceGroup, instance_group=instance_group)
+
+    #TODO: Add method to change the name of an instance group
+    def setInstanceGroupName(self, instance_group: InstanceGroup, name: str):
+        self.execute(SetInstanceGroupName, instance_group=instance_group, name=name)
 
     def deleteTrack(self, track: "Track"):
         """Delete a track and remove from all instances."""
@@ -2725,6 +2728,22 @@ class AddInstanceGroup(EditCommand):
         # Now add the selected instance to the `InstanceGroup`
         context.execute(SetSelectedInstanceGroup, instance_group=instance_group)
 
+#TODO: Add class for changing the name of an instance group
+class SetInstanceGroupName(EditCommand):
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        instance_group = params["instance_group"]
+        name = params["name"]
+
+        # Access the name registry through the frame group of the instance group
+        frame_group = context.state["session"].frame_groups[instance_group.frame_idx]
+        name_registry = frame_group._instance_group_name_registry
+
+        if name in name_registry:
+            raise ValueError(f"Name {name} already in use. Please use a unique name.")
+
+        instance_group.set_name(name=name, name_registry=name_registry)
 
 class AddTrack(EditCommand):
     topics = [UpdateTopic.tracks]
