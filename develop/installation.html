@@ -34,7 +34,7 @@
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.css" />
-    <link rel="stylesheet" type="text/css" href="_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -319,12 +319,8 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-methods">Installation methods</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conda-package"><code class="docutils literal notranslate"><span class="pre">conda</span></code> package</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conda-from-source"><code class="docutils literal notranslate"><span class="pre">conda</span></code> from source</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pip-package"><code class="docutils literal notranslate"><span class="pre">pip</span></code> package</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#package-manager">Package Manager</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-methods">Installation methods</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-that-things-are-working">Testing that things are working</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-support">GUI support</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#importing">Importing</a></li>
@@ -347,40 +343,26 @@ document.write(`
   <section class="tex2jax_ignore mathjax_ignore" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">#</a></h1>
 <p>SLEAP can be installed as a Python package on Windows, Linux, and Mac OS.</p>
-<p>SLEAP requires many complex dependencies, so we <strong>strongly</strong> recommend using a package manager such as <a class="reference external" href="https://docs.anaconda.com/free/miniconda/">Miniconda</a> to install SLEAP in its own isolated environment. See the <a class="reference external" href="https://docs.anaconda.com/free/miniconda/">Miniconda website</a> for installation instructions. The Anaconda or Mamba package managers will also work well; however, take care not to install multiple different conda-based package managers - choose one and stick with it.</p>
 <p>The newest version of SLEAP can always be found in the <a class="reference external" href="https://github.com/talmolab/sleap/releases">Releases page</a>.</p>
 <div class="contents local topic" id="contents">
 <p class="topic-title">Contents</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#installation-methods" id="id1">Installation methods</a></p>
+<li><p><a class="reference internal" href="#package-manager" id="id1">Package Manager</a></p></li>
+<li><p><a class="reference internal" href="#installation-methods" id="id2">Installation methods</a></p></li>
+<li><p><a class="reference internal" href="#testing-that-things-are-working" id="id3">Testing that things are working</a></p>
 <ul>
-<li><p><a class="reference internal" href="#conda-package" id="id2"><code class="docutils literal notranslate"><span class="pre">conda</span></code> package</a></p></li>
-<li><p><a class="reference internal" href="#conda-from-source" id="id3"><code class="docutils literal notranslate"><span class="pre">conda</span></code> from source</a></p></li>
-<li><p><a class="reference internal" href="#pip-package" id="id4"><code class="docutils literal notranslate"><span class="pre">pip</span></code> package</a></p></li>
+<li><p><a class="reference internal" href="#gui-support" id="id4">GUI support</a></p></li>
+<li><p><a class="reference internal" href="#importing" id="id5">Importing</a></p></li>
+<li><p><a class="reference internal" href="#gpu-support" id="id6">GPU support</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#testing-that-things-are-working" id="id5">Testing that things are working</a></p>
-<ul>
-<li><p><a class="reference internal" href="#gui-support" id="id6">GUI support</a></p></li>
-<li><p><a class="reference internal" href="#importing" id="id7">Importing</a></p></li>
-<li><p><a class="reference internal" href="#gpu-support" id="id8">GPU support</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#upgrading-and-uninstalling" id="id9">Upgrading and uninstalling</a></p></li>
-<li><p><a class="reference internal" href="#getting-help" id="id10">Getting help</a></p></li>
+<li><p><a class="reference internal" href="#upgrading-and-uninstalling" id="id7">Upgrading and uninstalling</a></p></li>
+<li><p><a class="reference internal" href="#getting-help" id="id8">Getting help</a></p></li>
 </ul>
 </div>
-<div class="admonition hint">
-<p class="admonition-title">Hint</p>
-<p>Installation requires entering commands in a terminal. To open one:</p>
-<p><strong>Windows:</strong> Open the <em>Start menu</em> and search for the <em>Miniforge Prompt</em> (if using Mambaforge) or the <em>Command Prompt</em> if not.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>On Windows, our personal preference is to use alternative terminal apps like <a class="reference external" href="https://cmder.net">Cmder</a> or <a class="reference external" href="https://aka.ms/terminal">Windows Terminal</a>.</p>
-</div>
-<p><strong>Linux:</strong> Launch a new terminal by pressing <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>.</p>
-<p><strong>Mac:</strong> Launch a new terminal by pressing <kbd>Cmd</kbd> + <kbd>Space</kbd> and searching for <em>Terminal</em>.</p>
-</div>
+<section id="package-manager">
+<h2><a class="toc-backref" href="#id1">Package Manager</a><a class="headerlink" href="#package-manager" title="Permalink to this headline">#</a></h2>
+<p>SLEAP requires many complex dependencies, so we <strong>strongly</strong> recommend using a package manager such as <a class="reference external" href="https://docs.anaconda.com/free/miniconda/">Miniconda</a> to install SLEAP in its own isolated environment. See the <a class="reference external" href="https://docs.anaconda.com/free/miniconda/">Miniconda website</a> for installation instructions. The Anaconda or Mamba package managers will also work well; however, take care not to install multiple different conda-based package managers - choose one and stick with it.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>If you already have Anaconda on your computer (and it is an <a class="reference external" href="https://conda.org/blog/2023-11-06-conda-23-10-0-release/">older installation</a>), then make sure to <a class="reference external" href="https://www.anaconda.com/blog/a-faster-conda-for-a-growing-community">set the solver to <code class="docutils literal notranslate"><span class="pre">libmamba</span></code></a> in the <code class="docutils literal notranslate"><span class="pre">base</span></code> environment.</p>
@@ -394,13 +376,27 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <p>Any subsequent <code class="docutils literal notranslate"><span class="pre">mamba</span></code> commands in the docs will need to be replaced with <code class="docutils literal notranslate"><span class="pre">conda</span></code> if you choose to use your existing Anaconda installation.</p>
 </div>
 </div>
+</section>
 <section id="installation-methods">
-<h2><a class="toc-backref" href="#id1">Installation methods</a><a class="headerlink" href="#installation-methods" title="Permalink to this headline">#</a></h2>
-<p>SLEAP can be installed three different ways: via <a class="reference internal" href="#condapackage"><span class="std std-ref">conda package</span></a>, <a class="reference internal" href="#condasource"><span class="std std-ref">conda from source</span></a>, or <a class="reference internal" href="#pippackage"><span class="std std-ref">pip package</span></a>. Select one of the methods below to install SLEAP. We recommend <a class="reference internal" href="#condapackage"><span class="std std-ref">conda package</span></a>.</p>
-<section id="conda-package">
-<span id="condapackage"></span><h3><a class="toc-backref" href="#id2"><code class="docutils literal notranslate"><span class="pre">conda</span></code> package</a><a class="headerlink" href="#conda-package" title="Permalink to this headline">#</a></h3>
+<h2><a class="toc-backref" href="#id2">Installation methods</a><a class="headerlink" href="#installation-methods" title="Permalink to this headline">#</a></h2>
+<p>SLEAP can be installed three different ways: via <span class="xref std std-ref">conda package</span>, <span class="xref std std-ref">conda from source</span>, or <span class="xref std std-ref">pip package</span>. Select one of the methods below to install SLEAP. We recommend <span class="xref std std-ref">conda package</span>.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Installation requires entering commands in a terminal. To open one:</p>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>nvidia<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">Windows</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Linux</button><button aria-controls="panel-0-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-0-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><p>Open the <em>Start menu</em> and search for the <em>Anaconda Prompt</em> (if using Miniconda) or the <em>Command Prompt</em> if not.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On Windows, our personal preference is to use alternative terminal apps like <a class="reference external" href="https://cmder.net">Cmder</a> or <a class="reference external" href="https://aka.ms/terminal">Windows Terminal</a>.</p>
+</div>
+</div><div aria-labelledby="tab-0-0-1" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-1" name="0-1" role="tabpanel" tabindex="0"><p>Launch a new terminal by pressing <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>.</p>
+</div><div aria-labelledby="tab-0-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-0-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><p>Launch a new terminal by pressing <kbd>Cmd</kbd> + <kbd>Space</kbd> and searching for <em>Terminal</em>.</p>
+</div></div>
+</div>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-1-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-1-1-0" name="1-0" role="tab" tabindex="0">conda package</button><button aria-controls="panel-1-1-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-1" name="1-1" role="tab" tabindex="-1">conda from source</button><button aria-controls="panel-1-1-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-2" name="1-2" role="tab" tabindex="-1">pip package</button></div><div aria-labelledby="tab-1-1-0" class="sphinx-tabs-panel" id="panel-1-1-0" name="1-0" role="tabpanel" tabindex="0"><p><strong>This is the recommended installation method</strong>.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-2-V2luZG93cyBhbmQgTGludXg=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-2-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-2-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-2-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-2-V2luZG93cyBhbmQgTGludXg=" class="sphinx-tabs-panel group-tab" id="panel-2-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>nvidia<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
 </pre></div>
 </div>
 <div class="admonition note">
@@ -411,7 +407,7 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <li><p>This will also work in CPU mode if you don’t have a GPU on your machine.</p></li>
 </ul>
 </div>
-</div><div aria-labelledby="tab-0-0-1" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-1" name="0-1" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
+</div><div aria-labelledby="tab-2-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-2-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
 </pre></div>
 </div>
 <div class="admonition note">
@@ -419,16 +415,13 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <p>This will also work in CPU mode if you don’t have a GPU on your machine.</p>
 </div>
 </div></div>
-<p><strong>This is the recommended installation method</strong>.</p>
-</section>
-<section id="conda-from-source">
-<span id="condasource"></span><h3><a class="toc-backref" href="#id3"><code class="docutils literal notranslate"><span class="pre">conda</span></code> from source</a><a class="headerlink" href="#conda-from-source" title="Permalink to this headline">#</a></h3>
+</div><div aria-labelledby="tab-1-1-1" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-1" name="1-1" role="tabpanel" tabindex="0"><p>This is the <strong>recommended method for development</strong>.</p>
 <ol>
 <li><p>First, ensure git is installed:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>--version
 </pre></div>
 </div>
-<p>If ‘git’ is not recognized, then <a class="reference external" href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">install git</a>.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">git</span></code> is not recognized, then <a class="reference external" href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">install git</a>.</p>
 </li>
 <li><p>Then, clone the repository:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>sleap
@@ -437,19 +430,18 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 </li>
 <li><p>Finally, install SLEAP from the environment file:</p>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-1-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-1-1-0" name="1-0" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-1-1-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-1" name="1-1" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-1-1-0" class="sphinx-tabs-panel" id="panel-1-1-0" name="1-0" role="tabpanel" tabindex="0"><div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-2-2-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-2-2-0" name="2-0" role="tab" tabindex="0">NVIDIA GPU</button><button aria-controls="panel-2-2-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-2-2-1" name="2-1" role="tab" tabindex="-1">CPU or other GPU</button></div><div aria-labelledby="tab-2-2-0" class="sphinx-tabs-panel" id="panel-2-2-0" name="2-0" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment.yml<span class="w"> </span>-n<span class="w"> </span>sleap
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-3-V2luZG93cyBhbmQgTGludXg=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-3-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-3-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-3-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-3-V2luZG93cyBhbmQgTGludXg=" class="sphinx-tabs-panel group-tab" id="panel-3-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tabpanel" tabindex="0"><div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-4-TlZJRElBIEdQVQ==" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-4-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tab" tabindex="0">NVIDIA GPU</button><button aria-controls="panel-4-Q1BVIG9yIG90aGVyIEdQVQ==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-4-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tab" tabindex="-1">CPU or other GPU</button></div><div aria-labelledby="tab-4-TlZJRElBIEdQVQ==" class="sphinx-tabs-panel group-tab" id="panel-4-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment.yml<span class="w"> </span>-n<span class="w"> </span>sleap
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-2-2-1" class="sphinx-tabs-panel" hidden="true" id="panel-2-2-1" name="2-1" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_no_cuda.yml<span class="w"> </span>-n<span class="w"> </span>sleap
-</pre></div>
-</div>
-</div></div>
-</div><div aria-labelledby="tab-1-1-1" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-1" name="1-1" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_mac.yml<span class="w"> </span>-n<span class="w"> </span>sleap
+</div><div aria-labelledby="tab-4-Q1BVIG9yIG90aGVyIEdQVQ==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-4-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_no_cuda.yml<span class="w"> </span>-n<span class="w"> </span>sleap
 </pre></div>
 </div>
 </div></div>
-<p>This is the <strong>recommended method for development</strong>.</p>
+</div><div aria-labelledby="tab-3-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-3-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_mac.yml<span class="w"> </span>-n<span class="w"> </span>sleap
+</pre></div>
+</div>
+</div></div>
 </li>
 </ol>
 <div class="admonition note">
@@ -459,17 +451,28 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <li><p>Change the <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">sleap</span></code> in the command to create an environment with a different name (e.g., <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">sleap_develop</span></code>).</p></li>
 </ul>
 </div>
-</section>
-<section id="pip-package">
-<span id="pippackage"></span><h3><a class="toc-backref" href="#id4"><code class="docutils literal notranslate"><span class="pre">pip</span></code> package</a><a class="headerlink" href="#pip-package" title="Permalink to this headline">#</a></h3>
-<p>Although you do not need Mambaforge installed to perform a <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>, we recommend <a class="reference external" href="https://docs.anaconda.com/free/miniconda/">installing Miniconda</a> to create a new environment where we can isolate the <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>. Alternatively, you can use a venv if you have an existing python installation. If you are working on <strong>Google Colab</strong>, skip to step 3 to perform the <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> without using a conda environment.</p>
+</div><div aria-labelledby="tab-1-1-2" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-2" name="1-2" role="tabpanel" tabindex="0"><p>This is the <strong>recommended method for Google Colab only</strong>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This will uninstall existing libraries and potentially install conflicting ones.</p>
+<p>We strongly recommend that you <strong>only use this method if you know what you’re doing</strong>!</p>
+</div>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-5-V2luZG93cyBhbmQgTGludXg=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-5-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-5-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-5-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-5-V2luZG93cyBhbmQgTGludXg=" class="sphinx-tabs-panel group-tab" id="panel-5-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tabpanel" tabindex="0"><div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>Requires Python 3.7</p></li>
+<li><p>To enable GPU support, make sure that you have <strong>CUDA Toolkit v11.3</strong> and <strong>cuDNN v8.2</strong> installed.</p></li>
+</ul>
+</div>
+<p>Although you do not need Miniconda installed to perform a <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>, we recommend <a class="reference external" href="https://docs.anaconda.com/free/miniconda/">installing Miniconda</a> to create a new environment where we can isolate the <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>. Alternatively, you can use a venv if you have an existing Python 3.7 installation. If you are working on <strong>Google Colab</strong>, skip to step 3 to perform the <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> without using a conda environment.</p>
 <ol>
 <li><p>Otherwise, create a new conda environment where we will <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">sleap</span></code>:</p>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-3-3-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-3-3-0" name="3-0" role="tab" tabindex="0">NVIDIA GPU</button><button aria-controls="panel-3-3-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-3-3-1" name="3-1" role="tab" tabindex="-1">CPU or other GPU</button></div><div aria-labelledby="tab-3-3-0" class="sphinx-tabs-panel" id="panel-3-3-0" name="3-0" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>sleap<span class="w"> </span>pip<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7.12<span class="w"> </span><span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">11</span>.3<span class="w"> </span><span class="nv">cudnn</span><span class="o">=</span><span class="m">8</span>.2
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-6-TlZJRElBIEdQVQ==" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-6-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tab" tabindex="0">NVIDIA GPU</button><button aria-controls="panel-6-Q1BVIG9yIG90aGVyIEdQVQ==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-6-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tab" tabindex="-1">CPU or other GPU</button></div><div aria-labelledby="tab-6-TlZJRElBIEdQVQ==" class="sphinx-tabs-panel group-tab" id="panel-6-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>sleap<span class="w"> </span>pip<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7.12<span class="w"> </span><span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">11</span>.3<span class="w"> </span><span class="nv">cudnn</span><span class="o">=</span><span class="m">8</span>.2
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-3-3-1" class="sphinx-tabs-panel" hidden="true" id="panel-3-3-1" name="3-1" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>sleap<span class="w"> </span>pip<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7.12
+</div><div aria-labelledby="tab-6-Q1BVIG9yIG90aGVyIEdQVQ==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-6-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>sleap<span class="w"> </span>pip<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7.12
 </pre></div>
 </div>
 </div></div>
@@ -487,7 +490,6 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>sleap<span class="o">[</span>pypi<span class="o">]==</span><span class="m">1</span>.4.1a1
 </pre></div>
 </div>
-<p>This works on <strong>any OS except Apple silicon</strong> and on <strong>Google Colab</strong>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The pypi distributed package of SLEAP ships with the following extras:</p>
@@ -499,24 +501,17 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <li><p><strong>conda_dev</strong>: For installation using <a class="reference external" href="https://github.com/search?q=repo%3Atalmolab%2Fsleap+path%3Aenvironment*.yml&amp;type=code">a mamba environment</a> with a few PyPI dependencies for development tools.</p></li>
 </ul>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<ul class="simple">
-<li><p>Requires Python 3.7</p></li>
-<li><p>To enable GPU support, make sure that you have <strong>CUDA Toolkit v11.3</strong> and <strong>cuDNN v8.2</strong> installed.</p></li>
-</ul>
-</div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This will uninstall existing libraries and potentially install conflicting ones.</p>
-<p>We strongly recommend that you <strong>only use this method if you know what you’re doing</strong>!</p>
-</div>
 </li>
 </ol>
-</section>
+</div><div aria-labelledby="tab-5-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-5-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><p>Not supported.</p>
+</div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</div></div>
 </section>
 <section id="testing-that-things-are-working">
-<h2><a class="toc-backref" href="#id5">Testing that things are working</a><a class="headerlink" href="#testing-that-things-are-working" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id3">Testing that things are working</a><a class="headerlink" href="#testing-that-things-are-working" title="Permalink to this headline">#</a></h2>
 <p>If you installed using <code class="docutils literal notranslate"><span class="pre">mamba</span></code>, first activate the <code class="docutils literal notranslate"><span class="pre">sleap</span></code> environment by opening a terminal and typing:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>activate<span class="w"> </span>sleap
 </pre></div>
@@ -529,7 +524,7 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 </div>
 </div>
 <section id="gui-support">
-<h3><a class="toc-backref" href="#id6">GUI support</a><a class="headerlink" href="#gui-support" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id4">GUI support</a><a class="headerlink" href="#gui-support" title="Permalink to this headline">#</a></h3>
 <p>To check that the GUI is working, simply type:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sleap-label
 </pre></div>
@@ -537,7 +532,7 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <p>You should see the SLEAP labeling interface pop up within a few moments.</p>
 </section>
 <section id="importing">
-<h3><a class="toc-backref" href="#id7">Importing</a><a class="headerlink" href="#importing" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id5">Importing</a><a class="headerlink" href="#importing" title="Permalink to this headline">#</a></h3>
 <p>To check if SLEAP is installed correctly in non-interactive environments, such as remote servers, confirm that you can import it with:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import sleap; sleap.versions()&quot;</span>
 </pre></div>
@@ -553,7 +548,7 @@ OS: Windows-10-10.0.19041-SP0
 </div>
 </section>
 <section id="gpu-support">
-<h3><a class="toc-backref" href="#id8">GPU support</a><a class="headerlink" href="#gpu-support" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id6">GPU support</a><a class="headerlink" href="#gpu-support" title="Permalink to this headline">#</a></h3>
 <p>Assuming you installed using either of the <code class="docutils literal notranslate"><span class="pre">mamba</span></code>-based methods on Windows or Linux, SLEAP should automatically have GPU support enabled.</p>
 <p>To check, verify that SLEAP can detect the GPUs on your system:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import sleap; sleap.system_summary()&quot;</span>
@@ -630,7 +625,7 @@ file:<span class="w"> </span>No<span class="w"> </span>such<span class="w"> </sp
 </section>
 </section>
 <section id="upgrading-and-uninstalling">
-<h2><a class="toc-backref" href="#id9">Upgrading and uninstalling</a><a class="headerlink" href="#upgrading-and-uninstalling" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id7">Upgrading and uninstalling</a><a class="headerlink" href="#upgrading-and-uninstalling" title="Permalink to this headline">#</a></h2>
 <p>We <strong>strongly recommend</strong> installing SLEAP in a fresh environment when updating. This is because dependency versions might change, and depending on the state of your previous environment, directly updating might break compatibility with some of them.</p>
 <p>To uninstall an existing environment named <code class="docutils literal notranslate"><span class="pre">sleap</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>remove<span class="w"> </span>-n<span class="w"> </span>sleap
@@ -646,7 +641,7 @@ file:<span class="w"> </span>No<span class="w"> </span>such<span class="w"> </sp
 <p>Once the environment has been removed, you are free to install SLEAP using any of the installation methods above into an environment of the same name.</p>
 </section>
 <section id="getting-help">
-<h2><a class="toc-backref" href="#id10">Getting help</a><a class="headerlink" href="#getting-help" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id8">Getting help</a><a class="headerlink" href="#getting-help" title="Permalink to this headline">#</a></h2>
 <p>If you run into any problems, check out the <a class="reference external" href="https://github.com/talmolab/sleap/discussions">Github Discussions</a> and <a class="reference external" href="https://github.com/talmolab/sleap/issues">GitHub Issues</a> to see if others have had the same problem.</p>
 <p>If you get any errors or the GUI fails to launch, try running the diagnostics to see what SLEAP is able to detect on your system:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sleap-diagnostic
@@ -708,12 +703,8 @@ file:<span class="w"> </span>No<span class="w"> </span>such<span class="w"> </sp
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-methods">Installation methods</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conda-package"><code class="docutils literal notranslate"><span class="pre">conda</span></code> package</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conda-from-source"><code class="docutils literal notranslate"><span class="pre">conda</span></code> from source</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pip-package"><code class="docutils literal notranslate"><span class="pre">pip</span></code> package</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#package-manager">Package Manager</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-methods">Installation methods</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-that-things-are-working">Testing that things are working</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gui-support">GUI support</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#importing">Importing</a></li>
