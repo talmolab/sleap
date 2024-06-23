@@ -346,7 +346,7 @@ class GenericTableView(QtWidgets.QTableView):
         """
         if self.is_activatable:
             self.state[self.row_name] = self.getSelectedRowItem()
-            
+
             if self.row_name == "camera":
                 session = self.state["session"]
                 if session is not None:
