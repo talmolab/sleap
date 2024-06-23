@@ -1872,3 +1872,8 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
         app.exec_()
 
     pass
+
+if __name__ == "__main__":
+    ds = "tests/data/cameras/minimal_session/min_session_frame_groups.slp"
+    # ds = os.environ["dsmview"]
+    main([ds])

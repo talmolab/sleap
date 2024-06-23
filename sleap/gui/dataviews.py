@@ -682,6 +682,14 @@ class CamerasTableModel(GenericTableModel):
 
         video = obj.get_video(item)
         return {"camera": item.name, "video": video.filename if video else ""}
+    
+    def activateSelected(self, *args):
+        """Activate item currently selected in the caermas table.
+        """
+        if self.is_activatable:
+            item = self.getSelectedRowItem()
+            self.state["camera"] = item
+            self.state["video"] = self.context.labels.videos.get(item, None)
 
 
 class InstanceGroupTableModel(GenericTableModel):
