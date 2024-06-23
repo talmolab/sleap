@@ -2300,6 +2300,8 @@ class InstanceDeleteCommand(EditCommand):
         lfs_to_remove = []
         for lf, inst in lf_inst_list:
             context.labels.remove_instance(lf, inst, in_transaction=True)
+            if context.state["instance"] == inst:
+                context.state["instance"] = None
             if len(lf.instances) == 0:
                 lfs_to_remove.append(lf)
 
@@ -2570,6 +2572,7 @@ class DeleteSelectedInstance(EditCommand):
             return
 
         context.labels.remove_instance(context.state["labeled_frame"], selected_inst)
+        context.state["instance"] = None
 
 
 class DeleteSelectedInstanceTrack(EditCommand):
@@ -2587,6 +2590,7 @@ class DeleteSelectedInstanceTrack(EditCommand):
 
         track = selected_inst.track
         context.labels.remove_instance(context.state["labeled_frame"], selected_inst)
+        context.state["instance"] = None
 
         if track is not None:
             # remove any instance on this track
