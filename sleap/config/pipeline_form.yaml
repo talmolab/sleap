@@ -281,8 +281,13 @@ training:
   name: outputs.tensorboard.write_logs
   type: bool
 
-- name: _save_viz
+- name: _view_viz
   label: Visualize Predictions During Training
+  type: bool
+  default: true
+
+- name: _delete_viz
+  label: Delete Prediction Visualizations After Training
   type: bool
   default: true
 

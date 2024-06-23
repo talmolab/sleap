@@ -1857,11 +1857,19 @@ def create_trainer_using_cli(args: Optional[List] = None):
         ),
     )
     parser.add_argument(
-        "--save_viz",
+        "--view_viz",
         action="store_true",
         help=(
             "Enable saving of prediction visualizations to the run folder if not "
             "already specified in the training job config."
+        ),
+    )
+    parser.add_argument(
+        "--delete_viz",
+        action="store_true",
+        help=(
+            "Delete prediction visualizations in the run folder after training if "
+            "view_viz is enabled."
         ),
     )
     parser.add_argument(
@@ -1948,7 +1956,8 @@ def create_trainer_using_cli(args: Optional[List] = None):
         job_config.outputs.run_name_prefix = args.prefix
     if args.suffix != "":
         job_config.outputs.run_name_suffix = args.suffix
-    job_config.outputs.view_visualizations |= args.save_viz
+    job_config.outputs.view_visualizations |= args.view_viz
+    job_config.outputs.delete_viz_images |= args.delete_viz
     if args.labels_path == "":
         args.labels_path = None
     args.video_paths = args.video_paths.split(",")

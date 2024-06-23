@@ -1,4 +1,5 @@
 """Run training/inference in background process via CLI."""
+
 import abc
 import attr
 import os
@@ -500,9 +501,11 @@ def write_pipeline_files(
                 "data_path": os.path.basename(data_path),
                 "models": [Path(p).as_posix() for p in new_cfg_filenames],
                 "output_path": prediction_output_path,
-                "type": "labels"
-                if type(item_for_inference) == DatasetItemForInference
-                else "video",
+                "type": (
+                    "labels"
+                    if type(item_for_inference) == DatasetItemForInference
+                    else "video"
+                ),
                 "only_suggested_frames": only_suggested_frames,
                 "tracking": tracking_args,
             }
@@ -543,7 +546,8 @@ def run_learning_pipeline(
 
     """
 
-    save_viz = inference_params.get("_save_viz", False)
+    view_viz = inference_params.get("_view_viz", False)
+    delete_viz = inference_params.get("_delete_viz", False)
 
     if "movenet" in inference_params["_pipeline"]:
         trained_job_paths = [inference_params["_pipeline"]]
@@ -556,7 +560,8 @@ def run_learning_pipeline(
             config_info_list=config_info_list,
             inference_params=inference_params,
             gui=True,
-            save_viz=save_viz,
+            view_viz=view_viz,
+            delete_viz=delete_viz,
         )
 
         # Check that all the models were trained
@@ -584,7 +589,8 @@ def run_gui_training(
     config_info_list: List[ConfigFileInfo],
     inference_params: Dict[str, Any],
     gui: bool = True,
-    save_viz: bool = False,
+    view_viz: bool = False,
+    delete_viz: bool = True,
 ) -> Dict[Text, Text]:
     """
     Runs training for each training job.
@@ -593,7 +599,8 @@ def run_gui_training(
         labels: Labels object from which we'll get training data.
         config_info_list: List of ConfigFileInfo with configs for training.
         gui: Whether to show gui windows and process gui events.
-        save_viz: Whether to save visualizations from training.
+        view_viz: Whether to save visualizations from training.
+        delete_viz: Whether to delete prediction visualizations after training.
 
     Returns:
         Dictionary, keys are head name, values are path to trained config.
@@ -660,7 +667,7 @@ def run_gui_training(
                 win.reset(what=str(model_type), config=job)
                 win.setWindowTitle(f"Training Model - {str(model_type)}")
                 win.set_message(f"Preparing to run training...")
-                if save_viz:
+                if view_viz:
                     viz_window = QtImageDirectoryWidget.make_training_vizualizer(
                         job.outputs.run_path
                     )
@@ -682,7 +689,8 @@ def run_gui_training(
                 labels_filename=labels_filename,
                 video_paths=video_path_list,
                 waiting_callback=waiting,
-                save_viz=save_viz,
+                view_viz=view_viz,
+                delete_viz=delete_viz,
             )
 
             if ret == "success":
@@ -824,7 +832,8 @@ def train_subprocess(
     inference_params: Dict[str, Any],
     video_paths: Optional[List[Text]] = None,
     waiting_callback: Optional[Callable] = None,
-    save_viz: bool = False,
+    view_viz: bool = False,
+    delete_viz: bool = True,
 ):
     """Runs training inside subprocess."""
     run_path = job_config.outputs.run_path
@@ -851,8 +860,10 @@ def train_subprocess(
             str(inference_params["publish_port"]),
         ]
 
-        if save_viz:
-            cli_args.append("--save_viz")
+        if view_viz:
+            cli_args.append("--view_viz")
+        if delete_viz:
+            cli_args.append("--delete_viz")
 
         # Use cli arg since cli ignores setting in config
         if job_config.outputs.tensorboard.write_logs:
