@@ -140,7 +140,7 @@
         "run_name_suffix": null,
         "runs_folder": "models",
         "tags": [],
-        "save_visualizations": false,
+        "view_visualizations": false,
         "delete_viz_images": true,
         "zip_outputs": false,
         "log_to_csv": true,

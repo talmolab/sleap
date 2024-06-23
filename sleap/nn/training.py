@@ -515,7 +515,7 @@ def setup_visualization(
             "This probably means Qt is running headless."
         )
 
-    if config.save_visualizations and config.save_outputs:
+    if config.view_visualizations and config.save_outputs:
         callbacks.append(
             MatplotlibSaver(
                 save_folder=os.path.join(run_path, "viz"), plot_fn=viz_fn, prefix=name
@@ -945,7 +945,7 @@ class Trainer(ABC):
         # Run post-training actions.
         if self.config.outputs.save_outputs:
             if (
-                self.config.outputs.save_visualizations
+                self.config.outputs.view_visualizations
                 and self.config.outputs.delete_viz_images
             ):
                 self.cleanup()
@@ -1948,7 +1948,7 @@ def create_trainer_using_cli(args: Optional[List] = None):
         job_config.outputs.run_name_prefix = args.prefix
     if args.suffix != "":
         job_config.outputs.run_name_suffix = args.suffix
-    job_config.outputs.save_visualizations |= args.save_viz
+    job_config.outputs.view_visualizations |= args.save_viz
     if args.labels_path == "":
         args.labels_path = None
     args.video_paths = args.video_paths.split(",")

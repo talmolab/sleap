@@ -174,7 +174,7 @@
         "run_name_suffix": "",
         "runs_folder": "models",
         "tags": [],
-        "save_visualizations": false,
+        "view_visualizations": false,
         "log_to_csv": true,
         "checkpointing": {
             "initial_model": false,
