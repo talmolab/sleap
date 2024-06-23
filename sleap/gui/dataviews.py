@@ -349,7 +349,7 @@ class GenericTableView(QtWidgets.QTableView):
 
             if self.row_name == "camera":
                 session = self.state["session"]
-                if session is not None:
+                if session is not None and session.get_video(self.getSelectedRowItem()) is not None:
                     self.state["video"] = session.get_video(self.getSelectedRowItem())
 
     def selectRowItem(self, item: Any):
