@@ -346,6 +346,11 @@ class GenericTableView(QtWidgets.QTableView):
         """
         if self.is_activatable:
             self.state[self.row_name] = self.getSelectedRowItem()
+            
+            if self.row_name == "camera":
+                session = self.state["session"]
+                if session is not None:
+                    self.state["video"] = session.get_video(self.getSelectedRowItem())
 
     def selectRowItem(self, item: Any):
         """Select row corresponding to item.
@@ -682,14 +687,6 @@ class CamerasTableModel(GenericTableModel):
 
         video = obj.get_video(item)
         return {"camera": item.name, "video": video.filename if video else ""}
-    
-    def activateSelected(self, *args):
-        """Activate item currently selected in the caermas table.
-        """
-        if self.is_activatable:
-            item = self.getSelectedRowItem()
-            self.state["camera"] = item
-            self.state["video"] = self.context.labels.videos.get(item, None)
 
 
 class InstanceGroupTableModel(GenericTableModel):
