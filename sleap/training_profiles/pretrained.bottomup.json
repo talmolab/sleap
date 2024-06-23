@@ -122,6 +122,7 @@
         "runs_folder": "models",
         "tags": [],
         "view_visualizations": true,
+        "delete_viz_images": true,
         "log_to_csv": true,
         "checkpointing": {
             "initial_model": false,
