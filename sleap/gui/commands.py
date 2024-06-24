@@ -54,7 +54,7 @@ from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
-from sleap.io.cameras import FrameGroup, InstanceGroup, RecordingSession
+from sleap.io.cameras import Camcorder, FrameGroup, InstanceGroup, RecordingSession
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
@@ -454,7 +454,7 @@ class CommandContext:
         self,
         video: Optional[Video] = None,
         session: Optional[RecordingSession] = None,
-        camera: Optional[str] = None,
+        camera: Optional[Camcorder] = None,
     ):
         """Links a video to a `RecordingSession`."""
         self.execute(LinkVideoToSession, video=video, session=session, camera=camera)
