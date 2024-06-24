@@ -8,7 +8,7 @@ SLEAP can be installed as a Python package on Windows, Linux, and Mac OS.
 
 
       ```bash
-      mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a1
+      conda create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a1
       ```
 
       
@@ -23,7 +23,7 @@ SLEAP can be installed as a Python package on Windows, Linux, and Mac OS.
    ```{group-tab} Mac OS
 
       ```bash
-      mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a1
+      conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a1
       ```
 
       ```{note}
@@ -57,7 +57,7 @@ conda config --set solver libmamba
 ```
 
 ```{warning}
-Any subsequent `mamba` commands in the docs will need to be replaced with `conda` if you choose to use your existing Anaconda installation.
+Any subsequent `conda` commands in the docs will need to be replaced with `mamba` if you have [Mamba](https://mamba.readthedocs.io/en/latest/) installed instead of Anaconda or Miniconda.
 ```
 
 ````
@@ -111,7 +111,7 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
 
 
             ```bash
-            mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a1
+            conda create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a1
             ```
 
             
@@ -126,7 +126,7 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
          ```{group-tab} Mac OS
 
             ```bash
-            mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a1
+            conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a1
             ```
 
             ```{note}
@@ -170,7 +170,7 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
                   ```{group-tab} NVIDIA GPU
 
                      ```bash
-                     mamba env create -f environment.yml -n sleap
+                     conda env create -f environment.yml -n sleap
                      ```
 
                   ```
@@ -178,7 +178,7 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
                   ```{group-tab} CPU or other GPU
 
                      ```bash
-                     mamba env create -f environment_no_cuda.yml -n sleap
+                     conda env create -f environment_no_cuda.yml -n sleap
                      ```
                   
                   ```
@@ -190,7 +190,7 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
             ```{group-tab} Mac OS
 
                ```bash
-               mamba env create -f environment_mac.yml -n sleap
+               conda env create -f environment_mac.yml -n sleap
                ```
             ```
 
@@ -232,7 +232,7 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
 
 
                      ```bash
-                     mamba create --name sleap pip python=3.7.12 cudatoolkit=11.3 cudnn=8.2
+                     conda create --name sleap pip python=3.7.12 cudatoolkit=11.3 cudnn=8.2
                      ```
 
                   ```
@@ -240,7 +240,7 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
                   ```{group-tab} CPU or other GPU
 
                      ```bash
-                     mamba create --name sleap pip python=3.7.12
+                     conda create --name sleap pip python=3.7.12
                      ```
 
                      
@@ -251,7 +251,7 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
             2. Then activate the environment to isolate the `pip install` from other environments on your computer:
 
                ```bash
-               mamba activate sleap
+               conda activate sleap
                ```
 
                ```{warning}
@@ -266,11 +266,11 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
 
                ```{note}
                The pypi distributed package of SLEAP ships with the following extras:
-               - **pypi**: For installation without an mamba environment file. All dependencies come from PyPI.
+               - **pypi**: For installation without an conda environment file. All dependencies come from PyPI.
                - **jupyter**: This installs all *pypi* and jupyter lab dependencies.
                - **dev**: This installs all *jupyter* dependencies and developement tools for testing and building docs.
-               - **conda_jupyter**: For installation using a mamba environment file included in the source code. Most dependencies are listed as conda packages in the environment file and only a few come from PyPI to allow jupyter lab support.
-               - **conda_dev**: For installation using [a mamba environment](https://github.com/search?q=repo%3Atalmolab%2Fsleap+path%3Aenvironment*.yml&type=code) with a few PyPI dependencies for development tools.
+               - **conda_jupyter**: For installation using a conda environment file included in the source code. Most dependencies are listed as conda packages in the environment file and only a few come from PyPI to allow jupyter lab support.
+               - **conda_dev**: For installation using [a conda environment](https://github.com/search?q=repo%3Atalmolab%2Fsleap+path%3Aenvironment*.yml&type=code) with a few PyPI dependencies for development tools.
                ```
             
          ```
@@ -289,16 +289,16 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
 
 ## Testing that things are working
 
-If you installed using `mamba`, first activate the `sleap` environment by opening a terminal and typing:
+If you installed using `conda`, first activate the `sleap` environment by opening a terminal and typing:
 
 ```bash
-mamba activate sleap
+conda activate sleap
 ```
 
 ````{hint}
-Not sure what `mamba` environments you already installed? You can get a list of the environments on your system with:
+Not sure what `conda` environments you already installed? You can get a list of the environments on your system with:
 ```
-mamba env list
+conda env list
 ```
 ````
 
@@ -331,7 +331,7 @@ python -c "import sleap; sleap.versions()"
 
 ### GPU support
 
-Assuming you installed using either of the `mamba`-based methods on Windows or Linux, SLEAP should automatically have GPU support enabled.
+Assuming you installed using either of the `conda`-based methods on Windows or Linux, SLEAP should automatically have GPU support enabled.
 
 To check, verify that SLEAP can detect the GPUs on your system:
 
@@ -392,7 +392,7 @@ file: No such file or directory
 then activate the environment:
 
 ```bash
-mamba activate sleap
+conda activate sleap
 ```
 
 and run the commands:
@@ -421,13 +421,13 @@ We **strongly recommend** installing SLEAP in a fresh environment when updating.
 To uninstall an existing environment named `sleap`:
 
 ```bash
-mamba env remove -n sleap
+conda env remove -n sleap
 ```
 
 ````{hint}
-Not sure what `mamba` environments you already installed? You can get a list of the environments on your system with:
+Not sure what `conda` environments you already installed? You can get a list of the environments on your system with:
 ```bash
-mamba env list
+conda env list
 ```
 ````
 
@@ -443,10 +443,10 @@ If you get any errors or the GUI fails to launch, try running the diagnostics to
 sleap-diagnostic
 ```
 
-If you were not able to get SLEAP installed, activate the mamba environment it is in and generate a list of the package versions installed:
+If you were not able to get SLEAP installed, activate the conda environment it is in and generate a list of the package versions installed:
 
 ```bash
-mamba list
+conda list
 ```
 
 Then, [open a new Issue](https://github.com/talmolab/sleap/issues) providing the versions from either command above, as well as any errors you saw in the console during the installation. Or [start a discussion](https://github.com/talmolab/sleap/discussions) to get help from the community.
