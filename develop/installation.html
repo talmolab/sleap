@@ -344,7 +344,7 @@ document.write(`
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">#</a></h1>
 <p>SLEAP can be installed as a Python package on Windows, Linux, and Mac OS.</p>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-V2luZG93cyBhbmQgTGludXg=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-0-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-0-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-0-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-0-V2luZG93cyBhbmQgTGludXg=" class="sphinx-tabs-panel group-tab" id="panel-0-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>nvidia<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-V2luZG93cyBhbmQgTGludXg=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-0-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-0-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-0-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-0-V2luZG93cyBhbmQgTGludXg=" class="sphinx-tabs-panel group-tab" id="panel-0-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>nvidia<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
 </pre></div>
 </div>
 <div class="admonition note">
@@ -355,7 +355,7 @@ document.write(`
 <li><p>This will also work in CPU mode if you don’t have a GPU on your machine.</p></li>
 </ul>
 </div>
-</div><div aria-labelledby="tab-0-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-0-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
+</div><div aria-labelledby="tab-0-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-0-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
 </pre></div>
 </div>
 <div class="admonition note">
@@ -393,7 +393,7 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Any subsequent <code class="docutils literal notranslate"><span class="pre">mamba</span></code> commands in the docs will need to be replaced with <code class="docutils literal notranslate"><span class="pre">conda</span></code> if you choose to use your existing Anaconda installation.</p>
+<p>Any subsequent <code class="docutils literal notranslate"><span class="pre">conda</span></code> commands in the docs will need to be replaced with <code class="docutils literal notranslate"><span class="pre">mamba</span></code> if you have <a class="reference external" href="https://mamba.readthedocs.io/en/latest/">Mamba</a> installed instead of Anaconda or Miniconda.</p>
 </div>
 </div>
 </section>
@@ -416,7 +416,7 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-2-2-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-2-2-0" name="2-0" role="tab" tabindex="0">conda package</button><button aria-controls="panel-2-2-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-2-2-1" name="2-1" role="tab" tabindex="-1">conda from source</button><button aria-controls="panel-2-2-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-2-2-2" name="2-2" role="tab" tabindex="-1">pip package</button></div><div aria-labelledby="tab-2-2-0" class="sphinx-tabs-panel" id="panel-2-2-0" name="2-0" role="tabpanel" tabindex="0"><p><strong>This is the recommended installation method</strong>.</p>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-3-V2luZG93cyBhbmQgTGludXg=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-3-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-3-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-3-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-3-V2luZG93cyBhbmQgTGludXg=" class="sphinx-tabs-panel group-tab" id="panel-3-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>nvidia<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-3-V2luZG93cyBhbmQgTGludXg=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-3-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-3-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-3-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-3-V2luZG93cyBhbmQgTGludXg=" class="sphinx-tabs-panel group-tab" id="panel-3-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>nvidia<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
 </pre></div>
 </div>
 <div class="admonition note">
@@ -427,7 +427,7 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <li><p>This will also work in CPU mode if you don’t have a GPU on your machine.</p></li>
 </ul>
 </div>
-</div><div aria-labelledby="tab-3-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-3-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
+</div><div aria-labelledby="tab-3-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-3-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
 </pre></div>
 </div>
 <div class="admonition note">
@@ -451,14 +451,14 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <li><p>Finally, install SLEAP from the environment file:</p>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-4-V2luZG93cyBhbmQgTGludXg=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-4-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-4-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-4-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-4-V2luZG93cyBhbmQgTGludXg=" class="sphinx-tabs-panel group-tab" id="panel-4-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tabpanel" tabindex="0"><div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-5-TlZJRElBIEdQVQ==" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-5-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tab" tabindex="0">NVIDIA GPU</button><button aria-controls="panel-5-Q1BVIG9yIG90aGVyIEdQVQ==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-5-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tab" tabindex="-1">CPU or other GPU</button></div><div aria-labelledby="tab-5-TlZJRElBIEdQVQ==" class="sphinx-tabs-panel group-tab" id="panel-5-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment.yml<span class="w"> </span>-n<span class="w"> </span>sleap
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-5-TlZJRElBIEdQVQ==" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-5-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tab" tabindex="0">NVIDIA GPU</button><button aria-controls="panel-5-Q1BVIG9yIG90aGVyIEdQVQ==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-5-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tab" tabindex="-1">CPU or other GPU</button></div><div aria-labelledby="tab-5-TlZJRElBIEdQVQ==" class="sphinx-tabs-panel group-tab" id="panel-5-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment.yml<span class="w"> </span>-n<span class="w"> </span>sleap
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-5-Q1BVIG9yIG90aGVyIEdQVQ==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-5-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_no_cuda.yml<span class="w"> </span>-n<span class="w"> </span>sleap
+</div><div aria-labelledby="tab-5-Q1BVIG9yIG90aGVyIEdQVQ==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-5-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_no_cuda.yml<span class="w"> </span>-n<span class="w"> </span>sleap
 </pre></div>
 </div>
 </div></div>
-</div><div aria-labelledby="tab-4-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-4-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_mac.yml<span class="w"> </span>-n<span class="w"> </span>sleap
+</div><div aria-labelledby="tab-4-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-4-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_mac.yml<span class="w"> </span>-n<span class="w"> </span>sleap
 </pre></div>
 </div>
 </div></div>
@@ -489,16 +489,16 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <ol>
 <li><p>Otherwise, create a new conda environment where we will <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">sleap</span></code>:</p>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-7-TlZJRElBIEdQVQ==" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-7-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tab" tabindex="0">NVIDIA GPU</button><button aria-controls="panel-7-Q1BVIG9yIG90aGVyIEdQVQ==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-7-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tab" tabindex="-1">CPU or other GPU</button></div><div aria-labelledby="tab-7-TlZJRElBIEdQVQ==" class="sphinx-tabs-panel group-tab" id="panel-7-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>sleap<span class="w"> </span>pip<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7.12<span class="w"> </span><span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">11</span>.3<span class="w"> </span><span class="nv">cudnn</span><span class="o">=</span><span class="m">8</span>.2
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-7-TlZJRElBIEdQVQ==" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-7-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tab" tabindex="0">NVIDIA GPU</button><button aria-controls="panel-7-Q1BVIG9yIG90aGVyIEdQVQ==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-7-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tab" tabindex="-1">CPU or other GPU</button></div><div aria-labelledby="tab-7-TlZJRElBIEdQVQ==" class="sphinx-tabs-panel group-tab" id="panel-7-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>sleap<span class="w"> </span>pip<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7.12<span class="w"> </span><span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">11</span>.3<span class="w"> </span><span class="nv">cudnn</span><span class="o">=</span><span class="m">8</span>.2
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-7-Q1BVIG9yIG90aGVyIEdQVQ==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-7-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>sleap<span class="w"> </span>pip<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7.12
+</div><div aria-labelledby="tab-7-Q1BVIG9yIG90aGVyIEdQVQ==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-7-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>sleap<span class="w"> </span>pip<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7.12
 </pre></div>
 </div>
 </div></div>
 </li>
 <li><p>Then activate the environment to isolate the <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> from other environments on your computer:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>activate<span class="w"> </span>sleap
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>sleap
 </pre></div>
 </div>
 <div class="admonition warning">
@@ -514,11 +514,11 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <p class="admonition-title">Note</p>
 <p>The pypi distributed package of SLEAP ships with the following extras:</p>
 <ul class="simple">
-<li><p><strong>pypi</strong>: For installation without an mamba environment file. All dependencies come from PyPI.</p></li>
+<li><p><strong>pypi</strong>: For installation without an conda environment file. All dependencies come from PyPI.</p></li>
 <li><p><strong>jupyter</strong>: This installs all <em>pypi</em> and jupyter lab dependencies.</p></li>
 <li><p><strong>dev</strong>: This installs all <em>jupyter</em> dependencies and developement tools for testing and building docs.</p></li>
-<li><p><strong>conda_jupyter</strong>: For installation using a mamba environment file included in the source code. Most dependencies are listed as conda packages in the environment file and only a few come from PyPI to allow jupyter lab support.</p></li>
-<li><p><strong>conda_dev</strong>: For installation using <a class="reference external" href="https://github.com/search?q=repo%3Atalmolab%2Fsleap+path%3Aenvironment*.yml&amp;type=code">a mamba environment</a> with a few PyPI dependencies for development tools.</p></li>
+<li><p><strong>conda_jupyter</strong>: For installation using a conda environment file included in the source code. Most dependencies are listed as conda packages in the environment file and only a few come from PyPI to allow jupyter lab support.</p></li>
+<li><p><strong>conda_dev</strong>: For installation using <a class="reference external" href="https://github.com/search?q=repo%3Atalmolab%2Fsleap+path%3Aenvironment*.yml&amp;type=code">a conda environment</a> with a few PyPI dependencies for development tools.</p></li>
 </ul>
 </div>
 </li>
@@ -532,14 +532,14 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 </section>
 <section id="testing-that-things-are-working">
 <h2><a class="toc-backref" href="#id3">Testing that things are working</a><a class="headerlink" href="#testing-that-things-are-working" title="Permalink to this headline">#</a></h2>
-<p>If you installed using <code class="docutils literal notranslate"><span class="pre">mamba</span></code>, first activate the <code class="docutils literal notranslate"><span class="pre">sleap</span></code> environment by opening a terminal and typing:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>activate<span class="w"> </span>sleap
+<p>If you installed using <code class="docutils literal notranslate"><span class="pre">conda</span></code>, first activate the <code class="docutils literal notranslate"><span class="pre">sleap</span></code> environment by opening a terminal and typing:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>sleap
 </pre></div>
 </div>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
-<p>Not sure what <code class="docutils literal notranslate"><span class="pre">mamba</span></code> environments you already installed? You can get a list of the environments on your system with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mamba</span> <span class="n">env</span> <span class="nb">list</span>
+<p>Not sure what <code class="docutils literal notranslate"><span class="pre">conda</span></code> environments you already installed? You can get a list of the environments on your system with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">env</span> <span class="nb">list</span>
 </pre></div>
 </div>
 </div>
@@ -569,7 +569,7 @@ OS: Windows-10-10.0.19041-SP0
 </section>
 <section id="gpu-support">
 <h3><a class="toc-backref" href="#id6">GPU support</a><a class="headerlink" href="#gpu-support" title="Permalink to this headline">#</a></h3>
-<p>Assuming you installed using either of the <code class="docutils literal notranslate"><span class="pre">mamba</span></code>-based methods on Windows or Linux, SLEAP should automatically have GPU support enabled.</p>
+<p>Assuming you installed using either of the <code class="docutils literal notranslate"><span class="pre">conda</span></code>-based methods on Windows or Linux, SLEAP should automatically have GPU support enabled.</p>
 <p>To check, verify that SLEAP can detect the GPUs on your system:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import sleap; sleap.system_summary()&quot;</span>
 </pre></div>
@@ -623,7 +623,7 @@ file:<span class="w"> </span>No<span class="w"> </span>such<span class="w"> </sp
 </pre></div>
 </div>
 <p>then activate the environment:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>activate<span class="w"> </span>sleap
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>sleap
 </pre></div>
 </div>
 <p>and run the commands:</p>
@@ -648,13 +648,13 @@ file:<span class="w"> </span>No<span class="w"> </span>such<span class="w"> </sp
 <h2><a class="toc-backref" href="#id7">Upgrading and uninstalling</a><a class="headerlink" href="#upgrading-and-uninstalling" title="Permalink to this headline">#</a></h2>
 <p>We <strong>strongly recommend</strong> installing SLEAP in a fresh environment when updating. This is because dependency versions might change, and depending on the state of your previous environment, directly updating might break compatibility with some of them.</p>
 <p>To uninstall an existing environment named <code class="docutils literal notranslate"><span class="pre">sleap</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>remove<span class="w"> </span>-n<span class="w"> </span>sleap
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>remove<span class="w"> </span>-n<span class="w"> </span>sleap
 </pre></div>
 </div>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
-<p>Not sure what <code class="docutils literal notranslate"><span class="pre">mamba</span></code> environments you already installed? You can get a list of the environments on your system with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>list
+<p>Not sure what <code class="docutils literal notranslate"><span class="pre">conda</span></code> environments you already installed? You can get a list of the environments on your system with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>list
 </pre></div>
 </div>
 </div>
@@ -667,8 +667,8 @@ file:<span class="w"> </span>No<span class="w"> </span>such<span class="w"> </sp
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sleap-diagnostic
 </pre></div>
 </div>
-<p>If you were not able to get SLEAP installed, activate the mamba environment it is in and generate a list of the package versions installed:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>list
+<p>If you were not able to get SLEAP installed, activate the conda environment it is in and generate a list of the package versions installed:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>list
 </pre></div>
 </div>
 <p>Then, <a class="reference external" href="https://github.com/talmolab/sleap/issues">open a new Issue</a> providing the versions from either command above, as well as any errors you saw in the console during the installation. Or <a class="reference external" href="https://github.com/talmolab/sleap/discussions">start a discussion</a> to get help from the community.</p>
