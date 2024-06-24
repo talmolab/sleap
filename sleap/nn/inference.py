@@ -5303,7 +5303,7 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
         for file_path in data_path.iterdir():
             if file_path.is_file():
                 data_path_list.append(file_path)
-    elif data_path.is_file:
+    elif data_path.is_file():
         data_path_list = [args.data_path]
     else:
         raise ValueError(
@@ -5353,7 +5353,7 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
                 print(f"Video: {data_path_file}")
                 tmp_data_path_list.append(data_path_file)
                 # TODO: Clean this up.
-            except Exception as e:
+            except Exception:
                 print(f"Error reading file: {data_path_file}")
 
         data_path_list = tmp_data_path_list
@@ -5531,6 +5531,7 @@ def main(args: Optional[list] = None):
 
             else:
                 output_path = output_path + "/" + (data_path.stem + ".predictions.slp")
+                output_path_obj = Path(output_path)
 
             labels_pr.provenance["model_paths"] = predictor.model_paths
             labels_pr.provenance["predictor"] = type(predictor).__name__
