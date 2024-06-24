@@ -342,46 +342,47 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">#</a></h1>
-<p>SLEAP can be installed as a Python package on Windows, Linux, and Mac OS.</p>
+<p>SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. For quick install using conda, see below:</p>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-V2luZG93cyBhbmQgTGludXg=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-0-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-0-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-0-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-0-V2luZG93cyBhbmQgTGludXg=" class="sphinx-tabs-panel group-tab" id="panel-0-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>nvidia<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<ul class="simple">
-<li><p>This comes with CUDA to enable GPU support. All you need is to have an NVIDIA GPU and <a class="reference external" href="https://nvidia.com/drivers">updated drivers</a>.</p></li>
-<li><p>If you already have CUDA installed on your system, this will not conflict with it.</p></li>
-<li><p>This will also work in CPU mode if you don’t have a GPU on your machine.</p></li>
-</ul>
-</div>
 </div><div aria-labelledby="tab-0-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-0-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This will also work in CPU mode if you don’t have a GPU on your machine.</p>
-</div>
 </div></div>
-<p>The newest version of SLEAP can always be found in the <a class="reference external" href="https://github.com/talmolab/sleap/releases">Releases page</a>.</p>
+<p>. For more in-depth installation instructions, see the <a class="reference internal" href="#installation-methods"><span class="std std-ref">installation methods</span></a>. The newest version of SLEAP can always be found in the <a class="reference external" href="https://github.com/talmolab/sleap/releases">Releases page</a>.</p>
 <div class="contents local topic" id="contents">
 <p class="topic-title">Contents</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#package-manager" id="id1">Package Manager</a></p></li>
-<li><p><a class="reference internal" href="#installation-methods" id="id2">Installation methods</a></p></li>
-<li><p><a class="reference internal" href="#testing-that-things-are-working" id="id3">Testing that things are working</a></p>
+<li><p><a class="reference internal" href="#package-manager" id="id2">Package Manager</a></p></li>
+<li><p><a class="reference internal" href="#installation-methods" id="id3">Installation methods</a></p></li>
+<li><p><a class="reference internal" href="#testing-that-things-are-working" id="id4">Testing that things are working</a></p>
 <ul>
-<li><p><a class="reference internal" href="#gui-support" id="id4">GUI support</a></p></li>
-<li><p><a class="reference internal" href="#importing" id="id5">Importing</a></p></li>
-<li><p><a class="reference internal" href="#gpu-support" id="id6">GPU support</a></p></li>
+<li><p><a class="reference internal" href="#gui-support" id="id5">GUI support</a></p></li>
+<li><p><a class="reference internal" href="#importing" id="id6">Importing</a></p></li>
+<li><p><a class="reference internal" href="#gpu-support" id="id7">GPU support</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#upgrading-and-uninstalling" id="id7">Upgrading and uninstalling</a></p></li>
-<li><p><a class="reference internal" href="#getting-help" id="id8">Getting help</a></p></li>
+<li><p><a class="reference internal" href="#upgrading-and-uninstalling" id="id8">Upgrading and uninstalling</a></p></li>
+<li><p><a class="reference internal" href="#getting-help" id="id9">Getting help</a></p></li>
 </ul>
 </div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Installation requires entering commands in a terminal. To open one:</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-1-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-1-1-0" name="1-0" role="tab" tabindex="0">Windows</button><button aria-controls="panel-1-1-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-1" name="1-1" role="tab" tabindex="-1">Linux</button><button aria-controls="panel-1-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-1-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-1-1-0" class="sphinx-tabs-panel" id="panel-1-1-0" name="1-0" role="tabpanel" tabindex="0"><p>Open the <em>Start menu</em> and search for the <em>Anaconda Prompt</em> (if using Miniconda) or the <em>Command Prompt</em> if not.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On Windows, our personal preference is to use alternative terminal apps like <a class="reference external" href="https://cmder.net">Cmder</a> or <a class="reference external" href="https://aka.ms/terminal">Windows Terminal</a>.</p>
+</div>
+</div><div aria-labelledby="tab-1-1-1" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-1" name="1-1" role="tabpanel" tabindex="0"><p>Launch a new terminal by pressing <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>.</p>
+</div><div aria-labelledby="tab-1-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-1-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><p>Launch a new terminal by pressing <kbd>Cmd</kbd> + <kbd>Space</kbd> and searching for <em>Terminal</em>.</p>
+</div></div>
+</div>
 <section id="package-manager">
-<h2><a class="toc-backref" href="#id1">Package Manager</a><a class="headerlink" href="#package-manager" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id2">Package Manager</a><a class="headerlink" href="#package-manager" title="Permalink to this headline">#</a></h2>
 <p>SLEAP requires many complex dependencies, so we <strong>strongly</strong> recommend using a package manager such as <a class="reference external" href="https://docs.anaconda.com/free/miniconda/">Miniconda</a> to install SLEAP in its own isolated environment. See the <a class="reference external" href="https://docs.anaconda.com/free/miniconda/">Miniconda website</a> for installation instructions. The Anaconda or Mamba package managers will also work well; however, take care not to install multiple different conda-based package managers - choose one and stick with it.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -398,21 +399,8 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 </div>
 </section>
 <section id="installation-methods">
-<h2><a class="toc-backref" href="#id2">Installation methods</a><a class="headerlink" href="#installation-methods" title="Permalink to this headline">#</a></h2>
+<span id="id1"></span><h2><a class="toc-backref" href="#id3">Installation methods</a><a class="headerlink" href="#installation-methods" title="Permalink to this headline">#</a></h2>
 <p>SLEAP can be installed three different ways: via <span class="xref std std-ref">conda package</span>, <span class="xref std std-ref">conda from source</span>, or <span class="xref std std-ref">pip package</span>. Select one of the methods below to install SLEAP. We recommend <span class="xref std std-ref">conda package</span>.</p>
-<div class="admonition hint">
-<p class="admonition-title">Hint</p>
-<p>Installation requires entering commands in a terminal. To open one:</p>
-<div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-1-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-1-1-0" name="1-0" role="tab" tabindex="0">Windows</button><button aria-controls="panel-1-1-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-1" name="1-1" role="tab" tabindex="-1">Linux</button><button aria-controls="panel-1-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-1-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-1-1-0" class="sphinx-tabs-panel" id="panel-1-1-0" name="1-0" role="tabpanel" tabindex="0"><p>Open the <em>Start menu</em> and search for the <em>Anaconda Prompt</em> (if using Miniconda) or the <em>Command Prompt</em> if not.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>On Windows, our personal preference is to use alternative terminal apps like <a class="reference external" href="https://cmder.net">Cmder</a> or <a class="reference external" href="https://aka.ms/terminal">Windows Terminal</a>.</p>
-</div>
-</div><div aria-labelledby="tab-1-1-1" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-1" name="1-1" role="tabpanel" tabindex="0"><p>Launch a new terminal by pressing <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>.</p>
-</div><div aria-labelledby="tab-1-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-1-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><p>Launch a new terminal by pressing <kbd>Cmd</kbd> + <kbd>Space</kbd> and searching for <em>Terminal</em>.</p>
-</div></div>
-</div>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-2-2-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-2-2-0" name="2-0" role="tab" tabindex="0">conda package</button><button aria-controls="panel-2-2-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-2-2-1" name="2-1" role="tab" tabindex="-1">conda from source</button><button aria-controls="panel-2-2-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-2-2-2" name="2-2" role="tab" tabindex="-1">pip package</button></div><div aria-labelledby="tab-2-2-0" class="sphinx-tabs-panel" id="panel-2-2-0" name="2-0" role="tabpanel" tabindex="0"><p><strong>This is the recommended installation method</strong>.</p>
 <div class="sphinx-tabs docutils container">
@@ -531,7 +519,7 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 </div></div>
 </section>
 <section id="testing-that-things-are-working">
-<h2><a class="toc-backref" href="#id3">Testing that things are working</a><a class="headerlink" href="#testing-that-things-are-working" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id4">Testing that things are working</a><a class="headerlink" href="#testing-that-things-are-working" title="Permalink to this headline">#</a></h2>
 <p>If you installed using <code class="docutils literal notranslate"><span class="pre">conda</span></code>, first activate the <code class="docutils literal notranslate"><span class="pre">sleap</span></code> environment by opening a terminal and typing:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>sleap
 </pre></div>
@@ -544,7 +532,7 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 </div>
 </div>
 <section id="gui-support">
-<h3><a class="toc-backref" href="#id4">GUI support</a><a class="headerlink" href="#gui-support" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id5">GUI support</a><a class="headerlink" href="#gui-support" title="Permalink to this headline">#</a></h3>
 <p>To check that the GUI is working, simply type:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sleap-label
 </pre></div>
@@ -552,7 +540,7 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <p>You should see the SLEAP labeling interface pop up within a few moments.</p>
 </section>
 <section id="importing">
-<h3><a class="toc-backref" href="#id5">Importing</a><a class="headerlink" href="#importing" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id6">Importing</a><a class="headerlink" href="#importing" title="Permalink to this headline">#</a></h3>
 <p>To check if SLEAP is installed correctly in non-interactive environments, such as remote servers, confirm that you can import it with:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import sleap; sleap.versions()&quot;</span>
 </pre></div>
@@ -568,7 +556,7 @@ OS: Windows-10-10.0.19041-SP0
 </div>
 </section>
 <section id="gpu-support">
-<h3><a class="toc-backref" href="#id6">GPU support</a><a class="headerlink" href="#gpu-support" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id7">GPU support</a><a class="headerlink" href="#gpu-support" title="Permalink to this headline">#</a></h3>
 <p>Assuming you installed using either of the <code class="docutils literal notranslate"><span class="pre">conda</span></code>-based methods on Windows or Linux, SLEAP should automatically have GPU support enabled.</p>
 <p>To check, verify that SLEAP can detect the GPUs on your system:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import sleap; sleap.system_summary()&quot;</span>
@@ -645,7 +633,7 @@ file:<span class="w"> </span>No<span class="w"> </span>such<span class="w"> </sp
 </section>
 </section>
 <section id="upgrading-and-uninstalling">
-<h2><a class="toc-backref" href="#id7">Upgrading and uninstalling</a><a class="headerlink" href="#upgrading-and-uninstalling" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id8">Upgrading and uninstalling</a><a class="headerlink" href="#upgrading-and-uninstalling" title="Permalink to this headline">#</a></h2>
 <p>We <strong>strongly recommend</strong> installing SLEAP in a fresh environment when updating. This is because dependency versions might change, and depending on the state of your previous environment, directly updating might break compatibility with some of them.</p>
 <p>To uninstall an existing environment named <code class="docutils literal notranslate"><span class="pre">sleap</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>remove<span class="w"> </span>-n<span class="w"> </span>sleap
@@ -661,7 +649,7 @@ file:<span class="w"> </span>No<span class="w"> </span>such<span class="w"> </sp
 <p>Once the environment has been removed, you are free to install SLEAP using any of the installation methods above into an environment of the same name.</p>
 </section>
 <section id="getting-help">
-<h2><a class="toc-backref" href="#id8">Getting help</a><a class="headerlink" href="#getting-help" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id9">Getting help</a><a class="headerlink" href="#getting-help" title="Permalink to this headline">#</a></h2>
 <p>If you run into any problems, check out the <a class="reference external" href="https://github.com/talmolab/sleap/discussions">Github Discussions</a> and <a class="reference external" href="https://github.com/talmolab/sleap/issues">GitHub Issues</a> to see if others have had the same problem.</p>
 <p>If you get any errors or the GUI fails to launch, try running the diagnostics to see what SLEAP is able to detect on your system:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sleap-diagnostic

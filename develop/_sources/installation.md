@@ -1,40 +1,21 @@
 # Installation
 
-SLEAP can be installed as a Python package on Windows, Linux, and Mac OS.
+SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. For quick install using conda, see below:
 
 ````{tabs}
-
    ```{group-tab} Windows and Linux
-
-
       ```bash
       conda create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a1
       ```
-
-      
-      ```{note}
-      - This comes with CUDA to enable GPU support. All you need is to have an NVIDIA GPU and [updated drivers](https://nvidia.com/drivers).
-      - If you already have CUDA installed on your system, this will not conflict with it.
-      - This will also work in CPU mode if you don't have a GPU on your machine.
-      ```
-
    ```
-
    ```{group-tab} Mac OS
-
       ```bash
       conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a1
       ```
-
-      ```{note}
-      This will also work in CPU mode if you don't have a GPU on your machine.
-      ```
-   
    ```
-
 ````
 
-The newest version of SLEAP can always be found in the [Releases page](https://github.com/talmolab/sleap/releases).
+. For more in-depth installation instructions, see the [installation methods](installation-methods). The newest version of SLEAP can always be found in the [Releases page](https://github.com/talmolab/sleap/releases).
 
 ```{contents} Contents
 ---
@@ -42,6 +23,23 @@ local:
 ---
 ```
 
+`````{hint}
+   Installation requires entering commands in a terminal. To open one:
+   ````{tabs}
+      ```{tab} Windows
+         Open the *Start menu* and search for the *Anaconda Prompt* (if using Miniconda) or the *Command Prompt* if not. 
+         ```{note}
+         On Windows, our personal preference is to use alternative terminal apps like [Cmder](https://cmder.net) or [Windows Terminal](https://aka.ms/terminal).
+         ```
+      ```
+      ```{tab} Linux
+         Launch a new terminal by pressing <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>.
+      ```
+      ```{group-tab} Mac OS
+         Launch a new terminal by pressing <kbd>Cmd</kbd> + <kbd>Space</kbd> and searching for _Terminal_.
+      ```
+   ````
+`````
 
 ## Package Manager
 
@@ -62,208 +60,111 @@ Any subsequent `conda` commands in the docs will need to be replaced with `mamba
 
 ````
 
+(installation-methods)=
 ## Installation methods
 
 SLEAP can be installed three different ways: via {ref}`conda package<condapackage>`, {ref}`conda from source<condasource>`, or {ref}`pip package<pippackage>`. Select one of the methods below to install SLEAP. We recommend {ref}`conda package<condapackage>`.
 
-
-
-`````{hint}
-   Installation requires entering commands in a terminal. To open one:
-
-   ````{tabs}
-
-      ```{tab} Windows
-
-         Open the *Start menu* and search for the *Anaconda Prompt* (if using Miniconda) or the *Command Prompt* if not.
-         
-         ```{note}
-         On Windows, our personal preference is to use alternative terminal apps like [Cmder](https://cmder.net) or [Windows Terminal](https://aka.ms/terminal).
-         ```
-
-      ```
-
-      ```{tab} Linux
-
-         Launch a new terminal by pressing <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>.
-
-      ```
-
-      ```{group-tab} Mac OS
-
-         Launch a new terminal by pressing <kbd>Cmd</kbd> + <kbd>Space</kbd> and searching for _Terminal_.
-
-      ```
-
-   ````
-
-`````
-
 ````{tabs}
-
    ```{tab} conda package
-
       **This is the recommended installation method**.
-
       ````{tabs}
-
          ```{group-tab} Windows and Linux
-
-
             ```bash
             conda create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a1
-            ```
-
-            
+            ```  
             ```{note}
             - This comes with CUDA to enable GPU support. All you need is to have an NVIDIA GPU and [updated drivers](https://nvidia.com/drivers).
             - If you already have CUDA installed on your system, this will not conflict with it.
             - This will also work in CPU mode if you don't have a GPU on your machine.
             ```
-
          ```
-
          ```{group-tab} Mac OS
-
             ```bash
             conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a1
             ```
-
             ```{note}
             This will also work in CPU mode if you don't have a GPU on your machine.
             ```
-         
          ```
-
       ````
-
    ```
-
    ```{tab} conda from source
-
       This is the **recommended method for development**.
-
       1. First, ensure git is installed:
-
          ```bash
          git --version
          ```
-
          If `git` is not recognized, then [install git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
-
       2. Then, clone the repository:
-
          ```bash
          git clone https://github.com/talmolab/sleap && cd sleap
          ```
-
       3. Finally, install SLEAP from the environment file:
-
-
          ````{tabs}
-
             ```{group-tab} Windows and Linux
-
-            
                ````{tabs}
-
                   ```{group-tab} NVIDIA GPU
-
                      ```bash
                      conda env create -f environment.yml -n sleap
                      ```
-
                   ```
-
                   ```{group-tab} CPU or other GPU
-
                      ```bash
                      conda env create -f environment_no_cuda.yml -n sleap
                      ```
-                  
                   ```
-
                ````
-
             ```
-
             ```{group-tab} Mac OS
-
                ```bash
                conda env create -f environment_mac.yml -n sleap
                ```
             ```
-
          ````
-
       ```{note}
       - This installs SLEAP in development mode, which means that edits to the source code will be applied the next time you run SLEAP.
       - Change the `-n sleap` in the command to create an environment with a different name (e.g., `-n sleap_develop`).
       ```
-   
    ```
-
    ```{tab} pip package
-
       This is the **recommended method for Google Colab only**.
-
       ```{warning}
       This will uninstall existing libraries and potentially install conflicting ones.
 
       We strongly recommend that you **only use this method if you know what you're doing**!
       ```
-
       ````{tabs}
-
          ```{group-tab} Windows and Linux
-
             ```{note}
             - Requires Python 3.7
             - To enable GPU support, make sure that you have **CUDA Toolkit v11.3** and **cuDNN v8.2** installed.
             ```
-
             Although you do not need Miniconda installed to perform a `pip install`, we recommend [installing Miniconda](https://docs.anaconda.com/free/miniconda/) to create a new environment where we can isolate the `pip install`. Alternatively, you can use a venv if you have an existing Python 3.7 installation. If you are working on **Google Colab**, skip to step 3 to perform the `pip install` without using a conda environment.
-
             1. Otherwise, create a new conda environment where we will `pip install sleap`:
-
                ````{tabs}
-
                   ```{group-tab} NVIDIA GPU
-
-
                      ```bash
                      conda create --name sleap pip python=3.7.12 cudatoolkit=11.3 cudnn=8.2
                      ```
-
                   ```
-
                   ```{group-tab} CPU or other GPU
-
                      ```bash
                      conda create --name sleap pip python=3.7.12
                      ```
-
-                     
                   ```
-
                ````
-
             2. Then activate the environment to isolate the `pip install` from other environments on your computer:
-
                ```bash
                conda activate sleap
                ```
-
                ```{warning}
                Refrain from installing anything into the `base` environment. Always create a new environment to install new packages.
                ```
-
             3. Finally, we can perform the `pip install`:
-
                ```bash
                pip install sleap[pypi]==1.4.1a1
                ```
-
                ```{note}
                The pypi distributed package of SLEAP ships with the following extras:
                - **pypi**: For installation without an conda environment file. All dependencies come from PyPI.
@@ -272,19 +173,12 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
                - **conda_jupyter**: For installation using a conda environment file included in the source code. Most dependencies are listed as conda packages in the environment file and only a few come from PyPI to allow jupyter lab support.
                - **conda_dev**: For installation using [a conda environment](https://github.com/search?q=repo%3Atalmolab%2Fsleap+path%3Aenvironment*.yml&type=code) with a few PyPI dependencies for development tools.
                ```
-            
          ```
-
          ```{group-tab} Mac OS
-
             Not supported.
-
          ```
-
          ````
-   
    ```
-
 ````
 
 ## Testing that things are working
