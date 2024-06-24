@@ -2,6 +2,38 @@
 
 SLEAP can be installed as a Python package on Windows, Linux, and Mac OS.
 
+````{tabs}
+
+   ```{group-tab} Windows and Linux
+
+
+      ```bash
+      mamba create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a1
+      ```
+
+      
+      ```{note}
+      - This comes with CUDA to enable GPU support. All you need is to have an NVIDIA GPU and [updated drivers](https://nvidia.com/drivers).
+      - If you already have CUDA installed on your system, this will not conflict with it.
+      - This will also work in CPU mode if you don't have a GPU on your machine.
+      ```
+
+   ```
+
+   ```{group-tab} Mac OS
+
+      ```bash
+      mamba create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a1
+      ```
+
+      ```{note}
+      This will also work in CPU mode if you don't have a GPU on your machine.
+      ```
+   
+   ```
+
+````
+
 The newest version of SLEAP can always be found in the [Releases page](https://github.com/talmolab/sleap/releases).
 
 ```{contents} Contents

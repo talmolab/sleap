@@ -28,6 +28,10 @@
     margin: -1px;
     background-color: rgb(50, 50, 50);
   }
+
+  .admonition .sphinx-tabs-tab[aria-selected="true"]:last-child {
+    margin-bottom: -1px;
+  }
   
   .sphinx-tabs-tab:focus {
     z-index: 1;

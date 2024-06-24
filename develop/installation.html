@@ -343,6 +343,26 @@ document.write(`
   <section class="tex2jax_ignore mathjax_ignore" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">#</a></h1>
 <p>SLEAP can be installed as a Python package on Windows, Linux, and Mac OS.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-V2luZG93cyBhbmQgTGludXg=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-0-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-0-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-0-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-0-V2luZG93cyBhbmQgTGludXg=" class="sphinx-tabs-panel group-tab" id="panel-0-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>nvidia<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>This comes with CUDA to enable GPU support. All you need is to have an NVIDIA GPU and <a class="reference external" href="https://nvidia.com/drivers">updated drivers</a>.</p></li>
+<li><p>If you already have CUDA installed on your system, this will not conflict with it.</p></li>
+<li><p>This will also work in CPU mode if you don’t have a GPU on your machine.</p></li>
+</ul>
+</div>
+</div><div aria-labelledby="tab-0-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-0-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This will also work in CPU mode if you don’t have a GPU on your machine.</p>
+</div>
+</div></div>
 <p>The newest version of SLEAP can always be found in the <a class="reference external" href="https://github.com/talmolab/sleap/releases">Releases page</a>.</p>
 <div class="contents local topic" id="contents">
 <p class="topic-title">Contents</p>
@@ -384,19 +404,19 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <p class="admonition-title">Hint</p>
 <p>Installation requires entering commands in a terminal. To open one:</p>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">Windows</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Linux</button><button aria-controls="panel-0-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-0-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><p>Open the <em>Start menu</em> and search for the <em>Anaconda Prompt</em> (if using Miniconda) or the <em>Command Prompt</em> if not.</p>
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-1-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-1-1-0" name="1-0" role="tab" tabindex="0">Windows</button><button aria-controls="panel-1-1-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-1" name="1-1" role="tab" tabindex="-1">Linux</button><button aria-controls="panel-1-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-1-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-1-1-0" class="sphinx-tabs-panel" id="panel-1-1-0" name="1-0" role="tabpanel" tabindex="0"><p>Open the <em>Start menu</em> and search for the <em>Anaconda Prompt</em> (if using Miniconda) or the <em>Command Prompt</em> if not.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>On Windows, our personal preference is to use alternative terminal apps like <a class="reference external" href="https://cmder.net">Cmder</a> or <a class="reference external" href="https://aka.ms/terminal">Windows Terminal</a>.</p>
 </div>
-</div><div aria-labelledby="tab-0-0-1" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-1" name="0-1" role="tabpanel" tabindex="0"><p>Launch a new terminal by pressing <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>.</p>
-</div><div aria-labelledby="tab-0-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-0-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><p>Launch a new terminal by pressing <kbd>Cmd</kbd> + <kbd>Space</kbd> and searching for <em>Terminal</em>.</p>
+</div><div aria-labelledby="tab-1-1-1" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-1" name="1-1" role="tabpanel" tabindex="0"><p>Launch a new terminal by pressing <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>.</p>
+</div><div aria-labelledby="tab-1-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-1-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><p>Launch a new terminal by pressing <kbd>Cmd</kbd> + <kbd>Space</kbd> and searching for <em>Terminal</em>.</p>
 </div></div>
 </div>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-1-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-1-1-0" name="1-0" role="tab" tabindex="0">conda package</button><button aria-controls="panel-1-1-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-1" name="1-1" role="tab" tabindex="-1">conda from source</button><button aria-controls="panel-1-1-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-2" name="1-2" role="tab" tabindex="-1">pip package</button></div><div aria-labelledby="tab-1-1-0" class="sphinx-tabs-panel" id="panel-1-1-0" name="1-0" role="tabpanel" tabindex="0"><p><strong>This is the recommended installation method</strong>.</p>
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-2-2-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-2-2-0" name="2-0" role="tab" tabindex="0">conda package</button><button aria-controls="panel-2-2-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-2-2-1" name="2-1" role="tab" tabindex="-1">conda from source</button><button aria-controls="panel-2-2-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-2-2-2" name="2-2" role="tab" tabindex="-1">pip package</button></div><div aria-labelledby="tab-2-2-0" class="sphinx-tabs-panel" id="panel-2-2-0" name="2-0" role="tabpanel" tabindex="0"><p><strong>This is the recommended installation method</strong>.</p>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-2-V2luZG93cyBhbmQgTGludXg=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-2-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-2-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-2-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-2-V2luZG93cyBhbmQgTGludXg=" class="sphinx-tabs-panel group-tab" id="panel-2-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>nvidia<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-3-V2luZG93cyBhbmQgTGludXg=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-3-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-3-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-3-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-3-V2luZG93cyBhbmQgTGludXg=" class="sphinx-tabs-panel group-tab" id="panel-3-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>nvidia<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
 </pre></div>
 </div>
 <div class="admonition note">
@@ -407,7 +427,7 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <li><p>This will also work in CPU mode if you don’t have a GPU on your machine.</p></li>
 </ul>
 </div>
-</div><div aria-labelledby="tab-2-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-2-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
+</div><div aria-labelledby="tab-3-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-3-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span><span class="nv">sleap</span><span class="o">=</span><span class="m">1</span>.4.1a1
 </pre></div>
 </div>
 <div class="admonition note">
@@ -415,7 +435,7 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <p>This will also work in CPU mode if you don’t have a GPU on your machine.</p>
 </div>
 </div></div>
-</div><div aria-labelledby="tab-1-1-1" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-1" name="1-1" role="tabpanel" tabindex="0"><p>This is the <strong>recommended method for development</strong>.</p>
+</div><div aria-labelledby="tab-2-2-1" class="sphinx-tabs-panel" hidden="true" id="panel-2-2-1" name="2-1" role="tabpanel" tabindex="0"><p>This is the <strong>recommended method for development</strong>.</p>
 <ol>
 <li><p>First, ensure git is installed:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>--version
@@ -430,15 +450,15 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 </li>
 <li><p>Finally, install SLEAP from the environment file:</p>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-3-V2luZG93cyBhbmQgTGludXg=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-3-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-3-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-3-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-3-V2luZG93cyBhbmQgTGludXg=" class="sphinx-tabs-panel group-tab" id="panel-3-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tabpanel" tabindex="0"><div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-4-TlZJRElBIEdQVQ==" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-4-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tab" tabindex="0">NVIDIA GPU</button><button aria-controls="panel-4-Q1BVIG9yIG90aGVyIEdQVQ==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-4-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tab" tabindex="-1">CPU or other GPU</button></div><div aria-labelledby="tab-4-TlZJRElBIEdQVQ==" class="sphinx-tabs-panel group-tab" id="panel-4-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment.yml<span class="w"> </span>-n<span class="w"> </span>sleap
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-4-V2luZG93cyBhbmQgTGludXg=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-4-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-4-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-4-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-4-V2luZG93cyBhbmQgTGludXg=" class="sphinx-tabs-panel group-tab" id="panel-4-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tabpanel" tabindex="0"><div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-5-TlZJRElBIEdQVQ==" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-5-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tab" tabindex="0">NVIDIA GPU</button><button aria-controls="panel-5-Q1BVIG9yIG90aGVyIEdQVQ==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-5-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tab" tabindex="-1">CPU or other GPU</button></div><div aria-labelledby="tab-5-TlZJRElBIEdQVQ==" class="sphinx-tabs-panel group-tab" id="panel-5-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment.yml<span class="w"> </span>-n<span class="w"> </span>sleap
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-4-Q1BVIG9yIG90aGVyIEdQVQ==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-4-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_no_cuda.yml<span class="w"> </span>-n<span class="w"> </span>sleap
+</div><div aria-labelledby="tab-5-Q1BVIG9yIG90aGVyIEdQVQ==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-5-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_no_cuda.yml<span class="w"> </span>-n<span class="w"> </span>sleap
 </pre></div>
 </div>
 </div></div>
-</div><div aria-labelledby="tab-3-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-3-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_mac.yml<span class="w"> </span>-n<span class="w"> </span>sleap
+</div><div aria-labelledby="tab-4-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-4-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment_mac.yml<span class="w"> </span>-n<span class="w"> </span>sleap
 </pre></div>
 </div>
 </div></div>
@@ -451,14 +471,14 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <li><p>Change the <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">sleap</span></code> in the command to create an environment with a different name (e.g., <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">sleap_develop</span></code>).</p></li>
 </ul>
 </div>
-</div><div aria-labelledby="tab-1-1-2" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-2" name="1-2" role="tabpanel" tabindex="0"><p>This is the <strong>recommended method for Google Colab only</strong>.</p>
+</div><div aria-labelledby="tab-2-2-2" class="sphinx-tabs-panel" hidden="true" id="panel-2-2-2" name="2-2" role="tabpanel" tabindex="0"><p>This is the <strong>recommended method for Google Colab only</strong>.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>This will uninstall existing libraries and potentially install conflicting ones.</p>
 <p>We strongly recommend that you <strong>only use this method if you know what you’re doing</strong>!</p>
 </div>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-5-V2luZG93cyBhbmQgTGludXg=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-5-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-5-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-5-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-5-V2luZG93cyBhbmQgTGludXg=" class="sphinx-tabs-panel group-tab" id="panel-5-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tabpanel" tabindex="0"><div class="admonition note">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-6-V2luZG93cyBhbmQgTGludXg=" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-6-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tab" tabindex="0">Windows and Linux</button><button aria-controls="panel-6-TWFjIE9T" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-6-TWFjIE9T" name="TWFjIE9T" role="tab" tabindex="-1">Mac OS</button></div><div aria-labelledby="tab-6-V2luZG93cyBhbmQgTGludXg=" class="sphinx-tabs-panel group-tab" id="panel-6-V2luZG93cyBhbmQgTGludXg=" name="V2luZG93cyBhbmQgTGludXg=" role="tabpanel" tabindex="0"><div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
 <li><p>Requires Python 3.7</p></li>
@@ -469,10 +489,10 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 <ol>
 <li><p>Otherwise, create a new conda environment where we will <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">sleap</span></code>:</p>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-6-TlZJRElBIEdQVQ==" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-6-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tab" tabindex="0">NVIDIA GPU</button><button aria-controls="panel-6-Q1BVIG9yIG90aGVyIEdQVQ==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-6-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tab" tabindex="-1">CPU or other GPU</button></div><div aria-labelledby="tab-6-TlZJRElBIEdQVQ==" class="sphinx-tabs-panel group-tab" id="panel-6-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>sleap<span class="w"> </span>pip<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7.12<span class="w"> </span><span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">11</span>.3<span class="w"> </span><span class="nv">cudnn</span><span class="o">=</span><span class="m">8</span>.2
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-7-TlZJRElBIEdQVQ==" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-7-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tab" tabindex="0">NVIDIA GPU</button><button aria-controls="panel-7-Q1BVIG9yIG90aGVyIEdQVQ==" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-7-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tab" tabindex="-1">CPU or other GPU</button></div><div aria-labelledby="tab-7-TlZJRElBIEdQVQ==" class="sphinx-tabs-panel group-tab" id="panel-7-TlZJRElBIEdQVQ==" name="TlZJRElBIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>sleap<span class="w"> </span>pip<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7.12<span class="w"> </span><span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">11</span>.3<span class="w"> </span><span class="nv">cudnn</span><span class="o">=</span><span class="m">8</span>.2
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-6-Q1BVIG9yIG90aGVyIEdQVQ==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-6-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>sleap<span class="w"> </span>pip<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7.12
+</div><div aria-labelledby="tab-7-Q1BVIG9yIG90aGVyIEdQVQ==" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-7-Q1BVIG9yIG90aGVyIEdQVQ==" name="Q1BVIG9yIG90aGVyIEdQVQ==" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>sleap<span class="w"> </span>pip<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7.12
 </pre></div>
 </div>
 </div></div>
@@ -503,7 +523,7 @@ conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w">
 </div>
 </li>
 </ol>
-</div><div aria-labelledby="tab-5-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-5-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><p>Not supported.</p>
+</div><div aria-labelledby="tab-6-TWFjIE9T" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-6-TWFjIE9T" name="TWFjIE9T" role="tabpanel" tabindex="0"><p>Not supported.</p>
 </div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
 </pre></div>
 </div>
