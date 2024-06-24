@@ -450,9 +450,14 @@ class CommandContext:
         """Removes a session from the project and the sessions dock."""
         self.execute(RemoveSession)
 
-    def linkVideoToSession(self):
+    def linkVideoToSession(
+        self,
+        video: Optional[Video] = None,
+        session: Optional[RecordingSession] = None,
+        camera: Optional[str] = None,
+    ):
         """Links a video to a `RecordingSession`."""
-        self.execute(LinkVideoToSession)
+        self.execute(LinkVideoToSession, video=video, session=session, camera=camera)
 
     def openSkeletonTemplate(self):
         """Shows gui for loading saved skeleton into project."""
@@ -1831,6 +1836,8 @@ class ShowImportVideos(EditCommand):
     def do_action(context: CommandContext, params: dict):
         import_list = params["import_list"]
         new_videos = ImportVideos.create_videos(import_list)
+        params["new_videos"] = new_videos
+
         video = None
         for video in new_videos:
             # Add to labels
@@ -2031,9 +2038,28 @@ class AddSession(EditCommand):
         # Add session
         context.labels.add_session(session)
 
-        # Show import video dialog
+        # Import the new videos and link them to a camera
         if "import_list" in params:
             ShowImportVideos().do_action(context=context, params=params)
+
+            # Create a lookup for cameras and videos
+            camera_by_video_paths = params.get("camera_by_video_paths", {})
+            new_videos = params.get("new_videos", [])
+            new_video_by_filename = {
+                video.backend.filename: video for video in new_videos
+            }
+            camera_by_name = {cam.name: cam for cam in session.cameras}
+
+            # Link videos to cameras
+            for video_path, camera_name in camera_by_video_paths.items():
+                # Get video and camcorder
+                video = new_video_by_filename.get(video_path, None)
+                if video is None:
+                    continue
+                camera = camera_by_name.get(camera_name, None)
+                if camera is None:
+                    continue
+                context.linkVideoToSession(video=video, session=session, camera=camera)
 
         # Load if no video currently loaded
         if context.state["session"] is None:
@@ -2044,7 +2070,7 @@ class AddSession(EditCommand):
         context.state["selected_session"] = None
 
     @staticmethod
-    def find_video_paths(camera_calibration: str) -> List[str]:
+    def find_video_paths(camera_calibration: str) -> Dict[str, str]:
 
         # Find parent of calibration file
         calibration_path = Path(camera_calibration)
@@ -2057,7 +2083,7 @@ class AddSession(EditCommand):
         ]
 
         # Find videos inside camera folders
-        video_paths = []
+        camera_by_video_paths = {}
         for camera_name in camera_names:
             camera_folder = parent_dir / camera_name
 
@@ -2071,9 +2097,9 @@ class AddSession(EditCommand):
             for file in camera_folder.iterdir():
                 if file.suffix[1:] in video_extensions:
                     video_path = camera_folder / file
-                    video_paths.append(video_path.as_posix())
+                    camera_by_video_paths[video_path.as_posix()] = camera_name
 
-        return video_paths
+        return camera_by_video_paths
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
@@ -2090,11 +2116,12 @@ class AddSession(EditCommand):
         if len(filename) == 0:
             return False
 
-        video_paths = AddSession.find_video_paths(camera_calibration=filename)
+        camera_by_video_paths = AddSession.find_video_paths(camera_calibration=filename)
+        params["camera_by_video_paths"] = camera_by_video_paths
 
         # Show import video dialog if any videos are found
-        if len(video_paths) > 0:
-            params["filenames"] = video_paths
+        if len(camera_by_video_paths) > 0:
+            params["filenames"] = list(camera_by_video_paths.keys())
             ShowImportVideos().ask(context=context, params=params)
 
         return True
@@ -2105,9 +2132,9 @@ class LinkVideoToSession(EditCommand):
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        video = context.state["selected_unlinked_video"]
-        recording_session = context.state["selected_session"]
-        camcorder = context.state["selected_camera"]
+        video = params["video"] or context.state["selected_unlinked_video"]
+        recording_session = params["session"] or context.state["selected_session"]
+        camcorder = params["camera"] or context.state["selected_camera"]
 
         if camcorder.get_video(recording_session) is None:
             recording_session.add_video(video=video, camcorder=camcorder)
