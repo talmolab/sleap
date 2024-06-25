@@ -1454,7 +1454,7 @@ def test_DeleteInstanceGroup(multiview_min_session_frame_groups: Labels):
     assert len(instance_group_1.instances) == 6
 
 
-def test_automatic_addition_videos(min_session_directory):
+def test_automatic_addition_and_linkage_videos(min_session_directory):
     """Test if the automatic addition of videos works."""
     # Create a new RecordingSession object
     session_dir = Path(min_session_directory)
@@ -1486,7 +1486,7 @@ def test_automatic_addition_videos(min_session_directory):
     # Case 2: Videos imported
     template_import_item = {
         "params": {
-            "filename": "D:/social-leap-estimates-animal-poses/datasets/mview/back/min_session_back.mp4",
+            "filename": "path/to/video.mp4",
             "grayscale": True,
         },
         "video_type": "mp4",
@@ -1505,5 +1505,44 @@ def test_automatic_addition_videos(min_session_directory):
     assert len(labels.sessions) == 2
     assert isinstance(context.state["session"], RecordingSession)
 
-    # Check that no videos were added
+    # Check that videos were added
     assert len(labels.videos) == len(import_list)
+
+
+def test_link_video_to_session(min_session_session, centered_pair_vid):
+    """Test if the linkage of videos to a session works."""
+
+    # Create a new Label() object
+    session: RecordingSession = min_session_session
+    video: Video = centered_pair_vid
+    labels = Labels()
+    labels.add_session(session)
+    labels.add_video(video)
+
+    # Create command context
+    context = CommandContext.from_labels(labels)
+
+    # Call the function without a camera selected
+    with pytest.raises(ValueError):
+        context.linkVideoToSession()
+
+    # Call the function without a recording session selected
+    camera = session.cameras[0]
+    with pytest.raises(ValueError):
+        context.linkVideoToSession(camera=camera)
+    context.state["selected_camera"] = camera
+    with pytest.raises(ValueError):
+        context.linkVideoToSession()
+
+    # Call the function without a video selected
+    with pytest.raises(ValueError):
+        context.linkVideoToSession(session=session)
+    context.state["selected_session"] = session
+    with pytest.raises(ValueError):
+        context.linkVideoToSession()
+
+    # Call the function with all parameters
+    context.linkVideoToSession(video=video)
+    assert video in session.videos
+    assert camera is session.get_camera(video=video)
+    assert video is session.get_video(camcorder=camera)
