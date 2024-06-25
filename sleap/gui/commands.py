@@ -2136,6 +2136,12 @@ class LinkVideoToSession(EditCommand):
         recording_session = params["session"] or context.state["selected_session"]
         camcorder = params["camera"] or context.state["selected_camera"]
 
+        if camcorder is None:
+            raise ValueError("No camera selected.")
+
+        if recording_session is None:
+            raise ValueError("No session selected.")
+
         if camcorder.get_video(recording_session) is None:
             recording_session.add_video(video=video, camcorder=camcorder)
 
