@@ -275,6 +275,11 @@ def test_recording_session(
     session_3 = sessions_cattr.structure(session_dict_2, RecordingSession)
     compare_sessions(session_2, session_3)
 
+    # Test id
+    assert session.id == hash(session)
+    labels.add_session(session)
+    assert session.id == labels.sessions.index(session)
+
 
 def test_recording_session_get_videos_from_selected_cameras(
     multiview_min_session_labels: Labels,
