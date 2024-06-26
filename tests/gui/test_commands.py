@@ -1464,9 +1464,11 @@ def test_automatic_addition_and_linkage_videos(min_session_directory):
     calibration_path = Path(session_dir, "calibration.toml")
 
     # Test find_video_paths
-    video_paths = AddSession.find_video_paths(camera_calibration=calibration_path)
-    assert len(video_paths) == 8
-    assert all([p in session_dir_video_paths for p in video_paths])
+    camera_by_video_paths = AddSession.find_video_paths(
+        camera_calibration=calibration_path
+    )
+    assert len(camera_by_video_paths) == 8
+    assert all([p in session_dir_video_paths for p in camera_by_video_paths])
 
     # Create a new Label() object
     labels = Labels()
@@ -1484,29 +1486,53 @@ def test_automatic_addition_and_linkage_videos(min_session_directory):
     assert len(labels.videos) == 0
 
     # Case 2: Videos imported
+    template_import_params = {
+        "filename": "path/to/video.mp4",
+        "grayscale": True,
+    }
     template_import_item = {
-        "params": {
-            "filename": "path/to/video.mp4",
-            "grayscale": True,
-        },
+        "params": template_import_params,
         "video_type": "mp4",
         "video_class": Video.from_media,
     }
     import_list = []
-    for video_path in video_paths:
-        import_item = dict(template_import_item)
-        import_item["params"]["filename"] = video_path
+    cam_names_to_exclude = ["topL", "sideL"]
+    for video_path, cam_name in camera_by_video_paths.items():
 
-    import_list.append(import_item)
-    params = {"camera_calibration": calibration_path, "import_list": import_list}
+        # Only link videos for certain cameras
+        if cam_name in cam_names_to_exclude:
+            continue
+
+        import_params = dict(template_import_params)
+        import_params["filename"] = video_path
+        template_import_item["params"] = import_params
+        import_list.append(dict(template_import_item))
+
+    params = {
+        "camera_calibration": calibration_path,
+        "import_list": import_list,
+        "camera_by_video_paths": camera_by_video_paths,
+    }
     AddSession.do_action(context, params)
 
     # Check if the session was added to the Label object
     assert len(labels.sessions) == 2
     assert isinstance(context.state["session"], RecordingSession)
+    session: RecordingSession = labels.sessions[-1]
 
     # Check that videos were added
     assert len(labels.videos) == len(import_list)
+
+    # Check that videos were linked
+    assert len(session.videos) == len(import_list)
+    assert len(session.videos) == len(session.cameras) - len(cam_names_to_exclude)
+    for cam in session.cameras:
+        if cam.name in cam_names_to_exclude:
+            assert session.get_video(camcorder=cam) is None
+        else:
+            video = session.get_video(camcorder=cam)
+            assert video in session.videos
+            assert session.get_camera(video=video) is cam
 
 
 def test_link_video_to_session(min_session_session, centered_pair_vid):
