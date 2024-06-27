@@ -15,7 +15,7 @@ from attrs.validators import deep_iterable, instance_of
 # from sleap.io.dataset import Labels  # TODO(LM): Circular import, implement Observer
 from sleap.instance import Instance, LabeledFrame, PredictedInstance
 from sleap.io.video import Video
-from sleap.util import deep_iterable_converter
+from sleap.util import compute_oks, deep_iterable_converter
 
 logger = logging.getLogger(__name__)
 
@@ -416,6 +416,7 @@ class InstanceGroup:
     _camcorder_by_instance: Dict[Instance, Camcorder] = field(factory=dict)
     _dummy_instance: Optional[Instance] = field(default=None)
     camera_cluster: Optional[CameraCluster] = field(default=None)
+    _score: Optional[float] = field(default=None)
 
     def __attrs_post_init__(self):
         """Initialize `InstanceGroup` object."""
@@ -537,7 +538,7 @@ class InstanceGroup:
         return new_name
 
     @property
-    def instances(self) -> List[Instance]:
+    def instances(self) -> List[Union[Instance, PredictedInstance]]:
         """List of `Instance` objects."""
         return list(self._instance_by_camcorder.values())
 
@@ -551,7 +552,29 @@ class InstanceGroup:
         """Dictionary of `Instance` objects by `Camcorder`."""
         return self._instance_by_camcorder
 
-    def numpy(self, pred_as_nan: bool = False, invisible_as_nan=True) -> np.ndarray:
+    @property
+    def score(self) -> Optional[float]:
+        """Score for the `InstanceGroup`."""
+        return self._score
+    
+    @score.setter
+    def score(self, score: Optional[float]):
+        """Set the score for the `InstanceGroup`.
+        
+        Also sets the score for all instances in the `InstanceGroup` if they have a
+        `score` attribute.
+
+        Args:
+            score: Score to set for the `InstanceGroup`.
+        """
+        
+        for instance in self.instances:
+            if hasattr(instance, "score"):
+                instance.score = score
+
+        self._score = score
+
+    def numpy(self, pred_as_nan: bool = False, invisible_as_nan=True, cams_to_include: Optional[List[Camcorder]] = None) -> np.ndarray:
         """Return instances as a numpy array of shape (n_views, n_nodes, 2).
 
         The ordering of views is based on the ordering of `Camcorder`s in the
@@ -565,13 +588,19 @@ class InstanceGroup:
                 self.dummy_instance. Default is False.
             invisible_as_nan: If True, then replaces invisible points with nan. Default
                 is True.
+            cams_to_include: List of `Camcorder`s to include in the numpy array. If 
+                None, then all `Camcorder`s in the `CameraCluster` are included. Default 
+                is None.
 
         Returns:
             Numpy array of shape (n_views, n_nodes, 2).
         """
 
         instance_numpys: List[np.ndarray] = []  # len(M) x N x 2
-        for cam in self.camera_cluster.cameras:
+        if cams_to_include is None:
+            cams_to_include = self.camera_cluster.cameras
+
+        for cam in cams_to_include:
             instance = self.get_instance(cam)
 
             # Determine whether to use a dummy (all nan) instance
@@ -796,6 +825,9 @@ class InstanceGroup:
             f"Camcorders in `cams_to_include` ({len(cams_to_include)})."
         )
 
+        # Calculate OKS scores for the points
+        gt_points = self.numpy(pred_as_nan=True, invisible_as_nan=True, cams_to_include=cams_to_include)  # M x N x 2
+        oks_scores = np.full((n_views, n_nodes), np.nan)
         for cam_idx, cam in enumerate(cams_to_include):
             # Get the instance for the cam
             instance: Optional[Instance] = self.get_instance(cam)
@@ -805,10 +837,22 @@ class InstanceGroup:
                 )
                 continue
 
-            # Update the points (and scores) for the (predicted) instance
+            # Compute the OKS score for the instance if it is a ground truth instance
+            if not isinstance(instance, PredictedInstance):
+                instance_oks = compute_oks(
+                    gt_points[cam_idx, :, :],
+                    points[cam_idx, :, :],
+                )
+                oks_scores[cam_idx] = instance_oks
+
+            # Update the points for the instance
             instance.update_points(
                 points=points[cam_idx, :, :], exclude_complete=exclude_complete
             )
+        
+        # Update the score for the InstanceGroup to be the average OKS score
+        self.score = np.nanmean(oks_scores)  # scalar
+
 
     def __getitem__(
         self, idx_or_key: Union[int, Camcorder, Instance]
@@ -1654,7 +1698,7 @@ class FrameGroup:
 
         Returns:
             Numpy array of shape (M, T, N, 2) where M is the number of views (determined
-            by self.cames_to_include), T is the number of `InstanceGroup`s, N is the
+            by self.cams_to_include), T is the number of `InstanceGroup`s, N is the
             number of Nodes, and 2 is for x, y.
         """
 
@@ -1670,19 +1714,17 @@ class FrameGroup:
                         f"{self.instance_groups}"
                     )
 
-        instance_group_numpys: List[np.ndarray] = []  # len(T) M=all x N x 2
+        instance_group_numpys: List[np.ndarray] = []  # len(T) M=include x N x 2
         for instance_group in instance_groups:
             instance_group_numpy = instance_group.numpy(
-                pred_as_nan=pred_as_nan
-            )  # M=all x N x 2
+                pred_as_nan=pred_as_nan,
+                cams_to_include=self.cams_to_include,
+            )  # M=include x N x 2
             instance_group_numpys.append(instance_group_numpy)
 
-        frame_group_numpy = np.stack(instance_group_numpys, axis=1)  # M=all x T x N x 2
-        cams_to_include_mask = np.array(
-            [cam in self.cams_to_include for cam in self.session.cameras]
-        )  # M=all x 1
+        frame_group_numpy = np.stack(instance_group_numpys, axis=1)  # M=include x TxNx2
 
-        return frame_group_numpy[cams_to_include_mask]  # M=include x T x N x 2
+        return frame_group_numpy  # M=include x T x N x 2
 
     def add_instance(
         self,
@@ -2074,7 +2116,6 @@ class FrameGroup:
 
         This will update the points for existing `Instance`s in the `InstanceGroup`s and
         also add new `Instance`s if they do not exist.
-
 
         Included cams are specified by `FrameGroup.cams_to_include`.
 
