@@ -907,6 +907,7 @@ class InstanceGroup:
         instance_by_camcorder: Dict[Camcorder, Instance],
         name: str,
         name_registry: Set[str],
+        score: Optional[float] = None,
     ) -> Optional["InstanceGroup"]:
         """Creates an `InstanceGroup` object from a dictionary.
 
@@ -914,6 +915,7 @@ class InstanceGroup:
             instance_by_camcorder: Dictionary with `Camcorder` keys and `Instance` values.
             name: Name to use for the `InstanceGroup`.
             name_registry: Set of names to check for uniqueness.
+            score: Optional score to set for the `InstanceGroup`. Default is None.
 
         Raises:
             ValueError: If the `InstanceGroup` name is already in use.
@@ -957,6 +959,7 @@ class InstanceGroup:
             frame_idx=frame_idx,
             camera_cluster=camera_cluster,
             instance_by_camcorder=instance_by_camcorder_copy,
+            score=score,
         )
 
     def to_dict(
@@ -984,10 +987,14 @@ class InstanceGroup:
             for cam, instance in self._instance_by_camcorder.items()
         }
 
-        return {
+        instance_group_dict = {
             "name": self.name,
             "camcorder_to_lf_and_inst_idx_map": camcorder_to_lf_and_inst_idx_map,
         }
+        if self.score is not None:
+            instance_group_dict["score"] = str(round(self.score, 4))
+
+        return instance_group_dict
 
     @classmethod
     def from_dict(
@@ -1011,6 +1018,13 @@ class InstanceGroup:
             `InstanceGroup` object.
         """
 
+        # Get the score (if available)
+        score = (
+            float(instance_group_dict["score"])
+            if "score" in instance_group_dict
+            else None
+        )
+
         # Get the `Instance` objects
         camcorder_to_lf_and_inst_idx_map: Dict[
             str, Tuple[str, str]
@@ -1032,6 +1046,7 @@ class InstanceGroup:
             instance_by_camcorder=instance_by_camcorder,
             name=instance_group_dict["name"],
             name_registry=name_registry,
+            score=score,
         )
 
 
