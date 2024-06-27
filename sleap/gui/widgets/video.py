@@ -73,6 +73,7 @@ from sleap.instance import Instance, Point, PredictedInstance
 from sleap.io.video import Video
 from sleap.prefs import prefs
 from sleap.skeleton import Node
+from sleap.io.cameras import Camcorder
 
 
 class LoadImageWorker(QtCore.QObject):
@@ -281,6 +282,15 @@ class QtVideoPlayer(QWidget):
             self.state["video"] = video
 
         self.state.connect("unlinked_video", lambda video: set_video(video))
+
+        def set_camera(camera: Camcorder):
+            sessions = camera.sessions
+            session = self.state["session"] or sessions[0] if sessions else None
+            video = camera.get_video(session=session)
+            if session is not None and video is not None:
+                self.state["video"] = video
+
+        self.state.connect("camera", lambda camera: set_camera(camera))
 
         self.state.connect("fit", self.setFitZoom)
 

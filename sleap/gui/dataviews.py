@@ -347,14 +347,6 @@ class GenericTableView(QtWidgets.QTableView):
         if self.is_activatable:
             self.state[self.row_name] = self.getSelectedRowItem()
 
-            if self.row_name == "camera":
-                session = self.state["session"]
-                if (
-                    session is not None
-                    and session.get_video(self.getSelectedRowItem()) is not None
-                ):
-                    self.state["video"] = session.get_video(self.getSelectedRowItem())
-
     def selectRowItem(self, item: Any):
         """Select row corresponding to item.
 
