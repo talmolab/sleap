@@ -5302,9 +5302,9 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
         data_path_list = []
         for file_path in data_path.iterdir():
             if file_path.is_file():
-                data_path_list.append(file_path)
+                data_path_list.append(Path(file_path))
     elif data_path.is_file():
-        data_path_list = [args.data_path]
+        data_path_list = [data_path]
     else:
         raise ValueError(
             "You must specify a path to a video or a labels dataset. "
@@ -5315,7 +5315,6 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
     provider_list = []
     tmp_data_path_list = []
     for data_path_file in data_path_list:
-        data_path_file = Path(data_path_file)
         # Create a provider for each file
         if data_path_file.as_posix().endswith(".slp"):
             print(f"Sleap file: {data_path_file}")
@@ -5502,6 +5501,8 @@ def main(args: Optional[list] = None):
 
     # Output path given is a file, but multiple inputs were given
     if output_path is not None and (
+        #TODO check if directory exists
+        #always specify output directory
         Path.is_file(output_path_obj) and len(data_path_list) > 1
     ):
         raise ValueError(
@@ -5577,7 +5578,7 @@ def main(args: Optional[list] = None):
         for data_path, provider in zip(data_path_list, provider_list):
             # Load predictions
             print("Loading predictions...")
-            labels_pr = sleap.load_file(args.data_path.as_posix())
+            labels_pr = sleap.load_file(data_path.as_posix())
             frames = sorted(labels_pr.labeled_frames, key=lambda lf: lf.frame_idx)
 
             print("Starting tracker...")
