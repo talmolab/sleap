@@ -556,25 +556,30 @@ class InstanceGroup:
     def score(self) -> Optional[float]:
         """Score for the `InstanceGroup`."""
         return self._score
-    
+
     @score.setter
     def score(self, score: Optional[float]):
         """Set the score for the `InstanceGroup`.
-        
+
         Also sets the score for all instances in the `InstanceGroup` if they have a
         `score` attribute.
 
         Args:
             score: Score to set for the `InstanceGroup`.
         """
-        
+
         for instance in self.instances:
             if hasattr(instance, "score"):
                 instance.score = score
 
         self._score = score
 
-    def numpy(self, pred_as_nan: bool = False, invisible_as_nan=True, cams_to_include: Optional[List[Camcorder]] = None) -> np.ndarray:
+    def numpy(
+        self,
+        pred_as_nan: bool = False,
+        invisible_as_nan=True,
+        cams_to_include: Optional[List[Camcorder]] = None,
+    ) -> np.ndarray:
         """Return instances as a numpy array of shape (n_views, n_nodes, 2).
 
         The ordering of views is based on the ordering of `Camcorder`s in the
@@ -588,8 +593,8 @@ class InstanceGroup:
                 self.dummy_instance. Default is False.
             invisible_as_nan: If True, then replaces invisible points with nan. Default
                 is True.
-            cams_to_include: List of `Camcorder`s to include in the numpy array. If 
-                None, then all `Camcorder`s in the `CameraCluster` are included. Default 
+            cams_to_include: List of `Camcorder`s to include in the numpy array. If
+                None, then all `Camcorder`s in the `CameraCluster` are included. Default
                 is None.
 
         Returns:
@@ -826,7 +831,9 @@ class InstanceGroup:
         )
 
         # Calculate OKS scores for the points
-        gt_points = self.numpy(pred_as_nan=True, invisible_as_nan=True, cams_to_include=cams_to_include)  # M x N x 2
+        gt_points = self.numpy(
+            pred_as_nan=True, invisible_as_nan=True, cams_to_include=cams_to_include
+        )  # M x N x 2
         oks_scores = np.full((n_views, n_nodes), np.nan)
         for cam_idx, cam in enumerate(cams_to_include):
             # Get the instance for the cam
@@ -849,10 +856,9 @@ class InstanceGroup:
             instance.update_points(
                 points=points[cam_idx, :, :], exclude_complete=exclude_complete
             )
-        
+
         # Update the score for the InstanceGroup to be the average OKS score
         self.score = np.nanmean(oks_scores)  # scalar
-
 
     def __getitem__(
         self, idx_or_key: Union[int, Camcorder, Instance]
@@ -888,7 +894,8 @@ class InstanceGroup:
     def __repr__(self):
         return (
             f"{self.__class__.__name__}(name={self.name}, frame_idx={self.frame_idx}, "
-            f"instances:{len(self)}, camera_cluster={self.camera_cluster})"
+            f"score={self.score}, instances:{len(self)}, camera_cluster="
+            f"{self.camera_cluster})"
         )
 
     def __hash__(self) -> int:
