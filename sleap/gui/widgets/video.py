@@ -1566,7 +1566,8 @@ class QtNode(QGraphicsEllipseItem):
             # Disable contextual menu for right clicks on node
             self.player.is_menu_enabled = False
 
-            self.point.complete = True  # FIXME: move to command
+            # For triangulation, we want non-visible nodes to always be updated
+            self.point.complete = self.point.visible  # FIXME: move to command
             self.updatePoint(user_change=True)
         elif event.button() == Qt.MidButton:
             pass
