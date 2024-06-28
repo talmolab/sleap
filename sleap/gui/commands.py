@@ -600,7 +600,6 @@ class CommandContext:
         """Sets the instance group for selected instance."""
         self.execute(SetSelectedInstanceGroup, instance_group=instance_group)
 
-    #TODO: Add method to change the name of an instance group
     def setInstanceGroupName(self, instance_group: InstanceGroup, name: str):
         self.execute(SetInstanceGroupName, instance_group=instance_group, name=name)
 
@@ -2728,20 +2727,17 @@ class AddInstanceGroup(EditCommand):
         # Now add the selected instance to the `InstanceGroup`
         context.execute(SetSelectedInstanceGroup, instance_group=instance_group)
 
-#TODO: Add class for changing the name of an instance group
 class SetInstanceGroupName(EditCommand):
+
+    topics = [UpdateTopic.sessions]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         instance_group = params["instance_group"]
         name = params["name"]
 
-        # Access the name registry through the frame group of the instance group
         frame_group = context.state["session"].frame_groups[instance_group.frame_idx]
         name_registry = frame_group._instance_group_name_registry
-
-        if name in name_registry:
-            raise ValueError(f"Name {name} already in use. Please use a unique name.")
 
         instance_group.set_name(name=name, name_registry=name_registry)
 

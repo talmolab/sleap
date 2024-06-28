@@ -722,7 +722,6 @@ class InstanceGroupTableModel(GenericTableModel):
             color = color_manager.get_instance_group_color(instance_group, frame_group)
             return QtGui.QColor(*color)
     
-    #TODO: Add methods to allow the name property of an instance group to be editable in the table view.
     def can_set(self, item, key):
         return True
 
