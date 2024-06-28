@@ -32,19 +32,60 @@ def test_point(p1):
         p1.score = 30.0
         assert p1.score == 30.0
 
+    # Check complete does not change visibility when visible
+    visible = True
+    p1.visible = visible
+    p1.complete = False
+    assert p1.complete == False
+    assert p1.visible == visible
+    p1.complete = True
+    assert p1.complete == True
+    assert p1.visible == visible
+
+    # Check that complete cannot be set to True if not visible
+    visible = False
+    p1.visible = visible
+    p1.complete = False
+    assert p1.complete == False
+    assert p1.visible == visible
+    p1.complete = True
+    assert p1.complete == False
+    assert p1.visible == visible
+
+    # Check visibility also changes complete
+    p1.visible = False
+    assert p1.visible == False
+    assert p1.complete == False
+    p1.visible = True
+    assert p1.visible == True
+    assert p1.complete == True
+
 
 def test_constructor():
     p = Point(x=1.0, y=2.0, visible=False, complete=True)
     assert p.x == 1.0
     assert p.y == 2.0
     assert p.visible == False
-    assert p.complete == True
+    assert p.complete == False  # If a point is not visible, it is not complete
 
     p = PredictedPoint(x=1.0, y=2.0, visible=False, complete=True, score=0.3)
     assert p.x == 1.0
     assert p.y == 2.0
     assert p.visible == False
-    assert p.complete == True
+    assert p.complete == False  # If a point is not visible, it is not complete
+    assert p.score == 0.3
+
+    p = Point(x=1.0, y=2.0, visible=True, complete=False)
+    assert p.x == 1.0
+    assert p.y == 2.0
+    assert p.visible == True
+    assert p.complete == False  # A point can be visible but not complete
+
+    p = PredictedPoint(x=1.0, y=2.0, visible=True, complete=False, score=0.3)
+    assert p.x == 1.0
+    assert p.y == 2.0
+    assert p.visible == True
+    assert p.complete == False  # A point can be visible but not complete
     assert p.score == 0.3
 
 

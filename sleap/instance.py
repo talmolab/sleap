@@ -57,6 +57,11 @@ class Point(np.record):
         visible: bool = True,
         complete: bool = False,
     ) -> "Point":
+
+        # Ensure that if a point is not visible, it is also not complete.
+        if not visible:
+            complete = False
+
         # HACK: This is a crazy way to instantiate at new Point but I can't figure
         # out how recarray does it. So I just use it to make matrix of size 1 and
         # index in to get the np.record/Point
@@ -64,13 +69,19 @@ class Point(np.record):
         val = PointArray(1)
         val[0] = (x, y, visible, complete)
         val = val[0]
-
-        # val.x = x
-        # val.y = y
-        # val.visible = visible
-        # val.complete = complete
-
         return val
+
+    def __setattr__(self, name, value):
+        # For triangulation, we want non-visible nodes to always be updated
+        if name == "visible":
+            super().__setattr__("complete", value)
+
+        # A point should not be complete if it's not visible
+        if name == "complete":
+            if not super().__getattribute__("visible"):
+                value = False
+
+        super().__setattr__(name, value)
 
     def __str__(self) -> str:
         return f"({self.x}, {self.y})"
@@ -123,6 +134,11 @@ class PredictedPoint(Point):
         complete: bool = False,
         score: float = 0.0,
     ) -> "PredictedPoint":
+
+        # Ensure that if a point is not visible, it is also not complete.
+        if not visible:
+            complete = False
+
         # HACK: This is a crazy way to instantiate at new Point but I can't figure
         # out how recarray does it. So I just use it to make matrix of size 1 and
         # index in to get the np.record/Point
@@ -130,13 +146,6 @@ class PredictedPoint(Point):
         val = PredictedPointArray(1)
         val[0] = (x, y, visible, complete, score)
         val = val[0]
-
-        # val.x = x
-        # val.y = y
-        # val.visible = visible
-        # val.complete = complete
-        # val.score = score
-
         return val
 
     @classmethod
@@ -722,15 +731,20 @@ class Instance:
 
         Args:
             points: The new points to update to.
-            exclude_complete: Whether to update points where Point.complete is True
+            exclude_complete: Whether to update points where Point.complete is True.
+                This only applies to user Instances, not PredictedInstances.
         """
+
+        is_predicted = type(self._points) == PredictedPointArray
         points_dict = dict()
         for point_new, points_old, node_name in zip(
             points, self._points, self.skeleton.node_names
         ):
 
             # Skip if new point is nan or old point is complete
-            if np.isnan(point_new).any() or (exclude_complete and points_old.complete):
+            if np.isnan(point_new).any() or (
+                not is_predicted and exclude_complete and points_old.complete
+            ):
                 continue
 
             # Grab the x, y from the new point and visible, complete from the old point
@@ -739,7 +753,7 @@ class Instance:
             complete = points_old.complete
 
             # Create a new point and add to the dict
-            if type(self._points) == PredictedPointArray:
+            if is_predicted:
                 # TODO(LM): The point score is meant to rate the confidence of the
                 # prediction, but this method updates from triangulation.
                 score = points_old.score

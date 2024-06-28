@@ -1555,6 +1555,7 @@ class QtNode(QGraphicsEllipseItem):
                 super(QtNode, self).mousePressEvent(event)
                 self.updatePoint()
 
+            # Note that the setter for complete will not allow complete if not visible
             self.point.complete = complete  # FIXME: move to command
 
         elif event.button() == Qt.RightButton:
@@ -1563,11 +1564,9 @@ class QtNode(QGraphicsEllipseItem):
 
             # Right-click to toggle node as missing from this instance
             self.toggleVisibility()
+
             # Disable contextual menu for right clicks on node
             self.player.is_menu_enabled = False
-
-            # For triangulation, we want non-visible nodes to always be updated
-            self.point.complete = self.point.visible  # FIXME: move to command
             self.updatePoint(user_change=True)
         elif event.button() == Qt.MidButton:
             pass
