@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; SLEAP (v1.4.1a1)</title>
+    <title>Index &#8212; SLEAP (v1.4.1a2)</title>
   
   
   
@@ -33,7 +33,6 @@
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.css" />
-    <link rel="stylesheet" type="text/css" href="_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -45,7 +44,6 @@
     <script src="_static/doctools.js"></script>
     <script src="_static/clipboard.min.js"></script>
     <script src="_static/copybutton.js"></script>
-    <script src="_static/tabs.js"></script>
     <script>let toggleHintShow = 'Click to show';</script>
     <script>let toggleHintHide = 'Click to hide';</script>
     <script>let toggleOpenOnPrint = 'true';</script>
@@ -465,9 +463,11 @@ document.write(`
       </ul></li>
       <li><a href="api/sleap.nn.data.instance_centroids.html#sleap.nn.data.instance_centroids.InstanceCentroidFinder.anchor_part_names">anchor_part_names (sleap.nn.data.instance_centroids.InstanceCentroidFinder attribute)</a>
 </li>
-      <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.append">append() (sleap.io.dataset.Labels method)</a>
+      <li><a href="api/sleap.instance.html#sleap.instance.InstancesList.append">append() (sleap.instance.InstancesList method)</a>
 
       <ul>
+        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.append">(sleap.io.dataset.Labels method)</a>
+</li>
         <li><a href="api/sleap.nn.data.pipelines.html#sleap.nn.data.pipelines.Pipeline.append">(sleap.nn.data.pipelines.Pipeline method)</a>
 </li>
       </ul></li>
@@ -827,10 +827,10 @@ document.write(`
 </li>
       <li><a href="api/sleap.nn.config.outputs.html#sleap.nn.config.outputs.CheckpointingConfig">CheckpointingConfig (class in sleap.nn.config.outputs)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.io.asyncvideo.html#sleap.io.asyncvideo.AsyncVideo.chunks">chunks (sleap.io.asyncvideo.AsyncVideo property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/sleap.nn.data.identity.html#sleap.nn.data.identity.ClassMapGenerator.class_map_threshold">class_map_threshold (sleap.nn.data.identity.ClassMapGenerator attribute)</a>
 </li>
       <li><a href="api/sleap.nn.config.model.html#sleap.nn.config.model.MultiClassBottomUpConfig.class_maps">class_maps (sleap.nn.config.model.MultiClassBottomUpConfig attribute)</a>
@@ -876,6 +876,8 @@ document.write(`
       <li><a href="api/sleap.nn.tracking.html#sleap.nn.tracking.Tracker.cleaner">cleaner (sleap.nn.tracking.Tracker attribute)</a>
 </li>
       <li><a href="api/sleap.nn.training.html#sleap.nn.training.Trainer.cleanup">cleanup() (sleap.nn.training.Trainer method)</a>
+</li>
+      <li><a href="api/sleap.instance.html#sleap.instance.InstancesList.clear">clear() (sleap.instance.InstancesList method)</a>
 </li>
       <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.clear_edges">clear_edges() (sleap.skeleton.Skeleton method)</a>
 </li>
@@ -1015,8 +1017,12 @@ document.write(`
 </li>
       <li><a href="api/sleap.nn.architectures.unet.html#sleap.nn.architectures.unet.UNet.convs_per_block">convs_per_block (sleap.nn.architectures.unet.UNet attribute)</a>
 </li>
-      <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.copy">copy() (sleap.io.dataset.Labels method)</a>
+      <li><a href="api/sleap.instance.html#sleap.instance.InstancesList.copy">copy() (sleap.instance.InstancesList method)</a>
+
+      <ul>
+        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.copy">(sleap.io.dataset.Labels method)</a>
 </li>
+      </ul></li>
       <li><a href="api/sleap.nn.tracker.components.html#sleap.nn.tracker.components.FrameMatches.cost_matrix">cost_matrix (sleap.nn.tracker.components.FrameMatches attribute)</a>
 </li>
       <li><a href="api/sleap.nn.training.html#sleap.nn.training.create_trainer_using_cli">create_trainer_using_cli() (in module sleap.nn.training)</a>
@@ -1460,6 +1466,8 @@ document.write(`
 </li>
       </ul></li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.export_nwb">export_nwb() (sleap.io.dataset.Labels method)</a>
+</li>
+      <li><a href="api/sleap.instance.html#sleap.instance.InstancesList.extend">extend() (sleap.instance.InstancesList method)</a>
 </li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.extend_from">extend_from() (sleap.io.dataset.Labels method)</a>
 </li>
@@ -2331,9 +2339,11 @@ document.write(`
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.insert">insert() (sleap.instance.LabeledFrame method)</a>
+      <li><a href="api/sleap.instance.html#sleap.instance.InstancesList.insert">insert() (sleap.instance.InstancesList method)</a>
 
       <ul>
+        <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.insert">(sleap.instance.LabeledFrame method)</a>
+</li>
         <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.insert">(sleap.io.dataset.Labels method)</a>
 </li>
       </ul></li>
@@ -2376,6 +2386,8 @@ document.write(`
 </li>
       </ul></li>
       <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame.instances_to_show">instances_to_show (sleap.instance.LabeledFrame property)</a>
+</li>
+      <li><a href="api/sleap.instance.html#sleap.instance.InstancesList">InstancesList (class in sleap.instance)</a>
 </li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.BottomUpInferenceLayer.integral_patch_size">integral_patch_size (sleap.nn.inference.BottomUpInferenceLayer attribute)</a>
 
@@ -2555,6 +2567,8 @@ document.write(`
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/sleap.instance.html#sleap.instance.InstancesList.labeled_frame">labeled_frame (sleap.instance.InstancesList property)</a>
+</li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.labeled_frames">labeled_frames (sleap.io.dataset.Labels attribute)</a>
 </li>
       <li><a href="api/sleap.instance.html#sleap.instance.LabeledFrame">LabeledFrame (class in sleap.instance)</a>
@@ -3880,6 +3894,8 @@ document.write(`
       </ul></li>
       <li><a href="api/sleap.nn.architectures.unet.html#sleap.nn.architectures.unet.PoolingBlock">PoolingBlock (class in sleap.nn.architectures.unet)</a>
 </li>
+      <li><a href="api/sleap.instance.html#sleap.instance.InstancesList.pop">pop() (sleap.instance.InstancesList method)</a>
+</li>
       <li><a href="api/sleap.nn.inference.html#sleap.nn.inference.InferenceModel.predict">predict() (sleap.nn.inference.InferenceModel method)</a>
 
       <ul>
@@ -4072,8 +4088,12 @@ document.write(`
 </li>
       <li><a href="api/sleap.skeleton.html#sleap.skeleton.Skeleton.relabel_nodes">relabel_nodes() (sleap.skeleton.Skeleton method)</a>
 </li>
-      <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.remove">remove() (sleap.io.dataset.Labels method)</a>
+      <li><a href="api/sleap.instance.html#sleap.instance.InstancesList.remove">remove() (sleap.instance.InstancesList method)</a>
+
+      <ul>
+        <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.remove">(sleap.io.dataset.Labels method)</a>
 </li>
+      </ul></li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.remove_all_tracks">remove_all_tracks() (sleap.io.dataset.Labels method)</a>
 </li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.remove_empty_frames">remove_empty_frames() (sleap.io.dataset.Labels method)</a>
@@ -4100,10 +4120,10 @@ document.write(`
         <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.LabelsDataCache.remove_instance">(sleap.io.dataset.LabelsDataCache method)</a>
 </li>
       </ul></li>
-      <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.remove_predictions">remove_predictions() (sleap.io.dataset.Labels method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.remove_predictions">remove_predictions() (sleap.io.dataset.Labels method)</a>
+</li>
       <li><a href="api/sleap.nn.tracker.kalman.html#sleap.nn.tracker.kalman.remove_second_bests_from_cost_matrix">remove_second_bests_from_cost_matrix() (in module sleap.nn.tracker.kalman)</a>
 </li>
       <li><a href="api/sleap.io.dataset.html#sleap.io.dataset.Labels.remove_suggestion">remove_suggestion() (sleap.io.dataset.Labels method)</a>
