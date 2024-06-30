@@ -151,6 +151,7 @@ class MainWindow(QMainWindow):
         self.state["edge style"] = prefs["edge style"]
         self.state["fit"] = False
         self.state["color predicted"] = prefs["color predicted"]
+        self.state["trail_length"] = prefs["trail length"]
         self.state["trail_shade"] = prefs["trail shade"]
         self.state["marker size"] = prefs["marker size"]
         self.state["propagate track labels"] = prefs["propagate track labels"]
@@ -221,6 +222,7 @@ class MainWindow(QMainWindow):
         prefs["edge style"] = self.state["edge style"]
         prefs["propagate track labels"] = self.state["propagate track labels"]
         prefs["color predicted"] = self.state["color predicted"]
+        prefs["trail length"] = self.state["trail_length"]
         prefs["trail shade"] = self.state["trail_shade"]
         prefs["share usage data"] = self.state["share usage data"]
 
@@ -1025,6 +1027,7 @@ class MainWindow(QMainWindow):
             labels=self.labels,
             player=self.player,
             trail_shade=self.state["trail_shade"],
+            trail_length=self.state["trail_length"],
         )
         self.overlays["instance"] = InstanceOverlay(
             labels=self.labels, player=self.player, state=self.state
