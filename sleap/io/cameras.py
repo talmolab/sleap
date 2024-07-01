@@ -1014,6 +1014,14 @@ class RecordingSession:
     _excluded_views: Optional[Tuple[str]] = field(default=None)
 
     @property
+    def id(self) -> str:
+        """Unique identifier for the `RecordingSession`."""
+        if self.labels is not None and self in self.labels.sessions:
+            return self.labels.sessions.index(self)
+        else:
+            return hash(self)
+
+    @property
     def videos(self) -> List[Video]:
         """List of `Video`s."""
 
