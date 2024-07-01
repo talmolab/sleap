@@ -45,6 +45,10 @@ class Preferences(object):
             self._prefs = util.get_config_yaml(self._filename)
             if not hasattr(self._prefs, "get"):
                 self._prefs = self._defaults
+            else:
+                self._prefs["trail length"] = self._prefs.get(
+                    "trail length", self._defaults["trail length"]
+                )
         except FileNotFoundError:
             self._prefs = self._defaults
 
