@@ -283,14 +283,23 @@ class QtVideoPlayer(QWidget):
 
         self.state.connect("unlinked_video", lambda video: set_video(video))
 
-        def set_camera(camera: Camcorder):
-            sessions = camera.sessions
-            session = self.state["session"] or sessions[0] if sessions else None
-            video = camera.get_video(session=session)
-            if session is not None and video is not None:
+        def set_video_from_camera(camera: Camcorder):
+            """Updates the video state when camera state changes.
+
+            Args:
+                camera: The camera object
+            """
+            # If either the camera or the session is None, we can't get the linked video
+            session = self.state["session"]
+            if camera is None or session is None:
+                return
+
+            # Get the linked video from the camera
+            video: Optional[Video] = camera.get_video(session=session)
+            if video is not None:
                 self.state["video"] = video
 
-        self.state.connect("camera", lambda camera: set_camera(camera))
+        self.state.connect("camera", lambda camera: set_video_from_camera(camera))
 
         self.state.connect("fit", self.setFitZoom)
 
