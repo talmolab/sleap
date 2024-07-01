@@ -283,7 +283,7 @@ class ColorManager:
 
             return (128, 128, 128)
 
-        if self.distinctly_color == "instance_groups":
+        if self.distinctly_color == "instance_groups" and parent_instance:
 
             if parent_frame is None and parent_instance:
                 parent_frame = parent_instance.frame
