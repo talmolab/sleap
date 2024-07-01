@@ -515,7 +515,7 @@ def setup_visualization(
             "This probably means Qt is running headless."
         )
 
-    if config.view_visualizations and config.save_outputs:
+    if config.save_visualizations and config.save_outputs:
         callbacks.append(
             MatplotlibSaver(
                 save_folder=os.path.join(run_path, "viz"), plot_fn=viz_fn, prefix=name
@@ -945,8 +945,8 @@ class Trainer(ABC):
         # Run post-training actions.
         if self.config.outputs.save_outputs:
             if (
-                self.config.outputs.view_visualizations
-                and self.config.outputs.delete_viz_images
+                self.config.outputs.save_visualizations
+                and not self.config.outputs.keep_viz_images
             ):
                 self.cleanup()
 
@@ -997,7 +997,7 @@ class Trainer(ABC):
 
     def package(self):
         """Package model folder into a zip file for portability."""
-        if self.config.outputs.delete_viz_images:
+        if not self.config.outputs.keep_viz_images:
             self.cleanup()
         logger.info(f"Packaging results to: {self.run_path}.zip")
         shutil.make_archive(
@@ -1857,7 +1857,7 @@ def create_trainer_using_cli(args: Optional[List] = None):
         ),
     )
     parser.add_argument(
-        "--view_viz",
+        "--save_viz",
         action="store_true",
         help=(
             "Enable saving of prediction visualizations to the run folder if not "
@@ -1865,11 +1865,11 @@ def create_trainer_using_cli(args: Optional[List] = None):
         ),
     )
     parser.add_argument(
-        "--delete_viz",
+        "--keep_viz",
         action="store_true",
         help=(
-            "Delete prediction visualizations in the run folder after training if "
-            "view_viz is enabled."
+            "Keep prediction visualization images in the run folder after training when "
+            "save_viz is enabled."
         ),
     )
     parser.add_argument(
@@ -1956,8 +1956,8 @@ def create_trainer_using_cli(args: Optional[List] = None):
         job_config.outputs.run_name_prefix = args.prefix
     if args.suffix != "":
         job_config.outputs.run_name_suffix = args.suffix
-    job_config.outputs.view_visualizations |= args.view_viz
-    job_config.outputs.delete_viz_images |= args.delete_viz
+    job_config.outputs.save_visualizations |= args.save_viz
+    job_config.outputs.keep_viz_images |= args.keep_viz
     if args.labels_path == "":
         args.labels_path = None
     args.video_paths = args.video_paths.split(",")

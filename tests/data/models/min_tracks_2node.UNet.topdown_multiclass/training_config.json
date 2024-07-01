@@ -207,8 +207,8 @@
         "run_name_suffix": "",
         "runs_folder": "models",
         "tags": [],
-        "view_visualizations": false,
-        "delete_viz_images": true,
+        "save_visualizations": false,
+        "keep_viz_images": false,
         "zip_outputs": false,
         "log_to_csv": true,
         "checkpointing": {

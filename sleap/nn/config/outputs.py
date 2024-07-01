@@ -148,11 +148,11 @@ class OutputsConfig:
         tags: A list of strings to use as "tags" that can be used to organize multiple
             runs. These are not used for anything during training or inference, so they
             can be used to store arbitrary user-specified metadata.
-        view_visualizations: If True, will render and save visualizations of the model
+        save_visualizations: If True, will render and save visualizations of the model
             predictions as PNGs to "{run_folder}/viz/{split}.{epoch:04d}.png", where the
             split is one of "train", "validation", "test".
-        delete_viz_images: If True, delete the saved visualizations after training
-            completes. This is useful to reduce the model folder size if you do not need
+        keep_viz_images: If True, keep the saved visualization images after training
+            completes. This is useful unchecked to reduce the model folder size if you do not need
             to keep the visualization images.
         zip_outputs: If True, compress the run folder to a zip file. This will be named
             "{run_folder}.zip".
@@ -169,8 +169,8 @@ class OutputsConfig:
     run_name_suffix: Optional[Text] = None
     runs_folder: Text = "models"
     tags: List[Text] = attr.ib(factory=list)
-    view_visualizations: bool = True
-    delete_viz_images: bool = True
+    save_visualizations: bool = True
+    keep_viz_images: bool = False
     zip_outputs: bool = False
     log_to_csv: bool = True
     checkpointing: CheckpointingConfig = attr.ib(factory=CheckpointingConfig)

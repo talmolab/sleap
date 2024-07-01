@@ -124,8 +124,8 @@
         "run_name_suffix": null,
         "runs_folder": "models",
         "tags": [],
-        "view_visualizations": true,
-        "delete_viz_images": true,
+        "save_visualizations": true,
+        "keep_viz_images": false,
         "log_to_csv": true,
         "checkpointing": {
             "initial_model": false,

@@ -140,8 +140,8 @@
         "run_name_suffix": null,
         "runs_folder": "models",
         "tags": [],
-        "view_visualizations": false,
-        "delete_viz_images": false,
+        "save_visualizations": false,
+        "keep_viz_images": false,
         "zip_outputs": false,
         "log_to_csv": true,
         "checkpointing": {
