@@ -721,7 +721,7 @@ class InstanceGroupTableModel(GenericTableModel):
             # Get the InstanceGroup and color
             color = color_manager.get_instance_group_color(instance_group, frame_group)
             return QtGui.QColor(*color)
-    
+
     def can_set(self, item, key):
         return True
 

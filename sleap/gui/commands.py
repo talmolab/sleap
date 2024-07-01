@@ -84,6 +84,7 @@ class UpdateTopic(Enum):
     project_instances = 10
     sessions = 11
 
+
 class AppCommand:
     """Base class for specific commands.
 
@@ -2727,6 +2728,7 @@ class AddInstanceGroup(EditCommand):
         # Now add the selected instance to the `InstanceGroup`
         context.execute(SetSelectedInstanceGroup, instance_group=instance_group)
 
+
 class SetInstanceGroupName(EditCommand):
 
     topics = [UpdateTopic.sessions]
@@ -2739,6 +2741,7 @@ class SetInstanceGroupName(EditCommand):
         FrameGroup = context.state["session"].frame_groups[instance_group.frame_idx]
 
         FrameGroup.set_instance_group_name(instance_group=instance_group, name=name)
+
 
 class AddTrack(EditCommand):
     topics = [UpdateTopic.tracks]
