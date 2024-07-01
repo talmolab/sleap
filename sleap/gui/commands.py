@@ -2736,10 +2736,9 @@ class SetInstanceGroupName(EditCommand):
         instance_group = params["instance_group"]
         name = params["name"]
 
-        frame_group = context.state["session"].frame_groups[instance_group.frame_idx]
-        name_registry = frame_group._instance_group_name_registry
+        FrameGroup = context.state["session"].frame_groups[instance_group.frame_idx]
 
-        instance_group.set_name(name=name, name_registry=name_registry)
+        FrameGroup.set_instance_group_name(instance_group=instance_group, name=name)
 
 class AddTrack(EditCommand):
     topics = [UpdateTopic.tracks]
