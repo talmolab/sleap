@@ -387,11 +387,11 @@ class GenericTableView(QtWidgets.QTableView):
 
 
 class SessionsTableModel(GenericTableModel):
-    properties = ("id", "videos", "cameras")
+    properties = ("index", "videos", "cameras")
 
-    def item_to_data(self, obj, item):
+    def item_to_data(self, obj, item: RecordingSession):
         res = {}
-        res["id"] = hash(item)
+        res["index"] = item.id
         res["cameras"] = len(getattr(item, "cameras"))
         res["videos"] = len(getattr(item, "videos"))
         return res

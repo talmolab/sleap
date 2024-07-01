@@ -3,6 +3,7 @@ import sys
 import time
 from pathlib import Path, PurePath
 from typing import List
+import tempfile
 
 import numpy as np
 import pytest
@@ -1451,6 +1452,126 @@ def test_DeleteInstanceGroup(multiview_min_session_frame_groups: Labels):
     # Check InstanceGroup.instances
     assert len(instance_group_0.instances) == 8
     assert len(instance_group_1.instances) == 6
+
+
+def test_automatic_addition_and_linkage_videos(min_session_directory):
+    """Test if the automatic addition of videos works."""
+    # Create a new RecordingSession object
+    session_dir = Path(min_session_directory)
+    session_dir_video_paths = [
+        video_path.as_posix() for video_path in session_dir.rglob("*.mp4")
+    ]
+    calibration_path = Path(session_dir, "calibration.toml")
+
+    # Test find_video_paths
+    camera_by_video_paths = AddSession.find_video_paths(
+        camera_calibration=calibration_path
+    )
+    assert len(camera_by_video_paths) == 8
+    assert all([p in session_dir_video_paths for p in camera_by_video_paths])
+
+    # Create a new Label() object
+    labels = Labels()
+    context = CommandContext.from_labels(labels)
+
+    # Case 1: No videos imported
+    params = {"camera_calibration": calibration_path}
+    AddSession.do_action(context, params)
+
+    # Check if the session was added to the Label object
+    assert len(labels.sessions) == 1
+    assert isinstance(context.state["session"], RecordingSession)
+
+    # Check that no videos were added
+    assert len(labels.videos) == 0
+
+    # Case 2: Videos imported
+    template_import_params = {
+        "filename": "path/to/video.mp4",
+        "grayscale": True,
+    }
+    template_import_item = {
+        "params": template_import_params,
+        "video_type": "mp4",
+        "video_class": Video.from_media,
+    }
+    import_list = []
+    cam_names_to_exclude = ["topL", "sideL"]
+    for video_path, cam_name in camera_by_video_paths.items():
+
+        # Only link videos for certain cameras
+        if cam_name in cam_names_to_exclude:
+            continue
+
+        import_params = dict(template_import_params)
+        import_params["filename"] = video_path
+        template_import_item["params"] = import_params
+        import_list.append(dict(template_import_item))
+
+    params = {
+        "camera_calibration": calibration_path,
+        "import_list": import_list,
+        "camera_by_video_paths": camera_by_video_paths,
+    }
+    AddSession.do_action(context, params)
+
+    # Check if the session was added to the Label object
+    assert len(labels.sessions) == 2
+    assert isinstance(context.state["session"], RecordingSession)
+    session: RecordingSession = labels.sessions[-1]
+
+    # Check that videos were added
+    assert len(labels.videos) == len(import_list)
+
+    # Check that videos were linked
+    assert len(session.videos) == len(import_list)
+    assert len(session.videos) == len(session.cameras) - len(cam_names_to_exclude)
+    for cam in session.cameras:
+        if cam.name in cam_names_to_exclude:
+            assert session.get_video(camcorder=cam) is None
+        else:
+            video = session.get_video(camcorder=cam)
+            assert video in session.videos
+            assert session.get_camera(video=video) is cam
+
+
+def test_link_video_to_session(min_session_session, centered_pair_vid):
+    """Test if the linkage of videos to a session works."""
+
+    # Create a new Label() object
+    session: RecordingSession = min_session_session
+    video: Video = centered_pair_vid
+    labels = Labels()
+    labels.add_session(session)
+    labels.add_video(video)
+
+    # Create command context
+    context = CommandContext.from_labels(labels)
+
+    # Call the function without a camera selected
+    with pytest.raises(ValueError):
+        context.linkVideoToSession()
+
+    # Call the function without a recording session selected
+    camera = session.cameras[0]
+    with pytest.raises(ValueError):
+        context.linkVideoToSession(camera=camera)
+    context.state["selected_camera"] = camera
+    with pytest.raises(ValueError):
+        context.linkVideoToSession()
+
+    # Call the function without a video selected
+    with pytest.raises(ValueError):
+        context.linkVideoToSession(session=session)
+    context.state["selected_session"] = session
+    with pytest.raises(ValueError):
+        context.linkVideoToSession()
+
+    # Call the function with all parameters
+    context.linkVideoToSession(video=video)
+    assert video in session.videos
+    assert camera is session.get_camera(video=video)
+    assert video is session.get_video(camcorder=camera)
 
 
 def test_setInstanceGroupName(multiview_min_session_frame_groups):

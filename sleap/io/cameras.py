@@ -1014,6 +1014,14 @@ class RecordingSession:
     _excluded_views: Optional[Tuple[str]] = field(default=None)
 
     @property
+    def id(self) -> str:
+        """Unique identifier for the `RecordingSession`."""
+        if self.labels is not None and self in self.labels.sessions:
+            return self.labels.sessions.index(self)
+        else:
+            return hash(self)
+
+    @property
     def videos(self) -> List[Video]:
         """List of `Video`s."""
 
@@ -1157,6 +1165,12 @@ class RecordingSession:
             raise ValueError(
                 f"Camcorder {camcorder.name} is not in this RecordingSession's "
                 f"{self.camera_cluster}."
+            )
+
+        # Ensure the `Video` is a `Video` object
+        if not isinstance(video, Video):
+            raise ValueError(
+                f"Expected a `Video` object, but got {type(video)} instead."
             )
 
         # Add session-to-videos (1-to-many) map to `CameraCluster`

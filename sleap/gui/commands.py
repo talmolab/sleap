@@ -33,6 +33,7 @@ import re
 import subprocess
 import sys
 import traceback
+import toml
 from enum import Enum
 from glob import glob
 from pathlib import Path, PurePath
@@ -59,7 +60,7 @@ from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
-from sleap.io.video import Video
+from sleap.io.video import Video, MediaVideo
 from sleap.skeleton import Node, Skeleton
 from sleap.util import get_package_file
 
@@ -449,9 +450,14 @@ class CommandContext:
         """Removes a session from the project and the sessions dock."""
         self.execute(RemoveSession)
 
-    def linkVideoToSession(self):
+    def linkVideoToSession(
+        self,
+        video: Optional[Video] = None,
+        session: Optional[RecordingSession] = None,
+        camera: Optional[Camcorder] = None,
+    ):
         """Links a video to a `RecordingSession`."""
-        self.execute(LinkVideoToSession)
+        self.execute(LinkVideoToSession, video=video, session=session, camera=camera)
 
     def openSkeletonTemplate(self):
         """Shows gui for loading saved skeleton into project."""
@@ -1819,10 +1825,22 @@ class ShowImportVideos(EditCommand):
     topics = [UpdateTopic.video]
 
     @staticmethod
-    def do_action(context: CommandContext, params: dict):
+    def ask(context: CommandContext, params: dict) -> bool:
         filenames = params["filenames"]
         import_list = ImportVideos().ask(filenames=filenames)
+
+        if len(import_list) > 0:
+            params["import_list"] = import_list
+            return True
+
+        return False
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        import_list = params["import_list"]
         new_videos = ImportVideos.create_videos(import_list)
+        params["new_videos"] = new_videos
+
         video = None
         for video in new_videos:
             # Add to labels
@@ -2011,15 +2029,40 @@ class RemoveSession(EditCommand):
 
 
 class AddSession(EditCommand):
-    topics = [UpdateTopic.sessions]
+    topics = [UpdateTopic.sessions, UpdateTopic.video]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         camera_calibration = params["camera_calibration"]
+
+        # Create session from camera calibration file
         session = RecordingSession.load(filename=camera_calibration)
 
         # Add session
         context.labels.add_session(session)
+
+        # Import the new videos and link them to a camera
+        if "import_list" in params:
+            ShowImportVideos().do_action(context=context, params=params)
+
+            # Create a lookup for cameras and videos
+            camera_by_video_paths = params.get("camera_by_video_paths", {})
+            new_videos = params.get("new_videos", [])
+            new_video_by_filename = {
+                video.backend.filename: video for video in new_videos
+            }
+            camera_by_name = {cam.name: cam for cam in session.cameras}
+
+            # Link videos to cameras
+            for video_path, camera_name in camera_by_video_paths.items():
+                # Get video and camcorder
+                video = new_video_by_filename.get(video_path, None)
+                if video is None:
+                    continue
+                camera = camera_by_name.get(camera_name, None)
+                if camera is None:
+                    continue
+                context.linkVideoToSession(video=video, session=session, camera=camera)
 
         # Load if no video currently loaded
         if context.state["session"] is None:
@@ -2028,6 +2071,38 @@ class AddSession(EditCommand):
         # Reset since this action is also linked to a button in the SessionsDock and it
         # is not visually apparent which session is selected after clicking the button
         context.state["selected_session"] = None
+
+    @staticmethod
+    def find_video_paths(camera_calibration: str) -> Dict[str, str]:
+
+        # Find parent of calibration file
+        calibration_path = Path(camera_calibration)
+        parent_dir = calibration_path.parent
+
+        # Use camcorder names in session to find camera folders
+        calibration_data = toml.load(camera_calibration)
+        camera_names = [
+            value["name"] for value in calibration_data.values() if "name" in value
+        ]
+
+        # Find videos inside camera folders
+        camera_by_video_paths = {}
+        for camera_name in camera_names:
+            camera_folder = parent_dir / camera_name
+
+            # Skip if camera folder does not exist
+            if not camera_folder.exists():
+                continue
+
+            # Find and append all videos in camera folder
+            video_path = None
+            video_extensions = MediaVideo.EXTS
+            for file in camera_folder.iterdir():
+                if file.suffix[1:] in video_extensions:
+                    video_path = camera_folder / file
+                    camera_by_video_paths[video_path.as_posix()] = camera_name
+
+        return camera_by_video_paths
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
@@ -2041,8 +2116,18 @@ class AddSession(EditCommand):
         )
 
         params["camera_calibration"] = filename
+        if len(filename) == 0:
+            return False
 
-        return len(filename) > 0
+        camera_by_video_paths = AddSession.find_video_paths(camera_calibration=filename)
+        params["camera_by_video_paths"] = camera_by_video_paths
+
+        # Show import video dialog if any videos are found
+        if len(camera_by_video_paths) > 0:
+            params["filenames"] = list(camera_by_video_paths.keys())
+            ShowImportVideos().ask(context=context, params=params)
+
+        return True
 
 
 class LinkVideoToSession(EditCommand):
@@ -2050,9 +2135,15 @@ class LinkVideoToSession(EditCommand):
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        video = context.state["selected_unlinked_video"]
-        recording_session = context.state["selected_session"]
-        camcorder = context.state["selected_camera"]
+        video = params["video"] or context.state["selected_unlinked_video"]
+        recording_session = params["session"] or context.state["selected_session"]
+        camcorder = params["camera"] or context.state["selected_camera"]
+
+        if camcorder is None:
+            raise ValueError("No camera selected.")
+
+        if recording_session is None:
+            raise ValueError("No session selected.")
 
         if camcorder.get_video(recording_session) is None:
             recording_session.add_video(video=video, camcorder=camcorder)
