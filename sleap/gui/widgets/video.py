@@ -73,6 +73,7 @@ from sleap.instance import Instance, Point, PredictedInstance
 from sleap.io.video import Video
 from sleap.prefs import prefs
 from sleap.skeleton import Node
+from sleap.io.cameras import Camcorder
 
 
 class LoadImageWorker(QtCore.QObject):
@@ -281,6 +282,24 @@ class QtVideoPlayer(QWidget):
             self.state["video"] = video
 
         self.state.connect("unlinked_video", lambda video: set_video(video))
+
+        def set_video_from_camera(camera: Camcorder):
+            """Updates the video state when camera state changes.
+
+            Args:
+                camera: The camera object
+            """
+            # If either the camera or the session is None, we can't get the linked video
+            session = self.state["session"]
+            if camera is None or session is None:
+                return
+
+            # Get the linked video from the camera
+            video: Optional[Video] = camera.get_video(session=session)
+            if video is not None:
+                self.state["video"] = video
+
+        self.state.connect("camera", lambda camera: set_video_from_camera(camera))
 
         self.state.connect("fit", self.setFitZoom)
 

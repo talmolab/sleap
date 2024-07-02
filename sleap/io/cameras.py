@@ -1237,6 +1237,12 @@ class RecordingSession:
                 f"{self.camera_cluster}."
             )
 
+        # Ensure the `Video` is a `Video` object
+        if not isinstance(video, Video):
+            raise ValueError(
+                f"Expected a `Video` object, but got {type(video)} instead."
+            )
+
         # Add session-to-videos (1-to-many) map to `CameraCluster`
         if self not in self.camera_cluster._videos_by_session:
             self.camera_cluster.add_session(self)
