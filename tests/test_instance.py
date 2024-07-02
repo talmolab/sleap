@@ -529,3 +529,79 @@ def test_instance_structuring_from_predicted(centered_pair_predictions):
 
     # Unstructure -> structure
     labels_copy = labels.copy()
+
+
+def test_instance_update_points(multiview_min_session_frame_groups):
+    """Test updating points of an instance."""
+
+    labels: Labels = multiview_min_session_frame_groups
+    lf: LabeledFrame = labels.labeled_frames[0]
+    instance = lf.user_instances[0]
+    pred_instance = lf.predicted_instances[0]
+    n_nodes = len(labels.skeleton.nodes)
+
+    # Case 0. User instance with incomplete and invisible points.
+    point_val = 0
+    for inst in [instance, pred_instance]:
+        for points in inst._points:
+            points.visible = False
+            points.complete = False
+        inst.update_points(points=np.full((n_nodes, 2), point_val))
+
+        # All points should be updated.
+        assert np.all(inst.get_points_array(invisible_as_nan=False) == point_val)
+
+    # Case 1. User instance with incomplete and visible points.
+    point_val = 1
+    for inst in [instance, pred_instance]:
+        for points in inst._points:
+            points.visible = True
+            points.complete = False
+        inst.update_points(points=np.full((n_nodes, 2), point_val))
+
+        # All points should be updated.
+        assert np.all(inst.get_points_array(invisible_as_nan=False) == point_val)
+
+    # Case 2. User instance with complete and visible points.
+    old_point_val = point_val
+    point_val = 2
+    for inst in [instance, pred_instance]:
+        for points in inst._points:
+            points.visible = True
+            points.complete = True
+        inst.update_points(
+            points=np.full((n_nodes, 2), point_val), exclude_complete=True
+        )
+
+        # All points should be updated IF predicted
+        is_predicted = isinstance(inst, PredictedInstance)
+        if is_predicted:
+            assert np.all(inst.get_points_array(invisible_as_nan=False) == point_val)
+        else:
+            assert np.all(
+                inst.get_points_array(invisible_as_nan=False) == old_point_val
+            )
+
+    # Test that we can update just a single point
+    old_point_val = point_val
+    point_val = 4
+    inst = instance
+    points = inst._points[0]
+    points.visible = False
+    points.complete = False
+    inst.update_points(points=np.full((n_nodes, 2), point_val), exclude_complete=True)
+    # Only a single point should be updated
+    assert np.sum(inst.get_points_array(invisible_as_nan=False) == point_val) == 2
+
+    # Case 3. User instance with complete and invisible points.
+    point_val = 3
+    for inst in [instance, pred_instance]:
+        for points in inst._points:
+            points.visible = False
+            points.complete = True
+        inst.update_points(
+            points=np.full((n_nodes, 2), point_val), exclude_complete=True
+        )
+
+        # All points should be updated
+        assert np.all(inst.get_points_array(invisible_as_nan=False) == point_val)
