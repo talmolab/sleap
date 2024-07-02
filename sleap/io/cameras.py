@@ -408,6 +408,9 @@ class InstanceGroup:
         cameras: List of `Camcorder` objects that have an `Instance` associated.
         instances: List of `Instance` objects.
         instance_by_camcorder: Dictionary of `Instance` objects by `Camcorder`.
+        score: Optional score for the `InstanceGroup`. Setting the score will also
+            update the score for all `instances` already in the `InstanceGroup`. The
+            score for `instances` will not be updated upon initialization.
     """
 
     _name: str = field()
@@ -915,7 +918,8 @@ class InstanceGroup:
             instance_by_camcorder: Dictionary with `Camcorder` keys and `Instance` values.
             name: Name to use for the `InstanceGroup`.
             name_registry: Set of names to check for uniqueness.
-            score: Optional score to set for the `InstanceGroup`. Default is None.
+            score: Optional score for the `InstanceGroup`. This will NOT update the
+                score of the `Instance`s within the `InstanceGroup`. Default is None.
 
         Raises:
             ValueError: If the `InstanceGroup` name is already in use.
