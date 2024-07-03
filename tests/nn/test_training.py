@@ -360,3 +360,34 @@ def test_resume_training_cli(
 
         trainer = sleap_train(cli_args)
         assert trainer.config.model.base_checkpoint == base_checkpoint_path
+
+
+@pytest.mark.parametrize("keep_viz_cli", [None, "--keep_viz"])
+def test_keep_viz_cli(
+    keep_viz_cli,
+    min_single_instance_robot_model_path: str,
+    small_robot_mp4_path: str,
+    tmp_path: str,
+):
+    """Test training CLI for --keep_viz option."""
+    cfg_dir = min_single_instance_robot_model_path
+    cfg = TrainingJobConfig.load_json(str(Path(cfg_dir, "training_config.json")))
+
+    # Save training config to tmp folder
+    cfg_path = str(Path(tmp_path, "training_config.json"))
+    cfg.save_json(cfg_path)
+
+    # We need to do this reload because we save absolute paths (for the video).
+    labels_path = str(Path(cfg_dir, "labels_gt.train.slp"))
+    labels: Labels = sleap.load_file(labels_path, search_paths=[small_robot_mp4_path])
+    labels_path = str(Path(tmp_path, "labels_gt.train.slp"))
+    labels.save_file(labels, labels_path)
+
+    # Check that base_checkpoint is set correctly (not overridden by CLI)
+    cli_args = [cfg_path, labels_path, keep_viz_cli]
+    trainer = sleap_train(cli_args)
+
+    if keep_viz_cli:
+        assert trainer.config.outputs.keep_viz_images == True
+    else:
+        assert trainer.config.outputs.keep_viz_images == False
