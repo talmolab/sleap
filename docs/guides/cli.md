@@ -69,7 +69,7 @@ optional arguments:
                         folder if not already specified in the training job
                         config.
   --keep_viz            Keep prediction visualization images in the run
-                        folder after training when save_viz is enabled.
+                        folder after training if --save_viz is enabled.
   --zmq                 Enable ZMQ logging (for GUI) if not already specified
                         in the training job config.
   --run_name RUN_NAME   Run name to use when saving file, overrides other run

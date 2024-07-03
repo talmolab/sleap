@@ -1869,7 +1869,7 @@ def create_trainer_using_cli(args: Optional[List] = None):
         action="store_true",
         help=(
             "Keep prediction visualization images in the run folder after training when "
-            "save_viz is enabled."
+            "--save_viz is enabled."
         ),
     )
     parser.add_argument(
@@ -1957,7 +1957,7 @@ def create_trainer_using_cli(args: Optional[List] = None):
     if args.suffix != "":
         job_config.outputs.run_name_suffix = args.suffix
     job_config.outputs.save_visualizations |= args.save_viz
-    job_config.outputs.keep_viz_images |= args.keep_viz
+    job_config.outputs.keep_viz_images = args.keep_viz
     if args.labels_path == "":
         args.labels_path = None
     args.video_paths = args.video_paths.split(",")
