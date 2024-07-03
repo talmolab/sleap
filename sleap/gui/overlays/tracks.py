@@ -1,17 +1,16 @@
 """Track trail and track list overlays."""
 
+from typing import Dict, Iterable, List, Optional, Tuple
+
+import attr
+from qtpy import QtCore, QtGui
+
 from sleap.gui.overlays.base import BaseOverlay
+from sleap.gui.widgets.video import QtTextWithBackground
 from sleap.instance import Track
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
 from sleap.prefs import prefs
-from sleap.gui.widgets.video import QtTextWithBackground
-
-import attr
-
-from typing import Iterable, List, Optional, Dict
-
-from qtpy import QtCore, QtGui
 
 
 @attr.s(auto_attribs=True)
@@ -58,7 +57,9 @@ class TrackTrailOverlay(BaseOverlay):
 
         return {"Dark": 0.6, "Normal": 1.0, "Light": 1.25}
 
-    def get_track_trails(self, frame_selection: Iterable["LabeledFrame"]):
+    def get_track_trails(
+        self, frame_selection: Iterable["LabeledFrame"]
+    ) -> Optional[Dict[Track, List[List[Tuple[float, float]]]]]:
         """Get data needed to draw track trail.
 
         Args:
@@ -154,6 +155,8 @@ class TrackTrailOverlay(BaseOverlay):
         frame_selection = self.get_frame_selection(video, frame_idx)
 
         all_track_trails = self.get_track_trails(frame_selection)
+        if all_track_trails is None:
+            return
 
         for track, trails in all_track_trails.items():
             trail_color = tuple(
