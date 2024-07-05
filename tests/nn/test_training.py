@@ -366,7 +366,6 @@ def test_resume_training_cli(
 def test_keep_viz_cli(
     keep_viz_cli,
     min_single_instance_robot_model_path: str,
-    small_robot_mp4_path: str,
     tmp_path: str,
 ):
     """Test training CLI for --keep_viz option."""
@@ -377,14 +376,8 @@ def test_keep_viz_cli(
     cfg_path = str(Path(tmp_path, "training_config.json"))
     cfg.save_json(cfg_path)
 
-    # We need to do this reload because we save absolute paths (for the video).
-    labels_path = str(Path(cfg_dir, "labels_gt.train.slp"))
-    labels: Labels = sleap.load_file(labels_path, search_paths=[small_robot_mp4_path])
-    labels_path = str(Path(tmp_path, "labels_gt.train.slp"))
-    labels.save_file(labels, labels_path)
-
     # Check that base_checkpoint is set correctly (not overridden by CLI)
-    cli_args = [cfg_path, labels_path, keep_viz_cli]
+    cli_args = [cfg_path, keep_viz_cli]
     trainer = sleap_train(cli_args)
 
     if keep_viz_cli:
