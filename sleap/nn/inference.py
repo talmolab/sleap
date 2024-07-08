@@ -5322,9 +5322,13 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
             labels = sleap.load_file(file_path.as_posix())
 
             if args.only_labeled_frames:
-                output_provider_list.append(LabelsReader.from_user_labeled_frames(labels))
+                output_provider_list.append(
+                    LabelsReader.from_user_labeled_frames(labels)
+                )
             elif args.only_suggested_frames:
-                output_provider_list.append(LabelsReader.from_unlabeled_suggestions(labels))
+                output_provider_list.append(
+                    LabelsReader.from_unlabeled_suggestions(labels)
+                )
             elif getattr(args, "video.index") != "":
                 output_provider_list.append(
                     VideoReader(
@@ -5531,7 +5535,9 @@ def main(args: Optional[list] = None):
             # if output_path was provided and multiple inputs were provided, create a directory to store outputs
             elif len(data_path_list) > 1:
                 output_path = (
-                    output_path_obj.as_posix() + "/" + (data_path_obj.stem + ".predictions.slp")
+                    output_path_obj.as_posix()
+                    + "/"
+                    + (data_path_obj.stem + ".predictions.slp")
                 )
                 output_path_obj = Path(output_path)
 
@@ -5606,7 +5612,9 @@ def main(args: Optional[list] = None):
 
                 elif len(data_path_list) > 1:
                     output_path = (
-                        output_path_obj.as_posix() + "/" + (data_path_obj.stem + ".predictions.slp")
+                        output_path_obj.as_posix()
+                        + "/"
+                        + (data_path_obj.stem + ".predictions.slp")
                     )
                     output_path_obj = Path(output_path)
 

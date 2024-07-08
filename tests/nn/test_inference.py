@@ -1603,7 +1603,7 @@ def test_sleap_track_mult_input_slp_mp4(
             assert Path(expected_output_file).exists()
 
     new_slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
-    
+
     # remove the files that have been added within the test case to revert input folders to their original state
     files_to_remove = set(new_slp_path_list) - set(slp_path_list)
     for file in files_to_remove:
