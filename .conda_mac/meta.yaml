@@ -24,8 +24,10 @@ source:
 requirements:
   host:  
     # - conda-forge::python >=3.10.0,<3.11.0
-    - conda-forge::python >=3.11.0,<3.12.0
-    - anaconda::numpy >=1.19.5,<1.23.0
+    # - conda-forge::python >=3.11.0,<3.12.0
+    - conda-forge::python >=3.11.0,<3.13.0
+    # - anaconda::numpy >=1.19.5,<1.23.0
+    - conda-forge::numpy >=1.21.6
     - conda-forge::setuptools
     - conda-forge::packaging
     - conda-forge::pip
@@ -44,16 +46,18 @@ requirements:
     - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside2 >=5.12
+    # - conda-forge::pyside2 >=5.12
+    - conda-forge::pyside6 >=6.4.0
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
     - conda-forge::qtpy >=2.0.1
     - conda-forge::rich
     # - conda-forge::scipy >=1.4.1,<=1.9.0
-    -  conda-forge::scipy >=1.11.1
+    - conda-forge::scipy >=1.11.0
     - conda-forge::scikit-image
-    - conda-forge::scikit-learn ==1.0
+    # - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-learn >=1.0.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
     - conda-forge::qudida
@@ -62,7 +66,8 @@ requirements:
 
   run:
     # - conda-forge::python >=3.10.0,<3.11.0
-    - conda-forge::python >=3.11.0,<3.12.0
+    # - conda-forge::python >=3.11.0,<3.12.0
+    - conda-forge::python >=3.11.0,<3.13.0
     - conda-forge::attrs >=21.2.0
     - conda-forge::cattrs ==1.1.1
     - conda-forge::h5py
@@ -70,22 +75,25 @@ requirements:
     - conda-forge::jsonpickle ==1.2
     - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
     - conda-forge::networkx <3.3
-    - anaconda::numpy >=1.19.5,<1.23.0
+    # - anaconda::numpy >=1.19.5,<1.23.0
+    - conda-forge::numpy >=1.21.6
     - conda-forge::opencv
     - conda-forge::pandas
     - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside2 >=5.12
+    # - conda-forge::pyside2 >=5.12
+    - conda-forge::pyside6 >=6.4.0
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
     - conda-forge::qtpy >=2.0.1
     - conda-forge::rich
     # - conda-forge::scipy >=1.4.1,<=1.9.0
-    -  conda-forge::scipy >=1.11.1
+    - conda-forge::scipy >=1.11.1
     - conda-forge::scikit-image
-    - conda-forge::scikit-learn ==1.0
+    # - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-learn >=1.0.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
     # - conda-forge::tensorflow-hub  # pulls in tensorflow cpu from conda-forge
