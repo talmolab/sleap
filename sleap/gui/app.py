@@ -520,7 +520,7 @@ class MainWindow(QMainWindow):
         add_menu_item(
             fileMenu,
             "open preference directory",
-            "Open preference directory...",
+            "Open Preferences Directory...",
             self.openPrefs,
         )
 
