@@ -5526,7 +5526,7 @@ def main(args: Optional[list] = None):
                     raise ValueError(
                         "output_path argument must be a directory if multiple video inputs are given"
                     )
-            
+
             print(f"OUTPUT_PATH: {output_path}")
             if output_path is None:
                 output_path = f"{data_path}.predictions.slp"
@@ -5534,7 +5534,9 @@ def main(args: Optional[list] = None):
 
             # if output_path was provided and multiple inputs were provided, create a directory to store outputs
             elif len(data_path_list) > 1:
-                output_path = output_path + "/" + (data_path_obj.stem + ".predictions.slp")
+                output_path = (
+                    output_path + "/" + (data_path_obj.stem + ".predictions.slp")
+                )
                 output_path_obj = Path(output_path)
 
             labels_pr.provenance["model_paths"] = predictor.model_paths
@@ -5559,7 +5561,7 @@ def main(args: Optional[list] = None):
             labels_pr.provenance["total_elapsed"] = total_elapsed
             labels_pr.provenance["start_timestamp"] = start_timestamp
             labels_pr.provenance["finish_timestamp"] = finish_timestamp
-            
+
             print("Provenance:")
             print(labels_pr.provenance)
             print()
@@ -5590,7 +5592,7 @@ def main(args: Optional[list] = None):
             tracker.final_pass(frames)
 
             labels_pr = Labels(labeled_frames=frames)
-            
+
             if output_path is None:
                 output_path = f"{data_path}.{tracker.get_name()}.slp"
                 output_path_obj = Path(output_path)
@@ -5605,9 +5607,11 @@ def main(args: Optional[list] = None):
                     raise ValueError(
                         "output_path argument must be a directory if multiple video inputs are given"
                     )
-                    
+
                 elif len(data_path_list) > 1:
-                    output_path = output_path + "/" + (data_path_obj.stem + ".predictions.slp")
+                    output_path = (
+                        output_path + "/" + (data_path_obj.stem + ".predictions.slp")
+                    )
                     output_path_obj = Path(output_path)
 
             if args.no_empty_frames:
@@ -5629,7 +5633,7 @@ def main(args: Optional[list] = None):
             labels_pr.provenance["total_elapsed"] = total_elapsed
             labels_pr.provenance["start_timestamp"] = start_timestamp
             labels_pr.provenance["finish_timestamp"] = finish_timestamp
-            
+
             print("Provenance:")
             print(labels_pr.provenance)
             print()
