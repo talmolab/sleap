@@ -71,7 +71,7 @@ def test_sleap_track_mult_inputs_folder_slp():
 
 @pytest.fixture
 def test_sleap_track_output_folder():
-    return "tests/data/output_folder"
+    return "tests/data/videos/seperate_output_test_folder"
 
 
 @pytest.fixture
@@ -1474,7 +1474,7 @@ def test_make_predictor_from_cli_mult_input(
     min_bottomup_model_path: str,
     test_sleap_track_mult_inputs_folder_slp: str,
 ):
-    slp_path = str(Path(test_sleap_track_mult_inputs_folder_slp))
+    slp_path = Path(test_sleap_track_mult_inputs_folder_slp).as_posix()
     Labels.save(centered_pair_predictions, slp_path)
 
     # Create sleap-track command
@@ -1483,7 +1483,6 @@ def test_make_predictor_from_cli_mult_input(
         f"--model {min_bottomup_model_path}",
     ]
     for model_arg in model_args:
-        # print(model_arg)
         args = (
             f"{slp_path} {model_arg} --video.index 0 --frames 1-3 "
             "--cpu --max_instances 5"
@@ -1548,7 +1547,6 @@ def test_sleap_track_mult_input_slp(
 
     # Run inference
     sleap_track(args=args)
-    slp_path = Path(slp_path)
 
     # Assert predictions file exists
     expected_extensions = {
@@ -1560,9 +1558,9 @@ def test_sleap_track_mult_input_slp(
     for file_path in slp_path_list:
         if file_path.suffix in expected_extensions:
             expected_output_file = f"{slp_path}.predictions.slp"
-            print(f"PATH: {expected_output_file}")
             assert Path(expected_output_file).exists()
 
+    # remove the files that have been added within the test case to revert input folders to their original state
     new_slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
 
     files_to_remove = set(new_slp_path_list) - set(slp_path_list)
@@ -1591,7 +1589,6 @@ def test_sleap_track_mult_input_slp_mp4(
 
     # Run inference
     sleap_track(args=args)
-    slp_path = Path(slp_path)
 
     # Assert predictions file exists
     expected_extensions = {
@@ -1603,11 +1600,11 @@ def test_sleap_track_mult_input_slp_mp4(
     for file_path in slp_path_list:
         if file_path.suffix in expected_extensions:
             expected_output_file = f"{file_path}.predictions.slp"
-            print(f"PATH: {expected_output_file}")
             assert Path(expected_output_file).exists()
 
     new_slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
-
+    
+    # remove the files that have been added within the test case to revert input folders to their original state
     files_to_remove = set(new_slp_path_list) - set(slp_path_list)
     for file in files_to_remove:
         file.unlink()
@@ -1634,7 +1631,6 @@ def test_sleap_track_mult_input_mp4(
 
     # Run inference
     sleap_track(args=args)
-    slp_path = Path(slp_path)
 
     # Assert predictions file exists
     expected_extensions = {
@@ -1646,11 +1642,11 @@ def test_sleap_track_mult_input_mp4(
     for file_path in slp_path_list:
         if file_path.suffix in expected_extensions:
             expected_output_file = f"{file_path}.predictions.slp"
-            print(f"PATH: {expected_output_file}")
             assert Path(expected_output_file).exists()
 
     new_slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
 
+    # remove the files that have been added within the test case to revert input folders to their original state
     files_to_remove = set(new_slp_path_list) - set(slp_path_list)
     for file in files_to_remove:
         file.unlink()
@@ -1700,9 +1696,9 @@ def test_sleap_track_output_mult(
             expected_output_file = Path(output_path) / (
                 file_path.stem + ".predictions.slp"
             )
-            print(f"PATH: {expected_output_file}")
             assert Path(expected_output_file).exists()
 
+    # remove the files that have been added within the test case to revert input folders to their original state
     files_to_remove = set(new_output_path_list) - set(output_path_list)
     for file in files_to_remove:
         file.unlink()

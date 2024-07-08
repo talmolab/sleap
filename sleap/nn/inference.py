@@ -5292,19 +5292,21 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
     # Figure out which input path to use.
     labels_path = getattr(args, "labels", None)
     if labels_path is not None:
-        data_path = Path(labels_path)
+        data_path = labels_path
+        data_path_obj = Path(data_path)
     else:
-        data_path = Path(args.data_path)
+        data_path = args.data_path
+        data_path_obj = Path(data_path)
 
     # Check for multiple video inputs
     # Compile file(s) into a list for later itteration
-    if data_path.is_dir():
+    if data_path_obj.is_dir():
         data_path_list = []
-        for file_path in data_path.iterdir():
+        for file_path in data_path_obj.iterdir():
             if file_path.is_file():
-                data_path_list.append(file_path)
-    elif data_path.is_file():
-        data_path_list = [data_path.as_posix()]
+                data_path_list.append(Path(file_path))
+    elif data_path_obj.is_file():
+        data_path_list = [data_path_obj.as_posix()]
     else:
         raise ValueError(
             "You must specify a path to a video or a labels dataset. "
@@ -5312,30 +5314,28 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
         )
 
     # Provider list to accomodate multiple video inputs
-    provider_list = []
-    tmp_data_path_list = []
-    for data_path in data_path_list:
+    output_provider_list = []
+    output_data_path_list = []
+    for file_path in data_path_list:
         # Create a provider for each file
-        data_path_obj = Path(data_path)
-        if data_path_obj.as_posix().endswith(".slp"):
-            print(f"Sleap file: {data_path_obj}")
-            labels = sleap.load_file(data_path_obj.as_posix())
+        if file_path.as_posix().endswith(".slp"):
+            labels = sleap.load_file(file_path.as_posix())
 
             if args.only_labeled_frames:
-                provider_list.append(LabelsReader.from_user_labeled_frames(labels))
+                output_provider_list.append(LabelsReader.from_user_labeled_frames(labels))
             elif args.only_suggested_frames:
-                provider_list.append(LabelsReader.from_unlabeled_suggestions(labels))
+                output_provider_list.append(LabelsReader.from_unlabeled_suggestions(labels))
             elif getattr(args, "video.index") != "":
-                provider_list.append(
+                output_provider_list.append(
                     VideoReader(
                         video=labels.videos[int(getattr(args, "video.index"))],
                         example_indices=frame_list(args.frames),
                     )
                 )
             else:
-                provider_list.append(LabelsReader(labels))
+                output_provider_list.append(LabelsReader(labels))
 
-            tmp_data_path_list.append(data_path_obj)
+            output_data_path_list.append(file_path)
 
         else:
             try:
@@ -5343,22 +5343,20 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
                     dataset=vars(args).get("video.dataset"),
                     input_format=vars(args).get("video.input_format"),
                 )
-                provider_list.append(
+                output_provider_list.append(
                     VideoReader.from_filepath(
-                        filename=data_path.as_posix(),
+                        filename=file_path.as_posix(),
                         example_indices=frame_list(args.frames),
                         **video_kwargs,
                     )
                 )
-                print(f"Video: {data_path}")
-                tmp_data_path_list.append(data_path)
+                print(f"Video: {file_path.as_posix()}")
+                output_data_path_list.append(file_path)
                 # TODO: Clean this up.
             except Exception:
-                print(f"Error reading file: {data_path}")
+                print(f"Error reading file: {file_path.as_posix()}")
 
-        data_path_list = tmp_data_path_list
-
-    return provider_list, data_path_list
+    return output_provider_list, output_data_path_list
 
 
 def _make_predictor_from_cli(args: argparse.Namespace) -> Predictor:
@@ -5509,7 +5507,6 @@ def main(args: Optional[list] = None):
             # Setup models.
             data_path_obj = Path(data_path)
             predictor = _make_predictor_from_cli(args)
-            print(f"predictor.tracker: {tracker}")
             predictor.tracker = tracker
 
             # Run inference!
@@ -5527,15 +5524,14 @@ def main(args: Optional[list] = None):
                         "output_path argument must be a directory if multiple video inputs are given"
                     )
 
-            print(f"OUTPUT_PATH: {output_path}")
             if output_path is None:
-                output_path = f"{data_path}.predictions.slp"
+                output_path = f"{data_path.as_posix()}.predictions.slp"
                 output_path_obj = Path(output_path)
 
             # if output_path was provided and multiple inputs were provided, create a directory to store outputs
             elif len(data_path_list) > 1:
                 output_path = (
-                    output_path + "/" + (data_path_obj.stem + ".predictions.slp")
+                    output_path_obj.as_posix() + "/" + (data_path_obj.stem + ".predictions.slp")
                 )
                 output_path_obj = Path(output_path)
 
@@ -5610,7 +5606,7 @@ def main(args: Optional[list] = None):
 
                 elif len(data_path_list) > 1:
                     output_path = (
-                        output_path + "/" + (data_path_obj.stem + ".predictions.slp")
+                        output_path_obj.as_posix() + "/" + (data_path_obj.stem + ".predictions.slp")
                     )
                     output_path_obj = Path(output_path)
 
