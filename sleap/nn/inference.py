@@ -5302,9 +5302,9 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
         data_path_list = []
         for file_path in data_path.iterdir():
             if file_path.is_file():
-                data_path_list.append(Path(file_path))
+                data_path_list.append(file_path)
     elif data_path.is_file():
-        data_path_list = [data_path]
+        data_path_list = [data_path.as_posix()]
     else:
         raise ValueError(
             "You must specify a path to a video or a labels dataset. "
@@ -5314,11 +5314,12 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
     # Provider list to accomodate multiple video inputs
     provider_list = []
     tmp_data_path_list = []
-    for data_path_file in data_path_list:
+    for data_path in data_path_list:
         # Create a provider for each file
-        if data_path_file.as_posix().endswith(".slp"):
-            print(f"Sleap file: {data_path_file}")
-            labels = sleap.load_file(data_path_file.as_posix())
+        data_path_obj = Path(data_path)
+        if data_path_obj.as_posix().endswith(".slp"):
+            print(f"Sleap file: {data_path_obj}")
+            labels = sleap.load_file(data_path_obj.as_posix())
 
             if args.only_labeled_frames:
                 provider_list.append(LabelsReader.from_user_labeled_frames(labels))
@@ -5334,7 +5335,7 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
             else:
                 provider_list.append(LabelsReader(labels))
 
-            tmp_data_path_list.append(data_path_file)
+            tmp_data_path_list.append(data_path_obj)
 
         else:
             try:
@@ -5344,16 +5345,16 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
                 )
                 provider_list.append(
                     VideoReader.from_filepath(
-                        filename=data_path_file.as_posix(),
+                        filename=data_path.as_posix(),
                         example_indices=frame_list(args.frames),
                         **video_kwargs,
                     )
                 )
-                print(f"Video: {data_path_file}")
-                tmp_data_path_list.append(data_path_file)
+                print(f"Video: {data_path}")
+                tmp_data_path_list.append(data_path)
                 # TODO: Clean this up.
             except Exception:
-                print(f"Error reading file: {data_path_file}")
+                print(f"Error reading file: {data_path}")
 
         data_path_list = tmp_data_path_list
 
@@ -5496,18 +5497,6 @@ def main(args: Optional[list] = None):
     tracker = _make_tracker_from_cli(args)
 
     output_path = args.output
-    if output_path is not None:
-        output_path_obj = Path(output_path)
-
-    # Output path given is a file, but multiple inputs were given
-    if output_path is not None and (
-        #TODO check if directory exists
-        #always specify output directory
-        Path.is_file(output_path_obj) and len(data_path_list) > 1
-    ):
-        raise ValueError(
-            "output_path argument must be a directory if multiple video inputs are given"
-        )
 
     if args.models is not None and "movenet" in args.models[0]:
         args.models = args.models[0]
@@ -5518,6 +5507,7 @@ def main(args: Optional[list] = None):
         # Run inference on all files inputed
         for data_path, provider in zip(data_path_list, provider_list):
             # Setup models.
+            data_path_obj = Path(data_path)
             predictor = _make_predictor_from_cli(args)
             print(f"predictor.tracker: {tracker}")
             predictor.tracker = tracker
@@ -5525,13 +5515,26 @@ def main(args: Optional[list] = None):
             # Run inference!
             labels_pr = predictor.predict(provider)
 
+            # if output path was not provided, create an output path
+            if output_path is not None:
+                output_path_obj = Path(output_path)
+                if (
+                    output_path_obj.exists()
+                    and output_path_obj.is_file()
+                    and len(data_path_list) > 1
+                ):
+                    raise ValueError(
+                        "output_path argument must be a directory if multiple video inputs are given"
+                    )
+            
+            print(f"OUTPUT_PATH: {output_path}")
             if output_path is None:
-
-                output_path = data_path.parent / (data_path.stem + ".predictions.slp")
+                output_path = f"{data_path}.predictions.slp"
                 output_path_obj = Path(output_path)
 
-            else:
-                output_path = output_path + "/" + (data_path.stem + ".predictions.slp")
+            # if output_path was provided and multiple inputs were provided, create a directory to store outputs
+            elif len(data_path_list) > 1:
+                output_path = output_path + "/" + (data_path_obj.stem + ".predictions.slp")
                 output_path_obj = Path(output_path)
 
             labels_pr.provenance["model_paths"] = predictor.model_paths
@@ -5551,12 +5554,12 @@ def main(args: Optional[list] = None):
             labels_pr.provenance["sleap_version"] = sleap.__version__
             labels_pr.provenance["platform"] = platform.platform()
             labels_pr.provenance["command"] = " ".join(sys.argv)
-            labels_pr.provenance["data_path"] = data_path.as_posix()
+            labels_pr.provenance["data_path"] = data_path_obj.as_posix()
             labels_pr.provenance["output_path"] = output_path_obj.as_posix()
             labels_pr.provenance["total_elapsed"] = total_elapsed
             labels_pr.provenance["start_timestamp"] = start_timestamp
             labels_pr.provenance["finish_timestamp"] = finish_timestamp
-
+            
             print("Provenance:")
             print(labels_pr.provenance)
             print()
@@ -5577,8 +5580,9 @@ def main(args: Optional[list] = None):
     elif getattr(args, "tracking.tracker") is not None:
         for data_path, provider in zip(data_path_list, provider_list):
             # Load predictions
+            data_path_obj = Path(data_path)
             print("Loading predictions...")
-            labels_pr = sleap.load_file(data_path.as_posix())
+            labels_pr = sleap.load_file(data_path_obj.as_posix())
             frames = sorted(labels_pr.labeled_frames, key=lambda lf: lf.frame_idx)
 
             print("Starting tracker...")
@@ -5586,9 +5590,25 @@ def main(args: Optional[list] = None):
             tracker.final_pass(frames)
 
             labels_pr = Labels(labeled_frames=frames)
-
+            
             if output_path is None:
                 output_path = f"{data_path}.{tracker.get_name()}.slp"
+                output_path_obj = Path(output_path)
+
+            if output_path is not None:
+                output_path_obj = Path(output_path)
+                if (
+                    output_path_obj.exists()
+                    and output_path_obj.is_file()
+                    and len(data_path_list) > 1
+                ):
+                    raise ValueError(
+                        "output_path argument must be a directory if multiple video inputs are given"
+                    )
+                    
+                elif len(data_path_list) > 1:
+                    output_path = output_path + "/" + (data_path_obj.stem + ".predictions.slp")
+                    output_path_obj = Path(output_path)
 
             if args.no_empty_frames:
                 # Clear empty frames if specified.
@@ -5604,14 +5624,14 @@ def main(args: Optional[list] = None):
             labels_pr.provenance["sleap_version"] = sleap.__version__
             labels_pr.provenance["platform"] = platform.platform()
             labels_pr.provenance["command"] = " ".join(sys.argv)
-            labels_pr.provenance["data_path"] = data_path
-            labels_pr.provenance["output_path"] = output_path
+            labels_pr.provenance["data_path"] = data_path_obj.as_posix()
+            labels_pr.provenance["output_path"] = output_path_obj.as_posix()
             labels_pr.provenance["total_elapsed"] = total_elapsed
             labels_pr.provenance["start_timestamp"] = start_timestamp
             labels_pr.provenance["finish_timestamp"] = finish_timestamp
-
+            
             print("Provenance:")
-            pprint(labels_pr.provenance)
+            print(labels_pr.provenance)
             print()
 
             labels_pr.provenance["args"] = vars(args)
