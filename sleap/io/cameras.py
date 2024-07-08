@@ -394,6 +394,35 @@ class CameraCluster(CameraGroup):
 
         return calibration_dict
 
+    # TODO(LM): Remove this function once aniposelib is updated.
+    def optim_points(
+        self,
+        points,
+        p3ds,
+        constraints=[],
+        constraints_weak=[],
+        scale_smooth=4,
+        scale_length=2,
+        scale_length_weak=0.5,
+        reproj_error_threshold=15,
+        reproj_loss="soft_l1",
+        n_deriv_smooth=1,
+        scores=None,
+        verbose=False,
+    ):
+        """Overwrite parent function which does not handle nan values.
+
+        This function is called when we triangulate. The triangulated points are stored
+        in p3ds, but the parent function optimizes the triangulated p3ds to better fit
+        the 2D points. The parent function does not handle nan values (yet), so we need
+        to overwrite it here.
+
+        Reutrns:
+            p3ds: np.ndarray of shape (n_points, 3)
+        """
+
+        return p3ds
+
 
 @define
 class InstanceGroup:
