@@ -1559,9 +1559,7 @@ def test_sleap_track_mult_input_slp(
 
     for file_path in slp_path_list:
         if file_path.suffix in expected_extensions:
-            expected_output_file = file_path.parent / (
-                file_path.stem + ".predictions.slp"
-            )
+            expected_output_file = f"{slp_path}.predictions.slp"
             print(f"PATH: {expected_output_file}")
             assert Path(expected_output_file).exists()
 
@@ -1604,9 +1602,7 @@ def test_sleap_track_mult_input_slp_mp4(
 
     for file_path in slp_path_list:
         if file_path.suffix in expected_extensions:
-            expected_output_file = file_path.parent / (
-                file_path.stem + ".predictions.slp"
-            )
+            expected_output_file = f"{file_path}.predictions.slp"
             print(f"PATH: {expected_output_file}")
             assert Path(expected_output_file).exists()
 
@@ -1649,9 +1645,7 @@ def test_sleap_track_mult_input_mp4(
 
     for file_path in slp_path_list:
         if file_path.suffix in expected_extensions:
-            expected_output_file = file_path.parent / (
-                file_path.stem + ".predictions.slp"
-            )
+            expected_output_file = f"{file_path}.predictions.slp"
             print(f"PATH: {expected_output_file}")
             assert Path(expected_output_file).exists()
 
