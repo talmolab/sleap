@@ -270,30 +270,20 @@ def get_config_file(
         The full path to the specified config file.
     """
 
-    desired_path = None  # Handle case where get_defaults, but cannot find package_path
+    desired_path = Path.home() / f".sleap/{sleap_version.__version__}/{shortname}"
 
-    if not get_defaults:
-        desired_path = os.path.expanduser(
-            f"~/.sleap/{sleap_version.__version__}/{shortname}"
-        )
+    # Make sure there's a ~/.sleap/<version>/ directory to store user version of the config file.
+    desired_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Make sure there's a ~/.sleap/<version>/ directory to store user version of the
-        # config file.
-        try:
-            os.makedirs(os.path.expanduser(f"~/.sleap/{sleap_version.__version__}"))
-        except FileExistsError:
-            pass
+    # If we don't care whether the file exists, just return the path
+    if ignore_file_not_found:
+        return desired_path
 
-        # If we don't care whether the file exists, just return the path
-        if ignore_file_not_found:
-            return desired_path
-
-    # If we do care whether the file exists, check the package version of the
-    # config file if we can't find the user version.
-
-    if get_defaults or not os.path.exists(desired_path):
+    # If we do care whether the file exists, check the package version of the config file if we can't find the user version.
+    if get_defaults or not desired_path.exists():
         package_path = get_package_file(f"config/{shortname}")
-        if not os.path.exists(package_path):
+        package_path = Path(package_path)
+        if not package_path.exists():
             raise FileNotFoundError(
                 f"Cannot locate {shortname} config file at {desired_path} or {package_path}."
             )
