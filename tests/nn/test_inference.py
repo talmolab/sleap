@@ -85,6 +85,15 @@ def test_sleap_track_mult_inputs_folder_mp4():
 
 
 @pytest.fixture
+def test_sleap_track_invalid_input_path():
+    return "tests/data/videos/invalid_input_test"
+
+@pytest.fixture
+def test_sleap_track_output_file():
+    return "tests/data/videos/output_test_file.slp"
+
+
+@pytest.fixture
 def test_labels():
     skel = sleap.Skeleton()
     skel.add_node("a")
@@ -1560,9 +1569,9 @@ def test_sleap_track_mult_input_slp(
             expected_output_file = f"{slp_path}.predictions.slp"
             assert Path(expected_output_file).exists()
 
-    # remove the files that have been added within the test case to revert input folders to their original state
     new_slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
 
+    # remove the files that have been added within the test case to revert input folders to their original state
     files_to_remove = set(new_slp_path_list) - set(slp_path_list)
     for file in files_to_remove:
         file.unlink()
@@ -1702,6 +1711,47 @@ def test_sleap_track_output_mult(
     files_to_remove = set(new_output_path_list) - set(output_path_list)
     for file in files_to_remove:
         file.unlink()
+        
+        
+def test_sleap_track_invalid_output(
+    test_sleap_track_output_file: str,
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    test_sleap_track_mult_inputs_folder_mp4: str,
+):
+    slp_path = test_sleap_track_mult_inputs_folder_mp4
+    output_path = test_sleap_track_output_file
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker simple "
+        f"-o {output_path} "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    # Run inference
+    with pytest.raises(ValueError):
+        sleap_track(args=args)
+
+
+def test_sleap_track_invalid_input(
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+):
+
+    slp_path = ""
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker simple "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    # Run inference
+    with pytest.raises(KeyError):
+        sleap_track(args=args)
 
 
 def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):

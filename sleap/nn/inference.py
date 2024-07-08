@@ -5290,13 +5290,8 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
     """
 
     # Figure out which input path to use.
-    labels_path = getattr(args, "labels", None)
-    if labels_path is not None:
-        data_path = labels_path
-        data_path_obj = Path(data_path)
-    else:
-        data_path = args.data_path
-        data_path_obj = Path(data_path)
+    data_path = args.data_path
+    data_path_obj = Path(data_path)
 
     # Check for multiple video inputs
     # Compile file(s) into a list for later itteration
@@ -5306,7 +5301,7 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
             if file_path.is_file():
                 data_path_list.append(Path(file_path))
     elif data_path_obj.is_file():
-        data_path_list = [data_path_obj.as_posix()]
+        data_path_list = [data_path_obj]
     else:
         raise ValueError(
             "You must specify a path to a video or a labels dataset. "
@@ -5601,6 +5596,7 @@ def main(args: Optional[list] = None):
 
             if output_path is not None:
                 output_path_obj = Path(output_path)
+                print(output_path_obj.is_dir)
                 if (
                     output_path_obj.exists()
                     and output_path_obj.is_file()
@@ -5610,7 +5606,7 @@ def main(args: Optional[list] = None):
                         "output_path argument must be a directory if multiple video inputs are given"
                     )
 
-                elif len(data_path_list) > 1:
+                elif not output_path_obj.exists() and len(data_path_list) > 1:
                     output_path = (
                         output_path_obj.as_posix()
                         + "/"
