@@ -5291,6 +5291,13 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
 
     # Figure out which input path to use.
     data_path = args.data_path
+    
+    if data_path == None or data_path == "":
+        raise ValueError(
+            "You must specify a path to a video or a labels dataset. "
+            "Run 'sleap-track -h' to see full command documentation."
+        )
+        
     data_path_obj = Path(data_path)
 
     # Check for multiple video inputs
@@ -5302,11 +5309,6 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
                 data_path_list.append(Path(file_path))
     elif data_path_obj.is_file():
         data_path_list = [data_path_obj]
-    else:
-        raise ValueError(
-            "You must specify a path to a video or a labels dataset. "
-            "Run 'sleap-track -h' to see full command documentation."
-        )
 
     # Provider list to accomodate multiple video inputs
     output_provider_list = []
@@ -5514,6 +5516,7 @@ def main(args: Optional[list] = None):
             # if output path was not provided, create an output path
             if output_path is not None:
                 output_path_obj = Path(output_path)
+                print(Path(output_path).exists())
                 if (
                     output_path_obj.exists()
                     and output_path_obj.is_file()
@@ -5596,7 +5599,6 @@ def main(args: Optional[list] = None):
 
             if output_path is not None:
                 output_path_obj = Path(output_path)
-                print(output_path_obj.is_dir)
                 if (
                     output_path_obj.exists()
                     and output_path_obj.is_file()

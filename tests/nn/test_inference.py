@@ -1733,6 +1733,8 @@ def test_sleap_track_invalid_output(
     # Run inference
     with pytest.raises(ValueError):
         sleap_track(args=args)
+        
+    assert 1 == 0
 
 
 def test_sleap_track_invalid_input(
@@ -1750,7 +1752,7 @@ def test_sleap_track_invalid_input(
     ).split()
 
     # Run inference
-    with pytest.raises(KeyError):
+    with pytest.raises(ValueError):
         sleap_track(args=args)
 
 
