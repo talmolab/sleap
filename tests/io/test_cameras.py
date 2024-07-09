@@ -404,6 +404,7 @@ def create_instance_group(
     frame_idx: int,
     add_dummy: bool = False,
     name: Optional[str] = None,
+    score: Optional[float] = None,
 ) -> Union[
     InstanceGroup, Tuple[InstanceGroup, Dict[Camcorder, Instance], Instance, Camcorder]
 ]:
@@ -449,6 +450,7 @@ def create_instance_group(
         instance_by_camcorder=instance_by_camera,
         name="test_instance_group",
         name_registry={},
+        score=score,
     )
     return (
         (instance_group, instance_by_camera, dummy_instance, cam)
@@ -539,6 +541,20 @@ def test_instance_group(
     assert isinstance(instance_group_dict, dict)
     assert instance_group_dict["name"] == instance_group.name
     assert "camcorder_to_lf_and_inst_idx_map" in instance_group_dict
+    assert "score" not in instance_group_dict
+
+    # Test `score` property (and `to_dict`)
+    assert instance_group.score is None
+    instance_group.score = 0.5
+    for instance in instance_group.instances:
+        assert instance.score == 0.5
+    instance_group.score = 0.75
+    for instance in instance_group.instances:
+        assert instance.score == 0.75
+    instance_group_dict = instance_group.to_dict(
+        instance_to_lf_and_inst_idx=instance_to_lf_and_inst_idx
+    )
+    assert instance_group_dict["score"] == str(0.75)
 
     # Test `from_dict`
     instance_group_2 = InstanceGroup.from_dict(
@@ -590,6 +606,20 @@ def test_instance_group(
             name="test_instance_group",
             name_registry={},
         )
+    instance_by_camera = {
+        cam: instance_group.get_instance(cam) for cam in instance_group.cameras
+    }
+    instance_group_from_dict = InstanceGroup.from_instance_by_camcorder_dict(
+        instance_by_camcorder=instance_by_camera,
+        name="test_instance_group",
+        name_registry={},
+        score=0.5,
+    )
+    assert instance_group_from_dict.score == 0.5
+    # The score of instances will NOT be updated on initialization.
+    for instance in instance_group_from_dict.instances:
+        if isinstance(instance, PredictedInstance):
+            assert instance.score != instance_group_from_dict.score
 
     # Test `__repr__`
     print(instance_group)
@@ -624,9 +654,22 @@ def test_instance_group(
 
     # Test `update_points` method
     assert not np.all(instance_group.numpy(invisible_as_nan=False) == 72317)
-    instance_group.update_points(np.full((n_views, n_nodes, n_coords), 72317))
+    # Remove some Instances to "expose" underlying PredictedInstances
+    for inst in instance_group.instances[:2]:
+        lf = inst.frame
+        labels.remove_instance(lf, inst)
+    instance_group.update_points(points=np.full((n_views, n_nodes, n_coords), 72317))
+    for inst in instance_group.instances:
+        if isinstance(inst, PredictedInstance):
+            assert inst.score == instance_group.score
+    prev_score = instance_group.score
+    instance_group.update_points(points=np.full((n_views, n_nodes, n_coords), 72317))
+    for inst in instance_group.instances:
+        if isinstance(inst, PredictedInstance):
+            assert inst.score == instance_group.score
     instance_group_numpy = instance_group.numpy(invisible_as_nan=False)
     assert np.all(instance_group_numpy == 72317)
+    assert instance_group.score == 1.0  # Score should be 1.0 because same points
 
     # Test `add_instance`, `replace_instance`, and `remove_instance`
     cam = instance_group.cameras[0]
@@ -858,3 +901,7 @@ def test_frame_group(
     assert camera in frame_group.cameras
     assert labeled_frame_created in frame_group.labeled_frames
     assert labeled_frame in frame_group.session.labels.labeled_frames
+
+
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::test_instance_group"])

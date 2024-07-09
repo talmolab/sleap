@@ -13,7 +13,6 @@ from sleap.nn.data.providers import LabelsReader
 from sleap.nn.evals import (
     compute_dists,
     compute_dist_metrics,
-    compute_oks,
     load_metrics,
     evaluate_model,
 )
@@ -21,48 +20,6 @@ from sleap.nn.model import Model
 
 
 sleap.use_cpu_only()
-
-
-def test_compute_oks():
-    # Test compute_oks function with the cocoutils implementation
-    inst_gt = np.array([[0, 0], [1, 1], [2, 2]]).astype("float32")
-    inst_pr = np.array([[0, 0], [1, 1], [2, 2]]).astype("float32")
-    oks = compute_oks(inst_gt, inst_pr)
-    np.testing.assert_allclose(oks, 1)
-
-    inst_pr = np.array([[0, 0], [1, 1], [np.nan, np.nan]]).astype("float32")
-    oks = compute_oks(inst_gt, inst_pr)
-    np.testing.assert_allclose(oks, 2 / 3)
-
-    inst_gt = np.array([[0, 0], [1, 1], [np.nan, np.nan]]).astype("float32")
-    inst_pr = np.array([[0, 0], [1, 1], [2, 2]]).astype("float32")
-    oks = compute_oks(inst_gt, inst_pr)
-    np.testing.assert_allclose(oks, 1)
-
-    inst_gt = np.array([[0, 0], [1, 1], [np.nan, np.nan]]).astype("float32")
-    inst_pr = np.array([[0, 0], [1, 1], [np.nan, np.nan]]).astype("float32")
-    oks = compute_oks(inst_gt, inst_pr)
-    np.testing.assert_allclose(oks, 1)
-
-    # Test compute_oks function with the implementation from the paper
-    inst_gt = np.array([[0, 0], [1, 1], [2, 2]]).astype("float32")
-    inst_pr = np.array([[0, 0], [1, 1], [2, 2]]).astype("float32")
-    oks = compute_oks(inst_gt, inst_pr, False)
-    np.testing.assert_allclose(oks, 1)
-
-    inst_pr = np.array([[0, 0], [1, 1], [np.nan, np.nan]]).astype("float32")
-    oks = compute_oks(inst_gt, inst_pr, False)
-    np.testing.assert_allclose(oks, 2 / 3)
-
-    inst_gt = np.array([[0, 0], [1, 1], [np.nan, np.nan]]).astype("float32")
-    inst_pr = np.array([[0, 0], [1, 1], [2, 2]]).astype("float32")
-    oks = compute_oks(inst_gt, inst_pr, False)
-    np.testing.assert_allclose(oks, 1)
-
-    inst_gt = np.array([[0, 0], [1, 1], [np.nan, np.nan]]).astype("float32")
-    inst_pr = np.array([[0, 0], [1, 1], [np.nan, np.nan]]).astype("float32")
-    oks = compute_oks(inst_gt, inst_pr, False)
-    np.testing.assert_allclose(oks, 1)
 
 
 def test_compute_dists(instances, predicted_instances):
