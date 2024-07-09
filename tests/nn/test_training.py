@@ -128,7 +128,7 @@ def test_train_single_instance(min_labels_robot, cfg, tmp_path):
         sigma=1.5, output_stride=1, offset_refinement=False
     )
 
-    # set save directory
+    # Set save directory
     cfg.outputs.run_name = "test_run"
     cfg.outputs.runs_folder = str(tmp_path / "training_runs")  # ensure it's a string
     cfg.outputs.save_visualizations = True
@@ -141,35 +141,42 @@ def test_train_single_instance(min_labels_robot, cfg, tmp_path):
     trainer.setup()
     trainer.train()
 
-    # Check if viz directory exists
-    found_viz = False
     run_path = Path(cfg.outputs.runs_folder, cfg.outputs.run_name)
-    for folder in run_path.iterdir():
-        if folder.is_dir() and folder == str(
-            run_path / "viz"
-        ):  # Iterate through each model trained
-            found_viz = True
-            break
+    viz_path = run_path / "viz"
 
     assert trainer.keras_model.output_names[0] == "SingleInstanceConfmapsHead"
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 320, 560, 2)
-    assert found_viz == True
+    assert viz_path.exists()
 
 
-def test_train_single_instance_with_offset(min_labels_robot, cfg):
+def test_train_single_instance_with_offset(min_labels_robot, cfg, tmp_path):
     cfg.model.heads.single_instance = SingleInstanceConfmapsHeadConfig(
         sigma=1.5, output_stride=1, offset_refinement=True
     )
+
+    # Set save directory
+    cfg.outputs.run_name = "test_run"
+    cfg.outputs.runs_folder = str(tmp_path / "training_runs")  # ensure it's a string
+    cfg.outputs.save_visualizations = False
+    cfg.outputs.keep_viz_images = False
+    cfg.outputs.save_outputs = True  # enable saving
+
     trainer = SingleInstanceModelTrainer.from_config(
         cfg, training_labels=min_labels_robot
     )
     trainer.setup()
     trainer.train()
+
+    run_path = Path(cfg.outputs.runs_folder, cfg.outputs.run_name)
+    viz_path = run_path / "viz"
+
     assert trainer.keras_model.output_names[0] == "SingleInstanceConfmapsHead"
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 320, 560, 2)
 
     assert trainer.keras_model.output_names[1] == "OffsetRefinementHead"
     assert tuple(trainer.keras_model.outputs[1].shape) == (None, 320, 560, 4)
+
+    assert not viz_path.exists()
 
 
 def test_train_centroids(training_labels, cfg):
@@ -396,12 +403,8 @@ def test_keep_viz_cli(
     cfg_path = str(Path(tmp_path, "training_config.json"))
     cfg.save_json(cfg_path)
 
-    # Check that --keep_viz is set correctly
-    cli_args = [cfg_path, "--save_viz", keep_viz_cli]
+    cli_args = [cfg_path, keep_viz_cli]
     trainer = sleap_train(cli_args)
 
-    if keep_viz_cli:
-        assert trainer.config.outputs.keep_viz_images == True
-
-    else:
-        assert trainer.config.outputs.keep_viz_images == False
+    # Check that --keep_viz is set correctly
+    assert trainer.config.outputs.keep_viz_images == bool(keep_viz_cli)
