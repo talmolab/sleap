@@ -5516,7 +5516,6 @@ def main(args: Optional[list] = None):
             # if output path was not provided, create an output path
             if output_path is not None:
                 output_path_obj = Path(output_path)
-                print(Path(output_path).exists())
                 if (
                     output_path_obj.exists()
                     and output_path_obj.is_file()
