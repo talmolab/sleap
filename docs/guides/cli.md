@@ -36,8 +36,8 @@ optional arguments:
 
 ```none
 usage: sleap-train [-h] [--video-paths VIDEO_PATHS] [--val_labels VAL_LABELS]
-                   [--test_labels TEST_LABELS] [--tensorboard] [--save_viz]
-                   [--zmq] [--run_name RUN_NAME] [--prefix PREFIX]
+                   [--test_labels TEST_LABELS] [--tensorboard] [--save_viz] 
+                   [--keep_viz] [--zmq] [--run_name RUN_NAME] [--prefix PREFIX]
                    [--suffix SUFFIX]
                    training_job_path [labels_path]
 
@@ -68,6 +68,8 @@ optional arguments:
   --save_viz            Enable saving of prediction visualizations to the run
                         folder if not already specified in the training job
                         config.
+  --keep_viz            Keep prediction visualization images in the run
+                        folder after training if --save_viz is enabled.
   --zmq                 Enable ZMQ logging (for GUI) if not already specified
                         in the training job config.
   --run_name RUN_NAME   Run name to use when saving file, overrides other run
