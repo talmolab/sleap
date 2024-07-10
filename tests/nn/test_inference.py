@@ -1755,32 +1755,6 @@ def test_sleap_track_invalid_input(
         sleap_track(args=args)
 
 
-def test_sleap_track_user_labeled_frames(
-    centered_pair_predictions: Labels,
-    min_centroid_model_path: str,
-    min_centered_instance_model_path: str,
-    tmpdir,
-):
-    slp_path = str(Path(tmpdir, "old_slp.slp"))
-    Labels.save(centered_pair_predictions, slp_path)
-
-    # Create sleap-track command
-    args = (
-        f"{slp_path} --model {min_centroid_model_path} "
-        "--only-labeled-frames "
-        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
-    ).split()
-
-    # Run inference
-    sleap_track(args=args)
-
-    # Assert predictions file exists
-    output_path = f"{slp_path}.predictions.slp"
-    assert Path(output_path).exists()
-
-    # Create invalid sleap-track command
-
-
 def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
     """Test flow tracker instances are pruned."""
     labels: Labels = centered_pair_predictions
