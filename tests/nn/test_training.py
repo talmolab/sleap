@@ -389,7 +389,7 @@ def test_resume_training_cli(
         assert trainer.config.model.base_checkpoint == base_checkpoint_path
 
 
-@pytest.mark.parametrize("keep_viz_cli", [None, "--keep_viz"])
+@pytest.mark.parametrize("keep_viz_cli", ["", "--keep_viz"])
 def test_keep_viz_cli(
     keep_viz_cli,
     min_single_instance_robot_model_path: str,
@@ -407,4 +407,6 @@ def test_keep_viz_cli(
     trainer = sleap_train(cli_args)
 
     # Check that --keep_viz is set correctly
-    assert trainer.config.outputs.keep_viz_images == bool(keep_viz_cli)
+    assert trainer.config.outputs.keep_viz_images == (
+        True if keep_viz_cli == "--keep_viz" else False
+    )
