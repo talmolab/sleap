@@ -691,16 +691,18 @@ class InstanceGroupTableModel(GenericTableModel):
         item: 'InstanceGroup' which has information about the instance group
     """
 
-    properties = ("name", "frame index", "cameras", "instances")
+    properties = ("name", "score", "frame index", "cameras", "instances")
 
     def item_to_data(self, obj, item: InstanceGroup):
 
-        return {
+        data = {
             "name": item.name,
+            "score": "" if item.score is None else str(round(item.score, 2)),
             "frame index": item.frame_idx,
             "cameras": len(item.camera_cluster.cameras),
             "instances": len(item.instances),
         }
+        return data
 
     def get_item_color(self, instance_group: InstanceGroup, key: str):
         color_manager = self.context.app.color_manager

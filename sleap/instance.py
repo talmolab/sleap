@@ -722,26 +722,34 @@ class Instance:
 
         Args:
             points: The new points to update to.
-            exclude_complete: Whether to update points where Point.complete is True
+            exclude_complete: Whether to update visible points where Point.complete
+                and Point.visible is True. This only applies to user-labeled instances.
         """
+
+        # Determine if Instance is a PredictedInstance
+        is_predicted = True if isinstance(self._points, PredictedPointArray) else False
+
         points_dict = dict()
         for point_new, points_old, node_name in zip(
             points, self._points, self.skeleton.node_names
         ):
 
-            # Skip if new point is nan or old point is complete
-            if np.isnan(point_new).any() or (exclude_complete and points_old.complete):
+            visible = points_old.visible
+            complete = points_old.complete
+
+            # Skip if new point is nan or old is user-labeled, visible and complete
+            skip_if_complete = (not is_predicted) and exclude_complete and visible
+            if np.isnan(point_new).any() or (skip_if_complete and complete):
                 continue
 
             # Grab the x, y from the new point and visible, complete from the old point
             x, y = point_new
-            visible = points_old.visible
-            complete = points_old.complete
+            visible = visible
+            complete = complete
 
             # Create a new point and add to the dict
-            if type(self._points) == PredictedPointArray:
-                # TODO(LM): The point score is meant to rate the confidence of the
-                # prediction, but this method updates from triangulation.
+            if is_predicted:
+                # This method does not update the points score.
                 score = points_old.score
                 point_obj = PredictedPoint(
                     x=x, y=y, visible=visible, complete=complete, score=score
