@@ -5515,7 +5515,10 @@ def main(args: Optional[list] = None):
 
             # if output path was not provided, create an output path
             if output_path is not None:
+                print("HERE")
                 output_path_obj = Path(output_path)
+                print(output_path_obj.exists())
+                print(output_path_obj.is_dir())
                 if (
                     output_path_obj.exists()
                     and output_path_obj.is_file()
