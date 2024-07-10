@@ -23,6 +23,19 @@ def test_velocity_suggestions(centered_pair_predictions):
     assert suggestions[0].frame_idx == 21
     assert suggestions[1].frame_idx == 45
 
+# something like this?
+def test_max_point_displacement_suggestions(centered_pair_predictions):
+    suggestions = VideoFrameSuggestions.suggest(
+        labels=centered_pair_predictions,
+        params=dict(
+            videos=centered_pair_predictions.videos,
+            method="max_point_displacement",
+            displacement_threshold = 3
+        ),
+    )
+    assert len(suggestions) == 45
+    assert suggestions[0].frame_idx == 21
+    assert suggestions[1].frame_idx == 45
 
 def test_frame_increment(centered_pair_predictions: Labels):
     # Testing videos that have less frames than desired Samples per Video (stride)

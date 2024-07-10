@@ -3,7 +3,7 @@ main:
     label: Method
     type: stacked
     default: " "
-    options: " ,image features,sample,prediction score,velocity,frame chunk"
+    options: " ,image features,sample,prediction score,velocity,frame chunk,max point displacement"
     " ":
 
     sample:
@@ -175,6 +175,12 @@ main:
         type: double
         default: 0.1
         range: 0.1,1.0
+    
+    "max point displacement":
+      - name: per_video
+        label: Threshold
+        type: int
+        default: 10
 
   - name: target
     label: Target

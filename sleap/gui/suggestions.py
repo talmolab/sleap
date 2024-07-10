@@ -61,6 +61,7 @@ class VideoFrameSuggestions(object):
             prediction_score=cls.prediction_score,
             velocity=cls.velocity,
             frame_chunk=cls.frame_chunk,
+            max_point_displacement = cls.max_point_displacement,
         )
 
         method = str.replace(params["method"], " ", "_")
@@ -290,6 +291,57 @@ class VideoFrameSuggestions(object):
         )
 
         return cls.idx_list_to_frame_list(frame_idxs, video)
+
+    def max_point_displacement(
+        cls,
+        labels: "Labels",
+        videos: List[Video],
+        displacement_threshold: float,
+        **kwargs,
+    ):
+        """Finds frames with maximum point displacement above a threshold."""
+
+        proposed_suggestions = []
+        for video in videos:
+            proposed_suggestions.extend(
+                cls._max_point_displacement_video(video, labels, displacement_threshold)
+            )
+
+        suggestions = VideoFrameSuggestions.filter_unique_suggestions(
+            labels, videos, proposed_suggestions
+        )
+
+        return suggestions
+
+    @classmethod
+    def _max_point_displacement_video(
+        cls, video: Video, labels: "Labels", displacement_threshold: float
+    ):
+        lfs = labels.find(video)
+        frames = len(lfs)
+
+        if frames < 2:
+            return []
+
+        displacements = []
+        for i in range(1, frames):
+            prev_lf = lfs[i - 1]
+            curr_lf = lfs[i]
+            prev_points = np.array([inst.points_array for inst in prev_lf.instances_to_show])
+            curr_points = np.array([inst.points_array for inst in curr_lf.instances_to_show])
+
+            if prev_points.shape != curr_points.shape:
+                continue
+
+            displacement = np.linalg.norm(curr_points - prev_points, axis=2).sum()
+            displacements.append((displacement, curr_lf.frame_idx))
+
+        frame_idxs = [
+            frame_idx for displacement, frame_idx in displacements if displacement > displacement_threshold
+        ]
+
+        return cls.idx_list_to_frame_list(frame_idxs, video)
+
 
     @classmethod
     def frame_chunk(
