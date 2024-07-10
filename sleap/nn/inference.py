@@ -5291,13 +5291,13 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
 
     # Figure out which input path to use.
     data_path = args.data_path
-    
+
     if data_path == None or data_path == "":
         raise ValueError(
             "You must specify a path to a video or a labels dataset. "
             "Run 'sleap-track -h' to see full command documentation."
         )
-        
+
     data_path_obj = Path(data_path)
 
     # Check for multiple video inputs
