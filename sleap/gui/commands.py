@@ -3016,10 +3016,22 @@ class AddInstance(EditCommand):
             if node in copy_instance and not copy_instance[node].isnan():
                 # Ensure x, y inside current frame, then copy x, y, and visible.
                 # We don't want to copy a PredictedPoint or score attribute.
-                x_old = copy_instance[node].x
+                x_old = copy_instance[node].x 
                 y_old = copy_instance[node].y
-                x_new = x_old * scale_width
-                y_new = y_old * scale_height
+                if isinstance(copy_instance, PredictedInstance):
+                    x_new = x_old
+                else:
+                    if (x_old + 10) * scale_width <= (new_size_width - 10):
+                        x_new = (x_old + 10) * scale_width
+                    else:
+                        x_new = x_old
+                if isinstance(copy_instance, PredictedInstance):
+                    y_new = y_old
+                else:     
+                    if (y_old + 10) * scale_height <= (new_size_height - 10):
+                        y_new = (y_old + 10) * scale_height
+                    else:
+                        y_new = y_old
 
                 new_instance[node] = Point(
                     x=x_new,
