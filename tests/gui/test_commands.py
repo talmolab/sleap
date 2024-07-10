@@ -1572,3 +1572,19 @@ def test_link_video_to_session(min_session_session, centered_pair_vid):
     assert video in session.videos
     assert camera is session.get_camera(video=video)
     assert video is session.get_video(camcorder=camera)
+
+
+def test_setInstanceGroupName(multiview_min_session_frame_groups):
+    labels: Labels = multiview_min_session_frame_groups
+    session: RecordingSession = labels.sessions[0]
+
+    # Set-up CommandContext
+    context: CommandContext = CommandContext.from_labels(labels)
+    context.state["session"] = session
+
+    # Start test
+    frame_group = session.frame_groups[0]
+    instance_group: InstanceGroup = frame_group.instance_groups[0]
+    new_name = "New Name"
+    context.setInstanceGroupName(instance_group=instance_group, name=new_name)
+    assert instance_group.name == new_name

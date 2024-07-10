@@ -607,6 +607,9 @@ class CommandContext:
         """Sets the instance group for selected instance."""
         self.execute(SetSelectedInstanceGroup, instance_group=instance_group)
 
+    def setInstanceGroupName(self, instance_group: InstanceGroup, name: str):
+        self.execute(SetInstanceGroupName, instance_group=instance_group, name=name)
+
     def deleteTrack(self, track: "Track"):
         """Delete a track and remove from all instances."""
         self.execute(DeleteTrack, track=track)
@@ -2815,6 +2818,20 @@ class AddInstanceGroup(EditCommand):
 
         # Now add the selected instance to the `InstanceGroup`
         context.execute(SetSelectedInstanceGroup, instance_group=instance_group)
+
+
+class SetInstanceGroupName(EditCommand):
+
+    topics = [UpdateTopic.sessions]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        instance_group = params["instance_group"]
+        name = params["name"]
+
+        FrameGroup = context.state["session"].frame_groups[instance_group.frame_idx]
+
+        FrameGroup.set_instance_group_name(instance_group=instance_group, name=name)
 
 
 class AddTrack(EditCommand):
