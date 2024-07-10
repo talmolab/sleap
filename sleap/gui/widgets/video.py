@@ -970,6 +970,7 @@ class GraphicsView(QGraphicsView):
         Returns:
             None
         """
+        # TODO:
         for idx, instance in enumerate(self.all_instances):
             instance.selected = select == idx or select == instance.instance
         self.updatedSelection.emit()
