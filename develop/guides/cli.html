@@ -386,8 +386,8 @@ optional arguments:
 <span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-train</span></code><a class="headerlink" href="#sleap-train" title="Permalink to this headline">#</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-train</span></code> is the command-line interface for training. Use this for training on a remote machine/cluster/colab notebook instead of through the GUI.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-train [-h] [--video-paths VIDEO_PATHS] [--val_labels VAL_LABELS]
-                   [--test_labels TEST_LABELS] [--tensorboard] [--save_viz]
-                   [--zmq] [--run_name RUN_NAME] [--prefix PREFIX]
+                   [--test_labels TEST_LABELS] [--tensorboard] [--save_viz] 
+                   [--keep_viz] [--zmq] [--run_name RUN_NAME] [--prefix PREFIX]
                    [--suffix SUFFIX]
                    training_job_path [labels_path]
 
@@ -418,6 +418,8 @@ optional arguments:
   --save_viz            Enable saving of prediction visualizations to the run
                         folder if not already specified in the training job
                         config.
+  --keep_viz            Keep prediction visualization images in the run
+                        folder after training if --save_viz is enabled.
   --zmq                 Enable ZMQ logging (for GUI) if not already specified
                         in the training job config.
   --run_name RUN_NAME   Run name to use when saving file, overrides other run
