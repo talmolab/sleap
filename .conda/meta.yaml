@@ -21,10 +21,9 @@ build:
 requirements:
   host:
     # - conda-forge::python ==3.7.12  # Run into _MAX_WINDOWS_WORKERS not found if <
-    # - conda-forge::python >=3.9.0,<3.10.0
     - conda-forge::python >=3.10.0,<3.11.0
     # - numpy >=1.19.5,<1.23.0  # Linux likes anaconda, windows likes conda-forge
-    - numpy >=1.21.6 # SciPy 1.11 requires numpy >=1.21.6
+    - numpy >=1.16.5 # SciPy 1.7 requires numpy >=1.16.5
     - conda-forge::cudatoolkit ==11.3.1
     - conda-forge::cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
@@ -45,7 +44,6 @@ requirements:
     - conda-forge::psutil
     - conda-forge::pykalman
     # - conda-forge::pyside2 >=5.12,<5.14  # To ensure works correctly with QtPy.
-    # - conda-forge::pyside6 >5.15 # >5.15 is compatible with Python 3.9
     - conda-forge::pyside6 >=6.2.0 # >=6.2.0 is compatible with Python 3.10
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
@@ -53,9 +51,10 @@ requirements:
     - conda-forge::qtpy >=2.0.1
     - conda-forge::rich
     # - conda-forge::scipy >=1.4.1,<=1.9.0
-    - conda-forge::scipy >=1.11 # Python 3.9, 3.10 requires scipy >=1.11
+    - conda-forge::scipy >=1.7.0 # Python 3.10 requires scipy >=1.7
     - conda-forge::scikit-image
-    - conda-forge::scikit-learn ==1.0
+    # - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-learn >=1.0.0 # Python 3.10 requires scikit-learn >=1.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
     - conda-forge::qudida
@@ -64,10 +63,9 @@ requirements:
     - conda-forge::importlib-metadata ==4.11.4
   run:
     # - conda-forge::python ==3.7.12  # Run into _MAX_WINDOWS_WORKERS not found if <
-    # - conda-forge::python >=3.9.0,<3.10.0
     - conda-forge::python >=3.10.0,<3.11.0
     # - numpy >=1.19.5,<1.23.0  # Linux likes anaconda, windows likes conda-forge
-    - numpy >=1.21.6 # SciPy 1.11 requires numpy >=1.21.6
+    - numpy >=1.16.5 # SciPy 1.7 requires numpy >=1.16.5
     - conda-forge::attrs ==21.4.0
     - conda-forge::cattrs ==1.1.1
     - conda-forge::cudatoolkit ==11.3.1
@@ -83,7 +81,6 @@ requirements:
     - conda-forge::psutil
     - conda-forge::pykalman
     # - conda-forge::pyside2 >=5.12,<5.14  # To ensure works correctly with QtPy.
-    # - conda-forge::pyside6 >5.15 # >5.15 is compatible with Python 3.9
     - conda-forge::pyside6 >=6.2.0 # >=6.2.0 is compatible with Python 3.10
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
@@ -91,13 +88,14 @@ requirements:
     - conda-forge::qtpy >=2.0.1
     - conda-forge::rich
     # - conda-forge::scipy >=1.4.1,<=1.9.0
-    - conda-forge::scipy >=1.11 # Python 3.9, 3.10 requires scipy >=1.11
+    - conda-forge::scipy >=1.7.0 # Python 3.10 requires scipy >=1.7
     - conda-forge::scikit-image
-    - conda-forge::scikit-learn ==1.0
+    # - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-learn >=1.0.0 # Python 3.10 requires scikit-learn >=1.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
     - sleap/label/dev::tensorflow ==2.7.0  # TODO: Switch to main label when updated
-    - conda-forge::tensorflow-hub <0.14.0  # Causes pynwb conflicts on linux GH-1446
+    - conda-forge::tensorflow-hub <0.14.0  # Causes pynwb conflicts on linux GH-1446, why is this not in the run section?
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose
