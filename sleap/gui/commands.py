@@ -3011,7 +3011,7 @@ class AddInstance(EditCommand):
         new_size_height = new_instance.frame.video.shape[1]
         scale_width = new_size_width / old_size_width
         scale_height = new_size_height / old_size_height
-        
+
         if location is not None:
             reference_x = copy_instance[context.state["skeleton"].node_names[0]].x
             reference_y = copy_instance[context.state["skeleton"].node_names[0]].y
@@ -3026,13 +3026,16 @@ class AddInstance(EditCommand):
                 # We don't want to copy a PredictedPoint or score attribute.
                 x_old = copy_instance[node].x
                 y_old = copy_instance[node].y
-                
+
                 # Handles if the new instance is created with right click
-                if location is not None and offset_x is not None and offset_y is not None:
+                if (
+                    location is not None
+                    and offset_x is not None
+                    and offset_y is not None
+                ):
                     x_old += offset_x
                     y_old += offset_y
-                
-                
+
                 if isinstance(copy_instance, PredictedInstance):
                     x_new = x_old
                     y_new = y_old
@@ -3041,12 +3044,12 @@ class AddInstance(EditCommand):
                         x_new = (x_old + 10) * scale_width
                     else:
                         x_new = x_old
-                    
+
                     if (y_old + 10) * scale_height <= (new_size_height - 10):
                         y_new = (y_old + 10) * scale_height
                     else:
                         y_new = y_old
-                        
+
                 new_instance[node] = Point(
                     x=x_new,
                     y=y_new,
