@@ -2236,6 +2236,9 @@ class FrameGroup:
         ), f"Expected {len(instance_groups)} instances, got {n_instances}."
         assert n_coords == 2, f"Expected 2 coordinates, got {n_coords}."
 
+        # Ensure we are working with a float array
+        points = points.astype(float)
+
         # Get projection bounds (based on video height/width)
         bounds = self.session.projection_bounds
         bounds_expanded_x = bounds[:, None, None, 0]
