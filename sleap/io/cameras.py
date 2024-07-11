@@ -1203,6 +1203,36 @@ class RecordingSession:
 
         return self._excluded_views
 
+    @property
+    def projection_bounds(self) -> Tuple[Tuple[float, float], Tuple[float, float]]:
+        """Projection bounds for all `Camcorder`s in the `RecordingSession`.
+
+        The projection bounds are based off the linked `Video`'s height and width.
+
+        Returns:
+            Tuple of x and y bounds as (min, max) for all `Camcorder`s in the
+            `RecordingSession`.
+        """
+
+        # Get the projection bounds for all `Camcorder`s in the `RecordingSession`
+        n_cameras = len(self.camera_cluster.cameras)
+        bounds = np.full((n_cameras, 2), np.nan)
+        for cam in self.linked_cameras:
+            video: Video = self.get_video(cam)
+
+            # Get the video's width and height
+            x_max = video.width
+            y_max = video.height
+
+            # Allow triangulating even if no video information is available
+            if x_max is None or y_max is None:
+                continue
+
+            # Update the bounds
+            bounds[self.camera_cluster.cameras.index(cam)] = (x_max, y_max)
+
+        return bounds
+
     def get_video(self, camcorder: Camcorder) -> Optional[Video]:
         """Retrieve `Video` linked to `Camcorder`.
 
@@ -2200,6 +2230,19 @@ class FrameGroup:
             instance_groups
         ), f"Expected {len(instance_groups)} instances, got {n_instances}."
         assert n_coords == 2, f"Expected 2 coordinates, got {n_coords}."
+
+        # Get projection bounds (based on video height/width)
+        bounds = self.session.projection_bounds
+        bounds_expanded_x = bounds[:, None, None, 0]
+        bounds_expanded_y = bounds[:, None, None, 1]
+
+        # Create masks for out-of-bounds x and y coordinates
+        out_of_bounds_x = (points[..., 0] < 0) | (points[..., 0] > bounds_expanded_x)
+        out_of_bounds_y = (points[..., 1] < 0) | (points[..., 1] > bounds_expanded_y)
+
+        # Replace out-of-bounds x and y coordinates with nan
+        points[out_of_bounds_x, 0] = np.nan
+        points[out_of_bounds_y, 1] = np.nan
 
         # Update points for each `InstanceGroup`
         for ig_idx, instance_group in enumerate(instance_groups):
