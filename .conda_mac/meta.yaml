@@ -23,11 +23,9 @@ source:
 
 requirements:
   host:  
-    # - conda-forge::python >=3.10.0,<3.11.0
-    # - conda-forge::python >=3.11.0,<3.12.0
-    - conda-forge::python >=3.11.0,<3.13.0
+    - conda-forge::python >=3.10.0,<3.11.0
     # - anaconda::numpy >=1.19.5,<1.23.0
-    - conda-forge::numpy >=1.21.6
+    - conda-forge::numpy >=1.16.5 # Scipy 1.7.0 requires numpy >=1.16.5
     - conda-forge::setuptools
     - conda-forge::packaging
     - conda-forge::pip
@@ -46,18 +44,17 @@ requirements:
     - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    # - conda-forge::pyside2 >=5.12
-    - conda-forge::pyside6 >=6.4.0
+    - conda-forge::pyside2 >=5.12 # To ensure application works correctly with QtPy.
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
     - conda-forge::qtpy >=2.0.1
     - conda-forge::rich
     # - conda-forge::scipy >=1.4.1,<=1.9.0
-    - conda-forge::scipy >=1.11.0
+    - conda-forge::scipy >=1.7.0 # Python 3.10 needs scipy >= 1.7
     - conda-forge::scikit-image
     # - conda-forge::scikit-learn ==1.0
-    - conda-forge::scikit-learn >=1.0.0
+    - conda-forge::scikit-learn >=1.0.0 # Python 3.10 needs scikit-learn >= 1.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
     - conda-forge::qudida
@@ -65,9 +62,7 @@ requirements:
     - conda-forge::ndx-pose
 
   run:
-    # - conda-forge::python >=3.10.0,<3.11.0
-    # - conda-forge::python >=3.11.0,<3.12.0
-    - conda-forge::python >=3.11.0,<3.13.0
+    - conda-forge::python >=3.10.0,<3.11.0
     - conda-forge::attrs >=21.2.0
     - conda-forge::cattrs ==1.1.1
     - conda-forge::h5py
@@ -76,13 +71,13 @@ requirements:
     - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
     - conda-forge::networkx <3.3
     # - anaconda::numpy >=1.19.5,<1.23.0
-    - conda-forge::numpy >=1.21.6
+    - conda-forge::numpy >=1.16.5 # Scipy 1.7.0 requires numpy >=1.16.5
     - conda-forge::opencv
     - conda-forge::pandas
     - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    # - conda-forge::pyside2 >=5.12
+    - conda-forge::pyside2 >=5.12
     - conda-forge::pyside6 >=6.4.0
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
@@ -90,10 +85,10 @@ requirements:
     - conda-forge::qtpy >=2.0.1
     - conda-forge::rich
     # - conda-forge::scipy >=1.4.1,<=1.9.0
-    - conda-forge::scipy >=1.11.1
+    - conda-forge::scipy >=1.7.0 # Python 3.10 is compatible with scipy >=1.7.0
     - conda-forge::scikit-image
     # - conda-forge::scikit-learn ==1.0
-    - conda-forge::scikit-learn >=1.0.0
+    - conda-forge::scikit-learn >=1.0.0 # Python 3.10 is compatible with scikit-learn >=1.0.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
     # - conda-forge::tensorflow-hub  # pulls in tensorflow cpu from conda-forge
