@@ -44,7 +44,8 @@ requirements:
     - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside2 >=5.12 # To ensure application works correctly with QtPy.
+    # - conda-forge::pyside2 >=5.12 # To ensure application works correctly with QtPy.
+    - conda-forge::pyside6 >=6.2.0 # Python 3.10 is compatible with PySide6 >=6.2.0 
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
@@ -77,8 +78,8 @@ requirements:
     - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside2 >=5.12
-    - conda-forge::pyside6 >=6.4.0
+    # - conda-forge::pyside2 >=5.12
+    - conda-forge::pyside6 >=6.2.0
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
