@@ -1231,6 +1231,8 @@ class RecordingSession:
             # Update the bounds
             bounds[self.camera_cluster.cameras.index(cam)] = (x_max, y_max)
 
+        # Only return the bounds for cams to include
+        bounds = bounds[[cam in self.cams_to_include for cam in self.camera_cluster]]
         return bounds
 
     def get_video(self, camcorder: Camcorder) -> Optional[Video]:
