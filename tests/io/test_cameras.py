@@ -263,6 +263,24 @@ def test_recording_session(
     # Test __getitem__ with `Camcorder` key
     assert session[camcorder] is None
 
+    # Test projection_bounds
+    projection_bounds = session.projection_bounds
+    n_cameras, n_coords = projection_bounds.shape
+    assert n_cameras == len(session.camera_cluster.cameras)
+    assert n_coords == 2
+    n_linked_cameras = len(session.linked_cameras)
+    assert n_linked_cameras < n_cameras
+    assert projection_bounds[np.isnan(projection_bounds)].shape == (
+        n_coords * (n_cameras - n_linked_cameras),
+    )
+    for cam_idx, cam in enumerate(session.camera_cluster.cameras):
+        if cam in session.linked_cameras:
+            linked_video = session.get_video(cam)
+            assert projection_bounds[cam_idx, 0] == linked_video.width
+            assert projection_bounds[cam_idx, 1] == linked_video.height
+        else:
+            assert np.all(np.isnan(projection_bounds[cam_idx]) == True)
+
     # Test make_cattr
     labeled_frame_to_idx = {lf: idx for idx, lf in enumerate(labels.labeled_frames)}
     sessions_cattr = RecordingSession.make_cattr(
