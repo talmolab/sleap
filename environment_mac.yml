@@ -12,6 +12,7 @@ dependencies:
     - conda-forge::importlib-metadata <7.1.0
     - conda-forge::cattrs ==1.1.1
     - conda-forge::h5py
+    - conda-forge::imageio
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
