@@ -1059,9 +1059,9 @@ class InstanceGroup:
         )
 
         # Get the `Instance` objects
-        camcorder_to_lf_and_inst_idx_map: Dict[str, Tuple[str, str]] = (
-            instance_group_dict["camcorder_to_lf_and_inst_idx_map"]
-        )
+        camcorder_to_lf_and_inst_idx_map: Dict[
+            str, Tuple[str, str]
+        ] = instance_group_dict["camcorder_to_lf_and_inst_idx_map"]
 
         instance_by_camcorder: Dict[Camcorder, Instance] = {}
         for cam_idx, (lf_idx, inst_idx) in camcorder_to_lf_and_inst_idx_map.items():
