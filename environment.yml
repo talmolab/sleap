@@ -38,7 +38,7 @@ dependencies:
     - conda-forge::scikit-image
     # - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-learn >=1.0.0 # Python 3.10 is compatible with scikit-learn >=1.0.0
-    - conda-forge::scikit-video
+    # - conda-forge::scikit-video
     - conda-forge::seaborn
     - sleap/label/dev::tensorflow ==2.7.0  # TODO: Switch to main label when updated
     - conda-forge::tensorflow-hub  # Pinned in meta.yml, but no problems here... yet
