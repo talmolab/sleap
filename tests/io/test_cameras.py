@@ -178,9 +178,21 @@ def test_recording_session(
     assert frame_group.frame_idx == 0
     assert frame_group == session.frame_groups[0]
 
-    # Test add_video
-    camcorder = session.camera_cluster.cameras[0]
+    # Test add_video (and _projection_bounds)
+    cam_idx = 0
+    camcorder = session.camera_cluster.cameras[cam_idx]
+    prev_cams_to_include = session.cams_to_include
+    n_prev_cams_to_include = len(prev_cams_to_include)
+    assert session.projection_bounds.shape == (n_prev_cams_to_include, 2)
+    assert np.all(np.isnan(session._projection_bounds[cam_idx]))
     session.add_video(centered_pair_vid, camcorder)
+    n_cams_to_include = len(session.cams_to_include)
+    assert n_cams_to_include == n_prev_cams_to_include + 1
+    assert session.projection_bounds.shape == (n_cams_to_include, 2)
+    assert np.all(
+        session._projection_bounds[cam_idx]
+        == [centered_pair_vid.width, centered_pair_vid.height]
+    )
     assert centered_pair_vid is session.camera_cluster._videos_by_session[session][0]
     assert centered_pair_vid is camcorder._video_by_session[session]
     assert session is session.camera_cluster._session_by_video[centered_pair_vid]
@@ -246,8 +258,18 @@ def test_recording_session(
     )
     compare_sessions(session, session_2)
 
-    # Test remove_video
+    # Test remove_video (and _projection_bounds)
+    assert session.projection_bounds.shape == (len(session.cams_to_include), 2)
+    cam_idx = session.camera_cluster.cameras.index(
+        session.get_camera(centered_pair_vid)
+    )
+    assert np.all(
+        session._projection_bounds[cam_idx]
+        == [centered_pair_vid.width, centered_pair_vid.height]
+    )
     session.remove_video(centered_pair_vid)
+    assert session.projection_bounds.shape == (len(session.cams_to_include), 2)
+    assert np.all(np.isnan(session._projection_bounds[cam_idx]))
     assert centered_pair_vid not in session.videos
     assert camcorder not in session.linked_cameras
     assert camcorder in session.unlinked_cameras
@@ -263,23 +285,44 @@ def test_recording_session(
     # Test __getitem__ with `Camcorder` key
     assert session[camcorder] is None
 
-    # Test projection_bounds
-    projection_bounds = session.projection_bounds
-    n_cameras, n_coords = projection_bounds.shape
+    # Test _projection_bounds
+    _projection_bounds = session._projection_bounds
+    n_cameras, n_coords = _projection_bounds.shape
     assert n_cameras == len(session.camera_cluster.cameras)
     assert n_coords == 2
     n_linked_cameras = len(session.linked_cameras)
     assert n_linked_cameras < n_cameras
-    assert projection_bounds[np.isnan(projection_bounds)].shape == (
+    assert _projection_bounds[np.isnan(_projection_bounds)].shape == (
         n_coords * (n_cameras - n_linked_cameras),
     )
     for cam_idx, cam in enumerate(session.camera_cluster.cameras):
         if cam in session.linked_cameras:
             linked_video = session.get_video(cam)
-            assert projection_bounds[cam_idx, 0] == linked_video.width
-            assert projection_bounds[cam_idx, 1] == linked_video.height
+            assert _projection_bounds[cam_idx, 0] == linked_video.width
+            assert _projection_bounds[cam_idx, 1] == linked_video.height
         else:
-            assert np.all(np.isnan(projection_bounds[cam_idx]) == True)
+            assert np.all(np.isnan(_projection_bounds[cam_idx]) == True)
+
+    # Test projection_bounds property
+    session.cams_to_include = session.camera_cluster.cameras[:6]
+    projection_bounds = session.projection_bounds
+    n_cams_to_include, n_coords = projection_bounds.shape
+    assert n_cams_to_include == len(
+        set(session.linked_cameras) & set(session._cams_to_include)
+    )
+    assert n_coords == 2
+    assert projection_bounds[np.isnan(projection_bounds)].shape == (
+        n_coords * (n_cams_to_include - n_linked_cameras),
+    )
+    pb_idx = 0
+    for cam_idx, cam in enumerate(session.camera_cluster.cameras):
+        if cam in session.linked_cameras:
+            linked_video = session.get_video(cam)
+            assert projection_bounds[pb_idx, 0] == linked_video.width
+            assert projection_bounds[pb_idx, 1] == linked_video.height
+            pb_idx += 1
+        else:
+            assert np.all(np.isnan(session._projection_bounds[cam_idx]) == True)
 
     # Test make_cattr
     labeled_frame_to_idx = {lf: idx for idx, lf in enumerate(labels.labeled_frames)}
