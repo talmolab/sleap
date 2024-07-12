@@ -1453,10 +1453,21 @@ def test_make_predictor_from_cli_mult_input(
     min_centroid_model_path: str,
     min_centered_instance_model_path: str,
     min_bottomup_model_path: str,
-    test_sleap_track_mult_inputs_folder_slp: str,
+    tmpdir
 ):
-    slp_path = Path(test_sleap_track_mult_inputs_folder_slp).as_posix()
-    Labels.save(centered_pair_predictions, slp_path)
+    slp_path = tmpdir.mkdir("slp_directory")
+
+    slp_file = slp_path / "old_slp.slp"
+    Labels.save(centered_pair_predictions, slp_file)
+
+    # Copy and paste the video into the temp dir multiple times
+    num_copies = 3
+    for i in range(num_copies):
+        # Construct the destination path with a unique name for the video
+
+        # Construct the destination path with a unique name for the SLP file
+        slp_dest_path = slp_path / f"old_slp_copy_{i}.slp"
+        shutil.copy(slp_file, slp_dest_path)
 
     # Create sleap-track command
     model_args = [
@@ -1712,6 +1723,7 @@ def test_sleap_track_invalid_output(
 ):
 
     output_path = Path(tmpdir, "output_file.slp").as_posix()
+    output_path = Path(tmpdir, "output_file.slp"),as_posix()
     Labels.save(centered_pair_predictions, output_path)
 
     # Create temporary directory with the structured video files
