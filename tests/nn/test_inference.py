@@ -1453,7 +1453,7 @@ def test_make_predictor_from_cli_mult_input(
     min_centroid_model_path: str,
     min_centered_instance_model_path: str,
     min_bottomup_model_path: str,
-    tmpdir
+    tmpdir,
 ):
     slp_path = tmpdir.mkdir("slp_directory")
 
@@ -1723,7 +1723,6 @@ def test_sleap_track_invalid_output(
 ):
 
     output_path = Path(tmpdir, "output_file.slp").as_posix()
-    output_path = Path(tmpdir, "output_file.slp"),as_posix()
     Labels.save(centered_pair_predictions, output_path)
 
     # Create temporary directory with the structured video files
