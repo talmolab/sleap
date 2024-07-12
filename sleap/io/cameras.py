@@ -1059,9 +1059,9 @@ class InstanceGroup:
         )
 
         # Get the `Instance` objects
-        camcorder_to_lf_and_inst_idx_map: Dict[
-            str, Tuple[str, str]
-        ] = instance_group_dict["camcorder_to_lf_and_inst_idx_map"]
+        camcorder_to_lf_and_inst_idx_map: Dict[str, Tuple[str, str]] = (
+            instance_group_dict["camcorder_to_lf_and_inst_idx_map"]
+        )
 
         instance_by_camcorder: Dict[Camcorder, Instance] = {}
         for cam_idx, (lf_idx, inst_idx) in camcorder_to_lf_and_inst_idx_map.items():
@@ -1101,6 +1101,7 @@ class RecordingSession:
         frame_inds: List of frame indices.
         cams_to_include: List of `Camcorder`s to include in this `FrameGroup`.
         excluded_views: List of excluded views (names of `Camcorder`s).
+        projection_bounds: Projection bounds for `Camcorder`s in `self.cams_to_include`.
     """
 
     # TODO(LM): Consider implementing Observer pattern for `camera_cluster` and `labels`
@@ -1111,6 +1112,7 @@ class RecordingSession:
     _frame_group_by_frame_idx: Dict[int, "FrameGroup"] = field(factory=dict)
     _cams_to_include: Optional[List[Camcorder]] = field(default=None)
     _excluded_views: Optional[Tuple[str]] = field(default=None)
+    _projection_bounds: Optional[np.ndarray] = field(default=None)
 
     @property
     def id(self) -> str:
@@ -1203,15 +1205,18 @@ class RecordingSession:
 
         return self._excluded_views
 
-    @property
-    def projection_bounds(self) -> Tuple[Tuple[float, float], Tuple[float, float]]:
-        """Projection bounds for all `Camcorder`s in the `RecordingSession`.
+    def _recalculate_projection_bounds(self):
+        """Calculate the projection bounds for `Camcorder`s in `self.cams_to_include`.
 
-        The projection bounds are based off the linked `Video`'s height and width.
+        This method recreates the `_projection_bounds` attribute based on the linked
+        `Video`'s height and width. The `_projection_bounds` are updated one by one for
+        each `Video` added to the `RecordingSession` through the `add_video` method.
+        However, the `_projection_bounds` will need to be recalculated if the
+        `Video.height` or `Video.width` attribute is changed after the `Video` is added
+        to the `RecordingSession`.
 
-        Returns:
-            Tuple of x and y bounds as (min, max) for all `Camcorder`s in the
-            `RecordingSession`.
+        Currently, this method is only called on initialization/deserialization of the
+        `RecordingSession` and yields an all nan array.
         """
 
         # Get the projection bounds for all `Camcorder`s in the `RecordingSession`
@@ -1230,10 +1235,50 @@ class RecordingSession:
 
             # Update the bounds
             bounds[self.camera_cluster.cameras.index(cam)] = (x_max, y_max)
+        self._projection_bounds = bounds.copy()
+
+    @property
+    def projection_bounds(self) -> Tuple[Tuple[float, float], Tuple[float, float]]:
+        """Projection bounds for `Camcorder`s in the `RecordingSession.cams_to_include`.
+
+        The projection bounds are based off the linked `Video`'s height and width.
+
+        To recalculate the projection bounds, set the `_projection_bounds` attribute to
+        None, then access the `projection_bounds` property.
+
+        Returns:
+            NumPy array of shape (n_cameras, 2) where the first column is the width and
+            the second column is the height of the `Video` linked to the associated
+            `Camcorder`.
+        """
+
+        # If the projection bounds have not been set, then calculate them
+        if self._projection_bounds is None:
+            # Reconstruct the projection bounds for all `Camcorder`s in the session
+            self._recalculate_projection_bounds()
+
+        # Ensure we don't accidentally modify the underlying projection bounds
+        bounds = self._projection_bounds.copy()
 
         # Only return the bounds for cams to include
         bounds = bounds[[cam in self.cams_to_include for cam in self.camera_cluster]]
         return bounds
+
+    @projection_bounds.setter
+    def projection_bounds(self, bounds: np.ndarray):
+        """Raises error if trying to set projection bounds directly.
+
+        The underlying self._projection_bounds is updated automatically when calling
+        `RecordingSession.add_video`.
+
+        Raises:
+            ValueError: If trying to set projection bounds directly.
+        """
+
+        raise ValueError(
+            "Cannot set projection bounds directly. Projection bounds are updated "
+            "automatically when calling `RecordingSession.add_video`."
+        )
 
     def get_video(self, camcorder: Camcorder) -> Optional[Video]:
         """Retrieve `Video` linked to `Camcorder`.
@@ -1334,6 +1379,14 @@ class RecordingSession:
         if self.labels is not None:
             self.labels.update_session(self, video)
 
+        # TODO(LM): Use observer pattern to update bounds when `Video.shape` changes
+        # Update projection bounds
+        x_max = video.width
+        y_max = video.height
+        if not (x_max is None or y_max is None):
+            cam_idx = self.camera_cluster.cameras.index(camcorder)
+            self._projection_bounds[cam_idx] = (x_max, y_max)
+
     def remove_video(self, video: Video):
         """Removes a `Video` from the `RecordingSession`.
 
@@ -1357,6 +1410,10 @@ class RecordingSession:
         # Update labels cache
         if self.labels is not None and self.labels.get_session(video) is not None:
             self.labels.remove_session_video(video=video)
+
+        # Update projection bounds
+        cam_idx = self.camera_cluster.cameras.index(camcorder)
+        self._projection_bounds[cam_idx] = (np.nan, np.nan)
 
     def new_frame_group(self, frame_idx: int):
         """Creates and adds an empty `FrameGroup` to the `RecordingSession`.
@@ -1407,6 +1464,9 @@ class RecordingSession:
         # Reorder `cams_to_include` to match `CameraCluster` order (via setter method)
         if self._cams_to_include is not None:
             self.cams_to_include = self._cams_to_include
+
+        # Initialize `_projection_bounds` by calling the property
+        self.projection_bounds
 
     def __iter__(self) -> Iterator[List[Camcorder]]:
         return iter(self.camera_cluster)
