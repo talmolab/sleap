@@ -301,6 +301,24 @@ class QtVideoPlayer(QWidget):
     def dropEvent(self, event):
         if self.parentWidget():
             self.parentWidget().dropEvent(event)
+    
+    def geestureEvent(self, event):
+        if event.type() == QEvent.Gesture and event.gesture(Qt.PinchGesture):
+            self.handlePinchGesture(event.gesture(Qt.PinchGesture))
+            return True
+        return super().gestureEvent(event)
+
+    def handlePinchGesture(self, gesture: QPinchGesture):
+        """
+        Handle pinch gesture for zooming in/out.
+        """
+        if gesture.state() == Qt.GestureUpdated:
+            self._gesture_last_scale = 1.0
+        elif gesture.state() == Qt.GestureUpdated:
+            newScale = gesture.scaleFactor() / self._gesture_last_scale
+            self.zoom(at=gesture.centerPoint().toPoint(), factor=newScale)
+        elif gesture.state() == Qt.GestureFinished:
+            self._gesture_last_scale = 1.0
 
     def _load_and_show_requested_image(self, frame_idx):
         # Get image data
@@ -728,16 +746,6 @@ class QtVideoPlayer(QWidget):
         # If user is holding down shift and action resulted in moving to another frame
         if self._shift_key_down:
             self._select_on_possible_frame_movement(frame_t0)
-    
-    def handlePinchGesture(self, gesture: QPinchGesture):
-        """
-        Handle pinch gesture for zooming in/out.
-        """
-        if gesture.state() == Qt.GestureUpdated:
-            self._gesture_last_scale = 1.0
-        elif gesture.state() == Qt.GestureUpdated:
-            newScale = gesture.scaleFactor() / self._gesture_last_scale
-            self.zoom(at=gesture.centerPoint().toPoint(), factor=newScale)
 
     def _select_on_possible_frame_movement(self, before_frame_idx: int):
         if before_frame_idx != self.state["frame_idx"]:
