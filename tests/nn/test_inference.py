@@ -1557,9 +1557,7 @@ def test_sleap_track_mult_input_slp(
 
     # Assert predictions file exists
     expected_extensions = {
-        ".slp",
         ".mp4",
-        ".avi",
     }  # Add other video formats if necessary
 
     for file_path in slp_path_list:
@@ -1605,14 +1603,8 @@ def test_sleap_track_mult_input_slp_mp4(
     sleap_track(args=args)
 
     # Assert predictions file exists
-    expected_extensions = {
-        ".slp",
-        ".mp4",
-        ".avi",
-    }  # Add other video formats if necessary
-
     for file_path in slp_path_list:
-        if file_path.suffix in expected_extensions:
+        if file_path.suffix == ".mp4":
             expected_output_file = f"{file_path}.predictions.slp"
             assert Path(expected_output_file).exists()
 
@@ -1651,14 +1643,8 @@ def test_sleap_track_mult_input_mp4(
     sleap_track(args=args)
 
     # Assert predictions file exists
-    expected_extensions = {
-        ".slp",
-        ".mp4",
-        ".avi",
-    }  # Add other video formats if necessary
-
     for file_path in slp_path_list:
-        if file_path.suffix in expected_extensions:
+        if file_path.suffix == ".mp4":
             expected_output_file = f"{file_path}.predictions.slp"
             assert Path(expected_output_file).exists()
 
@@ -1700,14 +1686,8 @@ def test_sleap_track_output_mult(
     slp_path = Path(slp_path)
 
     # Check if there are any files in the directory
-    expected_extensions = {
-        ".slp",
-        ".mp4",
-        ".avi",
-    }  # Add other video formats if necessary
-
     for file_path in slp_path_list:
-        if file_path.suffix in expected_extensions:
+        if file_path.suffix == ".mp4":
             expected_output_file = output_path_obj / (
                 file_path.stem + ".predictions.slp"
             )

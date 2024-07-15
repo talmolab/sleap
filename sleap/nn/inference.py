@@ -5315,7 +5315,10 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
     output_data_path_list = []
     for file_path in data_path_list:
         # Create a provider for each file
-        if file_path.as_posix().endswith(".slp"):
+        if file_path.as_posix().endswith(".slp") and len(data_path_list) > 1:
+            print(f"slp file skipped: {file_path.as_posix()}")
+
+        elif file_path.as_posix().endswith(".slp"):
             labels = sleap.load_file(file_path.as_posix())
 
             if args.only_labeled_frames:
@@ -5369,7 +5372,6 @@ def _make_predictor_from_cli(args: argparse.Namespace) -> Predictor:
     Returns:
         The `Predictor` created from loaded models.
     """
-    print(args)
     peak_threshold = None
     for deprecated_arg in [
         "single.peak_threshold",
@@ -5450,7 +5452,7 @@ def main(args: Optional[list] = None):
     # Parse inputs.
     args, _ = parser.parse_known_args(args)
     print("Args:")
-    print(vars(args))
+    pprint(vars(args))
     print()
 
     # Setup devices.
@@ -5514,29 +5516,24 @@ def main(args: Optional[list] = None):
             labels_pr = predictor.predict(provider)
 
             # if output path was not provided, create an output path
-            if output_path is not None:
-                output_path_obj = Path(output_path)
-                if (
-                    output_path_obj.exists()
-                    and output_path_obj.is_file()
-                    and len(data_path_list) > 1
-                ):
-                    raise ValueError(
-                        "output_path argument must be a directory if multiple video inputs are given"
-                    )
-
             if output_path is None:
                 output_path = f"{data_path.as_posix()}.predictions.slp"
                 output_path_obj = Path(output_path)
 
-            # if output_path was provided and multiple inputs were provided, create a directory to store outputs
-            elif len(data_path_list) > 1:
-                output_path = (
-                    output_path_obj.as_posix()
-                    + "/"
-                    + (data_path_obj.stem + ".predictions.slp")
-                )
+            else:
                 output_path_obj = Path(output_path)
+                if output_path_obj.is_file() and len(data_path_list) > 1:
+                    raise ValueError(
+                        "output_path argument must be a directory if multiple video inputs are given"
+                    )
+
+                # if output_path was provided and multiple inputs were provided, create a directory to store outputs
+                if len(data_path_list) > 1:
+                    output_path = (
+                        output_path_obj
+                        / data_path_obj.with_suffix(".predictions.slp").name
+                    )
+                    output_path_obj = Path(output_path)
 
             labels_pr.provenance["model_paths"] = predictor.model_paths
             labels_pr.provenance["predictor"] = type(predictor).__name__
@@ -5562,7 +5559,7 @@ def main(args: Optional[list] = None):
             labels_pr.provenance["finish_timestamp"] = finish_timestamp
 
             print("Provenance:")
-            print(labels_pr.provenance)
+            pprint(labels_pr.provenance)
             print()
 
             labels_pr.provenance["args"] = vars(args)
@@ -5596,7 +5593,7 @@ def main(args: Optional[list] = None):
                 output_path = f"{data_path}.{tracker.get_name()}.slp"
                 output_path_obj = Path(output_path)
 
-            if output_path is not None:
+            else:
                 output_path_obj = Path(output_path)
                 if (
                     output_path_obj.exists()
@@ -5608,12 +5605,11 @@ def main(args: Optional[list] = None):
                     )
 
                 elif not output_path_obj.exists() and len(data_path_list) > 1:
-                    output_path = (
-                        output_path_obj.as_posix()
-                        + "/"
-                        + (data_path_obj.stem + ".predictions.slp")
+                    output_path = output_path_obj / data_path_obj.with_suffix(
+                        ".predictions.slp"
                     )
                     output_path_obj = Path(output_path)
+                    output_path_obj.parent.mkdir(exist_ok=True, parents=True)
 
             if args.no_empty_frames:
                 # Clear empty frames if specified.
@@ -5636,7 +5632,7 @@ def main(args: Optional[list] = None):
             labels_pr.provenance["finish_timestamp"] = finish_timestamp
 
             print("Provenance:")
-            print(labels_pr.provenance)
+            pprint(labels_pr.provenance)
             print()
 
             labels_pr.provenance["args"] = vars(args)
