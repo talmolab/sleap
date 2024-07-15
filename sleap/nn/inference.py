@@ -5300,6 +5300,9 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
 
     data_path_obj = Path(data_path)
 
+    if not data_path_obj.exists():
+        raise ValueError("Path to data_path does not exist")
+
     # Check for multiple video inputs
     # Compile file(s) into a list for later itteration
     if data_path_obj.is_dir():
@@ -5494,10 +5497,20 @@ def main(args: Optional[list] = None):
     # Setup data loader.
     provider_list, data_path_list = _make_provider_from_cli(args)
 
+    output_path = args.output
+
+    # check if output_path is valid before running inference
+    if (
+        output_path is not None
+        and Path(output_path).is_file()
+        and len(data_path_list) > 1
+    ):
+        raise ValueError(
+            "output_path argument must be a directory if multiple video inputs are given"
+        )
+
     # Setup tracker.
     tracker = _make_tracker_from_cli(args)
-
-    output_path = args.output
 
     if args.models is not None and "movenet" in args.models[0]:
         args.models = args.models[0]
@@ -5522,10 +5535,6 @@ def main(args: Optional[list] = None):
 
             else:
                 output_path_obj = Path(output_path)
-                if output_path_obj.is_file() and len(data_path_list) > 1:
-                    raise ValueError(
-                        "output_path argument must be a directory if multiple video inputs are given"
-                    )
 
                 # if output_path was provided and multiple inputs were provided, create a directory to store outputs
                 if len(data_path_list) > 1:
@@ -5534,6 +5543,8 @@ def main(args: Optional[list] = None):
                         / data_path_obj.with_suffix(".predictions.slp").name
                     )
                     output_path_obj = Path(output_path)
+                    # Create the containing directory if needed.
+                    output_path_obj.parent.mkdir(exist_ok=True, parents=True)
 
             labels_pr.provenance["model_paths"] = predictor.model_paths
             labels_pr.provenance["predictor"] = type(predictor).__name__
