@@ -734,9 +734,10 @@ class QtVideoPlayer(QWidget):
         Handle pinch gesture for zooming in/out.
         """
         if gesture.state() == Qt.GestureUpdated:
-            scale = gesture.scaleFactor()
-        else:
-            pass
+            self._gesture_last_scale = 1.0
+        elif gesture.state() == Qt.GestureUpdated:
+            newScale = gesture.scaleFactor() / self._gesture_last_scale
+            self.zoom(at=gesture.centerPoint().toPoint(), factor=newScale)
 
     def _select_on_possible_frame_movement(self, before_frame_idx: int):
         if before_frame_idx != self.state["frame_idx"]:
