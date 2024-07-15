@@ -32,7 +32,7 @@ from typing import Callable, List, Optional, Union
 import numpy as np
 import qimage2ndarray
 from qtpy import QtCore, QtWidgets
-from qtpy.QtCore import QLineF, QMarginsF, QPointF, QRectF, Qt
+from qtpy.QtCore import QEvent, QGesture, QLineF, QMarginsF, QPointF, QRectF, Qt
 from qtpy.QtGui import (
     QBrush,
     QColor,
@@ -45,6 +45,7 @@ from qtpy.QtGui import (
     QPainter,
     QPainterPath,
     QPen,
+    QPinchGesture,
     QPixmap,
     QPolygonF,
     QTransform,
@@ -239,6 +240,8 @@ class QtVideoPlayer(QWidget):
         self.setLayout(self.layout)
 
         self._register_shortcuts()
+
+        self.grabGesture(Qt.PinchGesture)
 
         if self.context:
             self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -725,6 +728,15 @@ class QtVideoPlayer(QWidget):
         # If user is holding down shift and action resulted in moving to another frame
         if self._shift_key_down:
             self._select_on_possible_frame_movement(frame_t0)
+    
+    def handlePinchGesture(self, gesture: QPinchGesture):
+        """
+        Handle pinch gesture for zooming in/out.
+        """
+        if gesture.state() == Qt.GestureUpdated:
+            scale = gesture.scaleFactor()
+        else:
+            pass
 
     def _select_on_possible_frame_movement(self, before_frame_idx: int):
         if before_frame_idx != self.state["frame_idx"]:
