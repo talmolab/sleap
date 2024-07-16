@@ -70,6 +70,7 @@ from sleap.gui.shortcuts import Shortcuts
 from sleap.gui.state import GuiState
 from sleap.gui.widgets.slider import VideoSlider
 from sleap.instance import Instance, Point, PredictedInstance
+from sleap.io.cameras import InstanceGroup
 from sleap.io.video import Video
 from sleap.prefs import prefs
 from sleap.skeleton import Node
@@ -272,6 +273,7 @@ class QtVideoPlayer(QWidget):
         self.state.connect("frame_idx", lambda idx: self.plot())
         self.state.connect("frame_idx", lambda idx: self.seekbar.setValue(idx))
         self.state.connect("instance", self.view.selectInstance)
+        self.state.connect("instance_group", self.view.selectInstance)
 
         self.state.connect("show instances", self.plot)
         self.state.connect("show labels", self.plot)
@@ -960,7 +962,7 @@ class GraphicsView(QGraphicsView):
         scene_items = self.scene.items(Qt.SortOrder.AscendingOrder)
         return list(filter(lambda x: isinstance(x, QtInstance), scene_items))
 
-    def selectInstance(self, select: Union[Instance, int]):
+    def selectInstance(self, select: Union[Instance, int, InstanceGroup]):
         """
         Select a particular instance in view.
 
@@ -970,9 +972,16 @@ class GraphicsView(QGraphicsView):
         Returns:
             None
         """
-        # TODO:
+        
         for idx, instance in enumerate(self.all_instances):
+            if isinstance(select, int):
+                instance.selected = select == idx
+            elif isinstance(select, Instance):
+                instance.selected = select == instance.instance
+            elif isinstance(select, InstanceGroup):
+                instance.selected = True if instance in select else False
             instance.selected = select == idx or select == instance.instance
+
         self.updatedSelection.emit()
 
     def getSelectionIndex(self) -> Optional[int]:
