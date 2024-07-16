@@ -53,6 +53,8 @@ import traceback
 from logging import getLogger
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
+import sys
+import subprocess
 
 from qtpy import QtCore, QtGui
 from qtpy.QtCore import QEvent, Qt
@@ -84,7 +86,7 @@ from sleap.io.dataset import Labels
 from sleap.io.video import available_video_exts
 from sleap.prefs import prefs
 from sleap.skeleton import Skeleton
-from sleap.util import parse_uri_path
+from sleap.util import parse_uri_path, get_config_file
 
 
 logger = getLogger(__name__)
@@ -513,6 +515,13 @@ class MainWindow(QMainWindow):
         fileMenu.addSeparator()
         add_menu_item(
             fileMenu, "reset prefs", "Reset preferences to defaults...", self.resetPrefs
+        )
+
+        add_menu_item(
+            fileMenu,
+            "open preference directory",
+            "Open Preferences Directory...",
+            self.openPrefs,
         )
 
         fileMenu.addSeparator()
@@ -1329,6 +1338,20 @@ class MainWindow(QMainWindow):
             "Note: Some preferences may not take effect until application is restarted."
         )
         msg.exec_()
+
+    def openPrefs(self):
+        """Open preference file directory"""
+        pref_path = get_config_file("preferences.yaml")
+        # Make sure the pref_path is a directory rather than a file
+        if pref_path.is_file():
+            pref_path = pref_path.parent
+        # Open the file explorer at the folder containing the preferences.yaml file
+        if sys.platform == "win32":
+            subprocess.Popen(["explorer", str(pref_path)])
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", str(pref_path)])
+        else:
+            subprocess.Popen(["xdg-open", str(pref_path)])
 
     def _update_track_menu(self):
         """Updates track menu options."""

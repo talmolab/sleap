@@ -120,6 +120,7 @@
             ""
         ],
         "save_visualizations": false,
+        "keep_viz_images": true,
         "log_to_csv": true,
         "checkpointing": {
             "initial_model": false,
