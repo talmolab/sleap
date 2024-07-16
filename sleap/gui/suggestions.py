@@ -61,7 +61,7 @@ class VideoFrameSuggestions(object):
             prediction_score=cls.prediction_score,
             velocity=cls.velocity,
             frame_chunk=cls.frame_chunk,
-            max_point_displacement = cls.max_point_displacement,
+            max_point_displacement=cls.max_point_displacement,
         )
 
         method = str.replace(params["method"], " ", "_")
@@ -214,6 +214,7 @@ class VideoFrameSuggestions(object):
     ):
         lfs = labels.find(video)
         frames = len(lfs)
+
         # initiate an array filled with -1 to store frame index (starting from 0).
         idxs = np.full((frames), -1, dtype="int")
 
@@ -292,6 +293,7 @@ class VideoFrameSuggestions(object):
 
         return cls.idx_list_to_frame_list(frame_idxs, video)
 
+    @classmethod
     def max_point_displacement(
         cls,
         labels: "Labels",
@@ -317,24 +319,52 @@ class VideoFrameSuggestions(object):
     def _max_point_displacement_video(
         cls, video: Video, labels: "Labels", displacement_threshold: float
     ):
+        # ONCE labels.numpy works: delete lfs ~322 - 328
         lfs = labels.find(video)
         frames = len(lfs)
 
         if frames < 2:
             return []
+        
+
+        video_instances = labels.numpy(video=video, all_frames=True, untracked=False)
+        frames = len(video_instances)
+
+        if frames < 2:
+            return []
+
+        # ONCE labels.numpy works: delete print statements ~336 - 340
+        print('type of video_instances: ', type(video_instances))
+        print(video_instances[0])
+        print('type of video_instances[0]: ', type(video_instances[0]))
+        print(f"Number of elements returned by labels.numpy(): {video_instances.shape}")
+        print(f"Number of elements returned by labels.numpy(): {len(video_instances)}")
+
+
+        print('type of video_instances: ', type(video_instances))
+        print('type of video_instances[0]: ', type(video_instances[0]))
+
 
         displacements = []
-        for i in range(1, frames):
-            prev_lf = lfs[i - 1]
-            curr_lf = lfs[i]
-            prev_points = np.array([inst.points_array for inst in prev_lf.instances_to_show])
-            curr_points = np.array([inst.points_array for inst in curr_lf.instances_to_show])
+        for idx in range(1, frames):
+            prev_points = video_instances[idx-1]
+            curr_points = video_instances[idx]
+
 
             if prev_points.shape != curr_points.shape:
                 continue
+            
+            # Mask to identify non-nan values
+            valid_mask = ~np.isnan(prev_points) & ~np.isnan(curr_points)
+            # Filter out nan values
+            valid_prev_points = prev_points[valid_mask].reshape(-1, 2)
+            valid_curr_points = curr_points[valid_mask].reshape(-1, 2)
 
-            displacement = np.linalg.norm(curr_points - prev_points, axis=2).sum()
-            displacements.append((displacement, curr_lf.frame_idx))
+            if valid_prev_points.size == 0 or valid_curr_points.size == 0:
+                continue
+
+            displacement = np.linalg.norm(valid_curr_points - valid_prev_points, axis=1).sum()
+            displacements.append((displacement, idx))
 
         frame_idxs = [
             frame_idx for displacement, frame_idx in displacements if displacement > displacement_threshold
