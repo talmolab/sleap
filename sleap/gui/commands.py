@@ -2913,6 +2913,7 @@ class AddInstance(EditCommand):
             copy_instance=copy_instance,
             new_instance=new_instance,
             mark_complete=mark_complete,
+            init_method=init_method,
             location=location,
         )
 
@@ -2985,7 +2986,8 @@ class AddInstance(EditCommand):
         copy_instance: Optional[Union[Instance, PredictedInstance]],
         new_instance: Instance,
         mark_complete: bool,
-        location: Optional[QtCore.QPoint],
+        init_method: str,
+        location: Optional[QtCore.QPoint] = None,
     ) -> bool:
         """Sets visible nodes for new instance.
 
@@ -3012,7 +3014,9 @@ class AddInstance(EditCommand):
         scale_width = new_size_width / old_size_width
         scale_height = new_size_height / old_size_height
 
-        if location is not None:
+        # Calculate the difference from the cursor to the
+        # original position for getting new x and y values.
+        if location is not None and init_method == "best":
             reference_x = copy_instance[context.state["skeleton"].node_names[0]].x
             reference_y = copy_instance[context.state["skeleton"].node_names[0]].y
             offset_x = location.x() - reference_x
@@ -3027,28 +3031,27 @@ class AddInstance(EditCommand):
                 x_old = copy_instance[node].x
                 y_old = copy_instance[node].y
 
-                # Handles if the new instance is created with right click
-                if (
-                    location is not None
-                    and offset_x is not None
-                    and offset_y is not None
-                ):
-                    x_old += offset_x
-                    y_old += offset_y
-
+                # Copy the instance without scale or offset if predicted
                 if isinstance(copy_instance, PredictedInstance):
                     x_new = x_old
                     y_new = y_old
                 else:
+                    # Scale the x and y values to the new frame size.
                     if (x_old + 10) * scale_width <= (new_size_width - 10):
                         x_new = (x_old + 10) * scale_width
                     else:
                         x_new = x_old
 
+                    # Scale the x and y values to the new frame size.
                     if (y_old + 10) * scale_height <= (new_size_height - 10):
                         y_new = (y_old + 10) * scale_height
                     else:
                         y_new = y_old
+
+                # Add offsets when location is passed
+                if location is not None and init_method == "best":
+                    x_new += offset_x
+                    y_new += offset_y
 
                 new_instance[node] = Point(
                     x=x_new,
