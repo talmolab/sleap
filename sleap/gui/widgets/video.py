@@ -988,7 +988,7 @@ class GraphicsView(QGraphicsView):
         instances = self.all_instances
         if len(instances) == 0:
             return None
-        for idx, instance in enumerate(instances):
+        for instance in instances:
             if instance.selected:
                 return instance.instance
 
