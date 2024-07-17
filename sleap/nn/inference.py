@@ -5300,6 +5300,7 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
 
     data_path_obj = Path(data_path)
 
+    # Check that input value is valid
     if not data_path_obj.exists():
         raise ValueError("Path to data_path does not exist")
 
