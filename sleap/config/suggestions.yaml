@@ -175,10 +175,10 @@ main:
         type: double
         default: 0.1
         range: 0.1,1.0
-  
+    
     "max point displacement":
-      - name: displacement_threshold
-        label: Maximum Displacement Threshold
+      - name: per_video
+        label: Threshold
         type: int
         default: 10
 

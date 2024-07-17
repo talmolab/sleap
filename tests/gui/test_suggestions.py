@@ -30,12 +30,12 @@ def test_max_point_displacement_suggestions(centered_pair_predictions):
         params=dict(
             videos=centered_pair_predictions.videos,
             method="max_point_displacement",
-            displacement_threshold = 6
+            displacement_threshold = 300
         ),
     )
-    assert len(suggestions) == 19
-    assert suggestions[0].frame_idx == 27
-    assert suggestions[1].frame_idx == 81
+    assert len(suggestions) == 6
+    assert suggestions[0].frame_idx == 2117
+    assert suggestions[1].frame_idx == 4937
 
 def test_frame_increment(centered_pair_predictions: Labels):
     # Testing videos that have less frames than desired Samples per Video (stride)
@@ -521,6 +521,3 @@ def test_limits_prediction_score(centered_pair_predictions: Labels):
         },
     )
     assert_suggestions_unique(labels, suggestions)
-
-if __name__=="__main__":
-    pytest.main([f"{__file__}::test_max_point_displacement_suggestions"])
