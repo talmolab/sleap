@@ -208,7 +208,7 @@
         "runs_folder": "models",
         "tags": [],
         "save_visualizations": false,
-        "keep_viz_images": false,
+        "delete_viz_images": true,
         "zip_outputs": false,
         "log_to_csv": true,
         "checkpointing": {

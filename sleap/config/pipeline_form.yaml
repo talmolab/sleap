@@ -286,11 +286,6 @@ training:
   type: bool
   default: true
 
-- name: _keep_viz
-  label: Keep Prediction Visualization Images After Training
-  type: bool
-  default: false
-
 - name: _predict_frames
   label: Predict On
   type: list
