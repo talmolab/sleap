@@ -302,7 +302,7 @@ class QtVideoPlayer(QWidget):
         if self.parentWidget():
             self.parentWidget().dropEvent(event)
     
-    def geestureEvent(self, event):
+    def gestureEvent(self, event):
         if event.type() == QEvent.Gesture and event.gesture(Qt.PinchGesture):
             self.handlePinchGesture(event.gesture(Qt.PinchGesture))
             return True
@@ -1170,7 +1170,7 @@ class GraphicsView(QGraphicsView):
     def wheelEvent(self, event):
         """Custom event handler. Zoom in/out based on scroll wheel change."""
         # zoom on wheel when no mouse buttons are pressed
-        if event.buttons() == Qt.NoButton:
+        if event.buttons() == Qt.NoButton or (event.type() == QEvent.Gesture and event.gesture(Qt.PinchGesture)):
             angle = event.angleDelta().y()
             factor = 1.1 if angle > 0 else 0.9
 
@@ -1191,6 +1191,11 @@ class GraphicsView(QGraphicsView):
                 child.wheelEvent(event)
             except TypeError:
                 pass
+    
+    def gestureEvent(self, event):
+        if event.type() == QEvent.Gesture and event.gesture(Qt.PinchGesture):
+            self.handlePinchGesture(event.gesture(Qt.PinchGesture))
+        return super().gestureEvent(event)
 
     def keyPressEvent(self, event):
         """Custom event hander, disables default QGraphicsView behavior."""
