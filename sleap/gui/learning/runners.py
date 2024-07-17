@@ -1,4 +1,5 @@
 """Run training/inference in background process via CLI."""
+
 import abc
 import attr
 import os
@@ -500,9 +501,11 @@ def write_pipeline_files(
                 "data_path": os.path.basename(data_path),
                 "models": [Path(p).as_posix() for p in new_cfg_filenames],
                 "output_path": prediction_output_path,
-                "type": "labels"
-                if type(item_for_inference) == DatasetItemForInference
-                else "video",
+                "type": (
+                    "labels"
+                    if type(item_for_inference) == DatasetItemForInference
+                    else "video"
+                ),
                 "only_suggested_frames": only_suggested_frames,
                 "tracking": tracking_args,
             }
@@ -544,6 +547,7 @@ def run_learning_pipeline(
     """
 
     save_viz = inference_params.get("_save_viz", False)
+    keep_viz = inference_params.get("_keep_viz", False)
 
     if "movenet" in inference_params["_pipeline"]:
         trained_job_paths = [inference_params["_pipeline"]]
@@ -557,6 +561,7 @@ def run_learning_pipeline(
             inference_params=inference_params,
             gui=True,
             save_viz=save_viz,
+            keep_viz=keep_viz,
         )
 
         # Check that all the models were trained
@@ -585,6 +590,7 @@ def run_gui_training(
     inference_params: Dict[str, Any],
     gui: bool = True,
     save_viz: bool = False,
+    keep_viz: bool = False,
 ) -> Dict[Text, Text]:
     """
     Runs training for each training job.
@@ -594,6 +600,7 @@ def run_gui_training(
         config_info_list: List of ConfigFileInfo with configs for training.
         gui: Whether to show gui windows and process gui events.
         save_viz: Whether to save visualizations from training.
+        keep_viz: Whether to keep prediction visualization images after training.
 
     Returns:
         Dictionary, keys are head name, values are path to trained config.
@@ -683,6 +690,7 @@ def run_gui_training(
                 video_paths=video_path_list,
                 waiting_callback=waiting,
                 save_viz=save_viz,
+                keep_viz=keep_viz,
             )
 
             if ret == "success":
@@ -825,6 +833,7 @@ def train_subprocess(
     video_paths: Optional[List[Text]] = None,
     waiting_callback: Optional[Callable] = None,
     save_viz: bool = False,
+    keep_viz: bool = False,
 ):
     """Runs training inside subprocess."""
     run_path = job_config.outputs.run_path
@@ -853,6 +862,8 @@ def train_subprocess(
 
         if save_viz:
             cli_args.append("--save_viz")
+        if keep_viz:
+            cli_args.append("--keep_viz")
 
         # Use cli arg since cli ignores setting in config
         if job_config.outputs.tensorboard.write_logs:
