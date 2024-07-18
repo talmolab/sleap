@@ -6,6 +6,7 @@ name: sleap_ci
 
 channels:
     - conda-forge
+    - sleap-deps
     - sleap
     - anaconda
 

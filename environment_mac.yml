@@ -4,6 +4,7 @@ name: sleap
 
 channels:
     - conda-forge
+    - sleap-deps
     - anaconda
 
 dependencies:

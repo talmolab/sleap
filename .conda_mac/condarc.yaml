@@ -2,4 +2,5 @@
 
 channels:
   - conda-forge
+  - sleap-deps
   - anaconda

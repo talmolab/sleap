@@ -5,6 +5,7 @@ name: sleap
 channels:
     - conda-forge
     - nvidia
+    - sleap-deps
     - sleap
     - anaconda
 
