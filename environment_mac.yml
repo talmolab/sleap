@@ -14,9 +14,10 @@ dependencies:
     - conda-forge::cattrs ==1.1.1
     - conda-forge::h5py
     - conda-forge::imageio
+    - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
-    - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
+    # - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
     - conda-forge::networkx <3.3
     # - anaconda::numpy >=1.19.5,<1.23.0
     - conda-forge::numpy >=1.16.5 # Scipy 1.7.0 requires numpy >=1.16.5
@@ -27,7 +28,7 @@ dependencies:
     - conda-forge::psutil
     - conda-forge::pykalman
     # - conda-forge::pyside2 >=5.12  # To ensure application works correctly with QtPy.
-    - conda-forge::pyside6 >=6.2.0 # Python 3.10 is compatible with PySide6 >=6.2.0
+    - conda-forge::pyside6 >=6.2.0,<6.4.1 # Python 3.10 is compatible with PySide6 >=6.2.0
     # - conda-forge::python  ~=3.9
     - conda-forge::python >=3.10.0,<3.11.0 # Trying python 3.10
     - conda-forge::python-rapidjson
@@ -43,6 +44,7 @@ dependencies:
     # - conda-forge::scikit-video
     - conda-forge::seaborn
     # - conda-forge::tensorflow-hub  # pulls in tensorflow cpu from conda-forge
+    - sleap-deps/label/dev::tensorflow ==2.9.2a0 # TODO: Switch to main label when updated
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose
