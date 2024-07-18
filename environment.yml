@@ -20,13 +20,14 @@ dependencies:
     - conda-forge::opencv <4.9.0
     - conda-forge::h5py <=3.7.0
     - conda-forge::imageio
+    - conda-forge::imageio-ffmpeg
     - conda-forge::pandas
     - conda-forge::pip
     - conda-forge::pillow #>=8.3.1,<=8.4.0
     - conda-forge::psutil
     - conda-forge::pykalman
     # - conda-forge::pyside2 >=5.12  # To ensure application works correctly with QtPy.
-    - conda-forge::pyside6 >=6.2.0 # Python 3.10 needs pyside6 >=6.2.0
+    - conda-forge::pyside6 >=6.2.0,<6.4.1 # >=6.2.0 is compatible with Python 3.10, <6.4.1 since newer versions are missing Qt6Charts.dll
     # - conda-forge::python ~=3.7    # Run into _MAX_WINDOWS_WORKERS not found if ==
     - conda-forge::python >=3.10.0,<3.11.0 # Trying python 3.10
     - conda-forge::python-rapidjson
@@ -41,7 +42,8 @@ dependencies:
     - conda-forge::scikit-learn >=1.0.0 # Python 3.10 is compatible with scikit-learn >=1.0.0
     # - conda-forge::scikit-video
     - conda-forge::seaborn
-    - sleap/label/dev::tensorflow ==2.7.0  # TODO: Switch to main label when updated
+    # - sleap/label/dev::tensorflow ==2.7.0  # TODO: Switch to main label when updated
+    - sleap-deps/label/dev::tensorflow ==2.9.2a0 # TODO: Switch to main label when updated
     - conda-forge::tensorflow-hub  # Pinned in meta.yml, but no problems here... yet
     - conda-forge::qudida
     - conda-forge::albumentations
