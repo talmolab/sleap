@@ -35,6 +35,7 @@ requirements:
     - conda-forge::attrs >=21.2.0
     - conda-forge::cattrs ==1.1.1
     - conda-forge::h5py
+    - conda-forge::imageio
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
@@ -45,7 +46,7 @@ requirements:
     - conda-forge::psutil
     - conda-forge::pykalman
     # - conda-forge::pyside2 >=5.12 # To ensure application works correctly with QtPy.
-    - conda-forge::pyside6 >=6.2.0 # Python 3.10 is compatible with PySide6 >=6.2.0 
+    - conda-forge::pyside6 >=6.2.0,<6.4.1 # >=6.2.0 is compatible with Python 3.10, <6.4.1 since newer versions are missing Qt6Charts.dll
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
@@ -67,6 +68,7 @@ requirements:
     - conda-forge::attrs >=21.2.0
     - conda-forge::cattrs ==1.1.1
     - conda-forge::h5py
+    - conda-forge::imageio
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
@@ -79,7 +81,7 @@ requirements:
     - conda-forge::psutil
     - conda-forge::pykalman
     # - conda-forge::pyside2 >=5.12
-    - conda-forge::pyside6 >=6.2.0
+    - conda-forge::pyside6 >=6.2.0,<6.4.1 # >=6.2.0 is compatible with Python 3.10, <6.4.1 since newer versions are missing Qt6Charts.dll
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
