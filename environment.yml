@@ -34,7 +34,7 @@ dependencies:
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
-    # - conda-forge::qtpy >=2.0.1
+    - conda-forge::qtpy >=2.0.1
     - conda-forge::rich
     # - conda-forge::scipy >=1.4.1,<=1.9.0
     - conda-forge::scipy >=1.7.0 # Python 3.10 is compatible with scipy >=1.7.0
