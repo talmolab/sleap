@@ -36,6 +36,7 @@ requirements:
     - conda-forge::cattrs ==1.1.1
     - conda-forge::h5py
     - conda-forge::imageio
+    - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
@@ -57,7 +58,7 @@ requirements:
     - conda-forge::scikit-image
     # - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-learn >=1.0.0 # Python 3.10 needs scikit-learn >= 1.0
-    - conda-forge::scikit-video
+    # - conda-forge::scikit-video
     - conda-forge::seaborn
     - conda-forge::qudida
     - conda-forge::albumentations
@@ -69,6 +70,7 @@ requirements:
     - conda-forge::cattrs ==1.1.1
     - conda-forge::h5py
     - conda-forge::imageio
+    - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
@@ -92,7 +94,7 @@ requirements:
     - conda-forge::scikit-image
     # - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-learn >=1.0.0 # Python 3.10 is compatible with scikit-learn >=1.0.0
-    - conda-forge::scikit-video
+    # - conda-forge::scikit-video
     - conda-forge::seaborn
     # - conda-forge::tensorflow-hub  # pulls in tensorflow cpu from conda-forge
     - conda-forge::qudida
