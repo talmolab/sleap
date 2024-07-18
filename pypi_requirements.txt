@@ -29,7 +29,7 @@ imgaug==0.4.0
 scipy>=1.4.1,<=1.9.0
 scikit-image
 scikit-learn ==1.0.*
-scikit-video
+# scikit-video
 seaborn
 tensorflow>=2.6.3,<2.9; platform_machine != 'arm64'
 # tensorflow ==2.7.4; platform_machine != 'arm64'
