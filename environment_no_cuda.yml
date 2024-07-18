@@ -17,29 +17,36 @@ dependencies:
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::networkx
-    - anaconda::numpy >=1.19.5,<1.23.0
+    # - anaconda::numpy >=1.19.5,<1.23.0
+    - conda-forge::numpy >=1.16.5 # Scipy 1.7.0 requires numpy >=1.16.5
     - conda-forge::opencv <4.9.0
+    - conda-forge::h5py <=3.7.0
+    - conda-forge::imageio
+    - conda-forge::imageio-ffmpeg
     - conda-forge::pandas
     - conda-forge::pip
     - conda-forge::pillow #>=8.3.1,<=8.4.0
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside2 >=5.12  # To ensure application works correctly with QtPy.
-    - conda-forge::python ~=3.7    # Run into _MAX_WINDOWS_WORKERS not found if ==
+    # - conda-forge::pyside2 >=5.12  # To ensure application works correctly with QtPy.
+    - conda-forge::pyside6 >=6.2.0 # >=6.2.0 is compatible with Python 3.10, <6.4.1 since newer versions are missing Qt6Charts.dll
+    # - conda-forge::python ~=3.7    # Run into _MAX_WINDOWS_WORKERS not found if ==
+    - conda-forge::python >=3.10.0,<3.11.0 # Trying python 3.10
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
     - conda-forge::qtpy >=2.0.1
     - conda-forge::rich
-    - conda-forge::scipy >=1.4.1,<=1.9.0
+    # - conda-forge::scipy >=1.4.1,<=1.9.0
+    - conda-forge::scipy >=1.7.0 # Python 3.10 is compatible with scipy >=1.7.0
     - conda-forge::scikit-image
-    - conda-forge::scikit-learn ==1.0
+    # - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-learn >=1.0.0 # Python 3.10 is compatible with scikit-learn >=1.0.0
     # - conda-forge::scikit-video
     - conda-forge::seaborn
-    # - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
-    # - sleap/label/dev::tensorflow ==2.7.0
+    # - sleap/label/dev::tensorflow ==2.7.0  # TODO: Switch to main label when updated
     - sleap-deps/label/dev::tensorflow ==2.9.2a0 # TODO: Switch to main label when updated
-    - conda-forge::tensorflow-hub
+    - conda-forge::tensorflow-hub  # Pinned in meta.yml, but no problems here... yet
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose
