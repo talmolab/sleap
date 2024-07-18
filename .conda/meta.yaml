@@ -36,6 +36,7 @@ requirements:
     - conda-forge::cattrs ==1.1.1
     - conda-forge::h5py ==3.7.0
     - conda-forge::imageio
+    - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::networkx
@@ -76,6 +77,7 @@ requirements:
     - nvidia::cuda-nvcc=11.3
     - conda-forge::h5py ==3.7.0
     - conda-forge::imageio
+    - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::networkx
