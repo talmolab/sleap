@@ -3014,13 +3014,21 @@ class AddInstance(EditCommand):
         scale_width = new_size_width / old_size_width
         scale_height = new_size_height / old_size_height
 
-        # Calculate the difference from the cursor to the
-        # original position for getting new x and y values.
-        if location is not None and init_method == "best":
+        # Default the offset is 0
+        offset_x = 0
+        offset_y = 0
+
+        # if using the menu or the hotkey
+        if init_method == "best":
+            offset_x = 10
+            offset_y = 10
+
+        # if using right click
+        if location is not None:
             reference_x = copy_instance[context.state["skeleton"].node_names[0]].x
             reference_y = copy_instance[context.state["skeleton"].node_names[0]].y
-            offset_x = location.x() - reference_x
-            offset_y = location.y() - reference_y
+            offset_x = location.x() - (reference_x * scale_width)
+            offset_y = location.y() - (reference_y * scale_height)
 
         # Go through each node in skeleton.
         for node in context.state["skeleton"].node_names:
@@ -3036,22 +3044,18 @@ class AddInstance(EditCommand):
                     x_new = x_old
                     y_new = y_old
                 else:
-                    # Scale the x and y values to the new frame size.
-                    if (x_old + 10) * scale_width <= (new_size_width - 10):
-                        x_new = (x_old + 10) * scale_width
-                    else:
-                        x_new = x_old
+                    x_new = x_old * scale_width
+                    y_new = y_old * scale_height
 
-                    # Scale the x and y values to the new frame size.
-                    if (y_old + 10) * scale_height <= (new_size_height - 10):
-                        y_new = (y_old + 10) * scale_height
-                    else:
-                        y_new = y_old
+                # Apply offset if in bounds
+                x_new_offset = x_new + offset_x
+                y_new_offset = y_new + offset_y
 
-                # Add offsets when location is passed
-                if location is not None and init_method == "best":
-                    x_new += offset_x
-                    y_new += offset_y
+                if x_new_offset >= 0 and x_new_offset < new_size_width:
+                    x_new = x_new_offset
+
+                if y_new_offset >= 0 and y_new_offset < new_size_height:
+                    y_new = y_new_offset
 
                 new_instance[node] = Point(
                     x=x_new,
