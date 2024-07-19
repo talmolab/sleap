@@ -18,11 +18,11 @@ jobs:
         include:
           # Use this condarc as default
           - condarc: .conda/condarc.yaml
-          - pyver: "3.7"
+          - pyver: "3.10"
           # Use special condarc if macos
           - os: "macos-14"
             condarc: .conda_mac/condarc.yaml
-            pyver: "3.9"
+            pyver: "3.10"
     steps:
       # Setup
       - name: Checkout

@@ -26,7 +26,7 @@ jobs:
           # Use this condarc as default
           - condarc: .conda/condarc.yaml
           - wheel_name: sleap-wheel-linux
-          - pyver: "3.7"
+          - pyver: "3.10"
     steps:
       # Setup
       - name: Checkout
@@ -83,7 +83,7 @@ jobs:
               pip install '$wheel_path'[dev]
           - test_args: pytest --durations=-1 tests/
           - condarc: .conda/condarc.yaml
-          - pyver: "3.7"
+          - pyver: "3.10"
           # Use special condarc if macos
           - os: "macos-14"
             condarc: .conda_mac/condarc.yaml
