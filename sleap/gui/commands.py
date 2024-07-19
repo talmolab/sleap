@@ -3023,12 +3023,12 @@ class AddInstance(EditCommand):
             offset_x = 10
             offset_y = 10
 
-        # if using right click
-        if location is not None:
-            reference_x = copy_instance[context.state["skeleton"].node_names[0]].x
-            reference_y = copy_instance[context.state["skeleton"].node_names[0]].y
-            offset_x = location.x() - (reference_x * scale_width)
-            offset_y = location.y() - (reference_y * scale_height)
+            # if using right click
+            if location is not None:
+                reference_x = copy_instance[context.state["skeleton"].node_names[0]].x
+                reference_y = copy_instance[context.state["skeleton"].node_names[0]].y
+                offset_x = location.x() - (reference_x * scale_width)
+                offset_y = location.y() - (reference_y * scale_height)
 
         # Go through each node in skeleton.
         for node in context.state["skeleton"].node_names:
@@ -3050,11 +3050,12 @@ class AddInstance(EditCommand):
                 # Apply offset if in bounds
                 x_new_offset = x_new + offset_x
                 y_new_offset = y_new + offset_y
-
-                if x_new_offset >= 0 and x_new_offset < new_size_width:
+                
+                
+                if x_new_offset < new_size_width:
                     x_new = x_new_offset
 
-                if y_new_offset >= 0 and y_new_offset < new_size_height:
+                if y_new_offset < new_size_height:
                     y_new = y_new_offset
 
                 new_instance[node] = Point(
