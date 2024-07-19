@@ -29,7 +29,7 @@ dependencies:
     - conda-forge::psutil
     - conda-forge::pykalman
     # - conda-forge::pyside2 >=5.12  # To ensure application works correctly with QtPy.
-    - conda-forge::pyside6 >=6.2.0 # >=6.2.0 is compatible with Python 3.10, <6.4.1 since newer versions are missing Qt6Charts.dll
+    - conda-forge::pyside6 >=6.2.0,<6.4.1 # >=6.2.0 is compatible with Python 3.10, <6.4.1 since newer versions are missing Qt6Charts.dll
     # - conda-forge::python ~=3.7    # Run into _MAX_WINDOWS_WORKERS not found if ==
     - conda-forge::python >=3.10.0,<3.11.0 # Trying python 3.10
     - conda-forge::python-rapidjson
