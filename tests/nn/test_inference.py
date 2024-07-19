@@ -3,6 +3,7 @@ import json
 import zipfile
 from pathlib import Path
 from typing import cast
+import shutil
 
 import numpy as np
 import pytest
@@ -1447,7 +1448,49 @@ def test_make_predictor_from_cli(
             assert predictor.max_instances == 5
 
 
-def test_sleap_track(
+def test_make_predictor_from_cli_mult_input(
+    centered_pair_predictions: Labels,
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    min_bottomup_model_path: str,
+    tmpdir,
+):
+    slp_path = tmpdir.mkdir("slp_directory")
+
+    slp_file = slp_path / "old_slp.slp"
+    Labels.save(centered_pair_predictions, slp_file)
+
+    # Copy and paste the video into the temp dir multiple times
+    num_copies = 3
+    for i in range(num_copies):
+        # Construct the destination path with a unique name for the video
+
+        # Construct the destination path with a unique name for the SLP file
+        slp_dest_path = slp_path / f"old_slp_copy_{i}.slp"
+        shutil.copy(slp_file, slp_dest_path)
+
+    # Create sleap-track command
+    model_args = [
+        f"--model {min_centroid_model_path} --model {min_centered_instance_model_path}",
+        f"--model {min_bottomup_model_path}",
+    ]
+    for model_arg in model_args:
+        args = (
+            f"{slp_path} {model_arg} --video.index 0 --frames 1-3 "
+            "--cpu --max_instances 5"
+        ).split()
+        parser = _make_cli_parser()
+        args, _ = parser.parse_known_args(args=args)
+
+        # Create predictor
+        predictor = _make_predictor_from_cli(args=args)
+        if isinstance(predictor, TopDownPredictor):
+            assert predictor.inference_model.centroid_crop.max_instances == 5
+        elif isinstance(predictor, BottomUpPredictor):
+            assert predictor.max_instances == 5
+
+
+def test_sleap_track_single_input(
     centered_pair_predictions: Labels,
     min_centroid_model_path: str,
     min_centered_instance_model_path: str,
@@ -1471,6 +1514,235 @@ def test_sleap_track(
 
     # Create invalid sleap-track command
     args = [slp_path, "--cpu"]
+    with pytest.raises(ValueError):
+        sleap_track(args=args)
+
+
+@pytest.mark.parametrize("tracking", ["simple", "flow", "None"])
+def test_sleap_track_mult_input_slp(
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    tmpdir,
+    centered_pair_predictions: Labels,
+    tracking,
+):
+    # Create temporary directory with the structured video files
+    slp_path = tmpdir.mkdir("slp_directory")
+
+    slp_file = slp_path / "old_slp.slp"
+    Labels.save(centered_pair_predictions, slp_file)
+
+    slp_path_obj = Path(slp_path)
+
+    # Copy and paste the video into the temp dir multiple times
+    num_copies = 3
+    for i in range(num_copies):
+        # Construct the destination path with a unique name for the video
+
+        # Construct the destination path with a unique name for the SLP file
+        slp_dest_path = slp_path / f"old_slp_copy_{i}.slp"
+        shutil.copy(slp_file, slp_dest_path)
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker {tracking} "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
+
+    # Run inference
+    sleap_track(args=args)
+
+    # Assert predictions file exists
+    expected_extensions = {
+        ".mp4",
+    }  # Add other video formats if necessary
+
+    for file_path in slp_path_list:
+        if file_path.suffix in expected_extensions:
+            expected_output_file = f"{file_path}.predictions.slp"
+            assert Path(expected_output_file).exists()
+
+
+@pytest.mark.parametrize("tracking", ["simple", "flow", "None"])
+def test_sleap_track_mult_input_slp_mp4(
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    centered_pair_vid_path,
+    tracking,
+    tmpdir,
+    centered_pair_predictions: Labels,
+):
+    # Create temporary directory with the structured video files
+    slp_path = tmpdir.mkdir("slp_mp4_directory")
+
+    slp_file = slp_path / "old_slp.slp"
+    Labels.save(centered_pair_predictions, slp_file)
+
+    # Copy and paste the video into temp dir multiple times
+    num_copies = 3
+    for i in range(num_copies):
+        # Construct the destination path with a unique name
+        dest_path = slp_path / f"centered_pair_vid_copy_{i}.mp4"
+        shutil.copy(centered_pair_vid_path, dest_path)
+
+    slp_path_obj = Path(slp_path)
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker {tracking} "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
+
+    # Run inference
+    sleap_track(args=args)
+
+    # Assert predictions file exists
+    for file_path in slp_path_list:
+        if file_path.suffix == ".mp4":
+            expected_output_file = f"{file_path}.predictions.slp"
+            assert Path(expected_output_file).exists()
+
+
+@pytest.mark.parametrize("tracking", ["simple", "flow", "None"])
+def test_sleap_track_mult_input_mp4(
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    centered_pair_vid_path,
+    tracking,
+    tmpdir,
+):
+
+    # Create temporary directory with the structured video files
+    slp_path = tmpdir.mkdir("mp4_directory")
+
+    # Copy and paste the video into the temp dir multiple times
+    num_copies = 3
+    for i in range(num_copies):
+        # Construct the destination path with a unique name
+        dest_path = slp_path / f"centered_pair_vid_copy_{i}.mp4"
+        shutil.copy(centered_pair_vid_path, dest_path)
+
+    slp_path_obj = Path(slp_path)
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker {tracking} "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
+
+    # Run inference
+    sleap_track(args=args)
+
+    # Assert predictions file exists
+    for file_path in slp_path_list:
+        if file_path.suffix == ".mp4":
+            expected_output_file = f"{file_path}.predictions.slp"
+            assert Path(expected_output_file).exists()
+
+
+def test_sleap_track_output_mult(
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    centered_pair_vid_path,
+    tmpdir,
+):
+
+    output_path = tmpdir.mkdir("output_directory")
+    output_path_obj = Path(output_path)
+
+    # Create temporary directory with the structured video files
+    slp_path = tmpdir.mkdir("mp4_directory")
+
+    # Copy and paste the video into the temp dir multiple times
+    num_copies = 3
+    for i in range(num_copies):
+        # Construct the destination path with a unique name
+        dest_path = slp_path / f"centered_pair_vid_copy_{i}.mp4"
+        shutil.copy(centered_pair_vid_path, dest_path)
+
+    slp_path_obj = Path(slp_path)
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker simple "
+        f"-o {output_path} "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
+
+    # Run inference
+    sleap_track(args=args)
+    slp_path = Path(slp_path)
+
+    # Check if there are any files in the directory
+    for file_path in slp_path_list:
+        if file_path.suffix == ".mp4":
+            expected_output_file = output_path_obj / (
+                file_path.stem + ".predictions.slp"
+            )
+            assert Path(expected_output_file).exists()
+
+
+def test_sleap_track_invalid_output(
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    centered_pair_vid_path,
+    centered_pair_predictions: Labels,
+    tmpdir,
+):
+
+    output_path = Path(tmpdir, "output_file.slp").as_posix()
+    Labels.save(centered_pair_predictions, output_path)
+
+    # Create temporary directory with the structured video files
+    slp_path = tmpdir.mkdir("mp4_directory")
+
+    # Copy and paste the video into the temp dir multiple times
+    num_copies = 3
+    for i in range(num_copies):
+        # Construct the destination path with a unique name
+        dest_path = slp_path / f"centered_pair_vid_copy_{i}.mp4"
+        shutil.copy(centered_pair_vid_path, dest_path)
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker simple "
+        f"-o {output_path} "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    # Run inference
+    with pytest.raises(ValueError):
+        sleap_track(args=args)
+
+
+def test_sleap_track_invalid_input(
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+):
+
+    slp_path = ""
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker simple "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    # Run inference
     with pytest.raises(ValueError):
         sleap_track(args=args)
 
