@@ -70,7 +70,6 @@ from sleap.gui.shortcuts import Shortcuts
 from sleap.gui.state import GuiState
 from sleap.gui.widgets.slider import VideoSlider
 from sleap.instance import Instance, Point, PredictedInstance
-from sleap.io.cameras import InstanceGroup
 from sleap.io.video import Video
 from sleap.prefs import prefs
 from sleap.skeleton import Node
@@ -962,7 +961,9 @@ class GraphicsView(QGraphicsView):
         scene_items = self.scene.items(Qt.SortOrder.AscendingOrder)
         return list(filter(lambda x: isinstance(x, QtInstance), scene_items))
 
-    def selectInstance(self, select: Union[Instance, int, InstanceGroup]):
+    
+
+    def selectInstance(self, select: Union[Instance, int, 'QtInstance']):
         """
         Select a particular instance in view.
 
@@ -978,9 +979,8 @@ class GraphicsView(QGraphicsView):
                 instance.selected = select == idx
             elif isinstance(select, Instance):
                 instance.selected = select == instance.instance
-            elif isinstance(select, InstanceGroup):
-                instance.selected = True if instance in select else False
-            instance.selected = select == idx or select == instance.instance
+            elif isinstance(select, QtInstance.instance):
+                instance.selected = True if instance.instance in select.instances else False
 
         self.updatedSelection.emit()
 
