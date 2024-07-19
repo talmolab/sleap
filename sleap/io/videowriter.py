@@ -116,6 +116,7 @@ class VideoWriterOpenCV(VideoWriter):
 #     def close(self):
 #         self._writer.close()
 
+
 class VideoWriterImageio(VideoWriter):
     """Writes video using imageio as a wrapper for ffmpeg.
 
@@ -141,22 +142,26 @@ class VideoWriterImageio(VideoWriter):
         self.preset = preset
 
         import imageio_ffmpeg as ffmpeg
-        
+
         # Imageio's ffmpeg writer parameters
         # https://imageio.readthedocs.io/en/stable/examples.html#writing-videos-with-ffmpeg-and-vaapi
         # iio.help(name='FFMPEG') to test
         self.writer = iio.get_writer(
-            filename, 
-            fps=fps, 
-            codec='libx264', 
-            format='FFMPEG', 
-            pixelformat='yuv420p', 
+            filename,
+            fps=fps,
+            codec="libx264",
+            format="FFMPEG",
+            pixelformat="yuv420p",
             output_params=[
-                '-preset', preset,
-                '-crf', str(crf),
-                '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',  # Ensure even dimensions
-                '-r', str(fps),
-            ]
+                "-preset",
+                preset,
+                "-crf",
+                str(crf),
+                "-vf",
+                "scale=trunc(iw/2)*2:trunc(ih/2)*2",  # Ensure even dimensions
+                "-r",
+                str(fps),
+            ],
         )
 
     def add_frame(self, img, bgr: bool = False):
