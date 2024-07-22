@@ -5325,12 +5325,12 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
             if "output_path" in df.columns:
                 output_path_list = df["output_path"].tolist()
 
-        except FileNotFoundError:
-            print(f"File not found: {data_path}")
-        except pandas.errors.EmptyDataError:
-            print(f"No data: {data_path}")
-        except pandas.errors.ParserError:
-            print(f"Error parsing file: {data_path}")
+        except FileNotFoundError as e:
+            raise ValueError(f"CSV file not found: {data_path}") from e
+        except pandas.errors.EmptyDataError as e:
+           raise ValueError(f"CSV file is empty: {data_path}") from e
+        except pandas.errors.ParserError as e:
+            raise ValueError(f"Error parsing CSV file: {data_path}") from e
 
     elif data_path_obj.is_dir():
         raw_data_path_list = []
@@ -5344,7 +5344,7 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
     # Provider list to accomodate multiple video inputs
     provider_list = []
     data_path_list = []
-    for file_path in data_path_list:
+    for file_path in raw_data_path_list:
         # Create a provider for each file
         if file_path.as_posix().endswith(".slp") and len(raw_data_path_list) > 1:
             print(f"slp file skipped: {file_path.as_posix()}")
@@ -5557,34 +5557,34 @@ def main(args: Optional[list] = None):
             predictor = _make_predictor_from_cli(args)
             predictor.tracker = tracker
 
-        # Run inference!
-        labels_pr = predictor.predict(provider)
+            # Run inference!
+            labels_pr = predictor.predict(provider)
 
-        if output_path is None:
-            output_path = data_path + ".predictions.slp"
-            # if output path was not provided, create an output path
-            if output_path_list is not None:
-                output_path = output_path_list[i]
-            
-            elif output_path is None:
-                output_path = f"{data_path.as_posix()}.predictions.slp"
-                output_path_obj = Path(output_path)
-
-            else:
-                output_path_obj = Path(output_path)
-
-                # if output_path was provided and multiple inputs were provided, create a directory to store outputs
-                if len(data_path_list) > 1:
-                    output_path = (
-                        output_path_obj
-                        / data_path_obj.with_suffix(".predictions.slp").name
-                    )
+            if output_path is None:
+                output_path = data_path + ".predictions.slp"
+                # if output path was not provided, create an output path
+                if output_path_list is not None:
+                    output_path = output_path_list[i]
+                
+                elif output_path is None:
+                    output_path = f"{data_path.as_posix()}.predictions.slp"
                     output_path_obj = Path(output_path)
-                    # Create the containing directory if needed.
-                    output_path_obj.parent.mkdir(exist_ok=True, parents=True)
 
-        labels_pr.provenance["model_paths"] = predictor.model_paths
-        labels_pr.provenance["predictor"] = type(predictor).__name__
+                else:
+                    output_path_obj = Path(output_path)
+
+                    # if output_path was provided and multiple inputs were provided, create a directory to store outputs
+                    if len(data_path_list) > 1:
+                        output_path = (
+                            output_path_obj
+                            / data_path_obj.with_suffix(".predictions.slp").name
+                        )
+                        output_path_obj = Path(output_path)
+                        # Create the containing directory if needed.
+                        output_path_obj.parent.mkdir(exist_ok=True, parents=True)
+
+            labels_pr.provenance["model_paths"] = predictor.model_paths
+            labels_pr.provenance["predictor"] = type(predictor).__name__
 
     elif getattr(args, "tracking.tracker") is not None:
         # Load predictions
