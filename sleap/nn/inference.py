@@ -33,6 +33,7 @@ import shutil
 import atexit
 import subprocess
 import rich.progress
+import pandas
 from rich.pretty import pprint
 from collections import deque
 import json
@@ -5299,44 +5300,57 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
         )
 
     data_path_obj = Path(data_path)
-    
+
     # Set output_path_list to None as a default to return later
     output_path_list = None
 
     # Check that input value is valid
     if not data_path_obj.exists():
         raise ValueError("Path to data_path does not exist")
-    
-    elif data_path_obj.suffix.lower() == ".csv":
-        try:
-            # Read the CSV file
-            df = pandas.read_csv(data_path)
 
-            # Check if the 'data_path' and 'output_path' columns exist
-            if "data_path" in df.columns:
-                raw_data_path_list = df["data_path"].tolist()
-            else:
-                print("Column 'data_path' does not exist in data_path csv file.")
-            if "output_path" in df.columns:
-                output_path_list = df["output_path"].tolist()
+    elif data_path_obj.is_file():
+        # If the file is a CSV file, check for data_paths and output_paths
+        if data_path_obj.suffix.lower() == ".csv":
+            try:
+                # Read the CSV file
+                df = pandas.read_csv(data_path)
 
-        except FileNotFoundError as e:
-            raise ValueError(f"CSV file not found: {data_path}") from e
-        except pandas.errors.EmptyDataError as e:
-           raise ValueError(f"CSV file is empty: {data_path}") from e
-        except pandas.errors.ParserError as e:
-            raise ValueError(f"Error parsing CSV file: {data_path}") from e
+                # collect data_paths from column
+                if "data_path" in df.columns:
+                    raw_data_path_list = df["data_path"].tolist()
+                else:
+                    raise ValueError(
+                        "Column 'data_path' does not exist in the CSV file."
+                    )
+
+                # optional output_path column to specify multiple output_paths
+                if "output_path" in df.columns:
+                    output_path_list = df["output_path"].tolist()
+
+            except FileNotFoundError as e:
+                raise ValueError(f"CSV file not found: {data_path}") from e
+            except pandas.errors.EmptyDataError as e:
+                raise ValueError(f"CSV file is empty: {data_path}") from e
+            except pandas.errors.ParserError as e:
+                raise ValueError(f"Error parsing CSV file: {data_path}") from e
+
+        # If the file is a text file, collect data_paths
+        elif data_path_obj.suffix.lower() == ".txt":
+            with open(data_path_obj, "r") as file:
+                raw_data_path_list = [line.strip() for line in file.readlines()]
+
+        # Else, the file is a single data_path
+        else:
+            raw_data_path_list = [data_path_obj]
+
+        raw_data_path_list = [Path(p) for p in raw_data_path_list]
 
     # Check for multiple video inputs
-    # Compile file(s) into a list for later itteration
+    # Compile file(s) into a list for later iteration
     elif data_path_obj.is_dir():
-        raw_data_path_list = []
-        for file_path in data_path_obj.iterdir():
-            if file_path.is_file():
-                raw_data_path_list.append(Path(file_path))
-                
-    elif data_path_obj.is_file():
-        raw_data_path_list = [data_path_obj]
+        raw_data_path_list = [
+            file_path for file_path in data_path_obj.iterdir() if file_path.is_file()
+        ]
 
     # Provider list to accomodate multiple video inputs
     provider_list = []
@@ -5350,13 +5364,9 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
             labels = sleap.load_file(file_path.as_posix())
 
             if args.only_labeled_frames:
-                provider_list.append(
-                    LabelsReader.from_user_labeled_frames(labels)
-                )
+                provider_list.append(LabelsReader.from_user_labeled_frames(labels))
             elif args.only_suggested_frames:
-                provider_list.append(
-                    LabelsReader.from_unlabeled_suggestions(labels)
-                )
+                provider_list.append(LabelsReader.from_unlabeled_suggestions(labels))
             elif getattr(args, "video.index") != "":
                 provider_list.append(
                     VideoReader(
@@ -5522,10 +5532,12 @@ def main(args: Optional[list] = None):
     # Setup data loader.
     provider_list, data_path_list, output_path_list = _make_provider_from_cli(args)
 
-# if output_path has not been extracted from a csv file yet
+    output_path = None
+
+    # if output_path has not been extracted from a csv file yet
     if output_path_list is None:
         output_path = args.output
-        
+
     # check if output_path is valid before running inference
     if (
         output_path is not None
@@ -5557,27 +5569,23 @@ def main(args: Optional[list] = None):
 
             # if output path was not provided, create an output path
             if output_path is None:
-                output_path = data_path + ".predictions.slp"
                 # if output path was not provided, create an output path
-                if output_path_list is not None:
+                if output_path_list:
                     output_path = output_path_list[i]
-                
-                elif output_path is None:
-                    output_path = f"{data_path.as_posix()}.predictions.slp"
-                    output_path_obj = Path(output_path)
 
                 else:
-                    output_path_obj = Path(output_path)
+                    output_path = f"{data_path.as_posix()}.predictions.slp"
 
-                # if output_path was provided and multiple inputs were provided, create a directory to store outputs
-                if len(data_path_list) > 1:
-                    output_path = (
-                        output_path_obj
-                        / data_path_obj.with_suffix(".predictions.slp").name
-                    )
-                    output_path_obj = Path(output_path)
-                    # Create the containing directory if needed.
-                    output_path_obj.parent.mkdir(exist_ok=True, parents=True)
+            output_path_obj = Path(output_path)
+
+            # if output_path was provided and multiple inputs were provided, create a directory to store outputs
+            if len(data_path_list) > 1:
+                output_path = (
+                    output_path_obj / data_path_obj.with_suffix(".predictions.slp").name
+                )
+                output_path_obj = Path(output_path)
+                # Create the containing directory if needed.
+                output_path_obj.parent.mkdir(exist_ok=True, parents=True)
 
             labels_pr.provenance["model_paths"] = predictor.model_paths
             labels_pr.provenance["predictor"] = type(predictor).__name__
