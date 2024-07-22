@@ -5320,28 +5320,28 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
                     raw_data_path_list = df["data_path"].tolist()
                 else:
                     raise ValueError(
-                        "Column 'data_path' does not exist in the CSV file."
+                        f"Column 'data_path' does not exist in the CSV file: {data_path}"
                     )
 
                 # optional output_path column to specify multiple output_paths
                 if "output_path" in df.columns:
                     output_path_list = df["output_path"].tolist()
 
-            except FileNotFoundError as e:
-                raise ValueError(f"CSV file not found: {data_path}") from e
             except pandas.errors.EmptyDataError as e:
-                raise ValueError(f"CSV file is empty: {data_path}") from e
-            except pandas.errors.ParserError as e:
-                raise ValueError(f"Error parsing CSV file: {data_path}") from e
+                raise ValueError(f"CSV file is empty: {data_path}. Error: {e}") from e
+
 
         # If the file is a text file, collect data_paths
         elif data_path_obj.suffix.lower() == ".txt":
-            with open(data_path_obj, "r") as file:
-                raw_data_path_list = [line.strip() for line in file.readlines()]
-
-        # Else, the file is a single data_path
+            try:
+                with open(data_path_obj, "r") as file:
+                    raw_data_path_list = [line.strip() for line in file.readlines()]
+            except Exception as e:
+                raise ValueError(
+                    f"Error reading text file: {data_path}. Error: {e}"
+                ) from e
         else:
-            raw_data_path_list = [data_path_obj]
+            raw_data_path_list = [str(data_path_obj)]
 
         raw_data_path_list = [Path(p) for p in raw_data_path_list]
 
@@ -5535,18 +5535,18 @@ def main(args: Optional[list] = None):
     output_path = None
 
     # if output_path has not been extracted from a csv file yet
-    if output_path_list is None:
+    if output_path_list is None and args.output is not None:
         output_path = args.output
+        output_path_obj = Path(output_path)
 
-    # check if output_path is valid before running inference
-    if (
-        output_path is not None
-        and Path(output_path).is_file()
-        and len(data_path_list) > 1
-    ):
-        raise ValueError(
-            "output_path argument must be a directory if multiple video inputs are given"
-        )
+        # check if output_path is valid before running inference
+        if (
+            Path(output_path).is_file()
+            and len(data_path_list) > 1
+        ):
+            raise ValueError(
+                "output_path argument must be a directory if multiple video inputs are given"
+            )
 
     # Setup tracker.
     tracker = _make_tracker_from_cli(args)
@@ -5576,10 +5576,11 @@ def main(args: Optional[list] = None):
                 else:
                     output_path = f"{data_path.as_posix()}.predictions.slp"
 
-            output_path_obj = Path(output_path)
+                output_path_obj = Path(output_path)
 
             # if output_path was provided and multiple inputs were provided, create a directory to store outputs
-            if len(data_path_list) > 1:
+            elif len(data_path_list) > 1:
+                output_path_obj = Path(output_path)
                 output_path = (
                     output_path_obj / data_path_obj.with_suffix(".predictions.slp").name
                 )
