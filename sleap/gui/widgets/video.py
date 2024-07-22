@@ -74,6 +74,7 @@ from sleap.io.video import Video
 from sleap.prefs import prefs
 from sleap.skeleton import Node
 from sleap.io.cameras import Camcorder
+from sleap.io.cameras import InstanceGroup
 
 
 class LoadImageWorker(QtCore.QObject):
@@ -961,9 +962,7 @@ class GraphicsView(QGraphicsView):
         scene_items = self.scene.items(Qt.SortOrder.AscendingOrder)
         return list(filter(lambda x: isinstance(x, QtInstance), scene_items))
 
-    
-
-    def selectInstance(self, select: Union[Instance, int, 'QtInstance']):
+    def selectInstance(self, select: Union[Instance, int, InstanceGroup]):
         """
         Select a particular instance in view.
 
@@ -973,14 +972,16 @@ class GraphicsView(QGraphicsView):
         Returns:
             None
         """
-        
+
         for idx, instance in enumerate(self.all_instances):
             if isinstance(select, int):
                 instance.selected = select == idx
             elif isinstance(select, Instance):
                 instance.selected = select == instance.instance
-            elif isinstance(select, QtInstance.instance):
-                instance.selected = True if instance.instance in select.instances else False
+            elif isinstance(select, QtInstance):
+                instance.selected = (
+                    True if QtInstance.instance in select.instances else False
+                )
 
         self.updatedSelection.emit()
 
