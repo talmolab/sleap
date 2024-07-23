@@ -1373,7 +1373,7 @@ def test_retracking(
     # Create sleap-track command
     cmd = (
         f"{slp_path} --tracking.tracker {tracker_method} --video.index 0 --frames 1-3 "
-        "--cpu"
+        "--tracking.similarity object_keypoint --cpu"
     )
     if tracker_method == "flow":
         cmd += " --tracking.save_shifted_instances 1"
@@ -1393,6 +1393,8 @@ def test_retracking(
         parser = _make_cli_parser()
         args, _ = parser.parse_known_args(args=args)
         tracker = _make_tracker_from_cli(args)
+        # Additional check for similarity method
+        assert tracker.similarity_function.__name__ == "object_keypoint_similarity"
         output_path = f"{slp_path}.{tracker.get_name()}.slp"
 
     # Assert tracked predictions file exists
@@ -1747,9 +1749,9 @@ def test_sleap_track_invalid_input(
         sleap_track(args=args)
 
 
-def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
+def test_flow_tracker(centered_pair_predictions_sorted: Labels, tmpdir):
     """Test flow tracker instances are pruned."""
-    labels: Labels = centered_pair_predictions
+    labels: Labels = centered_pair_predictions_sorted
     track_window = 5
 
     # Setup tracker
@@ -1759,7 +1761,7 @@ def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
     tracker.candidate_maker = cast(FlowCandidateMaker, tracker.candidate_maker)
 
     # Run tracking
-    frames = sorted(labels.labeled_frames, key=lambda lf: lf.frame_idx)
+    frames = labels.labeled_frames
 
     # Run tracking on subset of frames using psuedo-implementation of
     # sleap.nn.tracking.run_tracker
