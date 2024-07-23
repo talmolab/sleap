@@ -476,7 +476,7 @@ class SimpleMaxTracksCandidateMaker(SimpleCandidateMaker):
         candidate_instances = []
         tracks = []
         for track, matched_instances in track_matching_queue_dict.items():
-            if not max_tracking or len(tracks) <= self.max_tracks:
+            if not max_tracking or len(tracks) < self.max_tracks:
                 tracks.append(track)
                 for ref_instance in matched_instances:
                     if ref_instance.instance_t.n_visible_points >= self.min_points:
