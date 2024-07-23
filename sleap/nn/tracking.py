@@ -392,6 +392,7 @@ class FlowMaxTracksCandidateMaker(FlowCandidateMaker):
     def get_candidates(
         self,
         track_matching_queue_dict: Dict[Track, Deque[MatchedFrameInstance]],
+        max_tracking: bool,
         t: int,
         img: np.ndarray,
         *args,
@@ -405,7 +406,7 @@ class FlowMaxTracksCandidateMaker(FlowCandidateMaker):
         tracks = []
 
         for track, matched_items in track_matching_queue_dict.items():
-            if len(tracks) <= self.max_tracks:
+            if not max_tracking or len(tracks) <= self.max_tracks:
                 tracks.append(track)
                 for matched_item in matched_items:
                     ref_t, ref_img = (
@@ -467,6 +468,7 @@ class SimpleMaxTracksCandidateMaker(SimpleCandidateMaker):
     def get_candidates(
         self,
         track_matching_queue_dict: Dict,
+        max_tracking: bool,
         *args,
         **kwargs,
     ) -> List[InstanceType]:
@@ -474,7 +476,7 @@ class SimpleMaxTracksCandidateMaker(SimpleCandidateMaker):
         candidate_instances = []
         tracks = []
         for track, matched_instances in track_matching_queue_dict.items():
-            if len(tracks) <= self.max_tracks:
+            if not max_tracking or len(tracks) <= self.max_tracks:
                 tracks.append(track)
                 for ref_instance in matched_instances:
                     if ref_instance.instance_t.n_visible_points >= self.min_points:
@@ -600,8 +602,15 @@ class Tracker(BaseTracker):
         """Factory for instantiating default matching queue with specified size."""
         return deque(maxlen=self.track_window)
 
+    @property
+    def has_max_tracking(self) -> bool:
+        return isinstance(
+            self.candidate_maker,
+            (SimpleMaxTracksCandidateMaker, FlowMaxTracksCandidateMaker),
+        )
+
     def reset_candidates(self):
-        if self.max_tracking:
+        if self.has_max_tracking:
             for track in self.track_matching_queue_dict:
                 self.track_matching_queue_dict[track] = deque(maxlen=self.track_window)
         else:
@@ -612,13 +621,14 @@ class Tracker(BaseTracker):
         """Returns the unique tracks in the matching queue."""
 
         unique_tracks = set()
-        for match_item in self.track_matching_queue:
-            for instance in match_item.instances_t:
-                unique_tracks.add(instance.track)
-
-        if self.max_tracking:
+        if self.has_max_tracking:
             for track in self.track_matching_queue_dict.keys():
                 unique_tracks.add(track)
+
+        else:
+            for match_item in self.track_matching_queue:
+                for instance in match_item.instances_t:
+                    unique_tracks.add(instance.track)
 
         return list(unique_tracks)
 
@@ -648,7 +658,7 @@ class Tracker(BaseTracker):
 
         # Infer timestep if not provided.
         if t is None:
-            if self.max_tracking:
+            if self.has_max_tracking:
                 if len(self.track_matching_queue_dict) > 0:
 
                     # Default to last timestep + 1 if available.
@@ -686,10 +696,10 @@ class Tracker(BaseTracker):
                 self.pre_cull_function(untracked_instances)
 
             # Build a pool of matchable candidate instances.
-            if self.max_tracking:
+            if self.has_max_tracking:
                 candidate_instances = self.candidate_maker.get_candidates(
                     track_matching_queue_dict=self.track_matching_queue_dict,
-                    max_tracks=self.max_tracks,
+                    max_tracking=self.max_tracking,
                     t=t,
                     img=img,
                 )
@@ -723,13 +733,16 @@ class Tracker(BaseTracker):
             )
 
         # Add the tracked instances to the dictionary of matched instances.
-        if self.max_tracking:
+        if self.has_max_tracking:
             for tracked_instance in tracked_instances:
                 if tracked_instance.track in self.track_matching_queue_dict:
                     self.track_matching_queue_dict[tracked_instance.track].append(
                         MatchedFrameInstance(t, tracked_instance, img)
                     )
-                elif len(self.track_matching_queue_dict) < self.max_tracks:
+                elif (
+                    not self.max_tracking
+                    or len(self.track_matching_queue_dict) < self.max_tracks
+                ):
                     self.track_matching_queue_dict[tracked_instance.track] = deque(
                         maxlen=self.track_window
                     )
@@ -775,7 +788,8 @@ class Tracker(BaseTracker):
 
             # Skip if we've reached the maximum number of tracks.
             if (
-                self.max_tracking
+                self.has_max_tracking
+                and self.max_tracking
                 and len(self.track_matching_queue_dict) >= self.max_tracks
             ):
                 break
@@ -846,6 +860,11 @@ class Tracker(BaseTracker):
         oks_normalization: str = "all",
         **kwargs,
     ) -> BaseTracker:
+        # Parse max_tracking arguments, only True if max_tracks is not None and > 0
+        max_tracking = max_tracking if max_tracks else False
+        if max_tracking and tracker in ("simple", "flow"):
+            # Force a candidate maker of 'maxtracks' type
+            tracker += "maxtracks"
 
         if tracker.lower() == "none":
             candidate_maker = None
@@ -944,7 +963,10 @@ class Tracker(BaseTracker):
 
         option = dict(name="max_tracking", default=False)
         option["type"] = bool
-        option["help"] = "If true then the tracker will cap the max number of tracks."
+        option["help"] = (
+            "If true then the tracker will cap the max number of tracks. "
+            "Falls back to false if `max_tracks` is not defined or 0."
+        )
         options.append(option)
 
         option = dict(name="max_tracks", default=None)

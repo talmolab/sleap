@@ -17,6 +17,8 @@ from sleap.skeleton import Skeleton
 
 def tracker_by_name(frames=None, **kwargs):
     t = Tracker.make_tracker_by_name(**kwargs)
+    print(kwargs)
+    print(t.candidate_maker)
     if frames is None:
         t.track([])
         t.final_pass([])
@@ -38,9 +40,22 @@ def tracker_by_name(frames=None, **kwargs):
 @pytest.mark.parametrize("similarity", ["instance", "iou", "centroid"])
 @pytest.mark.parametrize("match", ["greedy", "hungarian"])
 @pytest.mark.parametrize("count", [0, 2])
-def test_tracker_by_name(tracker, similarity, match, count):
+def test_tracker_by_name(
+    centered_pair_predictions_sorted,
+    tracker,
+    similarity,
+    match,
+    count,
+):
+    # This is slow, so limit to 5 time points
+    frames = centered_pair_predictions_sorted[:5]
+
     tracker_by_name(
-        tracker=tracker, similarity=similarity, match=match, clean_instance_count=count
+        frames=frames,
+        tracker=tracker,
+        similarity=similarity,
+        match=match,
+        max_tracks=count,
     )
 
 
@@ -65,6 +80,7 @@ def test_oks_tracker_by_name(
         matching="greedy",
         oks_score_weighting=oks_score_weighting,
         oks_normalization=oks_normalization,
+        max_tracks=2,
     )
 
 
