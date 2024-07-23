@@ -406,7 +406,7 @@ class FlowMaxTracksCandidateMaker(FlowCandidateMaker):
         tracks = []
 
         for track, matched_items in track_matching_queue_dict.items():
-            if not max_tracking or len(tracks) <= self.max_tracks:
+            if not max_tracking or len(tracks) < self.max_tracks:
                 tracks.append(track)
                 for matched_item in matched_items:
                     ref_t, ref_img = (
