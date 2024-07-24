@@ -325,7 +325,7 @@ class VideoFrameSuggestions(object):
         # Return empty list if not enough frames
         n_frames, n_tracks, n_nodes, _ = labels_numpy.shape
 
-        if frames < 2:
+        if n_frames < 2:
             return []
         
         # Calculate displacements
