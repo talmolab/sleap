@@ -3014,7 +3014,6 @@ class AddInstance(EditCommand):
         scale_width = new_size_width / old_size_width
         scale_height = new_size_height / old_size_height
 
-        print(new_size_height, new_size_width)
         # Default the offset is 0
         offset_x = 0
         offset_y = 0
@@ -3052,7 +3051,8 @@ class AddInstance(EditCommand):
                 x_new_offset = x_new + offset_x
                 y_new_offset = y_new + offset_y
 
-                print(x_new_offset, ",", y_new_offset)
+                # Default visibility is same as copied instance.
+                visible = copy_instance[node].visible
 
                 if x_new_offset >= 0 and x_new_offset < new_size_width:
                     x_new = x_new_offset
@@ -3060,10 +3060,11 @@ class AddInstance(EditCommand):
                 if y_new_offset >= 0 and y_new_offset < new_size_height:
                     y_new = y_new_offset
 
+                # Update the new instance with the new x, y, and visibility.
                 new_instance[node] = Point(
                     x=x_new,
                     y=y_new,
-                    visible=copy_instance[node].visible,
+                    visible=visible,
                     complete=mark_complete,
                 )
             else:
