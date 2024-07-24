@@ -327,7 +327,7 @@ class VideoFrameSuggestions(object):
 
         if n_frames < 2:
             return []
-        
+
         # Calculate displacements
         diff = labels_numpy[1:] - labels_numpy[:-1]  # (frames - 1, tracks, nodes, x, y)
         euc_norm = np.linalg.norm(diff, axis=-1)  # (frames - 1, tracks, nodes)
@@ -337,10 +337,11 @@ class VideoFrameSuggestions(object):
         threshold_mask = np.any(
             mean_euc_norm > displacement_threshold, axis=-1
         )  # (frames - 1,)
-        frame_idxs = list(np.argwhere(threshold_mask).flatten() + 1)  # [0, len(frames - 1)]
+        frame_idxs = list(
+            np.argwhere(threshold_mask).flatten() + 1
+        )  # [0, len(frames - 1)]
 
         return cls.idx_list_to_frame_list(frame_idxs, video)
-
 
     @classmethod
     def frame_chunk(
