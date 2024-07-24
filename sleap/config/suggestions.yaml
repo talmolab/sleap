@@ -181,6 +181,7 @@ main:
         label: Maximum Displacement Threshold
         type: int
         default: 10
+        range: 0,999
 
   - name: target
     label: Target
