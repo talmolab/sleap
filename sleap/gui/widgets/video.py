@@ -963,11 +963,10 @@ class GraphicsView(QGraphicsView):
         return list(filter(lambda x: isinstance(x, QtInstance), scene_items))
 
     def selectInstance(self, select: Union[Instance, int, InstanceGroup]):
-        """
-        Select a particular instance in view.
+        """Select a particular instance in view.
 
         Args:
-            select: Either `Instance` or index of instance in view.
+            select: Either `Instance`, index, or `InstanceGroup` of instance in view.
 
         Returns:
             None
@@ -978,9 +977,9 @@ class GraphicsView(QGraphicsView):
                 instance.selected = select == idx
             elif isinstance(select, Instance):
                 instance.selected = select == instance.instance
-            elif isinstance(select, QtInstance):
+            elif isinstance(select, InstanceGroup):
                 instance.selected = (
-                    True if QtInstance.instance in select.instances else False
+                    True if instance.instance in select.instances else False
                 )
 
         self.updatedSelection.emit()
