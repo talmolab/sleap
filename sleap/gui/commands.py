@@ -3057,10 +3057,22 @@ class AddInstance(EditCommand):
                 # Default visibility is same as copied instance.
                 visible = copy_instance[node].visible
 
-                if x_new_offset >= 0 and x_new_offset < new_size_width:
+                # If the node is offset to outside the frame, mark as not visible.
+                if x_new_offset < 0:
+                    x_new = 0
+                    visible = False
+                elif x_new_offset > new_size_width:
+                    x_new = new_size_width
+                    visible = False
+                else:
                     x_new = x_new_offset
-
-                if y_new_offset >= 0 and y_new_offset < new_size_height:
+                if y_new_offset < 0:
+                    y_new = 0
+                    visible = False
+                elif y_new_offset > new_size_height:
+                    y_new = new_size_height
+                    visible = False
+                else:
                     y_new = y_new_offset
 
                 # Update the new instance with the new x, y, and visibility.
