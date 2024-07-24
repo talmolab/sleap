@@ -3018,12 +3018,12 @@ class AddInstance(EditCommand):
         offset_x = 0
         offset_y = 0
 
-        # if using the menu or the hotkey
+        # Using the menu or the hotkey
         if init_method == "best":
             offset_x = 10
             offset_y = 10
 
-            # if using right click
+            # Using right click and context menu
             if location is not None:
                 reference_x = copy_instance[context.state["skeleton"].node_names[0]].x
                 reference_y = copy_instance[context.state["skeleton"].node_names[0]].y
