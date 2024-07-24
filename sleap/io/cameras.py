@@ -1101,6 +1101,7 @@ class RecordingSession:
         frame_inds: List of frame indices.
         cams_to_include: List of `Camcorder`s to include in this `FrameGroup`.
         excluded_views: List of excluded views (names of `Camcorder`s).
+        projection_bounds: Projection bounds for `Camcorder`s in `self.cams_to_include`.
     """
 
     # TODO(LM): Consider implementing Observer pattern for `camera_cluster` and `labels`
@@ -1111,6 +1112,7 @@ class RecordingSession:
     _frame_group_by_frame_idx: Dict[int, "FrameGroup"] = field(factory=dict)
     _cams_to_include: Optional[List[Camcorder]] = field(default=None)
     _excluded_views: Optional[Tuple[str]] = field(default=None)
+    _projection_bounds: Optional[np.ndarray] = field(default=None)
 
     @property
     def id(self) -> str:
@@ -1202,6 +1204,81 @@ class RecordingSession:
         """List of excluded views (names of Camcorders)."""
 
         return self._excluded_views
+
+    def _recalculate_projection_bounds(self):
+        """Calculate the projection bounds for `Camcorder`s in `self.cams_to_include`.
+
+        This method recreates the `_projection_bounds` attribute based on the linked
+        `Video`'s height and width. The `_projection_bounds` are updated one by one for
+        each `Video` added to the `RecordingSession` through the `add_video` method.
+        However, the `_projection_bounds` will need to be recalculated if the
+        `Video.height` or `Video.width` attribute is changed after the `Video` is added
+        to the `RecordingSession`.
+
+        Currently, this method is only called on initialization/deserialization of the
+        `RecordingSession` and yields an all nan array.
+        """
+
+        # Get the projection bounds for all `Camcorder`s in the `RecordingSession`
+        n_cameras = len(self.camera_cluster.cameras)
+        bounds = np.full((n_cameras, 2), np.nan)
+        for cam in self.linked_cameras:
+            video: Video = self.get_video(cam)
+
+            # Get the video's width and height
+            x_max = video.width
+            y_max = video.height
+
+            # Allow triangulating even if no video information is available
+            if x_max is None or y_max is None:
+                continue
+
+            # Update the bounds
+            bounds[self.camera_cluster.cameras.index(cam)] = (x_max, y_max)
+        self._projection_bounds = bounds.copy()
+
+    @property
+    def projection_bounds(self) -> Tuple[Tuple[float, float], Tuple[float, float]]:
+        """Projection bounds for `Camcorder`s in the `RecordingSession.cams_to_include`.
+
+        The projection bounds are based off the linked `Video`'s height and width.
+
+        To recalculate the projection bounds, set the `_projection_bounds` attribute to
+        None, then access the `projection_bounds` property.
+
+        Returns:
+            NumPy array of shape (n_cameras, 2) where the first column is the width and
+            the second column is the height of the `Video` linked to the associated
+            `Camcorder`.
+        """
+
+        # If the projection bounds have not been set, then calculate them
+        if self._projection_bounds is None:
+            # Reconstruct the projection bounds for all `Camcorder`s in the session
+            self._recalculate_projection_bounds()
+
+        # Ensure we don't accidentally modify the underlying projection bounds
+        bounds = self._projection_bounds.copy()
+
+        # Only return the bounds for cams to include
+        bounds = bounds[[cam in self.cams_to_include for cam in self.camera_cluster]]
+        return bounds
+
+    @projection_bounds.setter
+    def projection_bounds(self, bounds: np.ndarray):
+        """Raises error if trying to set projection bounds directly.
+
+        The underlying self._projection_bounds is updated automatically when calling
+        `RecordingSession.add_video`.
+
+        Raises:
+            ValueError: If trying to set projection bounds directly.
+        """
+
+        raise ValueError(
+            "Cannot set projection bounds directly. Projection bounds are updated "
+            "automatically when calling `RecordingSession.add_video`."
+        )
 
     def get_video(self, camcorder: Camcorder) -> Optional[Video]:
         """Retrieve `Video` linked to `Camcorder`.
@@ -1302,6 +1379,14 @@ class RecordingSession:
         if self.labels is not None:
             self.labels.update_session(self, video)
 
+        # TODO(LM): Use observer pattern to update bounds when `Video.shape` changes
+        # Update projection bounds
+        x_max = video.width
+        y_max = video.height
+        if not (x_max is None or y_max is None):
+            cam_idx = self.camera_cluster.cameras.index(camcorder)
+            self._projection_bounds[cam_idx] = (x_max, y_max)
+
     def remove_video(self, video: Video):
         """Removes a `Video` from the `RecordingSession`.
 
@@ -1325,6 +1410,10 @@ class RecordingSession:
         # Update labels cache
         if self.labels is not None and self.labels.get_session(video) is not None:
             self.labels.remove_session_video(video=video)
+
+        # Update projection bounds
+        cam_idx = self.camera_cluster.cameras.index(camcorder)
+        self._projection_bounds[cam_idx] = (np.nan, np.nan)
 
     def new_frame_group(self, frame_idx: int):
         """Creates and adds an empty `FrameGroup` to the `RecordingSession`.
@@ -1375,6 +1464,9 @@ class RecordingSession:
         # Reorder `cams_to_include` to match `CameraCluster` order (via setter method)
         if self._cams_to_include is not None:
             self.cams_to_include = self._cams_to_include
+
+        # Initialize `_projection_bounds` by calling the property
+        self.projection_bounds
 
     def __iter__(self) -> Iterator[List[Camcorder]]:
         return iter(self.camera_cluster)
@@ -1748,6 +1840,7 @@ class FrameGroup:
         self,
         instance_groups: Optional[List[InstanceGroup]] = None,
         pred_as_nan: bool = False,
+        invisible_as_nan: bool = True,
     ) -> np.ndarray:
         """Numpy array of all `InstanceGroup`s in `FrameGroup.cams_to_include`.
 
@@ -1756,7 +1849,8 @@ class FrameGroup:
                 self.instance_groups.
             pred_as_nan: If True, then replaces `PredictedInstance`s with all nan
                 self.dummy_instance. Default is False.
-
+            invisible_as_nan: If True, then replaces invisible points with nan. Default
+                is True.
         Returns:
             Numpy array of shape (M, T, N, 2) where M is the number of views (determined
             by self.cams_to_include), T is the number of `InstanceGroup`s, N is the
@@ -1779,6 +1873,7 @@ class FrameGroup:
         for instance_group in instance_groups:
             instance_group_numpy = instance_group.numpy(
                 pred_as_nan=pred_as_nan,
+                invisible_as_nan=invisible_as_nan,
                 cams_to_include=self.cams_to_include,
             )  # M=include x N x 2
             instance_group_numpys.append(instance_group_numpy)
@@ -2200,6 +2295,22 @@ class FrameGroup:
             instance_groups
         ), f"Expected {len(instance_groups)} instances, got {n_instances}."
         assert n_coords == 2, f"Expected 2 coordinates, got {n_coords}."
+
+        # Ensure we are working with a float array
+        points = points.astype(float)
+
+        # Get projection bounds (based on video height/width)
+        bounds = self.session.projection_bounds
+        bounds_expanded_x = bounds[:, None, None, 0]
+        bounds_expanded_y = bounds[:, None, None, 1]
+
+        # Create masks for out-of-bounds x and y coordinates
+        out_of_bounds_x = (points[..., 0] < 0) | (points[..., 0] > bounds_expanded_x)
+        out_of_bounds_y = (points[..., 1] < 0) | (points[..., 1] > bounds_expanded_y)
+
+        # Replace out-of-bounds x and y coordinates with nan
+        points[out_of_bounds_x, 0] = np.nan
+        points[out_of_bounds_y, 1] = np.nan
 
         # Update points for each `InstanceGroup`
         for ig_idx, instance_group in enumerate(instance_groups):
