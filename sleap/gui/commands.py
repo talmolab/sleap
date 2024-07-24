@@ -3025,8 +3025,11 @@ class AddInstance(EditCommand):
 
             # Using right click and context menu
             if location is not None:
-                reference_x = copy_instance[context.state["skeleton"].node_names[0]].x
-                reference_y = copy_instance[context.state["skeleton"].node_names[0]].y
+                reference_node = next(
+                    (node for node in copy_instance if not node.isnan()), None
+                )
+                reference_x = reference_node.x
+                reference_y = reference_node.y
                 offset_x = location.x() - (reference_x * scale_width)
                 offset_y = location.y() - (reference_y * scale_height)
 
