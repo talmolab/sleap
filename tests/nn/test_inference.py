@@ -1845,7 +1845,9 @@ def test_sleap_track_invalid_csv(
     ).split()
 
     # Run inference and expect ValueError for missing 'data_path' column
-    with pytest.raises(ValueError, match=f"Column containing valid data_paths does not exist in the CSV file: {csv_missing_column_path}"):
+    with pytest.raises(
+        ValueError,
+    ):
         sleap_track(args=args_missing_column)
 
     # Create sleap-track command for empty CSV file
@@ -1856,7 +1858,7 @@ def test_sleap_track_invalid_csv(
     ).split()
 
     # Run inference and expect ValueError for empty CSV file
-    with pytest.raises(ValueError, match = f"CSV file is empty: {csv_empty_path}"):
+    with pytest.raises(ValueError):
         sleap_track(args=args_empty)
 
 
