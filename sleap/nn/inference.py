@@ -5629,7 +5629,7 @@ def main(args: Optional[list] = None):
             # Save results.
             try:
                 labels_pr.save(output_path)
-            except Exception as e:
+            except Exception:
                 print("WARNING: Provided output path invalid.")
                 fallback_path = data_path_obj.with_suffix(".predictions.slp")
                 labels_pr.save(fallback_path)
