@@ -1488,6 +1488,8 @@ class MainWindow(QMainWindow):
                 if inst_group_ind < 9:
                     key_command = Qt.SHIFT + Qt.Key_0 + inst_group_ind + 1
 
+                # TODO: Update the Set Instance Group options so that the color matches the Color of the Instance Group
+
                 # Update the Set Instance Group menu
                 self.inst_groups_menu.addAction(
                     instance_group.name,
