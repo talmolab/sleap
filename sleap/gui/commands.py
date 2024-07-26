@@ -2913,6 +2913,8 @@ class AddInstance(EditCommand):
             copy_instance=copy_instance,
             new_instance=new_instance,
             mark_complete=mark_complete,
+            init_method=init_method,
+            location=location,
         )
 
         if has_missing_nodes:
@@ -2984,6 +2986,8 @@ class AddInstance(EditCommand):
         copy_instance: Optional[Union[Instance, PredictedInstance]],
         new_instance: Instance,
         mark_complete: bool,
+        init_method: str,
+        location: Optional[QtCore.QPoint] = None,
     ) -> bool:
         """Sets visible nodes for new instance.
 
@@ -3010,6 +3014,25 @@ class AddInstance(EditCommand):
         scale_width = new_size_width / old_size_width
         scale_height = new_size_height / old_size_height
 
+        # Default the offset is 0
+        offset_x = 0
+        offset_y = 0
+
+        # Using the menu or the hotkey
+        if init_method == "best":
+            offset_x = 10
+            offset_y = 10
+
+            # Using right click and context menu
+            if location is not None:
+                reference_node = next(
+                    (node for node in copy_instance if not node.isnan()), None
+                )
+                reference_x = reference_node.x
+                reference_y = reference_node.y
+                offset_x = location.x() - (reference_x * scale_width)
+                offset_y = location.y() - (reference_y * scale_height)
+
         # Go through each node in skeleton.
         for node in context.state["skeleton"].node_names:
             # If we're copying from a skeleton that has this node.
@@ -3018,13 +3041,45 @@ class AddInstance(EditCommand):
                 # We don't want to copy a PredictedPoint or score attribute.
                 x_old = copy_instance[node].x
                 y_old = copy_instance[node].y
-                x_new = x_old * scale_width
-                y_new = y_old * scale_height
 
+                # Copy the instance without scale or offset if predicted
+                if isinstance(copy_instance, PredictedInstance):
+                    x_new = x_old
+                    y_new = y_old
+                else:
+                    x_new = x_old * scale_width
+                    y_new = y_old * scale_height
+
+                # Apply offset if in bounds
+                x_new_offset = x_new + offset_x
+                y_new_offset = y_new + offset_y
+
+                # Default visibility is same as copied instance.
+                visible = copy_instance[node].visible
+
+                # If the node is offset to outside the frame, mark as not visible.
+                if x_new_offset < 0:
+                    x_new = 0
+                    visible = False
+                elif x_new_offset > new_size_width:
+                    x_new = new_size_width
+                    visible = False
+                else:
+                    x_new = x_new_offset
+                if y_new_offset < 0:
+                    y_new = 0
+                    visible = False
+                elif y_new_offset > new_size_height:
+                    y_new = new_size_height
+                    visible = False
+                else:
+                    y_new = y_new_offset
+
+                # Update the new instance with the new x, y, and visibility.
                 new_instance[node] = Point(
                     x=x_new,
                     y=y_new,
-                    visible=copy_instance[node].visible,
+                    visible=visible,
                     complete=mark_complete,
                 )
             else:
