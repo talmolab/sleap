@@ -962,25 +962,41 @@ class GraphicsView(QGraphicsView):
         scene_items = self.scene.items(Qt.SortOrder.AscendingOrder)
         return list(filter(lambda x: isinstance(x, QtInstance), scene_items))
 
-    def selectInstance(self, select: Union[Instance, int, InstanceGroup]):
+    def selectInstance(self, select: Optional[Union[Instance, int, InstanceGroup]]):
         """Select a particular instance in view.
 
         Args:
-            select: Either `Instance`, index, or `InstanceGroup` of instance in view.
+            select: Either `None` or `Instance`, index, or `InstanceGroup` of instance
+                in view.
 
         Returns:
             None
         """
 
+        # Decide which function to use to determine if instance is selected
+        if isinstance(select, int):
+
+            def determine_selected(idx: int, instance: QtInstance):
+                return idx == select
+
+        elif isinstance(select, Instance):
+
+            def determine_selected(idx: int, instance: QtInstance):
+                return instance.instance == select
+
+        elif isinstance(select, InstanceGroup):
+
+            def determine_selected(idx: int, instance: QtInstance):
+                return instance.instance in select.instances
+
+        else:
+
+            def determine_selected(idx: int, instance: QtInstance):
+                return False
+
+        # Set selected state for each instance
         for idx, instance in enumerate(self.all_instances):
-            if isinstance(select, int):
-                instance.selected = select == idx
-            elif isinstance(select, Instance):
-                instance.selected = select == instance.instance
-            elif isinstance(select, InstanceGroup):
-                instance.selected = (
-                    True if instance.instance in select.instances else False
-                )
+            instance.selected = determine_selected(idx, instance)
 
         self.updatedSelection.emit()
 
