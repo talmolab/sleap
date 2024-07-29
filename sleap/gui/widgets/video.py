@@ -367,7 +367,10 @@ class QtVideoPlayer(QWidget):
 
         menu.addAction("Add Instance:").setEnabled(False)
 
-        menu.addAction("Default", lambda: self.context.newInstance(init_method="best"))
+        menu.addAction(
+            "Default",
+            lambda: self.context.newInstance(init_method="best", location=scene_pos),
+        )
 
         menu.addAction(
             "Average",
