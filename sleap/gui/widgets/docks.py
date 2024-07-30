@@ -557,7 +557,7 @@ class InstancesDock(DockWidget):
 
         hb = QHBoxLayout()
         self.add_button(
-            hb, "New Instance", lambda x: main_window.commands.newInstance()
+            hb, "New Instance", lambda x: main_window.commands.newInstance(offset=10)
         )
         self.add_button(
             hb, "Delete Instance", main_window.commands.deleteSelectedInstance
