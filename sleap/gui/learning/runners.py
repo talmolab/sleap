@@ -260,11 +260,19 @@ class InferenceTask:
             "tracking.max_tracking",
             "tracking.post_connect_single_breaks",
             "tracking.save_shifted_instances",
+            "tracking.oks_score_weighting",
         )
 
         for key in bool_items_as_ints:
             if key in self.inference_params:
                 self.inference_params[key] = int(self.inference_params[key])
+
+        remove_spaces_items = ("tracking.similarity",)
+
+        for key in remove_spaces_items:
+            if key in self.inference_params:
+                value = self.inference_params[key]
+                self.inference_params[key] = value.replace(" ", "_")
 
         for key, val in self.inference_params.items():
             if not key.startswith(("_", "outputs.", "model.", "data.")):
