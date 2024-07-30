@@ -5286,8 +5286,10 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
         args: Parsed CLI namespace.
 
     Returns:
-        `(provider_list, data_path_list, output_path_list)` with the data `Provider`, path to the data
-        that was specified in the args, and list out output paths if a csv file was inputed.
+        `(provider_list, data_path_list, output_path_list)` where `provider_list` contains the data providers,
+        `data_path_list` contains the paths to the specified data, and the `output_path_list` contains the list
+        of output paths if a CSV file with a column of output paths was provided; otherwise, `output_path_list`
+        defaults to None
     """
 
     # Figure out which input path to use.

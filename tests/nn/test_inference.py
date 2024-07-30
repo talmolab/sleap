@@ -10,7 +10,6 @@ import numpy as np
 import pytest
 import pandas as pd
 import tensorflow as tf
-import tensorflow_hub as hub
 from numpy.testing import assert_array_equal, assert_allclose
 from sleap.io.video import available_video_exts
 
@@ -1826,12 +1825,12 @@ def test_sleap_track_invalid_csv(
     tmpdir,
 ):
 
-    # Create a CSV file with missing 'data_path' column
-    csv_missing_column_path = tmpdir / "missing_column.csv"
-    df_missing_column = pd.DataFrame(
-        {"some_other_column": ["video1.mp4", "video2.mp4", "video3.mp4"]}
+    # Create a CSV file with nonexistant data files
+    csv_nonexistant_files_path = tmpdir / "nonexistant_files.csv"
+    df_nonexistant_files = pd.DataFrame(
+        {"data_path": ["video1.mp4", "video2.mp4", "video3.mp4"]}
     )
-    df_missing_column.to_csv(csv_missing_column_path, index=False)
+    df_nonexistant_files.to_csv(csv_nonexistant_files_path, index=False)
 
     # Create an empty CSV file
     csv_empty_path = tmpdir / "empty.csv"
@@ -1839,7 +1838,7 @@ def test_sleap_track_invalid_csv(
 
     # Create sleap-track command for missing 'data_path' column
     args_missing_column = (
-        f"{csv_missing_column_path} --model {min_centroid_model_path} "
+        f"{csv_nonexistant_files_path} --model {min_centroid_model_path} "
         f"--tracking.tracker simple "
         f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
     ).split()
