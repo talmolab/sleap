@@ -28,7 +28,7 @@ dependencies:
     - conda-forge::psutil
     - conda-forge::pykalman
     # - conda-forge::pyside2 >=5.12  # To ensure application works correctly with QtPy.
-    - conda-forge::pyside6 >=6.2.0,<6.4.1 # Python 3.10 is compatible with PySide6 >=6.2.0
+    - conda-forge::pyside6 >=6.5.0 # >=6.2 is compatible with Python 3.10, conda package exists for >=6.4, 6.4 conda package uses problematic QtCharts https://github.com/roomrys/envexp/pull/3
     # - conda-forge::python  ~=3.9
     - conda-forge::python >=3.10.0,<3.11.0 # Trying python 3.10
     - conda-forge::python-rapidjson
