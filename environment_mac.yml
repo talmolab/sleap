@@ -38,7 +38,7 @@ dependencies:
     - conda-forge::rich
     # - conda-forge::scipy >=1.4.1,<=1.9.0
     - conda-forge::scipy >=1.7.0 # Python 3.10 is compatible with scipy >=1.7.0
-    - conda-forge::scikit-image <=0.20.0
+    - conda-forge::scikit-image <0.20.0
     # - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-learn >=1.0.0 # Python 3.10 is compatible with scikit-learn >=1.0.0
     # - conda-forge::scikit-video
