@@ -9,7 +9,7 @@ import jsonpickle
 import logging
 from typing import Optional, Dict
 from qtpy import QtCore, QtWidgets, QtGui
-from qtpy.QtCharts import QtCharts
+# from qtpy.QtCharts import QtCharts
 import attr
 
 
