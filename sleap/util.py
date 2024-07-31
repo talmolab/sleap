@@ -1,31 +1,50 @@
-"""A miscellaneous set of utility functions. 
+"""A miscellaneous set of utility functions.
 
 Try not to put things in here unless they really have no other place.
 """
 
+from __future__ import annotations
+
+import base64
 import json
 import os
 import re
 import shutil
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, Hashable, Iterable, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, Hashable, Iterable, List, Optional
 from urllib.parse import unquote, urlparse
 from urllib.request import url2pathname
-
-import attr
-import h5py as h5
-import numpy as np
-import psutil
-import rapidjson
-import yaml
 
 try:
     from importlib.resources import files  # New in 3.9+
 except ImportError:
     from importlib_resources import files  # TODO(LM): Upgrade to importlib.resources.
 
+import attr
+import h5py as h5
+import numpy as np
+import psutil
+import rapidjson
+import rich.progress
+import yaml
+from PIL import Image
+
 import sleap.version as sleap_version
+
+if TYPE_CHECKING:
+    from rich.progress import Task
+
+
+class RateColumn(rich.progress.ProgressColumn):
+    """Renders the progress rate."""
+
+    def render(self, task: Task) -> rich.progress.Text:
+        """Show progress rate."""
+        speed = task.speed
+        if speed is None:
+            return rich.progress.Text("?", style="progress.data.speed")
+        return rich.progress.Text(f"{speed:.1f} FPS", style="progress.data.speed")
 
 
 def json_loads(json_str: str) -> Dict:
