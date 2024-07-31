@@ -32,7 +32,7 @@ from typing import Callable, List, Optional, Union
 import numpy as np
 import qimage2ndarray
 from qtpy import QtCore, QtWidgets
-from qtpy.QtCore import QEvent, QGesture, QLineF, QMarginsF, QPointF, QRectF, Qt
+from qtpy.QtCore import QEvent, QLineF, QMarginsF, QPointF, QRectF, Qt
 from qtpy.QtGui import (
     QBrush,
     QColor,
@@ -45,13 +45,13 @@ from qtpy.QtGui import (
     QPainter,
     QPainterPath,
     QPen,
-    QPinchGesture,
     QPixmap,
     QPolygonF,
     QTransform,
 )
 from qtpy.QtWidgets import (
     QApplication,
+    QGestureEvent,
     QGraphicsEllipseItem,
     QGraphicsItem,
     QGraphicsObject,
@@ -60,6 +60,7 @@ from qtpy.QtWidgets import (
     QGraphicsScene,
     QGraphicsTextItem,
     QGraphicsView,
+    QPinchGesture,
     QShortcut,
     QVBoxLayout,
     QWidget,
@@ -241,8 +242,6 @@ class QtVideoPlayer(QWidget):
 
         self._register_shortcuts()
 
-        self.grabGesture(Qt.PinchGesture)
-
         if self.context:
             self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
             self.customContextMenuRequested.connect(self.show_contextual_menu)
@@ -301,24 +300,6 @@ class QtVideoPlayer(QWidget):
     def dropEvent(self, event):
         if self.parentWidget():
             self.parentWidget().dropEvent(event)
-    
-    def gestureEvent(self, event):
-        if event.type() == QEvent.Gesture and event.gesture(Qt.PinchGesture):
-            self.handlePinchGesture(event.gesture(Qt.PinchGesture))
-            return True
-        return super().gestureEvent(event)
-
-    def handlePinchGesture(self, gesture: QPinchGesture):
-        """
-        Handle pinch gesture for zooming in/out.
-        """
-        if gesture.state() == Qt.GestureUpdated:
-            self._gesture_last_scale = 1.0
-        elif gesture.state() == Qt.GestureUpdated:
-            newScale = gesture.scaleFactor() / self._gesture_last_scale
-            self.zoom(at=gesture.centerPoint().toPoint(), factor=newScale)
-        elif gesture.state() == Qt.GestureFinished:
-            self._gesture_last_scale = 1.0
 
     def _load_and_show_requested_image(self, frame_idx):
         # Get image data
@@ -388,7 +369,10 @@ class QtVideoPlayer(QWidget):
 
         menu.addAction("Add Instance:").setEnabled(False)
 
-        menu.addAction("Default", lambda: self.context.newInstance(init_method="best"))
+        menu.addAction(
+            "Default",
+            lambda: self.context.newInstance(init_method="best", location=scene_pos),
+        )
 
         menu.addAction(
             "Average",
@@ -988,7 +972,7 @@ class GraphicsView(QGraphicsView):
         instances = self.all_instances
         if len(instances) == 0:
             return None
-        for instance in instances:
+        for idx, instance in enumerate(instances):
             if instance.selected:
                 return instance.instance
 
@@ -1038,6 +1022,20 @@ class GraphicsView(QGraphicsView):
         elif event.button() == Qt.RightButton:
             self.rightMouseButtonPressed.emit(scenePos.x(), scenePos.y())
         QGraphicsView.mousePressEvent(self, event)
+    
+    def event(self, event):
+        if event.type() == QEvent.Gesture and isinstance(event, QGestureEvent):
+            for gesture in event.gestures():
+                return self._handle_pinch_gesture(gesture, event)
+        return super().event(event)
+    
+    def _handle_pinch_gesture(self, gesture, event: QGestureEvent):
+        if isinstance(gesture, QPinchGesture):
+            if gesture.state() == Qt.GestureState.GestureStarted:
+                self._gesture_last_scale = 1.0
+            elif gesture.state() == Qt.GestureState.GestureUpdated:
+                newScale = gesture.scaleFactor() / self._gesture_last_scale
+                self.zoom(at=gesture.centerPoint().toPoint(), factor=newScale)
 
     def mouseReleaseEvent(self, event):
         """Stop mouse pan or zoom mode (apply zoom if valid)."""
@@ -1170,7 +1168,7 @@ class GraphicsView(QGraphicsView):
     def wheelEvent(self, event):
         """Custom event handler. Zoom in/out based on scroll wheel change."""
         # zoom on wheel when no mouse buttons are pressed
-        if event.buttons() == Qt.NoButton or (event.type() == QEvent.Gesture and event.gesture(Qt.PinchGesture)):
+        if event.buttons() == Qt.NoButton:
             angle = event.angleDelta().y()
             factor = 1.1 if angle > 0 else 0.9
 
@@ -1191,11 +1189,6 @@ class GraphicsView(QGraphicsView):
                 child.wheelEvent(event)
             except TypeError:
                 pass
-    
-    def gestureEvent(self, event):
-        if event.type() == QEvent.Gesture and event.gesture(Qt.PinchGesture):
-            self.handlePinchGesture(event.gesture(Qt.PinchGesture))
-        return super().gestureEvent(event)
 
     def keyPressEvent(self, event):
         """Custom event hander, disables default QGraphicsView behavior."""
