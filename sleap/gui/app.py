@@ -56,6 +56,8 @@ from typing import Callable, List, Optional, Tuple
 from qtpy import QtCore, QtGui
 from qtpy.QtCore import QEvent, Qt
 from qtpy.QtWidgets import QApplication, QMainWindow, QMessageBox
+from PySide2.QtWidgets import QAction
+from PySide2.QtGui import QColor, QPalette, QBrush
 
 import sleap
 from sleap.gui.color import ColorManager
@@ -1479,6 +1481,7 @@ class MainWindow(QMainWindow):
         # Get the frame group for the current frame
         frame_idx = self.state["frame_idx"]
         frame_group = session.frame_groups.get(frame_idx, None)
+        instance_group_actions = {}
         if frame_group is not None:
             for inst_group_ind, instance_group in enumerate(
                 frame_group.instance_groups
@@ -1488,14 +1491,27 @@ class MainWindow(QMainWindow):
                 if inst_group_ind < 9:
                     key_command = Qt.SHIFT + Qt.Key_0 + inst_group_ind + 1
 
-                # TODO: Update the Set Instance Group options so that the color matches the Color of the Instance Group
+                # TODO: Fix Issue with Updating the Set Instance Group options so that the color matches the Color of the Instance Group
+                # Get the color for the instance group
+                instance_group_color = self.color_manager.get_instance_group_color(
+                    instance_group, frame_group
+                )
 
-                # Update the Set Instance Group menu
-                self.inst_groups_menu.addAction(
-                    instance_group.name,
-                    lambda x=instance_group: self.commands.setInstanceGroup(x),
+                # Create a QAction and set its text format for the color
+                action = self.inst_groups_menu.addAction(
+                    instance_group.name, 
+                    lambda x=instance_group: self.commands.setInstanceGroup(x), 
                     key_command,
                 )
+
+                action.triggered.connect(lambda x=instance_group: self.commands.setInstanceGroup(x))
+
+                if instance_group_color:  # Add color only if available
+                    color_name = ",".join(map(str, instance_group_color))  
+                    action.setText(f"<font color='{color_name}'>{instance_group.name}</font>")
+
+                # Store the action for potential future updates
+                instance_group_actions[instance_group] = action
 
                 # Update the Delete Instance Group menu
                 self.inst_groups_delete_menu.addAction(
@@ -1504,6 +1520,15 @@ class MainWindow(QMainWindow):
                         instance_group=x
                     ),
                 )
+
+        # Update colors for actions whose instance group might have changed color
+        for instance_group, action in instance_group_actions.items():
+            instance_group_color = self.color_manager.get_instance_group_color(
+                instance_group, frame_group
+            )   
+            if instance_group_color:
+                color_name = ",".join(map(str, instance_group_color))
+                action.setText(f"<font color='{color_name}'>{instance_group.name}</font>")
 
         self.inst_groups_menu.addAction(
             "New Instance Group",
