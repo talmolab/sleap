@@ -139,9 +139,9 @@ usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames] [-
 
 positional arguments:
   data_path             Path to data to predict on. This can be one of the following: A .slp file containing labeled data; A folder containing multiple
-                        video files in supported formats; An individual video file in a supported format; A CSV file with a column of file paths to
-                        video files in supported formats. If more than one columns contains file paths, the first will be used for data path and the
-                        next column will be tested as the output path; A text file with a path to a video file on each line
+                        video files in supported formats; An individual video file in a supported format; A CSV file with a column of video file paths. 
+                        If more than one column is provided in the CSV file, the first will be used for the input data paths and the next column will be
+                        used as the output paths; A text file with a path to a video file on each line
 
 optional arguments:
   -h, --help            show this help message and exit
