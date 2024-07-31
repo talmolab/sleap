@@ -138,7 +138,10 @@ usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames] [-
                    [data_path]
 
 positional arguments:
-  data_path             Path to data to predict on. This can be a labels (.slp) file or any supported video format.
+  data_path             Path to data to predict on. This can be one of the following: A .slp file containing labeled data; A folder containing multiple
+                        video files in supported formats; An individual video file in a supported format; A CSV file with a column of video file paths. 
+                        If more than one column is provided in the CSV file, the first will be used for the input data paths and the next column will be
+                        used as the output paths; A text file with a path to a video file on each line
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -153,7 +156,7 @@ optional arguments:
                         Only run inference on unlabeled suggested frames when running on labels dataset. This is useful for generating predictions for
                         initialization during labeling.
   -o OUTPUT, --output OUTPUT
-                        The output filename to use for the predicted data. If not provided, defaults to '[data_path].predictions.slp'.
+                        The output filename or directory path to use for the predicted data. If not provided, defaults to '[data_path].predictions.slp'.
   --no-empty-frames     Clear any empty frames that did not have any detected instances before saving to output.
   --verbosity {none,rich,json}
                         Verbosity of inference progress reporting. 'none' does not output anything during inference, 'rich' displays an updating
