@@ -5385,7 +5385,9 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
                     )
                 )
             else:
-                provider_list.append(LabelsReader(labels))
+                provider_list.append(
+                    LabelsReader(labels, example_indices=frame_list(args.frames))
+                )
 
             data_path_list.append(file_path)
 
@@ -5649,14 +5651,16 @@ def main(args: Optional[list] = None):
         data_path = data_path_list[0]
 
         # Load predictions
-        data_path = args.data_path
         print("Loading predictions...")
-        labels_pr = sleap.load_file(data_path)
+        labels_pr = sleap.load_file(data_path.as_posix())
         frames = sorted(labels_pr.labeled_frames, key=lambda lf: lf.frame_idx)
+        if provider.example_indices is not None:
+            # Convert indices to a set to search in O(1), otherwise it is much slower
+            index_set = set(provider.example_indices)
+            frames = list(filter(lambda lf: lf.frame_idx in index_set, frames))
 
         print("Starting tracker...")
-        frames = run_tracker(frames=frames, tracker=tracker)
-        tracker.final_pass(frames)
+        frames = tracker.run_tracker(frames=frames)
 
         labels_pr = Labels(labeled_frames=frames)
 
@@ -5677,7 +5681,7 @@ def main(args: Optional[list] = None):
         labels_pr.provenance["sleap_version"] = sleap.__version__
         labels_pr.provenance["platform"] = platform.platform()
         labels_pr.provenance["command"] = " ".join(sys.argv)
-        labels_pr.provenance["data_path"] = data_path
+        labels_pr.provenance["data_path"] = os.fspath(data_path)
         labels_pr.provenance["output_path"] = output_path
         labels_pr.provenance["total_elapsed"] = total_elapsed
         labels_pr.provenance["start_timestamp"] = start_timestamp
