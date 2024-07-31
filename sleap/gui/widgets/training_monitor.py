@@ -7,7 +7,7 @@ import zmq
 import jsonpickle
 import logging
 from typing import Optional
-from qtpy import QtCore, QtWidgets, QtGui, QtCharts
+from qtpy import QtCore, QtWidgets, QtGui
 import attr
 
 logger = logging.getLogger(__name__)
