@@ -1,11 +1,16 @@
 """Tracking tools for linking grouped instances over time."""
 
-from collections import deque, defaultdict
 import abc
-import attr
-import numpy as np
-import cv2
+import json
+import sys
+from collections import deque
+from time import time
 from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple
+
+import attr
+import cv2
+import numpy as np
+import rich.progress
 
 from sleap import Track, LabeledFrame, Skeleton
 
@@ -24,8 +29,13 @@ from sleap.nn.tracker.components import (
     Match,
 )
 from sleap.nn.tracker.kalman import BareKalmanTracker
-
 from sleap.nn.data.normalization import ensure_int
+from sleap.util import RateColumn
+
+if sys.version_info >= (3, 8):
+    from functools import cached_property
+else:  # cached_property is define only for python >=3.8
+    cached_property = property
 
 
 @attr.s(eq=False, slots=True, auto_attribs=True)
@@ -64,7 +74,6 @@ class ShiftedInstance:
         shift_score: float = 0.0,
         with_skeleton: bool = False,
     ):
-
         points_array = new_points_array
         if points_array is None:
             points_array = ref_instance.points_array
@@ -508,9 +517,140 @@ match_policies = dict(
 class BaseTracker(abc.ABC):
     """Abstract base class for tracker."""
 
+    verbosity: str
+    report_rate: float
+
     @property
     def is_valid(self):
         return False
+
+    @cached_property
+    def report_period(self) -> float:
+        """Time between progress reports in seconds."""
+        return 1.0 / self.report_rate
+
+    def run_step(self, lf: LabeledFrame) -> LabeledFrame:
+        # Clear the tracks
+        for inst in lf.instances:
+            inst.track = None
+
+        track_args = dict(untracked_instances=lf.instances, t=lf.frame_idx)
+        if self.uses_image:
+            track_args["img"] = lf.video[lf.frame_idx]
+        else:
+            track_args["img"] = None
+
+        return LabeledFrame(
+            frame_idx=lf.frame_idx,
+            video=lf.video,
+            instances=self.track(**track_args),
+        )
+
+    def run_tracker(
+        self,
+        frames: List[LabeledFrame],
+        *,
+        verbosity: Optional[str] = None,
+        final_pass: bool = True,
+    ) -> List[LabeledFrame]:
+        """Run the tracker on a set of labeled frames.
+
+        Args:
+            frames: A list of labeled frames with instances.
+
+        Returns:
+            The input frames with the new tracks assigned. If the frames already had tracks,
+            they will be cleared if the tracker has been re-initialized.
+        """
+        # Return original frames if we aren't retracking
+        if not self.is_valid:
+            return frames
+
+        verbosity = verbosity or self.verbosity
+        new_lfs = []
+
+        # Run tracking on every frame
+        if verbosity == "rich":
+            with rich.progress.Progress(
+                "{task.description}",
+                rich.progress.BarColumn(),
+                "[progress.percentage]{task.percentage:>3.0f}%",
+                "ETA:",
+                rich.progress.TimeRemainingColumn(),
+                RateColumn(),
+                auto_refresh=False,
+                refresh_per_second=self.report_rate,
+                speed_estimate_period=5,
+            ) as progress:
+                task = progress.add_task("Tracking...", total=len(frames))
+                last_report = time()
+                for lf in frames:
+                    new_lf = self.run_step(lf)
+                    new_lfs.append(new_lf)
+
+                    progress.update(task, advance=1)
+
+                    # Handle refreshing manually to support notebooks.
+                    elapsed_since_last_report = time() - last_report
+                    if elapsed_since_last_report > self.report_period:
+                        progress.refresh()
+
+        elif verbosity == "json":
+            n_total = len(frames)
+            n_processed = 0
+            n_batch = 0
+            elapsed_all = 0
+            n_recent = deque(maxlen=30)
+            elapsed_recent = deque(maxlen=30)
+            last_report = time()
+            t0_all = time()
+            t0_batch = time()
+            for lf in frames:
+                new_lf = self.run_step(lf)
+                new_lfs.append(new_lf)
+
+                # Track timing and progress.
+                elapsed_all = time() - t0_all
+                n_processed += 1
+                n_batch += 1
+
+                # Report.
+                elapsed_since_last_report = time() - last_report
+                if elapsed_since_last_report > self.report_period:
+                    elapsed_batch = time() - t0_batch
+                    t0_batch = time()
+
+                    # Compute recent rate.
+                    n_recent.append(n_batch)
+                    n_batch = 0
+                    elapsed_recent.append(elapsed_batch)
+                    rate = sum(n_recent) / sum(elapsed_recent)
+                    eta = (n_total - n_processed) / rate
+
+                    print(
+                        json.dumps(
+                            {
+                                "n_processed": n_processed,
+                                "n_total": n_total,
+                                "elapsed": elapsed_all,
+                                "rate": rate,
+                                "eta": eta,
+                            }
+                        ),
+                        flush=True,
+                    )
+                    last_report = time()
+
+        else:
+            for lf in frames:
+                new_lf = self.run_step(lf)
+                new_lfs.append(new_lf)
+
+        # Run final_pass
+        if final_pass:
+            self.final_pass(new_lfs)
+
+        return new_lfs
 
     @abc.abstractmethod
     def track(
@@ -561,6 +701,12 @@ class Tracker(BaseTracker):
             use the max similarity (non-robust). For selecting a robust score,
             0.95 is a good value.
         max_tracking: Max tracking is incorporated when this is set to true.
+        verbosity: Mode of inference progress reporting. If `"rich"` (the
+            default), an updating progress bar is displayed in the console or notebook.
+            If `"json"`, a JSON-serialized message is printed out which can be captured
+            for programmatic progress monitoring. If `"none"`, nothing is displayed
+            during tracking -- this is recommended when running on clusters or headless
+            machines where the output is captured to a log file.
     """
 
     max_tracks: int = None
@@ -592,6 +738,12 @@ class Tracker(BaseTracker):
     )  # keyed by t
 
     last_matches: Optional[FrameMatches] = None
+
+    verbosity: str = attr.ib(
+        validator=attr.validators.in_(["none", "rich", "json"]),
+        default="none",
+    )
+    report_rate: float = 2.0
 
     @property
     def is_valid(self):
@@ -660,7 +812,6 @@ class Tracker(BaseTracker):
         if t is None:
             if self.has_max_tracking:
                 if len(self.track_matching_queue_dict) > 0:
-
                     # Default to last timestep + 1 if available.
                     # Here we find the track that has the most instances.
                     track_with_max_instances = max(
@@ -676,7 +827,6 @@ class Tracker(BaseTracker):
                     t = 0
             else:
                 if len(self.track_matching_queue) > 0:
-
                     # Default to last timestep + 1 if available.
                     t = self.track_matching_queue[-1].t + 1
 
@@ -691,7 +841,6 @@ class Tracker(BaseTracker):
 
         # Process untracked instances.
         if untracked_instances:
-
             if self.pre_cull_function:
                 self.pre_cull_function(untracked_instances)
 
@@ -781,7 +930,6 @@ class Tracker(BaseTracker):
     ) -> List[InstanceType]:
         results = []
         for inst in unmatched_instances:
-
             # Skip if this instance is too small to spawn a new track with.
             if inst.n_visible_points < self.min_new_track_points:
                 continue
@@ -858,6 +1006,8 @@ class Tracker(BaseTracker):
         oks_errors: Optional[list] = None,
         oks_score_weighting: bool = False,
         oks_normalization: str = "all",
+        progress_reporting: str = "rich",
+        report_rate: float = 2.0,
         **kwargs,
     ) -> BaseTracker:
         # Parse max_tracking arguments, only True if max_tracks is not None and > 0
@@ -932,6 +1082,8 @@ class Tracker(BaseTracker):
             max_tracks=max_tracks,
             target_instance_count=target_instance_count,
             post_connect_single_breaks=post_connect_single_breaks,
+            verbosity=progress_reporting,
+            report_rate=report_rate,
         )
 
         if target_instance_count and kf_init_frame_count:
@@ -951,7 +1103,6 @@ class Tracker(BaseTracker):
 
     @classmethod
     def get_by_name_factory_options(cls):
-
         options = []
 
         option = dict(name="tracker", default="None")
@@ -1220,7 +1371,6 @@ class KalmanInitSet:
         # "usuable" instances—i.e., instances with the nodes that we'll track
         # using Kalman filters.
         elif frame_match.has_only_first_choice_matches:
-
             good_instances = [
                 inst for inst in instances if self.is_usable_instance(inst)
             ]
@@ -1310,6 +1460,12 @@ class KalmanTracker(BaseTracker):
     pre_tracked: bool = False
     last_t: int = 0
     last_init_t: int = 0
+
+    verbosity: str = attr.ib(
+        validator=attr.validators.in_(["none", "rich", "json"]),
+        default="none",
+    )
+    report_rate: float = 2.0
 
     @property
     def is_valid(self):
@@ -1434,7 +1590,6 @@ class KalmanTracker(BaseTracker):
         # Check whether we've been getting good results from the Kalman filters.
         # First, has it been a while since the filters were initialized?
         if self.init_done and (t - self.last_init_t) > self.re_init_cooldown:
-
             # If it's been a while, then see if it's also been a while since
             # the filters successfully matched tracks to the instances.
             if self.kalman_tracker.last_frame_with_tracks < t - self.re_init_after:
@@ -1491,46 +1646,6 @@ class TrackCleaner:
         connect_single_track_breaks(frames, self.instance_count)
 
 
-def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker) -> List[LabeledFrame]:
-    """Run a tracker on a set of labeled frames.
-
-    Args:
-        frames: A list of labeled frames with instances.
-        tracker: An initialized Tracker.
-
-    Returns:
-        The input frames with the new tracks assigned. If the frames already had tracks,
-        they will be cleared if the tracker has been re-initialized.
-    """
-    # Return original frames if we aren't retracking
-    if not tracker.is_valid:
-        return frames
-
-    new_lfs = []
-
-    # Run tracking on every frame
-    for lf in frames:
-
-        # Clear the tracks
-        for inst in lf.instances:
-            inst.track = None
-
-        track_args = dict(untracked_instances=lf.instances)
-        if tracker.uses_image:
-            track_args["img"] = lf.video[lf.frame_idx]
-        else:
-            track_args["img"] = None
-
-        new_lf = LabeledFrame(
-            frame_idx=lf.frame_idx,
-            video=lf.video,
-            instances=tracker.track(**track_args),
-        )
-        new_lfs.append(new_lf)
-
-    return new_lfs
-
-
 def retrack():
     import argparse
     import operator
@@ -1568,8 +1683,7 @@ def retrack():
     print(f"Done loading predictions in {time.time() - t0} seconds.")
 
     print("Starting tracker...")
-    frames = run_tracker(frames=frames, tracker=tracker)
-    tracker.final_pass(frames)
+    frames = tracker.run_tracker(frames=frames)
 
     new_labels = Labels(labeled_frames=frames)
 

@@ -19,7 +19,7 @@ def test_simple_tracker(tmpdir, centered_pair_predictions_slp_path):
     inference_cli(cli.split(" "))
 
     labels = sleap.load_file(f"{tmpdir}/simpletracks.slp")
-    assert len(labels.tracks) == 27
+    assert len(labels.tracks) == 8
 
 
 def test_simplemax_tracker(tmpdir, centered_pair_predictions_slp_path):
@@ -37,18 +37,19 @@ def test_simplemax_tracker(tmpdir, centered_pair_predictions_slp_path):
 
 
 # TODO: Refactor the below things into a real test suite.
+# running an equivalent to `make_ground_truth` is done as a test in tests/nn/test_tracker_components.py
 
 
 def make_ground_truth(frames, tracker, gt_filename):
     t0 = time.time()
-    new_labels = run_tracker(frames, tracker)
+    new_labels = tracker.run_tracker(frames, verbosity="none")
     print(f"{gt_filename}\t{len(tracker.spawned_tracks)}\t{time.time()-t0}")
     Labels.save_file(new_labels, gt_filename)
 
 
 def compare_ground_truth(frames, tracker, gt_filename):
     t0 = time.time()
-    new_labels = run_tracker(frames, tracker)
+    new_labels = tracker.run_tracker(frames, verbosity="none")
     print(f"{gt_filename}\t{time.time() - t0}")
 
     does_match = check_tracks(new_labels, gt_filename)
@@ -76,43 +77,6 @@ def check_tracks(labels, gt_filename, limit=None):
                 print(lf.frame_idx, inst.track.name, gt_inst.track.name)
                 return False
     return True
-
-
-def run_tracker(frames, tracker):
-    sig = inspect.signature(tracker.track)
-    takes_img = "img" in sig.parameters
-
-    # t0 = time.time()
-
-    new_lfs = []
-
-    # Run tracking on every frame
-    for lf in frames:
-
-        # Clear the tracks
-        for inst in lf.instances:
-            inst.track = None
-
-        track_args = dict(untracked_instances=lf.instances)
-        if takes_img:
-            track_args["img"] = lf.video[lf.frame_idx]
-        else:
-            track_args["img"] = None
-
-        new_lf = LabeledFrame(
-            frame_idx=lf.frame_idx,
-            video=lf.video,
-            instances=tracker.track(**track_args),
-        )
-        new_lfs.append(new_lf)
-
-        # if lf.frame_idx % 100 == 0: print(lf.frame_idx, time.time()-t0)
-
-    # print(time.time() - t0)
-
-    new_labels = Labels()
-    new_labels.extend(new_lfs)
-    return new_labels
 
 
 def main(f, dir):
@@ -164,7 +128,10 @@ def main(f, dir):
         return tracker
 
     def make_filename(tracker_name, matcher_name, sim_name, scale=0):
-        return f"{dir}{tracker_name}_{int(scale * 100)}_{matcher_name}_{sim_name}.h5"
+        return os.path.join(
+            dir,
+            f"{tracker_name}_{int(scale * 100)}_{matcher_name}_{sim_name}.h5",
+        )
 
     def make_tracker_and_filename(*args, **kwargs):
         tracker = make_tracker(*args, **kwargs)
@@ -178,7 +145,6 @@ def main(f, dir):
     for tracker_name in trackers.keys():
         for matcher_name in matchers.keys():
             for sim_name in similarities.keys():
-
                 if tracker_name == "flow":
                     # If this tracker supports scale, try multiple scales
                     for scale in scales:
