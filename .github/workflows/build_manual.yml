@@ -7,7 +7,9 @@ on:
   push:
     paths:
       - '.conda/meta.yaml'
+      - '.conda/condarc.yaml'
       - '.conda_mac/meta.yaml'
+      - '.conda_mac/condarc.yaml'
       - '.github/workflows/build_manual.yml'
     branches:
       # - develop
