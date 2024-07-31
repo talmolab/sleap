@@ -10,7 +10,7 @@ from sleap.gui.widgets.video import (
 )
 
 from qtpy import QtCore, QtWidgets
-from qtpy.QtGui import QColor
+from qtpy.QtGui import QColor, QWheelEvent
 
 
 def test_gui_video(qtbot):
@@ -144,3 +144,38 @@ def test_VisibleBoundingBox(qtbot, centered_pair_labels):
     # Check if bounding box scaled appropriately
     assert inst.box.rect().width() - initial_width == 2 * dx
     assert inst.box.rect().height() - initial_height == 2 * dy
+
+
+def test_wheelEvent(qtbot):
+    graphics_view = GraphicsView()
+
+    # Create a QWheelEvent
+    position = QtCore.QPointF(100, 100)  # The position of the wheel event
+    global_position = QtCore.QPointF(100, 100)  # The global position of the wheel event
+    pixel_delta = QtCore.QPoint(0, 120)  # The distance in pixels the wheel is rotated
+    angle_delta = QtCore.QPoint(0, 120)  # The distance in degrees the wheel is rotated
+    buttons = QtCore.Qt.NoButton  # No mouse button is pressed
+    modifiers = QtCore.Qt.NoModifier  # No keyboard modifier is pressed
+    phase = QtCore.Qt.ScrollUpdate  # The phase of the scroll event
+    inverted = False  # The scroll direction is not inverted
+    source = (
+        QtCore.Qt.MouseEventNotSynthesized
+    )  # The event is not synthesized from a touch or tablet event
+
+    event = QWheelEvent(
+        position,
+        global_position,
+        pixel_delta,
+        angle_delta,
+        buttons,
+        modifiers,
+        phase,
+        inverted,
+        source,
+    )
+
+    # Call the wheelEvent method
+    try:
+        graphics_view.wheelEvent(event)
+    except Exception as e:
+        assert False, f"An exception occurred: {e}"
