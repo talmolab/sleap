@@ -5,6 +5,7 @@
 name: sleap_ci
 
 channels:
+    - sleap-deps/label/dev
     - conda-forge
     - sleap-deps
     - sleap

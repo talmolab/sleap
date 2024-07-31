@@ -3,6 +3,7 @@
 name: sleap
 
 channels:
+    - sleap-deps/label/dev
     - conda-forge
     - nvidia
     - sleap-deps
