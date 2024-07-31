@@ -1492,12 +1492,11 @@ class MainWindow(QMainWindow):
                     key_command = Qt.SHIFT + Qt.Key_0 + inst_group_ind + 1
 
                 # TODO: Fix Issue with Updating the Set Instance Group options so that the color matches the Color of the Instance Group
-                # Get the color for the instance group
+
                 instance_group_color = self.color_manager.get_instance_group_color(
                     instance_group, frame_group
                 )
 
-                # Create a QAction and set its text format for the color
                 action = self.inst_groups_menu.addAction(
                     instance_group.name, 
                     lambda x=instance_group: self.commands.setInstanceGroup(x), 
@@ -1506,11 +1505,10 @@ class MainWindow(QMainWindow):
 
                 action.triggered.connect(lambda x=instance_group: self.commands.setInstanceGroup(x))
 
-                if instance_group_color:  # Add color only if available
+                if instance_group_color:
                     color_name = ",".join(map(str, instance_group_color))  
                     action.setText(f"<font color='{color_name}'>{instance_group.name}</font>")
 
-                # Store the action for potential future updates
                 instance_group_actions[instance_group] = action
 
                 # Update the Delete Instance Group menu
@@ -1521,7 +1519,6 @@ class MainWindow(QMainWindow):
                     ),
                 )
 
-        # Update colors for actions whose instance group might have changed color
         for instance_group, action in instance_group_actions.items():
             instance_group_color = self.color_manager.get_instance_group_color(
                 instance_group, frame_group
