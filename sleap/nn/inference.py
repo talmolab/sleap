@@ -418,6 +418,9 @@ class Predictor(ABC):
 
             return ex
 
+        # Compile loop examples before starting time to improve ETA
+        examples = self.pipeline.make_dataset()
+
         # Loop over data batches with optional progress reporting.
         if self.verbosity == "rich":
             with rich.progress.Progress(
@@ -433,7 +436,7 @@ class Predictor(ABC):
             ) as progress:
                 task = progress.add_task("Predicting...", total=len(data_provider))
                 last_report = time()
-                for ex in self.pipeline.make_dataset():
+                for ex in examples:
                     ex = process_batch(ex)
                     progress.update(task, advance=len(ex["frame_ind"]))
 
@@ -453,7 +456,7 @@ class Predictor(ABC):
             last_report = time()
             t0_all = time()
             t0_batch = time()
-            for ex in self.pipeline.make_dataset():
+            for ex in examples:
                 # Process batch of examples.
                 ex = process_batch(ex)
 
@@ -490,7 +493,7 @@ class Predictor(ABC):
                 # Return results.
                 yield ex
         else:
-            for ex in self.pipeline.make_dataset():
+            for ex in examples:
                 yield process_batch(ex)
 
     def predict(
