@@ -47,7 +47,7 @@ requirements:
     - conda-forge::psutil
     - conda-forge::pykalman
     # - conda-forge::pyside2 >=5.12 # To ensure application works correctly with QtPy.
-    - conda-forge::pyside6 >=6.2.0,<6.4.1 # >=6.2.0 is compatible with Python 3.10, <6.4.1 since newer versions are missing Qt6Charts.dll
+    - conda-forge::pyside6 >=6.5.0 # >=6.2 is compatible with Python 3.10, conda package exists for >=6.4, 6.4 conda package uses problematic QtCharts https://github.com/roomrys/envexp/pull/3
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
@@ -84,7 +84,7 @@ requirements:
     - conda-forge::psutil
     - conda-forge::pykalman
     # - conda-forge::pyside2 >=5.12
-    - conda-forge::pyside6 >=6.2.0,<6.4.1 # >=6.2.0 is compatible with Python 3.10, <6.4.1 since newer versions are missing Qt6Charts.dll
+    - conda-forge::pyside6 >=6.5.0 # >=6.2 is compatible with Python 3.10, conda package exists for >=6.4, 6.4 conda package uses problematic QtCharts https://github.com/roomrys/envexp/pull/3
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
