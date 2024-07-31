@@ -816,6 +816,8 @@ class GraphicsView(QGraphicsView):
         self.click_mode = ""
         self.in_zoom = False
 
+        self._down_pos = None
+
         self.zoomFactor = 1
         anchor_mode = QGraphicsView.AnchorUnderMouse
         self.setTransformationAnchor(anchor_mode)
@@ -1039,7 +1041,7 @@ class GraphicsView(QGraphicsView):
         scenePos = self.mapToScene(event.pos())
 
         # check if mouse moved during click
-        has_moved = event.pos() != self._down_pos
+        has_moved = self._down_pos is not None and event.pos() != self._down_pos
         if event.button() == Qt.LeftButton:
 
             if self.in_zoom:
