@@ -53,7 +53,6 @@ dependencies:
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose
-    - conda-forge::libopencv *=headless* # https://github.com/nebari-dev/nebari-docs/issues/443
 
     # Packages required by tensorflow to find/use GPUs
     - conda-forge::cudatoolkit ==11.3.1
