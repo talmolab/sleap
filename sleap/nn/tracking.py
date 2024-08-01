@@ -1291,11 +1291,21 @@ class Tracker(BaseTracker):
             else:
                 arg_name = arg["name"]
 
-            parser.add_argument(
-                f"--{arg_name}",
-                type=arg["type"],
-                help=help_string,
-            )
+            if arg["name"] == "tracker":
+                # If default is defined for "tracking.tracker", we cannot detect
+                # mal-formed command line.
+                parser.add_argument(
+                    f"--{arg_name}",
+                    type=arg["type"],
+                    help=help_string,
+                )
+            else:
+                parser.add_argument(
+                    f"--{arg_name}",
+                    type=arg["type"],
+                    help=help_string,
+                    default=arg["default"],
+                )
 
 
 @attr.s(auto_attribs=True)
