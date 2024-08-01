@@ -54,6 +54,7 @@ dependencies:
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose
+    - libopencv *headless*  # [linux]
 
     - pip:  
         - "--editable=.[conda_dev]"
