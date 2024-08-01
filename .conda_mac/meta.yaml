@@ -39,7 +39,7 @@ requirements:
     - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
-    - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
+    # - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos in sleap-deps now
     - conda-forge::networkx <3.3
     - conda-forge::opencv
     - conda-forge::pandas
@@ -74,7 +74,7 @@ requirements:
     - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
-    - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
+    # - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos in sleap-deps now
     - conda-forge::networkx <3.3
     # - anaconda::numpy >=1.19.5,<1.23.0
     - conda-forge::numpy >=1.16.5 # Scipy 1.7.0 requires numpy >=1.16.5
