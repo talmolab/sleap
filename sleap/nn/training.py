@@ -508,7 +508,7 @@ def setup_visualization(
     callbacks = []
 
     try:
-        matplotlib.use("Qt5Agg")
+        matplotlib.use("QtAgg")
     except ImportError:
         print(
             "Unable to use Qt backend for matplotlib. "

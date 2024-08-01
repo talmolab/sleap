@@ -6,11 +6,11 @@ Currently this is used for plotting metrics graphs in GUI.
 
 from qtpy import QtWidgets
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as Canvas
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as Canvas
 import matplotlib
 
 # Ensure using PyQt5 backend
-matplotlib.use("QT5Agg")
+matplotlib.use("QtAgg")
 
 
 class MplCanvas(Canvas):
