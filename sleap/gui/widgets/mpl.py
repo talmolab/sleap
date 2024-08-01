@@ -26,3 +26,23 @@ class MplCanvas(Canvas):
             self, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
         )
         Canvas.updateGeometry(self)
+        self.series = {}
+
+    def add_scatter(self, key, x, y, label, color, size):
+        if key in self.series:
+            self.series[key].remove()
+        scatter = self.axes.scatter(x, y, label=label, color=color, s=size)
+        self.series[key] = scatter
+        self.draw()
+
+    def add_line(self, key, x, y, label, color, width):
+        if key in self.series:
+            self.series[key].remove()
+        (line,) = self.axes.plot(x, y, label=label, color=color, linewidth=width)
+        self.series[key] = line
+        self.draw()
+
+    def clear(self):
+        self.axes.cla()
+        self.series.clear()
+        self.draw()
