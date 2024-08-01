@@ -32,15 +32,20 @@ requirements:
 
     # Only the packages above are required to build, but listing them all ensures no 
     # unnecessary pypi packages are installed via the build script (bld.bat, build.sh)
-    - conda-forge::attrs ==21.4.0
-    - conda-forge::cattrs ==1.1.1
-    - conda-forge::h5py ==3.7.0
+    # - conda-forge::attrs ==21.4.0
+    - conda-forge::attrs 
+    # - conda-forge::cattrs ==1.1.1
+    - conda-forge::cattrs
+    # - conda-forge::h5py ==3.7.0
+    - conda-forge::h5py
     - conda-forge::imageio
     - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
-    - conda-forge::jsonpickle ==1.2
+    # - conda-forge::jsonpickle ==1.2
+    - conda-forge::jsonpickle
     - conda-forge::networkx
-    - conda-forge::opencv <4.9.0
+    # - conda-forge::opencv <4.9.0
+    - conda-forge::opencv
     - conda-forge::pandas
     - conda-forge::pillow >=8.3.2
     - conda-forge::psutil
@@ -64,24 +69,30 @@ requirements:
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose
-    - conda-forge::importlib-metadata ==4.11.4
+    # - conda-forge::importlib-metadata ==4.11.4
+    - conda-forge::importlib-metadata
   run:
     # - conda-forge::python ==3.7.12  # Run into _MAX_WINDOWS_WORKERS not found if <
     - conda-forge::python >=3.10.0,<3.11.0
     # - numpy >=1.19.5,<1.23.0  # Linux likes anaconda, windows likes conda-forge
     - numpy >=1.16.5,<2.0 # SciPy 1.7 requires numpy >=1.16.5
-    - conda-forge::attrs ==21.4.0
-    - conda-forge::cattrs ==1.1.1
+    # - conda-forge::attrs ==21.4.0
+    - conda-forge::attrs
+    # - conda-forge::cattrs ==1.1.1
+    - conda-forge::cattrs
     - conda-forge::cudatoolkit ==11.3.1
     - conda-forge::cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
-    - conda-forge::h5py ==3.7.0
+    # - conda-forge::h5py ==3.7.0
+    - conda-forge::h5py
     - conda-forge::imageio
     - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
-    - conda-forge::jsonpickle ==1.2
+    # - conda-forge::jsonpickle ==1.2
+    - conda-forge::jsonpickle
     - conda-forge::networkx
-    - conda-forge::opencv <4.9.0
+    # - conda-forge::opencv <4.9.0
+    - conda-forge::opencv
     - conda-forge::pandas
     - conda-forge::pillow >=8.3.2
     - conda-forge::psutil
@@ -102,11 +113,13 @@ requirements:
     - conda-forge::seaborn
     # - sleap/label/dev::tensorflow ==2.7.0  # TODO: Switch to main label when updated
     - sleap-deps/label/dev::tensorflow ==2.9.2a0 # TODO: Switch to main label when updated
-    - conda-forge::tensorflow-hub <0.14.0  # Causes pynwb conflicts on linux GH-1446
+    # - conda-forge::tensorflow-hub <0.14.0  # Causes pynwb conflicts on linux GH-1446
+    - conda-forge::tensorflow-hub
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose
-    - conda-forge::importlib-metadata ==4.11.4
+    # - conda-forge::importlib-metadata ==4.11.4
+    - conda-forge::importlib-metadata
 
 # This no longer works so we have moved it to the build workflow
 # https://github.com/talmolab/sleap/pull/1744
