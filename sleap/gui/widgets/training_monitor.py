@@ -9,6 +9,10 @@ import logging
 from typing import Optional
 from qtpy import QtCore, QtWidgets, QtGui
 import attr
+import matplotlib.pyplot as plt
+
+plt.use("QtAgg")
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +82,9 @@ class LossViewer(QtWidgets.QMainWindow):
             what: String identifier indicating which job type the current run
                 corresponds to.
         """
-        self.chart = QtCharts.QChart()
+        self.fig, self.ax = plt.subplots()
+        self.canvas = FigureCanvas(self.fig)
+        self.setCentralWidget(self.canvas)
 
         self.series = dict()
 
