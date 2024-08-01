@@ -128,6 +128,4 @@ requirements:
 #     - sleap
 test:
   requires:
-    - pip
-    # https://github.com/conda-forge/opencv-feedstock/issues/401#issuecomment-2028099423
-    - libopencv *=headless*  # [linux]
+    - libopencv *=headless*  # [linux] https://github.com/conda-forge/opencv-feedstock/issues/401#issuecomment-2028099423
