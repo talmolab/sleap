@@ -54,7 +54,7 @@ dependencies:
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose
-    - libopencv *=headless* # https://github.com/nebari-dev/nebari-docs/issues/443
+    # - libopencv *=headless* # [linux] https://github.com/nebari-dev/nebari-docs/issues/443
 
     - pip:  
         - "--editable=.[conda_dev]"
