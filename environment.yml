@@ -13,9 +13,11 @@ channels:
 dependencies:
     # Packages SLEAP uses directly
     - conda-forge::attrs >=21.2.0  #,<=21.4.0
-    - conda-forge::cattrs ==1.1.1
+    # - conda-forge::cattrs ==1.1.1
+    - conda-forge::cattrs
     - conda-forge::jsmin
-    - conda-forge::jsonpickle ==1.2
+    # - conda-forge::jsonpickle ==1.2
+    - conda-forge::jsonpickle
     - conda-forge::networkx
     # - anaconda::numpy >=1.19.5,<1.23.0
     - conda-forge::numpy >=1.16.5 # Scipy 1.7.0 requires numpy >=1.16.5
