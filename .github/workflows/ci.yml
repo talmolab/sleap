@@ -62,6 +62,13 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Add Linux libraries
+        if: matrix.os == 'ubuntu-22.04'
+        # https://github.com/conda-forge/opencv-feedstock/issues/401#issue-2196393732
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-glx
+
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3.0.3
         with:
