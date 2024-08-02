@@ -138,7 +138,7 @@ class FlowCandidateMaker:
     img_scale: float = 1.0
     of_window_size: int = 21
     of_max_levels: int = 3
-    save_shifted_instances: bool = False
+    save_shifted_instances: bool = True
     track_window: int = 5
 
     shifted_instances: Dict[
@@ -1217,11 +1217,12 @@ class Tracker(BaseTracker):
         option["help"] = "For optical-flow: Number of pyramid scale levels to consider"
         options.append(option)
 
-        option = dict(name="save_shifted_instances", default=0)
+        option = dict(name="save_shifted_instances", default=1)
         option["type"] = int
         option["help"] = (
             "If non-zero and tracking.tracker is set to flow, save the shifted "
-            "instances between elapsed frames"
+            "instances between elapsed frames. It uses a bit more of memory but gives "
+            "better instance matches."
         )
         options.append(option)
 
@@ -1235,9 +1236,10 @@ class Tracker(BaseTracker):
 
         option = dict(name="kf_init_frame_count", default="0")
         option["type"] = int
-        option[
-            "help"
-        ] = "For Kalman filter: Number of frames to track with other tracker. 0 means no Kalman filters will be used."
+        option["help"] = (
+            "For Kalman filter: Number of frames to track with other tracker. "
+            "0 means no Kalman filters will be used."
+        )
         options.append(option)
 
         def float_list_func(s):
@@ -1258,9 +1260,10 @@ class Tracker(BaseTracker):
         option = dict(name="oks_score_weighting", default="0")
         option["type"] = int
         option["help"] = (
-            "For Object Keypoint similarity: if 0 (default), only the distance between the reference "
-            "and query keypoint is used to compute the similarity. If 1, each distance is weighted "
-            "by the prediction scores of the reference and query keypoint."
+            "For Object Keypoint similarity: if 0 (default), only the distance "
+            "between the reference and query keypoint is used to compute the "
+            "similarity. If 1, each distance is weighted by the prediction scores "
+            "of the reference and query keypoint."
         )
         options.append(option)
 
@@ -1268,10 +1271,10 @@ class Tracker(BaseTracker):
         option["type"] = str
         option["options"] = ["all", "ref", "union"]
         option["help"] = (
-            "For Object Keypoint similarity: Determine how to normalize similarity score. "
+            "Object Keypoint similarity: Determine how to normalize similarity score. "
             "If 'all', similarity score is normalized by number of reference points. "
-            "If 'ref', similarity score is normalized by number of visible reference points. "
-            "If 'union', similarity score is normalized by number of points both visible "
+            "If 'ref', score is normalized by number of visible reference points. "
+            "If 'union', score is normalized by number of points both visible "
             "in query and reference instance."
         )
         options.append(option)
