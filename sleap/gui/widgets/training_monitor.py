@@ -86,11 +86,13 @@ class LossViewer(QtWidgets.QMainWindow):
         COLOR_VAL = (248, 167, 52)
         COLOR_BEST_VAL = (151, 204, 89)
 
+        x_batch_init = []
+        y_batch_init = []
         # Add scatter series for batch training loss
         self.canvas.add_scatter(
             key="batch",
-            x=x_batch,
-            y=y_batch,
+            x=x_batch_init,
+            y=y_batch_init,
             label="Batch Training Loss",
             color=COLOR_TRAIN + "80",  # Color with alpha
             size=64,
