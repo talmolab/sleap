@@ -12,6 +12,7 @@ Example usage: ::
     >>> vp.addInstance(instance=my_instance, color=(r, g, b))
 
 """
+
 from collections import deque
 
 # FORCE_REQUESTS controls whether we emit a signal to process frame requests
@@ -62,6 +63,7 @@ from qtpy.QtWidgets import (
     QGraphicsView,
     QPinchGesture,
     QShortcut,
+    QStyleOptionGraphicsItem,
     QVBoxLayout,
     QWidget,
 )
@@ -1164,6 +1166,24 @@ class GraphicsView(QGraphicsView):
         elif event.button() == Qt.RightButton:
             self.rightMouseButtonDoubleClicked.emit(scenePos.x(), scenePos.y())
         QGraphicsView.mouseDoubleClickEvent(self, event)
+    
+    def event(self, event):
+        if event.type() == QPinchGesture:
+            self.trackpad_zoom(event)
+
+    def trackpad_zoom(self, event):
+        """Custom event handler, zooms in/out based on trackpad pinch."""
+        if event.angleDelta().y() > 0:
+            self.zoomFactor = min(self.zoomFactor + 0.1, 2)
+        else:
+            self.zoomFactor = max(self.zoomFactor - 0.1, 0.1)
+        self.updateViewer()
+        
+        for child in self.items():
+            try:
+                child.trackpad_zoom(event)
+            except TypeError:
+                pass
 
     def wheelEvent(self, event):
         """Custom event handler. Zoom in/out based on scroll wheel change."""
@@ -1602,6 +1622,16 @@ class QtNode(QGraphicsEllipseItem):
             self.updatePoint(user_change=True)
         self.dragParent = False
         self.player.update_plot()  # Redraw trails after node is moved
+    
+    def trackpad_zoom(self, event):
+        """Custom event handler for trackpad pinch zoom."""
+        if self.dragParent:
+            return
+        if event.angleDelta().y() > 0:
+            self.setRotation(self.rotation() + 5)
+        else:
+            self.setRotation(self.rotation() - 5)
+        event.accept()
 
     def wheelEvent(self, event):
         """Custom event handler for mouse scroll wheel."""
@@ -1869,7 +1899,7 @@ class QtInstance(QGraphicsObject):
         self.track_label.setHtml(instance_label_text)
 
         # Add nodes
-        for (node, point) in self.instance.nodes_points:
+        for node, point in self.instance.nodes_points:
             if point.visible or self.show_non_visible:
                 node_item = QtNode(
                     parent=self,
@@ -1884,7 +1914,7 @@ class QtInstance(QGraphicsObject):
                 self.nodes[node.name] = node_item
 
         # Add edges
-        for (src, dst) in self.skeleton.edge_names:
+        for src, dst in self.skeleton.edge_names:
             # Make sure that both nodes are present in this instance before drawing edge
             if src in self.nodes and dst in self.nodes:
                 edge_item = QtEdge(
