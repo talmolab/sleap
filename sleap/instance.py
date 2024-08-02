@@ -18,12 +18,14 @@ The relationships between objects in this module:
 """
 
 import math
+from functools import reduce
+from itertools import chain, combinations
 
 import numpy as np
 import cattr
 
 from copy import copy
-from typing import Dict, List, Optional, Union, Tuple, ForwardRef
+from typing import Dict, List, Optional, Union, Sequence, Tuple
 
 from numpy.lib.recfunctions import structured_to_unstructured
 
@@ -1175,6 +1177,75 @@ class PredictedInstance(Instance):
         return cls.from_arrays(
             points, point_confidences, instance_score, skeleton, track=track
         )
+
+
+def all_disjoint(x: Sequence[Sequence]) -> bool:
+    return all((set(p0).isdisjoint(set(p1))) for p0, p1 in combinations(x, 2))
+
+
+def create_merged_instances(
+    instances: List[PredictedInstance],
+    penalty: float = 0.2,
+) -> List[PredictedInstance]:
+    """Create merged instances from the list of PredictedInstance.
+
+    Only instances with non-overlapping visible nodes are merged.
+
+    Args:
+        instances: a list of original PredictedInstances to try to merge.
+        penalty: a float between 0 and 1. All scores of the merged instance
+            are multplied by (1 - penalty).
+
+    Returns:
+        a list of PredictedInstance that were merged.
+    """
+    # Ensure same skeleton
+    skeletons = {inst.skeleton for inst in instances}
+    if len(skeletons) != 1:
+        return []
+    skeleton = list(skeletons)[0]
+
+    # Ensure same track
+    tracks = {inst.track for inst in instances}
+    if len(tracks) != 1:
+        return []
+    track = list(tracks)[0]
+
+    # Ensure non-intersecting visible nodes
+    merged_instances = []
+    instance_subsets = (
+        combinations(instances, n) for n in range(2, len(instances) + 1)
+    )
+    instance_subsets = chain.from_iterable(instance_subsets)
+    for subset in instance_subsets:
+        nodes = [s.nodes for s in subset]
+        if not all_disjoint(nodes):
+            continue
+
+        nodes_points_gen = chain.from_iterable(
+            instance.nodes_points for instance in subset
+        )
+        predicted_points = {node: point for node, point in nodes_points_gen}
+
+        instance_score = reduce(lambda x, y: x * y, [s.score for s in subset])
+
+        # Penalize scores of merged instances
+        if 0 < penalty <= 1:
+            factor = 1 - penalty
+            instance_score *= factor
+            for point in predicted_points.values():
+                point.score *= factor
+
+        merged_instance = PredictedInstance(
+            points=predicted_points,
+            skeleton=skeleton,
+            score=instance_score,
+            track=track,
+        )
+
+        merged_instances.append(merged_instance)
+
+    return merged_instances
 
 
 def make_instance_cattr() -> cattr.Converter:

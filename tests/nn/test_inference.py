@@ -1976,7 +1976,7 @@ def test_max_tracks_matching_queue(
 
         if trackername == "flow":
             # Check that saved instances are pruned to track window
-            for key in tracker.candidate_maker.shifted_instances.keys():
+            for key in tracker.candidate_maker.shifted_instances:
                 assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
                 assert abs(key[0] - key[1]) <= track_window
 

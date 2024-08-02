@@ -947,6 +947,8 @@ class Tracker(BaseTracker):
         target_instance_count: int = 0,
         pre_cull_to_target: bool = False,
         pre_cull_iou_threshold: Optional[float] = None,
+        pre_cull_merge_instances: bool = False,
+        pre_cull_merging_penalty: float = 0.2,
         # Post-tracking options to connect broken tracks
         post_connect_single_breaks: bool = False,
         # TODO: deprecate these post-tracking cleaning options
@@ -1011,13 +1013,15 @@ class Tracker(BaseTracker):
             )
 
         pre_cull_function = None
-        if target_instance_count and pre_cull_to_target:
+        if (target_instance_count and pre_cull_to_target) or pre_cull_merge_instances:
 
             def pre_cull_function(inst_list):
                 cull_frame_instances(
                     inst_list,
                     instance_count=target_instance_count,
                     iou_threshold=pre_cull_iou_threshold,
+                    merge_instances=pre_cull_merge_instances,
+                    merging_penalty=pre_cull_merging_penalty,
                 )
 
         tracker_obj = cls(
@@ -1091,6 +1095,22 @@ class Tracker(BaseTracker):
             "If non-zero and pre_cull_to_target also set, "
             "then use IOU threshold to remove overlapping "
             "instances over count *before* tracking."
+        )
+        options.append(option)
+
+        option = dict(name="pre_cull_merge_instances", default=False)
+        option["type"] = bool
+        option["help"] = (
+            "If True, allow merging instances with non-overlapping visible nodes "
+            "to create new instances *before* tracking."
+        )
+        options.append(option)
+
+        option = dict(name="pre_cull_merging_penalty", default=0.2)
+        option["type"] = float
+        option["help"] = (
+            "A float between 0 and 1. All scores of the merged instances "
+            "are multplied by (1 - penalty)."
         )
         options.append(option)
 

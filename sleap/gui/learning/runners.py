@@ -253,6 +253,7 @@ class InferenceTask:
 
         bool_items_as_ints = (
             "tracking.pre_cull_to_target",
+            "tracking.pre_cull_merge_instances",
             "tracking.post_connect_single_breaks",
             "tracking.save_shifted_instances",
             "tracking.oks_score_weighting",

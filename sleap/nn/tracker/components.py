@@ -12,6 +12,7 @@ Main types of functions:
 
 
 """
+
 import operator
 from collections import defaultdict
 import logging
@@ -23,6 +24,7 @@ from scipy.optimize import linear_sum_assignment
 
 from sleap import PredictedInstance, Instance, Track
 from sleap.nn import utils
+from sleap.instance import create_merged_instances
 
 logger = logging.getLogger(__name__)
 
@@ -249,7 +251,6 @@ def nms_fast(boxes, scores, iou_threshold, target_count=None) -> List[int]:
 
     # keep looping while some indexes still remain in the indexes list
     while len(idxs) > 0:
-
         # we want to add the best box which is the last box in sorted list
         picked_box_idx = idxs[-1]
 
@@ -351,6 +352,8 @@ def cull_frame_instances(
     instances_list: List[InstanceType],
     instance_count: int,
     iou_threshold: Optional[float] = None,
+    merge_instances: bool = False,
+    merging_penalty: float = 0.2,
 ) -> List["LabeledFrame"]:
     """
     Removes instances (for single frame) over instance per frame threshold.
@@ -361,12 +364,23 @@ def cull_frame_instances(
         iou_threshold: Intersection over Union (IOU) threshold to use when
             removing overlapping instances over target count; if None, then
             only use score to determine which instances to remove.
+        merge_instances: If True, allow merging instances with no overlapping
+        merging_penalty: a float between 0 and 1. All scores of the merged
+            instance are multplied by (1 - penalty).
 
     Returns:
         Updated list of frames, also modifies frames in place.
     """
     if not instances_list:
         return
+
+    # Merge instances
+    if merge_instances:
+        logger.info("Merging instances with penalty: %f", merging_penalty)
+        merged_instances = create_merged_instances(
+            instances_list, penalty=merging_penalty
+        )
+        instances_list.extend(merged_instances)
 
     if len(instances_list) > instance_count:
         # List of instances which we'll pare down
@@ -387,9 +401,10 @@ def cull_frame_instances(
         if len(keep_instances) > instance_count:
             # Sort by ascending score, get target number of instances
             # from the end of list (i.e., with highest score)
-            extra_instances = sorted(keep_instances, key=operator.attrgetter("score"))[
-                :-instance_count
-            ]
+            extra_instances = sorted(
+                keep_instances,
+                key=operator.attrgetter("score"),
+            )[:-instance_count]
 
             # Remove the extra instances
             for inst in extra_instances:
@@ -523,7 +538,6 @@ class FrameMatches:
         candidate_tracks = []
 
         if candidate_instances:
-
             # Group candidate instances by track.
             candidate_instances_by_track = defaultdict(list)
             for instance in candidate_instances:
@@ -536,7 +550,6 @@ class FrameMatches:
             matching_similarities = np.full(dims, np.nan)
 
             for i, untracked_instance in enumerate(untracked_instances):
-
                 for j, candidate_track in enumerate(candidate_tracks):
                     # Compute similarity between untracked instance and all track
                     # candidates.
