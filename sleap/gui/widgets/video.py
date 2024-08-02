@@ -240,6 +240,8 @@ class QtVideoPlayer(QWidget):
 
         self._register_shortcuts()
 
+        self.context_menu = None
+        self._menu_actions = dict()
         if self.context:
             self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
             self.customContextMenuRequested.connect(self.show_contextual_menu)
@@ -358,44 +360,32 @@ class QtVideoPlayer(QWidget):
     def setSeekbarSelection(self, a: int, b: int):
         self.seekbar.setSelection(a, b)
 
+    def create_contextual_menu(self, scene_pos: QtCore.QPointF):
+
+        self.context_menu = QtWidgets.QMenu()
+        self.context_menu.addAction("Add Instance:").setEnabled(False)
+
+        self._menu_actions = dict()
+        params_by_action_name = {
+            "Default": {"init_method": "best", "location": scene_pos},
+            "Average": {"init_method": "template", "location": scene_pos},
+            "Force Directed": {"init_method": "force_directed", "location": scene_pos},
+            "Copy Prior Frame": {"init_method": "prior_frame"},
+            "Random": {"init_method": "random", "location": scene_pos},
+        }
+        for action_name, params in params_by_action_name.items():
+            self._menu_actions[action_name] = self.context_menu.addAction(
+                action_name, lambda params=params: self.context.newInstance(**params)
+            )
+
+        return self.context_menu
+
     def show_contextual_menu(self, where: QtCore.QPoint):
         if not self.is_menu_enabled:
             return
 
         scene_pos = self.view.mapToScene(where)
-        menu = QtWidgets.QMenu()
-
-        menu.addAction("Add Instance:").setEnabled(False)
-
-        menu.addAction(
-            "Default",
-            lambda: self.context.newInstance(init_method="best", location=scene_pos),
-        )
-
-        menu.addAction(
-            "Average",
-            lambda: self.context.newInstance(
-                init_method="template", location=scene_pos
-            ),
-        )
-
-        menu.addAction(
-            "Force Directed",
-            lambda: self.context.newInstance(
-                init_method="force_directed", location=scene_pos
-            ),
-        )
-
-        menu.addAction(
-            "Copy Prior Frame",
-            lambda: self.context.newInstance(init_method="prior_frame"),
-        )
-
-        menu.addAction(
-            "Random",
-            lambda: self.context.newInstance(init_method="random", location=scene_pos),
-        )
-
+        menu = self.create_contextual_menu(scene_pos)
         menu.exec_(self.mapToGlobal(where))
 
     def load_video(self, video: Video, plot=True):
