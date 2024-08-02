@@ -28,10 +28,10 @@ class MplCanvas(Canvas):
         Canvas.updateGeometry(self)
         self.series = {}
 
-    def add_scatter(self, key, x, y, label, color, size):
+    def add_scatter(self, key, x, y, label, color, markersize):
         if key in self.series:
             self.series[key].remove()
-        scatter = self.axes.scatter(x, y, label=label, color=color, s=size)
+        scatter = self.axes.scatter(x, y, label=label, color=color, s=markersize)
         self.series[key] = scatter
         self.draw()
 
