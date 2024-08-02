@@ -4947,16 +4947,10 @@ def load_model(
     )
     predictor.verbosity = progress_reporting
     if tracker is not None:
-        use_max_tracker = tracker_max_instances is not None
-        if use_max_tracker and not tracker.endswith("maxtracks"):
-            # Append maxtracks to the tracker name to use the right tracker variants.
-            tracker += "maxtracks"
-
         predictor.tracker = Tracker.make_tracker_by_name(
             tracker=tracker,
             track_window=tracker_window,
             post_connect_single_breaks=True,
-            max_tracking=use_max_tracker,
             max_tracks=tracker_max_instances,
             # clean_instance_count=tracker_max_instances,
         )

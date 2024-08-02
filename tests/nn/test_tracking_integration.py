@@ -22,10 +22,10 @@ def test_simple_tracker(tmpdir, centered_pair_predictions_slp_path):
     assert len(labels.tracks) == 8
 
 
-def test_simplemax_tracker(tmpdir, centered_pair_predictions_slp_path):
+def test_simple_max_tracks(tmpdir, centered_pair_predictions_slp_path):
     cli = (
-        "--tracking.tracker simplemaxtracks "
-        "--tracking.max_tracking 1 --tracking.max_tracks 2 "
+        "--tracking.tracker simple "
+        "--tracking.max_tracks 2 "
         "--frames 200-300 "
         f"-o {tmpdir}/simplemaxtracks.slp "
         f"{centered_pair_predictions_slp_path}"
@@ -91,8 +91,6 @@ def main(f, dir):
     trackers = dict(
         simple=sleap.nn.tracker.simple.SimpleTracker,
         flow=sleap.nn.tracker.flow.FlowTracker,
-        simplemaxtracks=sleap.nn.tracker.SimpleMaxTracker,
-        flowmaxtracks=sleap.nn.tracker.FlowMaxTracker,
     )
     matchers = dict(
         hungarian=sleap.nn.tracker.components.hungarian_matching,
@@ -108,21 +106,12 @@ def main(f, dir):
         0.25,
     )
 
-    def make_tracker(
-        tracker_name, matcher_name, sim_name, max_tracks, max_tracking=False, scale=0
-    ):
-        if tracker_name == "simplemaxtracks" or tracker_name == "flowmaxtracks":
-            tracker = trackers[tracker_name](
-                matching_function=matchers[matcher_name],
-                similarity_function=similarities[sim_name],
-                max_tracks=max_tracks,
-                max_tracking=max_tracking,
-            )
-        else:
-            tracker = trackers[tracker_name](
-                matching_function=matchers[matcher_name],
-                similarity_function=similarities[sim_name],
-            )
+    def make_tracker(tracker_name, matcher_name, sim_name, max_tracks, scale=0):
+        tracker = trackers[tracker_name](
+            matching_function=matchers[matcher_name],
+            similarity_function=similarities[sim_name],
+            max_tracks=max_tracks,
+        )
         if scale:
             tracker.candidate_maker.img_scale = scale
         return tracker
@@ -151,36 +140,16 @@ def main(f, dir):
                         tracker, gt_filename = make_tracker_and_filename(
                             tracker_name=tracker_name,
                             matcher_name=matcher_name,
-                            sim_name=sim_name,
-                            scale=scale,
-                        )
-                        f(frames, tracker, gt_filename)
-                elif tracker_name == "flowmaxtracks":
-                    # If this tracker supports scale, try multiple scales
-                    for scale in scales:
-                        tracker, gt_filename = make_tracker_and_filename(
-                            tracker_name=tracker_name,
-                            matcher_name=matcher_name,
-                            sim_name=sim_name,
                             max_tracks=2,
-                            max_tracking=True,
+                            sim_name=sim_name,
                             scale=scale,
                         )
                         f(frames, tracker, gt_filename)
-                elif tracker_name == "simplemaxtracks":
-                    tracker, gt_filename = make_tracker_and_filename(
-                        tracker_name=tracker_name,
-                        matcher_name=matcher_name,
-                        sim_name=sim_name,
-                        max_tracks=2,
-                        max_tracking=True,
-                        scale=0,
-                    )
-                    f(frames, tracker, gt_filename)
                 else:
                     tracker, gt_filename = make_tracker_and_filename(
                         tracker_name=tracker_name,
                         matcher_name=matcher_name,
+                        max_tracks=2,
                         sim_name=sim_name,
                         scale=0,
                     )

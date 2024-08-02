@@ -521,10 +521,6 @@ inference:
       text: '<b>Tracking</b>:<br />
         This tracker assigns track identities by matching instances from prior
         frames to instances on subsequent frames.'
-    # - name: tracking.max_tracking
-    #   label: Limit max number of tracks
-    #   type: bool
-    #   default: false
     - name: tracking.max_tracks
       label: Max number of tracks
       type: optional_int

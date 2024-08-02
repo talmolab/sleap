@@ -204,7 +204,6 @@ class InferenceTask:
 
         # Make path where we'll save predictions (if not specified)
         if output_path is None:
-
             if self.labels_filename:
                 # Make a predictions directory next to the labels dataset file
                 predictions_dir = os.path.join(
@@ -239,15 +238,12 @@ class InferenceTask:
             if key in self.inference_params and self.inference_params[key] is None:
                 del self.inference_params[key]
 
-        # Setting max_tracks to True means we want to use the max_tracking mode.
-        if "tracking.max_tracks" in self.inference_params:
-            self.inference_params["tracking.max_tracking"] = True
-
-            # Hacky:  Update the tracker name to include "maxtracks" suffix.
-            if self.inference_params["tracking.tracker"] in ("simple", "flow"):
-                self.inference_params["tracking.tracker"] = (
-                    self.inference_params["tracking.tracker"] + "maxtracks"
-                )
+        # Compatibility with using the "maxtracks" suffix to the tracker name.
+        if "tracking.tracker" in self.inference_params:
+            compat_trackers = ("simplemaxtracks", "flowmaxtracks")
+            if self.inference_params["tracking.tracker"] in compat_trackers:
+                tname = self.inference_params["tracking.tracker"][: -len("maxtracks")]
+                self.inference_params["tracking.tracker"] = tname
 
         # --tracking.kf_init_frame_count enables the kalman filter tracking
         # so if not set, then remove other (unused) args
@@ -257,10 +253,11 @@ class InferenceTask:
 
         bool_items_as_ints = (
             "tracking.pre_cull_to_target",
-            "tracking.max_tracking",
             "tracking.post_connect_single_breaks",
             "tracking.save_shifted_instances",
             "tracking.oks_score_weighting",
+            "tracking.prefer_reassigning_track",
+            "tracking.allow_reassigning_track",
         )
 
         for key in bool_items_as_ints:
@@ -303,10 +300,8 @@ class InferenceTask:
 
         # Run inference CLI capturing output.
         with subprocess.Popen(cli_args, stdout=subprocess.PIPE) as proc:
-
             # Poll until finished.
             while proc.poll() is None:
-
                 # Read line.
                 line = proc.stdout.readline()
                 line = line.decode().rstrip()
@@ -635,7 +630,6 @@ def run_gui_training(
 
     for config_info in config_info_list:
         if config_info.dont_retrain:
-
             if not config_info.has_trained_model:
                 raise ValueError(
                     "Config is set to not retrain but no trained model found: "
@@ -849,7 +843,6 @@ def train_subprocess(
     success = False
 
     with tempfile.TemporaryDirectory() as temp_dir:
-
         # Write a temporary file of the TrainingJob so that we can respect
         # any changed made to the job attributes after it was loaded.
         temp_filename = datetime.now().strftime("%y%m%d_%H%M%S") + "_training_job.json"

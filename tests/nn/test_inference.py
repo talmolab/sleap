@@ -58,7 +58,6 @@ from sleap.nn.inference import (
 from sleap.nn.tracking import (
     MatchedFrameInstance,
     FlowCandidateMaker,
-    FlowMaxTracksCandidateMaker,
     Tracker,
 )
 from sleap.instance import Track
@@ -1273,6 +1272,7 @@ def test_make_export_cli():
     assert args.max_instances == max_instances
 
 
+@pytest.mark.slow()
 def test_topdown_predictor_save(
     min_centroid_model_path, min_centered_instance_model_path, tmp_path
 ):
@@ -1315,6 +1315,7 @@ def test_topdown_predictor_save(
     )
 
 
+@pytest.mark.slow()
 def test_topdown_id_predictor_save(
     min_centroid_model_path, min_topdown_multiclass_model_path, tmp_path
 ):
@@ -1361,9 +1362,7 @@ def test_topdown_id_predictor_save(
     "output_path,tracker_method",
     [
         ("not_default", "flow"),
-        ("not_default", "flowmaxtracks"),
         (None, "simple"),
-        (None, "simplemaxtracks"),
     ],
 )
 def test_retracking(
@@ -1380,7 +1379,6 @@ def test_retracking(
     if tracker_method == "flow":
         cmd += " --tracking.save_shifted_instances 1"
     elif tracker_method == "simplemaxtracks" or tracker_method == "flowmaxtracks":
-        cmd += " --tracking.max_tracking 1"
         cmd += " --tracking.max_tracks 2"
     if output_path == "not_default":
         output_path = Path(tmpdir, "tracked_slp.slp")
@@ -1944,8 +1942,8 @@ def test_flow_tracker(centered_pair_predictions_sorted: Labels, tmpdir):
 @pytest.mark.parametrize(
     "max_tracks, trackername",
     [
-        (2, "flowmaxtracks"),
-        (2, "simplemaxtracks"),
+        (2, "flow"),
+        (2, "simple"),
     ],
 )
 def test_max_tracks_matching_queue(
@@ -1953,7 +1951,6 @@ def test_max_tracks_matching_queue(
 ):
     """Test flow max tracks instance generation."""
     labels: Labels = centered_pair_predictions
-    max_tracking = True
     track_window = 5
 
     # Setup flow max tracker
@@ -1961,11 +1958,10 @@ def test_max_tracks_matching_queue(
         tracker=trackername,
         track_window=track_window,
         save_shifted_instances=True,
-        max_tracking=max_tracking,
         max_tracks=max_tracks,
     )
 
-    tracker.candidate_maker = cast(FlowMaxTracksCandidateMaker, tracker.candidate_maker)
+    tracker.candidate_maker = cast(FlowCandidateMaker, tracker.candidate_maker)
 
     # Run tracking
     frames = sorted(labels.labeled_frames, key=lambda lf: lf.frame_idx)
@@ -1978,18 +1974,17 @@ def test_max_tracks_matching_queue(
         track_args = dict(untracked_instances=lf.instances, img=lf.video[lf.frame_idx])
         tracker.track(**track_args)
 
-        if trackername == "flowmaxtracks":
+        if trackername == "flow":
             # Check that saved instances are pruned to track window
             for key in tracker.candidate_maker.shifted_instances.keys():
                 assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
                 assert abs(key[0] - key[1]) <= track_window
 
         # Check if the length of each of the tracks is not more than the track window
-        for track in tracker.track_matching_queue_dict.keys():
-            assert len(tracker.track_matching_queue_dict[track]) <= track_window
+        assert len(tracker.track_matching_queue) <= track_window
 
         # Check if number of tracks that are generated are not more than the maximum tracks
-        assert len(tracker.track_matching_queue_dict) <= max_tracks
+        assert len(tracker.unique_tracks_in_queue) <= max_tracks
 
 
 def test_movenet_inference(movenet_video):
@@ -2012,6 +2007,7 @@ def test_movenet_inference(movenet_video):
     assert preds["instance_peaks"].shape == (1, 1, 17, 2)
 
 
+@pytest.mark.slow()
 def test_movenet_predictor(min_dance_labels, movenet_video):
     predictor = MoveNetPredictor.from_trained_models("thunder")
     predictor.verbosity = "none"
