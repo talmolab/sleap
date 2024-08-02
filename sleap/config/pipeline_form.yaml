@@ -424,10 +424,6 @@ inference:
       This tracker "shifts" instances from previous frames using optical flow
       before matching instances in each frame to the <i>shifted</i> instances from
       prior frames.'
-    # - name: tracking.max_tracking
-    #   label: Limit max number of tracks
-    #   type: bool
-      default: false
     - name: tracking.max_tracks
       label: Max number of tracks
       type: optional_int
@@ -459,10 +455,12 @@ inference:
       none_label: Use max (non-robust)
       range: 0,1
       default: 0.95
-    # - name: tracking.save_shifted_instances
-    #   label: Save shifted instances
-    #   type: bool
-    #   default: false
+    - name: tracking.save_shifted_instances
+      label: Save shifted instances
+      help: 'Save the flow-shifted instances between elapsed frames. It improves
+      instance matching at the cost of using a bit more of memory.'
+      type: bool
+      default: true
     - type: text
       text: '<b>Kalman filter-based tracking</b>:<br />
       Uses the above tracking options to track instances for an initial
