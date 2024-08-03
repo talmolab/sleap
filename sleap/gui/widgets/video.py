@@ -1140,8 +1140,13 @@ class GraphicsView(QGraphicsView):
         QGraphicsView.mouseDoubleClickEvent(self, event)
 
     def wheelEvent(self, event):
-        """Custom event handler. Zoom in/out based on scroll wheel change."""
-        # zoom on wheel when no mouse buttons are pressed
+        """Custom event handler to zoom in/out based on scroll wheel change.
+
+        We cannot use the default QGraphicsView.wheelEvent behavior since that will
+        scroll the view.
+        """
+
+        # Zoom on wheel when no mouse buttons are pressed
         if event.buttons() == Qt.NoButton:
             angle = event.angleDelta().y()
             factor = 1.1 if angle > 0 else 0.9
@@ -1149,20 +1154,10 @@ class GraphicsView(QGraphicsView):
             self.zoomFactor = max(factor * self.zoomFactor, 1)
             self.updateViewer()
 
-        # Trigger wheelEvent for all child elements. This is a bit of a hack.
-        # We can't use QGraphicsView.wheelEvent(self, event) since that will scroll
-        # view.
-        # We want to trigger for all children, since wheelEvent should continue rotating
-        # an skeleton even if the skeleton node/node label is no longer under the
-        # cursor.
-        # Note that children expect a QGraphicsSceneWheelEvent event, which is why we're
-        # explicitly ignoring TypeErrors. Everything seems to work fine since we don't
-        # care about the mouse position; if we did, we'd need to map pos to scene.
+        # Trigger only for rotation-relevant children (otherwise GUI crashes)
         for child in self.items():
-            try:
+            if isinstance(child, (QtNode, QtNodeLabel)):
                 child.wheelEvent(event)
-            except TypeError:
-                pass
 
     def keyPressEvent(self, event):
         """Custom event hander, disables default QGraphicsView behavior."""
@@ -1580,7 +1575,9 @@ class QtNode(QGraphicsEllipseItem):
     def wheelEvent(self, event):
         """Custom event handler for mouse scroll wheel."""
         if self.dragParent:
-            angle = event.delta() / 20 + self.parentObject().rotation()
+            angle = (
+                event.angleDelta().x() + event.angleDelta().y()
+            ) / 20 + self.parentObject().rotation()
             self.parentObject().setRotation(angle)
             event.accept()
 
