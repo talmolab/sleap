@@ -1,10 +1,13 @@
 """Module for testing dock widgets for the `MainWindow`."""
 
 from pathlib import Path
+
+import numpy as np
 import pytest
+
 from sleap import Labels, Video
 from sleap.gui.app import MainWindow
-from sleap.gui.commands import OpenSkeleton
+from sleap.gui.commands import AddInstance, OpenSkeleton
 from sleap.gui.widgets.docks import (
     InstancesDock,
     SuggestionsDock,
@@ -99,11 +102,35 @@ def test_suggestions_dock(qtbot):
     assert dock.wgt_layout is dock.widget().layout()
 
 
-def test_instances_dock(qtbot):
+def test_instances_dock(qtbot, centered_pair_predictions: Labels):
     """Test the `DockWidget` class."""
-    main_window = MainWindow()
+    main_window = MainWindow(labels=centered_pair_predictions)
+    labels = main_window.labels
+    context = main_window.commands
+    lf = context.state["labeled_frame"]
     dock = InstancesDock(main_window)
 
     assert dock.name == "Instances"
     assert dock.main_window is main_window
     assert dock.wgt_layout is dock.widget().layout()
+
+    # Test new instance button
+
+    offset = 10
+
+    # Find instance that we will copy from
+    (
+        copy_instance,
+        from_predicted,
+        from_prev_frame,
+    ) = AddInstance.find_instance_to_copy_from(
+        context, copy_instance=None, init_method="best"
+    )
+    n_instance = len(lf.instances)
+    dock.main_window._buttons["new instance"].click()
+
+    # Check that new instance was added with offset
+    assert len(lf.instances) == n_instance + 1
+    new_inst = lf.instances[-1]
+    diff = np.nan_to_num(new_inst.numpy() - copy_instance.numpy(), nan=offset)
+    assert np.all(diff == offset)
