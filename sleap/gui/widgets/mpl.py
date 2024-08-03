@@ -6,11 +6,11 @@ Currently this is used for plotting metrics graphs in GUI.
 
 from qtpy import QtWidgets
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as Canvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as Canvas
 import matplotlib
 
 # Ensure using PyQt5 backend
-matplotlib.use("QtAgg")
+matplotlib.use("QT5Agg")
 
 
 class MplCanvas(Canvas):
@@ -26,23 +26,3 @@ class MplCanvas(Canvas):
             self, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
         )
         Canvas.updateGeometry(self)
-        self.series = {}
-
-    def add_scatter(self, key, x, y, label, color, markersize):
-        if key in self.series:
-            self.series[key].remove()
-        scatter = self.axes.scatter(x, y, label=label, color=color, s=markersize)
-        self.series[key] = scatter
-        self.draw()
-
-    def add_line(self, key, x, y, label, color, width):
-        if key in self.series:
-            self.series[key].remove()
-        (line,) = self.axes.plot(x, y, label=label, color=color, linewidth=width)
-        self.series[key] = line
-        self.draw()
-
-    def clear(self):
-        self.axes.cla()
-        self.series.clear()
-        self.draw()
