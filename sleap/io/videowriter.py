@@ -85,7 +85,7 @@ class VideoWriterSkvideo(VideoWriter):
     def __init__(
         self, filename, height, width, fps, crf: int = 21, preset: str = "superfast"
     ):
-        import skvideo.io
+        # import skvideo.io
 
         fps = str(fps)
         self._writer = skvideo.io.FFmpegWriter(
