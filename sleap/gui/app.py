@@ -704,7 +704,7 @@ class MainWindow(QMainWindow):
         )
 
         def new_instance_menu_action():
-            """Determine which action to use when usinf Ctrl + I or menu Add Instance.
+            """Determine which action to use when using Ctrl + I or menu Add Instance.
 
             We always add an offset of 10.
             """
