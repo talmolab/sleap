@@ -1335,7 +1335,7 @@ class ExportLabeledClip(AppCommand):
             context.app,
             caption="Save Video As...",
             dir=default_out_filename,
-            filter="Video (*.avi *mp4)",
+            filter="Video (*.avi *.mp4)",
         )
 
         # Check if user hit cancel
