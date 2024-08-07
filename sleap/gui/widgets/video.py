@@ -360,7 +360,19 @@ class QtVideoPlayer(QWidget):
     def setSeekbarSelection(self, a: int, b: int):
         self.seekbar.setSelection(a, b)
 
-    def create_contextual_menu(self, scene_pos: QtCore.QPointF):
+    def create_contextual_menu(self, scene_pos: QtCore.QPointF) -> QtWidgets.QMenu:
+        """Create the context menu for the viewer.
+
+        This is called when the user right-clicks in the viewer. This function also
+        stores the menu actions in the `_menu_actions` attribute so that they can be
+        accessed later and stores the context menu in the `context_menu` attribute.
+
+        Args:
+            scene_pos: The position in the scene where the menu was requested.
+
+        Returns:
+            The created context menu.
+        """
 
         self.context_menu = QtWidgets.QMenu()
         self.context_menu.addAction("Add Instance:").setEnabled(False)
@@ -381,6 +393,16 @@ class QtVideoPlayer(QWidget):
         return self.context_menu
 
     def show_contextual_menu(self, where: QtCore.QPoint):
+        """Show the context menu at the given position in the viewer.
+
+        This is called when the user right-clicks in the viewer. This function calls
+        `create_contextual_menu` to create the menu and then shows the menu at the
+        given position.
+
+        Args:
+            where: The position in the viewer where the menu was requested.
+        """
+
         if not self.is_menu_enabled:
             return
 
