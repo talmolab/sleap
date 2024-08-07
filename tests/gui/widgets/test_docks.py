@@ -3,16 +3,15 @@
 from pathlib import Path
 
 import numpy as np
-import pytest
 
 from sleap import Labels, Video
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import AddInstance, OpenSkeleton
 from sleap.gui.widgets.docks import (
     InstancesDock,
+    SkeletonDock,
     SuggestionsDock,
     VideosDock,
-    SkeletonDock,
 )
 
 
