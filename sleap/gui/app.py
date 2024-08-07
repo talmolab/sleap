@@ -704,13 +704,17 @@ class MainWindow(QMainWindow):
         )
 
         def new_instance_menu_action():
+            """Determine which action to use when using Ctrl + I or menu Add Instance.
+
+            We always add an offset of 10.
+            """
             method_key = [
                 key
                 for (key, val) in instance_adding_methods.items()
                 if val == self.state["instance_init_method"]
             ]
             if method_key:
-                self.commands.newInstance(init_method=method_key[0])
+                self.commands.newInstance(init_method=method_key[0], offset=10)
 
         labelMenu = self.menuBar().addMenu("Labels")
         add_menu_item(
