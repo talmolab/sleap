@@ -9,8 +9,10 @@ import jsonpickle
 import logging
 from typing import Optional, Dict
 from qtpy import QtCore, QtWidgets, QtGui
-from qtpy.QtCharts import QtCharts
 import attr
+
+# from qtpy.QtCharts import QtCharts # QtCharts is not working replace with matplotlib
+from sleap.gui.widgets.mpl import MplCanvas
 
 
 logger = logging.getLogger(__name__)
