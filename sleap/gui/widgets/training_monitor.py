@@ -7,8 +7,11 @@ import zmq
 import jsonpickle
 import logging
 from typing import Optional
-from qtpy import QtCore, QtWidgets, QtGui, QtCharts
+
+# from qtpy import QtCore, QtWidgets, QtGui, QtCharts # QtCharts if not working
+from qtpy import QtCore, QtWidgets, QtGui
 import attr
+from sleap.gui.widgets.mpl import MplCanvas
 
 logger = logging.getLogger(__name__)
 
