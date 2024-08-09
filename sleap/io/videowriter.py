@@ -12,6 +12,7 @@ Usage: ::
 from abc import ABC, abstractmethod
 import cv2
 import numpy as np
+import imageio.v2 as iio
 
 
 class VideoWriter(ABC):
