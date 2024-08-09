@@ -81,7 +81,8 @@ class LossViewer(QtWidgets.QMainWindow):
             what: String identifier indicating which job type the current run
                 corresponds to.
         """
-        self.chart = QtCharts.QChart()
+        self.canvas = MplCanvas(width=5, height=4, dpi=100)
+        self.setCentralWidget(self.canvas)
 
         self.series = dict()
 
@@ -89,14 +90,16 @@ class LossViewer(QtWidgets.QMainWindow):
         COLOR_VAL = (248, 167, 52)
         COLOR_BEST_VAL = (151, 204, 89)
 
-        self.series["batch"] = QtCharts.QScatterSeries()
+        # self.series["batch"] = QtCharts.QScatterSeries()
+
         self.series["batch"].setName("Batch Training Loss")
         self.series["batch"].setColor(QtGui.QColor(*COLOR_TRAIN, 48))
         self.series["batch"].setMarkerSize(8.0)
         self.series["batch"].setBorderColor(QtGui.QColor(255, 255, 255, 25))
         self.chart.addSeries(self.series["batch"])
 
-        self.series["epoch_loss"] = QtCharts.QLineSeries()
+        # self.series["epoch_loss"] = QtCharts.QLineSeries()
+
         self.series["epoch_loss"].setName("Epoch Training Loss")
         self.series["epoch_loss"].setColor(QtGui.QColor(*COLOR_TRAIN, 255))
         pen = self.series["epoch_loss"].pen()
@@ -104,7 +107,8 @@ class LossViewer(QtWidgets.QMainWindow):
         self.series["epoch_loss"].setPen(pen)
         self.chart.addSeries(self.series["epoch_loss"])
 
-        self.series["epoch_loss_scatter"] = QtCharts.QScatterSeries()
+        # self.series["epoch_loss_scatter"] = QtCharts.QScatterSeries()
+
         self.series["epoch_loss_scatter"].setColor(QtGui.QColor(*COLOR_TRAIN, 255))
         self.series["epoch_loss_scatter"].setMarkerSize(12.0)
         self.series["epoch_loss_scatter"].setBorderColor(
@@ -112,7 +116,8 @@ class LossViewer(QtWidgets.QMainWindow):
         )
         self.chart.addSeries(self.series["epoch_loss_scatter"])
 
-        self.series["val_loss"] = QtCharts.QLineSeries()
+        # self.series["val_loss"] = QtCharts.QLineSeries()
+
         self.series["val_loss"].setName("Epoch Validation Loss")
         self.series["val_loss"].setColor(QtGui.QColor(*COLOR_VAL, 255))
         pen = self.series["val_loss"].pen()
@@ -120,20 +125,22 @@ class LossViewer(QtWidgets.QMainWindow):
         self.series["val_loss"].setPen(pen)
         self.chart.addSeries(self.series["val_loss"])
 
-        self.series["val_loss_scatter"] = QtCharts.QScatterSeries()
+        # self.series["val_loss_scatter"] = QtCharts.QScatterSeries()
+
         self.series["val_loss_scatter"].setColor(QtGui.QColor(*COLOR_VAL, 255))
         self.series["val_loss_scatter"].setMarkerSize(12.0)
         self.series["val_loss_scatter"].setBorderColor(QtGui.QColor(255, 255, 255, 25))
         self.chart.addSeries(self.series["val_loss_scatter"])
 
-        self.series["val_loss_best"] = QtCharts.QScatterSeries()
+        # self.series["val_loss_best"] = QtCharts.QScatterSeries()
+
         self.series["val_loss_best"].setName("Best Validation Loss")
         self.series["val_loss_best"].setColor(QtGui.QColor(*COLOR_BEST_VAL, 255))
         self.series["val_loss_best"].setMarkerSize(12.0)
         self.series["val_loss_best"].setBorderColor(QtGui.QColor(32, 32, 32, 25))
         self.chart.addSeries(self.series["val_loss_best"])
 
-        axisX = QtCharts.QValueAxis()
+        # axisX = QtCharts.QValueAxis()
         axisX.setLabelFormat("%d")
         axisX.setTitleText("Batches")
         self.chart.addAxis(axisX, QtCore.Qt.AlignBottom)
@@ -141,10 +148,10 @@ class LossViewer(QtWidgets.QMainWindow):
         # Create the different Y axes that can be used.
         self.axisY = dict()
 
-        self.axisY["log"] = QtCharts.QLogValueAxis()
+        # self.axisY["log"] = QtCharts.QLogValueAxis()
         self.axisY["log"].setBase(10)
 
-        self.axisY["linear"] = QtCharts.QValueAxis()
+        # self.axisY["linear"] = QtCharts.QValueAxis()
 
         # Apply settings that apply to all Y axes.
         for axisY in self.axisY.values():
@@ -165,13 +172,13 @@ class LossViewer(QtWidgets.QMainWindow):
         # Setup legend.
         self.chart.legend().setVisible(True)
         self.chart.legend().setAlignment(QtCore.Qt.AlignTop)
-        self.chart.legend().setMarkerShape(QtCharts.QLegend.MarkerShapeCircle)
+        # self.chart.legend().setMarkerShape(QtCharts.QLegend.MarkerShapeCircle)
 
         # Hide scatters for epoch and val loss from legend.
         for s in ("epoch_loss_scatter", "val_loss_scatter"):
             self.chart.legend().markers(self.series[s])[0].setVisible(False)
 
-        self.chartView = QtCharts.QChartView(self.chart)
+        # self.chartView = QtCharts.QChartView(self.chart)
         self.chartView.setRenderHint(QtGui.QPainter.Antialiasing)
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.chartView)
