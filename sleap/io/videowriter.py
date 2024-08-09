@@ -32,22 +32,26 @@ class VideoWriter(ABC):
     @staticmethod
     def safe_builder(filename, height, width, fps):
         """Builds VideoWriter based on available dependencies."""
-        if VideoWriter.can_use_skvideo():
-            return VideoWriterSkvideo(filename, height, width, fps)
+        if VideoWriter.can_use_ffmpeg():
+            return VideoWriterImageio(filename, height, width, fps)
         else:
             return VideoWriterOpenCV(filename, height, width, fps)
 
     @staticmethod
-    def can_use_skvideo():
-        # See if we can import skvideo
+    def can_use_ffmpeg():
+        """Check if ffmpeg is available for writing videos."""
         try:
-            import skvideo
+            import imageio_ffmpeg as ffmpeg
         except ImportError:
             return False
 
-        # See if skvideo can find FFMPEG
-        if skvideo.getFFmpegVersion() != "0.0.0":
-            return True
+        try:
+            # Try to get the version of the ffmpeg plugin
+            ffmpeg_version = ffmpeg.get_ffmpeg_version()
+            if ffmpeg_version:
+                return True
+        except Exception:
+            return False
 
         return False
 
