@@ -73,55 +73,11 @@ class VideoWriterOpenCV(VideoWriter):
         self._writer.release()
 
 
-# class VideoWriterSkvideo(VideoWriter):
-#     """Writes video using scikit-video as wrapper for ffmpeg.
-
-#     Attributes:
-#         filename: Path to mp4 file to save to.
-#         height: Height of movie frames.
-#         width: Width of movie frames.
-#         fps: Playback framerate to save at.
-#         crf: Compression rate factor to control lossiness of video. Values go from
-#             2 to 32, with numbers in the 18 to 30 range being most common. Lower values
-#             mean less compressed/higher quality.
-#         preset: Name of the libx264 preset to use (default: "superfast").
-#     """
-
-#     def __init__(
-#         self, filename, height, width, fps, crf: int = 21, preset: str = "superfast"
-#     ):
-#         import skvideo.io
-
-#         fps = str(fps)
-#         self._writer = skvideo.io.FFmpegWriter(
-#             filename,
-#             inputdict={
-#                 "-r": fps,
-#             },
-#             outputdict={
-#                 "-c:v": "libx264",
-#                 "-preset": preset,
-#                 "-vf": "scale=trunc(iw/2)*2:trunc(ih/2)*2",  # Need even dims for libx264
-#                 "-framerate": fps,
-#                 "-crf": str(crf),
-#                 "-pix_fmt": "yuv420p",
-#             },
-#         )
-
-#     def add_frame(self, img, bgr: bool = False):
-#         if bgr:
-#             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-#         self._writer.writeFrame(img)
-
-#     def close(self):
-#         self._writer.close()
-
-
 class VideoWriterImageio(VideoWriter):
     """Writes video using imageio as a wrapper for ffmpeg.
 
     Attributes:
-        filename: Path to mp4 file to save to.
+        filename: Path to video file to save to.
         height: Height of movie frames.
         width: Width of movie frames.
         fps: Playback framerate to save at.
