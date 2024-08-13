@@ -101,6 +101,8 @@ class VideoWriterImageio(VideoWriter):
 
         # Imageio's ffmpeg writer parameters
         # https://imageio.readthedocs.io/en/stable/examples.html#writing-videos-with-ffmpeg-and-vaapi
+        # Use `ffmpeg -h encoder=libx264`` to see all options for libx264 output_params
+        # output_params must be a list of strings
         # iio.help(name='FFMPEG') to test
         self.writer = iio.get_writer(
             filename,
@@ -115,8 +117,6 @@ class VideoWriterImageio(VideoWriter):
                 str(crf),
                 "-vf",
                 "scale=trunc(iw/2)*2:trunc(ih/2)*2",  # Ensure even dimensions
-                "-r",
-                str(fps),
             ],
         )
 
