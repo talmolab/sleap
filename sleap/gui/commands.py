@@ -1329,12 +1329,10 @@ class ExportLabeledClip(AppCommand):
         # makes mp4's that most programs can't open (VLC can).
         default_out_filename = context.state["filename"] + ".avi"
 
-        # But if we can write mpegs using sci-kit video, use .mp4
-        # since it has trouble writing .avi files.
-        if VideoWriter.can_use_skvideo():
-            default_out_filename = context.state["filename"] + ".mp4"
+        if VideoWriter.can_use_ffmpeg():
+            default_out_filename = context.state["filename"] + ".avi"
 
-        # Ask where use wants to save video file
+        # Ask where user wants to save video file
         filename, _ = FileDialog.save(
             context.app,
             caption="Save Video As...",
