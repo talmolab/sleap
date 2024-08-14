@@ -1549,7 +1549,9 @@ class Video:
         # in case they are coming from a different computer or the file has been moved.
         def fixup_video(x: dict, cl: Video):
             backend_dict = x.pop("backend")
-            filename = backend_dict.pop("filename", None) or backend_dict.pop("file", None)
+            filename = backend_dict.pop("filename", None) or backend_dict.pop(
+                "file", None
+            )
 
             return Video.from_filename(filename, **backend_dict)
 
