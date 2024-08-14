@@ -1,5 +1,4 @@
 import os
-import cv2
 from pathlib import Path
 from sleap.io.videowriter import VideoWriter, VideoWriterOpenCV, VideoWriterImageio
 
