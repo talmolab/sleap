@@ -15,7 +15,7 @@ class ExportClipDialog(FormBuilderModalDialog):
 
         if can_use_ffmpeg:
             message = (
-                "<i><b>AVI</b> file will be encoded using "
+                "<i><b>MP4</b> file will be encoded using "
                 "system ffmpeg via imageio (preferred option).</i>"
             )
         else:
