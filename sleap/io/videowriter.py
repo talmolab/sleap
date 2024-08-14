@@ -116,8 +116,6 @@ class VideoWriterImageio(VideoWriter):
                 preset,
                 "-crf",
                 str(crf),
-                "-vf",
-                "scale=trunc(iw/2)*2:trunc(ih/2)*2",  # Ensure even dimensions
             ],
         )
 
