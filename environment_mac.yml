@@ -10,11 +10,11 @@ channels:
 
 dependencies:
     # Packages SLEAP uses directly
-    - conda-forge::attrs >=21.2.0
+    - conda-forge::attrs >=23.1.0  # Corresponds to version of cattrs
     # - conda-forge::importlib-metadata <7.1.0
     - conda-forge::importlib-metadata
     # - conda-forge::cattrs ==1.1.1
-    - conda-forge::cattrs
+    - conda-forge::cattrs >=23.2.0
     - conda-forge::h5py
     - conda-forge::imageio
     - conda-forge::imageio-ffmpeg
