@@ -34,6 +34,7 @@ class VideoWriter(ABC):
     def safe_builder(filename, height, width, fps):
         """Builds VideoWriter based on available dependencies."""
         if VideoWriter.can_use_ffmpeg():
+            print("USING IMAGEIO")
             return VideoWriterImageio(filename, height, width, fps)
         else:
             return VideoWriterOpenCV(filename, height, width, fps)
