@@ -13,6 +13,7 @@ from abc import ABC, abstractmethod
 import cv2
 import numpy as np
 import imageio.v2 as iio
+import logging
 
 
 class VideoWriter(ABC):
@@ -34,7 +35,7 @@ class VideoWriter(ABC):
     def safe_builder(filename, height, width, fps):
         """Builds VideoWriter based on available dependencies."""
         if VideoWriter.can_use_ffmpeg():
-            print("USING IMAGEIO")
+            logging.info("USING IMAGEIO")
             return VideoWriterImageio(filename, height, width, fps)
         else:
             return VideoWriterOpenCV(filename, height, width, fps)
