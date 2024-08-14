@@ -1330,7 +1330,7 @@ class ExportLabeledClip(AppCommand):
         default_out_filename = context.state["filename"] + ".avi"
 
         if VideoWriter.can_use_ffmpeg():
-            default_out_filename = context.state["filename"] + ".avi"
+            default_out_filename = context.state["filename"] + ".mp4"
 
         # Ask where user wants to save video file
         filename, _ = FileDialog.save(
