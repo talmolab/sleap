@@ -42,7 +42,7 @@ def test_cv_video_writer(tmpdir, small_robot_mp4_vid):
     assert os.path.exists(out_path)
 
 
-def test_imageio_video_writer(tmpdir, small_robot_mp4_vid):
+def test_imageio_video_writer_avi(tmpdir, small_robot_mp4_vid):
     out_path = Path(tmpdir) / "clip.avi"
 
     # Make sure imageio video writer works
