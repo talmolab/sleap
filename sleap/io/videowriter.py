@@ -12,6 +12,7 @@ Usage: ::
 from abc import ABC, abstractmethod
 import cv2
 import numpy as np
+import imageio.v2 as iio
 
 
 class VideoWriter(ABC):
@@ -32,22 +33,26 @@ class VideoWriter(ABC):
     @staticmethod
     def safe_builder(filename, height, width, fps):
         """Builds VideoWriter based on available dependencies."""
-        if VideoWriter.can_use_skvideo():
-            return VideoWriterSkvideo(filename, height, width, fps)
+        if VideoWriter.can_use_ffmpeg():
+            return VideoWriterImageio(filename, height, width, fps)
         else:
             return VideoWriterOpenCV(filename, height, width, fps)
 
     @staticmethod
-    def can_use_skvideo():
-        # See if we can import skvideo
+    def can_use_ffmpeg():
+        """Check if ffmpeg is available for writing videos."""
         try:
-            import skvideo
+            import imageio_ffmpeg as ffmpeg
         except ImportError:
             return False
 
-        # See if skvideo can find FFMPEG
-        if skvideo.getFFmpegVersion() != "0.0.0":
-            return True
+        try:
+            # Try to get the version of the ffmpeg plugin
+            ffmpeg_version = ffmpeg.get_ffmpeg_version()
+            if ffmpeg_version:
+                return True
+        except Exception:
+            return False
 
         return False
 
@@ -68,11 +73,11 @@ class VideoWriterOpenCV(VideoWriter):
         self._writer.release()
 
 
-class VideoWriterSkvideo(VideoWriter):
-    """Writes video using scikit-video as wrapper for ffmpeg.
+class VideoWriterImageio(VideoWriter):
+    """Writes video using imageio as a wrapper for ffmpeg.
 
     Attributes:
-        filename: Path to mp4 file to save to.
+        filename: Path to video file to save to.
         height: Height of movie frames.
         width: Width of movie frames.
         fps: Playback framerate to save at.
@@ -85,28 +90,38 @@ class VideoWriterSkvideo(VideoWriter):
     def __init__(
         self, filename, height, width, fps, crf: int = 21, preset: str = "superfast"
     ):
-        import skvideo.io
+        self.filename = filename
+        self.height = height
+        self.width = width
+        self.fps = fps
+        self.crf = crf
+        self.preset = preset
 
-        fps = str(fps)
-        self._writer = skvideo.io.FFmpegWriter(
+        import imageio_ffmpeg as ffmpeg
+
+        # Imageio's ffmpeg writer parameters
+        # https://imageio.readthedocs.io/en/stable/examples.html#writing-videos-with-ffmpeg-and-vaapi
+        # Use `ffmpeg -h encoder=libx264`` to see all options for libx264 output_params
+        # output_params must be a list of strings
+        # iio.help(name='FFMPEG') to test
+        self.writer = iio.get_writer(
             filename,
-            inputdict={
-                "-r": fps,
-            },
-            outputdict={
-                "-c:v": "libx264",
-                "-preset": preset,
-                "-vf": "scale=trunc(iw/2)*2:trunc(ih/2)*2",  # Need even dims for libx264
-                "-framerate": fps,
-                "-crf": str(crf),
-                "-pix_fmt": "yuv420p",
-            },
+            fps=fps,
+            codec="libx264",
+            format="FFMPEG",
+            pixelformat="yuv420p",
+            output_params=[
+                "-preset",
+                preset,
+                "-crf",
+                str(crf),
+            ],
         )
 
     def add_frame(self, img, bgr: bool = False):
         if bgr:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        self._writer.writeFrame(img)
+        self.writer.append_data(img)
 
     def close(self):
-        self._writer.close()
+        self.writer.close()
