@@ -1,6 +1,6 @@
 # Use this environment file if your computer does not have a nvidia GPU and runs Windows
-# or Linux. This environment file has exactly the same dependencies listed as 
-# environment.yaml, minus the packages required by tensorflow to find/use GPUs. 
+# or Linux. This environment file has exactly the same dependencies listed as
+# environment.yaml, minus the packages required by tensorflow to find/use GPUs.
 
 name: sleap_ci
 
@@ -18,7 +18,7 @@ dependencies:
     - conda-forge::cattrs >=23.2.0
     - conda-forge::jsmin
     # - conda-forge::jsonpickle ==1.2
-    - conda-forge::jsonpickle
+    - conda-forge::jsonpickle <=1.5.0 # 1.5.1 breaks compatibility with v1 encoded files
     - conda-forge::networkx
     # - anaconda::numpy >=1.19.5,<1.23.0
     - conda-forge::numpy >=1.16.5 # Scipy 1.7.0 requires numpy >=1.16.5

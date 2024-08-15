@@ -20,7 +20,7 @@ dependencies:
     - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
     # - conda-forge::jsonpickle ==1.2
-    - conda-forge::jsonpickle
+    - conda-forge::jsonpickle <=1.5.0 # 1.5.1 breaks compatibility with v1 encoded files
     # - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
     # - conda-forge::networkx <3.3
     - conda-forge::networkx
