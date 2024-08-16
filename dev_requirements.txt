@@ -21,5 +21,5 @@ PyGithub
 jedi==0.17.2
 click==8.0.4
 
-# The version of attrs must correspond to cattrs version
+# attrs is pulled in with myst-nb and myst-parser
 attrs>=23.1.0  # cattrs >=23.2.0 requires attrs >=23.1.0
