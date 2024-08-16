@@ -14,7 +14,7 @@ on:
     branches:
       # - develop
       # - fakebranch
-      - elizabeth/update-python-and-dependencies
+      - elizabeth/fix-ubuntu-CI-ImportError
 
 jobs:
   build:
