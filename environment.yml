@@ -15,6 +15,7 @@ dependencies:
     - conda-forge::attrs >=23.1.0  # Corresponds to version of cattrs
     # - conda-forge::cattrs ==1.1.1
     - conda-forge::cattrs >=23.2.0
+    - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
     - conda-forge::jsmin
     # - conda-forge::jsonpickle ==1.2
     - conda-forge::jsonpickle <=1.5.0 # 1.5.1 breaks compatibility with v1 encoded files

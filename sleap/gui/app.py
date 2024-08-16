@@ -53,6 +53,8 @@ import traceback
 from logging import getLogger
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
+import sys
+import subprocess
 
 from qtpy import QtCore, QtGui
 from qtpy.QtCore import QEvent, Qt
@@ -84,7 +86,7 @@ from sleap.io.dataset import Labels
 from sleap.io.video import available_video_exts
 from sleap.prefs import prefs
 from sleap.skeleton import Skeleton
-from sleap.util import parse_uri_path
+from sleap.util import parse_uri_path, get_config_file
 
 
 logger = getLogger(__name__)
@@ -515,6 +517,13 @@ class MainWindow(QMainWindow):
             fileMenu, "reset prefs", "Reset preferences to defaults...", self.resetPrefs
         )
 
+        add_menu_item(
+            fileMenu,
+            "open preference directory",
+            "Open Preferences Directory...",
+            self.openPrefs,
+        )
+
         fileMenu.addSeparator()
         add_menu_item(fileMenu, "close", "Quit", self.close)
 
@@ -695,13 +704,17 @@ class MainWindow(QMainWindow):
         )
 
         def new_instance_menu_action():
+            """Determine which action to use when using Ctrl + I or menu Add Instance.
+
+            We always add an offset of 10.
+            """
             method_key = [
                 key
                 for (key, val) in instance_adding_methods.items()
                 if val == self.state["instance_init_method"]
             ]
             if method_key:
-                self.commands.newInstance(init_method=method_key[0])
+                self.commands.newInstance(init_method=method_key[0], offset=10)
 
         labelMenu = self.menuBar().addMenu("Labels")
         add_menu_item(
@@ -744,12 +757,12 @@ class MainWindow(QMainWindow):
         labelMenu.addAction(
             "Copy Instance",
             self.commands.copyInstance,
-            Qt.CTRL + Qt.Key_C,
+            Qt.CTRL | Qt.Key_C,
         )
         labelMenu.addAction(
             "Paste Instance",
             self.commands.pasteInstance,
-            Qt.CTRL + Qt.Key_V,
+            Qt.CTRL | Qt.Key_V,
         )
 
         labelMenu.addSeparator()
@@ -843,12 +856,12 @@ class MainWindow(QMainWindow):
         tracksMenu.addAction(
             "Copy Instance Track",
             self.commands.copyInstanceTrack,
-            Qt.CTRL + Qt.SHIFT + Qt.Key_C,
+            Qt.CTRL | Qt.SHIFT | Qt.Key_C,
         )
         tracksMenu.addAction(
             "Paste Instance Track",
             self.commands.pasteInstanceTrack,
-            Qt.CTRL + Qt.SHIFT + Qt.Key_V,
+            Qt.CTRL | Qt.SHIFT | Qt.Key_V,
         )
 
         tracksMenu.addSeparator()
@@ -1330,14 +1343,42 @@ class MainWindow(QMainWindow):
         )
         msg.exec_()
 
+    def openPrefs(self):
+        """Open preference file directory"""
+        pref_path = get_config_file("preferences.yaml")
+        # Make sure the pref_path is a directory rather than a file
+        if pref_path.is_file():
+            pref_path = pref_path.parent
+        # Open the file explorer at the folder containing the preferences.yaml file
+        if sys.platform == "win32":
+            subprocess.Popen(["explorer", str(pref_path)])
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", str(pref_path)])
+        else:
+            subprocess.Popen(["xdg-open", str(pref_path)])
+
     def _update_track_menu(self):
         """Updates track menu options."""
         self.track_menu.clear()
         self.delete_tracks_menu.clear()
+
+        # Create a dictionary mapping track indices to Qt.Key values
+        key_mapping = {
+            0: Qt.Key_1,
+            1: Qt.Key_2,
+            2: Qt.Key_3,
+            3: Qt.Key_4,
+            4: Qt.Key_5,
+            5: Qt.Key_6,
+            6: Qt.Key_7,
+            7: Qt.Key_8,
+            8: Qt.Key_9,
+            9: Qt.Key_0,
+        }
         for track_ind, track in enumerate(self.labels.tracks):
             key_command = ""
             if track_ind < 9:
-                key_command = Qt.CTRL + Qt.Key_0 + self.labels.tracks.index(track) + 1
+                key_command = Qt.CTRL | key_mapping[track_ind]
             self.track_menu.addAction(
                 f"{track.name}",
                 lambda x=track: self.commands.setInstanceTrack(x),
@@ -1347,7 +1388,7 @@ class MainWindow(QMainWindow):
                 f"{track.name}", lambda x=track: self.commands.deleteTrack(x)
             )
         self.track_menu.addAction(
-            "New Track", self.commands.addTrack, Qt.CTRL + Qt.Key_0
+            "New Track", self.commands.addTrack, Qt.CTRL | Qt.Key_0
         )
 
     def _update_seekbar_marks(self):

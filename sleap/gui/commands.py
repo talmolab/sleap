@@ -504,6 +504,7 @@ class CommandContext:
         init_method: str = "best",
         location: Optional[QtCore.QPoint] = None,
         mark_complete: bool = False,
+        offset: int = 0,
     ):
         """Creates a new instance, copying node coordinates as appropriate.
 
@@ -513,6 +514,8 @@ class CommandContext:
             init_method: Method to use for positioning nodes.
             location: The location where instance should be added (if node init
                 method supports custom location).
+            mark_complete: Whether to mark the instance as complete.
+            offset: Offset to apply to the location if given.
         """
         self.execute(
             AddInstance,
@@ -520,6 +523,7 @@ class CommandContext:
             init_method=init_method,
             location=location,
             mark_complete=mark_complete,
+            offset=offset,
         )
 
     def setPointLocations(
@@ -1325,17 +1329,15 @@ class ExportLabeledClip(AppCommand):
         # makes mp4's that most programs can't open (VLC can).
         default_out_filename = context.state["filename"] + ".avi"
 
-        # But if we can write mpegs using sci-kit video, use .mp4
-        # since it has trouble writing .avi files.
-        if VideoWriter.can_use_skvideo():
+        if VideoWriter.can_use_ffmpeg():
             default_out_filename = context.state["filename"] + ".mp4"
 
-        # Ask where use wants to save video file
+        # Ask where user wants to save video file
         filename, _ = FileDialog.save(
             context.app,
             caption="Save Video As...",
             dir=default_out_filename,
-            filter="Video (*.avi *mp4)",
+            filter="Video (*.avi *.mp4)",
         )
 
         # Check if user hit cancel
@@ -2858,6 +2860,7 @@ class AddInstance(EditCommand):
         init_method = params.get("init_method", "best")
         location = params.get("location", None)
         mark_complete = params.get("mark_complete", False)
+        offset = params.get("offset", 0)
 
         if context.state["labeled_frame"] is None:
             return
@@ -2881,6 +2884,7 @@ class AddInstance(EditCommand):
             init_method=init_method,
             location=location,
             from_prev_frame=from_prev_frame,
+            offset=offset,
         )
 
         # Add the instance
@@ -2898,6 +2902,7 @@ class AddInstance(EditCommand):
         init_method: str,
         location: Optional[QtCore.QPoint],
         from_prev_frame: bool,
+        offset: int = 0,
     ) -> Instance:
         """Create new instance."""
 
@@ -2913,6 +2918,9 @@ class AddInstance(EditCommand):
             copy_instance=copy_instance,
             new_instance=new_instance,
             mark_complete=mark_complete,
+            init_method=init_method,
+            location=location,
+            offset=offset,
         )
 
         if has_missing_nodes:
@@ -2984,6 +2992,9 @@ class AddInstance(EditCommand):
         copy_instance: Optional[Union[Instance, PredictedInstance]],
         new_instance: Instance,
         mark_complete: bool,
+        init_method: str,
+        location: Optional[QtCore.QPoint] = None,
+        offset: int = 0,
     ) -> bool:
         """Sets visible nodes for new instance.
 
@@ -2992,6 +3003,9 @@ class AddInstance(EditCommand):
             copy_instance: The instance to copy from.
             new_instance: The new instance.
             mark_complete: Whether to mark the instance as complete.
+            init_method: The initialization method.
+            location: The location of the mouse click if any.
+            offset: The offset to apply to all nodes.
 
         Returns:
             Whether the new instance has missing nodes.
@@ -3010,6 +3024,20 @@ class AddInstance(EditCommand):
         scale_width = new_size_width / old_size_width
         scale_height = new_size_height / old_size_height
 
+        # The offset is 0, except when using Ctrl + I or Add Instance button.
+        offset_x = offset
+        offset_y = offset
+
+        # Using right click and context menu with option "best"
+        if (init_method == "best") and (location is not None):
+            reference_node = next(
+                (node for node in copy_instance if not node.isnan()), None
+            )
+            reference_x = reference_node.x
+            reference_y = reference_node.y
+            offset_x = location.x() - (reference_x * scale_width)
+            offset_y = location.y() - (reference_y * scale_height)
+
         # Go through each node in skeleton.
         for node in context.state["skeleton"].node_names:
             # If we're copying from a skeleton that has this node.
@@ -3018,13 +3046,45 @@ class AddInstance(EditCommand):
                 # We don't want to copy a PredictedPoint or score attribute.
                 x_old = copy_instance[node].x
                 y_old = copy_instance[node].y
-                x_new = x_old * scale_width
-                y_new = y_old * scale_height
 
+                # Copy the instance without scale or offset if predicted
+                if isinstance(copy_instance, PredictedInstance):
+                    x_new = x_old
+                    y_new = y_old
+                else:
+                    x_new = x_old * scale_width
+                    y_new = y_old * scale_height
+
+                # Apply offset if in bounds
+                x_new_offset = x_new + offset_x
+                y_new_offset = y_new + offset_y
+
+                # Default visibility is same as copied instance.
+                visible = copy_instance[node].visible
+
+                # If the node is offset to outside the frame, mark as not visible.
+                if x_new_offset < 0:
+                    x_new = 0
+                    visible = False
+                elif x_new_offset > new_size_width:
+                    x_new = new_size_width
+                    visible = False
+                else:
+                    x_new = x_new_offset
+                if y_new_offset < 0:
+                    y_new = 0
+                    visible = False
+                elif y_new_offset > new_size_height:
+                    y_new = new_size_height
+                    visible = False
+                else:
+                    y_new = y_new_offset
+
+                # Update the new instance with the new x, y, and visibility.
                 new_instance[node] = Point(
                     x=x_new,
                     y=y_new,
-                    visible=copy_instance[node].visible,
+                    visible=visible,
                     complete=mark_complete,
                 )
             else:
