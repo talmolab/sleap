@@ -1545,22 +1545,17 @@ class Video:
             A cattr converter.
         """
 
-        # When we are structuring video backends, try to fixup the video file paths
-        # in case they are coming from a different computer or the file has been moved.
-        def fixup_video(x, cl):
-            if "filename" in x:
-                x["filename"] = Video.fixup_path(x["filename"])
-            if "file" in x:
-                x["file"] = Video.fixup_path(x["file"])
+        # Use from_filename to fixup the video path and determine backend
+        def fixup_video(x: dict, cl: Video):
+            backend_dict = x.pop("backend")
+            filename = backend_dict.pop("filename", None) or backend_dict.pop(
+                "file", None
+            )
 
-            return Video.make_specific_backend(cl, x)
+            return Video.from_filename(filename, **backend_dict)
 
         vid_cattr = cattr.Converter()
-
-        # Check the type hint for backend and register the video path
-        # fixup hook for each type in the Union.
-        for t in attr.fields(Video).backend.type.__args__:
-            vid_cattr.register_structure_hook(t, fixup_video)
+        vid_cattr.register_structure_hook(Video, fixup_video)
 
         return vid_cattr
 
