@@ -757,12 +757,12 @@ class MainWindow(QMainWindow):
         labelMenu.addAction(
             "Copy Instance",
             self.commands.copyInstance,
-            Qt.CTRL + Qt.Key_C,
+            Qt.CTRL | Qt.Key_C,
         )
         labelMenu.addAction(
             "Paste Instance",
             self.commands.pasteInstance,
-            Qt.CTRL + Qt.Key_V,
+            Qt.CTRL | Qt.Key_V,
         )
 
         labelMenu.addSeparator()
@@ -856,12 +856,12 @@ class MainWindow(QMainWindow):
         tracksMenu.addAction(
             "Copy Instance Track",
             self.commands.copyInstanceTrack,
-            Qt.CTRL + Qt.SHIFT + Qt.Key_C,
+            Qt.CTRL | Qt.SHIFT | Qt.Key_C,
         )
         tracksMenu.addAction(
             "Paste Instance Track",
             self.commands.pasteInstanceTrack,
-            Qt.CTRL + Qt.SHIFT + Qt.Key_V,
+            Qt.CTRL | Qt.SHIFT | Qt.Key_V,
         )
 
         tracksMenu.addSeparator()
@@ -1361,10 +1361,24 @@ class MainWindow(QMainWindow):
         """Updates track menu options."""
         self.track_menu.clear()
         self.delete_tracks_menu.clear()
+
+        # Create a dictionary mapping track indices to Qt.Key values
+        key_mapping = {
+            0: Qt.Key_1,
+            1: Qt.Key_2,
+            2: Qt.Key_3,
+            3: Qt.Key_4,
+            4: Qt.Key_5,
+            5: Qt.Key_6,
+            6: Qt.Key_7,
+            7: Qt.Key_8,
+            8: Qt.Key_9,
+            9: Qt.Key_0,
+        }
         for track_ind, track in enumerate(self.labels.tracks):
             key_command = ""
             if track_ind < 9:
-                key_command = Qt.CTRL + Qt.Key_0 + self.labels.tracks.index(track) + 1
+                key_command = Qt.CTRL | key_mapping[track_ind]
             self.track_menu.addAction(
                 f"{track.name}",
                 lambda x=track: self.commands.setInstanceTrack(x),
@@ -1374,7 +1388,7 @@ class MainWindow(QMainWindow):
                 f"{track.name}", lambda x=track: self.commands.deleteTrack(x)
             )
         self.track_menu.addAction(
-            "New Track", self.commands.addTrack, Qt.CTRL + Qt.Key_0
+            "New Track", self.commands.addTrack, Qt.CTRL | Qt.Key_0
         )
 
     def _update_seekbar_marks(self):
