@@ -1373,7 +1373,7 @@ class MainWindow(QMainWindow):
             6: Qt.Key_7,
             7: Qt.Key_8,
             8: Qt.Key_9,
-            9: Qt.Key_0
+            9: Qt.Key_0,
         }
         for track_ind, track in enumerate(self.labels.tracks):
             key_command = ""
