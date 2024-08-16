@@ -91,6 +91,7 @@ jobs:
           # Ubuntu specific values
           - os: ubuntu-22.04
             # Otherwise core dumped in github actions
+            # https://github.com/conda-forge/opencv-feedstock/issues/401#issue-2196393732
             test_args: |
               sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
               sudo apt-get install libglapi-mesa libegl-mesa0 libegl1 libopengl0 libgl1-mesa-glx
