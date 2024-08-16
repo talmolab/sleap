@@ -1,23 +1,20 @@
 """
 Dialogs for running training and/or inference in GUI.
 """
-import cattr
-import os
+import json
 import shutil
-import atexit
 import tempfile
 from pathlib import Path
+from typing import Dict, List, Optional, Text, cast
+
+import cattr
+from qtpy import QtCore, QtGui, QtWidgets
 
 import sleap
 from sleap import Labels, Video
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
-from sleap.gui.learning import runners, scopedkeydict, configs, datagen, receptivefield
-
-from typing import Dict, List, Text, Optional, cast
-
-from qtpy import QtWidgets, QtCore
-import json
+from sleap.gui.learning import configs, datagen, receptivefield, runners, scopedkeydict
 
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
@@ -171,7 +168,7 @@ class LearningDialog(QtWidgets.QDialog):
 
     def adjust_initial_size(self):
         # Get screen size
-        screen = QtWidgets.QDesktopWidget().screenGeometry()
+        screen = QtGui.QGuiApplication.primaryScreen().availableGeometry()
 
         max_width = 1860
         max_height = 1150
