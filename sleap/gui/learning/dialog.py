@@ -171,7 +171,7 @@ class LearningDialog(QtWidgets.QDialog):
 
     def adjust_initial_size(self):
         # Get screen size
-        screen = QtWidgets.QDesktopWidget().screenGeometry()
+        screen = QtGui.QGuiApplication.primaryScreen().availableGeometry()
 
         max_width = 1860
         max_height = 1150
