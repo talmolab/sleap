@@ -2067,7 +2067,7 @@ class OpenSkeleton(EditCommand):
                 func(*args, **kwargs)
             except Exception as e:
                 tb_str = traceback.format_exception(
-                    etype=type(e), value=e, tb=e.__traceback__
+                    type(e), value=e, tb=e.__traceback__
                 )
                 logger.warning(
                     f"Recieved the following error while replacing skeleton:\n"
