@@ -1740,3 +1740,22 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
         app.exec_()
 
     pass
+
+
+if __name__ == "__main__":
+
+    labels_path = os.environ["dsdmc"]
+
+    app = create_app()
+
+    window = MainWindow(
+        labels_path=labels_path,
+    )
+    window.showMaximized()
+
+    sleap.use_cpu_only()
+
+    mode = "training"
+    window._show_learning_dialog(mode)
+    learning_dialog = window._child_windows[mode]
+    learning_dialog.run()
