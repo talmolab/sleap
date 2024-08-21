@@ -657,3 +657,30 @@ class LossViewer(QtWidgets.QMainWindow):
 
         if do_update:
             self.update_runtime()
+
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication([])
+    win = LossViewer()
+    win.resize(600, 400)
+    win.show()
+
+    def test_point(x=[0]):
+        x[0] += 1
+        i = x[0] + 1
+        win.add_datapoint(
+            i,
+            i % 30 + 1,
+            which="batch",
+        )
+
+    t = QtCore.QTimer()
+    t.timeout.connect(test_point)
+    t.start(200)
+
+    win.set_message("Waiting for 3 seconds...")
+    t2 = QtCore.QTimer()
+    t2.timeout.connect(lambda: win.set_message("Running demo..."))
+    t2.start(3000)
+
+    app.exec_()
