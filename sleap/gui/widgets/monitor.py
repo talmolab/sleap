@@ -1,19 +1,21 @@
 """GUI for monitoring training progress interactively."""
 
-import numpy as np
-from time import perf_counter
-from sleap.nn.config.training_job import TrainingJobConfig
-from sleap.gui.utils import is_port_free, select_zmq_port
-import zmq
-import jsonpickle
 import logging
-from typing import Optional, Dict
-from qtpy import QtCore, QtWidgets, QtGui
+from time import perf_counter
+from typing import Dict, Optional
+
 import attr
+import jsonpickle
+import numpy as np
+import zmq
+from qtpy import QtCore, QtGui, QtWidgets
 
-# from qtpy.QtCharts import QtCharts # QtCharts is not working replace with matplotlib
+# TODO(LM): Replace with matplotlib
+from qtpy.QtCharts import QtCharts
+
+from sleap.gui.utils import is_port_free, select_zmq_port
 from sleap.gui.widgets.mpl import MplCanvas
-
+from sleap.nn.config.training_job import TrainingJobConfig
 
 logger = logging.getLogger(__name__)
 
