@@ -2,7 +2,7 @@
 
 import logging
 from time import perf_counter
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 import attr
 import jsonpickle
@@ -92,6 +92,9 @@ class LossViewer(QtWidgets.QMainWindow):
             what: String identifier indicating which job type the current run
                 corresponds to.
         """
+        self.canvas = MplCanvas(width=5, height=4, dpi=100)
+        self.setCentralWidget(self.canvas)
+
         self.chart = QtCharts.QChart()
 
         self.series = dict()
@@ -100,50 +103,57 @@ class LossViewer(QtWidgets.QMainWindow):
         COLOR_VAL = (248, 167, 52)
         COLOR_BEST_VAL = (151, 204, 89)
 
-        self.series["batch"] = QtCharts.QScatterSeries()
-        self.series["batch"].setName("Batch Training Loss")
-        self.series["batch"].setColor(QtGui.QColor(*COLOR_TRAIN, 48))
-        self.series["batch"].setMarkerSize(8.0)
-        self.series["batch"].setBorderColor(QtGui.QColor(255, 255, 255, 25))
-        self.chart.addSeries(self.series["batch"])
-
-        self.series["epoch_loss"] = QtCharts.QLineSeries()
-        self.series["epoch_loss"].setName("Epoch Training Loss")
-        self.series["epoch_loss"].setColor(QtGui.QColor(*COLOR_TRAIN, 255))
-        pen = self.series["epoch_loss"].pen()
-        pen.setWidth(4)
-        self.series["epoch_loss"].setPen(pen)
-        self.chart.addSeries(self.series["epoch_loss"])
-
-        self.series["epoch_loss_scatter"] = QtCharts.QScatterSeries()
-        self.series["epoch_loss_scatter"].setColor(QtGui.QColor(*COLOR_TRAIN, 255))
-        self.series["epoch_loss_scatter"].setMarkerSize(12.0)
-        self.series["epoch_loss_scatter"].setBorderColor(
-            QtGui.QColor(255, 255, 255, 25)
+        # TODO(LM): Replace with matplotlib
+        self.series["batch"] = self._init_series(
+            series_type=QtCharts.QScatterSeries,
+            name="Batch Training Loss",
+            color=COLOR_TRAIN + (48,),
+            marker_size=8.0,
+            border_color=(255, 255, 255, 25),
         )
-        self.chart.addSeries(self.series["epoch_loss_scatter"])
 
-        self.series["val_loss"] = QtCharts.QLineSeries()
-        self.series["val_loss"].setName("Epoch Validation Loss")
-        self.series["val_loss"].setColor(QtGui.QColor(*COLOR_VAL, 255))
-        pen = self.series["val_loss"].pen()
-        pen.setWidth(4)
-        self.series["val_loss"].setPen(pen)
-        self.chart.addSeries(self.series["val_loss"])
+        # TODO(LM): Replace with matplotlib
+        self.series["epoch_loss"] = self._init_series(
+            series_type=QtCharts.QLineSeries,
+            name="Epoch Training Loss",
+            color=COLOR_TRAIN + (255,),
+            pen_width=4,
+        )
 
-        self.series["val_loss_scatter"] = QtCharts.QScatterSeries()
-        self.series["val_loss_scatter"].setColor(QtGui.QColor(*COLOR_VAL, 255))
-        self.series["val_loss_scatter"].setMarkerSize(12.0)
-        self.series["val_loss_scatter"].setBorderColor(QtGui.QColor(255, 255, 255, 25))
-        self.chart.addSeries(self.series["val_loss_scatter"])
+        # TODO(LM): Replace with matplotlib
+        self.series["epoch_loss_scatter"] = self._init_series(
+            series_type=QtCharts.QScatterSeries,
+            color=COLOR_TRAIN + (255,),
+            marker_size=12.0,
+            border_color=(255, 255, 255, 25),
+        )
 
-        self.series["val_loss_best"] = QtCharts.QScatterSeries()
-        self.series["val_loss_best"].setName("Best Validation Loss")
-        self.series["val_loss_best"].setColor(QtGui.QColor(*COLOR_BEST_VAL, 255))
-        self.series["val_loss_best"].setMarkerSize(12.0)
-        self.series["val_loss_best"].setBorderColor(QtGui.QColor(32, 32, 32, 25))
-        self.chart.addSeries(self.series["val_loss_best"])
+        # TODO(LM): Replace with matplotlib
+        self.series["val_loss"] = self._init_series(
+            series_type=QtCharts.QLineSeries,
+            name="Epoch Validation Loss",
+            color=COLOR_VAL + (255,),
+            pen_width=4,
+        )
 
+        # TODO(LM): Replace with matplotlib
+        self.series["val_loss_scatter"] = self._init_series(
+            series_type=QtCharts.QScatterSeries,
+            color=COLOR_VAL + (255,),
+            marker_size=12.0,
+            border_color=(255, 255, 255, 25),
+        )
+
+        # TODO(LM): Replace with matplotlib
+        self.series["val_loss_best"] = self._init_series(
+            series_type=QtCharts.QScatterSeries,
+            name="Best Validation Loss",
+            color=COLOR_BEST_VAL + (255,),
+            marker_size=12.0,
+            border_color=(32, 32, 32, 25),
+        )
+
+        # TODO(LM): Replace with matplotlib
         axisX = QtCharts.QValueAxis()
         axisX.setLabelFormat("%d")
         axisX.setTitleText("Batches")
@@ -152,9 +162,11 @@ class LossViewer(QtWidgets.QMainWindow):
         # Create the different Y axes that can be used.
         self.axisY = dict()
 
+        # TODO(LM): Replace with matplotlib
         self.axisY["log"] = QtCharts.QLogValueAxis()
         self.axisY["log"].setBase(10)
 
+        # TODO(LM): Replace with matplotlib
         self.axisY["linear"] = QtCharts.QValueAxis()
 
         # Apply settings that apply to all Y axes.
@@ -182,6 +194,7 @@ class LossViewer(QtWidgets.QMainWindow):
         for s in ("epoch_loss_scatter", "val_loss_scatter"):
             self.chart.legend().markers(self.series[s])[0].setVisible(False)
 
+        # TODO(LM): Replace with matplotlib
         self.chartView = QtCharts.QChartView(self.chart)
         self.chartView.setRenderHint(QtGui.QPainter.Antialiasing)
         layout = QtWidgets.QVBoxLayout()
@@ -259,6 +272,36 @@ class LossViewer(QtWidgets.QMainWindow):
         self.epoch_in_plateau_flag = False
         self.last_batch_number = 0
         self.is_running = False
+
+    def _init_series(
+        self,
+        series_type,
+        color,
+        name: Optional[str] = None,
+        border_color: Optional[Tuple[int, int, int]] = None,
+        pen_width: Optional[int] = None,
+        marker_size: Optional[float] = None,
+    ):
+        series = series_type()
+
+        series.setColor(QtGui.QColor(*color))
+
+        if name is not None:
+            series.setName(name)
+
+        if pen_width is not None:
+            pen = series.pen()
+            pen.setWidth(pen_width)
+            series.setPen(pen)
+
+        if marker_size is not None:
+            series.setMarkerSize(8.0)
+
+        if border_color is not None:
+            series.setBorderColor(QtGui.QColor(*border_color))
+
+        self.chart.addSeries(series)
+        return series
 
     def toggle_ignore_outliers(self):
         """Toggles whether to ignore outliers in chart scaling."""
