@@ -418,7 +418,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.ax.spines["right"].set_visible(False)
 
         # Set the tick markers color to light gray, but not the tick labels
-        self.ax.tick_params(axis="both", which="both", color="#d3d3d3")
+        self.ax.tick_params(axis="both", which="both", color="#d3d3d3", labelsize="small")
 
         # Add gridlines at the tick labels
         self.ax.grid(True, which="major", linewidth=0.5, color="#d3d3d3")
