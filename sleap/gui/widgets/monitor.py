@@ -257,26 +257,23 @@ class LossViewer(QtWidgets.QMainWindow):
         color,
         name: Optional[str] = None,
         border_color: Optional[Tuple[int, int, int]] = None,
-        pen_width: Optional[int] = None,
     ):
+
+        # Set the color
+        color = [c / 255.0 for c in color]  # Normalize color values to [0, 1]
 
         # Create the series
         series = series_type(
             [],
             [],
+            color=color,
+            label=name,
+            marker="o",
         )
 
-        # Set the color
-        color = [c / 255.0 for c in color]  # Normalize color values to [0, 1]
-        series.set_color(color)
-
-        # Set the name (label)
-        if name is not None:
-            series.set_label(name)
-
-        # Set the pen width (line width)
-        if pen_width is not None:
-            series.set_linewidth(pen_width)
+        # ax.plot returns a list of PathCollections, so we need to get the first one
+        if not isinstance(series, PathCollection):
+            series = series[0]
 
         # Set the border color (edge color)
         if border_color is not None:
@@ -285,8 +282,6 @@ class LossViewer(QtWidgets.QMainWindow):
             ]  # Normalize color values to [0, 1]
             series.set_edgecolor(border_color)
 
-        # Add the series to the chart (Matplotlib Axes)
-        self.ax.add_collection(series)
         return series
 
     def _init_series(
