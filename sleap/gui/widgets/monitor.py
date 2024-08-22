@@ -9,7 +9,6 @@ import jsonpickle
 import numpy as np
 import zmq
 from matplotlib.collections import PathCollection
-from matplotlib.path import Path
 from qtpy import QtCore, QtGui, QtWidgets
 
 # TODO(LM): Replace with matplotlib
