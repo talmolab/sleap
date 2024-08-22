@@ -347,6 +347,10 @@ class LossViewer(QtWidgets.QMainWindow):
 
         # Use the default Y axis.
         axisY = self.axisY["log"] if self.log_scale else self.axisY["linear"]
+        if self.log_scale:
+            self.ax.set_yscale("log")
+        else:
+            self.ax.set_yscale("linear")
 
         # Add axes to chart and series.
         self.chart.addAxis(axisY, QtCore.Qt.AlignLeft)
@@ -370,6 +374,10 @@ class LossViewer(QtWidgets.QMainWindow):
         """Toggle whether to use log-scaled y-axis."""
         self.log_scale = not self.log_scale
         self.update_y_axis()
+        if self.log_scale:
+            self.ax.set_yscale("log")
+        else:
+            self.ax.set_yscale("linear")
 
     def set_batches_to_show(self, batches: str):
         """Set the number of batches to show on the x-axis.
