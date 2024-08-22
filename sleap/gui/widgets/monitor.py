@@ -381,6 +381,8 @@ class LossViewer(QtWidgets.QMainWindow):
         for s in ("epoch_loss_scatter", "val_loss_scatter"):
             self.chart.legend().markers(self.series[s])[0].setVisible(False)
 
+        self.ax.legend(loc="upper right")
+
     def toggle_ignore_outliers(self):
         """Toggles whether to ignore outliers in chart scaling."""
         self.ignore_outliers = not self.ignore_outliers
