@@ -664,44 +664,71 @@ class LossViewer(QtWidgets.QMainWindow):
 
     def update_runtime(self):
         """Update the title text with the current running time."""
+
         if self.is_timer_running:
             dt = perf_counter() - self.t0
             dt_min, dt_sec = divmod(dt, 60)
-            title = f"Training Epoch {self.epoch + 1} / "
-            title += f"Runtime: {int(dt_min):02}:{int(dt_sec):02}"
+
+            charts_title = f"Training Epoch <b>{self.epoch + 1}</b> / "
+            charts_title += f"Runtime: <b>{int(dt_min):02}:{int(dt_sec):02}</b>"
+            title = r"Training Epoch $\mathbf{" + str(self.epoch + 1) + r"}$ / "
+            title += r"Runtime: $\mathbf{" + f"{int(dt_min):02}:{int(dt_sec):02}" + r"}$"
             if self.last_epoch_val_loss is not None:
                 if self.penultimate_epoch_val_loss is not None:
+                    charts_title += (
+                        f"<br />Mean Time per Epoch: "
+                        f"<b>{int(self.mean_epoch_time_min):02}:{int(self.mean_epoch_time_sec):02}</b> / "
+                        f"ETA Next 10 Epochs: <b>{int(self.eta_ten_epochs_min)} min</b>"
+                    )
                     title += (
-                        f"\nMean Time per Epoch: "
-                        f"{int(self.mean_epoch_time_min):02}:{int(self.mean_epoch_time_sec):02} / "
-                        f"ETA Next 10 Epochs: {int(self.eta_ten_epochs_min)} min"
+                        "\nMean Time per Epoch: "
+                        r"$\mathbf{" + f"{int(self.mean_epoch_time_min):02}:{int(self.mean_epoch_time_sec):02}" + r"}$ / "
+                        r"ETA Next 10 Epochs: $\mathbf{" + f"{int(self.eta_ten_epochs_min)}" + r"}$ min"
                     )
                     if self.epoch_in_plateau_flag:
-                        title += (
-                            f"\nEpochs in Plateau: "
-                            f"{self.epochs_in_plateau} / "
-                            f"{self.config.optimization.early_stopping.plateau_patience}"
+                        charts_title += (
+                            f"<br />Epochs in Plateau: "
+                            f"<b>{self.epochs_in_plateau} / "
+                            f"{self.config.optimization.early_stopping.plateau_patience}</b>"
                         )
+                        title += (
+                            "\nEpochs in Plateau: "
+                            r"$\mathbf{" + f"{self.epochs_in_plateau}" + r"}$ / "
+                            r"$\mathbf{" + f"{self.config.optimization.early_stopping.plateau_patience}" + r"}$"
+                        )
+                charts_title += (
+                    f"<br />Last Epoch Validation Loss: "
+                    f"<b>{self.last_epoch_val_loss:.3e}</b>"
+                )
                 title += (
-                    f"\nLast Epoch Validation Loss: " f"{self.last_epoch_val_loss:.3e}"
+                    "\nLast Epoch Validation Loss: "
+                    r"$\mathbf{" + f"{self.last_epoch_val_loss:.3e}" + r"}$"
                 )
             if self.best_val_x is not None:
                 best_epoch = (self.best_val_x // self.epoch_size) + 1
-                title += (
-                    f"\nBest Epoch Validation Loss: "
-                    f"{self.best_val_y:.3e} (epoch {best_epoch})"
+                charts_title += (
+                    f"<br />Best Epoch Validation Loss: "
+                    f"<b>{self.best_val_y:.3e}</b> (epoch <b>{best_epoch}</b>)"
                 )
-            self.set_message(title)
+                title += (
+                    "\nBest Epoch Validation Loss: "
+                    r"$\mathbf{" + f"{self.best_val_y:.3e}" + r"}$ (epoch $\mathbf{" + str(best_epoch) + r"}$)"
+                )
+            self.set_message(title, charts_title)
 
     @property
     def is_timer_running(self) -> bool:
         """Return True if the timer has started."""
         return self.t0 is not None and self.is_running
 
-    def set_message(self, text: str):
+    def set_message(self, text: str, charts_text = None):
         """Set the chart title text."""
-        self.chart.setTitle(text)
+        
         self.ax.set_title(text, fontweight="light", fontsize="small", x=0.55, y=1.05)
+        
+
+        charts_text = text if charts_text is None else charts_text
+        self.chart.setTitle(charts_text)
 
     def check_messages(
         self, timeout: int = 10, times_to_check: int = 10, do_update: bool = True
