@@ -128,6 +128,11 @@ class LossViewer(QtWidgets.QMainWindow):
             color=COLOR_TRAIN + (255,),
             pen_width=4,
         )
+        self.mp_series["epoch_loss"] = self._init_series_(
+            series_type=self.ax.plot,
+            name="Epoch Training Loss",
+            color=COLOR_TRAIN + (255,),
+        )
 
         # TODO(LM): Replace with matplotlib
         self.series["epoch_loss_scatter"] = self._init_series(
@@ -548,6 +553,10 @@ class LossViewer(QtWidgets.QMainWindow):
             if which == "epoch_loss":
                 self.series["epoch_loss"].append(x, y)
                 self.series["epoch_loss_scatter"].append(x, y)
+                x_data, y_data = self.mp_series["epoch_loss"].get_data()
+                self.mp_series["epoch_loss"].set_data(
+                    np.append(x_data, x), np.append(y_data, y)
+                )
             elif which == "val_loss":
                 self.series["val_loss"].append(x, y)
                 self.series["val_loss_scatter"].append(x, y)
@@ -555,6 +564,8 @@ class LossViewer(QtWidgets.QMainWindow):
                     self.best_val_x = x
                     self.best_val_y = y
                     self.series["val_loss_best"].replace([QtCore.QPointF(x, y)])
+
+            self.ax.figure.canvas.draw_idle()  # Redraw the plot
 
     def _resize_axes(self, x, y):
         """Resize axes to fit data."""
