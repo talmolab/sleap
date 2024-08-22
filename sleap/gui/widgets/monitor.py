@@ -96,6 +96,7 @@ class LossViewer(QtWidgets.QMainWindow):
         """
         self.canvas = MplCanvas(width=5, height=4, dpi=100)
         self.ax = self.canvas.axes
+        self.fig = self.canvas.fig
 
         self.chart = QtCharts.QChart()
 
@@ -188,6 +189,8 @@ class LossViewer(QtWidgets.QMainWindow):
 
         # Setup legend.
         self._setup_legend()
+
+        self.fig.subplots_adjust(top=0.75)  # Adjust the top parameters as needed
 
         # TODO(LM): Replace with matplotlib
         self.chartView = QtCharts.QChartView(self.chart)
@@ -344,6 +347,7 @@ class LossViewer(QtWidgets.QMainWindow):
             series.attachAxis(axisX)
 
         self.ax.set_xlabel("Batches", fontweight="bold")
+        self.fig.subplots_adjust(bottom=0.16, right=0.98)
 
     def _setup_y_axes(self):
         self.axisY = dict()
@@ -371,6 +375,7 @@ class LossViewer(QtWidgets.QMainWindow):
             series.attachAxis(axisY)
 
         self.ax.set_ylabel("Loss", fontweight="bold")
+        self.fig.subplots_adjust(left=0.2)  # Adjust the left parameter as needed
 
     def _setup_legend(self):
         self.chart.legend().setVisible(True)
