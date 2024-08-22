@@ -667,6 +667,23 @@ class LossViewer(QtWidgets.QMainWindow):
         self.chart.axisY().setRange(low, high)
         self.ax.set_ylim(low, high)
 
+        self._add_midpoint_gridlines()
+
+    def _add_midpoint_gridlines(self):
+        # Clear existing minor vertical lines
+        for line in self.ax.get_lines():
+            if line.get_linestyle() == ':':
+                line.remove()
+
+        # Add gridlines at midpoint between major ticks
+        major_ticks = self.ax.yaxis.get_majorticklocs()
+        if len(major_ticks) > 1:
+            prev_major_tick = major_ticks[0]
+            for major_tick in major_ticks[:-1]:
+                midpoint = (major_tick + prev_major_tick) / 2
+                self.ax.axhline(midpoint, linestyle=':', linewidth=0.5, color='#d3d3d3')
+                prev_major_tick = major_tick
+
     def set_start_time(self, t0: float):
         """Mark the start flag and time of the run.
 
