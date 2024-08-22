@@ -149,6 +149,12 @@ class LossViewer(QtWidgets.QMainWindow):
             color=COLOR_VAL + (255,),
             pen_width=4,
         )
+        self.mp_series["val_loss"] = self._init_series_(
+            series_type=self.ax.plot,
+            name="Epoch Validation Loss",
+            color=COLOR_VAL + (255,),
+            zorder=4,
+        )
 
         # TODO(LM): Replace with matplotlib
         self.series["val_loss_scatter"] = self._init_series(
@@ -262,6 +268,7 @@ class LossViewer(QtWidgets.QMainWindow):
         color,
         name: Optional[str] = None,
         border_color: Optional[Tuple[int, int, int]] = None,
+        zorder: Optional[int] = None,
     ):
 
         # Set the color
@@ -274,6 +281,7 @@ class LossViewer(QtWidgets.QMainWindow):
             color=color,
             label=name,
             marker="o",
+            zorder=zorder,
         )
 
         # ax.plot returns a list of PathCollections, so we need to get the first one
