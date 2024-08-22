@@ -348,6 +348,8 @@ class LossViewer(QtWidgets.QMainWindow):
         for series in self.chart.series():
             series.attachAxis(axisX)
 
+        self.ax.set_xlim(0,1)
+
         self.ax.set_xlabel("Batches", fontweight="bold", fontsize="small")
         self.fig.subplots_adjust(bottom=0.16, right=0.98)
 
@@ -376,6 +378,9 @@ class LossViewer(QtWidgets.QMainWindow):
         for series in self.chart.series():
             series.attachAxis(axisY)
 
+        
+        # Set the minimum value of the y-axis
+        self.ax.set_ylim(bottom=0, top=None)
         self.ax.set_ylabel("Loss", fontweight="bold", fontsize="small")
         self.fig.subplots_adjust(left=0.2)  # Adjust the left parameter as needed
 
