@@ -530,21 +530,9 @@ class LossViewer(QtWidgets.QMainWindow):
 
                 points = [QtCore.QPointF(x, y) for x, y in zip(xs, ys) if y > 0]
                 self.series["batch"].replace(points)
+                self._add_data_to_scatter(xs, ys, which)
 
-                # Set coordinates for each point
-                offsets = np.column_stack((xs, ys))
-                self.mp_series["batch"].set_offsets(offsets)
-
-                # Set paths for each point (circles)
-                path = self.mp_series["batch"].get_paths()[0]
-                self.mp_series["batch"].set_paths([path] * len(xs))
-
-                # Set X scale to show all points
-                dx = 0.5
-                x_min, x_max = min(xs), max(xs)
-                self.chart.axisX().setRange(x_min - dx, x_max + dx)
-                self.ax.set_xlim(x_min - dx, x_max + dx)
-
+                # Redraw the plot
                 self._resize_axes(xs, ys)
 
                 self.ax.figure.canvas.draw_idle()  # Redraw the plot
@@ -566,6 +554,21 @@ class LossViewer(QtWidgets.QMainWindow):
                     self.series["val_loss_best"].replace([QtCore.QPointF(x, y)])
 
             self.ax.figure.canvas.draw_idle()  # Redraw the plot
+
+    def _add_data_to_scatter(self, xs, ys, which):
+        """Add data to a scatter plot.
+
+        Not to be used with line plots.
+
+        Args:
+            xs: The x-coordinates of the data points.
+            ys: The y-coordinates of the data points.
+            which: The type of data point. Possible values are:
+                * "batch"
+        """
+
+        offsets = np.column_stack((xs, ys))
+        self.mp_series[which].set_offsets(offsets)
 
     def _resize_axes(self, x, y):
         """Resize axes to fit data."""
