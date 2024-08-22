@@ -343,6 +343,8 @@ class LossViewer(QtWidgets.QMainWindow):
         for series in self.chart.series():
             series.attachAxis(axisX)
 
+        self.ax.set_xlabel("Batches", fontweight="bold")
+
     def _setup_y_axes(self):
         self.axisY = dict()
 
@@ -367,6 +369,8 @@ class LossViewer(QtWidgets.QMainWindow):
         self.chart.addAxis(axisY, QtCore.Qt.AlignLeft)
         for series in self.chart.series():
             series.attachAxis(axisY)
+
+        self.ax.set_ylabel("Loss", fontweight="bold")
 
     def _setup_legend(self):
         self.chart.legend().setVisible(True)
