@@ -182,6 +182,8 @@ class LossViewer(QtWidgets.QMainWindow):
         )
 
         # TODO(LM): Replace with matplotlib
+        self._setup_axes()
+
         self._setup_x_axis()
 
         # Create the different Y axes that can be used.
@@ -388,6 +390,22 @@ class LossViewer(QtWidgets.QMainWindow):
         
         # Move the legend outside the plot on the upper left
         self.ax.legend(loc="upper left", bbox_to_anchor=(-0.25, 1.4), fontsize="small")
+
+    def _setup_axes(self):
+        
+        # Set the outline color of the plot to gray
+        for spine in self.ax.spines.values():
+            spine.set_edgecolor('#d3d3d3')  # Light gray color
+
+        # Remove the top and right axis spines
+        self.ax.spines['top'].set_visible(False)
+        self.ax.spines['right'].set_visible(False)
+
+        # Set the tick markers color to light gray, but not the tick labels
+        self.ax.tick_params(axis='both', which='both', color='#d3d3d3')
+
+        # Add gridlines at the tick labels
+        self.ax.grid(True, which='major', linewidth=0.5, color='#d3d3d3')
 
     def toggle_ignore_outliers(self):
         """Toggles whether to ignore outliers in chart scaling."""
