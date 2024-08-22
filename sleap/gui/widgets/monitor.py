@@ -166,6 +166,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.chartView = QtCharts.QChartView(self.chart)
         self.chartView.setRenderHint(QtGui.QPainter.Antialiasing)
         layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.canvas)
         layout.addWidget(self.chartView)
 
         if self.show_controller:
@@ -673,7 +674,7 @@ class LossViewer(QtWidgets.QMainWindow):
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
     win = LossViewer()
-    win.resize(600, 400)
+    win.resize(600, 2 * 400)
     win.show()
 
     def test_point(x=[0]):
