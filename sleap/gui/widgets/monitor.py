@@ -813,22 +813,40 @@ if __name__ == "__main__":
     win.resize(600, 2 * 400)
     win.show()
 
-    def test_point(x=[0]):
+    MODULO = 10
+
+    def test_point(which, x=[0]):
         x[0] += 1
         i = x[0] + 1
         win.add_datapoint(
             i,
-            i % 30 + 1,
-            which="batch",
+            i % MODULO + 1,
+            which=which,
         )
 
-    t = QtCore.QTimer()
-    t.timeout.connect(test_point)
-    t.start(200)
+    T0 = 200
+
+    timer_0 = QtCore.QTimer()
+    timer_0.timeout.connect(lambda which="batch": test_point(which=which))
+    timer_0.start(T0)
+
+    timer_1 = QtCore.QTimer()
+    timer_1.timeout.connect(lambda which="epoch_loss": test_point(which=which))
+    timer_1.start(MODULO * T0)
+
+    timer_2 = QtCore.QTimer()
+    timer_2.timeout.connect(lambda which="val_loss": test_point(which=which))
+    timer_2.start(MODULO * T0)
 
     win.set_message("Waiting for 3 seconds...")
     t2 = QtCore.QTimer()
-    t2.timeout.connect(lambda: win.set_message("Running demo..."))
+    t2.timeout.connect(win.update_runtime)
     t2.start(3000)
 
+    win.set_start_time(0)
+    win.mean_epoch_time_min = 9
+    win.mean_epoch_time_sec = 45
+    win.eta_ten_epochs_min = 4
+    win.last_epoch_val_loss = 0.8374
+    win.penultimate_epoch_val_loss = 0.23432346
     app.exec_()
