@@ -659,30 +659,29 @@ class LossViewer(QtWidgets.QMainWindow):
         if self.is_timer_running:
             dt = perf_counter() - self.t0
             dt_min, dt_sec = divmod(dt, 60)
-            title = f"Training Epoch <b>{self.epoch + 1}</b> / "
-            title += f"Runtime: <b>{int(dt_min):02}:{int(dt_sec):02}</b>"
+            title = f"Training Epoch {self.epoch + 1} / "
+            title += f"Runtime: {int(dt_min):02}:{int(dt_sec):02}"
             if self.last_epoch_val_loss is not None:
                 if self.penultimate_epoch_val_loss is not None:
                     title += (
-                        f"<br />Mean Time per Epoch: "
-                        f"<b>{int(self.mean_epoch_time_min):02}:{int(self.mean_epoch_time_sec):02}</b> / "
-                        f"ETA Next 10 Epochs: <b>{int(self.eta_ten_epochs_min)} min</b>"
+                        f"\nMean Time per Epoch: "
+                        f"{int(self.mean_epoch_time_min):02}:{int(self.mean_epoch_time_sec):02} / "
+                        f"ETA Next 10 Epochs: {int(self.eta_ten_epochs_min)} min"
                     )
                     if self.epoch_in_plateau_flag:
                         title += (
-                            f"<br />Epochs in Plateau: "
-                            f"<b>{self.epochs_in_plateau} / "
-                            f"{self.config.optimization.early_stopping.plateau_patience}</b>"
+                            f"\nEpochs in Plateau: "
+                            f"{self.epochs_in_plateau} / "
+                            f"{self.config.optimization.early_stopping.plateau_patience}"
                         )
                 title += (
-                    f"<br />Last Epoch Validation Loss: "
-                    f"<b>{self.last_epoch_val_loss:.3e}</b>"
+                    f"\nLast Epoch Validation Loss: " f"{self.last_epoch_val_loss:.3e}"
                 )
             if self.best_val_x is not None:
                 best_epoch = (self.best_val_x // self.epoch_size) + 1
                 title += (
-                    f"<br />Best Epoch Validation Loss: "
-                    f"<b>{self.best_val_y:.3e}</b> (epoch <b>{best_epoch}</b>)"
+                    f"\nBest Epoch Validation Loss: "
+                    f"{self.best_val_y:.3e} (epoch {best_epoch})"
                 )
             self.set_message(title)
 
@@ -694,6 +693,7 @@ class LossViewer(QtWidgets.QMainWindow):
     def set_message(self, text: str):
         """Set the chart title text."""
         self.chart.setTitle(text)
+        self.ax.set_title(text)
 
     def check_messages(
         self, timeout: int = 10, times_to_check: int = 10, do_update: bool = True
