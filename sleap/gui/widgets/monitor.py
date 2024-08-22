@@ -93,7 +93,7 @@ class LossViewer(QtWidgets.QMainWindow):
                 corresponds to.
         """
         self.canvas = MplCanvas(width=5, height=4, dpi=100)
-        self.setCentralWidget(self.canvas)
+        self.ax = self.canvas.axes
 
         self.chart = QtCharts.QChart()
 
@@ -478,7 +478,9 @@ class LossViewer(QtWidgets.QMainWindow):
 
                 # Set X scale to show all points
                 dx = 0.5
-                self.chart.axisX().setRange(min(xs) - dx, max(xs) + dx)
+                x_min, x_max = min(xs), max(xs)
+                self.chart.axisX().setRange(x_min - dx, x_max + dx)
+                self.ax.set_xlim(x_min - dx, x_max + dx)
 
                 if self.ignore_outliers:
                     dy = np.ptp(ys) * 0.02
@@ -500,6 +502,9 @@ class LossViewer(QtWidgets.QMainWindow):
                     low = max(low, 1e-8)  # for log scale, low cannot be 0
 
                 self.chart.axisY().setRange(low, high)
+                self.ax.set_ylim(low, high)
+
+                self.ax.figure.canvas.draw_idle()  # Redraw the plot
 
         else:
             if which == "epoch_loss":
