@@ -877,6 +877,16 @@ class LossViewer(QtWidgets.QMainWindow):
 
 
 if __name__ == "__main__":
+
+    class DummyConfig:
+        def __init__(self):
+            self.attrs = {}
+
+        def __getattr__(self, name: str):
+            var = self.attrs.get(name, DummyConfig())
+            setattr(self, name, var)
+            return var
+
     app = QtWidgets.QApplication([])
     win = LossViewer()
     win.resize(600, 2 * 400)
@@ -918,4 +928,8 @@ if __name__ == "__main__":
     win.eta_ten_epochs_min = 4
     win.last_epoch_val_loss = 0.8374
     win.penultimate_epoch_val_loss = 0.23432346
+    win.epochs_in_plateau = 2
+    win.config = DummyConfig()
+    win.config.optimization.early_stopping.plateau_patience = 4
+    win.epoch_in_plateau_flag = True
     app.exec_()
