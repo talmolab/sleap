@@ -172,6 +172,13 @@ class LossViewer(QtWidgets.QMainWindow):
             marker_size=12.0,
             border_color=(32, 32, 32, 25),
         )
+        self.mp_series["val_loss_best"] = self._init_series_(
+            series_type=self.ax.scatter,
+            name="Best Validation Loss",
+            color=COLOR_BEST_VAL + (255,),
+            border_color=(255, 255, 255, 25),
+            zorder=5,
+        )
 
         # TODO(LM): Replace with matplotlib
         self._setup_x_axis()
@@ -556,6 +563,7 @@ class LossViewer(QtWidgets.QMainWindow):
                     self.best_val_x = x
                     self.best_val_y = y
                     self.series["val_loss_best"].replace([QtCore.QPointF(x, y)])
+                    self._add_data_to_scatter([x], [y], "val_loss_best")
             self._add_data_to_plot(x, y, which)
 
             self.ax.figure.canvas.draw_idle()  # Redraw the plot
