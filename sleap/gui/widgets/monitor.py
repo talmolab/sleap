@@ -384,7 +384,14 @@ class LossViewer(QtWidgets.QMainWindow):
             series.attachAxis(axisY)
 
         # Set the minimum value of the y-axis
-        self.ax.set_ylim(bottom=0, top=None)
+        if self.log_scale:
+            yscale = "log"
+            y_min = 0.001
+        else:
+            yscale = "linear"
+            y_min = 0
+        self.ax.set_ylim(bottom=y_min)
+        self.ax.set_yscale(yscale)
         self.ax.set_ylabel("Loss", fontweight="bold", fontsize="small")
         self.fig.subplots_adjust(left=0.2)  # Adjust the left parameter as needed
 
