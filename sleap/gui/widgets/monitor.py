@@ -115,10 +115,9 @@ class LossViewer(QtWidgets.QMainWindow):
             border_color=(255, 255, 255, 25),
         )
         self.mp_series["batch"] = self._init_series_(
-            series_type=PathCollection,
+            series_type=self.ax.scatter,
             name="Batch Training Loss",
             color=COLOR_TRAIN + (48,),
-            marker_size=8.0,
             border_color=(255, 255, 255, 25),
         )
 
@@ -259,12 +258,13 @@ class LossViewer(QtWidgets.QMainWindow):
         name: Optional[str] = None,
         border_color: Optional[Tuple[int, int, int]] = None,
         pen_width: Optional[int] = None,
-        marker_size: Optional[float] = 0.01,
     ):
 
-        # Create the series (scatter plot in this case)
-        path = Path.circle(radius=marker_size / 10)
-        series = series_type(paths=[path])
+        # Create the series
+        series = series_type(
+            [],
+            [],
+        )
 
         # Set the color
         color = [c / 255.0 for c in color]  # Normalize color values to [0, 1]
@@ -523,14 +523,9 @@ class LossViewer(QtWidgets.QMainWindow):
                 points = [QtCore.QPointF(x, y) for x, y in zip(xs, ys) if y > 0]
                 self.series["batch"].replace(points)
 
-                # Transform data to pixel coordinates
+                # Set coordinates for each point
                 offsets = np.column_stack((xs, ys))
-                transformed_offsets = self.ax.transData.transform(
-                    offsets
-                )  # Pixel coords
-
-                # Set pixel coordinates for each point
-                self.mp_series["batch"].set_offsets(transformed_offsets)
+                self.mp_series["batch"].set_offsets(offsets)
 
                 # Set paths for each point (circles)
                 path = self.mp_series["batch"].get_paths()[0]
