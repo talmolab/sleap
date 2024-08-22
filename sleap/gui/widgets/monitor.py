@@ -541,10 +541,6 @@ class LossViewer(QtWidgets.QMainWindow):
             if which == "epoch_loss":
                 self.series["epoch_loss"].append(x, y)
                 self.series["epoch_loss_scatter"].append(x, y)
-                x_data, y_data = self.mp_series["epoch_loss"].get_data()
-                self.mp_series["epoch_loss"].set_data(
-                    np.append(x_data, x), np.append(y_data, y)
-                )
             elif which == "val_loss":
                 self.series["val_loss"].append(x, y)
                 self.series["val_loss_scatter"].append(x, y)
@@ -552,6 +548,7 @@ class LossViewer(QtWidgets.QMainWindow):
                     self.best_val_x = x
                     self.best_val_y = y
                     self.series["val_loss_best"].replace([QtCore.QPointF(x, y)])
+            self._add_data_to_plot(x, y, which)
 
             self.ax.figure.canvas.draw_idle()  # Redraw the plot
 
@@ -569,6 +566,22 @@ class LossViewer(QtWidgets.QMainWindow):
 
         offsets = np.column_stack((xs, ys))
         self.mp_series[which].set_offsets(offsets)
+
+    def _add_data_to_plot(self, x, y, which):
+        """Add data to a line plot.
+
+        Not to be used with scatter plots.
+
+        Args:
+            x: The x-coordinate of the data point.
+            y: The y-coordinate of the data point.
+            which: The type of data point. Possible values are:
+                * "epoch_loss"
+                * "val_loss"
+        """
+
+        x_data, y_data = self.mp_series[which].get_data()
+        self.mp_series[which].set_data(np.append(x_data, x), np.append(y_data, y))
 
     def _resize_axes(self, x, y):
         """Resize axes to fit data."""
