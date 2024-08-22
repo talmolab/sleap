@@ -346,7 +346,7 @@ class LossViewer(QtWidgets.QMainWindow):
         for series in self.chart.series():
             series.attachAxis(axisX)
 
-        self.ax.set_xlabel("Batches", fontweight="bold")
+        self.ax.set_xlabel("Batches", fontweight="bold", fontsize="small")
         self.fig.subplots_adjust(bottom=0.16, right=0.98)
 
     def _setup_y_axes(self):
@@ -374,7 +374,7 @@ class LossViewer(QtWidgets.QMainWindow):
         for series in self.chart.series():
             series.attachAxis(axisY)
 
-        self.ax.set_ylabel("Loss", fontweight="bold")
+        self.ax.set_ylabel("Loss", fontweight="bold", fontsize="small")
         self.fig.subplots_adjust(left=0.2)  # Adjust the left parameter as needed
 
     def _setup_legend(self):
@@ -700,7 +700,7 @@ class LossViewer(QtWidgets.QMainWindow):
     def set_message(self, text: str):
         """Set the chart title text."""
         self.chart.setTitle(text)
-        self.ax.set_title(text)
+        self.ax.set_title(text, fontweight="light", fontsize="small", x=0.55, y=1.05)
 
     def check_messages(
         self, timeout: int = 10, times_to_check: int = 10, do_update: bool = True
