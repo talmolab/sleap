@@ -385,8 +385,9 @@ class LossViewer(QtWidgets.QMainWindow):
         # Hide scatters for epoch and val loss from legend.
         for s in ("epoch_loss_scatter", "val_loss_scatter"):
             self.chart.legend().markers(self.series[s])[0].setVisible(False)
-
-        self.ax.legend(loc="upper right")
+        
+        # Move the legend outside the plot on the upper left
+        self.ax.legend(loc="upper left", bbox_to_anchor=(-0.25, 1.4), fontsize="small")
 
     def toggle_ignore_outliers(self):
         """Toggles whether to ignore outliers in chart scaling."""
