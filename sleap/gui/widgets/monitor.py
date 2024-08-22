@@ -393,6 +393,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.ax.set_ylim(bottom=y_min)
         self.ax.set_yscale(yscale)
         self.ax.set_ylabel("Loss", fontweight="bold", fontsize="small")
+        self.ax.yaxis.set_label_coords(-0.19, 0.5)
         self.fig.subplots_adjust(left=0.2)  # Adjust the left parameter as needed
 
     def _setup_legend(self):
