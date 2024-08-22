@@ -154,45 +154,13 @@ class LossViewer(QtWidgets.QMainWindow):
         )
 
         # TODO(LM): Replace with matplotlib
-        axisX = QtCharts.QValueAxis()
-        axisX.setLabelFormat("%d")
-        axisX.setTitleText("Batches")
-        self.chart.addAxis(axisX, QtCore.Qt.AlignBottom)
+        self._setup_x_axis()
 
         # Create the different Y axes that can be used.
-        self.axisY = dict()
-
-        # TODO(LM): Replace with matplotlib
-        self.axisY["log"] = QtCharts.QLogValueAxis()
-        self.axisY["log"].setBase(10)
-
-        # TODO(LM): Replace with matplotlib
-        self.axisY["linear"] = QtCharts.QValueAxis()
-
-        # Apply settings that apply to all Y axes.
-        for axisY in self.axisY.values():
-            axisY.setLabelFormat("%f")
-            axisY.setLabelsVisible(True)
-            axisY.setMinorTickCount(1)
-            axisY.setTitleText("Loss")
-
-        # Use the default Y axis.
-        axisY = self.axisY["log"] if self.log_scale else self.axisY["linear"]
-
-        # Add axes to chart and series.
-        self.chart.addAxis(axisY, QtCore.Qt.AlignLeft)
-        for series in self.chart.series():
-            series.attachAxis(axisX)
-            series.attachAxis(axisY)
+        self._setup_y_axes()
 
         # Setup legend.
-        self.chart.legend().setVisible(True)
-        self.chart.legend().setAlignment(QtCore.Qt.AlignTop)
-        self.chart.legend().setMarkerShape(QtCharts.QLegend.MarkerShapeCircle)
-
-        # Hide scatters for epoch and val loss from legend.
-        for s in ("epoch_loss_scatter", "val_loss_scatter"):
-            self.chart.legend().markers(self.series[s])[0].setVisible(False)
+        self._setup_legend()
 
         # TODO(LM): Replace with matplotlib
         self.chartView = QtCharts.QChartView(self.chart)
@@ -302,6 +270,49 @@ class LossViewer(QtWidgets.QMainWindow):
 
         self.chart.addSeries(series)
         return series
+
+    def _setup_x_axis(self):
+        axisX = QtCharts.QValueAxis()
+        axisX.setLabelFormat("%d")
+        axisX.setTitleText("Batches")
+        self.chart.addAxis(axisX, QtCore.Qt.AlignBottom)
+
+        for series in self.chart.series():
+            series.attachAxis(axisX)
+
+    def _setup_y_axes(self):
+        self.axisY = dict()
+
+        # TODO(LM): Replace with matplotlib
+        self.axisY["log"] = QtCharts.QLogValueAxis()
+        self.axisY["log"].setBase(10)
+
+        # TODO(LM): Replace with matplotlib
+        self.axisY["linear"] = QtCharts.QValueAxis()
+
+        # Apply settings that apply to all Y axes.
+        for axisY in self.axisY.values():
+            axisY.setLabelFormat("%f")
+            axisY.setLabelsVisible(True)
+            axisY.setMinorTickCount(1)
+            axisY.setTitleText("Loss")
+
+        # Use the default Y axis.
+        axisY = self.axisY["log"] if self.log_scale else self.axisY["linear"]
+
+        # Add axes to chart and series.
+        self.chart.addAxis(axisY, QtCore.Qt.AlignLeft)
+        for series in self.chart.series():
+            series.attachAxis(axisY)
+
+    def _setup_legend(self):
+        self.chart.legend().setVisible(True)
+        self.chart.legend().setAlignment(QtCore.Qt.AlignTop)
+        self.chart.legend().setMarkerShape(QtCharts.QLegend.MarkerShapeCircle)
+
+        # Hide scatters for epoch and val loss from legend.
+        for s in ("epoch_loss_scatter", "val_loss_scatter"):
+            self.chart.legend().markers(self.series[s])[0].setVisible(False)
 
     def toggle_ignore_outliers(self):
         """Toggles whether to ignore outliers in chart scaling."""
