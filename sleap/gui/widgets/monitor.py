@@ -133,6 +133,7 @@ class LossViewer(QtWidgets.QMainWindow):
             series_type=self.ax.plot,
             name="Epoch Training Loss",
             color=COLOR_TRAIN + (255,),
+            line_width=3.0,
         )
 
         # TODO(LM): Replace with matplotlib
@@ -154,6 +155,7 @@ class LossViewer(QtWidgets.QMainWindow):
             series_type=self.ax.plot,
             name="Epoch Validation Loss",
             color=COLOR_VAL + (255,),
+            line_width=3.0,
             zorder=4,
         )
 
@@ -279,6 +281,7 @@ class LossViewer(QtWidgets.QMainWindow):
         series_type,
         color,
         name: Optional[str] = None,
+        line_width: Optional[float] = None,
         border_color: Optional[Tuple[int, int, int]] = None,
         zorder: Optional[int] = None,
     ):
@@ -299,6 +302,9 @@ class LossViewer(QtWidgets.QMainWindow):
         # ax.plot returns a list of PathCollections, so we need to get the first one
         if not isinstance(series, PathCollection):
             series = series[0]
+
+        if line_width is not None:
+            series.set_linewidth(line_width)
 
         # Set the border color (edge color)
         if border_color is not None:
