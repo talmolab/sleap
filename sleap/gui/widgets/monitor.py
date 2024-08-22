@@ -356,7 +356,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.ax.set_xlim(0, 1)
 
         self.ax.set_xlabel("Batches", fontweight="bold", fontsize="small")
-        self.fig.subplots_adjust(bottom=0.16, right=0.97)
+        self.fig.subplots_adjust(bottom=0.14, right=0.97)
 
     def _setup_y_axes(self):
         self.axisY = dict()
