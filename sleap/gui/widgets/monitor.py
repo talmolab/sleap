@@ -545,27 +545,7 @@ class LossViewer(QtWidgets.QMainWindow):
                 self.chart.axisX().setRange(x_min - dx, x_max + dx)
                 self.ax.set_xlim(x_min - dx, x_max + dx)
 
-                if self.ignore_outliers:
-                    dy = np.ptp(ys) * 0.02
-                    # Set Y scale to exclude outliers
-                    q1, q3 = np.quantile(ys, (0.25, 0.75))
-                    iqr = q3 - q1  # interquartile range
-                    low = q1 - iqr * 1.5
-                    high = q3 + iqr * 1.5
-
-                    low = max(low, min(ys) - dy)  # keep within range of data
-                    high = min(high, max(ys) + dy)
-                else:
-                    # Set Y scale to show all points
-                    dy = np.ptp(ys) * 0.02
-                    low = min(ys) - dy
-                    high = max(ys) + dy
-
-                if self.log_scale:
-                    low = max(low, 1e-8)  # for log scale, low cannot be 0
-
-                self.chart.axisY().setRange(low, high)
-                self.ax.set_ylim(low, high)
+                self._resize_axes(xs, ys)
 
                 self.ax.figure.canvas.draw_idle()  # Redraw the plot
 
@@ -580,6 +560,38 @@ class LossViewer(QtWidgets.QMainWindow):
                     self.best_val_x = x
                     self.best_val_y = y
                     self.series["val_loss_best"].replace([QtCore.QPointF(x, y)])
+
+    def _resize_axes(self, x, y):
+        """Resize axes to fit data."""
+
+        # Set X scale to show all points
+        dx = 0.5
+        x_min, x_max = min(x), max(x)
+        self.chart.axisX().setRange(x_min - dx, x_max + dx)
+        self.ax.set_xlim(x_min - dx, x_max + dx)
+
+        # Set Y scale
+        if self.ignore_outliers:
+            dy = np.ptp(y) * 0.02
+            # Set Y scale to exclude outliers
+            q1, q3 = np.quantile(y, (0.25, 0.75))
+            iqr = q3 - q1  # interquartile range
+            low = q1 - iqr * 1.5
+            high = q3 + iqr * 1.5
+
+            low = max(low, min(y) - dy)  # keep within range of data
+            high = min(high, max(y) + dy)
+        else:
+            # Set Y scale to show all points
+            dy = np.ptp(y) * 0.02
+            low = min(y) - dy
+            high = max(y) + dy
+
+        if self.log_scale:
+            low = max(low, 1e-8)  # For log scale, low cannot be 0
+
+        self.chart.axisY().setRange(low, high)
+        self.ax.set_ylim(low, high)
 
     def set_start_time(self, t0: float):
         """Mark the start flag and time of the run.
