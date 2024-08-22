@@ -192,7 +192,7 @@ class LossViewer(QtWidgets.QMainWindow):
         # Setup legend.
         self._setup_legend()
 
-        self.fig.subplots_adjust(top=0.75)  # Adjust the top parameters as needed
+        self.fig.subplots_adjust(top=0.71)  # Adjust the top parameters as needed
 
         # TODO(LM): Replace with matplotlib
         self.chartView = QtCharts.QChartView(self.chart)
@@ -351,7 +351,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.ax.set_xlim(0,1)
 
         self.ax.set_xlabel("Batches", fontweight="bold", fontsize="small")
-        self.fig.subplots_adjust(bottom=0.16, right=0.98)
+        self.fig.subplots_adjust(bottom=0.16, right=0.97)
 
     def _setup_y_axes(self):
         self.axisY = dict()
@@ -394,7 +394,7 @@ class LossViewer(QtWidgets.QMainWindow):
             self.chart.legend().markers(self.series[s])[0].setVisible(False)
         
         # Move the legend outside the plot on the upper left
-        self.ax.legend(loc="upper left", bbox_to_anchor=(-0.25, 1.4), fontsize="small")
+        self.ax.legend(loc="upper left", bbox_to_anchor=(-0.25, 1.5), fontsize="small")
 
     def _setup_axes(self):
         
@@ -765,8 +765,8 @@ class LossViewer(QtWidgets.QMainWindow):
 
     def set_message(self, text: str, charts_text = None):
         """Set the chart title text."""
-        
-        self.ax.set_title(text, fontweight="light", fontsize="small", x=0.55, y=1.05)
+
+        self.ax.set_title(text, fontweight="light", fontsize="small", x=0.55, y=1.03)
         
 
         charts_text = text if charts_text is None else charts_text
