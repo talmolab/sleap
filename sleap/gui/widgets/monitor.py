@@ -8,6 +8,8 @@ import attr
 import jsonpickle
 import numpy as np
 import zmq
+from matplotlib.collections import PathCollection
+from matplotlib.path import Path
 from qtpy import QtCore, QtGui, QtWidgets
 
 # TODO(LM): Replace with matplotlib
@@ -98,6 +100,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.chart = QtCharts.QChart()
 
         self.series = dict()
+        self.mp_series = dict()
 
         COLOR_TRAIN = (18, 158, 220)
         COLOR_VAL = (248, 167, 52)
@@ -106,6 +109,13 @@ class LossViewer(QtWidgets.QMainWindow):
         # TODO(LM): Replace with matplotlib
         self.series["batch"] = self._init_series(
             series_type=QtCharts.QScatterSeries,
+            name="Batch Training Loss",
+            color=COLOR_TRAIN + (48,),
+            marker_size=8.0,
+            border_color=(255, 255, 255, 25),
+        )
+        self.mp_series["batch"] = self._init_series_(
+            series_type=PathCollection,
             name="Batch Training Loss",
             color=COLOR_TRAIN + (48,),
             marker_size=8.0,
@@ -241,6 +251,43 @@ class LossViewer(QtWidgets.QMainWindow):
         self.epoch_in_plateau_flag = False
         self.last_batch_number = 0
         self.is_running = False
+
+    def _init_series_(
+        self,
+        series_type,
+        color,
+        name: Optional[str] = None,
+        border_color: Optional[Tuple[int, int, int]] = None,
+        pen_width: Optional[int] = None,
+        marker_size: Optional[float] = 0.01,
+    ):
+
+        # Create the series (scatter plot in this case)
+        path = Path.circle(radius=marker_size / 10)
+        series = series_type(paths=[path])
+
+        # Set the color
+        color = [c / 255.0 for c in color]  # Normalize color values to [0, 1]
+        series.set_color(color)
+
+        # Set the name (label)
+        if name is not None:
+            series.set_label(name)
+
+        # Set the pen width (line width)
+        if pen_width is not None:
+            series.set_linewidth(pen_width)
+
+        # Set the border color (edge color)
+        if border_color is not None:
+            border_color = [
+                c / 255.0 for c in border_color
+            ]  # Normalize color values to [0, 1]
+            series.set_edgecolor(border_color)
+
+        # Add the series to the chart (Matplotlib Axes)
+        self.ax.add_collection(series)
+        return series
 
     def _init_series(
         self,
@@ -475,6 +522,19 @@ class LossViewer(QtWidgets.QMainWindow):
 
                 points = [QtCore.QPointF(x, y) for x, y in zip(xs, ys) if y > 0]
                 self.series["batch"].replace(points)
+
+                # Transform data to pixel coordinates
+                offsets = np.column_stack((xs, ys))
+                transformed_offsets = self.ax.transData.transform(
+                    offsets
+                )  # Pixel coords
+
+                # Set pixel coordinates for each point
+                self.mp_series["batch"].set_offsets(transformed_offsets)
+
+                # Set paths for each point (circles)
+                path = self.mp_series["batch"].get_paths()[0]
+                self.mp_series["batch"].set_paths([path] * len(xs))
 
                 # Set X scale to show all points
                 dx = 0.5
