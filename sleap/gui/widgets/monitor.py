@@ -645,9 +645,11 @@ class LossViewer(QtWidgets.QMainWindow):
 
         # Set X scale to show all points
         dx = 0.5
-        x_min, x_max = min(x), max(x)
-        self.chart.axisX().setRange(x_min - dx, x_max + dx)
-        self.ax.set_xlim(x_min - dx, x_max + dx)
+        x_min = min(x) - dx
+        x_min = x_min if x_min > 0 else 0
+        x_max = max(x) + dx
+        self.chart.axisX().setRange(x_min, x_max)
+        self.ax.set_xlim(x_min, x_max)
 
         # Set Y scale
         if self.ignore_outliers:
