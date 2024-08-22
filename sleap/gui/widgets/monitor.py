@@ -362,10 +362,6 @@ class LossViewer(QtWidgets.QMainWindow):
 
         # Use the default Y axis.
         axisY = self.axisY["log"] if self.log_scale else self.axisY["linear"]
-        if self.log_scale:
-            self.ax.set_yscale("log")
-        else:
-            self.ax.set_yscale("linear")
 
         # Add axes to chart and series.
         self.chart.addAxis(axisY, QtCore.Qt.AlignLeft)
@@ -549,8 +545,11 @@ class LossViewer(QtWidgets.QMainWindow):
 
                 # Redraw the plot
                 self._resize_axes(xs, ys)
-
-                self.ax.figure.canvas.draw_idle()  # Redraw the plot
+                if self.log_scale:
+                    self.ax.set_yscale("log")
+                else:
+                    self.ax.set_yscale("linear")
+                self.ax.figure.canvas.draw_idle()
 
         else:
             if which == "epoch_loss":
