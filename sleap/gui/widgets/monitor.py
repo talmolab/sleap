@@ -584,7 +584,14 @@ class LossViewer(QtWidgets.QMainWindow):
         self.mp_series[which].set_data(np.append(x_data, x), np.append(y_data, y))
 
     def _resize_axes(self, x, y):
-        """Resize axes to fit data."""
+        """Resize axes to fit data.
+
+        This is only called when plotting batches.
+
+        Args:
+            x: The x-coordinates of the data points.
+            y: The y-coordinates of the data points.
+        """
 
         # Set X scale to show all points
         dx = 0.5
