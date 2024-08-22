@@ -348,7 +348,7 @@ class LossViewer(QtWidgets.QMainWindow):
         for series in self.chart.series():
             series.attachAxis(axisX)
 
-        self.ax.set_xlim(0,1)
+        self.ax.set_xlim(0, 1)
 
         self.ax.set_xlabel("Batches", fontweight="bold", fontsize="small")
         self.fig.subplots_adjust(bottom=0.16, right=0.97)
@@ -378,7 +378,6 @@ class LossViewer(QtWidgets.QMainWindow):
         for series in self.chart.series():
             series.attachAxis(axisY)
 
-        
         # Set the minimum value of the y-axis
         self.ax.set_ylim(bottom=0, top=None)
         self.ax.set_ylabel("Loss", fontweight="bold", fontsize="small")
@@ -392,25 +391,25 @@ class LossViewer(QtWidgets.QMainWindow):
         # Hide scatters for epoch and val loss from legend.
         for s in ("epoch_loss_scatter", "val_loss_scatter"):
             self.chart.legend().markers(self.series[s])[0].setVisible(False)
-        
+
         # Move the legend outside the plot on the upper left
         self.ax.legend(loc="upper left", bbox_to_anchor=(-0.25, 1.5), fontsize="small")
 
     def _setup_axes(self):
-        
+
         # Set the outline color of the plot to gray
         for spine in self.ax.spines.values():
-            spine.set_edgecolor('#d3d3d3')  # Light gray color
+            spine.set_edgecolor("#d3d3d3")  # Light gray color
 
         # Remove the top and right axis spines
-        self.ax.spines['top'].set_visible(False)
-        self.ax.spines['right'].set_visible(False)
+        self.ax.spines["top"].set_visible(False)
+        self.ax.spines["right"].set_visible(False)
 
         # Set the tick markers color to light gray, but not the tick labels
-        self.ax.tick_params(axis='both', which='both', color='#d3d3d3')
+        self.ax.tick_params(axis="both", which="both", color="#d3d3d3")
 
         # Add gridlines at the tick labels
-        self.ax.grid(True, which='major', linewidth=0.5, color='#d3d3d3')
+        self.ax.grid(True, which="major", linewidth=0.5, color="#d3d3d3")
 
     def toggle_ignore_outliers(self):
         """Toggles whether to ignore outliers in chart scaling."""
@@ -679,7 +678,7 @@ class LossViewer(QtWidgets.QMainWindow):
     def _add_midpoint_gridlines(self):
         # Clear existing minor vertical lines
         for line in self.ax.get_lines():
-            if line.get_linestyle() == ':':
+            if line.get_linestyle() == ":":
                 line.remove()
 
         # Add gridlines at midpoint between major ticks
@@ -688,7 +687,7 @@ class LossViewer(QtWidgets.QMainWindow):
             prev_major_tick = major_ticks[0]
             for major_tick in major_ticks[:-1]:
                 midpoint = (major_tick + prev_major_tick) / 2
-                self.ax.axhline(midpoint, linestyle=':', linewidth=0.5, color='#d3d3d3')
+                self.ax.axhline(midpoint, linestyle=":", linewidth=0.5, color="#d3d3d3")
                 prev_major_tick = major_tick
 
     def set_start_time(self, t0: float):
@@ -714,7 +713,9 @@ class LossViewer(QtWidgets.QMainWindow):
             charts_title = f"Training Epoch <b>{self.epoch + 1}</b> / "
             charts_title += f"Runtime: <b>{int(dt_min):02}:{int(dt_sec):02}</b>"
             title = r"Training Epoch $\mathbf{" + str(self.epoch + 1) + r"}$ / "
-            title += r"Runtime: $\mathbf{" + f"{int(dt_min):02}:{int(dt_sec):02}" + r"}$"
+            title += (
+                r"Runtime: $\mathbf{" + f"{int(dt_min):02}:{int(dt_sec):02}" + r"}$"
+            )
             if self.last_epoch_val_loss is not None:
                 if self.penultimate_epoch_val_loss is not None:
                     charts_title += (
@@ -724,8 +725,12 @@ class LossViewer(QtWidgets.QMainWindow):
                     )
                     title += (
                         "\nMean Time per Epoch: "
-                        r"$\mathbf{" + f"{int(self.mean_epoch_time_min):02}:{int(self.mean_epoch_time_sec):02}" + r"}$ / "
-                        r"ETA Next 10 Epochs: $\mathbf{" + f"{int(self.eta_ten_epochs_min)}" + r"}$ min"
+                        r"$\mathbf{"
+                        + f"{int(self.mean_epoch_time_min):02}:{int(self.mean_epoch_time_sec):02}"
+                        + r"}$ / "
+                        r"ETA Next 10 Epochs: $\mathbf{"
+                        + f"{int(self.eta_ten_epochs_min)}"
+                        + r"}$ min"
                     )
                     if self.epoch_in_plateau_flag:
                         charts_title += (
@@ -736,7 +741,9 @@ class LossViewer(QtWidgets.QMainWindow):
                         title += (
                             "\nEpochs in Plateau: "
                             r"$\mathbf{" + f"{self.epochs_in_plateau}" + r"}$ / "
-                            r"$\mathbf{" + f"{self.config.optimization.early_stopping.plateau_patience}" + r"}$"
+                            r"$\mathbf{"
+                            + f"{self.config.optimization.early_stopping.plateau_patience}"
+                            + r"}$"
                         )
                 charts_title += (
                     f"<br />Last Epoch Validation Loss: "
@@ -754,7 +761,11 @@ class LossViewer(QtWidgets.QMainWindow):
                 )
                 title += (
                     "\nBest Epoch Validation Loss: "
-                    r"$\mathbf{" + f"{self.best_val_y:.3e}" + r"}$ (epoch $\mathbf{" + str(best_epoch) + r"}$)"
+                    r"$\mathbf{"
+                    + f"{self.best_val_y:.3e}"
+                    + r"}$ (epoch $\mathbf{"
+                    + str(best_epoch)
+                    + r"}$)"
                 )
             self.set_message(title, charts_title)
 
@@ -763,11 +774,10 @@ class LossViewer(QtWidgets.QMainWindow):
         """Return True if the timer has started."""
         return self.t0 is not None and self.is_running
 
-    def set_message(self, text: str, charts_text = None):
+    def set_message(self, text: str, charts_text=None):
         """Set the chart title text."""
 
         self.ax.set_title(text, fontweight="light", fontsize="small", x=0.55, y=1.03)
-        
 
         charts_text = text if charts_text is None else charts_text
         self.chart.setTitle(charts_text)
