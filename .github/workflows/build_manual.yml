@@ -48,7 +48,7 @@ jobs:
           activate-environment: sleap_ci
           conda-solver: "libmamba"
 
-      - name: Print environment info
+      - name: Print build environment info
         shell: bash -l {0}
         run: |
           which python
@@ -95,9 +95,8 @@ jobs:
           conda build .conda_mac --output-folder build
           echo "BUILD_PATH=$(pwd)/build" >> "$GITHUB_ENV"
 
-      # Test built conda package (Ubuntu)
-      - name: Test built conda package (Ubuntu)
-        if: matrix.os == 'ubuntu-22.04'
+      # Print build and environment info for each OS after deactiviating build environment
+      - name: Print base environment info
         shell: bash -l {0}
         run: |
           echo "Current build path: $BUILD_PATH"
