@@ -145,16 +145,6 @@ jobs:
         if: matrix.os == 'macos-14'
         shell: bash -l {0}
         run: |
-          echo "Current build path: $BUILD_PATH"
-          conda deactivate
-    
-          echo "Python executable before activating environment:"
-          which python
-          echo "Python version before activating environment:"
-          python --version
-          echo "Conda info before activating environment:"
-          conda info
-    
           echo "Creating and testing conda environment with sleap package..."
           conda create -y -n sleap_test -c file://$BUILD_PATH -c conda-forge -c anaconda sleap
           conda activate sleap_test
