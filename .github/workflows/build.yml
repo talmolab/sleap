@@ -52,14 +52,14 @@ jobs:
         run: |
           python setup.py bdist_wheel
 
-      # # Upload pip wheel (Ubuntu)
-      # - name: Upload pip wheel (Ubuntu)
-      #   if: matrix.os == 'ubuntu-22.04'
-      #   env:
-      #     PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-      #   shell: bash -l {0}
-      #   run: |
-      #     twine upload -u __token__ -p "$PYPI_TOKEN" dist/* --non-interactive --skip-existing --disable-progress-bar
+      # Upload pip wheel (Ubuntu)
+      - name: Upload pip wheel (Ubuntu)
+        if: matrix.os == 'ubuntu-22.04'
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        shell: bash -l {0}
+        run: |
+          twine upload -u __token__ -p "$PYPI_TOKEN" dist/* --non-interactive --skip-existing --disable-progress-bar
 
       # Build conda package (Ubuntu)
       - name: Build conda package (Ubuntu)
