@@ -109,6 +109,18 @@ jobs:
           echo "Conda info before activating environment:"
           conda info
 
+      # Install necessary OpenGL packages for Ubuntu only https://github.com/conda-forge/opencv-feedstock/issues/401
+      - name: Install OpenGL libraries on Ubuntu runner
+        shell: bash -l {0}
+        run: |
+          sudo apt-get update
+          sudo apt-get install libglapi-mesa libegl-mesa0 libegl1 libopengl0 libgl1-mesa-glx
+
+      # Test built conda package (Ubuntu)
+      - name: Test built conda package (Ubuntu)
+        if: matrix.os == 'ubuntu-22.04'
+        shell: bash -l {0}
+        run: |
           echo "Creating and testing conda environment with sleap package..."
           sudo apt-get update
           sudo apt-get install libglapi-mesa libegl-mesa0 libegl1 libopengl0 libgl1-mesa-glx
