@@ -124,7 +124,6 @@ jobs:
         run: |
           echo "Creating and testing conda environment with sleap package..."
           conda create -y -n sleap_test -c file://$BUILD_PATH -c sleap/label/dev -c conda-forge -c nvidia -c anaconda sleap
-          conda activate sleap_test
 
       # Create conda environment using built conda package (Mac)
       # Note channel differences
@@ -134,12 +133,14 @@ jobs:
         run: |
           echo "Creating and testing conda environment with sleap package..."
           conda create -y -n sleap_test -c file://$BUILD_PATH -c conda-forge -c anaconda sleap
-          conda activate sleap_test
 
       # Test conda environment
       - name: Test conda environment
         shell: bash -l {0}
         run: |
+          echo "Activating sleap_test"
+          conda activate sleap_test
+
           echo "Python executable after activating sleap_test environment:"
           which python
           echo "Python version after activating sleap_test environment:"
