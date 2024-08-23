@@ -9,10 +9,7 @@ import jsonpickle
 import numpy as np
 import zmq
 from matplotlib.collections import PathCollection
-from qtpy import QtCore, QtGui, QtWidgets
-
-# TODO(LM): Replace with matplotlib
-from qtpy.QtCharts import QtCharts
+from qtpy import QtCore, QtWidgets
 
 from sleap.gui.utils import is_port_free, select_zmq_port
 from sleap.gui.widgets.mpl import MplCanvas
@@ -577,86 +574,14 @@ class LossViewer(QtWidgets.QMainWindow):
             ignore_outliers=self.ignore_outliers,
         )
 
-        self.chart = QtCharts.QChart()
-
         self.mp_series = dict()
-        # TODO(LM): Remove before merging
-        self.series = dict()
-
-        # TODO(LM): Remove before merging
-        COLOR_TRAIN = (18, 158, 220)
-        COLOR_VAL = (248, 167, 52)
-        COLOR_BEST_VAL = (151, 204, 89)
-
         self.mp_series["batch"] = self.canvas.series["batch"]
-        # TODO(LM): Remove before merging
-        self.series["batch"] = self._init_series(
-            series_type=QtCharts.QScatterSeries,
-            name="Batch Training Loss",
-            color=COLOR_TRAIN + (48,),
-            marker_size=8.0,
-            border_color=(255, 255, 255, 25),
-        )
-
         self.mp_series["epoch_loss"] = self.canvas.series["epoch_loss"]
-        # TODO(LM): Remove before merging
-        self.series["epoch_loss"] = self._init_series(
-            series_type=QtCharts.QLineSeries,
-            name="Epoch Training Loss",
-            color=COLOR_TRAIN + (255,),
-            pen_width=4,
-        )
-
-        # TODO(LM): Remove before merging
-        self.series["epoch_loss_scatter"] = self._init_series(
-            series_type=QtCharts.QScatterSeries,
-            color=COLOR_TRAIN + (255,),
-            marker_size=12.0,
-            border_color=(255, 255, 255, 25),
-        )
-
         self.mp_series["val_loss"] = self.canvas.series["val_loss"]
-        # TODO(LM): Remove before merging
-        self.series["val_loss"] = self._init_series(
-            series_type=QtCharts.QLineSeries,
-            name="Epoch Validation Loss",
-            color=COLOR_VAL + (255,),
-            pen_width=4,
-        )
-
-        # TODO(LM): Remove before merging
-        self.series["val_loss_scatter"] = self._init_series(
-            series_type=QtCharts.QScatterSeries,
-            color=COLOR_VAL + (255,),
-            marker_size=12.0,
-            border_color=(255, 255, 255, 25),
-        )
-
         self.mp_series["val_loss_best"] = self.canvas.series["val_loss_best"]
-        # TODO(LM): Remove before merging
-        self.series["val_loss_best"] = self._init_series(
-            series_type=QtCharts.QScatterSeries,
-            name="Best Validation Loss",
-            color=COLOR_BEST_VAL + (255,),
-            marker_size=12.0,
-            border_color=(32, 32, 32, 25),
-        )
-
-        # TODO(LM): Remove before merging
-        self._setup_x_axis()
-        # Create the different Y axes that can be used.
-        self._setup_y_axes()
-        # Setup legend.
-        self._setup_legend()
-
-        # TODO(LM): Remove before merging
-        self.chartView = QtCharts.QChartView(self.chart)
-        self.chartView.setRenderHint(QtGui.QPainter.Antialiasing)
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.canvas)
-
-        layout.addWidget(self.chartView)  # TODO(LM): Remove before merging
 
         if self.show_controller:
             control_layout = QtWidgets.QHBoxLayout()
@@ -731,81 +656,6 @@ class LossViewer(QtWidgets.QMainWindow):
         self.last_batch_number = 0
         self.is_running = False
 
-    # TODO(LM): Remove before merging
-    def _init_series(
-        self,
-        series_type,
-        color,
-        name: Optional[str] = None,
-        border_color: Optional[Tuple[int, int, int]] = None,
-        pen_width: Optional[int] = None,
-        marker_size: Optional[float] = None,
-    ):
-        series = series_type()
-
-        series.setColor(QtGui.QColor(*color))
-
-        if name is not None:
-            series.setName(name)
-
-        if pen_width is not None:
-            pen = series.pen()
-            pen.setWidth(pen_width)
-            series.setPen(pen)
-
-        if marker_size is not None:
-            series.setMarkerSize(8.0)
-
-        if border_color is not None:
-            series.setBorderColor(QtGui.QColor(*border_color))
-
-        self.chart.addSeries(series)
-        return series
-
-    # TODO(LM): Remove before merging
-    def _setup_x_axis(self):
-        axisX = QtCharts.QValueAxis()
-        axisX.setLabelFormat("%d")
-        axisX.setTitleText("Batches")
-        self.chart.addAxis(axisX, QtCore.Qt.AlignBottom)
-
-        for series in self.chart.series():
-            series.attachAxis(axisX)
-
-    # TODO(LM): Remove before merging
-    def _setup_y_axes(self):
-        self.axisY = dict()
-
-        self.axisY["log"] = QtCharts.QLogValueAxis()
-        self.axisY["log"].setBase(10)
-
-        self.axisY["linear"] = QtCharts.QValueAxis()
-
-        # Apply settings that apply to all Y axes.
-        for axisY in self.axisY.values():
-            axisY.setLabelFormat("%f")
-            axisY.setLabelsVisible(True)
-            axisY.setMinorTickCount(1)
-            axisY.setTitleText("Loss")
-
-        # Use the default Y axis.
-        axisY = self.axisY["log"] if self.log_scale else self.axisY["linear"]
-
-        # Add axes to chart and series.
-        self.chart.addAxis(axisY, QtCore.Qt.AlignLeft)
-        for series in self.chart.series():
-            series.attachAxis(axisY)
-
-    # TODO(LM): Remove before merging
-    def _setup_legend(self):
-        self.chart.legend().setVisible(True)
-        self.chart.legend().setAlignment(QtCore.Qt.AlignTop)
-        self.chart.legend().setMarkerShape(QtCharts.QLegend.MarkerShapeCircle)
-
-        # Hide scatters for epoch and val loss from legend.
-        for s in ("epoch_loss_scatter", "val_loss_scatter"):
-            self.chart.legend().markers(self.series[s])[0].setVisible(False)
-
     @property
     def log_scale(self):
         """Returns True if the plot has a log scale for y-axis."""
@@ -848,9 +698,6 @@ class LossViewer(QtWidgets.QMainWindow):
 
         self.log_scale = not self.log_scale
 
-        # TODO(LM): Remove before merging
-        self.update_y_axis()
-
     def set_batches_to_show(self, batches: str):
         """Set the number of batches to show on the x-axis.
 
@@ -863,26 +710,6 @@ class LossViewer(QtWidgets.QMainWindow):
             self.batches_to_show = int(batches)
         else:
             self.batches_to_show = -1
-
-    # TODO(LM): Remove before merging
-    def update_y_axis(self):
-        """Update the y-axis when scale changes."""
-        to = "log" if self.log_scale else "linear"
-
-        # Remove other axes.
-        for name, axisY in self.axisY.items():
-            if name != to:
-                if axisY in self.chart.axes():
-                    self.chart.removeAxis(axisY)
-                for series in self.chart.series():
-                    if axisY in series.attachedAxes():
-                        series.detachAxis(axisY)
-
-        # Add axis.
-        axisY = self.axisY[to]
-        self.chart.addAxis(axisY, QtCore.Qt.AlignLeft)
-        for series in self.chart.series():
-            series.attachAxis(axisY)
 
     def setup_zmq(self, zmq_context: Optional[zmq.Context] = None):
         """Connect to ZMQ ports that listen to commands and updates.
@@ -1001,31 +828,17 @@ class LossViewer(QtWidgets.QMainWindow):
                         self.Y[-self.batches_to_show :],
                     )
 
+                # Set data, resize and redraw the plot
                 self._set_data_on_scatter(xs, ys, which)
-                # TODO(LM): Remove before merging
-                points = [QtCore.QPointF(x, y) for x, y in zip(xs, ys) if y > 0]
-                self.series["batch"].replace(points)
-
-                # Resize and redraw the plot
                 self._resize_axes(xs, ys)
 
         else:
-            # TODO(LM): Remove before merging
-            if which == "epoch_loss":
-                self.series["epoch_loss"].append(x, y)
-                self.series["epoch_loss_scatter"].append(x, y)
 
-            elif which == "val_loss":
-                # TODO(LM): Remove before merging
-                self.series["val_loss"].append(x, y)
-                self.series["val_loss_scatter"].append(x, y)
-
+            if which == "val_loss":
                 if self.best_val_y is None or y < self.best_val_y:
                     self.best_val_x = x
                     self.best_val_y = y
                     self._set_data_on_scatter([x], [y], "val_loss_best")
-                    # TODO(LM): Remove before merging
-                    self.series["val_loss_best"].replace([QtCore.QPointF(x, y)])
 
             # Add data and redraw the plot
             self._add_data_to_plot(x, y, which)
@@ -1077,36 +890,6 @@ class LossViewer(QtWidgets.QMainWindow):
         """
         self.canvas.resize_axes(x, y)
 
-        # TODO(LM): Remove before merging
-        # Set X scale to show all points
-        dx = 0.5
-        x_min = min(x) - dx
-        x_min = x_min if x_min > 0 else 0
-        x_max = max(x) + dx
-        self.chart.axisX().setRange(x_min, x_max)
-
-        # Set Y scale
-        if self.ignore_outliers:
-            dy = np.ptp(y) * 0.02
-            # Set Y scale to exclude outliers
-            q1, q3 = np.quantile(y, (0.25, 0.75))
-            iqr = q3 - q1  # interquartile range
-            low = q1 - iqr * 1.5
-            high = q3 + iqr * 1.5
-
-            low = max(low, min(y) - dy)  # keep within range of data
-            high = min(high, max(y) + dy)
-        else:
-            # Set Y scale to show all points
-            dy = np.ptp(y) * 0.02
-            low = min(y) - dy
-            high = max(y) + dy
-
-        if self.log_scale:
-            low = max(low, 1e-8)  # For log scale, low cannot be 0
-
-        self.chart.axisY().setRange(low, high)
-
     def set_start_time(self, t0: float):
         """Mark the start flag and time of the run.
 
@@ -1144,34 +927,6 @@ class LossViewer(QtWidgets.QMainWindow):
                 epoch_size=self.epoch_size,
             )
 
-            # TODO(LM): Remove before merging
-            charts_title = f"Training Epoch <b>{self.epoch + 1}</b> / "
-            charts_title += f"Runtime: <b>{int(dt_min):02}:{int(dt_sec):02}</b>"
-            if self.last_epoch_val_loss is not None:
-                if self.penultimate_epoch_val_loss is not None:
-                    charts_title += (
-                        f"<br />Mean Time per Epoch: "
-                        f"<b>{int(self.mean_epoch_time_min):02}:{int(self.mean_epoch_time_sec):02}</b> / "
-                        f"ETA Next 10 Epochs: <b>{int(self.eta_ten_epochs_min)} min</b>"
-                    )
-                    if self.epoch_in_plateau_flag:
-                        charts_title += (
-                            f"<br />Epochs in Plateau: "
-                            f"<b>{self.epochs_in_plateau} / "
-                            f"{self.config.optimization.early_stopping.plateau_patience}</b>"
-                        )
-                charts_title += (
-                    f"<br />Last Epoch Validation Loss: "
-                    f"<b>{self.last_epoch_val_loss:.3e}</b>"
-                )
-            if self.best_val_x is not None:
-                best_epoch = (self.best_val_x // self.epoch_size) + 1
-                charts_title += (
-                    f"<br />Best Epoch Validation Loss: "
-                    f"<b>{self.best_val_y:.3e}</b> (epoch <b>{best_epoch}</b>)"
-                )
-            self.set_message(charts_title)
-
     @property
     def is_timer_running(self) -> bool:
         """Return True if the timer has started."""
@@ -1179,12 +934,7 @@ class LossViewer(QtWidgets.QMainWindow):
 
     def set_message(self, text: str):
         """Set the chart title text."""
-
-        # TODO(LM): Uncomment before merging
-        # self.canvas.set_title(text)
-
-        # TODO(LM): Remove before merging
-        self.chart.setTitle(text)
+        self.canvas.set_title(text)
 
     def check_messages(
         self, timeout: int = 10, times_to_check: int = 10, do_update: bool = True
@@ -1303,7 +1053,7 @@ if __name__ == "__main__":
 
     app = QtWidgets.QApplication([])
     win = LossViewer()
-    win.resize(600, 2 * 400)
+    win.resize(600, 400)
     win.show()
 
     MODULO = 10
@@ -1331,7 +1081,7 @@ if __name__ == "__main__":
     timer_2.timeout.connect(lambda which="val_loss": test_point(which=which))
     timer_2.start(MODULO * T0)
 
-    win.set_message("Waiting for 3 seconds...")
+    win.canvas.set_title("Waiting for 3 seconds...")
     t2 = QtCore.QTimer()
     t2.timeout.connect(win.update_runtime)
     t2.start(3000)
