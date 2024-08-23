@@ -220,7 +220,9 @@ class LossPlot(MplCanvas):
             prev_major_tick = major_ticks[0]
             for major_tick in major_ticks[:-1]:
                 midpoint = (major_tick + prev_major_tick) / 2
-                self.axes.axhline(midpoint, linestyle=":", linewidth=0.5, color="#d3d3d3")
+                self.axes.axhline(
+                    midpoint, linestyle=":", linewidth=0.5, color="#d3d3d3"
+                )
                 prev_major_tick = major_tick
 
     def set_data_on_scatter(self, xs, ys, which):
@@ -520,12 +522,13 @@ class LossViewer(QtWidgets.QMainWindow):
         self.zmq_ports = zmq_ports
 
         self.batches_to_show = -1  # -1 to show all
-        self.ignore_outliers = False
-        self.log_scale = True
+        self._ignore_outliers = False
+        self._log_scale = True
         self.message_poll_time_ms = 20  # ms
         self.redraw_batch_time_ms = 500  # ms
         self.last_redraw_batch = None
 
+        self.canvas = None
         self.reset()
         self.setup_zmq(zmq_context)
 
@@ -566,20 +569,27 @@ class LossViewer(QtWidgets.QMainWindow):
             what: String identifier indicating which job type the current run
                 corresponds to.
         """
-        self.canvas = MplCanvas(width=5, height=4, dpi=100)
-        self.ax = self.canvas.axes
-        self.fig = self.canvas.fig
+        self.canvas = LossPlot(
+            width=5,
+            height=4,
+            dpi=100,
+            log_scale=self.log_scale,
+            ignore_outliers=self.ignore_outliers,
+        )
 
         self.chart = QtCharts.QChart()
 
-        self.series = dict()
         self.mp_series = dict()
+        # TODO(LM): Remove before merging
+        self.series = dict()
 
+        # TODO(LM): Remove before merging
         COLOR_TRAIN = (18, 158, 220)
         COLOR_VAL = (248, 167, 52)
         COLOR_BEST_VAL = (151, 204, 89)
 
-        # TODO(LM): Replace with matplotlib
+        self.mp_series["batch"] = self.canvas.series["batch"]
+        # TODO(LM): Remove before merging
         self.series["batch"] = self._init_series(
             series_type=QtCharts.QScatterSeries,
             name="Batch Training Loss",
@@ -587,28 +597,17 @@ class LossViewer(QtWidgets.QMainWindow):
             marker_size=8.0,
             border_color=(255, 255, 255, 25),
         )
-        self.mp_series["batch"] = self._init_series_(
-            series_type=self.ax.scatter,
-            name="Batch Training Loss",
-            color=COLOR_TRAIN + (48,),
-            border_color=(255, 255, 255, 25),
-        )
 
-        # TODO(LM): Replace with matplotlib
+        self.mp_series["epoch_loss"] = self.canvas.series["epoch_loss"]
+        # TODO(LM): Remove before merging
         self.series["epoch_loss"] = self._init_series(
             series_type=QtCharts.QLineSeries,
             name="Epoch Training Loss",
             color=COLOR_TRAIN + (255,),
             pen_width=4,
         )
-        self.mp_series["epoch_loss"] = self._init_series_(
-            series_type=self.ax.plot,
-            name="Epoch Training Loss",
-            color=COLOR_TRAIN + (255,),
-            line_width=3.0,
-        )
 
-        # TODO(LM): Replace with matplotlib
+        # TODO(LM): Remove before merging
         self.series["epoch_loss_scatter"] = self._init_series(
             series_type=QtCharts.QScatterSeries,
             color=COLOR_TRAIN + (255,),
@@ -616,22 +615,16 @@ class LossViewer(QtWidgets.QMainWindow):
             border_color=(255, 255, 255, 25),
         )
 
-        # TODO(LM): Replace with matplotlib
+        self.mp_series["val_loss"] = self.canvas.series["val_loss"]
+        # TODO(LM): Remove before merging
         self.series["val_loss"] = self._init_series(
             series_type=QtCharts.QLineSeries,
             name="Epoch Validation Loss",
             color=COLOR_VAL + (255,),
             pen_width=4,
         )
-        self.mp_series["val_loss"] = self._init_series_(
-            series_type=self.ax.plot,
-            name="Epoch Validation Loss",
-            color=COLOR_VAL + (255,),
-            line_width=3.0,
-            zorder=4,
-        )
 
-        # TODO(LM): Replace with matplotlib
+        # TODO(LM): Remove before merging
         self.series["val_loss_scatter"] = self._init_series(
             series_type=QtCharts.QScatterSeries,
             color=COLOR_VAL + (255,),
@@ -639,7 +632,8 @@ class LossViewer(QtWidgets.QMainWindow):
             border_color=(255, 255, 255, 25),
         )
 
-        # TODO(LM): Replace with matplotlib
+        self.mp_series["val_loss_best"] = self.canvas.series["val_loss_best"]
+        # TODO(LM): Remove before merging
         self.series["val_loss_best"] = self._init_series(
             series_type=QtCharts.QScatterSeries,
             name="Best Validation Loss",
@@ -647,33 +641,22 @@ class LossViewer(QtWidgets.QMainWindow):
             marker_size=12.0,
             border_color=(32, 32, 32, 25),
         )
-        self.mp_series["val_loss_best"] = self._init_series_(
-            series_type=self.ax.scatter,
-            name="Best Validation Loss",
-            color=COLOR_BEST_VAL + (255,),
-            border_color=(255, 255, 255, 25),
-            zorder=5,
-        )
 
-        # TODO(LM): Replace with matplotlib
-        self._setup_axes()
-
+        # TODO(LM): Remove before merging
         self._setup_x_axis()
-
         # Create the different Y axes that can be used.
         self._setup_y_axes()
-
         # Setup legend.
         self._setup_legend()
 
-        self.fig.subplots_adjust(top=0.71)  # Adjust the top parameters as needed
-
-        # TODO(LM): Replace with matplotlib
+        # TODO(LM): Remove before merging
         self.chartView = QtCharts.QChartView(self.chart)
         self.chartView.setRenderHint(QtGui.QPainter.Antialiasing)
+
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.canvas)
-        layout.addWidget(self.chartView)
+
+        layout.addWidget(self.chartView)  # TODO(LM): Remove before merging
 
         if self.show_controller:
             control_layout = QtWidgets.QHBoxLayout()
@@ -748,45 +731,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.last_batch_number = 0
         self.is_running = False
 
-    def _init_series_(
-        self,
-        series_type,
-        color,
-        name: Optional[str] = None,
-        line_width: Optional[float] = None,
-        border_color: Optional[Tuple[int, int, int]] = None,
-        zorder: Optional[int] = None,
-    ):
-
-        # Set the color
-        color = [c / 255.0 for c in color]  # Normalize color values to [0, 1]
-
-        # Create the series
-        series = series_type(
-            [],
-            [],
-            color=color,
-            label=name,
-            marker="o",
-            zorder=zorder,
-        )
-
-        # ax.plot returns a list of PathCollections, so we need to get the first one
-        if not isinstance(series, PathCollection):
-            series = series[0]
-
-        if line_width is not None:
-            series.set_linewidth(line_width)
-
-        # Set the border color (edge color)
-        if border_color is not None:
-            border_color = [
-                c / 255.0 for c in border_color
-            ]  # Normalize color values to [0, 1]
-            series.set_edgecolor(border_color)
-
-        return series
-
+    # TODO(LM): Remove before merging
     def _init_series(
         self,
         series_type,
@@ -817,6 +762,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.chart.addSeries(series)
         return series
 
+    # TODO(LM): Remove before merging
     def _setup_x_axis(self):
         axisX = QtCharts.QValueAxis()
         axisX.setLabelFormat("%d")
@@ -826,19 +772,13 @@ class LossViewer(QtWidgets.QMainWindow):
         for series in self.chart.series():
             series.attachAxis(axisX)
 
-        self.ax.set_xlim(0, 1)
-
-        self.ax.set_xlabel("Batches", fontweight="bold", fontsize="small")
-        self.fig.subplots_adjust(bottom=0.14, right=0.97)
-
+    # TODO(LM): Remove before merging
     def _setup_y_axes(self):
         self.axisY = dict()
 
-        # TODO(LM): Replace with matplotlib
         self.axisY["log"] = QtCharts.QLogValueAxis()
         self.axisY["log"].setBase(10)
 
-        # TODO(LM): Replace with matplotlib
         self.axisY["linear"] = QtCharts.QValueAxis()
 
         # Apply settings that apply to all Y axes.
@@ -856,19 +796,7 @@ class LossViewer(QtWidgets.QMainWindow):
         for series in self.chart.series():
             series.attachAxis(axisY)
 
-        # Set the minimum value of the y-axis
-        if self.log_scale:
-            yscale = "log"
-            y_min = 0.001
-        else:
-            yscale = "linear"
-            y_min = 0
-        self.ax.set_ylim(bottom=y_min)
-        self.ax.set_yscale(yscale)
-        self.ax.set_ylabel("Loss", fontweight="bold", fontsize="small")
-        self.ax.yaxis.set_label_coords(-0.19, 0.5)
-        self.fig.subplots_adjust(left=0.2)  # Adjust the left parameter as needed
-
+    # TODO(LM): Remove before merging
     def _setup_legend(self):
         self.chart.legend().setVisible(True)
         self.chart.legend().setAlignment(QtCore.Qt.AlignTop)
@@ -878,39 +806,50 @@ class LossViewer(QtWidgets.QMainWindow):
         for s in ("epoch_loss_scatter", "val_loss_scatter"):
             self.chart.legend().markers(self.series[s])[0].setVisible(False)
 
-        # Move the legend outside the plot on the upper left
-        self.ax.legend(loc="upper left", bbox_to_anchor=(-0.25, 1.5), fontsize="small")
+    @property
+    def log_scale(self):
+        """Returns True if the plot has a log scale for y-axis."""
 
-    def _setup_axes(self):
+        return self._log_scale
 
-        # Set the outline color of the plot to gray
-        for spine in self.ax.spines.values():
-            spine.set_edgecolor("#d3d3d3")  # Light gray color
+    @log_scale.setter
+    def log_scale(self, val):
+        """Sets the scale of the y axis to log if True else linear."""
 
-        # Remove the top and right axis spines
-        self.ax.spines["top"].set_visible(False)
-        self.ax.spines["right"].set_visible(False)
+        if isinstance(val, bool):
+            self._log_scale = val
 
-        # Set the tick markers color to light gray, but not the tick labels
-        self.ax.tick_params(
-            axis="both", which="both", color="#d3d3d3", labelsize="small"
-        )
+        # Set the log scale on the canvas
+        self.canvas.log_scale = self._log_scale
 
-        # Add gridlines at the tick labels
-        self.ax.grid(True, which="major", linewidth=0.5, color="#d3d3d3")
+    @property
+    def ignore_outliers(self):
+        """Returns True if the plot ignores outliers."""
+
+        return self._ignore_outliers
+
+    @ignore_outliers.setter
+    def ignore_outliers(self, val):
+        """Sets whether to ignore outliers in the plot."""
+
+        if isinstance(val, bool):
+            self._ignore_outliers = val
+
+        # Set the ignore_outliers on the canvas
+        self.canvas.ignore_outliers = self._ignore_outliers
 
     def toggle_ignore_outliers(self):
         """Toggles whether to ignore outliers in chart scaling."""
+
         self.ignore_outliers = not self.ignore_outliers
 
     def toggle_log_scale(self):
         """Toggle whether to use log-scaled y-axis."""
+
         self.log_scale = not self.log_scale
+
+        # TODO(LM): Remove before merging
         self.update_y_axis()
-        if self.log_scale:
-            self.ax.set_yscale("log")
-        else:
-            self.ax.set_yscale("linear")
 
     def set_batches_to_show(self, batches: str):
         """Set the number of batches to show on the x-axis.
@@ -925,6 +864,7 @@ class LossViewer(QtWidgets.QMainWindow):
         else:
             self.batches_to_show = -1
 
+    # TODO(LM): Remove before merging
     def update_y_axis(self):
         """Update the y-axis when scale changes."""
         to = "log" if self.log_scale else "linear"
@@ -1061,35 +1001,37 @@ class LossViewer(QtWidgets.QMainWindow):
                         self.Y[-self.batches_to_show :],
                     )
 
+                self._set_data_on_scatter(xs, ys, which)
+                # TODO(LM): Remove before merging
                 points = [QtCore.QPointF(x, y) for x, y in zip(xs, ys) if y > 0]
                 self.series["batch"].replace(points)
-                self._add_data_to_scatter(xs, ys, which)
 
-                # Redraw the plot
+                # Resize and redraw the plot
                 self._resize_axes(xs, ys)
-                if self.log_scale:
-                    self.ax.set_yscale("log")
-                else:
-                    self.ax.set_yscale("linear")
-                self.ax.figure.canvas.draw_idle()
 
         else:
+            # TODO(LM): Remove before merging
             if which == "epoch_loss":
                 self.series["epoch_loss"].append(x, y)
                 self.series["epoch_loss_scatter"].append(x, y)
+
             elif which == "val_loss":
+                # TODO(LM): Remove before merging
                 self.series["val_loss"].append(x, y)
                 self.series["val_loss_scatter"].append(x, y)
+
                 if self.best_val_y is None or y < self.best_val_y:
                     self.best_val_x = x
                     self.best_val_y = y
+                    self._set_data_on_scatter([x], [y], "val_loss_best")
+                    # TODO(LM): Remove before merging
                     self.series["val_loss_best"].replace([QtCore.QPointF(x, y)])
-                    self._add_data_to_scatter([x], [y], "val_loss_best")
+
+            # Add data and redraw the plot
             self._add_data_to_plot(x, y, which)
+            self._redraw_plot()
 
-            self.ax.figure.canvas.draw_idle()  # Redraw the plot
-
-    def _add_data_to_scatter(self, xs, ys, which):
+    def _set_data_on_scatter(self, xs, ys, which):
         """Add data to a scatter plot.
 
         Not to be used with line plots.
@@ -1099,10 +1041,10 @@ class LossViewer(QtWidgets.QMainWindow):
             ys: The y-coordinates of the data points.
             which: The type of data point. Possible values are:
                 * "batch"
+                * "val_loss_best"
         """
 
-        offsets = np.column_stack((xs, ys))
-        self.mp_series[which].set_offsets(offsets)
+        self.canvas.set_data_on_scatter(xs, ys, which)
 
     def _add_data_to_plot(self, x, y, which):
         """Add data to a line plot.
@@ -1117,8 +1059,12 @@ class LossViewer(QtWidgets.QMainWindow):
                 * "val_loss"
         """
 
-        x_data, y_data = self.mp_series[which].get_data()
-        self.mp_series[which].set_data(np.append(x_data, x), np.append(y_data, y))
+        self.canvas.add_data_to_plot(x, y, which)
+
+    def _redraw_plot(self):
+        """Redraw the plot."""
+
+        self.canvas.redraw_plot()
 
     def _resize_axes(self, x, y):
         """Resize axes to fit data.
@@ -1129,14 +1075,15 @@ class LossViewer(QtWidgets.QMainWindow):
             x: The x-coordinates of the data points.
             y: The y-coordinates of the data points.
         """
+        self.canvas.resize_axes(x, y)
 
+        # TODO(LM): Remove before merging
         # Set X scale to show all points
         dx = 0.5
         x_min = min(x) - dx
         x_min = x_min if x_min > 0 else 0
         x_max = max(x) + dx
         self.chart.axisX().setRange(x_min, x_max)
-        self.ax.set_xlim(x_min, x_max)
 
         # Set Y scale
         if self.ignore_outliers:
@@ -1159,24 +1106,6 @@ class LossViewer(QtWidgets.QMainWindow):
             low = max(low, 1e-8)  # For log scale, low cannot be 0
 
         self.chart.axisY().setRange(low, high)
-        self.ax.set_ylim(low, high)
-
-        self._add_midpoint_gridlines()
-
-    def _add_midpoint_gridlines(self):
-        # Clear existing minor vertical lines
-        for line in self.ax.get_lines():
-            if line.get_linestyle() == ":":
-                line.remove()
-
-        # Add gridlines at midpoint between major ticks
-        major_ticks = self.ax.yaxis.get_majorticklocs()
-        if len(major_ticks) > 1:
-            prev_major_tick = major_ticks[0]
-            for major_tick in major_ticks[:-1]:
-                midpoint = (major_tick + prev_major_tick) / 2
-                self.ax.axhline(midpoint, linestyle=":", linewidth=0.5, color="#d3d3d3")
-                prev_major_tick = major_tick
 
     def set_start_time(self, t0: float):
         """Mark the start flag and time of the run.
@@ -1198,12 +1127,26 @@ class LossViewer(QtWidgets.QMainWindow):
             dt = perf_counter() - self.t0
             dt_min, dt_sec = divmod(dt, 60)
 
+            self.canvas.update_runtime_title(
+                epoch=self.epoch,
+                dt_min=dt_min,
+                dt_sec=dt_sec,
+                last_epoch_val_loss=self.last_epoch_val_loss,
+                penultimate_epoch_val_loss=self.penultimate_epoch_val_loss,
+                mean_epoch_time_min=self.mean_epoch_time_min,
+                mean_epoch_time_sec=self.mean_epoch_time_sec,
+                eta_ten_epochs_min=self.eta_ten_epochs_min,
+                epochs_in_plateau=self.epochs_in_plateau,
+                plateau_patience=self.config.optimization.early_stopping.plateau_patience,
+                epoch_in_plateau_flag=self.epoch_in_plateau_flag,
+                best_val_x=self.best_val_x,
+                best_val_y=self.best_val_y,
+                epoch_size=self.epoch_size,
+            )
+
+            # TODO(LM): Remove before merging
             charts_title = f"Training Epoch <b>{self.epoch + 1}</b> / "
             charts_title += f"Runtime: <b>{int(dt_min):02}:{int(dt_sec):02}</b>"
-            title = r"Training Epoch $\mathbf{" + str(self.epoch + 1) + r"}$ / "
-            title += (
-                r"Runtime: $\mathbf{" + f"{int(dt_min):02}:{int(dt_sec):02}" + r"}$"
-            )
             if self.last_epoch_val_loss is not None:
                 if self.penultimate_epoch_val_loss is not None:
                     charts_title += (
@@ -1211,35 +1154,15 @@ class LossViewer(QtWidgets.QMainWindow):
                         f"<b>{int(self.mean_epoch_time_min):02}:{int(self.mean_epoch_time_sec):02}</b> / "
                         f"ETA Next 10 Epochs: <b>{int(self.eta_ten_epochs_min)} min</b>"
                     )
-                    title += (
-                        "\nMean Time per Epoch: "
-                        r"$\mathbf{"
-                        + f"{int(self.mean_epoch_time_min):02}:{int(self.mean_epoch_time_sec):02}"
-                        + r"}$ / "
-                        r"ETA Next 10 Epochs: $\mathbf{"
-                        + f"{int(self.eta_ten_epochs_min)}"
-                        + r"}$ min"
-                    )
                     if self.epoch_in_plateau_flag:
                         charts_title += (
                             f"<br />Epochs in Plateau: "
                             f"<b>{self.epochs_in_plateau} / "
                             f"{self.config.optimization.early_stopping.plateau_patience}</b>"
                         )
-                        title += (
-                            "\nEpochs in Plateau: "
-                            r"$\mathbf{" + f"{self.epochs_in_plateau}" + r"}$ / "
-                            r"$\mathbf{"
-                            + f"{self.config.optimization.early_stopping.plateau_patience}"
-                            + r"}$"
-                        )
                 charts_title += (
                     f"<br />Last Epoch Validation Loss: "
                     f"<b>{self.last_epoch_val_loss:.3e}</b>"
-                )
-                title += (
-                    "\nLast Epoch Validation Loss: "
-                    r"$\mathbf{" + f"{self.last_epoch_val_loss:.3e}" + r"}$"
                 )
             if self.best_val_x is not None:
                 best_epoch = (self.best_val_x // self.epoch_size) + 1
@@ -1247,28 +1170,21 @@ class LossViewer(QtWidgets.QMainWindow):
                     f"<br />Best Epoch Validation Loss: "
                     f"<b>{self.best_val_y:.3e}</b> (epoch <b>{best_epoch}</b>)"
                 )
-                title += (
-                    "\nBest Epoch Validation Loss: "
-                    r"$\mathbf{"
-                    + f"{self.best_val_y:.3e}"
-                    + r"}$ (epoch $\mathbf{"
-                    + str(best_epoch)
-                    + r"}$)"
-                )
-            self.set_message(title, charts_title)
+            self.set_message(charts_title)
 
     @property
     def is_timer_running(self) -> bool:
         """Return True if the timer has started."""
         return self.t0 is not None and self.is_running
 
-    def set_message(self, text: str, charts_text=None):
+    def set_message(self, text: str):
         """Set the chart title text."""
 
-        self.ax.set_title(text, fontweight="light", fontsize="small", x=0.55, y=1.03)
+        # TODO(LM): Uncomment before merging
+        # self.canvas.set_title(text)
 
-        charts_text = text if charts_text is None else charts_text
-        self.chart.setTitle(charts_text)
+        # TODO(LM): Remove before merging
+        self.chart.setTitle(text)
 
     def check_messages(
         self, timeout: int = 10, times_to_check: int = 10, do_update: bool = True
