@@ -128,7 +128,7 @@ jobs:
 
       # Create conda environment using built conda package (Mac)
       # Note channel differences
-      - name: Test built conda package (Mac)
+      - name: Create conda environment (Mac)
         if: matrix.os == 'macos-14'
         shell: bash -l {0}
         run: |
