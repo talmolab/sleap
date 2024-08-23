@@ -117,8 +117,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install libglapi-mesa libegl-mesa0 libegl1 libopengl0 libgl1-mesa-glx
 
-      # Test built conda package (Ubuntu and Windows)
-      - name: Test built conda package (Ubuntu and Windows)
+      # Create conda environment using built conda package (Ubuntu and Windows)
+      - name: Create conda environment (Ubuntu and Windows)
         if: matrix.os != 'macos-14'
         shell: bash -l {0}
         run: |
@@ -126,22 +126,8 @@ jobs:
           conda create -y -n sleap_test -c file://$BUILD_PATH -c sleap/label/dev -c conda-forge -c nvidia -c anaconda sleap
           conda activate sleap_test
 
-          echo "Python executable after activating sleap_test environment:"
-          which python
-          echo "Python version after activating sleap_test environment:"
-          python --version
-          echo "Conda info after activating sleap_test environment:"
-          conda info
-          echo "List of installed conda packages in the sleap_test environment:"
-          conda list
-          echo "List of installed pip packages in the sleap_test environment:"
-          pip list
-    
-          echo "Testing sleap package installation..."
-          sleap_version=$(python -c "import sleap; print(sleap.__version__)")
-          echo "Test completed using sleap version: $sleap_version"
-
-      # Test built conda package (Mac)
+      # Create conda environment using built conda package (Mac)
+      # Note channel differences
       - name: Test built conda package (Mac)
         if: matrix.os == 'macos-14'
         shell: bash -l {0}
@@ -149,7 +135,11 @@ jobs:
           echo "Creating and testing conda environment with sleap package..."
           conda create -y -n sleap_test -c file://$BUILD_PATH -c conda-forge -c anaconda sleap
           conda activate sleap_test
-    
+
+      # Test conda environment
+      - name: Test conda environment
+        shell: bash -l {0}
+        run: |
           echo "Python executable after activating sleap_test environment:"
           which python
           echo "Python version after activating sleap_test environment:"
