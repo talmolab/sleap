@@ -166,7 +166,7 @@ class AsyncVideoServer(Process):
                         break
 
                     if "video" in request:
-                        self.video = cattr.structure(request["video"], Video)
+                        self.video = Video.cattr().structure(request["video"], Video)
                         logger.debug(f"loaded video: {self.video.filename}")
 
                     if self.video is not None:
