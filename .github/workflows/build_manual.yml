@@ -111,6 +111,7 @@ jobs:
 
       # Install necessary OpenGL packages for Ubuntu only https://github.com/conda-forge/opencv-feedstock/issues/401
       - name: Install OpenGL libraries on Ubuntu runner
+        if: matrix.os == 'ubuntu-22.04'
         shell: bash -l {0}
         run: |
           sudo apt-get update
