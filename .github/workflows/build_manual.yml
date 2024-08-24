@@ -11,10 +11,11 @@ on:
       - '.conda_mac/meta.yaml'
       - '.conda_mac/condarc.yaml'
       - '.github/workflows/build_manual.yml'
+      - 'requirements.txt'
     branches:
       # - develop
       # - fakebranch
-      - elizabeth/fix-ubuntu-CI-ImportError
+      - elizabeth/test-conda-build-when-changes-made-to-requirements
 
 jobs:
   build:
