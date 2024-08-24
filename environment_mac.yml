@@ -49,7 +49,7 @@ dependencies:
     # - conda-forge::scikit-video
     - conda-forge::seaborn
     # - conda-forge::tensorflow-hub  # pulls in tensorflow cpu from conda-forge
-    - sleap-deps/label/dev::tensorflow ==2.9.2a0 # TODO: Switch to main label when updated
+    - sleap-deps/label/dev::tensorflow ==2.12.0 # TODO: Switch to main label when updated
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose
