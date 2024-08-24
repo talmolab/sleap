@@ -181,8 +181,9 @@ class LossPlot(MplCanvas):
         x_min, x_max = self._calculate_xlim(x)
         self.axes.set_xlim(x_min, x_max)
 
-        # Set Y scale
+        # Set Y scale, ensuring that y_min and y_max do not lead to sngular transform
         y_min, y_max = self._calculate_ylim(y)
+        y_min, y_max = self.axes.yaxis.get_major_locator().nonsingular(y_min, y_max)
         self.axes.set_ylim(y_min, y_max)
 
         # Add gridlines at midpoint between major ticks (major gridlines are automatic)
