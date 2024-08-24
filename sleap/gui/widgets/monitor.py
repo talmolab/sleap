@@ -43,7 +43,7 @@ class LossPlot(MplCanvas):
         COLOR_BEST_VAL = (151, 204, 89)
 
         # Initialize scatter series for batch training loss
-        self.series["batch"] = self.init_series(
+        self.series["batch"] = self._init_series(
             series_type=self.axes.scatter,
             name="Batch Training Loss",
             color=COLOR_TRAIN + (48,),
@@ -51,7 +51,7 @@ class LossPlot(MplCanvas):
         )
 
         # Initialize line series for epoch training loss
-        self.series["epoch_loss"] = self.init_series(
+        self.series["epoch_loss"] = self._init_series(
             series_type=self.axes.plot,
             name="Epoch Training Loss",
             color=COLOR_TRAIN + (255,),
@@ -59,7 +59,7 @@ class LossPlot(MplCanvas):
         )
 
         # Initialize line series for epoch validation loss
-        self.series["val_loss"] = self.init_series(
+        self.series["val_loss"] = self._init_series(
             series_type=self.axes.plot,
             name="Epoch Validation Loss",
             color=COLOR_VAL + (255,),
@@ -68,7 +68,7 @@ class LossPlot(MplCanvas):
         )
 
         # Initialize scatter series for best epoch validation loss
-        self.series["val_loss_best"] = self.init_series(
+        self.series["val_loss_best"] = self._init_series(
             series_type=self.axes.scatter,
             name="Best Validation Loss",
             color=COLOR_BEST_VAL + (255,),
@@ -135,44 +135,280 @@ class LossPlot(MplCanvas):
         self.axes.set_yscale(y_scale)
         self.redraw_plot()
 
-    def init_series(
-        self,
-        series_type,
-        color,
-        name: Optional[str] = None,
-        line_width: Optional[float] = None,
-        border_color: Optional[Tuple[int, int, int]] = None,
-        zorder: Optional[int] = None,
-    ):
+    def set_data_on_scatter(self, xs, ys, which):
+        """Set data on a scatter plot.
 
-        # Set the color
-        color = [c / 255.0 for c in color]  # Normalize color values to [0, 1]
+        Not to be used with line plots.
 
-        # Create the series
-        series = series_type(
-            [],
-            [],
-            color=color,
-            label=name,
-            marker="o",
-            zorder=zorder,
+        Args:
+            xs: The x-coordinates of the data points.
+            ys: The y-coordinates of the data points.
+            which: The type of data point. Possible values are:
+                * "batch"
+                * "val_loss_best"
+        """
+
+        offsets = np.column_stack((xs, ys))
+        self.series[which].set_offsets(offsets)
+
+    def add_data_to_plot(self, x, y, which):
+        """Add data to a line plot.
+
+        Not to be used with scatter plots.
+
+        Args:
+            x: The x-coordinate of the data point.
+            y: The y-coordinate of the data point.
+            which: The type of data point. Possible values are:
+                * "epoch_loss"
+                * "val_loss"
+        """
+
+        x_data, y_data = self.series[which].get_data()
+        self.series[which].set_data(np.append(x_data, x), np.append(y_data, y))
+
+    def resize_axes(self, x, y):
+        """Resize axes to fit data.
+
+        This is only called when plotting batches.
+
+        Args:
+            x: The x-coordinates of the data points.
+            y: The y-coordinates of the data points.
+        """
+
+        # Set X scale to show all points
+        x_min, x_max = self._calculate_xlim(x)
+        self.axes.set_xlim(x_min, x_max)
+
+        # Set Y scale
+        y_min, y_max = self._calculate_ylim(y)
+        self.axes.set_ylim(y_min, y_max)
+
+        # Add gridlines at midpoint between major ticks (major gridlines are automatic)
+        self._add_midpoint_gridlines()
+
+        # Redraw the plot
+        self.redraw_plot()
+
+    def redraw_plot(self):
+        """Redraw the plot."""
+
+        self.fig.canvas.draw_idle()
+
+    def set_title(self, title, color=None):
+        """Set the title of the plot.
+
+        Args:
+            title: The title text to display.
+        """
+
+        if color is None:
+            color = "black"
+
+        self.axes.set_title(
+            title, fontweight="light", fontsize="small", color=color, x=0.55, y=1.03
         )
 
-        # ax.plot returns a list of PathCollections, so we need to get the first one
-        if not isinstance(series, PathCollection):
-            series = series[0]
+    def update_runtime_title(
+        self,
+        epoch: int,
+        dt_min: int,
+        dt_sec: int,
+        last_epoch_val_loss: float = None,
+        penultimate_epoch_val_loss: float = None,
+        mean_epoch_time_min: int = None,
+        mean_epoch_time_sec: int = None,
+        eta_ten_epochs_min: int = None,
+        epochs_in_plateau: int = None,
+        plateau_patience: int = None,
+        epoch_in_plateau_flag: bool = False,
+        best_val_x: int = None,
+        best_val_y: float = None,
+        epoch_size: int = None,
+    ):
 
-        if line_width is not None:
-            series.set_linewidth(line_width)
+        # Add training epoch and runtime info
+        title = self._get_training_epoch_and_runtime_text(epoch, dt_min, dt_sec)
 
-        # Set the border color (edge color)
-        if border_color is not None:
-            border_color = [
-                c / 255.0 for c in border_color
-            ]  # Normalize color values to [0, 1]
-            series.set_edgecolor(border_color)
+        if last_epoch_val_loss is not None:
 
-        return series
+            if penultimate_epoch_val_loss is not None:
+                # Add mean epoch time and ETA for next 10 epochs
+                eta_text = self._get_eta_text(
+                    mean_epoch_time_min, mean_epoch_time_sec, eta_ten_epochs_min
+                )
+                title = self._add_with_newline(title, eta_text)
+
+                # Add epochs in plateau if flag is set
+                if epoch_in_plateau_flag:
+                    plateau_text = self._get_epochs_in_plateau_text(
+                        epochs_in_plateau, plateau_patience
+                    )
+                    title = self._add_with_newline(title, plateau_text)
+
+            # Add last epoch validation loss
+            last_val_text = self._get_last_validation_loss_text(last_epoch_val_loss)
+            title = self._add_with_newline(title, last_val_text)
+
+            # Add best epoch validation loss if available
+            if best_val_x is not None:
+                best_epoch = (best_val_x // epoch_size) + 1
+                best_val_text = self._get_best_validation_loss_text(
+                    best_val_y, best_epoch
+                )
+                title = self._add_with_newline(title, best_val_text)
+
+        self.set_title(title)
+
+    @staticmethod
+    def _get_training_epoch_and_runtime_text(epoch: int, dt_min: int, dt_sec: int):
+        """Get the training epoch and runtime text to display in the plot.
+
+        Args:
+            epoch: The current epoch.
+            dt_min: The number of minutes since training started.
+            dt_sec: The number of seconds since training started.
+        """
+
+        runtime_text = (
+            r"Training Epoch $\mathbf{" + str(epoch + 1) + r"}$ / "
+            r"Runtime: $\mathbf{" + f"{int(dt_min):02}:{int(dt_sec):02}" + r"}$"
+        )
+
+        return runtime_text
+
+    @staticmethod
+    def _get_eta_text(mean_epoch_time_min, mean_epoch_time_sec, eta_ten_epochs_min):
+        """Get the mean time and ETA text to display in the plot.
+
+        Args:
+            mean_epoch_time_min: The mean time per epoch in minutes.
+            mean_epoch_time_sec: The mean time per epoch in seconds.
+            eta_ten_epochs_min: The estimated time for the next ten epochs in minutes.
+        """
+
+        runtime_text = (
+            r"Mean Time per Epoch: $\mathbf{"
+            + f"{int(mean_epoch_time_min):02}:{int(mean_epoch_time_sec):02}"
+            + r"}$ / "
+            r"ETA Next 10 Epochs: $\mathbf{" + f"{int(eta_ten_epochs_min)}" + r"}$ min"
+        )
+
+        return runtime_text
+
+    @staticmethod
+    def _get_epochs_in_plateau_text(epochs_in_plateau, plateau_patience):
+        """Get the epochs in plateau text to display in the plot.
+
+        Args:
+            epochs_in_plateau: The number of epochs in plateau.
+            plateau_patience: The number of epochs to wait before stopping training.
+        """
+
+        plateau_text = (
+            r"Epochs in Plateau: $\mathbf{" + f"{epochs_in_plateau}" + r"}$ / "
+            r"$\mathbf{" + f"{plateau_patience}" + r"}$"
+        )
+
+        return plateau_text
+
+    @staticmethod
+    def _get_last_validation_loss_text(last_epoch_val_loss):
+        """Get the last epoch validation loss text to display in the plot.
+
+        Args:
+            last_epoch_val_loss: The validation loss from the last epoch.
+        """
+
+        last_val_loss_text = (
+            "Last Epoch Validation Loss: "
+            r"$\mathbf{" + f"{last_epoch_val_loss:.3e}" + r"}$"
+        )
+
+        return last_val_loss_text
+
+    @staticmethod
+    def _get_best_validation_loss_text(best_val_y, best_epoch):
+        """Get the best epoch validation loss text to display in the plot.
+
+        Args:
+            best_val_x: The epoch number of the best validation loss.
+            best_val_y: The best validation loss.
+        """
+
+        best_val_loss_text = (
+            r"Best Epoch Validation Loss: $\mathbf{"
+            + f"{best_val_y:.3e}"
+            + r"}$ (epoch $\mathbf{"
+            + str(best_epoch)
+            + r"}$)"
+        )
+
+        return best_val_loss_text
+
+    @staticmethod
+    def _add_with_newline(old_text: str, new_text: str):
+        """Add a new line to the text.
+
+        Args:
+            old_text: The existing text.
+            new_text: The text to add on a new line.
+        """
+
+        return old_text + "\n" + new_text
+
+    @staticmethod
+    def _calculate_xlim(x: np.ndarray, dx: float = 0.5):
+        """Calculates x-axis limits.
+
+        Args:
+            x: Array of x data to fit the limits to.
+            dx: The padding to add to the limits.
+
+        Returns:
+            Tuple of the minimum and maximum x-axis limits.
+        """
+
+        x_min = min(x) - dx
+        x_min = x_min if x_min > 0 else 0
+        x_max = max(x) + dx
+
+        return x_min, x_max
+
+    def _calculate_ylim(self, y: np.ndarray, dy: float = 0.02):
+        """Calculates y-axis limits.
+
+        Args:
+            y: Array of y data to fit the limits to.
+            dy: The padding to add to the limits.
+
+        Returns:
+            Tuple of the minimum and maximum y-axis limits.
+        """
+
+        if self.ignore_outliers:
+            dy = np.ptp(y) * 0.02
+            # Set Y scale to exclude outliers
+            q1, q3 = np.quantile(y, (0.25, 0.75))
+            iqr = q3 - q1  # Interquartile range
+            y_min = q1 - iqr * 1.5
+            y_max = q3 + iqr * 1.5
+
+            # Keep within range of data
+            y_min = max(y_min, min(y) - dy)
+            y_max = min(y_max, max(y) + dy)
+        else:
+            # Set Y scale to show all points
+            dy = np.ptp(y) * 0.02
+            y_min = min(y) - dy
+            y_max = max(y) + dy
+
+        # For log scale, low cannot be 0
+        if self.log_scale:
+            y_min = max(y_min, 1e-8)
+
+        return y_min, y_max
 
     def _set_title_space(self):
         """Set up the title space.
@@ -308,280 +544,44 @@ class LossPlot(MplCanvas):
                 )
                 prev_major_tick = major_tick
 
-    def set_data_on_scatter(self, xs, ys, which):
-        """Set data on a scatter plot.
-
-        Not to be used with line plots.
-
-        Args:
-            xs: The x-coordinates of the data points.
-            ys: The y-coordinates of the data points.
-            which: The type of data point. Possible values are:
-                * "batch"
-                * "val_loss_best"
-        """
-
-        offsets = np.column_stack((xs, ys))
-        self.series[which].set_offsets(offsets)
-
-    def add_data_to_plot(self, x, y, which):
-        """Add data to a line plot.
-
-        Not to be used with scatter plots.
-
-        Args:
-            x: The x-coordinate of the data point.
-            y: The y-coordinate of the data point.
-            which: The type of data point. Possible values are:
-                * "epoch_loss"
-                * "val_loss"
-        """
-
-        x_data, y_data = self.series[which].get_data()
-        self.series[which].set_data(np.append(x_data, x), np.append(y_data, y))
-
-    @staticmethod
-    def calculate_xlim(x: np.ndarray, dx: float = 0.5):
-        """Calculates x-axis limits.
-
-        Args:
-            x: Array of x data to fit the limits to.
-            dx: The padding to add to the limits.
-
-        Returns:
-            Tuple of the minimum and maximum x-axis limits.
-        """
-
-        x_min = min(x) - dx
-        x_min = x_min if x_min > 0 else 0
-        x_max = max(x) + dx
-
-        return x_min, x_max
-
-    def calculate_ylim(self, y: np.ndarray, dy: float = 0.02):
-        """Calculates y-axis limits.
-
-        Args:
-            y: Array of y data to fit the limits to.
-            dy: The padding to add to the limits.
-
-        Returns:
-            Tuple of the minimum and maximum y-axis limits.
-        """
-
-        if self.ignore_outliers:
-            dy = np.ptp(y) * 0.02
-            # Set Y scale to exclude outliers
-            q1, q3 = np.quantile(y, (0.25, 0.75))
-            iqr = q3 - q1  # Interquartile range
-            y_min = q1 - iqr * 1.5
-            y_max = q3 + iqr * 1.5
-
-            # Keep within range of data
-            y_min = max(y_min, min(y) - dy)
-            y_max = min(y_max, max(y) + dy)
-        else:
-            # Set Y scale to show all points
-            dy = np.ptp(y) * 0.02
-            y_min = min(y) - dy
-            y_max = max(y) + dy
-
-        # For log scale, low cannot be 0
-        if self.log_scale:
-            y_min = max(y_min, 1e-8)
-
-        return y_min, y_max
-
-    def resize_axes(self, x, y):
-        """Resize axes to fit data.
-
-        This is only called when plotting batches.
-
-        Args:
-            x: The x-coordinates of the data points.
-            y: The y-coordinates of the data points.
-        """
-
-        # Set X scale to show all points
-        x_min, x_max = self.calculate_xlim(x)
-        self.axes.set_xlim(x_min, x_max)
-
-        # Set Y scale
-        y_min, y_max = self.calculate_ylim(y)
-        self.axes.set_ylim(y_min, y_max)
-
-        # Add gridlines at midpoint between major ticks (major gridlines are automatic)
-        self._add_midpoint_gridlines()
-
-        # Redraw the plot
-        self.redraw_plot()
-
-    def redraw_plot(self):
-        """Redraw the plot."""
-
-        self.fig.canvas.draw_idle()
-
-    @staticmethod
-    def get_training_epoch_and_runtime_text(epoch: int, dt_min: int, dt_sec: int):
-        """Get the training epoch and runtime text to display in the plot.
-
-        Args:
-            epoch: The current epoch.
-            dt_min: The number of minutes since training started.
-            dt_sec: The number of seconds since training started.
-        """
-
-        runtime_text = (
-            r"Training Epoch $\mathbf{" + str(epoch + 1) + r"}$ / "
-            r"Runtime: $\mathbf{" + f"{int(dt_min):02}:{int(dt_sec):02}" + r"}$"
-        )
-
-        return runtime_text
-
-    @staticmethod
-    def get_eta_text(mean_epoch_time_min, mean_epoch_time_sec, eta_ten_epochs_min):
-        """Get the mean time and ETA text to display in the plot.
-
-        Args:
-            mean_epoch_time_min: The mean time per epoch in minutes.
-            mean_epoch_time_sec: The mean time per epoch in seconds.
-            eta_ten_epochs_min: The estimated time for the next ten epochs in minutes.
-        """
-
-        runtime_text = (
-            r"Mean Time per Epoch: $\mathbf{"
-            + f"{int(mean_epoch_time_min):02}:{int(mean_epoch_time_sec):02}"
-            + r"}$ / "
-            r"ETA Next 10 Epochs: $\mathbf{" + f"{int(eta_ten_epochs_min)}" + r"}$ min"
-        )
-
-        return runtime_text
-
-    @staticmethod
-    def get_epochs_in_plateau_text(epochs_in_plateau, plateau_patience):
-        """Get the epochs in plateau text to display in the plot.
-
-        Args:
-            epochs_in_plateau: The number of epochs in plateau.
-            plateau_patience: The number of epochs to wait before stopping training.
-        """
-
-        plateau_text = (
-            r"Epochs in Plateau: $\mathbf{" + f"{epochs_in_plateau}" + r"}$ / "
-            r"$\mathbf{" + f"{plateau_patience}" + r"}$"
-        )
-
-        return plateau_text
-
-    @staticmethod
-    def get_last_validation_loss_text(last_epoch_val_loss):
-        """Get the last epoch validation loss text to display in the plot.
-
-        Args:
-            last_epoch_val_loss: The validation loss from the last epoch.
-        """
-
-        last_val_loss_text = (
-            "Last Epoch Validation Loss: "
-            r"$\mathbf{" + f"{last_epoch_val_loss:.3e}" + r"}$"
-        )
-
-        return last_val_loss_text
-
-    @staticmethod
-    def get_best_validation_loss_text(best_val_y, best_epoch):
-        """Get the best epoch validation loss text to display in the plot.
-
-        Args:
-            best_val_x: The epoch number of the best validation loss.
-            best_val_y: The best validation loss.
-        """
-
-        best_val_loss_text = (
-            r"Best Epoch Validation Loss: $\mathbf{"
-            + f"{best_val_y:.3e}"
-            + r"}$ (epoch $\mathbf{"
-            + str(best_epoch)
-            + r"}$)"
-        )
-
-        return best_val_loss_text
-
-    @staticmethod
-    def add_with_newline(old_text: str, new_text: str):
-        """Add a new line to the text.
-
-        Args:
-            old_text: The existing text.
-            new_text: The text to add on a new line.
-        """
-
-        return old_text + "\n" + new_text
-
-    def update_runtime_title(
+    def _init_series(
         self,
-        epoch: int,
-        dt_min: int,
-        dt_sec: int,
-        last_epoch_val_loss: float = None,
-        penultimate_epoch_val_loss: float = None,
-        mean_epoch_time_min: int = None,
-        mean_epoch_time_sec: int = None,
-        eta_ten_epochs_min: int = None,
-        epochs_in_plateau: int = None,
-        plateau_patience: int = None,
-        epoch_in_plateau_flag: bool = False,
-        best_val_x: int = None,
-        best_val_y: float = None,
-        epoch_size: int = None,
+        series_type,
+        color,
+        name: Optional[str] = None,
+        line_width: Optional[float] = None,
+        border_color: Optional[Tuple[int, int, int]] = None,
+        zorder: Optional[int] = None,
     ):
 
-        # Add training epoch and runtime info
-        title = self.get_training_epoch_and_runtime_text(epoch, dt_min, dt_sec)
+        # Set the color
+        color = [c / 255.0 for c in color]  # Normalize color values to [0, 1]
 
-        if last_epoch_val_loss is not None:
-
-            if penultimate_epoch_val_loss is not None:
-                # Add mean epoch time and ETA for next 10 epochs
-                eta_text = self.get_eta_text(
-                    mean_epoch_time_min, mean_epoch_time_sec, eta_ten_epochs_min
-                )
-                title = self.add_with_newline(title, eta_text)
-
-                # Add epochs in plateau if flag is set
-                if epoch_in_plateau_flag:
-                    plateau_text = self.get_epochs_in_plateau_text(
-                        epochs_in_plateau, plateau_patience
-                    )
-                    title = self.add_with_newline(title, plateau_text)
-
-            # Add last epoch validation loss
-            last_val_text = self.get_last_validation_loss_text(last_epoch_val_loss)
-            title = self.add_with_newline(title, last_val_text)
-
-            # Add best epoch validation loss if available
-            if best_val_x is not None:
-                best_epoch = (best_val_x // epoch_size) + 1
-                best_val_text = self.get_best_validation_loss_text(
-                    best_val_y, best_epoch
-                )
-                title = self.add_with_newline(title, best_val_text)
-
-        self.set_title(title)
-
-    def set_title(self, title, color=None):
-        """Set the title of the plot.
-
-        Args:
-            title: The title text to display.
-        """
-
-        if color is None:
-            color = "black"
-
-        self.axes.set_title(
-            title, fontweight="light", fontsize="small", color=color, x=0.55, y=1.03
+        # Create the series
+        series = series_type(
+            [],
+            [],
+            color=color,
+            label=name,
+            marker="o",
+            zorder=zorder,
         )
+
+        # ax.plot returns a list of PathCollections, so we need to get the first one
+        if not isinstance(series, PathCollection):
+            series = series[0]
+
+        if line_width is not None:
+            series.set_linewidth(line_width)
+
+        # Set the border color (edge color)
+        if border_color is not None:
+            border_color = [
+                c / 255.0 for c in border_color
+            ]  # Normalize color values to [0, 1]
+            series.set_edgecolor(border_color)
+
+        return series
 
 
 class LossViewer(QtWidgets.QMainWindow):
