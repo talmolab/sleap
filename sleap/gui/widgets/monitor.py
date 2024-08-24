@@ -9,6 +9,7 @@ import jsonpickle
 import numpy as np
 import zmq
 from matplotlib.collections import PathCollection
+import matplotlib.transforms as mtransforms
 from qtpy import QtCore, QtWidgets
 
 from sleap.gui.utils import is_port_free, select_zmq_port
@@ -75,6 +76,14 @@ class LossPlot(MplCanvas):
             zorder=5,  # Above epoch validation loss series
         )
 
+        # Set the x and y positions for the xy labels (as fraction of figure size)
+        self.ypos_xlabel = 0.1
+        self.xpos_ylabel = 0.05
+
+        # Padding between the axes and the xy labels
+        self.xpos_padding = 0.2
+        self.ypos_padding = 0.1
+
         # Set up the major gridlines
         self._setup_major_gridlines()
 
@@ -85,10 +94,29 @@ class LossPlot(MplCanvas):
         self._set_up_y_axis()
 
         # Set up the legend
-        self._setup_legend()
+        self.legend_width, legend_height = self._setup_legend()
+
+        # Set up the title space
+        self.ypos_title = None
+        title_height = self._set_title_space()
+        self.ypos_title = 1 - title_height - self.ypos_padding
+
+        # Determine the top height of the plot
+        top_height = max(title_height, legend_height)
 
         # Adjust the figure layout
-        self.fig.subplots_adjust(top=0.71)  # Adjust the top parameters as needed
+        self.xpos_left_plot = self.xpos_ylabel + self.xpos_padding
+        self.xpos_right_plot = 0.97
+        self.ypos_bottom_plot = self.ypos_xlabel + self.ypos_padding
+        self.ypos_top_plot = 1 - top_height - self.ypos_padding
+
+        # Adjust the top parameters as needed
+        self.fig.subplots_adjust(
+            left=self.xpos_left_plot,
+            right=self.xpos_right_plot,
+            top=self.ypos_top_plot,
+            bottom=self.ypos_bottom_plot,
+        )
 
     @property
     def log_scale(self):
@@ -146,6 +174,39 @@ class LossPlot(MplCanvas):
 
         return series
 
+    def _set_title_space(self):
+        """Set up the title space.
+
+        Returns:
+            The height of the title space as a decimal fraction of the total figure height.
+        """
+
+        # Set a dummy title of the plot
+        n_lines = 5  # Number of lines in the title
+        title_str = "\n".join(
+            [r"Number: $\mathbf{" + str(n) + r"}$" for n in range(n_lines + 1)]
+        )
+        self.set_title(
+            title_str, color="white"
+        )  # Set the title color to white so it's not visible
+
+        # Draw the canvas to ensure the title is created
+        self.fig.canvas.draw()
+
+        # Get the title Text object
+        title = self.axes.title
+
+        # Get the bounding box of the title in display coordinates
+        bbox = title.get_window_extent()
+
+        # Transform the bounding box to figure coordinates
+        bbox = bbox.transformed(self.fig.transFigure.inverted())
+
+        # Calculate the height of the title as a percentage of the total figure height
+        title_height = bbox.height
+
+        return title_height
+
     def _setup_x_axis(self):
         """Set up the x axis.
 
@@ -154,7 +215,14 @@ class LossPlot(MplCanvas):
 
         self.axes.set_xlim(0, 1)
         self.axes.set_xlabel("Batches", fontweight="bold", fontsize="small")
-        self.fig.subplots_adjust(bottom=0.14, right=0.97)
+
+        # Set the x-label in the center of the axes and some amount above the bottom of the figure
+        blended_transform = mtransforms.blended_transform_factory(
+            self.axes.transAxes, self.fig.transFigure
+        )
+        self.axes.xaxis.set_label_coords(
+            0.5, self.ypos_xlabel, transform=blended_transform
+        )
 
     def _set_up_y_axis(self):
         """Set up the y axis.
@@ -174,18 +242,36 @@ class LossPlot(MplCanvas):
 
         # Set the y-label name, size, wight, and position
         self.axes.set_ylabel("Loss", fontweight="bold", fontsize="small")
-        self.axes.yaxis.set_label_coords(-0.19, 0.5)
-
-        # Adjust the bottom of the plot
-        self.fig.subplots_adjust(left=0.2)
+        self.axes.yaxis.set_label_coords(
+            self.xpos_ylabel, 0.5, transform=self.fig.transFigure
+        )
 
     def _setup_legend(self):
-        """Set up the legend."""
+        """Set up the legend.
+
+        Returns:
+            Tuple of the width and height of the legend as a decimal fraction of the total figure width and height.
+        """
 
         # Move the legend outside the plot on the upper left
-        self.axes.legend(
-            loc="upper left", bbox_to_anchor=(-0.25, 1.5), fontsize="small"
+        legend = self.axes.legend(
+            loc="upper left",
+            fontsize="small",
+            bbox_to_anchor=(0, 1),
+            bbox_transform=self.fig.transFigure,
         )
+
+        # Draw the canvas to ensure the legend is created
+        self.fig.canvas.draw()
+
+        # Get the bounding box of the legend in display coordinates
+        bbox = legend.get_window_extent()
+
+        # Transform the bounding box to figure coordinates
+        bbox = bbox.transformed(self.fig.transFigure.inverted())
+
+        # Calculate the width and height of the legend as a percentage of the total figure width and height
+        return bbox.width, bbox.height
 
     def _setup_major_gridlines(self):
 
@@ -483,14 +569,19 @@ class LossPlot(MplCanvas):
 
         self.set_title(title)
 
-    def set_title(self, title):
+    def set_title(self, title, color=None):
         """Set the title of the plot.
 
         Args:
             title: The title text to display.
         """
 
-        self.axes.set_title(title, fontweight="light", fontsize="small", x=0.55, y=1.03)
+        if color is None:
+            color = "black"
+
+        self.axes.set_title(
+            title, fontweight="light", fontsize="small", color=color, x=0.55, y=1.03
+        )
 
 
 class LossViewer(QtWidgets.QMainWindow):
