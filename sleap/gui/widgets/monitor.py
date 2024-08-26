@@ -1,20 +1,588 @@
 """GUI for monitoring training progress interactively."""
 
-import numpy as np
-from time import perf_counter
-from sleap.nn.config.training_job import TrainingJobConfig
-from sleap.gui.utils import is_port_free, select_zmq_port
-import zmq
-import jsonpickle
 import logging
-from typing import Optional, Dict
-from qtpy import QtCore, QtWidgets, QtGui
+from time import perf_counter
+from typing import Dict, Optional, Tuple
 
-# from qtpy.QtCharts import QtCharts
 import attr
+import jsonpickle
+import numpy as np
+import zmq
+from matplotlib.collections import PathCollection
+import matplotlib.transforms as mtransforms
+from qtpy import QtCore, QtWidgets
 
+from sleap.gui.utils import is_port_free, select_zmq_port
+from sleap.gui.widgets.mpl import MplCanvas
+from sleap.nn.config.training_job import TrainingJobConfig
 
 logger = logging.getLogger(__name__)
+
+
+class LossPlot(MplCanvas):
+    """Matplotlib canvas for diplaying training and validation loss curves."""
+
+    def __init__(
+        self,
+        width: int = 5,
+        height: int = 4,
+        dpi: int = 100,
+        log_scale: bool = True,
+        ignore_outliers: bool = False,
+    ):
+        super().__init__(width=width, height=height, dpi=dpi)
+
+        self._log_scale: bool = log_scale
+
+        self.ignore_outliers = ignore_outliers
+
+        # Initialize the series for the plot
+        self.series: dict = {}
+        COLOR_TRAIN = (18, 158, 220)
+        COLOR_VAL = (248, 167, 52)
+        COLOR_BEST_VAL = (151, 204, 89)
+
+        # Initialize scatter series for batch training loss
+        self.series["batch"] = self._init_series(
+            series_type=self.axes.scatter,
+            name="Batch Training Loss",
+            color=COLOR_TRAIN + (48,),
+            border_color=(255, 255, 255, 25),
+        )
+
+        # Initialize line series for epoch training loss
+        self.series["epoch_loss"] = self._init_series(
+            series_type=self.axes.plot,
+            name="Epoch Training Loss",
+            color=COLOR_TRAIN + (255,),
+            line_width=3.0,
+        )
+
+        # Initialize line series for epoch validation loss
+        self.series["val_loss"] = self._init_series(
+            series_type=self.axes.plot,
+            name="Epoch Validation Loss",
+            color=COLOR_VAL + (255,),
+            line_width=3.0,
+            zorder=4,  # Below best validation loss series
+        )
+
+        # Initialize scatter series for best epoch validation loss
+        self.series["val_loss_best"] = self._init_series(
+            series_type=self.axes.scatter,
+            name="Best Validation Loss",
+            color=COLOR_BEST_VAL + (255,),
+            border_color=(255, 255, 255, 25),
+            zorder=5,  # Above epoch validation loss series
+        )
+
+        # Set the x and y positions for the xy labels (as fraction of figure size)
+        self.ypos_xlabel = 0.1
+        self.xpos_ylabel = 0.05
+
+        # Padding between the axes and the xy labels
+        self.xpos_padding = 0.2
+        self.ypos_padding = 0.1
+
+        # Set up the major gridlines
+        self._setup_major_gridlines()
+
+        # Set up the x-axis
+        self._setup_x_axis()
+
+        # Set up the y-axis
+        self._set_up_y_axis()
+
+        # Set up the legend
+        self.legend_width, legend_height = self._setup_legend()
+
+        # Set up the title space
+        self.ypos_title = None
+        title_height = self._set_title_space()
+        self.ypos_title = 1 - title_height - self.ypos_padding
+
+        # Determine the top height of the plot
+        top_height = max(title_height, legend_height)
+
+        # Adjust the figure layout
+        self.xpos_left_plot = self.xpos_ylabel + self.xpos_padding
+        self.xpos_right_plot = 0.97
+        self.ypos_bottom_plot = self.ypos_xlabel + self.ypos_padding
+        self.ypos_top_plot = 1 - top_height - self.ypos_padding
+
+        # Adjust the top parameters as needed
+        self.fig.subplots_adjust(
+            left=self.xpos_left_plot,
+            right=self.xpos_right_plot,
+            top=self.ypos_top_plot,
+            bottom=self.ypos_bottom_plot,
+        )
+
+    @property
+    def log_scale(self):
+        """Returns True if the plot has a log scale for y-axis."""
+
+        return self._log_scale
+
+    @log_scale.setter
+    def log_scale(self, val):
+        """Sets the scale of the y axis to log if True else linear."""
+
+        if isinstance(val, bool):
+            self._log_scale = val
+
+        y_scale = "log" if self._log_scale else "linear"
+        self.axes.set_yscale(y_scale)
+        self.redraw_plot()
+
+    def set_data_on_scatter(self, xs, ys, which):
+        """Set data on a scatter plot.
+
+        Not to be used with line plots.
+
+        Args:
+            xs: The x-coordinates of the data points.
+            ys: The y-coordinates of the data points.
+            which: The type of data point. Possible values are:
+                * "batch"
+                * "val_loss_best"
+        """
+
+        offsets = np.column_stack((xs, ys))
+        self.series[which].set_offsets(offsets)
+
+    def add_data_to_plot(self, x, y, which):
+        """Add data to a line plot.
+
+        Not to be used with scatter plots.
+
+        Args:
+            x: The x-coordinate of the data point.
+            y: The y-coordinate of the data point.
+            which: The type of data point. Possible values are:
+                * "epoch_loss"
+                * "val_loss"
+        """
+
+        x_data, y_data = self.series[which].get_data()
+        self.series[which].set_data(np.append(x_data, x), np.append(y_data, y))
+
+    def resize_axes(self, x, y):
+        """Resize axes to fit data.
+
+        This is only called when plotting batches.
+
+        Args:
+            x: The x-coordinates of the data points.
+            y: The y-coordinates of the data points.
+        """
+
+        # Set X scale to show all points
+        x_min, x_max = self._calculate_xlim(x)
+        self.axes.set_xlim(x_min, x_max)
+
+        # Set Y scale, ensuring that y_min and y_max do not lead to sngular transform
+        y_min, y_max = self._calculate_ylim(y)
+        y_min, y_max = self.axes.yaxis.get_major_locator().nonsingular(y_min, y_max)
+        self.axes.set_ylim(y_min, y_max)
+
+        # Add gridlines at midpoint between major ticks (major gridlines are automatic)
+        self._add_midpoint_gridlines()
+
+        # Redraw the plot
+        self.redraw_plot()
+
+    def redraw_plot(self):
+        """Redraw the plot."""
+
+        self.fig.canvas.draw_idle()
+
+    def set_title(self, title, color=None):
+        """Set the title of the plot.
+
+        Args:
+            title: The title text to display.
+        """
+
+        if color is None:
+            color = "black"
+
+        self.axes.set_title(
+            title, fontweight="light", fontsize="small", color=color, x=0.55, y=1.03
+        )
+
+    def update_runtime_title(
+        self,
+        epoch: int,
+        dt_min: int,
+        dt_sec: int,
+        last_epoch_val_loss: float = None,
+        penultimate_epoch_val_loss: float = None,
+        mean_epoch_time_min: int = None,
+        mean_epoch_time_sec: int = None,
+        eta_ten_epochs_min: int = None,
+        epochs_in_plateau: int = None,
+        plateau_patience: int = None,
+        epoch_in_plateau_flag: bool = False,
+        best_val_x: int = None,
+        best_val_y: float = None,
+        epoch_size: int = None,
+    ):
+
+        # Add training epoch and runtime info
+        title = self._get_training_epoch_and_runtime_text(epoch, dt_min, dt_sec)
+
+        if last_epoch_val_loss is not None:
+
+            if penultimate_epoch_val_loss is not None:
+                # Add mean epoch time and ETA for next 10 epochs
+                eta_text = self._get_eta_text(
+                    mean_epoch_time_min, mean_epoch_time_sec, eta_ten_epochs_min
+                )
+                title = self._add_with_newline(title, eta_text)
+
+                # Add epochs in plateau if flag is set
+                if epoch_in_plateau_flag:
+                    plateau_text = self._get_epochs_in_plateau_text(
+                        epochs_in_plateau, plateau_patience
+                    )
+                    title = self._add_with_newline(title, plateau_text)
+
+            # Add last epoch validation loss
+            last_val_text = self._get_last_validation_loss_text(last_epoch_val_loss)
+            title = self._add_with_newline(title, last_val_text)
+
+            # Add best epoch validation loss if available
+            if best_val_x is not None:
+                best_epoch = (best_val_x // epoch_size) + 1
+                best_val_text = self._get_best_validation_loss_text(
+                    best_val_y, best_epoch
+                )
+                title = self._add_with_newline(title, best_val_text)
+
+        self.set_title(title)
+
+    @staticmethod
+    def _get_training_epoch_and_runtime_text(epoch: int, dt_min: int, dt_sec: int):
+        """Get the training epoch and runtime text to display in the plot.
+
+        Args:
+            epoch: The current epoch.
+            dt_min: The number of minutes since training started.
+            dt_sec: The number of seconds since training started.
+        """
+
+        runtime_text = (
+            r"Training Epoch $\mathbf{" + str(epoch + 1) + r"}$ / "
+            r"Runtime: $\mathbf{" + f"{int(dt_min):02}:{int(dt_sec):02}" + r"}$"
+        )
+
+        return runtime_text
+
+    @staticmethod
+    def _get_eta_text(mean_epoch_time_min, mean_epoch_time_sec, eta_ten_epochs_min):
+        """Get the mean time and ETA text to display in the plot.
+
+        Args:
+            mean_epoch_time_min: The mean time per epoch in minutes.
+            mean_epoch_time_sec: The mean time per epoch in seconds.
+            eta_ten_epochs_min: The estimated time for the next ten epochs in minutes.
+        """
+
+        runtime_text = (
+            r"Mean Time per Epoch: $\mathbf{"
+            + f"{int(mean_epoch_time_min):02}:{int(mean_epoch_time_sec):02}"
+            + r"}$ / "
+            r"ETA Next 10 Epochs: $\mathbf{" + f"{int(eta_ten_epochs_min)}" + r"}$ min"
+        )
+
+        return runtime_text
+
+    @staticmethod
+    def _get_epochs_in_plateau_text(epochs_in_plateau, plateau_patience):
+        """Get the epochs in plateau text to display in the plot.
+
+        Args:
+            epochs_in_plateau: The number of epochs in plateau.
+            plateau_patience: The number of epochs to wait before stopping training.
+        """
+
+        plateau_text = (
+            r"Epochs in Plateau: $\mathbf{" + f"{epochs_in_plateau}" + r"}$ / "
+            r"$\mathbf{" + f"{plateau_patience}" + r"}$"
+        )
+
+        return plateau_text
+
+    @staticmethod
+    def _get_last_validation_loss_text(last_epoch_val_loss):
+        """Get the last epoch validation loss text to display in the plot.
+
+        Args:
+            last_epoch_val_loss: The validation loss from the last epoch.
+        """
+
+        last_val_loss_text = (
+            "Last Epoch Validation Loss: "
+            r"$\mathbf{" + f"{last_epoch_val_loss:.3e}" + r"}$"
+        )
+
+        return last_val_loss_text
+
+    @staticmethod
+    def _get_best_validation_loss_text(best_val_y, best_epoch):
+        """Get the best epoch validation loss text to display in the plot.
+
+        Args:
+            best_val_x: The epoch number of the best validation loss.
+            best_val_y: The best validation loss.
+        """
+
+        best_val_loss_text = (
+            r"Best Epoch Validation Loss: $\mathbf{"
+            + f"{best_val_y:.3e}"
+            + r"}$ (epoch $\mathbf{"
+            + str(best_epoch)
+            + r"}$)"
+        )
+
+        return best_val_loss_text
+
+    @staticmethod
+    def _add_with_newline(old_text: str, new_text: str):
+        """Add a new line to the text.
+
+        Args:
+            old_text: The existing text.
+            new_text: The text to add on a new line.
+        """
+
+        return old_text + "\n" + new_text
+
+    @staticmethod
+    def _calculate_xlim(x: np.ndarray, dx: float = 0.5):
+        """Calculates x-axis limits.
+
+        Args:
+            x: Array of x data to fit the limits to.
+            dx: The padding to add to the limits.
+
+        Returns:
+            Tuple of the minimum and maximum x-axis limits.
+        """
+
+        x_min = min(x) - dx
+        x_min = x_min if x_min > 0 else 0
+        x_max = max(x) + dx
+
+        return x_min, x_max
+
+    def _calculate_ylim(self, y: np.ndarray, dy: float = 0.02):
+        """Calculates y-axis limits.
+
+        Args:
+            y: Array of y data to fit the limits to.
+            dy: The padding to add to the limits.
+
+        Returns:
+            Tuple of the minimum and maximum y-axis limits.
+        """
+
+        if self.ignore_outliers:
+            dy = np.ptp(y) * 0.02
+            # Set Y scale to exclude outliers
+            q1, q3 = np.quantile(y, (0.25, 0.75))
+            iqr = q3 - q1  # Interquartile range
+            y_min = q1 - iqr * 1.5
+            y_max = q3 + iqr * 1.5
+
+            # Keep within range of data
+            y_min = max(y_min, min(y) - dy)
+            y_max = min(y_max, max(y) + dy)
+        else:
+            # Set Y scale to show all points
+            dy = np.ptp(y) * 0.02
+            y_min = min(y) - dy
+            y_max = max(y) + dy
+
+        # For log scale, low cannot be 0
+        if self.log_scale:
+            y_min = max(y_min, 1e-8)
+
+        return y_min, y_max
+
+    def _set_title_space(self):
+        """Set up the title space.
+
+        Returns:
+            The height of the title space as a decimal fraction of the total figure height.
+        """
+
+        # Set a dummy title of the plot
+        n_lines = 5  # Number of lines in the title
+        title_str = "\n".join(
+            [r"Number: $\mathbf{" + str(n) + r"}$" for n in range(n_lines + 1)]
+        )
+        self.set_title(
+            title_str, color="white"
+        )  # Set the title color to white so it's not visible
+
+        # Draw the canvas to ensure the title is created
+        self.fig.canvas.draw()
+
+        # Get the title Text object
+        title = self.axes.title
+
+        # Get the bounding box of the title in display coordinates
+        bbox = title.get_window_extent()
+
+        # Transform the bounding box to figure coordinates
+        bbox = bbox.transformed(self.fig.transFigure.inverted())
+
+        # Calculate the height of the title as a percentage of the total figure height
+        title_height = bbox.height
+
+        return title_height
+
+    def _setup_x_axis(self):
+        """Set up the x axis.
+
+        This includes setting the label, limits, and bottom/right adjustment.
+        """
+
+        self.axes.set_xlim(0, 1)
+        self.axes.set_xlabel("Batches", fontweight="bold", fontsize="small")
+
+        # Set the x-label in the center of the axes and some amount above the bottom of the figure
+        blended_transform = mtransforms.blended_transform_factory(
+            self.axes.transAxes, self.fig.transFigure
+        )
+        self.axes.xaxis.set_label_coords(
+            0.5, self.ypos_xlabel, transform=blended_transform
+        )
+
+    def _set_up_y_axis(self):
+        """Set up the y axis.
+
+        This includes setting the label, limits, scaling, and left adjustment.
+        """
+
+        # Set the minimum value of the y-axis depending on scaling
+        if self.log_scale:
+            yscale = "log"
+            y_min = 0.001
+        else:
+            yscale = "linear"
+            y_min = 0
+        self.axes.set_ylim(bottom=y_min)
+        self.axes.set_yscale(yscale)
+
+        # Set the y-label name, size, wight, and position
+        self.axes.set_ylabel("Loss", fontweight="bold", fontsize="small")
+        self.axes.yaxis.set_label_coords(
+            self.xpos_ylabel, 0.5, transform=self.fig.transFigure
+        )
+
+    def _setup_legend(self):
+        """Set up the legend.
+
+        Returns:
+            Tuple of the width and height of the legend as a decimal fraction of the total figure width and height.
+        """
+
+        # Move the legend outside the plot on the upper left
+        legend = self.axes.legend(
+            loc="upper left",
+            fontsize="small",
+            bbox_to_anchor=(0, 1),
+            bbox_transform=self.fig.transFigure,
+        )
+
+        # Draw the canvas to ensure the legend is created
+        self.fig.canvas.draw()
+
+        # Get the bounding box of the legend in display coordinates
+        bbox = legend.get_window_extent()
+
+        # Transform the bounding box to figure coordinates
+        bbox = bbox.transformed(self.fig.transFigure.inverted())
+
+        # Calculate the width and height of the legend as a percentage of the total figure width and height
+        return bbox.width, bbox.height
+
+    def _setup_major_gridlines(self):
+
+        # Set the outline color of the plot to gray
+        for spine in self.axes.spines.values():
+            spine.set_edgecolor("#d3d3d3")  # Light gray color
+
+        # Remove the top and right axis spines
+        self.axes.spines["top"].set_visible(False)
+        self.axes.spines["right"].set_visible(False)
+
+        # Set the tick markers color to light gray, but not the tick labels
+        self.axes.tick_params(
+            axis="both", which="both", color="#d3d3d3", labelsize="small"
+        )
+
+        # Add gridlines at the tick labels
+        self.axes.grid(True, which="major", linewidth=0.5, color="#d3d3d3")
+
+    def _add_midpoint_gridlines(self):
+        # Clear existing minor vertical lines
+        for line in self.axes.get_lines():
+            if line.get_linestyle() == ":":
+                line.remove()
+
+        # Add gridlines at midpoint between major ticks
+        major_ticks = self.axes.yaxis.get_majorticklocs()
+        if len(major_ticks) > 1:
+            prev_major_tick = major_ticks[0]
+            for major_tick in major_ticks[:-1]:
+                midpoint = (major_tick + prev_major_tick) / 2
+                self.axes.axhline(
+                    midpoint, linestyle=":", linewidth=0.5, color="#d3d3d3"
+                )
+                prev_major_tick = major_tick
+
+    def _init_series(
+        self,
+        series_type,
+        color,
+        name: Optional[str] = None,
+        line_width: Optional[float] = None,
+        border_color: Optional[Tuple[int, int, int]] = None,
+        zorder: Optional[int] = None,
+    ):
+
+        # Set the color
+        color = [c / 255.0 for c in color]  # Normalize color values to [0, 1]
+
+        # Create the series
+        series = series_type(
+            [],
+            [],
+            color=color,
+            label=name,
+            marker="o",
+            zorder=zorder,
+        )
+
+        # ax.plot returns a list of PathCollections, so we need to get the first one
+        if not isinstance(series, PathCollection):
+            series = series[0]
+
+        if line_width is not None:
+            series.set_linewidth(line_width)
+
+        # Set the border color (edge color)
+        if border_color is not None:
+            border_color = [
+                c / 255.0 for c in border_color
+            ]  # Normalize color values to [0, 1]
+            series.set_edgecolor(border_color)
+
+        return series
 
 
 class LossViewer(QtWidgets.QMainWindow):
@@ -43,12 +611,13 @@ class LossViewer(QtWidgets.QMainWindow):
         self.zmq_ports = zmq_ports
 
         self.batches_to_show = -1  # -1 to show all
-        self.ignore_outliers = False
-        self.log_scale = True
+        self._ignore_outliers = False
+        self._log_scale = True
         self.message_poll_time_ms = 20  # ms
         self.redraw_batch_time_ms = 500  # ms
         self.last_redraw_batch = None
 
+        self.canvas = None
         self.reset()
         self.setup_zmq(zmq_context)
 
@@ -89,100 +658,22 @@ class LossViewer(QtWidgets.QMainWindow):
             what: String identifier indicating which job type the current run
                 corresponds to.
         """
-        self.chart = QtCharts.QChart()
-
-        self.series = dict()
-
-        COLOR_TRAIN = (18, 158, 220)
-        COLOR_VAL = (248, 167, 52)
-        COLOR_BEST_VAL = (151, 204, 89)
-
-        self.series["batch"] = QtCharts.QScatterSeries()
-        self.series["batch"].setName("Batch Training Loss")
-        self.series["batch"].setColor(QtGui.QColor(*COLOR_TRAIN, 48))
-        self.series["batch"].setMarkerSize(8.0)
-        self.series["batch"].setBorderColor(QtGui.QColor(255, 255, 255, 25))
-        self.chart.addSeries(self.series["batch"])
-
-        self.series["epoch_loss"] = QtCharts.QLineSeries()
-        self.series["epoch_loss"].setName("Epoch Training Loss")
-        self.series["epoch_loss"].setColor(QtGui.QColor(*COLOR_TRAIN, 255))
-        pen = self.series["epoch_loss"].pen()
-        pen.setWidth(4)
-        self.series["epoch_loss"].setPen(pen)
-        self.chart.addSeries(self.series["epoch_loss"])
-
-        self.series["epoch_loss_scatter"] = QtCharts.QScatterSeries()
-        self.series["epoch_loss_scatter"].setColor(QtGui.QColor(*COLOR_TRAIN, 255))
-        self.series["epoch_loss_scatter"].setMarkerSize(12.0)
-        self.series["epoch_loss_scatter"].setBorderColor(
-            QtGui.QColor(255, 255, 255, 25)
+        self.canvas = LossPlot(
+            width=5,
+            height=4,
+            dpi=100,
+            log_scale=self.log_scale,
+            ignore_outliers=self.ignore_outliers,
         )
-        self.chart.addSeries(self.series["epoch_loss_scatter"])
 
-        self.series["val_loss"] = QtCharts.QLineSeries()
-        self.series["val_loss"].setName("Epoch Validation Loss")
-        self.series["val_loss"].setColor(QtGui.QColor(*COLOR_VAL, 255))
-        pen = self.series["val_loss"].pen()
-        pen.setWidth(4)
-        self.series["val_loss"].setPen(pen)
-        self.chart.addSeries(self.series["val_loss"])
+        self.mp_series = dict()
+        self.mp_series["batch"] = self.canvas.series["batch"]
+        self.mp_series["epoch_loss"] = self.canvas.series["epoch_loss"]
+        self.mp_series["val_loss"] = self.canvas.series["val_loss"]
+        self.mp_series["val_loss_best"] = self.canvas.series["val_loss_best"]
 
-        self.series["val_loss_scatter"] = QtCharts.QScatterSeries()
-        self.series["val_loss_scatter"].setColor(QtGui.QColor(*COLOR_VAL, 255))
-        self.series["val_loss_scatter"].setMarkerSize(12.0)
-        self.series["val_loss_scatter"].setBorderColor(QtGui.QColor(255, 255, 255, 25))
-        self.chart.addSeries(self.series["val_loss_scatter"])
-
-        self.series["val_loss_best"] = QtCharts.QScatterSeries()
-        self.series["val_loss_best"].setName("Best Validation Loss")
-        self.series["val_loss_best"].setColor(QtGui.QColor(*COLOR_BEST_VAL, 255))
-        self.series["val_loss_best"].setMarkerSize(12.0)
-        self.series["val_loss_best"].setBorderColor(QtGui.QColor(32, 32, 32, 25))
-        self.chart.addSeries(self.series["val_loss_best"])
-
-        axisX = QtCharts.QValueAxis()
-        axisX.setLabelFormat("%d")
-        axisX.setTitleText("Batches")
-        self.chart.addAxis(axisX, QtCore.Qt.AlignBottom)
-
-        # Create the different Y axes that can be used.
-        self.axisY = dict()
-
-        self.axisY["log"] = QtCharts.QLogValueAxis()
-        self.axisY["log"].setBase(10)
-
-        self.axisY["linear"] = QtCharts.QValueAxis()
-
-        # Apply settings that apply to all Y axes.
-        for axisY in self.axisY.values():
-            axisY.setLabelFormat("%f")
-            axisY.setLabelsVisible(True)
-            axisY.setMinorTickCount(1)
-            axisY.setTitleText("Loss")
-
-        # Use the default Y axis.
-        axisY = self.axisY["log"] if self.log_scale else self.axisY["linear"]
-
-        # Add axes to chart and series.
-        self.chart.addAxis(axisY, QtCore.Qt.AlignLeft)
-        for series in self.chart.series():
-            series.attachAxis(axisX)
-            series.attachAxis(axisY)
-
-        # Setup legend.
-        self.chart.legend().setVisible(True)
-        self.chart.legend().setAlignment(QtCore.Qt.AlignTop)
-        self.chart.legend().setMarkerShape(QtCharts.QLegend.MarkerShapeCircle)
-
-        # Hide scatters for epoch and val loss from legend.
-        for s in ("epoch_loss_scatter", "val_loss_scatter"):
-            self.chart.legend().markers(self.series[s])[0].setVisible(False)
-
-        self.chartView = QtCharts.QChartView(self.chart)
-        self.chartView.setRenderHint(QtGui.QPainter.Antialiasing)
         layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(self.chartView)
+        layout.addWidget(self.canvas)
 
         if self.show_controller:
             control_layout = QtWidgets.QHBoxLayout()
@@ -257,14 +748,47 @@ class LossViewer(QtWidgets.QMainWindow):
         self.last_batch_number = 0
         self.is_running = False
 
+    @property
+    def log_scale(self):
+        """Returns True if the plot has a log scale for y-axis."""
+
+        return self._log_scale
+
+    @log_scale.setter
+    def log_scale(self, val):
+        """Sets the scale of the y axis to log if True else linear."""
+
+        if isinstance(val, bool):
+            self._log_scale = val
+
+        # Set the log scale on the canvas
+        self.canvas.log_scale = self._log_scale
+
+    @property
+    def ignore_outliers(self):
+        """Returns True if the plot ignores outliers."""
+
+        return self._ignore_outliers
+
+    @ignore_outliers.setter
+    def ignore_outliers(self, val):
+        """Sets whether to ignore outliers in the plot."""
+
+        if isinstance(val, bool):
+            self._ignore_outliers = val
+
+        # Set the ignore_outliers on the canvas
+        self.canvas.ignore_outliers = self._ignore_outliers
+
     def toggle_ignore_outliers(self):
         """Toggles whether to ignore outliers in chart scaling."""
+
         self.ignore_outliers = not self.ignore_outliers
 
     def toggle_log_scale(self):
         """Toggle whether to use log-scaled y-axis."""
+
         self.log_scale = not self.log_scale
-        self.update_y_axis()
 
     def set_batches_to_show(self, batches: str):
         """Set the number of batches to show on the x-axis.
@@ -278,25 +802,6 @@ class LossViewer(QtWidgets.QMainWindow):
             self.batches_to_show = int(batches)
         else:
             self.batches_to_show = -1
-
-    def update_y_axis(self):
-        """Update the y-axis when scale changes."""
-        to = "log" if self.log_scale else "linear"
-
-        # Remove other axes.
-        for name, axisY in self.axisY.items():
-            if name != to:
-                if axisY in self.chart.axes():
-                    self.chart.removeAxis(axisY)
-                for series in self.chart.series():
-                    if axisY in series.attachedAxes():
-                        series.detachAxis(axisY)
-
-        # Add axis.
-        axisY = self.axisY[to]
-        self.chart.addAxis(axisY, QtCore.Qt.AlignLeft)
-        for series in self.chart.series():
-            series.attachAxis(axisY)
 
     def setup_zmq(self, zmq_context: Optional[zmq.Context] = None):
         """Connect to ZMQ ports that listen to commands and updates.
@@ -415,45 +920,67 @@ class LossViewer(QtWidgets.QMainWindow):
                         self.Y[-self.batches_to_show :],
                     )
 
-                points = [QtCore.QPointF(x, y) for x, y in zip(xs, ys) if y > 0]
-                self.series["batch"].replace(points)
-
-                # Set X scale to show all points
-                dx = 0.5
-                self.chart.axisX().setRange(min(xs) - dx, max(xs) + dx)
-
-                if self.ignore_outliers:
-                    dy = np.ptp(ys) * 0.02
-                    # Set Y scale to exclude outliers
-                    q1, q3 = np.quantile(ys, (0.25, 0.75))
-                    iqr = q3 - q1  # interquartile range
-                    low = q1 - iqr * 1.5
-                    high = q3 + iqr * 1.5
-
-                    low = max(low, min(ys) - dy)  # keep within range of data
-                    high = min(high, max(ys) + dy)
-                else:
-                    # Set Y scale to show all points
-                    dy = np.ptp(ys) * 0.02
-                    low = min(ys) - dy
-                    high = max(ys) + dy
-
-                if self.log_scale:
-                    low = max(low, 1e-8)  # for log scale, low cannot be 0
-
-                self.chart.axisY().setRange(low, high)
+                # Set data, resize and redraw the plot
+                self._set_data_on_scatter(xs, ys, which)
+                self._resize_axes(xs, ys)
 
         else:
-            if which == "epoch_loss":
-                self.series["epoch_loss"].append(x, y)
-                self.series["epoch_loss_scatter"].append(x, y)
-            elif which == "val_loss":
-                self.series["val_loss"].append(x, y)
-                self.series["val_loss_scatter"].append(x, y)
+
+            if which == "val_loss":
                 if self.best_val_y is None or y < self.best_val_y:
                     self.best_val_x = x
                     self.best_val_y = y
-                    self.series["val_loss_best"].replace([QtCore.QPointF(x, y)])
+                    self._set_data_on_scatter([x], [y], "val_loss_best")
+
+            # Add data and redraw the plot
+            self._add_data_to_plot(x, y, which)
+            self._redraw_plot()
+
+    def _set_data_on_scatter(self, xs, ys, which):
+        """Add data to a scatter plot.
+
+        Not to be used with line plots.
+
+        Args:
+            xs: The x-coordinates of the data points.
+            ys: The y-coordinates of the data points.
+            which: The type of data point. Possible values are:
+                * "batch"
+                * "val_loss_best"
+        """
+
+        self.canvas.set_data_on_scatter(xs, ys, which)
+
+    def _add_data_to_plot(self, x, y, which):
+        """Add data to a line plot.
+
+        Not to be used with scatter plots.
+
+        Args:
+            x: The x-coordinate of the data point.
+            y: The y-coordinate of the data point.
+            which: The type of data point. Possible values are:
+                * "epoch_loss"
+                * "val_loss"
+        """
+
+        self.canvas.add_data_to_plot(x, y, which)
+
+    def _redraw_plot(self):
+        """Redraw the plot."""
+
+        self.canvas.redraw_plot()
+
+    def _resize_axes(self, x, y):
+        """Resize axes to fit data.
+
+        This is only called when plotting batches.
+
+        Args:
+            x: The x-coordinates of the data points.
+            y: The y-coordinates of the data points.
+        """
+        self.canvas.resize_axes(x, y)
 
     def set_start_time(self, t0: float):
         """Mark the start flag and time of the run.
@@ -470,35 +997,27 @@ class LossViewer(QtWidgets.QMainWindow):
 
     def update_runtime(self):
         """Update the title text with the current running time."""
+
         if self.is_timer_running:
             dt = perf_counter() - self.t0
             dt_min, dt_sec = divmod(dt, 60)
-            title = f"Training Epoch <b>{self.epoch + 1}</b> / "
-            title += f"Runtime: <b>{int(dt_min):02}:{int(dt_sec):02}</b>"
-            if self.last_epoch_val_loss is not None:
-                if self.penultimate_epoch_val_loss is not None:
-                    title += (
-                        f"<br />Mean Time per Epoch: "
-                        f"<b>{int(self.mean_epoch_time_min):02}:{int(self.mean_epoch_time_sec):02}</b> / "
-                        f"ETA Next 10 Epochs: <b>{int(self.eta_ten_epochs_min)} min</b>"
-                    )
-                    if self.epoch_in_plateau_flag:
-                        title += (
-                            f"<br />Epochs in Plateau: "
-                            f"<b>{self.epochs_in_plateau} / "
-                            f"{self.config.optimization.early_stopping.plateau_patience}</b>"
-                        )
-                title += (
-                    f"<br />Last Epoch Validation Loss: "
-                    f"<b>{self.last_epoch_val_loss:.3e}</b>"
-                )
-            if self.best_val_x is not None:
-                best_epoch = (self.best_val_x // self.epoch_size) + 1
-                title += (
-                    f"<br />Best Epoch Validation Loss: "
-                    f"<b>{self.best_val_y:.3e}</b> (epoch <b>{best_epoch}</b>)"
-                )
-            self.set_message(title)
+
+            self.canvas.update_runtime_title(
+                epoch=self.epoch,
+                dt_min=dt_min,
+                dt_sec=dt_sec,
+                last_epoch_val_loss=self.last_epoch_val_loss,
+                penultimate_epoch_val_loss=self.penultimate_epoch_val_loss,
+                mean_epoch_time_min=self.mean_epoch_time_min,
+                mean_epoch_time_sec=self.mean_epoch_time_sec,
+                eta_ten_epochs_min=self.eta_ten_epochs_min,
+                epochs_in_plateau=self.epochs_in_plateau,
+                plateau_patience=self.config.optimization.early_stopping.plateau_patience,
+                epoch_in_plateau_flag=self.epoch_in_plateau_flag,
+                best_val_x=self.best_val_x,
+                best_val_y=self.best_val_y,
+                epoch_size=self.epoch_size,
+            )
 
     @property
     def is_timer_running(self) -> bool:
@@ -507,7 +1026,7 @@ class LossViewer(QtWidgets.QMainWindow):
 
     def set_message(self, text: str):
         """Set the chart title text."""
-        self.chart.setTitle(text)
+        self.canvas.set_title(text)
 
     def check_messages(
         self, timeout: int = 10, times_to_check: int = 10, do_update: bool = True

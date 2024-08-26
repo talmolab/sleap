@@ -44,7 +44,6 @@ ensures consistency (e.g.) between color of instances drawn on video
 frame and instances listed in data view table.
 """
 
-
 import os
 import platform
 import random
