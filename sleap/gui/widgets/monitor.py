@@ -619,33 +619,47 @@ class LossViewer(QtWidgets.QMainWindow):
 
         self.canvas = None
         self.reset()
-        self.setup_zmq(zmq_context)
+        self._setup_zmq(zmq_context)
 
     def __del__(self):
-        self.unbind()
+        self._unbind()
 
-    def close(self):
-        """Disconnect from ZMQ ports and close the window."""
-        self.unbind()
-        super().close()
+    @property
+    def is_timer_running(self) -> bool:
+        """Return True if the timer has started."""
+        return self.t0 is not None and self.is_running
 
-    def unbind(self):
-        """Disconnect from all ZMQ sockets."""
-        if self.sub is not None:
-            self.sub.unbind(self.sub.LAST_ENDPOINT)
-            self.sub.close()
-            self.sub = None
+    @property
+    def log_scale(self):
+        """Returns True if the plot has a log scale for y-axis."""
 
-        if self.zmq_ctrl is not None:
-            url = self.zmq_ctrl.LAST_ENDPOINT
-            self.zmq_ctrl.unbind(url)
-            self.zmq_ctrl.close()
-            self.zmq_ctrl = None
+        return self._log_scale
 
-        # If we started out own zmq context, terminate it.
-        if not self.ctx_given and self.ctx is not None:
-            self.ctx.term()
-            self.ctx = None
+    @log_scale.setter
+    def log_scale(self, val):
+        """Sets the scale of the y axis to log if True else linear."""
+
+        if isinstance(val, bool):
+            self._log_scale = val
+
+        # Set the log scale on the canvas
+        self.canvas.log_scale = self._log_scale
+
+    @property
+    def ignore_outliers(self):
+        """Returns True if the plot ignores outliers."""
+
+        return self._ignore_outliers
+
+    @ignore_outliers.setter
+    def ignore_outliers(self, val):
+        """Sets whether to ignore outliers in the plot."""
+
+        if isinstance(val, bool):
+            self._ignore_outliers = val
+
+        # Set the ignore_outliers on the canvas
+        self.canvas.ignore_outliers = self._ignore_outliers
 
     def reset(
         self,
@@ -680,12 +694,12 @@ class LossViewer(QtWidgets.QMainWindow):
 
             field = QtWidgets.QCheckBox("Log Scale")
             field.setChecked(self.log_scale)
-            field.stateChanged.connect(self.toggle_log_scale)
+            field.stateChanged.connect(self._toggle_log_scale)
             control_layout.addWidget(field)
 
             field = QtWidgets.QCheckBox("Ignore Outliers")
             field.setChecked(self.ignore_outliers)
-            field.stateChanged.connect(self.toggle_ignore_outliers)
+            field.stateChanged.connect(self._toggle_ignore_outliers)
             control_layout.addWidget(field)
 
             control_layout.addWidget(QtWidgets.QLabel("Batches to Show:"))
@@ -703,7 +717,7 @@ class LossViewer(QtWidgets.QMainWindow):
 
             # Set connection action for when user selects another option.
             field.currentIndexChanged.connect(
-                lambda x: self.set_batches_to_show(self.batch_options[x])
+                lambda x: self._set_batches_to_show(self.batch_options[x])
             )
 
             # Store field as property and add to layout.
@@ -713,10 +727,10 @@ class LossViewer(QtWidgets.QMainWindow):
             control_layout.addStretch(1)
 
             self.stop_button = QtWidgets.QPushButton("Stop Early")
-            self.stop_button.clicked.connect(self.stop)
+            self.stop_button.clicked.connect(self._stop)
             control_layout.addWidget(self.stop_button)
             self.cancel_button = QtWidgets.QPushButton("Cancel Training")
-            self.cancel_button.clicked.connect(self.cancel)
+            self.cancel_button.clicked.connect(self._cancel)
             control_layout.addWidget(self.cancel_button)
 
             widget = QtWidgets.QWidget()
@@ -748,62 +762,16 @@ class LossViewer(QtWidgets.QMainWindow):
         self.last_batch_number = 0
         self.is_running = False
 
-    @property
-    def log_scale(self):
-        """Returns True if the plot has a log scale for y-axis."""
+    def set_message(self, text: str):
+        """Set the chart title text."""
+        self.canvas.set_title(text)
 
-        return self._log_scale
+    def close(self):
+        """Disconnect from ZMQ ports and close the window."""
+        self._unbind()
+        super().close()
 
-    @log_scale.setter
-    def log_scale(self, val):
-        """Sets the scale of the y axis to log if True else linear."""
-
-        if isinstance(val, bool):
-            self._log_scale = val
-
-        # Set the log scale on the canvas
-        self.canvas.log_scale = self._log_scale
-
-    @property
-    def ignore_outliers(self):
-        """Returns True if the plot ignores outliers."""
-
-        return self._ignore_outliers
-
-    @ignore_outliers.setter
-    def ignore_outliers(self, val):
-        """Sets whether to ignore outliers in the plot."""
-
-        if isinstance(val, bool):
-            self._ignore_outliers = val
-
-        # Set the ignore_outliers on the canvas
-        self.canvas.ignore_outliers = self._ignore_outliers
-
-    def toggle_ignore_outliers(self):
-        """Toggles whether to ignore outliers in chart scaling."""
-
-        self.ignore_outliers = not self.ignore_outliers
-
-    def toggle_log_scale(self):
-        """Toggle whether to use log-scaled y-axis."""
-
-        self.log_scale = not self.log_scale
-
-    def set_batches_to_show(self, batches: str):
-        """Set the number of batches to show on the x-axis.
-
-        Args:
-            batches: Number of batches as a string. If numeric, this will be converted
-                to an integer. If non-numeric string (e.g., "All"), then all batches
-                will be shown.
-        """
-        if batches.isdigit():
-            self.batches_to_show = int(batches)
-        else:
-            self.batches_to_show = -1
-
-    def setup_zmq(self, zmq_context: Optional[zmq.Context] = None):
+    def _setup_zmq(self, zmq_context: Optional[zmq.Context] = None):
         """Connect to ZMQ ports that listen to commands and updates.
 
         Args:
@@ -865,29 +833,159 @@ class LossViewer(QtWidgets.QMainWindow):
 
         # Set timer to poll for messages.
         self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.check_messages)
+        self.timer.timeout.connect(self._check_messages)
         self.timer.start(self.message_poll_time_ms)
 
-    def cancel(self):
-        """Set the cancel flag."""
-        self.canceled = True
-        if self.cancel_button is not None:
-            self.cancel_button.setText("Canceling...")
-            self.cancel_button.setEnabled(False)
+    def _set_batches_to_show(self, batches: str):
+        """Set the number of batches to show on the x-axis.
 
-    def stop(self):
-        """Send command to stop training."""
-        if self.zmq_ctrl is not None:
-            # Send command to stop training.
-            logger.info("Sending command to stop training.")
-            self.zmq_ctrl.send_string(jsonpickle.encode(dict(command="stop")))
+        Args:
+            batches: Number of batches as a string. If numeric, this will be converted
+                to an integer. If non-numeric string (e.g., "All"), then all batches
+                will be shown.
+        """
+        if batches.isdigit():
+            self.batches_to_show = int(batches)
+        else:
+            self.batches_to_show = -1
 
-        # Disable the button to prevent double messages.
-        if self.stop_button is not None:
-            self.stop_button.setText("Stopping...")
-            self.stop_button.setEnabled(False)
+    def _set_start_time(self, t0: float):
+        """Mark the start flag and time of the run.
 
-    def add_datapoint(self, x: int, y: float, which: str):
+        Args:
+            t0: Start time in seconds.
+        """
+        self.t0 = t0
+        self.is_running = True
+
+    def _update_runtime(self):
+        """Update the title text with the current running time."""
+
+        if self.is_timer_running:
+            dt = perf_counter() - self.t0
+            dt_min, dt_sec = divmod(dt, 60)
+
+            self.canvas.update_runtime_title(
+                epoch=self.epoch,
+                dt_min=dt_min,
+                dt_sec=dt_sec,
+                last_epoch_val_loss=self.last_epoch_val_loss,
+                penultimate_epoch_val_loss=self.penultimate_epoch_val_loss,
+                mean_epoch_time_min=self.mean_epoch_time_min,
+                mean_epoch_time_sec=self.mean_epoch_time_sec,
+                eta_ten_epochs_min=self.eta_ten_epochs_min,
+                epochs_in_plateau=self.epochs_in_plateau,
+                plateau_patience=self.config.optimization.early_stopping.plateau_patience,
+                epoch_in_plateau_flag=self.epoch_in_plateau_flag,
+                best_val_x=self.best_val_x,
+                best_val_y=self.best_val_y,
+                epoch_size=self.epoch_size,
+            )
+
+    def _check_messages(
+        self, timeout: int = 10, times_to_check: int = 10, do_update: bool = True
+    ):
+        """Poll for ZMQ messages and adds any received data to graph.
+
+        The message is a dictionary encoded as JSON:
+            * event - options include
+                * train_begin
+                * train_end
+                * epoch_begin
+                * epoch_end
+                * batch_end
+            * what - this should match the type of model we're training and
+                ensures that we ignore old messages when we start monitoring
+                a new training session (when we're training multiple types
+                of models in a sequence, as for the top-down pipeline).
+            * logs - dictionary with data relevant for plotting, can include
+                * loss
+                * val_loss
+
+        Args:
+            timeout: Message polling timeout in milliseconds. This is how often we will
+                check for new command messages.
+            times_to_check: How many times to check for new messages in the queue before
+                going back to polling with a timeout. Helps to clear backlogs of
+                messages if necessary.
+            do_update: If True (the default), update the GUI text.
+        """
+        if self.sub and self.sub.poll(timeout, zmq.POLLIN):
+            msg = jsonpickle.decode(self.sub.recv_string())
+
+            if msg["event"] == "train_begin":
+                self._set_start_time(perf_counter())
+                self.current_job_output_type = msg["what"]
+
+            # Make sure message matches current training job.
+            if msg.get("what", "") == self.current_job_output_type:
+
+                if not self.is_timer_running:
+                    # We must have missed the train_begin message, so start timer now.
+                    self._set_start_time(perf_counter())
+
+                if msg["event"] == "train_end":
+                    self._set_end()
+                elif msg["event"] == "epoch_begin":
+                    self.epoch = msg["epoch"]
+                elif msg["event"] == "epoch_end":
+                    self.epoch_size = max(self.epoch_size, self.last_batch_number + 1)
+                    self._add_datapoint(
+                        (self.epoch + 1) * self.epoch_size,
+                        msg["logs"]["loss"],
+                        "epoch_loss",
+                    )
+                    if "val_loss" in msg["logs"].keys():
+                        # update variables and add points to plot
+                        self.penultimate_epoch_val_loss = self.last_epoch_val_loss
+                        self.last_epoch_val_loss = msg["logs"]["val_loss"]
+                        self._add_datapoint(
+                            (self.epoch + 1) * self.epoch_size,
+                            msg["logs"]["val_loss"],
+                            "val_loss",
+                        )
+                        # calculate timing and flags at new epoch
+                        if self.penultimate_epoch_val_loss is not None:
+                            mean_epoch_time = (perf_counter() - self.t0) / (
+                                self.epoch + 1
+                            )
+                            self.mean_epoch_time_min, self.mean_epoch_time_sec = divmod(
+                                mean_epoch_time, 60
+                            )
+                            self.eta_ten_epochs_min = (mean_epoch_time * 10) // 60
+
+                            val_loss_delta = (
+                                self.penultimate_epoch_val_loss
+                                - self.last_epoch_val_loss
+                            )
+                            self.epoch_in_plateau_flag = (
+                                val_loss_delta
+                                < self.config.optimization.early_stopping.plateau_min_delta
+                            ) or (self.best_val_y < self.last_epoch_val_loss)
+                            self.epochs_in_plateau = (
+                                self.epochs_in_plateau + 1
+                                if self.epoch_in_plateau_flag
+                                else 0
+                            )
+                    self.on_epoch.emit()
+                elif msg["event"] == "batch_end":
+                    self.last_batch_number = msg["batch"]
+                    self._add_datapoint(
+                        (self.epoch * self.epoch_size) + msg["batch"],
+                        msg["logs"]["loss"],
+                        "batch",
+                    )
+
+            # Check for messages again (up to times_to_check times).
+            if times_to_check > 0:
+                self._check_messages(
+                    timeout=timeout, times_to_check=times_to_check - 1, do_update=False
+                )
+
+        if do_update:
+            self._update_runtime()
+
+    def _add_datapoint(self, x: int, y: float, which: str):
         """Add a data point to graph.
 
         Args:
@@ -982,151 +1080,53 @@ class LossViewer(QtWidgets.QMainWindow):
         """
         self.canvas.resize_axes(x, y)
 
-    def set_start_time(self, t0: float):
-        """Mark the start flag and time of the run.
+    def _toggle_ignore_outliers(self):
+        """Toggles whether to ignore outliers in chart scaling."""
 
-        Args:
-            t0: Start time in seconds.
-        """
-        self.t0 = t0
-        self.is_running = True
+        self.ignore_outliers = not self.ignore_outliers
 
-    def set_end(self):
+    def _toggle_log_scale(self):
+        """Toggle whether to use log-scaled y-axis."""
+
+        self.log_scale = not self.log_scale
+
+    def _stop(self):
+        """Send command to stop training."""
+        if self.zmq_ctrl is not None:
+            # Send command to stop training.
+            logger.info("Sending command to stop training.")
+            self.zmq_ctrl.send_string(jsonpickle.encode(dict(command="stop")))
+
+        # Disable the button to prevent double messages.
+        if self.stop_button is not None:
+            self.stop_button.setText("Stopping...")
+            self.stop_button.setEnabled(False)
+
+    def _cancel(self):
+        """Set the cancel flag."""
+        self.canceled = True
+        if self.cancel_button is not None:
+            self.cancel_button.setText("Canceling...")
+            self.cancel_button.setEnabled(False)
+
+    def _unbind(self):
+        """Disconnect from all ZMQ sockets."""
+        if self.sub is not None:
+            self.sub.unbind(self.sub.LAST_ENDPOINT)
+            self.sub.close()
+            self.sub = None
+
+        if self.zmq_ctrl is not None:
+            url = self.zmq_ctrl.LAST_ENDPOINT
+            self.zmq_ctrl.unbind(url)
+            self.zmq_ctrl.close()
+            self.zmq_ctrl = None
+
+        # If we started out own zmq context, terminate it.
+        if not self.ctx_given and self.ctx is not None:
+            self.ctx.term()
+            self.ctx = None
+
+    def _set_end(self):
         """Mark the end of the run."""
         self.is_running = False
-
-    def update_runtime(self):
-        """Update the title text with the current running time."""
-
-        if self.is_timer_running:
-            dt = perf_counter() - self.t0
-            dt_min, dt_sec = divmod(dt, 60)
-
-            self.canvas.update_runtime_title(
-                epoch=self.epoch,
-                dt_min=dt_min,
-                dt_sec=dt_sec,
-                last_epoch_val_loss=self.last_epoch_val_loss,
-                penultimate_epoch_val_loss=self.penultimate_epoch_val_loss,
-                mean_epoch_time_min=self.mean_epoch_time_min,
-                mean_epoch_time_sec=self.mean_epoch_time_sec,
-                eta_ten_epochs_min=self.eta_ten_epochs_min,
-                epochs_in_plateau=self.epochs_in_plateau,
-                plateau_patience=self.config.optimization.early_stopping.plateau_patience,
-                epoch_in_plateau_flag=self.epoch_in_plateau_flag,
-                best_val_x=self.best_val_x,
-                best_val_y=self.best_val_y,
-                epoch_size=self.epoch_size,
-            )
-
-    @property
-    def is_timer_running(self) -> bool:
-        """Return True if the timer has started."""
-        return self.t0 is not None and self.is_running
-
-    def set_message(self, text: str):
-        """Set the chart title text."""
-        self.canvas.set_title(text)
-
-    def check_messages(
-        self, timeout: int = 10, times_to_check: int = 10, do_update: bool = True
-    ):
-        """Poll for ZMQ messages and adds any received data to graph.
-
-        The message is a dictionary encoded as JSON:
-            * event - options include
-                * train_begin
-                * train_end
-                * epoch_begin
-                * epoch_end
-                * batch_end
-            * what - this should match the type of model we're training and
-                ensures that we ignore old messages when we start monitoring
-                a new training session (when we're training multiple types
-                of models in a sequence, as for the top-down pipeline).
-            * logs - dictionary with data relevant for plotting, can include
-                * loss
-                * val_loss
-
-        Args:
-            timeout: Message polling timeout in milliseconds. This is how often we will
-                check for new command messages.
-            times_to_check: How many times to check for new messages in the queue before
-                going back to polling with a timeout. Helps to clear backlogs of
-                messages if necessary.
-            do_update: If True (the default), update the GUI text.
-        """
-        if self.sub and self.sub.poll(timeout, zmq.POLLIN):
-            msg = jsonpickle.decode(self.sub.recv_string())
-
-            if msg["event"] == "train_begin":
-                self.set_start_time(perf_counter())
-                self.current_job_output_type = msg["what"]
-
-            # Make sure message matches current training job.
-            if msg.get("what", "") == self.current_job_output_type:
-
-                if not self.is_timer_running:
-                    # We must have missed the train_begin message, so start timer now.
-                    self.set_start_time(perf_counter())
-
-                if msg["event"] == "train_end":
-                    self.set_end()
-                elif msg["event"] == "epoch_begin":
-                    self.epoch = msg["epoch"]
-                elif msg["event"] == "epoch_end":
-                    self.epoch_size = max(self.epoch_size, self.last_batch_number + 1)
-                    self.add_datapoint(
-                        (self.epoch + 1) * self.epoch_size,
-                        msg["logs"]["loss"],
-                        "epoch_loss",
-                    )
-                    if "val_loss" in msg["logs"].keys():
-                        # update variables and add points to plot
-                        self.penultimate_epoch_val_loss = self.last_epoch_val_loss
-                        self.last_epoch_val_loss = msg["logs"]["val_loss"]
-                        self.add_datapoint(
-                            (self.epoch + 1) * self.epoch_size,
-                            msg["logs"]["val_loss"],
-                            "val_loss",
-                        )
-                        # calculate timing and flags at new epoch
-                        if self.penultimate_epoch_val_loss is not None:
-                            mean_epoch_time = (perf_counter() - self.t0) / (
-                                self.epoch + 1
-                            )
-                            self.mean_epoch_time_min, self.mean_epoch_time_sec = divmod(
-                                mean_epoch_time, 60
-                            )
-                            self.eta_ten_epochs_min = (mean_epoch_time * 10) // 60
-
-                            val_loss_delta = (
-                                self.penultimate_epoch_val_loss
-                                - self.last_epoch_val_loss
-                            )
-                            self.epoch_in_plateau_flag = (
-                                val_loss_delta
-                                < self.config.optimization.early_stopping.plateau_min_delta
-                            ) or (self.best_val_y < self.last_epoch_val_loss)
-                            self.epochs_in_plateau = (
-                                self.epochs_in_plateau + 1
-                                if self.epoch_in_plateau_flag
-                                else 0
-                            )
-                    self.on_epoch.emit()
-                elif msg["event"] == "batch_end":
-                    self.last_batch_number = msg["batch"]
-                    self.add_datapoint(
-                        (self.epoch * self.epoch_size) + msg["batch"],
-                        msg["logs"]["loss"],
-                        "batch",
-                    )
-
-            # Check for messages again (up to times_to_check times).
-            if times_to_check > 0:
-                self.check_messages(
-                    timeout=timeout, times_to_check=times_to_check - 1, do_update=False
-                )
-
-        if do_update:
-            self.update_runtime()
