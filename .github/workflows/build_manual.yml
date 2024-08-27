@@ -17,8 +17,7 @@ on:
       - 'sleap/version.py'
     branches:
       # - develop
-      # - fakebranch
-      - elizabeth/test-conda-build-when-changes-made-to-requirements
+      - fakebranch
 
 jobs:
   build:
