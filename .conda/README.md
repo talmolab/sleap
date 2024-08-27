@@ -1,5 +1,4 @@
 This folder defines the conda package build for Linux and Windows. There are runners for both Linux and Windows on GitHub Actions, but it is faster to experiment with builds locally first.
-Test workflow: this should not trigger build_manual.
 
 To build, first go to the base repo directory and install the build environment:
 
