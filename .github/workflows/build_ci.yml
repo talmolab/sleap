@@ -98,6 +98,8 @@ jobs:
               sudo apt-get install libglapi-mesa libegl-mesa0 libegl1 libopengl0 libgl1-mesa-glx
               sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
               export DISPLAY=":1"
+              conda install conda-forge::ffmpeg
+              echo which ffmpeg
               pytest tests -k 'not exclude_from_linux_pip_test'
           # Windows specific values
           - os: windows-2022
