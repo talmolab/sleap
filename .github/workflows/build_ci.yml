@@ -102,6 +102,15 @@ jobs:
           # Windows specific values
           - os: windows-2022
             venv_cmd: .\venv\Scripts\activate
+          # MacOS specific values
+          # Need ffmpeg since linux imageio-ffmpeg does not contain the binary executable of ffmpeg 
+          # https://pypi.org/project/imageio-ffmpeg/0.5.1/#modal-close
+          - os: macos-14
+            test_args: |
+              conda install conda-forge::ffmpeg
+              echo which ffmpeg
+
+          
 
     steps:
       - name: Checkout repo
