@@ -110,6 +110,7 @@ jobs:
             test_args: |
               brew install ffmpeg
               which ffmpeg
+              pytest --durations=-1 tests/
 
           
 
