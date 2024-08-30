@@ -83,10 +83,17 @@ jobs:
           - test_args: pytest --durations=-1 tests/
           - condarc: .conda/condarc.yaml
           - pyver: "3.10"
+          # MacOS specific values
+          # Need ffmpeg since linux imageio-ffmpeg does not contain the binary executable of ffmpeg 
+          # https://pypi.org/project/imageio-ffmpeg/0.5.1/#modal-close
           # Use special condarc if macos
           - os: "macos-14"
             condarc: .conda_mac/condarc.yaml
             pyver: "3.10"
+            test_args: |
+              brew install ffmpeg
+              which ffmpeg
+              pytest --durations=-1 tests/
           # Ubuntu specific values
           - os: ubuntu-22.04
             # Otherwise core dumped in github actions
@@ -103,14 +110,6 @@ jobs:
           # Windows specific values
           - os: windows-2022
             venv_cmd: .\venv\Scripts\activate
-          # MacOS specific values
-          # Need ffmpeg since linux imageio-ffmpeg does not contain the binary executable of ffmpeg 
-          # https://pypi.org/project/imageio-ffmpeg/0.5.1/#modal-close
-          - os: macos-14
-            test_args: |
-              brew install ffmpeg
-              which ffmpeg
-              pytest --durations=-1 tests/
 
           
 
