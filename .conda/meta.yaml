@@ -16,7 +16,7 @@ source:
   path: ../
 
 build:
-  number: 1
+  number: 0
 
 requirements:
   host:
@@ -86,5 +86,7 @@ requirements:
     - conda-forge::tensorflow-hub <0.14.0  # Causes pynwb conflicts on linux GH-1446
 
 test:
+  requires:
+    - libopencv *=headless*  # [linux]
   imports:
     - sleap

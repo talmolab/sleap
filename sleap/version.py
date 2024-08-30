@@ -11,8 +11,7 @@ For example, if you set the version to X.Y.Z, then the tag should be "vX.Y.Z".
 Must be a semver string, "aN" should be appended for alpha releases.
 """
 
-
-__version__ = "1.3.3"
+__version__ = "1.3.4"
 
 
 def versions():
