@@ -99,7 +99,7 @@ jobs:
               sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
               export DISPLAY=":1"
               conda install conda-forge::ffmpeg
-              echo which ffmpeg
+              which ffmpeg
               pytest tests -k 'not exclude_from_linux_pip_test'
           # Windows specific values
           - os: windows-2022
@@ -110,7 +110,7 @@ jobs:
           - os: macos-14
             test_args: |
               conda install conda-forge::ffmpeg
-              echo which ffmpeg
+              which ffmpeg
 
           
 
