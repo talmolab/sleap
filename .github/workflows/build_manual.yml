@@ -6,11 +6,15 @@ name: Build (manual)
 on:
   push:
     paths:
-      - '.conda/meta.yaml'
-      - '.conda/condarc.yaml'
-      - '.conda_mac/meta.yaml'
-      - '.conda_mac/condarc.yaml'
+      - '.conda/**/*'      # Include all files and subdirectories in .conda
+      - '!*.conda/**/README*'  # Exclude any README files
+      - '.conda_mac/**/*'  # Include all files and subdirectories in .conda_mac
+      - '!*.conda_mac/**/README*'  # Exclude any README files
       - '.github/workflows/build_manual.yml'
+      - 'requirements.txt'
+      - 'environment_build.yml'
+      - 'setup.py'
+      - 'sleap/version.py'
     branches:
       # - develop
       - fakebranch
