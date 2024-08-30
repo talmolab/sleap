@@ -13,8 +13,7 @@ on:
       - '.github/workflows/build_manual.yml'
     branches:
       # - develop
-      # - fakebranch
-      - elizabeth/fix-ubuntu-CI-ImportError
+      - fakebranch
 
 jobs:
   build:
