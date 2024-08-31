@@ -16,7 +16,7 @@ source:
   path: ../
 
 build:
-  number: 0
+  number: 1
 
 requirements:
   host:
@@ -37,8 +37,8 @@ requirements:
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::networkx
-    - conda-forge::opencv
-    - conda-forge::pandas
+    - conda-forge::opencv  # [not linux]
+    - conda-forge::opencv <=4.8.1  # [linux]
     - conda-forge::pillow >=8.3.2
     - conda-forge::psutil
     - conda-forge::pykalman
@@ -66,7 +66,8 @@ requirements:
     - conda-forge::jsonpickle ==1.2
     - conda-forge::networkx
     - numpy >=1.19.5,<1.23.0  # Linux likes anaconda, windows likes conda-forge
-    - conda-forge::opencv
+    - conda-forge::opencv  # [not linux]
+    - conda-forge::opencv <=4.8.1  # [linux]
     - conda-forge::pandas
     - conda-forge::pillow >=8.3.2
     - conda-forge::psutil
@@ -86,7 +87,5 @@ requirements:
     - conda-forge::tensorflow-hub <0.14.0  # Causes pynwb conflicts on linux GH-1446
 
 test:
-  requires:
-    - libopencv *=headless*  # [linux]
   imports:
     - sleap
