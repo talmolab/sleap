@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Interactive and resumable training &#8212; SLEAP (v1.4.1a2)</title>
+    <title>Interactive and resumable training &#8212; SLEAP (v1.3.4)</title>
   
   
   
@@ -346,8 +346,8 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This should take care of all the dependencies on colab:</span>
-<span class="o">!</span>pip<span class="w"> </span>uninstall<span class="w"> </span>-qqq<span class="w"> </span>-y<span class="w"> </span>opencv-python<span class="w"> </span>opencv-contrib-python
-<span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>-qqq<span class="w"> </span><span class="s2">&quot;sleap[pypi]&gt;=1.3.3&quot;</span>
+<span class="o">!</span>pip uninstall -qqq -y opencv-python opencv-contrib-python
+<span class="o">!</span>pip install -qqq <span class="s2">&quot;sleap[pypi]&gt;=1.3.4&quot;</span>
 
 
 <span class="c1"># But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):</span>
@@ -395,8 +395,8 @@ GPUs: 1/1 available
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># !curl -L --output labels.pkg.slp https://www.dropbox.com/s/b990gxjt3d3j3jh/210205.sleap_wt_gold.13pt.pkg.slp?dl=1</span>
-<span class="o">!</span>curl<span class="w"> </span>-L<span class="w"> </span>--output<span class="w"> </span>labels.pkg.slp<span class="w"> </span>https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/train.pkg.slp
-<span class="o">!</span>ls<span class="w"> </span>-lah
+<span class="o">!</span>curl -L --output labels.pkg.slp https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/train.pkg.slp
+<span class="o">!</span>ls -lah
 </pre></div>
 </div>
 </div>

@@ -36,8 +36,8 @@ optional arguments:
 
 ```none
 usage: sleap-train [-h] [--video-paths VIDEO_PATHS] [--val_labels VAL_LABELS]
-                   [--test_labels TEST_LABELS] [--tensorboard] [--save_viz] 
-                   [--keep_viz] [--zmq] [--run_name RUN_NAME] [--prefix PREFIX]
+                   [--test_labels TEST_LABELS] [--tensorboard] [--save_viz]
+                   [--zmq] [--run_name RUN_NAME] [--prefix PREFIX]
                    [--suffix SUFFIX]
                    training_job_path [labels_path]
 
@@ -68,8 +68,6 @@ optional arguments:
   --save_viz            Enable saving of prediction visualizations to the run
                         folder if not already specified in the training job
                         config.
-  --keep_viz            Keep prediction visualization images in the run
-                        folder after training if --save_viz is enabled.
   --zmq                 Enable ZMQ logging (for GUI) if not already specified
                         in the training job config.
   --run_name RUN_NAME   Run name to use when saving file, overrides other run
@@ -101,9 +99,9 @@ optional arguments:
   -e [EXPORT_PATH], --export_path [EXPORT_PATH]
                         Path to output directory where the frozen model will be exported to.
                         Defaults to a folder named 'exported_model'.
-  -r, --ragged RAGGED
-                        Keep tensors ragged if present. If ommited, convert
-                        ragged tensors into regular tensors with NaN padding.
+  -u, --unrag UNRAG
+                        Convert ragged tensors into regular tensors with NaN padding.
+                        Defaults to True.
   -n, --max_instances MAX_INSTANCES
                         Limit maximum number of instances in multi-instance models.
                         Not available for ID models. Defaults to None.
@@ -138,10 +136,7 @@ usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames] [-
                    [data_path]
 
 positional arguments:
-  data_path             Path to data to predict on. This can be one of the following: A .slp file containing labeled data; A folder containing multiple
-                        video files in supported formats; An individual video file in a supported format; A CSV file with a column of video file paths. 
-                        If more than one column is provided in the CSV file, the first will be used for the input data paths and the next column will be
-                        used as the output paths; A text file with a path to a video file on each line
+  data_path             Path to data to predict on. This can be a labels (.slp) file or any supported video format.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -156,7 +151,7 @@ optional arguments:
                         Only run inference on unlabeled suggested frames when running on labels dataset. This is useful for generating predictions for
                         initialization during labeling.
   -o OUTPUT, --output OUTPUT
-                        The output filename or directory path to use for the predicted data. If not provided, defaults to '[data_path].predictions.slp'.
+                        The output filename to use for the predicted data. If not provided, defaults to '[data_path].predictions.slp'.
   --no-empty-frames     Clear any empty frames that did not have any detected instances before saving to output.
   --verbosity {none,rich,json}
                         Verbosity of inference progress reporting. 'none' does not output anything during inference, 'rich' displays an updating
@@ -327,8 +322,7 @@ optional arguments:
                               analysis file for the latter video is given a default name.
   --format FORMAT       Output format. Default ('slp') is SLEAP dataset;
                         'analysis' results in analysis.h5 file; 'analysis.nix' results
-                        in an analysis nix file; 'analysis.csv' results
-                        in an analysis csv file; 'h5' or 'json' results in SLEAP dataset
+                        in an analysis nix file; 'h5' or 'json' results in SLEAP dataset
                         with specified file format.
   --video VIDEO         Path to video (if needed for conversion).
 ```
@@ -395,9 +389,6 @@ optional arguments:
   --distinctly_color DISTINCTLY_COLOR
                         Specify how to color instances. Options include: "instances",
                         "edges", and "nodes" (default: "instances")
-  --background BACKGROUND
-                        Specify the type of background to be used to save the videos.
-                        Options: original, black, white and grey. (default: "original")
 ```
 
 ## Debugging

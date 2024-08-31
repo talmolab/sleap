@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Training and inference on an example dataset &#8212; SLEAP (v1.4.1a2)</title>
+    <title>Training and inference on an example dataset &#8212; SLEAP (v1.3.4)</title>
   
   
   
@@ -341,8 +341,8 @@ document.write(`
 <p>Note: Before installing SLEAP check <a class="reference external" href="https://github.com/talmolab/sleap/releases">SLEAP releases</a> page for the latest version.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip<span class="w"> </span>uninstall<span class="w"> </span>-qqq<span class="w"> </span>-y<span class="w"> </span>opencv-python<span class="w"> </span>opencv-contrib-python
-<span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>-qqq<span class="w"> </span><span class="s2">&quot;sleap[pypi]&gt;=1.3.3&quot;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip uninstall -qqq -y opencv-python opencv-contrib-python
+<span class="o">!</span>pip install -qqq <span class="s2">&quot;sleap[pypi]&gt;=1.3.4&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -360,12 +360,12 @@ document.write(`
 <p>Let’s download a sample dataset from the SLEAP <a class="reference external" href="https://github.com/talmolab/sleap-datasets">sample datasets repository</a> into Colab.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>apt-get<span class="w"> </span>install<span class="w"> </span>tree
-<span class="o">!</span>wget<span class="w"> </span>-O<span class="w"> </span>dataset.zip<span class="w"> </span>https://github.com/talmolab/sleap-datasets/releases/download/dm-courtship-v1/drosophila-melanogaster-courtship.zip
-<span class="o">!</span>mkdir<span class="w"> </span>dataset
-<span class="o">!</span>unzip<span class="w"> </span>dataset.zip<span class="w"> </span>-d<span class="w"> </span>dataset
-<span class="o">!</span>rm<span class="w"> </span>dataset.zip
-<span class="o">!</span>tree<span class="w"> </span>dataset
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>apt-get install tree
+<span class="o">!</span>wget -O dataset.zip https://github.com/talmolab/sleap-datasets/releases/download/dm-courtship-v1/drosophila-melanogaster-courtship.zip
+<span class="o">!</span>mkdir dataset
+<span class="o">!</span>unzip dataset.zip -d dataset
+<span class="o">!</span>rm dataset.zip
+<span class="o">!</span>tree dataset
 </pre></div>
 </div>
 </div>
@@ -423,7 +423,7 @@ Archive:  dataset.zip
 <p>If you don’t stop training, it will run for 200 epochs or until validation loss fails to improve for some number of epochs (controlled by the <code class="docutils literal notranslate"><span class="pre">early_stopping</span></code> fields in the training profile).</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-train<span class="w"> </span>baseline.centroid.json<span class="w"> </span><span class="s2">&quot;dataset/drosophila-melanogaster-courtship/courtship_labels.slp&quot;</span><span class="w"> </span>--run_name<span class="w"> </span><span class="s2">&quot;courtship.centroid&quot;</span><span class="w"> </span>--video-paths<span class="w"> </span><span class="s2">&quot;dataset/drosophila-melanogaster-courtship/20190128_113421.mp4&quot;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-train baseline.centroid.json <span class="s2">&quot;dataset/drosophila-melanogaster-courtship/courtship_labels.slp&quot;</span> --run_name <span class="s2">&quot;courtship.centroid&quot;</span> --video-paths <span class="s2">&quot;dataset/drosophila-melanogaster-courtship/20190128_113421.mp4&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -593,7 +593,7 @@ INFO:sleap.nn.training:{
         &quot;runs_folder&quot;: &quot;models&quot;,
         &quot;tags&quot;: [],
         &quot;save_visualizations&quot;: true,
-        &quot;keep_viz_images&quot;: true,
+        &quot;delete_viz_images&quot;: true,
         &quot;zip_outputs&quot;: false,
         &quot;log_to_csv&quot;: true,
         &quot;checkpointing&quot;: {
@@ -799,7 +799,7 @@ INFO:sleap.nn.evals:OKS mAP: 0.870526
 <p>Let’s now train a centered-instance model.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-train<span class="w"> </span>baseline_medium_rf.topdown.json<span class="w"> </span><span class="s2">&quot;dataset/drosophila-melanogaster-courtship/courtship_labels.slp&quot;</span><span class="w"> </span>--run_name<span class="w"> </span><span class="s2">&quot;courtship.topdown_confmaps&quot;</span><span class="w"> </span>--video-paths<span class="w"> </span><span class="s2">&quot;dataset/drosophila-melanogaster-courtship/20190128_113421.mp4&quot;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-train baseline_medium_rf.topdown.json <span class="s2">&quot;dataset/drosophila-melanogaster-courtship/courtship_labels.slp&quot;</span> --run_name <span class="s2">&quot;courtship.topdown_confmaps&quot;</span> --video-paths <span class="s2">&quot;dataset/drosophila-melanogaster-courtship/20190128_113421.mp4&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -970,7 +970,7 @@ INFO:sleap.nn.training:{
         &quot;runs_folder&quot;: &quot;models&quot;,
         &quot;tags&quot;: [],
         &quot;save_visualizations&quot;: true,
-        &quot;keep_viz_images&quot;: true,
+        &quot;delete_viz_images&quot;: true,
         &quot;zip_outputs&quot;: false,
         &quot;log_to_csv&quot;: true,
         &quot;checkpointing&quot;: {
@@ -1154,7 +1154,7 @@ INFO:sleap.nn.evals:OKS mAP: 0.691378
 <p>The models (along with the profiles and ground truth data used to train and validate the model) are saved in the <code class="docutils literal notranslate"><span class="pre">models/</span></code> directory:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>tree<span class="w"> </span>models/
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>tree models/
 </pre></div>
 </div>
 </div>
@@ -1194,7 +1194,7 @@ INFO:sleap.nn.evals:OKS mAP: 0.691378
 <p>Let’s run inference with our trained models for centroids and centered instances.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-track<span class="w"> </span><span class="s2">&quot;dataset/drosophila-melanogaster-courtship/20190128_113421.mp4&quot;</span><span class="w"> </span>--frames<span class="w"> </span><span class="m">0</span>-100<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;models/courtship.centroid&quot;</span><span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;models/courtship.topdown_confmaps&quot;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-track <span class="s2">&quot;dataset/drosophila-melanogaster-courtship/20190128_113421.mp4&quot;</span> --frames <span class="m">0</span>-100 -m <span class="s2">&quot;models/courtship.centroid&quot;</span> -m <span class="s2">&quot;models/courtship.topdown_confmaps&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -1305,7 +1305,7 @@ Saved output: dataset/drosophila-melanogaster-courtship/20190128_113421.mp4.pred
 <p>When inference is finished, predictions are saved in a file. Since we didn’t specify a path, it will be saved as <code class="docutils literal notranslate"><span class="pre">&lt;video</span> <span class="pre">filename&gt;.predictions.slp</span></code> in the same directory as the video:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>tree<span class="w"> </span>dataset/drosophila-melanogaster-courtship
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>tree dataset/drosophila-melanogaster-courtship
 </pre></div>
 </div>
 </div>
@@ -1324,7 +1324,7 @@ Saved output: dataset/drosophila-melanogaster-courtship/20190128_113421.mp4.pred
 <p>You can inspect your predictions file using <code class="docutils literal notranslate"><span class="pre">sleap-inspect</span></code>:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-inspect<span class="w"> </span>dataset/drosophila-melanogaster-courtship/20190128_113421.mp4.predictions.slp
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>sleap-inspect dataset/drosophila-melanogaster-courtship/20190128_113421.mp4.predictions.slp
 </pre></div>
 </div>
 </div>
@@ -1360,7 +1360,7 @@ Provenance:
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Zip up the models directory</span>
-<span class="o">!</span>zip<span class="w"> </span>-r<span class="w"> </span>trained_models.zip<span class="w"> </span>models/
+<span class="o">!</span>zip -r trained_models.zip models/
 
 <span class="c1"># Download.</span>
 <span class="kn">from</span> <span class="nn">google.colab</span> <span class="kn">import</span> <span class="n">files</span>

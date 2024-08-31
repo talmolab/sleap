@@ -60,7 +60,7 @@ Note that many of the menu command have keyboard shortcuts which can be configur
 
 "**Edge Style**" controls whether edges are drawn as thin lines or as wedges which indicate the {ref}`orientation` of the instance (as well as the direction of the part affinity field which would be used to predict the connection between nodes when using a "bottom-up" approach).
 
-"**Trail Length**" allows you to show a trail of where each instance was located in prior frames (the length of the trail is the number of prior frames). This can be useful when proofreading predictions since it can help you detect swaps in the identities of animals across frames. By default, you can only select trail lengths of up to 250 frames. You can use a custom trail length by modifying the default length in the `preferences.yaml` file. However, using trail lengths longer than about 500 frames can result in significant lag.
+"**Trail Length**" allows you to show a trail of where each instance was located in prior frames (the length of the trail is the number of prior frames). This can be useful when proofreading predictions since it can help you detect swaps in the identities of animals across frames.
 
 "**Fit Instances to View**" allows you to toggle whether the view is auto-zoomed to the instances in each frame. This can be useful when proofreading predictions.
 
