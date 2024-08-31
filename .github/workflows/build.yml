@@ -23,24 +23,19 @@ jobs:
             condarc: .conda_mac/condarc.yaml
     steps:
       # Setup
-      - uses: actions/checkout@v2
-      - name: Cache conda
-        uses: actions/cache@v1
-        env:
-          # Increase this value to reset cache if environment_build.yml has not changed
-          CACHE_NUMBER: 0
-        with:
-          path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'requirements.txt') }}
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Setup Miniconda
-        # https://github.com/conda-incubator/setup-miniconda
-        uses: conda-incubator/setup-miniconda@v2.0.1
+        uses: conda-incubator/setup-miniconda@v3.0.3
         with:
-          python-version: 3.7
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-          environment-file: environment_build.yml
+          miniforge-version: latest
           condarc-file: ${{ matrix.condarc }}
+          python-version: 3.9
+          environment-file: environment_build.yml
           activate-environment: sleap_ci
+          conda-solver: "libmamba"
+
       - name: Print environment info
         shell: bash -l {0}
         run: |
@@ -101,7 +96,7 @@ jobs:
         shell: powershell
         run: |
           echo "yes" | anaconda login --username sleap --password "$env:ANACONDA_LOGIN"
-      
+
       # Login to conda (Mac)
       - name: Login to Anaconda (Mac)
         if: matrix.os == 'macos-latest'
@@ -110,7 +105,7 @@ jobs:
         shell: bash -l {0}
         run: |
           yes 2>/dev/null | anaconda login --username sleap --password "$ANACONDA_LOGIN" || true
-      
+
       # Upload conda package (Windows)
       - name: Upload conda package (Windows/main)
         if: matrix.os == 'windows-2019' && !github.event.release.prerelease
@@ -134,19 +129,19 @@ jobs:
         shell: bash -l {0}
         run: |
           anaconda -v upload build/linux-64/*.tar.bz2 --label dev
-      
+
       # Upload conda package (Mac)
       - name: Upload conda package (Mac/main)
         if: matrix.os == 'macos-latest' && !github.event.release.prerelease
         shell: bash -l {0}
         run: |
-          anaconda -v upload build/osx-64/*.tar.bz2 --label dev
+          anaconda -v upload build/osx-arm64/*.tar.bz2 --label dev
       - name: Upload conda package (Mac/dev)
         if: matrix.os == 'macos-latest' && github.event.release.prerelease
         shell: bash -l {0}
         run: |
-          anaconda -v upload build/osx-64/*.tar.bz2 --label dev
-      
+          anaconda -v upload build/osx-arm64/*.tar.bz2 --label dev
+
       # Logout
       - name: Logout from Anaconda
         shell: bash -l {0}
