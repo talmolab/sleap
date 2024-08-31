@@ -5,13 +5,13 @@ name: Build CI (no upload)
 on:
   push:
     paths:
-      - 'setup.py'
-      - 'requirements.txt'
-      - 'dev_requirements.txt'
-      - 'jupyter_requirements.txt'
-      - 'pypi_requirements.txt'
-      - 'environment_build.yml'
-      - '.github/workflows/build_ci.yml'
+      - "setup.py"
+      - "requirements.txt"
+      - "dev_requirements.txt"
+      - "jupyter_requirements.txt"
+      - "pypi_requirements.txt"
+      - "environment_build.yml"
+      - ".github/workflows/build_ci.yml" # Test number: 0
 
 jobs:
   build:
@@ -61,7 +61,7 @@ jobs:
         shell: bash -l {0}
         run: |
           python setup.py bdist_wheel
-      
+
       # Upload artifact "tests" can use it
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v3
@@ -73,7 +73,7 @@ jobs:
   tests:
     name: Run tests using wheel (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    needs: build  # Ensure the build job has completed before starting this job.
+    needs: build # Ensure the build job has completed before starting this job.
     strategy:
       fail-fast: false
       matrix:
@@ -107,12 +107,12 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-      
+
       - name: Set up Python 3.7
         uses: actions/setup-python@v4
         with:
           python-version: 3.7
-      
+
       # Download wheel
       - name: Download wheel artifact
         uses: actions/download-artifact@v3
@@ -148,7 +148,7 @@ jobs:
         run: |
           which python
           pip freeze
-        
+
       # Install and test the wheel
       - name: Test the built wheel
         run: |
