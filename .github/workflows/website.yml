@@ -8,7 +8,7 @@ on:
       # 'main' triggers updates to 'sleap.ai', all others to 'sleap.ai/develop'
       - main
       - develop
-      - liezl/add-pip-extras
+      - liezl/attrs-opencv-constraints-1.3.4
     paths:
       - "docs/**"
       - "README.rst"
