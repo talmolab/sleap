@@ -16,7 +16,7 @@ source:
   path: ../
 
 build:
-  number: 1
+  number: 2
 
 requirements:
   host:
@@ -39,6 +39,7 @@ requirements:
     - conda-forge::networkx
     - conda-forge::opencv  # [not linux]
     - conda-forge::opencv <=4.8.1  # [linux]
+    - conda-forge::pandas
     - conda-forge::pillow >=8.3.2
     - conda-forge::psutil
     - conda-forge::pykalman
