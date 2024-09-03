@@ -987,7 +987,7 @@ class Skeleton:
         """Convert the :class:`Skeleton` to a JSON representation.
 
         Args:
-            node_to_idx: optional dict which maps :class:`Node`sto index
+            node_to_idx: optional dict which maps :class:`Nodes`to index
                 in some list. This is used when saving
                 :class:`Labels`where we want to serialize the
                 :class:`Nodes` outside the :class:`Skeleton` object.
