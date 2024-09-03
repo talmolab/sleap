@@ -999,6 +999,7 @@ class Skeleton:
         Returns:
             A string containing the JSON representation of the skeleton.
         """
+        # TODO: Replace jsonpickle with a custom encoder from sleap-io.
         jsonpickle.set_encoder_options("simplejson", sort_keys=True, indent=4)
         if node_to_idx is not None:
             indexed_node_graph = nx.relabel_nodes(
