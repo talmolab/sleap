@@ -83,23 +83,35 @@ jobs:
           - test_args: pytest --durations=-1 tests/
           - condarc: .conda/condarc.yaml
           - pyver: "3.10"
+          # MacOS specific values
+          # Need ffmpeg since linux imageio-ffmpeg does not contain the binary executable of ffmpeg 
+          # https://pypi.org/project/imageio-ffmpeg/0.5.1/#modal-close
           # Use special condarc if macos
           - os: "macos-14"
             condarc: .conda_mac/condarc.yaml
             pyver: "3.10"
+            test_args: |
+              brew install ffmpeg
+              which ffmpeg
+              pytest --durations=-1 tests/
           # Ubuntu specific values
           - os: ubuntu-22.04
             # Otherwise core dumped in github actions
             # https://github.com/conda-forge/opencv-feedstock/issues/401#issue-2196393732
+            # Need ffmpeg since linux imageio-ffmpeg does not contain the binary executable of ffmpeg 
+            # https://pypi.org/project/imageio-ffmpeg/0.5.1/#modal-close
             test_args: |
-              sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
+              sudo apt install ffmpeg xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
               sudo apt-get install libglapi-mesa libegl-mesa0 libegl1 libopengl0 libgl1-mesa-glx
               sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
               export DISPLAY=":1"
+              which ffmpeg
               pytest tests -k 'not exclude_from_linux_pip_test'
           # Windows specific values
           - os: windows-2022
             venv_cmd: .\venv\Scripts\activate
+
+          
 
     steps:
       - name: Checkout repo
