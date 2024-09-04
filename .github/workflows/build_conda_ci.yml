@@ -19,7 +19,7 @@ env:
 
 jobs:
   build:
-    name: Build package from push (${{ matrix.os }})
+    name: ${{ env.RUN_BUILD_JOB == 'true' && '' || 'Skip ' }}Build package from push (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -149,7 +149,7 @@ jobs:
           run-id: ${{ env.RUN_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Lisst items in current directory
+      - name: List items in current directory
         run: |
           ls .
           ls -R build
@@ -164,7 +164,7 @@ jobs:
 
       - name: Create conda channel from artifact
         run:
-          conda index $(pwd)/build
+          conda-index $(pwd)/build
 
       - name: Create conda environment
         run: conda create -y -n sleap_test -c file://$(pwd)/build ${{ matrix.conda-channels }} sleap
