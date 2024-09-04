@@ -77,7 +77,7 @@ jobs:
 
       # Upload artifact "tests" can use it
       - name: Upload conda package artifact
-        if: runner.os == "Windows"  # Only need to upload the folder once
+        if: runner.os == 'Windows'  # Only need to upload the folder once
         uses: actions/upload-artifact@v4
         with:
           name: sleap-builds
