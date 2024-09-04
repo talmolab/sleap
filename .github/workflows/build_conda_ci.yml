@@ -164,9 +164,6 @@ jobs:
           # activate-environment: sleap_ci
           conda-solver: "libmamba"
 
-      - name: Search for package
-        run: conda search -c file://$(pwd)/build sleap
-
       - name: Create conda channel from artifact
         run:
           conda-index $(pwd)/build
