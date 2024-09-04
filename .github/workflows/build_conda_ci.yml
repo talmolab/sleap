@@ -135,7 +135,7 @@ jobs:
           python-version: ${{ matrix.pyver }}
 
       - name: Use current run for conda package download
-        if: ${{ env.RUN_BUILD_JOB }} == 'true'
+        if: env.RUN_BUILD_JOB == 'true'
         run: |
           echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
 
@@ -148,6 +148,14 @@ jobs:
           path: build
           run-id: ${{ env.RUN_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3.0.3  # TODO(LM): Upgrade
+        with:
+          miniforge-version: latest
+          condarc-file: ${{ matrix.condarc }}
+          python-version: ${{ matrix.pyver }}
+          conda-solver: "libmamba"
 
       - name: Create conda environment
         run: conda create -y -n sleap_test -c file://build ${{ matrix.conda-channels }} sleap
