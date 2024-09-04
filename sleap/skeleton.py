@@ -1024,8 +1024,6 @@ class Skeleton:
 
             edges_dicts.append(
                 {
-                    # Note: Insert idx is not the same as the edge index in the skeleton
-                    # in legacy SLEAP.
                     "edge_insert_idx": edge_ind,
                     "key": 0,  # Always 0.
                     "source": node_to_id[edge.source],
@@ -1057,21 +1055,25 @@ class Skeleton:
             )
 
         # Create skeleton dict.
-        # Taken from sleap-io: https://github.com/talmolab/sleap-io/blob/2bc3d5210c46bdb25413d25970c4bdc7adb6e8cc/sleap_io/io/slp.py#L695C1-L708C10
-        skeleton_dicts = []
-        skeleton_dicts.append(
-            {
-                "directed": True,
-                "graph": {
-                    "name": self.name,
-                    "num_edges_inserted": len(self.edges),
-                },
-                "links": edges_dicts,
-                "multigraph": True,
-                # In the order in Skeleton.nodes and must match up with nodes_dicts.
-                "nodes": [{"id": node_to_id[node]} for node in self.nodes],
-            }
-        )
+        skeleton_dict = {
+            "directed": True,
+            "graph": {
+                "name": self.name,
+                "num_edges_inserted": len(self.edges),
+            },
+            "links": edges_dicts,
+            "multigraph": True,
+            # In the order in Skeleton.nodes and must match up with nodes_dicts.
+            "nodes": [{"id": node_to_id[node]} for node in self.nodes],
+        }
+
+        # Convert the skeleton dict to a JSON string using the standard json module
+        json_str = json.dumps(skeleton_dict, indent=4, sort_keys=True)
+
+        return json_str
+
+
+        
         # jsonpickle.set_encoder_options("simplejson", sort_keys=True, indent=4)
         # if node_to_idx is not None:
         #     indexed_node_graph = nx.relabel_nodes(
