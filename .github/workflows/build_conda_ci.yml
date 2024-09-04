@@ -160,13 +160,13 @@ jobs:
           miniforge-version: latest
           condarc-file: ${{ matrix.condarc }}
           python-version: ${{ matrix.pyver }}
-          # environment-file: environment_build.yml
-          # activate-environment: sleap_ci
+          environment-file: environment_build.yml
+          activate-environment: sleap_ci
           conda-solver: "libmamba"
 
       - name: Create conda channel from artifact
         run:
-          conda-index $(pwd)/build
+          conda-build index $(pwd)/build
 
       - name: Search for package
         run: conda search -c file://$(pwd)/build sleap
