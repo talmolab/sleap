@@ -1000,7 +1000,7 @@ class Skeleton:
             A string containing the JSON representation of the skeleton.
         """
         # TODO: Replace jsonpickle with a custom encoder from sleap-io.
-        jsonpickle.set_encoder_options("simplejson", sort_keys=True, indent=4)
+
         if node_to_idx is not None:
             indexed_node_graph = nx.relabel_nodes(
                 G=self._graph, mapping=node_to_idx
@@ -1008,25 +1008,115 @@ class Skeleton:
         else:
             indexed_node_graph = self._graph
 
-        # Encode to JSON
-        graph = json_graph.node_link_data(indexed_node_graph)
+        # Create a dictionary to store node data
+        # Taken from sleap-io: https://github.com/talmolab/sleap-io/blob/2bc3d5210c46bdb25413d25970c4bdc7adb6e8cc/sleap_io/io/slp.py#L633C1-L644C71
+        nodes_dicts = []
+        node_to_id = {}
+        for node in self.nodes:
+            if node not in node_to_id:
+                # Note: This ID is not the same as the node index in the skeleton in
+                # legacy SLEAP, but we do not retain this information in the labels, so
+                # IDs will be different.
+                #
+                # The weight is also kept fixed here, but technically this is not
+                # modified or used in legacy SLEAP either.
+                #
+                # TODO: Store legacy metadata in labels to get byte-level compatibility?
+                node_to_id[node] = len(node_to_id)
+                nodes_dicts.append({"name": node.name, "weight": 1.0})
+        
+        # Create a dictionary to store edge data
+        # Taken from sleap-io: https://github.com/talmolab/sleap-io/blob/2bc3d5210c46bdb25413d25970c4bdc7adb6e8cc/sleap_io/io/slp.py#L649-L693
+        # Build links dicts for normal edges.
+        edges_dicts = []
+        for edge_ind, edge in enumerate(self.edges):
+            if edge_ind == 0:
+                edge_type = {
+                    "py/reduce": [
+                        {"py/type": "sleap.skeleton.EdgeType"},
+                        {"py/tuple": [1]},  # 1 = real edge, 2 = symmetry edge
+                    ]
+                }
+            else:
+                edge_type = {"py/id": 1}
 
-        # SLEAP v1.3.0 added `description` and `preview_image` to `Skeleton`, but saving
-        # these fields breaks data format compatibility. Currently, these are only
-        # added in our custom template skeletons. To ensure backwards data format
-        # compatibilty of user data, we only save these fields if they are not None.
-        if self.is_template:
-            data = {
-                "nx_graph": graph,
-                "description": self.description,
-                "preview_image": self.preview_image,
+            edges_dicts.append(
+                {
+                    # Note: Insert idx is not the same as the edge index in the skeleton
+                    # in legacy SLEAP.
+                    "edge_insert_idx": edge_ind,
+                    "key": 0,  # Always 0.
+                    "source": node_to_id[edge.source],
+                    "target": node_to_id[edge.destination],
+                    "type": edge_type,
+                }
+            )
+
+        # Build links dicts for symmetry edges.
+        for symmetry_ind, symmetry in enumerate(self.symmetries):
+            if symmetry_ind == 0:
+                edge_type = {
+                    "py/reduce": [
+                        {"py/type": "sleap.skeleton.EdgeType"},
+                        {"py/tuple": [2]},  # 1 = real edge, 2 = symmetry edge
+                    ]
+                }
+            else:
+                edge_type = {"py/id": 2}
+
+            src, dst = tuple(symmetry.nodes)
+            edges_dicts.append(
+                {
+                    "key": 0,
+                    "source": node_to_id[src],
+                    "target": node_to_id[dst],
+                    "type": edge_type,
+                }
+            )
+
+        # Create skeleton dict.
+        # Taken from sleap-io: https://github.com/talmolab/sleap-io/blob/2bc3d5210c46bdb25413d25970c4bdc7adb6e8cc/sleap_io/io/slp.py#L695C1-L708C10
+        skeleton_dicts = []
+        skeleton_dicts.append(
+            {
+                "directed": True,
+                "graph": {
+                    "name": self.name,
+                    "num_edges_inserted": len(self.edges),
+                },
+                "links": edges_dicts,
+                "multigraph": True,
+                # In the order in Skeleton.nodes and must match up with nodes_dicts.
+                "nodes": [{"id": node_to_id[node]} for node in self.nodes],
             }
-        else:
-            data = graph
+        )
+        # jsonpickle.set_encoder_options("simplejson", sort_keys=True, indent=4)
+        # if node_to_idx is not None:
+        #     indexed_node_graph = nx.relabel_nodes(
+        #         G=self._graph, mapping=node_to_idx
+        #     )  # map nodes to int
+        # else:
+        #     indexed_node_graph = self._graph
 
-        json_str = jsonpickle.encode(data)
+        # # Encode to JSON
+        # graph = json_graph.node_link_data(indexed_node_graph)
 
-        return json_str
+        # # SLEAP v1.3.0 added `description` and `preview_image` to `Skeleton`, but saving
+        # # these fields breaks data format compatibility. Currently, these are only
+        # # added in our custom template skeletons. To ensure backwards data format
+        # # compatibilty of user data, we only save these fields if they are not None.
+        # if self.is_template:
+        #     data = {
+        #         "nx_graph": graph,
+        #         "description": self.description,
+        #         "preview_image": self.preview_image,
+        #     }
+        # else:
+        #     data = graph
+
+        # json_str = jsonpickle.encode(data)
+
+        # return json_str
 
     def save_json(self, filename: str, node_to_idx: Optional[Dict[Node, int]] = None):
         """
