@@ -148,7 +148,7 @@ jobs:
           path: build
           run-id: ${{ env.RUN_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - run: ls -R build
+      - run: ls -R .
       
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v3.0.3  # TODO(LM): Upgrade
@@ -159,7 +159,7 @@ jobs:
           conda-solver: "libmamba"
 
       - name: Create conda environment
-        run: conda create -y -n sleap_test -c file://build ${{ matrix.conda-channels }} sleap
+        run: conda create -y -n sleap_test -c file:///build ${{ matrix.conda-channels }} sleap
 
       - name: Activate virtual environment
         run: conda activate sleap_test
