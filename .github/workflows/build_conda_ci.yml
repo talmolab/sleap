@@ -17,11 +17,11 @@ jobs:
   build:
     name: Build package from push (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    if: false  # TODO(LM): Remove this to rebuild
+    # if: false  # TODO(LM): Remove this to rebuild
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "windows-2022", "macos-14"]
+        os: ["windows-2022"] #, "ubuntu-22.04", "macos-14"]  TODO(LM): Uncomment
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Use these variables as defaults
@@ -77,20 +77,21 @@ jobs:
 
       # Upload artifact "tests" can use it
       - name: Upload conda package artifact
+        if: runner.os == "Windows"  # Only need to upload the folder once
         uses: actions/upload-artifact@v4
         with:
-          name: sleap-${{ matrix.build-prefix }}
-          path: build/${{ matrix.build-prefix }}*/*.tar.bz2
+          name: sleap-builds
+          path: $BUILD_PATH
           retention-days: 1
 
   tests:
     name: Run tests using wheel (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    # needs: build # Ensure the build job has completed before starting this job.  TODO(LM): Uncomment
+    needs: build # Ensure the build job has completed before starting this job.  TODO(LM): Uncomment
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "windows-2022", "macos-14"]
+        os: ["windows-2022"] #, "ubuntu-22.04", "macos-14"]  TODO(LM): Uncomment
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Default values
@@ -130,8 +131,8 @@ jobs:
         uses: actions/download-artifact@v4
         id: download
         with:
-          name: sleap-${{ matrix.build-prefix }}
-          path: build/${ {matrix.build-prefix }}-${{matrix.build-suffix }}
+          name: sleap-builds
+          path: build
           run-id: 10692613475  # TODO(LM): Comment
           github-token: ${{ secrets.GITHUB_TOKEN }}  # TODO(LM): Comment
 
