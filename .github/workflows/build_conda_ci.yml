@@ -13,11 +13,14 @@ on:
       - "environment_build.yml"
       - ".github/workflows/build_conda_ci.yml"
 
+env:
+  RUN_BUILD_JOB: false
+  RUN_ID: 10706100292
+
 jobs:
   build:
     name: Build package from push (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    if: false  # TODO(LM): Remove this to rebuild
     strategy:
       fail-fast: false
       matrix:
@@ -41,9 +44,11 @@ jobs:
     steps:
       # Setup
       - name: Checkout
+        if: env.RUN_BUILD_JOB == 'true'
         uses: actions/checkout@v4
 
       - name: Setup Miniconda
+        if: env.RUN_BUILD_JOB == 'true'
         uses: conda-incubator/setup-miniconda@v3.0.3
         with:
           miniforge-version: latest
@@ -54,6 +59,7 @@ jobs:
           conda-solver: "libmamba"
 
       - name: Print build environment info
+        if: env.RUN_BUILD_JOB == 'true'
         shell: bash -l {0}
         run: |
           which python
@@ -62,7 +68,7 @@ jobs:
 
       # Build conda package (not Windows)
       - name: Build conda package (not Windows)
-        if: runner.os != 'Windows'
+        if: runner.os != 'Windows' and env.RUN_BUILD_JOB == 'true'
         shell: bash -l {0}
         run: |
           conda build ${{ matrix.conda-folder }} --output-folder build
@@ -70,7 +76,7 @@ jobs:
 
       # Build conda package (Windows)
       - name: Build conda package (Windows)
-        if: matrix.os == 'windows-2022'
+        if: matrix.os == 'windows-2022' and env.RUN_BUILD_JOB == 'true'
         shell: powershell
         run: |
           conda build ${{ matrix.conda-folder }} --output-folder build
@@ -78,7 +84,7 @@ jobs:
 
       # Upload artifact "tests" can use it
       - name: Upload conda package artifact
-        if: runner.os == 'Windows'  # Only need to upload the folder once
+        if: runner.os == 'Windows' and env.RUN_BUILD_JOB == 'true'  # Only need to upload the folder once
         uses: actions/upload-artifact@v4
         with:
           name: sleap-builds
@@ -88,7 +94,7 @@ jobs:
   tests:
     name: Run tests using wheel (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    needs: build # Ensure the build job has completed before starting this job.  TODO(LM): Uncomment
+    needs: build # Ensure the build job has completed before starting this job.
     strategy:
       fail-fast: false
       matrix:
@@ -128,6 +134,11 @@ jobs:
         with:
           python-version: ${{ matrix.pyver }}
 
+      - name: Use current run for conda package download
+        if: ${{ env.RUN_BUILD_JOB }} == 'true'
+        run: |
+          echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
+
       # https://github.com/actions/download-artifact?tab=readme-ov-file#usage
       - name: Download conda package artifact
         uses: actions/download-artifact@v4
@@ -135,8 +146,8 @@ jobs:
         with:
           name: sleap-builds
           path: build
-          run-id: 10706100292  # TODO(LM): Comment
-          github-token: ${{ secrets.GITHUB_TOKEN }}  # TODO(LM): Comment
+          run-id: ${{ env.RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create conda environment
         run: conda create -y -n sleap_test -c file://build ${{ matrix.conda-channels }} sleap
