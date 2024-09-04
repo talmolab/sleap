@@ -169,7 +169,7 @@ jobs:
         run: conda activate sleap_test
 
       - name: Install test packages
-        run: pip install .[conda_dev]
+        run: pip install -r "dev_requirements.txt"
 
       - name: List environment info
         shell: bash -l {0}
