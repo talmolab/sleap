@@ -14,7 +14,7 @@ on:
       - ".github/workflows/build_conda_ci.yml"
 
 env:
-  RUN_BUILD_JOB: true
+  RUN_BUILD_JOB: false
   RUN_ID: 10706100292
 
 jobs:
