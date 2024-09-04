@@ -17,7 +17,7 @@ jobs:
   build:
     name: Build package from push (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    # if: false  # TODO(LM): Remove this to rebuild
+    if: false  # TODO(LM): Remove this to rebuild
     strategy:
       fail-fast: false
       matrix:
@@ -135,7 +135,7 @@ jobs:
         with:
           name: sleap-builds
           path: build
-          run-id: 10692613475  # TODO(LM): Comment
+          run-id: 10706100292  # TODO(LM): Comment
           github-token: ${{ secrets.GITHUB_TOKEN }}  # TODO(LM): Comment
 
       - name: Create conda environment
