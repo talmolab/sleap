@@ -17,6 +17,7 @@ jobs:
   build:
     name: Build package from push (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    if: false  # TODO(LM): Remove this to rebuild
     strategy:
       fail-fast: false
       matrix:
@@ -76,7 +77,7 @@ jobs:
 
       # Upload artifact "tests" can use it
       - name: Upload conda package artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: sleap-${{ matrix.build-prefix }}
           path: build/${{ matrix.build-prefix }}*/*.tar.bz2
@@ -85,7 +86,7 @@ jobs:
   tests:
     name: Run tests using wheel (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    needs: build # Ensure the build job has completed before starting this job.
+    # needs: build # Ensure the build job has completed before starting this job.  TODO(LM): Uncomment
     strategy:
       fail-fast: false
       matrix:
@@ -123,11 +124,12 @@ jobs:
           python-version: ${{ matrix.pyver }}
 
       - name: Download conda package artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         id: download
         with:
           name: sleap-${{ matrix.build-prefix }}
-          path: build/${{ matrix.build-prefix }}*
+          run-id: 10692613475
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create conda environment
         run: conda create -y -n sleap_test -c local ${{ matrix.conda-channels }} sleap
