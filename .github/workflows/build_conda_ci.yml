@@ -148,6 +148,7 @@ jobs:
           path: build
           run-id: ${{ env.RUN_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+      - run: ls -R build
       
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v3.0.3  # TODO(LM): Upgrade
