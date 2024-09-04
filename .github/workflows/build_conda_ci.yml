@@ -162,9 +162,6 @@ jobs:
           python-version: ${{ matrix.pyver }}
           conda-solver: "libmamba"
 
-      - name: Search for package
-        run: conda search -c $(pwd)/build sleap
-
       - name: Create conda environment
         run: conda create -y -n sleap_test -c $(pwd)/build ${{ matrix.conda-channels }} sleap
 
