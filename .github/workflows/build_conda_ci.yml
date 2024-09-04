@@ -163,9 +163,9 @@ jobs:
           conda-solver: "libmamba"
 
       - name: Create conda environment
-        run: conda create -y -n sleap_test -c $(pwd)/build ${{ matrix.conda-channels }} sleap
+        run: conda create -y -n sleap_test -c ./build ${{ matrix.conda-channels }} sleap
 
-      - name: Activate virtual environment
+      - name: Activate conda environment
         run: conda activate sleap_test
 
       - name: Install test packages
