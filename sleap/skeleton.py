@@ -999,35 +999,17 @@ class Skeleton:
         Returns:
             A string containing the JSON representation of the skeleton.
         """
-        # TODO: Replace jsonpickle with a custom encoder from sleap-io.
-
-        if node_to_idx is not None:
-            indexed_node_graph = nx.relabel_nodes(
-                G=self._graph, mapping=node_to_idx
-            )  # map nodes to int
-        else:
-            indexed_node_graph = self._graph
-
+        # Logic taken from github.com/talmolab/sleap-io/io/slp.py::serialize_skeletons
+        # https://github.com/talmolab/sleap-io/blob/main/sleap_io/io/slp.py#L606
         # Create a dictionary to store node data
-        # Taken from sleap-io: https://github.com/talmolab/sleap-io/blob/2bc3d5210c46bdb25413d25970c4bdc7adb6e8cc/sleap_io/io/slp.py#L633C1-L644C71
         nodes_dicts = []
         node_to_id = {}
         for node in self.nodes:
             if node not in node_to_id:
-                # Note: This ID is not the same as the node index in the skeleton in
-                # legacy SLEAP, but we do not retain this information in the labels, so
-                # IDs will be different.
-                #
-                # The weight is also kept fixed here, but technically this is not
-                # modified or used in legacy SLEAP either.
-                #
-                # TODO: Store legacy metadata in labels to get byte-level compatibility?
-                node_to_id[node] = len(node_to_id)
+                node_to_id[node] = node_to_idx[node] if node_to_idx is not None else len(node_to_id)
                 nodes_dicts.append({"name": node.name, "weight": 1.0})
         
         # Create a dictionary to store edge data
-        # Taken from sleap-io: https://github.com/talmolab/sleap-io/blob/2bc3d5210c46bdb25413d25970c4bdc7adb6e8cc/sleap_io/io/slp.py#L649-L693
-        # Build links dicts for normal edges.
         edges_dicts = []
         for edge_ind, edge in enumerate(self.edges):
             if edge_ind == 0:
