@@ -14,7 +14,7 @@ on:
       - ".github/workflows/build_conda_ci.yml"
 
 env:
-  RUN_BUILD_JOB: false
+  RUN_BUILD_JOB: true
   RUN_ID: 10706100292
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["windows-2022"] #, "ubuntu-22.04", "macos-14"]  TODO(LM): Uncomment
+        os: ["windows-2022", "ubuntu-22.04", "macos-14"]  # TODO(LM): Uncomment
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Use these variables as defaults
@@ -33,13 +33,13 @@ jobs:
           - pyver: "3.10"
           - build-prefix: win
           # TODO(LM): Uncomment to run on all os's
-          # - os: "ubuntu-22.04"
-          #   build-prefix: linux
-          # # Use special condarc if macos
-          # - os: "macos-14"
-          #   condarc: .conda_mac/condarc.yaml
-          #   conda-folder: .conda_mac
-          #   build-prefix: osx
+          - os: "ubuntu-22.04"
+            build-prefix: linux
+          # Use special condarc if macos
+          - os: "macos-14"
+            condarc: .conda_mac/condarc.yaml
+            conda-folder: .conda_mac
+            build-prefix: osx
 
     steps:
       # Setup
@@ -84,7 +84,7 @@ jobs:
 
       # Upload artifact "tests" can use it
       - name: Upload conda package artifact
-        if: runner.os == 'Windows' && env.RUN_BUILD_JOB == 'true'  # Only need to upload the folder once
+        if: env.RUN_BUILD_JOB == 'true'  # Ideally, only the slowest runner uploads
         uses: actions/upload-artifact@v4
         with:
           name: sleap-builds
@@ -98,7 +98,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["windows-2022"] #, "ubuntu-22.04", "macos-14"]  TODO(LM): Uncomment
+        os: ["windows-2022", "ubuntu-22.04", "macos-14"]  # TODO(LM): Uncomment
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Default values
@@ -109,21 +109,21 @@ jobs:
           - pyver: "3.10"
           - conda-channels: -c conda-forge -c nvidia -c anaconda
           # TODO(LM): Uncomment to run on all OS's
-          # # Use special condarc if macos
-          # - os: "macos-14"
-          #   build-prefix: osx
-          # - build-suffix: arm64
-          #   condarc: .conda_mac/condarc.yaml
-          #   conda-channels: -c conda-forge -c anaconda
-          # # Ubuntu specific values
-          # - os: ubuntu-22.04
-          #   build-prefix: linux
-          #   # Otherwise core dumped in github actions
-          #   test_args: |
-          #     sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
-          #     sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
-          #     export DISPLAY=":1"
-          #     pytest tests -k 'not exclude_from_linux_pip_test'
+          # Use special condarc if macos
+          - os: "macos-14"
+            build-prefix: osx
+          - build-suffix: arm64
+            condarc: .conda_mac/condarc.yaml
+            conda-channels: -c conda-forge -c anaconda
+          # Ubuntu specific values
+          - os: ubuntu-22.04
+            build-prefix: linux
+            # Otherwise core dumped in github actions
+            test_args: |
+              sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
+              sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
+              export DISPLAY=":1"
+              pytest tests -k 'not exclude_from_linux_pip_test'
 
     steps:
       - name: Checkout repo
@@ -140,7 +140,7 @@ jobs:
           echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
 
       # https://github.com/actions/download-artifact?tab=readme-ov-file#usage
-      - name: Download conda package artifact
+      - name: Download conda package artifact  # Ideally, fastest runner downloads
         uses: actions/download-artifact@v4
         id: download
         with:
