@@ -159,7 +159,7 @@ jobs:
           conda-solver: "libmamba"
 
       - name: Create conda environment
-        run: conda create -y -n sleap_test -c file:///build ${{ matrix.conda-channels }} sleap
+        run: conda create -y -n sleap_test -c file://$(pwd)/build ${{ matrix.conda-channels }} sleap
 
       - name: Activate virtual environment
         run: conda activate sleap_test
