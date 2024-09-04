@@ -14,73 +14,73 @@ on:
       - ".github/workflows/build_conda_ci.yml"
 
 jobs:
-  # build:
-  #   name: Build package from push (${{ matrix.os }})
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os: ["ubuntu-22.04", "windows-2022", "macos-14"]
-  #       # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
-  #       include:
-  #         # Use these variables as defaults
-  #         - condarc: .conda/condarc.yaml
-  #         - conda-folder: .conda
-  #         - pyver: "3.10"
-  #         - build-prefix: win
-  #         - os: "ubuntu-22.04"
-  #           build-prefix: linux
-  #         # Use special condarc if macos
-  #         - os: "macos-14"
-  #           condarc: .conda_mac/condarc.yaml
-  #           conda-folder: .conda_mac
-  #           build-prefix: osx
+  build:
+    name: Build package from push (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-22.04", "windows-2022", "macos-14"]
+        # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
+        include:
+          # Use these variables as defaults
+          - condarc: .conda/condarc.yaml
+          - conda-folder: .conda
+          - pyver: "3.10"
+          - build-prefix: win
+          - os: "ubuntu-22.04"
+            build-prefix: linux
+          # Use special condarc if macos
+          - os: "macos-14"
+            condarc: .conda_mac/condarc.yaml
+            conda-folder: .conda_mac
+            build-prefix: osx
 
-  #   steps:
-  #     # Setup
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
+    steps:
+      # Setup
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  #     - name: Setup Miniconda
-  #       uses: conda-incubator/setup-miniconda@v3.0.3
-  #       with:
-  #         miniforge-version: latest
-  #         condarc-file: ${{ matrix.condarc }}
-  #         python-version: ${{ matrix.pyver }}
-  #         environment-file: environment_build.yml
-  #         activate-environment: sleap_ci
-  #         conda-solver: "libmamba"
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3.0.3
+        with:
+          miniforge-version: latest
+          condarc-file: ${{ matrix.condarc }}
+          python-version: ${{ matrix.pyver }}
+          environment-file: environment_build.yml
+          activate-environment: sleap_ci
+          conda-solver: "libmamba"
 
-  #     - name: Print build environment info
-  #       shell: bash -l {0}
-  #       run: |
-  #         which python
-  #         conda list
-  #         pip freeze
+      - name: Print build environment info
+        shell: bash -l {0}
+        run: |
+          which python
+          conda list
+          pip freeze
 
-  #     # Build conda package (not Windows)
-  #     - name: Build conda package (not Windows)
-  #       if: runner.os != 'Windows'
-  #       shell: bash -l {0}
-  #       run: |
-  #         conda build ${{ matrix.conda-folder }} --output-folder build
-  #         echo "BUILD_PATH=$(pwd)/build" >> "$GITHUB_ENV"
+      # Build conda package (not Windows)
+      - name: Build conda package (not Windows)
+        if: runner.os != 'Windows'
+        shell: bash -l {0}
+        run: |
+          conda build ${{ matrix.conda-folder }} --output-folder build
+          echo "BUILD_PATH=$(pwd)/build" >> "$GITHUB_ENV"
 
-  #     # Build conda package (Windows)
-  #     - name: Build conda package (Windows)
-  #       if: matrix.os == 'windows-2022'
-  #       shell: powershell
-  #       run: |
-  #         conda build ${{ matrix.conda-folder }} --output-folder build
-  #         echo "BUILD_PATH=\$(pwd)\build" >> "$env:GITHUB_ENV"
+      # Build conda package (Windows)
+      - name: Build conda package (Windows)
+        if: matrix.os == 'windows-2022'
+        shell: powershell
+        run: |
+          conda build ${{ matrix.conda-folder }} --output-folder build
+          echo "BUILD_PATH=\$(pwd)\build" >> "$env:GITHUB_ENV"
 
-  #     # Upload artifact "tests" can use it
-  #     - name: Upload conda package artifact
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: sleap-${{ matrix.build-prefix }}
-  #         path: build/${{ matrix.build-prefix }}*/*.tar.bz2
-  #         retention-days: 1
+      # Upload artifact "tests" can use it
+      - name: Upload conda package artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: sleap-${{ matrix.build-prefix }}
+          path: build/${{ matrix.build-prefix }}*/*.tar.bz2
+          retention-days: 1
 
   tests:
     name: Run tests using wheel (${{ matrix.os }})
@@ -123,7 +123,7 @@ jobs:
           python-version: ${{ matrix.pyver }}
 
       - name: Download conda package artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v3
         id: download
         with:
           name: sleap-${{ matrix.build-prefix }}
