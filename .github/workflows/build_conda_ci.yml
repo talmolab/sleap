@@ -19,12 +19,12 @@ env:
 
 jobs:
   build:
-    name: ${{ github.event.inputs.RUN_BUILD_JOB == 'true' && '' || 'Skip ' }}Build package from push (${{ matrix.os }})
+    name: ${{ github.event.inputs.RUN_BUILD_JOB == 'false' && 'Skip ' || '' }}Build package from push (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: ["windows-2022", "ubuntu-22.04", "macos-14"]  # TODO(LM): Uncomment
+        os: ["windows-2022"]  #, "ubuntu-22.04", "macos-14"]  # TODO(LM): Uncomment
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Use these variables as defaults
@@ -98,7 +98,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["windows-2022", "ubuntu-22.04", "macos-14"]  # TODO(LM): Uncomment
+        os: ["windows-2022"]  #, "ubuntu-22.04", "macos-14"]  # TODO(LM): Uncomment
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Default values
@@ -110,20 +110,20 @@ jobs:
           - conda-channels: -c conda-forge -c nvidia -c anaconda
           # TODO(LM): Uncomment to run on all OS's
           # Use special condarc if macos
-          - os: "macos-14"
-            build-prefix: osx
-          - build-suffix: arm64
-            condarc: .conda_mac/condarc.yaml
-            conda-channels: -c conda-forge -c anaconda
-          # Ubuntu specific values
-          - os: ubuntu-22.04
-            build-prefix: linux
-            # Otherwise core dumped in github actions
-            test_args: |
-              sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
-              sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
-              export DISPLAY=":1"
-              pytest tests -k 'not exclude_from_linux_pip_test'
+          # - os: "macos-14"
+          #   build-prefix: osx
+          # - build-suffix: arm64
+          #   condarc: .conda_mac/condarc.yaml
+          #   conda-channels: -c conda-forge -c anaconda
+          # # Ubuntu specific values
+          # - os: ubuntu-22.04
+          #   build-prefix: linux
+          #   # Otherwise core dumped in github actions
+          #   test_args: |
+          #     sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
+          #     sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
+          #     export DISPLAY=":1"
+          #     pytest tests -k 'not exclude_from_linux_pip_test'
 
     steps:
       - name: Checkout repo
@@ -162,22 +162,19 @@ jobs:
           python-version: ${{ matrix.pyver }}
           conda-solver: "libmamba"
 
-      - name: Create conda environment
-        run: conda create sleap -y -n sleap_test -c ./build ${{ matrix.conda-channels }}
-
-      - name: Activate conda environment
-        run: conda activate sleap_test
-
-      - name: Install test packages
-        run: pip install -r "dev_requirements.txt"
-
-      - name: List environment info
+      # Big step because "conda activate" does not persist across steps
+      - name: Test package
         shell: bash -l {0}
         run: |
+          echo "Create conda environment"
+          conda create sleap -y -n sleap_test -c ./build ${{ matrix.conda-channels }}
+          echo "Activate conda environment"
+          conda activate sleap_test
+          echo "Install packages for testing"
+          pip install -r "dev_requirements.txt"
+          echo "List environment info"
           conda info
           conda list
           pip freeze
-
-      - name: Test environment
-        run: |
+          echo "Test environment"
           ${{ matrix.test_args}}
