@@ -82,7 +82,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sleap-builds
-          path: $BUILD_PATH
+          path: build
           retention-days: 1
 
   tests:
