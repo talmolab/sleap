@@ -19,7 +19,11 @@ env:
 
 jobs:
   build:
-    name: ${{ github.event.inputs.RUN_BUILD_JOB == 'false' ? 'Skip ' : '' }} Build package from push (${{ matrix.os }})
+    name:  >-
+      ${{ github.event.inputs.RUN_BUILD_JOB == 'false' 
+        && 'Skip ' 
+        || ''}}
+        Build package from push (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
