@@ -68,7 +68,7 @@ jobs:
 
       # Build conda package (not Windows)
       - name: Build conda package (not Windows)
-        if: runner.os != 'Windows' and env.RUN_BUILD_JOB == 'true'
+        if: runner.os != 'Windows' && env.RUN_BUILD_JOB == 'true'
         shell: bash -l {0}
         run: |
           conda build ${{ matrix.conda-folder }} --output-folder build
@@ -76,7 +76,7 @@ jobs:
 
       # Build conda package (Windows)
       - name: Build conda package (Windows)
-        if: matrix.os == 'windows-2022' and env.RUN_BUILD_JOB == 'true'
+        if: matrix.os == 'windows-2022' && env.RUN_BUILD_JOB == 'true'
         shell: powershell
         run: |
           conda build ${{ matrix.conda-folder }} --output-folder build
@@ -84,7 +84,7 @@ jobs:
 
       # Upload artifact "tests" can use it
       - name: Upload conda package artifact
-        if: runner.os == 'Windows' and env.RUN_BUILD_JOB == 'true'  # Only need to upload the folder once
+        if: runner.os == 'Windows' && env.RUN_BUILD_JOB == 'true'  # Only need to upload the folder once
         uses: actions/upload-artifact@v4
         with:
           name: sleap-builds
