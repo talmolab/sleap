@@ -95,6 +95,7 @@ jobs:
         include:
           # Default values
           - build-prefix: win
+          - build-suffix: 64
           - test_args: pytest --durations=-1 tests/
           - condarc: .conda/condarc.yaml
           - pyver: "3.10"
@@ -102,6 +103,7 @@ jobs:
           # Use special condarc if macos
           - os: "macos-14"
             build-prefix: osx
+          - build-suffix: arm64
             condarc: .conda_mac/condarc.yaml
             conda-channels: -c conda-forge -c anaconda
           # Ubuntu specific values
@@ -123,16 +125,18 @@ jobs:
         with:
           python-version: ${{ matrix.pyver }}
 
+      # https://github.com/actions/download-artifact?tab=readme-ov-file#usage
       - name: Download conda package artifact
         uses: actions/download-artifact@v4
         id: download
         with:
           name: sleap-${{ matrix.build-prefix }}
-          run-id: 10692613475
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/${ {matrix.build-prefix }}-${{matrix.build-suffix }}
+          run-id: 10692613475  # TODO(LM): Comment
+          github-token: ${{ secrets.GITHUB_TOKEN }}  # TODO(LM): Comment
 
       - name: Create conda environment
-        run: conda create -y -n sleap_test -c local ${{ matrix.conda-channels }} sleap
+        run: conda create -y -n sleap_test -c file://build ${{ matrix.conda-channels }} sleap
 
       - name: Activate virtual environment
         run: conda activate sleap_test
