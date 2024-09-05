@@ -6,7 +6,6 @@ pytest-cov<=3.0.0
 pytest-xvfb
 ipython
 sphinx
-# furo
 sphinx-book-theme
 sphinx-copybutton
 nbformat==5.1.3
