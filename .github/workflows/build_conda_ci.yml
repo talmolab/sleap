@@ -14,7 +14,7 @@ on:
       - ".github/workflows/build_conda_ci.yml"
 
 env:
-  RUN_BUILD_JOB: true
+  RUN_BUILD_JOB: false # TODO(LM): Change to "true"
   RUN_ID: 10712122474
 
 jobs:
@@ -136,21 +136,23 @@ jobs:
       - name: Set run id for conda package download (Windows)
         if: runner.os == 'Windows'
         id: set-run-id-win
+        # TODO(LM): Change to "true"
         run: |
-          if ($env:RUN_BUILD_JOB -eq "true") {
-            echo "::set-output name=RUN_ID::$env:GITHUB_RUN_ID"
+          if ($env:RUN_BUILD_JOB -eq "false") {
+            echo "RUN_ID=$env:GITHUB_RUN_ID" >> $GITHUB_OUTPUT
           } else {
-            echo "::set-output name=RUN_ID::$env:RUN_ID"
+            echo "RUN_ID=$env:RUN_ID" >> $GITHUB_OUTPUT
           }
 
       - name: Set run id for conda package download (not Windows)
         if: runner.os != 'Windows'
         id: set-run-id-not-win
+        # TODO(LM): Change to "true"
         run: |
-          if [ "${{ env.RUN_BUILD_JOB }}" == "true" ]; then
-            echo "::set-output name=RUN_ID::${{ github.run_id }}"
+          if [ "${{ env.RUN_BUILD_JOB }}" == "false" ]; then
+            echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=RUN_ID::${{ env.RUN_ID }}"
+            echo "RUN_ID=${{ env.RUN_ID }}" >> $GITHUB_OUTPUT
           fi
 
       # https://github.com/actions/download-artifact?tab=readme-ov-file#usage
