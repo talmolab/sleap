@@ -9,9 +9,9 @@ cattrs>=23.2.0
 imageio
 imageio-ffmpeg
 jsmin
-jsonpickle<=1.5.0
+jsonpickle<=1.5.0  # 1.5.1 breaks compatibility with v1 encoded files
 networkx
-numpy>=1.16.5
+numpy>=1.16.5  # Scipy 1.7.0 requires numpy >=1.16.5
 opencv-python
 pandas
 pillow
