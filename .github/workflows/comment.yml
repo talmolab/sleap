@@ -1,0 +1,36 @@
+name: Auto Comment on Issues and Discussions
+
+on:
+  issues:
+    types: [opened]
+  discussion:
+    types: [created]
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Comment on Issue
+        if: github.event_name == 'issues'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Thank you for opening an issue! We will look into it shortly.'
+            })
+
+      - name: Comment on Discussion
+        if: github.event_name == 'discussion'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.discussions.createComment({
+              discussion_number: context.payload.discussion.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Thank you for starting a discussion! We will join the conversation soon.'
+            })
