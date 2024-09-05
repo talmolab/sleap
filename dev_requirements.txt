@@ -5,13 +5,14 @@ pytest-qt>=4.0.0
 pytest-cov<=3.0.0
 pytest-xvfb
 ipython
-sphinx
+sphinx>=5.0  # sphinxcontrib.applehelp extension needs at least Sphinx v5.0
 # furo
 sphinx-book-theme
 sphinx-copybutton
+sphinx-tabs
 nbformat==5.1.3
-myst-nb==0.13.2
-myst-parser==0.15.2
+myst-nb
+myst-parser
 linkify-it-py
 sphinx-autobuild
 black==21.6b0
