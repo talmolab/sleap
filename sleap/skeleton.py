@@ -1005,13 +1005,17 @@ class Skeleton:
         nodes_dicts = []
         node_to_id = {}
         for node in self.nodes:
+            print(f'node: {node}')
             if node not in node_to_id:
                 node_to_id[node] = node_to_idx[node] if node_to_idx is not None else len(node_to_id)
                 nodes_dicts.append({"name": node.name, "weight": 1.0})
+                print(f'node_to_id: {node_to_id}')
+                print(f'nodes_dicts: {nodes_dicts}')
         
         # Create a dictionary to store edge data
         edges_dicts = []
         for edge_ind, edge in enumerate(self.edges):
+            print(f'edge: {edge}')
             if edge_ind == 0:
                 edge_type = {
                     "py/reduce": [
@@ -1019,19 +1023,20 @@ class Skeleton:
                         {"py/tuple": [1]},  # 1 = real edge, 2 = symmetry edge
                     ]
                 }
+                print(f'edge_type: {edge_type}')
             else:
                 edge_type = {"py/id": 1}
-
+                print(f'edge_type: {edge_type}')
             edges_dicts.append(
                 {
                     "edge_insert_idx": edge_ind,
                     "key": 0,  # Always 0.
-                    "source": node_to_id[edge.source],
-                    "target": node_to_id[edge.destination],
+                    "source": node_to_id[edge[0]],
+                    "target": node_to_id[edge[1]],
                     "type": edge_type,
                 }
             )
-
+            print(f'edges_dicts: {edges_dicts}')
         # Build links dicts for symmetry edges.
         for symmetry_ind, symmetry in enumerate(self.symmetries):
             if symmetry_ind == 0:
