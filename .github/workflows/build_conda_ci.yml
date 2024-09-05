@@ -15,7 +15,7 @@ on:
 
 # If RUN_BUILD_JOB is set to true, then RUN_ID will be overwritten to the current run id
 env:
-  RUN_BUILD_JOB: false # TODO(LM): Set to true
+  RUN_BUILD_JOB: true
   RUN_ID: 10713717594 # Only used if RUN_BUILD_JOB is false (to dowload build artifact)
 
 jobs:
@@ -66,22 +66,12 @@ jobs:
           conda list
           pip freeze
 
-      # TODO(LM): Test if we can merge this step
-      # Build conda package (not Windows)
-      - name: Build conda package (not Windows)
-        if: runner.os != 'Windows' && env.RUN_BUILD_JOB == 'true'
+      # Build conda package
+      - name: Build conda package
+        if: env.RUN_BUILD_JOB == 'true'
         shell: bash -l {0}
         run: |
           conda build ${{ matrix.conda-folder }} --output-folder build
-          echo "BUILD_PATH=$(pwd)/build" >> "$GITHUB_ENV"
-
-      # Build conda package (Windows)
-      - name: Build conda package (Windows)
-        if: matrix.os == 'windows-2022' && env.RUN_BUILD_JOB == 'true'
-        shell: powershell
-        run: |
-          conda build ${{ matrix.conda-folder }} --output-folder build
-          echo "BUILD_PATH=\$(pwd)\build" >> "$env:GITHUB_ENV"
 
       # Upload artifact "tests" can use it
       - name: Upload conda package artifact
