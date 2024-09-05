@@ -84,7 +84,7 @@ jobs:
           overwrite: true
 
   tests:
-    name: Run tests using wheel (${{ matrix.os }})
+    name: Run tests using package (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     needs: build # Ensure the build job has completed before starting this job.
     strategy:
