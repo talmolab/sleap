@@ -15,14 +15,13 @@ dependencies:
     # Packages SLEAP uses directly
     - conda-forge::attrs >=23.1.0 # Corresponds to version of cattrs
     - conda-forge::cattrs >=23.2.0
-    - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
     - conda-forge::jsmin
     - conda-forge::jsonpickle <=1.5.0 # 1.5.1 breaks compatibility with v1 encoded files
     - conda-forge::networkx
     - conda-forge::numpy >=1.16.5 # Scipy 1.7.0 requires numpy >=1.16.5
     - conda-forge::h5py
     - conda-forge::imageio
-    - conda-forge::imageio-ffmpeg
+    - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
     - conda-forge::pandas
     - conda-forge::pip
     - conda-forge::pillow #>=8.3.1,<=8.4.0
