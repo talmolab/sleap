@@ -142,7 +142,7 @@ jobs:
       - name: Use current run for conda package download (Windows)
         # TODO(LM): change to == "true"
         if: runner.os == 'Windows'
-        id: set-run-id-${{ matrix.build-prefix }}
+        id: set-run-id-win
         run: |
           if ($env:RUN_BUILD_JOB -eq "false") {
             echo "::set-output name=RUN_ID::$env:GITHUB_RUN_ID"
@@ -153,7 +153,7 @@ jobs:
       - name: Use current run for conda package download (not Windows)
         # TODO(LM): change to == "true"
         if: runner.os != 'Windows'
-        id: set-run-id-${{ matrix.build-prefix }}
+        id: set-run-id-not-win
         run: |
           if [ "${{ env.RUN_BUILD_JOB }}" == "false" ]; then
             echo "::set-output name=RUN_ID::${{ github.run_id }}"
@@ -168,7 +168,7 @@ jobs:
         with:
           name: sleap-build-${{ matrix.build-prefix }}
           path: build
-          run-id: ${{ steps.set-run-id.outputs.RUN_ID }}
+          run-id: ${{ steps.set-run-id-not-win.outputs.RUN_ID || steps.set-run-id-win.outputs.RUN_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: List items in current directory
