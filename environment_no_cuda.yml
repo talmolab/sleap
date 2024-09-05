@@ -13,18 +13,13 @@ channels:
 
 dependencies:
     # Packages SLEAP uses directly
-    - conda-forge::attrs >=23.1.0  # Corresponds to version of cattrs
-    # - conda-forge::cattrs ==1.1.1
+    - conda-forge::attrs >=23.1.0 # Corresponds to version of cattrs
     - conda-forge::cattrs >=23.2.0
     - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
     - conda-forge::jsmin
-    # - conda-forge::jsonpickle ==1.2
     - conda-forge::jsonpickle <=1.5.0 # 1.5.1 breaks compatibility with v1 encoded files
     - conda-forge::networkx
-    # - anaconda::numpy >=1.19.5,<1.23.0
     - conda-forge::numpy >=1.16.5 # Scipy 1.7.0 requires numpy >=1.16.5
-    # - conda-forge::opencv
-    # - conda-forge::h5py <=3.7.0
     - conda-forge::h5py
     - conda-forge::imageio
     - conda-forge::imageio-ffmpeg
@@ -33,29 +28,22 @@ dependencies:
     - conda-forge::pillow #>=8.3.1,<=8.4.0
     - conda-forge::psutil
     - conda-forge::pykalman
-    # - conda-forge::pyside2 >=5.12  # To ensure application works correctly with QtPy.
     - conda-forge::pyside6 >=6.5.0 # >=6.2 is compatible with Python 3.10, conda package exists for >=6.4, 6.4 conda package uses problematic QtCharts https://github.com/roomrys/envexp/pull/3
-    # - conda-forge::python ~=3.7    # Run into _MAX_WINDOWS_WORKERS not found if ==
     - conda-forge::python >=3.10.0,<3.11.0 # Trying python 3.10
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
     - conda-forge::qtpy >=2.0.1
     - conda-forge::rich
-    # - conda-forge::scipy >=1.4.1,<=1.9.0
     - conda-forge::scipy >=1.7.0 # Python 3.10 is compatible with scipy >=1.7.0
     - conda-forge::scikit-image
-    # - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-learn >=1.0.0 # Python 3.10 is compatible with scikit-learn >=1.0.0
-    # - conda-forge::scikit-video
     - conda-forge::seaborn
-    # - sleap/label/dev::tensorflow ==2.7.0  # TODO: Switch to main label when updated
     - sleap-deps/label/dev::tensorflow ==2.9.2a0 # TODO: Switch to main label when updated
-    - conda-forge::tensorflow-hub  # Pinned in meta.yml, but no problems here... yet
+    - conda-forge::tensorflow-hub # Pinned in meta.yml, but no problems here... yet
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose
-    # - libopencv *=headless* # [linux] https://github.com/nebari-dev/nebari-docs/issues/443
 
-    - pip:  
-        - "--editable=.[conda_dev]"
+    - pip:
+          - "--editable=.[conda_dev]"

@@ -10,21 +10,15 @@ channels:
 
 dependencies:
     # Packages SLEAP uses directly
-    - conda-forge::attrs >=23.1.0  # Corresponds to version of cattrs
-    # - conda-forge::importlib-metadata <7.1.0
+    - conda-forge::attrs >=23.1.0 # Corresponds to version of cattrs
     - conda-forge::importlib-metadata
-    # - conda-forge::cattrs ==1.1.1
     - conda-forge::cattrs >=23.2.0
     - conda-forge::h5py
     - conda-forge::imageio
     - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
     - conda-forge::jsmin
-    # - conda-forge::jsonpickle ==1.2
     - conda-forge::jsonpickle <=1.5.0 # 1.5.1 breaks compatibility with v1 encoded files
-    # - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
-    # - conda-forge::networkx <3.3
     - conda-forge::networkx
-    # - anaconda::numpy >=1.19.5,<1.23.0
     - conda-forge::numpy >=1.16.5 # Scipy 1.7.0 requires numpy >=1.16.5
     - conda-forge::opencv
     - conda-forge::pandas
@@ -32,26 +26,20 @@ dependencies:
     - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    # - conda-forge::pyside2 >=5.12  # To ensure application works correctly with QtPy.
     - conda-forge::pyside6 >=6.5.0 # >=6.2 is compatible with Python 3.10, conda package exists for >=6.4, 6.4 conda package uses problematic QtCharts https://github.com/roomrys/envexp/pull/3
-    # - conda-forge::python  ~=3.9
-    - conda-forge::python >=3.10.0,<3.11.0 # Trying python 3.10
+    - conda-forge::python >=3.10.0,<3.11.0
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
     - conda-forge::qtpy >=2.0.1
     - conda-forge::rich
-    # - conda-forge::scipy >=1.4.1,<=1.9.0
     - conda-forge::scipy >=1.7.0 # Python 3.10 is compatible with scipy >=1.7.0
     - conda-forge::scikit-image >= 0.21.0 # package scikit-image-0.20.0-py38hfaca753_0 requires python_abi 3.8.* *_cp38
-    # - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-learn >=1.0.0 # Python 3.10 is compatible with scikit-learn >=1.0.0
-    # - conda-forge::scikit-video
     - conda-forge::seaborn
-    # - conda-forge::tensorflow-hub  # pulls in tensorflow cpu from conda-forge
     - sleap-deps/label/dev::tensorflow ==2.12.0 # TODO: Switch to main label when updated
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose
     - pip:
-        - "--editable=.[conda_dev]"
+          - "--editable=.[conda_dev]"
