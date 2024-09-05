@@ -133,25 +133,11 @@ jobs:
         with:
           python-version: ${{ matrix.pyver }}
 
-      - name: Set run id for conda package download (Windows)
-        if: runner.os == 'Windows'
-        id: set-run-id-win
-        run: |
-          if ($env:RUN_BUILD_JOB -eq "true") {
-            echo "RUN_ID=$env:GITHUB_RUN_ID" >> $GITHUB_OUTPUT
-          } else {
-            echo "RUN_ID=$env:RUN_ID" >> $GITHUB_OUTPUT
-          }
-
-      - name: Set run id for conda package download (not Windows)
-        if: runner.os != 'Windows'
-        id: set-run-id-not-win
-        run: |
-          if [ "${{ env.RUN_BUILD_JOB }}" == "true" ]; then
-            echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_OUTPUT
-          else
-            echo "RUN_ID=${{ env.RUN_ID }}" >> $GITHUB_OUTPUT
-          fi
+      - name: Use current run id for conda package download
+        shell: bash -l {0}
+        # TODO(LM): Change to true
+        if: env.RUN_BUILD_JOB == 'false'
+        run: echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
 
       # https://github.com/actions/download-artifact?tab=readme-ov-file#usage
       - name: Download conda package artifact
@@ -160,7 +146,7 @@ jobs:
         with:
           name: sleap-build-${{ matrix.build-prefix }}
           path: build
-          run-id: ${{ steps.set-run-id-not-win.outputs.RUN_ID || steps.set-run-id-win.outputs.RUN_ID }}
+          run-id: ${{ env.RUN_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: List items in current directory
