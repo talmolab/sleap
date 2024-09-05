@@ -49,7 +49,7 @@ jobs:
 
       - name: Setup Miniconda
         if: env.RUN_BUILD_JOB == 'true'
-        uses: conda-incubator/setup-miniconda@v3.0.3
+        uses: conda-incubator/setup-miniconda@v3.0.3 # TODO(LM): Upgrade
         with:
           miniforge-version: latest
           condarc-file: ${{ matrix.condarc }}
@@ -156,7 +156,7 @@ jobs:
           ls -R build
 
       - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v3.0.3 # TODO(LM): Upgrade
+        uses: conda-incubator/setup-miniconda@v3.0.4
         with:
           miniforge-version: latest
           condarc-file: ${{ matrix.condarc }}
@@ -184,4 +184,6 @@ jobs:
 
       - name: Test package
         shell: bash -l {0}
-        run: ${{ matrix.test_args}}
+        run: |
+          conda activate sleap_test
+          ${{ matrix.test_args}}
