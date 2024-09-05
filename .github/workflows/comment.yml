@@ -28,9 +28,20 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            github.discussions.createComment({
-              discussion_number: context.payload.discussion.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: 'Thank you for starting a discussion! We will join the conversation soon.'
-            })
+            const discussion_number = context.payload.discussion.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const body = 'Thank you for starting a discussion! We will join the conversation soon.';
+
+            await github.graphql(`
+              mutation($discussionId: ID!, $body: String!) {
+                addDiscussionComment(input: {discussionId: $discussionId, body: $body}) {
+                  comment {
+                    id
+                  }
+                }
+              }
+            `, {
+              discussionId: discussion_number,
+              body: body
+            });
