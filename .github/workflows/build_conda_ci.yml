@@ -49,7 +49,7 @@ jobs:
 
       - name: Setup Miniconda
         if: env.RUN_BUILD_JOB == 'true'
-        uses: conda-incubator/setup-miniconda@v3.0.3 # TODO(LM): Upgrade
+        uses: conda-incubator/setup-miniconda@v3.0.4
         with:
           miniforge-version: latest
           condarc-file: ${{ matrix.condarc }}
@@ -165,19 +165,19 @@ jobs:
 
       - name: Create conda environment
         shell: bash -l {0}
-        run: conda create sleap -y -n sleap_test -c ./build ${{ matrix.conda-channels }}
+        run: conda create sleap -y -n sleap_ci -c ./build ${{ matrix.conda-channels }}
 
       - name: Install packages for testing
         shell: bash -l {0}
         run: |
-          conda activate sleap_test
+          conda activate sleap_ci
           pip install -r "dev_requirements.txt"
 
       # Note: "conda activate" does not persist across steps
       - name: Print environment info
         shell: bash -l {0}
         run: |
-          conda activate sleap_test
+          conda activate sleap_ci
           conda info
           conda list
           pip freeze
@@ -185,5 +185,5 @@ jobs:
       - name: Test package
         shell: bash -l {0}
         run: |
-          conda activate sleap_test
+          conda activate sleap_ci
           ${{ matrix.test_args}}
