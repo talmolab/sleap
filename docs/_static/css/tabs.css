@@ -58,38 +58,34 @@
 
 /* Dark theme preference styling */
 
-@media (prefers-color-scheme: dark) {
-  body[data-theme="dark"] .sphinx-tabs-panel {
-    color: white;
-    background-color: rgb(50, 50, 50);
-  }
-  
-  body[data-theme="dark"] .sphinx-tabs-tab {
-    color: white;
-    background-color: rgba(255, 255, 255, 0.05);
-  }
-  
-  body[data-theme="dark"] .sphinx-tabs-tab[aria-selected="true"] {
-    border-bottom: 2px solid rgb(50, 50, 50);
-    background-color: rgb(50, 50, 50);
-  }
+html[data-theme="dark"] .sphinx-tabs-panel {
+  color: white;
+  background-color: rgb(50, 50, 50);
+}
+
+html[data-theme="dark"] .sphinx-tabs-tab {
+  color: var(--pst-color-link);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+html[data-theme="dark"] .sphinx-tabs-tab[aria-selected="true"] {
+  border-bottom: 2px solid rgb(50, 50, 50);
+  background-color: rgb(50, 50, 50);
 }
 
 /* Light theme preference styling */
 
-@media (prefers-color-scheme: light) {
-  body[data-theme="light"] .sphinx-tabs-panel {
-    color: rgb(50, 50, 50);
-    background-color: rgb(220, 231, 252);
-  }
-  
-  body[data-theme="light"] .sphinx-tabs-tab {
-    color: white;
-    background-color: rgba(255, 255, 255, 0.05);
-  }
-  
-  body[data-theme="light"] .sphinx-tabs-tab[aria-selected="true"] {
-    border-bottom: 2px solid rgb(220, 231, 252);
-    background-color: rgb(220, 231, 252);
-  }
+html[data-theme="light"] .sphinx-tabs-panel {
+  color: black;
+  background-color: white;
+}
+
+html[data-theme="light"] .sphinx-tabs-tab {
+  color: var(--pst-color-link);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme="light"] .sphinx-tabs-tab[aria-selected="true"] {
+  border-bottom: 2px solid white;
+  background-color: white;
 }
