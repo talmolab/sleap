@@ -14,21 +14,17 @@ on:
       - ".github/workflows/build_conda_ci.yml"
 
 env:
-  RUN_BUILD_JOB: false
+  RUN_BUILD_JOB: true
   RUN_ID: 10712122474
 
 jobs:
   build:
-    name: >-
-      ${{ github.event.inputs.RUN_BUILD_JOB == 'false' 
-        && 'Skip ' 
-        || ''}}
-        Build package from push (${{ matrix.os }})
+    name: Build package from push (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: ["windows-2022", "ubuntu-22.04"] #, "macos-14"]  # TODO(LM): Uncomment
+        os: ["windows-2022", "ubuntu-22.04", "macos-14"]
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Use these variables as defaults
@@ -36,14 +32,13 @@ jobs:
           - conda-folder: .conda
           - pyver: "3.10"
           - build-prefix: win
-          # TODO(LM): Uncomment to run on all os's
           - os: "ubuntu-22.04"
             build-prefix: linux
           # Use special condarc if macos
-          # - os: "macos-14"
-          #   condarc: .conda_mac/condarc.yaml
-          #   conda-folder: .conda_mac
-          #   build-prefix: osx
+          - os: "macos-14"
+            condarc: .conda_mac/condarc.yaml
+            conda-folder: .conda_mac
+            build-prefix: osx
 
     steps:
       # Setup
@@ -103,7 +98,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["windows-2022", "ubuntu-22.04"] # , "macos-14"]  # TODO(LM): Uncomment
+        os: ["windows-2022", "ubuntu-22.04", "macos-14"]
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Default values
@@ -113,7 +108,6 @@ jobs:
           - condarc: .conda/condarc.yaml
           - pyver: "3.10"
           - conda-channels: -c conda-forge -c nvidia -c anaconda
-          # TODO(LM): Uncomment to run on all OS's
           # Ubuntu specific values
           - os: ubuntu-22.04
             build-prefix: linux
@@ -124,11 +118,11 @@ jobs:
               export DISPLAY=":1"
               pytest tests -k 'not exclude_from_linux_pip_test'
           # Use special condarc if macos
-          # - os: "macos-14"
-          #   build-prefix: osx
-          #   build-suffix: arm64
-          #   condarc: .conda_mac/condarc.yaml
-          #   conda-channels: -c conda-forge -c anaconda
+          - os: "macos-14"
+            build-prefix: osx
+            build-suffix: arm64
+            condarc: .conda_mac/condarc.yaml
+            conda-channels: -c conda-forge -c anaconda
 
     steps:
       - name: Checkout repo
