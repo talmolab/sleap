@@ -31,13 +31,13 @@ requirements:
 
     # Only the packages above are required to build, but listing them all ensures no 
     # unnecessary pypi packages are installed via the build script (bld.bat, build.sh)
-    - conda-forge::attrs >=21.2.0
+    - conda-forge::attrs
     - conda-forge::cattrs
     - conda-forge::h5py
     - conda-forge::imageio
     - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
-    - conda-forge::jsonpickle
+    - conda-forge::jsonpickle <=1.5.0 # 1.5.1 breaks compatibility with v1 encoded files
     - conda-forge::networkx
     - conda-forge::opencv
     - conda-forge::pandas
@@ -50,8 +50,8 @@ requirements:
     - conda-forge::pyzmq
     - conda-forge::qtpy >=2.0.1
     - conda-forge::rich
-    - conda-forge::scipy >=1.7.0 # Python 3.10 needs scipy >= 1.7.0
-    - conda-forge::scikit-image
+    - conda-forge::scipy >=1.7.0 # Python 3.10 is compatible with scipy >=1.7.0
+    - conda-forge::scikit-image >=0.21.0 # 0.20.0 requires python_abi 3.8.* *_cp38
     - conda-forge::scikit-learn >=1.0.0 # Python 3.10 needs scikit-learn >= 1.0
     - conda-forge::seaborn
     - sleap-deps/label/dev::tensorflow ==2.12.0 # TODO: Switch to main label when updated
@@ -61,13 +61,13 @@ requirements:
 
   run:
     - conda-forge::python >=3.10.0,<3.11.0
-    - conda-forge::attrs >=21.2.0
+    - conda-forge::attrs
     - conda-forge::cattrs
     - conda-forge::h5py
     - conda-forge::imageio
     - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
-    - conda-forge::jsonpickle
+    - conda-forge::jsonpickle <=1.5.0 # 1.5.1 breaks compatibility with v1 encoded files
     - conda-forge::networkx
     - conda-forge::numpy >=1.16.5 # Scipy 1.7.0 requires numpy >=1.16.5
     - conda-forge::opencv
@@ -82,10 +82,10 @@ requirements:
     - conda-forge::qtpy >=2.0.1
     - conda-forge::rich
     - conda-forge::scipy >=1.7.0 # Python 3.10 is compatible with scipy >=1.7.0
-    - conda-forge::scikit-image
+    - conda-forge::scikit-image >=0.21.0 # 0.20.0 requires python_abi 3.8.* *_cp38
     - conda-forge::scikit-learn >=1.0.0 # Python 3.10 needs scikit-learn >= 1.0
     - conda-forge::seaborn
-    - sleap-deps/label/dev::tensorflow ==2.9.2a0 # TODO: Switch to main label when updated
+    - sleap-deps/label/dev::tensorflow ==2.12.0 # TODO: Switch to main label when updated
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose

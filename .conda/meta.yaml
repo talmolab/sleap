@@ -30,7 +30,7 @@ requirements:
 
     # Only the packages above are required to build, but listing them all ensures no 
     # unnecessary pypi packages are installed via the build script (bld.bat, build.sh)
-    - conda-forge::attrs 
+    - conda-forge::attrs
     - conda-forge::cattrs
     - conda-forge::h5py
     - conda-forge::imageio
@@ -40,7 +40,7 @@ requirements:
     - conda-forge::networkx
     - conda-forge::opencv
     - conda-forge::pandas
-    - conda-forge::pillow >=8.3.2
+    - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
     - conda-forge::pyside6 >=6.5.0 # 6.4 conda package uses problematic QtCharts
@@ -54,6 +54,7 @@ requirements:
     - conda-forge::scikit-learn >=1.0.0 # Python 3.10 requires scikit-learn >=1.0
     - conda-forge::seaborn
     - sleap-deps/label/dev::tensorflow ==2.9.2a0 # TODO: Switch to main label when updated
+    - conda-forge::tensorflow-hub
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose
@@ -74,7 +75,7 @@ requirements:
     - conda-forge::networkx
     - conda-forge::opencv
     - conda-forge::pandas
-    - conda-forge::pillow >=8.3.2
+    - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
     - conda-forge::pyside6 >=6.5.0 # 6.4 conda package uses problematic QtCharts
