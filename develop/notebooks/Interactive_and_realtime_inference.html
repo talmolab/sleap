@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Interactive and realtime inference &#8212; SLEAP (v1.3.4)</title>
+    <title>Interactive and realtime inference &#8212; SLEAP (v1.4.1a2)</title>
   
   
   
@@ -34,6 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -344,8 +345,8 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This should take care of all the dependencies on colab:</span>
-<span class="o">!</span>pip uninstall -qqq -y opencv-python opencv-contrib-python
-<span class="o">!</span>pip install -qqq <span class="s2">&quot;sleap[pypi]&gt;=1.3.4&quot;</span>
+<span class="o">!</span>pip<span class="w"> </span>uninstall<span class="w"> </span>-qqq<span class="w"> </span>-y<span class="w"> </span>opencv-python<span class="w"> </span>opencv-contrib-python
+<span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>-qqq<span class="w"> </span><span class="s2">&quot;sleap[pypi]&gt;=1.3.3&quot;</span>
 
 
 <span class="c1"># But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):</span>
@@ -397,10 +398,10 @@ GPUs: 1/1 available
 <p>Before we start, let’s download a raw video and a set of trained top-down ID models that we’ll use to build our application around.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>curl -L --output video.mp4 https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.mp4
-<span class="o">!</span>curl -L --output centroid_model.zip https://storage.googleapis.com/sleap-data/reference/flies13/centroid.fast.210504_182918.centroid.n%3D1800.zip
-<span class="o">!</span>curl -L --output centered_instance_id_model.zip https://storage.googleapis.com/sleap-data/reference/flies13/td_id.fast.v2.210519_111253.multi_class_topdown.n%3D1800.zip
-<span class="o">!</span>ls -lah
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>curl<span class="w"> </span>-L<span class="w"> </span>--output<span class="w"> </span>video.mp4<span class="w"> </span>https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.mp4
+<span class="o">!</span>curl<span class="w"> </span>-L<span class="w"> </span>--output<span class="w"> </span>centroid_model.zip<span class="w"> </span>https://storage.googleapis.com/sleap-data/reference/flies13/centroid.fast.210504_182918.centroid.n%3D1800.zip
+<span class="o">!</span>curl<span class="w"> </span>-L<span class="w"> </span>--output<span class="w"> </span>centered_instance_id_model.zip<span class="w"> </span>https://storage.googleapis.com/sleap-data/reference/flies13/td_id.fast.v2.210519_111253.multi_class_topdown.n%3D1800.zip
+<span class="o">!</span>ls<span class="w"> </span>-lah
 </pre></div>
 </div>
 </div>
@@ -1280,7 +1281,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 
 
 <span class="k">class</span> <span class="nc">SimulatedCamera</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Simulated camera class that serves frames from memory continuously.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simulated camera class that serves frames from memory continuously.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        frames: Numpy array with pre-loaded frames.</span>

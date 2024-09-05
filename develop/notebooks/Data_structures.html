@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Data structures &#8212; SLEAP (v1.3.4)</title>
+    <title>Data structures &#8212; SLEAP (v1.4.1a2)</title>
   
   
   
@@ -34,6 +34,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -349,8 +350,8 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This should take care of all the dependencies on colab:</span>
-<span class="o">!</span>pip uninstall -qqq -y opencv-python opencv-contrib-python
-<span class="o">!</span>pip install -qqq <span class="s2">&quot;sleap[pypi]&gt;=1.3.4&quot;</span>
+<span class="o">!</span>pip<span class="w"> </span>uninstall<span class="w"> </span>-qqq<span class="w"> </span>-y<span class="w"> </span>opencv-python<span class="w"> </span>opencv-contrib-python
+<span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>-qqq<span class="w"> </span><span class="s2">&quot;sleap[pypi]&gt;=1.3.3&quot;</span>
 
 <span class="c1"># But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):</span>
 <span class="c1"># conda create -n sleap -c sleap -c conda-forge -c nvidia sleap</span>
@@ -361,17 +362,17 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Test video:</span>
-<span class="o">!</span>wget https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.mp4
+<span class="o">!</span>wget<span class="w"> </span>https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.mp4
 
 <span class="c1"># Test video labels (from predictions/not necessary for inference benchmarking):</span>
-<span class="o">!</span>wget https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.slp
+<span class="o">!</span>wget<span class="w"> </span>https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.slp
 
 <span class="c1"># Bottom-up model:</span>
 <span class="c1"># !wget https://storage.googleapis.com/sleap-data/reference/flies13/bu.210506_230852.multi_instance.n%3D1800.zip</span>
 
 <span class="c1"># Top-down model (two-stage):</span>
-<span class="o">!</span>wget https://storage.googleapis.com/sleap-data/reference/flies13/centroid.fast.210504_182918.centroid.n%3D1800.zip
-<span class="o">!</span>wget https://storage.googleapis.com/sleap-data/reference/flies13/td_fast.210505_012601.centered_instance.n%3D1800.zip
+<span class="o">!</span>wget<span class="w"> </span>https://storage.googleapis.com/sleap-data/reference/flies13/centroid.fast.210504_182918.centroid.n%3D1800.zip
+<span class="o">!</span>wget<span class="w"> </span>https://storage.googleapis.com/sleap-data/reference/flies13/td_fast.210505_012601.centered_instance.n%3D1800.zip
 </pre></div>
 </div>
 </div>
@@ -425,7 +426,7 @@ td_fast.210505_0126 100%[===================&gt;]  29.35M  21.3MB/s    in 1.4s
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>ls -lah
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>ls<span class="w"> </span>-lah
 </pre></div>
 </div>
 </div>
@@ -722,7 +723,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 <p>Let’s delete the source data:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>rm <span class="s2">&quot;190719_090330_wt_18159206_rig1.2@15000-17560.mp4&quot;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>rm<span class="w"> </span><span class="s2">&quot;190719_090330_wt_18159206_rig1.2@15000-17560.mp4&quot;</span>
 </pre></div>
 </div>
 </div>
