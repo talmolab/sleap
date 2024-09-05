@@ -140,22 +140,20 @@ jobs:
           python-version: ${{ matrix.pyver }}
 
       - name: Use current run for conda package download (Windows)
-        # TODO(LM): change to == "true"
         if: runner.os == 'Windows'
         id: set-run-id-win
         run: |
-          if ($env:RUN_BUILD_JOB -eq "false") {
+          if ($env:RUN_BUILD_JOB -eq "true") {
             echo "::set-output name=RUN_ID::$env:GITHUB_RUN_ID"
           } else {
             echo "::set-output name=RUN_ID::$env:RUN_ID"
           }
 
       - name: Use current run for conda package download (not Windows)
-        # TODO(LM): change to == "true"
         if: runner.os != 'Windows'
         id: set-run-id-not-win
         run: |
-          if [ "${{ env.RUN_BUILD_JOB }}" == "false" ]; then
+          if [ "${{ env.RUN_BUILD_JOB }}" == "true" ]; then
             echo "::set-output name=RUN_ID::${{ github.run_id }}"
           else
             echo "::set-output name=RUN_ID::${{ env.RUN_ID }}"
