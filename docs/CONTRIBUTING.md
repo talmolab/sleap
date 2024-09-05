@@ -53,7 +53,7 @@ Github has made it easy to separate issues from discussions. Generally speaking,
    * Optionally assign a reviewer on the right of the screen - otherwise a member of the SLEAP developer team will self-assign themselves.
 8) If the reviewer requests changes, repeat steps 3-5 and `Re-request review`.
 9) Once the reviewer signs off they will squash + merge the PR into the `develop` branch.
-   * New feautures will be available on the `main` branch when a new release of SLEAP is released.
+   * New features will be available on the `main` branch when a new release of SLEAP is released.
 
 ## Style Guides
 

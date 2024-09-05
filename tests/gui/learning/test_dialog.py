@@ -342,7 +342,7 @@ def test_training_editor_checkbox_states(
         elif action in actions_that_allow_change_everything_except_model:
             ted.set_fields_from_key_val_dict(copy_form_data_except_model)
 
-    # Test the case where the user selectes untrained model
+    # Test the case where the user selects untrained model
     ted._cfg_list_widget.setCurrentIndex(1)
     assert not ted.has_trained_config_selected
     assert not ted._resume_training.isChecked()

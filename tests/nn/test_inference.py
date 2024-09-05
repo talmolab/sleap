@@ -1250,8 +1250,8 @@ def test_single_instance_predictor_save(min_single_instance_robot_model_path, tm
 
 
 def test_make_export_cli():
-    models_path = r"psuedo/models/path"
-    export_path = r"psuedo/test/path"
+    models_path = r"pseudo/models/path"
+    export_path = r"pseudo/test/path"
     max_instances = 5
 
     parser = _make_export_cli_parser()

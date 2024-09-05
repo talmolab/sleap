@@ -12,7 +12,7 @@ The relationships between objects in this module:
 * `Instance` (`PredictedInstance`) can be associated with a `Track`
 
 * A `PointArray` (or `PredictedPointArray`) contains zero or more
-  `Point` objects (or `PredictedPoint` objectss), ideally as many as
+  `Point` objects (or `PredictedPoint` objects), ideally as many as
   there are in the associated :class:`Skeleton` although these can get
   out of sync if the skeleton is manipulated.
 """
@@ -91,7 +91,7 @@ class Point(np.record):
 
 
 # This turns PredictedPoint into an attrs class. Defines comparators for
-# us and generaly makes it behave better. Crazy that this works!
+# us and generally makes it behave better. Crazy that this works!
 Point = attr.s(these={name: attr.ib() for name in Point.dtype.names}, init=False)(Point)
 
 
@@ -157,7 +157,7 @@ class PredictedPoint(Point):
 
 
 # This turns PredictedPoint into an attrs class. Defines comparators for
-# us and generaly makes it behave better. Crazy that this works!
+# us and generally makes it behave better. Crazy that this works!
 PredictedPoint = attr.s(
     these={name: attr.ib() for name in PredictedPoint.dtype.names}, init=False
 )(PredictedPoint)
@@ -212,7 +212,7 @@ class PointArray(np.recarray):
         """
         Override :method:`np.recarray.__array_finalize__()`.
 
-        Overide __array_finalize__ on recarray because it converting the
+        Override __array_finalize__ on recarray because it converting the
         dtype of any np.void subclass to np.record, we don't want this.
         """
         pass
@@ -1191,7 +1191,7 @@ def make_instance_cattr() -> cattr.Converter:
 
     #### UNSTRUCTURE HOOKS
 
-    # JSON dump cant handle NumPy bools so convert them. These are present
+    # JSON dump can't handle NumPy bools so convert them. These are present
     # in Point/PredictedPoint objects now since they are actually custom numpy dtypes.
     converter.register_unstructure_hook(np.bool_, bool)
 

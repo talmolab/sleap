@@ -1883,7 +1883,7 @@ class Labels(MutableSequence):
             skip_labels: If True, skip labels serialization and just do the metadata.
 
         Returns:
-            A dict containing the followings top level keys:
+            A dict containing the following top level keys:
             * version - The version of the dict/json serialization format.
             * skeletons - The skeletons associated with these underlying
               instances.
@@ -2108,7 +2108,7 @@ class Labels(MutableSequence):
 
         Args:
             filename: Output path for the NWB format file.
-            labels: The `Labels` object to covert to a NWB format file.
+            labels: The `Labels` object to convert to a NWB format file.
             overwrite: Boolean that overwrites existing NWB file if True. If False, data
                 will be appended to existing NWB file.
             session_description: Description for entire project. Stored under
@@ -2634,7 +2634,7 @@ class Labels(MutableSequence):
             Args:
                 video_list: A list of serialized `Video` objects stored as nested
                     dictionaries.
-                new_paths: A list of paths where we'll autimatically try to find the
+                new_paths: A list of paths where we'll automatically try to find the
                     missing videos.
                 context: A dictionary containing a "changed_on_load" key with a boolean
                     value. Used externally to determine if any filenames were updated.

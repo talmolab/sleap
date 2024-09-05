@@ -857,7 +857,7 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
         """Assert that the loaded labels are similar to the original."""
 
         # Load the labels, but first copy file to a location (which pytest can and will
-        # keep in memory, but won't affect our re-use of the original file name)
+        # keep in memory, but won't affect our reuse of the original file name)
         filename_for_pytest_to_hoard: Path = path_to_pkg.with_name(
             f"pytest_labels_{time.perf_counter_ns()}{export_extension}"
         )

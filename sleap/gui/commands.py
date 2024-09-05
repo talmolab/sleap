@@ -1078,7 +1078,7 @@ class SaveProjectAs(AppCommand):
 
         except Exception as e:
             message = (
-                f"An error occured when attempting to save:\n {e}\n\n"
+                f"An error occurred when attempting to save:\n {e}\n\n"
                 "Try saving your project with a different filename or in a different "
                 "format."
             )
@@ -1244,7 +1244,7 @@ class ExportAnalysisFile(AppCommand):
                 analysis_videos.append(video)
                 output_paths.append(filename)
 
-        # Chack that output paths are valid
+        # Check that output paths are valid
         if len(output_paths) == 0:
             return False
 
@@ -2070,7 +2070,7 @@ class OpenSkeleton(EditCommand):
                     type(e), value=e, tb=e.__traceback__
                 )
                 logger.warning(
-                    f"Recieved the following error while replacing skeleton:\n"
+                    f"Received the following error while replacing skeleton:\n"
                     f"{''.join(tb_str)}"
                 )
 

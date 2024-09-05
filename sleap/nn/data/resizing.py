@@ -215,7 +215,7 @@ class Resizer:
             A `tf.data.Dataset` with elements containing the same images and points with
             resizing applied.
 
-            The "scale" key of the example will be multipled by the `scale` attribute of
+            The "scale" key of the example will be multiplied by the `scale` attribute of
             this transformer.
 
             If the `keep_full_image` attribute is True, a key specified by

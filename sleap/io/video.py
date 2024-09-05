@@ -657,7 +657,7 @@ class ImgStoreVideo:
         Check if attributes match.
 
         Args:
-            other: The instance to comapare with.
+            other: The instance to compare with.
 
         Returns:
             True if attributes match, False otherwise
@@ -1539,7 +1539,7 @@ class Video:
 
     @staticmethod
     def cattr():
-        """Return a cattr converter for serialiazing/deserializing Video objects.
+        """Return a cattr converter for serializing/deserializing Video objects.
 
         Returns:
             A cattr converter.
@@ -1602,7 +1602,7 @@ class Video:
         elif os.path.exists(os.path.basename(path)):
             return os.path.basename(path)
 
-        # Special case: this is an ImgStore path! We cant use
+        # Special case: this is an ImgStore path! We can't use
         # basename because it will strip the directory name off
         elif path.endswith("metadata.yaml"):
 

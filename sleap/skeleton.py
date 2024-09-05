@@ -1013,7 +1013,7 @@ class Skeleton:
         # SLEAP v1.3.0 added `description` and `preview_image` to `Skeleton`, but saving
         # these fields breaks data format compatibility. Currently, these are only
         # added in our custom template skeletons. To ensure backwards data format
-        # compatibilty of user data, we only save these fields if they are not None.
+        # compatibility of user data, we only save these fields if they are not None.
         if self.is_template:
             data = {
                 "nx_graph": graph,

@@ -326,7 +326,7 @@ def make_backbone_fn(
 def tile_channels(X: tf.Tensor) -> tf.Tensor:
     """Tile single channel to 3 channel tensor.
 
-    This functon is useful to replicate grayscale single-channel images into 3-channel
+    This function is useful to replicate grayscale single-channel images into 3-channel
     monochrome RGB images.
 
     Args:
