@@ -139,22 +139,26 @@ jobs:
         with:
           python-version: ${{ matrix.pyver }}
 
-      - name: Use current run for conda package download
+      - name: Use current run for conda package download (Windows)
         # TODO(LM): change to == "true"
-        id: set-run-id
+        if: runner.os == 'Windows'
+        id: set-run-id-${{ matrix.build-prefix }}
         run: |
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
-            if ($env:RUN_BUILD_JOB -eq "false") {
-              echo "::set-output name=RUN_ID::$env:GITHUB_RUN_ID"
-            } else {
-              echo "::set-output name=RUN_ID::$env:RUN_ID"
-            }
+          if ($env:RUN_BUILD_JOB -eq "false") {
+            echo "::set-output name=RUN_ID::$env:GITHUB_RUN_ID"
+          } else {
+            echo "::set-output name=RUN_ID::$env:RUN_ID"
+          }
+
+      - name: Use current run for conda package download (not Windows)
+        # TODO(LM): change to == "true"
+        if: runner.os != 'Windows'
+        id: set-run-id-${{ matrix.build-prefix }}
+        run: |
+          if [ "${{ env.RUN_BUILD_JOB }}" == "false" ]; then
+            echo "::set-output name=RUN_ID::${{ github.run_id }}"
           else
-            if [ "${{ env.RUN_BUILD_JOB }}" == "false" ]; then
-              echo "::set-output name=RUN_ID::${{ github.run_id }}"
-            else
-              echo "::set-output name=RUN_ID::${{ env.RUN_ID }}"
-            fi
+            echo "::set-output name=RUN_ID::${{ env.RUN_ID }}"
           fi
 
       # https://github.com/actions/download-artifact?tab=readme-ov-file#usage
