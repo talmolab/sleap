@@ -5,12 +5,12 @@ SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. For qu
 ````{tabs}
    ```{group-tab} Windows and Linux
       ```bash
-      conda create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a1
+      conda create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a2
       ```
    ```
    ```{group-tab} Mac OS
       ```bash
-      conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a1
+      conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a2
       ```
    ```
 ````
@@ -71,7 +71,7 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
       ````{tabs}
          ```{group-tab} Windows and Linux
             ```bash
-            conda create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a1
+            conda create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a2
             ```  
             ```{note}
             - This comes with CUDA to enable GPU support. All you need is to have an NVIDIA GPU and [updated drivers](https://nvidia.com/drivers).
@@ -81,13 +81,14 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
          ```
          ```{group-tab} Mac OS
             ```bash
-            conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a1
+            conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a2
             ```
             ```{note}
             This will also work in CPU mode if you don't have a GPU on your machine.
             ```
          ```
       ````
+
    ```
    ```{tab} conda from source
       This is the **recommended method for development**.
@@ -163,7 +164,7 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
                ```
             3. Finally, we can perform the `pip install`:
                ```bash
-               pip install sleap[pypi]==1.4.1a1
+               pip install sleap[pypi]==1.4.1a2
                ```
                ```{note}
                The pypi distributed package of SLEAP ships with the following extras:

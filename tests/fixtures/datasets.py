@@ -42,6 +42,13 @@ def centered_pair_predictions():
 
 
 @pytest.fixture
+def centered_pair_predictions_sorted(centered_pair_predictions):
+    labels: Labels = centered_pair_predictions
+    labels.labeled_frames.sort(key=lambda lf: lf.frame_idx)
+    return labels
+
+
+@pytest.fixture
 def min_labels():
     return Labels.load_file(TEST_JSON_MIN_LABELS)
 

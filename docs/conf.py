@@ -28,7 +28,7 @@ author = "SLEAP Developers"
 copyright = f"2019–{date.today().year}, Talmo Lab"
 
 # The short X.Y version
-version = "1.4.1a1"
+version = "1.4.1a2"
 
 # Get the sleap version
 # with open("../sleap/version.py") as f:
@@ -36,7 +36,7 @@ version = "1.4.1a1"
 #     version = re.search("\d.+(?=['\"])", version_file).group(0)
 
 # Release should be the full branch name
-release = "v1.4.1a1"
+release = "v1.4.1a2"
 
 html_title = f"SLEAP ({release})"
 html_short_title = "SLEAP"
@@ -85,6 +85,7 @@ exclude_patterns = ["_build", "build", "_templates", "Thumbs.db", ".DS_Store"]
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
 pygments_dark_style = "monokai"
+
 
 # Autosummary linkcode resolution
 # https://www.sphinx-doc.org/en/master/usage/extensions/linkcode.html

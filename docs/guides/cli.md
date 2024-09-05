@@ -36,8 +36,8 @@ optional arguments:
 
 ```none
 usage: sleap-train [-h] [--video-paths VIDEO_PATHS] [--val_labels VAL_LABELS]
-                   [--test_labels TEST_LABELS] [--tensorboard] [--save_viz]
-                   [--zmq] [--run_name RUN_NAME] [--prefix PREFIX]
+                   [--test_labels TEST_LABELS] [--tensorboard] [--save_viz] 
+                   [--keep_viz] [--zmq] [--run_name RUN_NAME] [--prefix PREFIX]
                    [--suffix SUFFIX]
                    training_job_path [labels_path]
 
@@ -68,6 +68,8 @@ optional arguments:
   --save_viz            Enable saving of prediction visualizations to the run
                         folder if not already specified in the training job
                         config.
+  --keep_viz            Keep prediction visualization images in the run
+                        folder after training if --save_viz is enabled.
   --zmq                 Enable ZMQ logging (for GUI) if not already specified
                         in the training job config.
   --run_name RUN_NAME   Run name to use when saving file, overrides other run
@@ -136,7 +138,10 @@ usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames] [-
                    [data_path]
 
 positional arguments:
-  data_path             Path to data to predict on. This can be a labels (.slp) file or any supported video format.
+  data_path             Path to data to predict on. This can be one of the following: A .slp file containing labeled data; A folder containing multiple
+                        video files in supported formats; An individual video file in a supported format; A CSV file with a column of video file paths. 
+                        If more than one column is provided in the CSV file, the first will be used for the input data paths and the next column will be
+                        used as the output paths; A text file with a path to a video file on each line
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -151,7 +156,7 @@ optional arguments:
                         Only run inference on unlabeled suggested frames when running on labels dataset. This is useful for generating predictions for
                         initialization during labeling.
   -o OUTPUT, --output OUTPUT
-                        The output filename to use for the predicted data. If not provided, defaults to '[data_path].predictions.slp'.
+                        The output filename or directory path to use for the predicted data. If not provided, defaults to '[data_path].predictions.slp'.
   --no-empty-frames     Clear any empty frames that did not have any detected instances before saving to output.
   --verbosity {none,rich,json}
                         Verbosity of inference progress reporting. 'none' does not output anything during inference, 'rich' displays an updating

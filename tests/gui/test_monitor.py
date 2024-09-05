@@ -30,7 +30,7 @@ def test_monitor_release(qtbot, min_centroid_model_path):
     # Enter "bes_val_x" conditional
     win.best_val_x = 0
     win.best_val_y = win.last_epoch_val_loss
-    win.update_runtime()
+    win._update_runtime()
 
     win.close()
 
