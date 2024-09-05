@@ -133,7 +133,7 @@ jobs:
         with:
           python-version: ${{ matrix.pyver }}
 
-      - name: Use current run for conda package download (Windows)
+      - name: Set run id for conda package download (Windows)
         if: runner.os == 'Windows'
         id: set-run-id-win
         run: |
@@ -143,7 +143,7 @@ jobs:
             echo "::set-output name=RUN_ID::$env:RUN_ID"
           }
 
-      - name: Use current run for conda package download (not Windows)
+      - name: Set run id for conda package download (not Windows)
         if: runner.os != 'Windows'
         id: set-run-id-not-win
         run: |
