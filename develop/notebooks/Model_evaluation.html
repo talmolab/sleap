@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>Model evaluation &#8212; SLEAP (v1.4.1a2)</title>
   
@@ -32,8 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -43,15 +42,12 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/Model_evaluation';</script>
     <link rel="canonical" href="/develop/notebooks/Model_evaluation.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -60,7 +56,7 @@
     <link rel="next" title="Analysis examples" href="Analysis_examples.html" />
     <link rel="prev" title="Training and inference on your own data using Google Drive" href="Training_and_inference_using_Google_Drive.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -322,7 +318,7 @@ document.write(`
                   
   <p><a href="https://colab.research.google.com/github/talmolab/sleap/blob/main/docs/notebooks/Model_evaluation.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
 <section class="tex2jax_ignore mathjax_ignore" id="model-evaluation">
-<h1>Model evaluation<a class="headerlink" href="#model-evaluation" title="Permalink to this headline">#</a></h1>
+<h1>Model evaluation<a class="headerlink" href="#model-evaluation" title="Permalink to this heading">#</a></h1>
 <p>After you’ve trained several models, you may want to generate some accuracy metrics to compare between them. This notebook demonstrates how you’ll do that given a trained model.</p>
 <p>Let’s start by installing SLEAP and downloading the trained model.</p>
 <div class="cell docutils container">
@@ -535,7 +531,7 @@ Error distance (95%): 3.0166608700891056
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Model_evaluation_14_0.png" src="../_images/Model_evaluation_14_0.png" />
+<img alt="../_images/d8517178d972bc0703903cfab70470e9c921794a84a0af190ce345f8321a14e9.png" src="../_images/d8517178d972bc0703903cfab70470e9c921794a84a0af190ce345f8321a14e9.png" />
 </div>
 </div>
 <p>This metric is intuitive, but it does not incorporate other sources of error like those stemming from poor instance detection and grouping, or missing points.</p>
@@ -550,7 +546,7 @@ Error distance (95%): 3.0166608700891056
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Model_evaluation_16_0.png" src="../_images/Model_evaluation_16_0.png" />
+<img alt="../_images/d2b61f464140b9d880c782c1347c1961ff1a43b6b62847e515dadb3047025028.png" src="../_images/d2b61f464140b9d880c782c1347c1961ff1a43b6b62847e515dadb3047025028.png" />
 </div>
 </div>
 <p>Since these range from 0 to 1, it seems like we’re doing pretty well!</p>
@@ -568,7 +564,7 @@ Error distance (95%): 3.0166608700891056
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Model_evaluation_18_0.png" src="../_images/Model_evaluation_18_0.png" />
+<img alt="../_images/b63ef4ea81a463798c2aa2540688b427d4c48b56a8bfa3f2b8e6edf7a74b37ef.png" src="../_images/b63ef4ea81a463798c2aa2540688b427d4c48b56a8bfa3f2b8e6edf7a74b37ef.png" />
 </div>
 </div>
 <p>An easy way to summarize this analysis is to take the average over all of these thresholds to compute the <strong>mean Average Precision (mAP)</strong> and <strong>mean Average Recall (mAR)</strong> which are widely used in the pose estimation literature.</p>
@@ -622,9 +618,7 @@ Skipping registering GPU devices...
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
 </pre></div>
 </div>
-<script type="application/vnd.jupyter.widget-view+json">
-{"model_id": "061ef3f7278a47bbbe199d38ccd6be37", "version_major": 2, "version_minor": 0}
-</script><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-09-01 14:14:07.317060: W tensorflow/core/grappler/costs/op_level_cost_estimator.cc:690] Error in PredictCost() for the op: op: &quot;CropAndResize&quot; attr { key: &quot;T&quot; value { type: DT_UINT8 } } attr { key: &quot;extrapolation_value&quot; value { f: 0 } } attr { key: &quot;method&quot; value { s: &quot;bilinear&quot; } } inputs { dtype: DT_UINT8 shape { dim { size: 4 } dim { size: 1024 } dim { size: 1024 } dim { size: 1 } } } inputs { dtype: DT_FLOAT shape { dim { size: -2 } dim { size: 4 } } } inputs { dtype: DT_INT32 shape { dim { size: -2 } } } inputs { dtype: DT_INT32 shape { dim { size: 2 } } } device { type: &quot;CPU&quot; vendor: &quot;GenuineIntel&quot; model: &quot;103&quot; frequency: 3600 num_cores: 16 environment { key: &quot;cpu_instruction_set&quot; value: &quot;AVX SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2&quot; } environment { key: &quot;eigen&quot; value: &quot;3.4.90&quot; } l1_cache_size: 49152 l2_cache_size: 524288 l3_cache_size: 16777216 memory_size: 268435456 } outputs { dtype: DT_FLOAT shape { dim { size: -2 } dim { size: -27 } dim { size: -28 } dim { size: 1 } } }
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "061ef3f7278a47bbbe199d38ccd6be37", "version_major": 2, "version_minor": 0}</script><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-09-01 14:14:07.317060: W tensorflow/core/grappler/costs/op_level_cost_estimator.cc:690] Error in PredictCost() for the op: op: &quot;CropAndResize&quot; attr { key: &quot;T&quot; value { type: DT_UINT8 } } attr { key: &quot;extrapolation_value&quot; value { f: 0 } } attr { key: &quot;method&quot; value { s: &quot;bilinear&quot; } } inputs { dtype: DT_UINT8 shape { dim { size: 4 } dim { size: 1024 } dim { size: 1024 } dim { size: 1 } } } inputs { dtype: DT_FLOAT shape { dim { size: -2 } dim { size: 4 } } } inputs { dtype: DT_INT32 shape { dim { size: -2 } } } inputs { dtype: DT_INT32 shape { dim { size: 2 } } } device { type: &quot;CPU&quot; vendor: &quot;GenuineIntel&quot; model: &quot;103&quot; frequency: 3600 num_cores: 16 environment { key: &quot;cpu_instruction_set&quot; value: &quot;AVX SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2&quot; } environment { key: &quot;eigen&quot; value: &quot;3.4.90&quot; } l1_cache_size: 49152 l2_cache_size: 524288 l3_cache_size: 16777216 memory_size: 268435456 } outputs { dtype: DT_FLOAT shape { dim { size: -2 } dim { size: -27 } dim { size: -28 } dim { size: 1 } } }
 2023-09-01 14:14:07.320224: W tensorflow/core/grappler/costs/op_level_cost_estimator.cc:690] Error in PredictCost() for the op: op: &quot;CropAndResize&quot; attr { key: &quot;T&quot; value { type: DT_FLOAT } } attr { key: &quot;extrapolation_value&quot; value { f: 0 } } attr { key: &quot;method&quot; value { s: &quot;bilinear&quot; } } inputs { dtype: DT_FLOAT shape { dim { size: -42 } dim { size: -43 } dim { size: -44 } dim { size: 1 } } } inputs { dtype: DT_FLOAT shape { dim { size: -10 } dim { size: 4 } } } inputs { dtype: DT_INT32 shape { dim { size: -10 } } } inputs { dtype: DT_INT32 shape { dim { size: 2 } } } device { type: &quot;CPU&quot; vendor: &quot;GenuineIntel&quot; model: &quot;103&quot; frequency: 3600 num_cores: 16 environment { key: &quot;cpu_instruction_set&quot; value: &quot;AVX SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2&quot; } environment { key: &quot;eigen&quot; value: &quot;3.4.90&quot; } l1_cache_size: 49152 l2_cache_size: 524288 l3_cache_size: 16777216 memory_size: 268435456 } outputs { dtype: DT_FLOAT shape { dim { size: -10 } dim { size: -48 } dim { size: -49 } dim { size: 1 } } }
 </pre></div>
 </div>

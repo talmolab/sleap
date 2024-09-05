@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>sleap.io.video &#8212; SLEAP (v1.4.1a2)</title>
   
@@ -32,8 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -43,22 +42,19 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/sleap.io.video';</script>
     <link rel="canonical" href="/develop/api/sleap.io.video.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -293,7 +289,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -309,6 +307,106 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.DummyVideo"><code class="docutils literal notranslate"><span class="pre">DummyVideo</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video"><code class="docutils literal notranslate"><span class="pre">HDF5Video</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.channels"><code class="docutils literal notranslate"><span class="pre">HDF5Video.channels</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.check"><code class="docutils literal notranslate"><span class="pre">HDF5Video.check()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.close"><code class="docutils literal notranslate"><span class="pre">HDF5Video.close()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.dtype"><code class="docutils literal notranslate"><span class="pre">HDF5Video.dtype</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.embedded_frame_inds"><code class="docutils literal notranslate"><span class="pre">HDF5Video.embedded_frame_inds</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.enable_source_video"><code class="docutils literal notranslate"><span class="pre">HDF5Video.enable_source_video</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.frames"><code class="docutils literal notranslate"><span class="pre">HDF5Video.frames</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.get_frame"><code class="docutils literal notranslate"><span class="pre">HDF5Video.get_frame()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.has_embedded_images"><code class="docutils literal notranslate"><span class="pre">HDF5Video.has_embedded_images</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.height"><code class="docutils literal notranslate"><span class="pre">HDF5Video.height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.last_frame_idx"><code class="docutils literal notranslate"><span class="pre">HDF5Video.last_frame_idx</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.matches"><code class="docutils literal notranslate"><span class="pre">HDF5Video.matches()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.reset"><code class="docutils literal notranslate"><span class="pre">HDF5Video.reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.source_video"><code class="docutils literal notranslate"><span class="pre">HDF5Video.source_video</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.source_video_available"><code class="docutils literal notranslate"><span class="pre">HDF5Video.source_video_available</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.width"><code class="docutils literal notranslate"><span class="pre">HDF5Video.width</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.channels"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.channels</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.close"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.close()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.dtype"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.dtype</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.frames"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.frames</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.get_frame"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.get_frame()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.height"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.imgstore"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.imgstore</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.last_frame_idx"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.last_frame_idx</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.matches"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.matches()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.open"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.open()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.reset"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.width"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.width</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo"><code class="docutils literal notranslate"><span class="pre">MediaVideo</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.channels"><code class="docutils literal notranslate"><span class="pre">MediaVideo.channels</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.dtype"><code class="docutils literal notranslate"><span class="pre">MediaVideo.dtype</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.fps"><code class="docutils literal notranslate"><span class="pre">MediaVideo.fps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.frames"><code class="docutils literal notranslate"><span class="pre">MediaVideo.frames</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.get_frame"><code class="docutils literal notranslate"><span class="pre">MediaVideo.get_frame()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.height"><code class="docutils literal notranslate"><span class="pre">MediaVideo.height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.matches"><code class="docutils literal notranslate"><span class="pre">MediaVideo.matches()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.reset"><code class="docutils literal notranslate"><span class="pre">MediaVideo.reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.width"><code class="docutils literal notranslate"><span class="pre">MediaVideo.width</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo"><code class="docutils literal notranslate"><span class="pre">NumpyVideo</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.channels"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.channels</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.dtype"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.dtype</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.frames"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.frames</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.get_frame"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.get_frame()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.height"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.is_missing"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.is_missing</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.matches"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.matches()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.reset"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.width"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.width</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo.channels"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo.channels</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo.dtype"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo.dtype</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo.frames"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo.frames</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo.get_frame"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo.get_frame()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo.height"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo.height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo.matches"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo.matches()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo.reset"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo.reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo.width"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo.width</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video"><code class="docutils literal notranslate"><span class="pre">Video</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.cattr"><code class="docutils literal notranslate"><span class="pre">Video.cattr()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.fixup_path"><code class="docutils literal notranslate"><span class="pre">Video.fixup_path()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.from_filename"><code class="docutils literal notranslate"><span class="pre">Video.from_filename()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.from_hdf5"><code class="docutils literal notranslate"><span class="pre">Video.from_hdf5()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.from_image_filenames"><code class="docutils literal notranslate"><span class="pre">Video.from_image_filenames()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.from_media"><code class="docutils literal notranslate"><span class="pre">Video.from_media()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.from_numpy"><code class="docutils literal notranslate"><span class="pre">Video.from_numpy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.get_frame"><code class="docutils literal notranslate"><span class="pre">Video.get_frame()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.get_frames"><code class="docutils literal notranslate"><span class="pre">Video.get_frames()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.get_frames_safely"><code class="docutils literal notranslate"><span class="pre">Video.get_frames_safely()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.imgstore_from_filenames"><code class="docutils literal notranslate"><span class="pre">Video.imgstore_from_filenames()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.is_missing"><code class="docutils literal notranslate"><span class="pre">Video.is_missing</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.last_frame_idx"><code class="docutils literal notranslate"><span class="pre">Video.last_frame_idx</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.num_frames"><code class="docutils literal notranslate"><span class="pre">Video.num_frames</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.shape"><code class="docutils literal notranslate"><span class="pre">Video.shape</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.to_hdf5"><code class="docutils literal notranslate"><span class="pre">Video.to_hdf5()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.to_imgstore"><code class="docutils literal notranslate"><span class="pre">Video.to_imgstore()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.to_pipeline"><code class="docutils literal notranslate"><span class="pre">Video.to_pipeline()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.available_video_exts"><code class="docutils literal notranslate"><span class="pre">available_video_exts()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.load_video"><code class="docutils literal notranslate"><span class="pre">load_video()</span></code></a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -319,7 +417,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="module-sleap.io.video">
-<span id="sleap-io-video"></span><h1>sleap.io.video<a class="headerlink" href="#module-sleap.io.video" title="Permalink to this headline">#</a></h1>
+<span id="sleap-io-video"></span><h1>sleap.io.video<a class="headerlink" href="#module-sleap.io.video" title="Permalink to this heading">#</a></h1>
 <p>Video reading and writing interfaces for different formats.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.io.video.DummyVideo">
@@ -334,7 +432,7 @@ have access to the real video.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.video.</span></span><span class="sig-name descname"><span class="pre">HDF5Video</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'channels_last'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L47-L336"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.HDF5Video" title="Permalink to this definition">#</a></dt>
 <dd><p>Video data stored as 4D datasets in HDF5 files.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> – The name of the HDF5 file where the dataset with video data
 is stored.</p></li>
@@ -400,13 +498,13 @@ saved in the file.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.HDF5Video.get_frame">
-<span class="sig-name descname"><span class="pre">get_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L301-L336"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.HDF5Video.get_frame" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L301-L336"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.HDF5Video.get_frame" title="Permalink to this definition">#</a></dt>
 <dd><p>Get a frame from the underlying HDF5 video data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>idx</strong> – The index of the frame to get.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The numpy.ndarray representing the video frame data.</p>
 </dd>
 </dl>
@@ -435,13 +533,13 @@ frame index here will not match the number of frames in video.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.HDF5Video.matches">
-<span class="sig-name descname"><span class="pre">matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.io.video.HDF5Video" title="sleap.io.video.HDF5Video"><span class="pre">sleap.io.video.HDF5Video</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L210-L225"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.HDF5Video.matches" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.io.video.HDF5Video" title="sleap.io.video.HDF5Video"><span class="pre">HDF5Video</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L210-L225"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.HDF5Video.matches" title="Permalink to this definition">#</a></dt>
 <dd><p>Check if attributes match those of another video.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>other</strong> – The other video to compare with.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>True if attributes match, False otherwise.</p>
 </dd>
 </dl>
@@ -455,7 +553,7 @@ frame index here will not match the number of frames in video.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.io.video.HDF5Video.source_video">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">source_video</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">sleap.io.video.Video</span></a></em><a class="headerlink" href="#sleap.io.video.HDF5Video.source_video" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">source_video</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">Video</span></a></em><a class="headerlink" href="#sleap.io.video.HDF5Video.source_video" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the source video if available, otherwise return <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </dd></dl>
 
@@ -481,7 +579,7 @@ frame index here will not match the number of frames in video.</p>
 This class is just a lightweight wrapper for reading such datasets as
 video sources for SLEAP.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> – The name of the file or directory to the imgstore.</p></li>
 <li><p><strong>index_by_original</strong> – ImgStores are great for storing a collection of
@@ -506,7 +604,7 @@ indices on <code class="xref py py-class docutils literal notranslate"><span cla
 <span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L789-L799"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.close" title="Permalink to this definition">#</a></dt>
 <dd><p>Close the imgstore if it isn’t already closed.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
 </dd>
 </dl>
@@ -526,17 +624,17 @@ indices on <code class="xref py py-class docutils literal notranslate"><span cla
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.ImgStoreVideo.get_frame">
-<span class="sig-name descname"><span class="pre">get_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L732-L763"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.get_frame" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L732-L763"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.get_frame" title="Permalink to this definition">#</a></dt>
 <dd><p>Get a frame from the underlying ImgStore video data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>frame_number</strong> – The number of the frame to get. If
 index_by_original is set to True, then this number should
 actually be a frame index within the imgstore. That is,
 if there are 4 frames in the imgstore, this number should be
 be from 0 to 3.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The numpy.ndarray representing the video frame data.</p>
 </dd>
 </dl>
@@ -553,7 +651,7 @@ be from 0 to 3.</p>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">imgstore</span></span><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.imgstore" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the underlying ImgStore object for this Video.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The imgstore that is backing this video object.</p>
 </dd>
 </dl>
@@ -573,10 +671,10 @@ frame index here will not match the number of frames in video.</p>
 <span class="sig-name descname"><span class="pre">matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L655-L668"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.matches" title="Permalink to this definition">#</a></dt>
 <dd><p>Check if attributes match.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>other</strong> – The instance to comapare with.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>True if attributes match, False otherwise</p>
 </dd>
 </dl>
@@ -587,7 +685,7 @@ frame index here will not match the number of frames in video.</p>
 <span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L775-L787"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.ImgStoreVideo.open" title="Permalink to this definition">#</a></dt>
 <dd><p>Open the image store if it isn’t already open.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
 </dd>
 </dl>
@@ -609,12 +707,12 @@ frame index here will not match the number of frames in video.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.io.video.MediaVideo">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.video.</span></span><span class="sig-name descname"><span class="pre">MediaVideo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayscale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bgr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L340-L507"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.MediaVideo" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.video.</span></span><span class="sig-name descname"><span class="pre">MediaVideo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayscale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bgr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L340-L507"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.MediaVideo" title="Permalink to this definition">#</a></dt>
 <dd><p>Video data stored in traditional media formats readable by FFMPEG</p>
 <p>This class provides bare minimum read only interface on top of
 OpenCV’s VideoCapture class.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> – The name of the file (.mp4, .avi, etc)</p></li>
 <li><p><strong>grayscale</strong> – Whether the video is grayscale or not. “auto” means detect
@@ -649,7 +747,7 @@ based on first frame.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.MediaVideo.get_frame">
-<span class="sig-name descname"><span class="pre">get_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayscale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L486-L507"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.MediaVideo.get_frame" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayscale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L486-L507"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.MediaVideo.get_frame" title="Permalink to this definition">#</a></dt>
 <dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
 </dd></dl>
 
@@ -661,13 +759,13 @@ based on first frame.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.MediaVideo.matches">
-<span class="sig-name descname"><span class="pre">matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.io.video.MediaVideo" title="sleap.io.video.MediaVideo"><span class="pre">sleap.io.video.MediaVideo</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L416-L430"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.MediaVideo.matches" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.io.video.MediaVideo" title="sleap.io.video.MediaVideo"><span class="pre">MediaVideo</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L416-L430"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.MediaVideo.matches" title="Permalink to this definition">#</a></dt>
 <dd><p>Check if attributes match those of another video.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>other</strong> – The other video to compare with.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>True if attributes match, False otherwise.</p>
 </dd>
 </dl>
@@ -689,10 +787,10 @@ based on first frame.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.io.video.NumpyVideo">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.video.</span></span><span class="sig-name descname"><span class="pre">NumpyVideo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L511-L607"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.NumpyVideo" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.video.</span></span><span class="sig-name descname"><span class="pre">NumpyVideo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L511-L607"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.NumpyVideo" title="Permalink to this definition">#</a></dt>
 <dd><p>Video data stored as Numpy array.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> – Either a file to load or a numpy array of the data.</p></li>
 <li><p><strong>shape</strong> (<em>* numpy data</em>) – (frames, height, width, channels)</p></li>
@@ -737,13 +835,13 @@ based on first frame.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.NumpyVideo.matches">
-<span class="sig-name descname"><span class="pre">matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.io.video.NumpyVideo" title="sleap.io.video.NumpyVideo"><span class="pre">sleap.io.video.NumpyVideo</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L556-L566"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.NumpyVideo.matches" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.io.video.NumpyVideo" title="sleap.io.video.NumpyVideo"><span class="pre">NumpyVideo</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L556-L566"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.NumpyVideo.matches" title="Permalink to this definition">#</a></dt>
 <dd><p>Check if attributes match those of another video.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>other</strong> – The other video to compare with.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>True if attributes match, False otherwise.</p>
 </dd>
 </dl>
@@ -765,10 +863,10 @@ based on first frame.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.io.video.SingleImageVideo">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.video.</span></span><span class="sig-name descname"><span class="pre">SingleImageVideo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filenames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayscale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L803-L997"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.SingleImageVideo" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.video.</span></span><span class="sig-name descname"><span class="pre">SingleImageVideo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filenames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayscale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L803-L997"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.SingleImageVideo" title="Permalink to this definition">#</a></dt>
 <dd><p>Video wrapper for individual image files.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>filenames</strong> – Files to load as video.</p>
 </dd>
 </dl>
@@ -792,7 +890,7 @@ based on first frame.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.SingleImageVideo.get_frame">
-<span class="sig-name descname"><span class="pre">get_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayscale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L981-L997"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.SingleImageVideo.get_frame" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayscale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L981-L997"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.SingleImageVideo.get_frame" title="Permalink to this definition">#</a></dt>
 <dd><p>See <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code></a>.</p>
 </dd></dl>
 
@@ -804,13 +902,13 @@ based on first frame.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.SingleImageVideo.matches">
-<span class="sig-name descname"><span class="pre">matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.io.video.SingleImageVideo" title="sleap.io.video.SingleImageVideo"><span class="pre">sleap.io.video.SingleImageVideo</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L891-L901"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.SingleImageVideo.matches" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.io.video.SingleImageVideo" title="sleap.io.video.SingleImageVideo"><span class="pre">SingleImageVideo</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L891-L901"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.SingleImageVideo.matches" title="Permalink to this definition">#</a></dt>
 <dd><p>Check if attributes match those of another video.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>other</strong> – The other video to compare with.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>True if attributes match, False otherwise.</p>
 </dd>
 </dl>
@@ -832,7 +930,7 @@ based on first frame.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.io.video.Video">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.video.</span></span><span class="sig-name descname"><span class="pre">Video</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.io.video.HDF5Video" title="sleap.io.video.HDF5Video"><span class="pre">sleap.io.video.HDF5Video</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.io.video.NumpyVideo" title="sleap.io.video.NumpyVideo"><span class="pre">sleap.io.video.NumpyVideo</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.io.video.MediaVideo" title="sleap.io.video.MediaVideo"><span class="pre">sleap.io.video.MediaVideo</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.io.video.ImgStoreVideo" title="sleap.io.video.ImgStoreVideo"><span class="pre">sleap.io.video.ImgStoreVideo</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.io.video.SingleImageVideo" title="sleap.io.video.SingleImageVideo"><span class="pre">sleap.io.video.SingleImageVideo</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.io.video.DummyVideo" title="sleap.io.video.DummyVideo"><span class="pre">sleap.io.video.DummyVideo</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1001-L1620"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.video.</span></span><span class="sig-name descname"><span class="pre">Video</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.io.video.HDF5Video" title="sleap.io.video.HDF5Video"><span class="pre">HDF5Video</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.io.video.NumpyVideo" title="sleap.io.video.NumpyVideo"><span class="pre">NumpyVideo</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.io.video.MediaVideo" title="sleap.io.video.MediaVideo"><span class="pre">MediaVideo</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.io.video.ImgStoreVideo" title="sleap.io.video.ImgStoreVideo"><span class="pre">ImgStoreVideo</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.io.video.SingleImageVideo" title="sleap.io.video.SingleImageVideo"><span class="pre">SingleImageVideo</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#sleap.io.video.DummyVideo" title="sleap.io.video.DummyVideo"><span class="pre">DummyVideo</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1001-L1620"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video" title="Permalink to this definition">#</a></dt>
 <dd><p>The top-level interface to any Video data used by SLEAP.</p>
 <p>This class provides a common interface for various supported video data
 backends. It provides the bare minimum of properties and methods that
@@ -850,7 +948,7 @@ for different formats. For example:</p>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>backend</strong> – A backend is an object that implements the following basic
 required methods and properties</p></li>
@@ -876,7 +974,7 @@ output shape=(height, width, channels).</p></li>
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cattr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1540-L1560"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.cattr" title="Permalink to this definition">#</a></dt>
 <dd><p>Return a cattr converter for serialiazing/deserializing Video objects.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A cattr converter.</p>
 </dd>
 </dl>
@@ -897,18 +995,18 @@ working directory as well.</p>
 saved <code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> dataset, it’s usually preferable to fix video
 paths using a <code class="xref py py-obj docutils literal notranslate"><span class="pre">video_search</span></code> callback or path list.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>path</strong> – The path the video asset.</p></li>
 <li><p><strong>raise_error</strong> – Whether to raise error if we cannot find video.</p></li>
 <li><p><strong>raise_warning</strong> – Whether to raise warning if we cannot find video.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>FileNotFoundError</strong> – If file still cannot be found and raise_error
     is True.</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The fixed up path</p>
 </dd>
 </dl>
@@ -916,10 +1014,10 @@ paths using a <code class="xref py py-obj docutils literal notranslate"><span cl
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.Video.from_filename">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">sleap.io.video.Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1243-L1283"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.from_filename" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1243-L1283"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.from_filename" title="Permalink to this definition">#</a></dt>
 <dd><p>Create an instance of a video object, auto-detecting the backend.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> – <p>The path to the video filename.
 Currently supported types are:</p>
@@ -938,7 +1036,7 @@ Currently supported types are:</p>
 <li><p><strong>kwargs</strong> – Arguments to pass to <a class="reference internal" href="#sleap.io.video.NumpyVideo" title="sleap.io.video.NumpyVideo"><code class="xref py py-class docutils literal notranslate"><span class="pre">NumpyVideo</span></code></a></p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A Video object with the detected backend.</p>
 </dd>
 </dl>
@@ -946,11 +1044,11 @@ Currently supported types are:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.Video.from_hdf5">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">h5py._hl.dataset.Dataset</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">h5py._hl.files.File</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'channels_last'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">sleap.io.video.Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1158-L1189"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.from_hdf5" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dataset</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">File</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'channels_last'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1158-L1189"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.from_hdf5" title="Permalink to this definition">#</a></dt>
 <dd><p>Create an instance of a video object from an HDF5 file and dataset.</p>
 <p>This is a helper method that invokes the HDF5Video backend.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dataset</strong> – The name of the dataset or and h5.Dataset object. If
 filename is h5.File, dataset must be a str of the dataset name.</p></li>
@@ -960,7 +1058,7 @@ or “channels_last”</p></li>
 <li><p><strong>convert_range</strong> – Whether we should convert data to [0, 255]-range</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A Video object with HDF5Video backend.</p>
 </dd>
 </dl>
@@ -968,24 +1066,24 @@ or “channels_last”</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.Video.from_image_filenames">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_image_filenames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filenames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">sleap.io.video.Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1226-L1241"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.from_image_filenames" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_image_filenames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filenames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1226-L1241"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.from_image_filenames" title="Permalink to this definition">#</a></dt>
 <dd><p>Create an instance of a SingleImageVideo from individual image file(s).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.Video.from_media">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_media</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">sleap.io.video.Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1208-L1224"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.from_media" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_media</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1208-L1224"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.from_media" title="Permalink to this definition">#</a></dt>
 <dd><p>Create an instance of a video object from a typical media file.</p>
 <p>For example, mp4, avi, or other types readable by FFMPEG.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> – The name of the file</p></li>
 <li><p><strong>args</strong> – Arguments to pass to <a class="reference internal" href="#sleap.io.video.MediaVideo" title="sleap.io.video.MediaVideo"><code class="xref py py-class docutils literal notranslate"><span class="pre">MediaVideo</span></code></a></p></li>
 <li><p><strong>kwargs</strong> – Arguments to pass to <a class="reference internal" href="#sleap.io.video.MediaVideo" title="sleap.io.video.MediaVideo"><code class="xref py py-class docutils literal notranslate"><span class="pre">MediaVideo</span></code></a></p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A Video object with a MediaVideo backend</p>
 </dd>
 </dl>
@@ -993,17 +1091,17 @@ or “channels_last”</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.Video.from_numpy">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_numpy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">sleap.io.video.Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1191-L1206"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.from_numpy" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_numpy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1191-L1206"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.from_numpy" title="Permalink to this definition">#</a></dt>
 <dd><p>Create an instance of a video object from a numpy array.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> – The numpy array or the name of the file</p></li>
 <li><p><strong>args</strong> – Arguments to pass to <a class="reference internal" href="#sleap.io.video.NumpyVideo" title="sleap.io.video.NumpyVideo"><code class="xref py py-class docutils literal notranslate"><span class="pre">NumpyVideo</span></code></a></p></li>
 <li><p><strong>kwargs</strong> – Arguments to pass to <a class="reference internal" href="#sleap.io.video.NumpyVideo" title="sleap.io.video.NumpyVideo"><code class="xref py py-class docutils literal notranslate"><span class="pre">NumpyVideo</span></code></a></p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A Video object with a NumpyVideo backend</p>
 </dd>
 </dl>
@@ -1011,13 +1109,13 @@ or “channels_last”</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.Video.get_frame">
-<span class="sig-name descname"><span class="pre">get_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1094-L1104"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.get_frame" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1094-L1104"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.get_frame" title="Permalink to this definition">#</a></dt>
 <dd><p>Return a single frame of video from the underlying video data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>idx</strong> – The index of the video frame</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The video frame with shape (height, width, channels)</p>
 </dd>
 </dl>
@@ -1025,13 +1123,13 @@ or “channels_last”</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.Video.get_frames">
-<span class="sig-name descname"><span class="pre">get_frames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idxs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1106-L1117"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.get_frames" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_frames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idxs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1106-L1117"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.get_frames" title="Permalink to this definition">#</a></dt>
 <dd><p>Return a collection of video frames from the underlying video data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>idxs</strong> – An iterable object that contains the indices of frames.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The requested video frames with shape (len(idxs), height, width, channels).</p>
 </dd>
 </dl>
@@ -1039,7 +1137,7 @@ or “channels_last”</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.Video.get_frames_safely">
-<span class="sig-name descname"><span class="pre">get_frames_safely</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idxs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1119-L1150"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.get_frames_safely" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_frames_safely</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idxs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1119-L1150"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.get_frames_safely" title="Permalink to this definition">#</a></dt>
 <dd><p>Return list of frame indices and frames which were successfully loaded.
 :param idxs: An iterable object that contains the indices of frames.</p>
 <dl>
@@ -1054,16 +1152,16 @@ or “channels_last”</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.Video.imgstore_from_filenames">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">imgstore_from_filenames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filenames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">sleap.io.video.Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1285-L1316"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.imgstore_from_filenames" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">imgstore_from_filenames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filenames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1285-L1316"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.imgstore_from_filenames" title="Permalink to this definition">#</a></dt>
 <dd><p>Create an imgstore from a list of image files.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filenames</strong> – List of filenames for the image files.</p></li>
 <li><p><strong>output_filename</strong> – Filename for the imgstore to create.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A <a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Video</span></code></a> object for the new imgstore.</p>
 </dd>
 </dl>
@@ -1099,7 +1197,7 @@ or “channels_last”</p></li>
 <dd><p>Convert frames from arbitrary video backend to HDF5Video.</p>
 <p>Used for building an HDF5 that holds all data needed for training.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>path</strong> – Filename to HDF5 (which could already exist).</p></li>
 <li><p><strong>dataset</strong> – The HDF5 dataset in which to store video frames.</p></li>
@@ -1116,7 +1214,7 @@ dataset to replace another video without having to update
 all the frame indices in the dataset.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A new Video object that references the HDF5 dataset.</p>
 </dd>
 </dl>
@@ -1124,11 +1222,11 @@ all the frame indices in the dataset.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.video.Video.to_imgstore">
-<span class="sig-name descname"><span class="pre">to_imgstore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_numbers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_by_original</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">sleap.io.video.Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1318-L1397"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.to_imgstore" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">to_imgstore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_numbers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_by_original</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1318-L1397"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.to_imgstore" title="Permalink to this definition">#</a></dt>
 <dd><p>Convert frames from arbitrary video backend to ImgStoreVideo.</p>
 <p>This should facilitate conversion of any video to a loopbio imgstore.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>path</strong> – Filename or directory name to store imgstore.</p></li>
 <li><p><strong>frame_numbers</strong> – A list of frame numbers from the video to save.
@@ -1146,7 +1244,7 @@ dataset to replace another video without having to update
 all the frame indices on <code class="xref py py-class docutils literal notranslate"><span class="pre">LabeledFrame</span></code> objects in the dataset.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A new Video object that references the imgstore.</p>
 </dd>
 </dl>
@@ -1157,7 +1255,7 @@ all the frame indices on <code class="xref py py-class docutils literal notransl
 <span class="sig-name descname"><span class="pre">to_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefetch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">sleap.pipelines.Pipeline</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1495-L1527"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.Video.to_pipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a pipeline for reading the video.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>batch_size</strong> – If not <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, the video frames will be batched into rank-4
 tensors. Otherwise, single rank-3 images will be returned.</p></li>
@@ -1166,7 +1264,7 @@ tensors. Otherwise, single rank-3 images will be returned.</p></li>
 specified (default), pipeline will read the entire video.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.pipelines.Pipeline</span></code> that builds <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> for high
 throughput I/O during inference.</p>
 </dd>
@@ -1181,7 +1279,7 @@ throughput I/O during inference.</p>
 <span class="sig-prename descclassname"><span class="pre">sleap.io.video.</span></span><span class="sig-name descname"><span class="pre">available_video_exts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1623-L1635"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.available_video_exts" title="Permalink to this definition">#</a></dt>
 <dd><p>Return tuple of supported video extensions.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Tuple of supported video extensions.</p>
 </dd>
 </dl>
@@ -1189,10 +1287,10 @@ throughput I/O during inference.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.io.video.load_video">
-<span class="sig-prename descclassname"><span class="pre">sleap.io.video.</span></span><span class="sig-name descname"><span class="pre">load_video</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayscale:</span> <span class="pre">typing.Optional[bool]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset=&lt;class</span> <span class="pre">'NoneType'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels_first:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">sleap.io.video.Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1638-L1684"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.load_video" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.io.video.</span></span><span class="sig-name descname"><span class="pre">load_video</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grayscale:</span> <span class="pre">~typing.Optional[bool]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset=&lt;class</span> <span class="pre">'NoneType'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels_first:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/video.py#L1638-L1684"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.video.load_video" title="Permalink to this definition">#</a></dt>
 <dd><p>Open a video from disk.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> – Path to a video file. The video reader backend will be determined by
 the file extension. Support extensions include: <code class="xref py py-obj docutils literal notranslate"><span class="pre">mp4</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">avi</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">h5</span></code>,
@@ -1209,7 +1307,7 @@ assume the data are in <code class="xref py py-obj docutils literal notranslate"
 no effect for non-HDF5 inputs.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Video</span></code> instance with the appropriate backend for its format.</p>
 <p>This enables numpy-like access to video data.</p>
 </p>
@@ -1253,6 +1351,112 @@ no effect for non-HDF5 inputs.</p></li>
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.DummyVideo"><code class="docutils literal notranslate"><span class="pre">DummyVideo</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video"><code class="docutils literal notranslate"><span class="pre">HDF5Video</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.channels"><code class="docutils literal notranslate"><span class="pre">HDF5Video.channels</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.check"><code class="docutils literal notranslate"><span class="pre">HDF5Video.check()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.close"><code class="docutils literal notranslate"><span class="pre">HDF5Video.close()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.dtype"><code class="docutils literal notranslate"><span class="pre">HDF5Video.dtype</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.embedded_frame_inds"><code class="docutils literal notranslate"><span class="pre">HDF5Video.embedded_frame_inds</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.enable_source_video"><code class="docutils literal notranslate"><span class="pre">HDF5Video.enable_source_video</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.frames"><code class="docutils literal notranslate"><span class="pre">HDF5Video.frames</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.get_frame"><code class="docutils literal notranslate"><span class="pre">HDF5Video.get_frame()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.has_embedded_images"><code class="docutils literal notranslate"><span class="pre">HDF5Video.has_embedded_images</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.height"><code class="docutils literal notranslate"><span class="pre">HDF5Video.height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.last_frame_idx"><code class="docutils literal notranslate"><span class="pre">HDF5Video.last_frame_idx</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.matches"><code class="docutils literal notranslate"><span class="pre">HDF5Video.matches()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.reset"><code class="docutils literal notranslate"><span class="pre">HDF5Video.reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.source_video"><code class="docutils literal notranslate"><span class="pre">HDF5Video.source_video</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.source_video_available"><code class="docutils literal notranslate"><span class="pre">HDF5Video.source_video_available</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.HDF5Video.width"><code class="docutils literal notranslate"><span class="pre">HDF5Video.width</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.channels"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.channels</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.close"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.close()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.dtype"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.dtype</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.frames"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.frames</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.get_frame"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.get_frame()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.height"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.imgstore"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.imgstore</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.last_frame_idx"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.last_frame_idx</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.matches"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.matches()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.open"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.open()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.reset"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.ImgStoreVideo.width"><code class="docutils literal notranslate"><span class="pre">ImgStoreVideo.width</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo"><code class="docutils literal notranslate"><span class="pre">MediaVideo</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.channels"><code class="docutils literal notranslate"><span class="pre">MediaVideo.channels</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.dtype"><code class="docutils literal notranslate"><span class="pre">MediaVideo.dtype</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.fps"><code class="docutils literal notranslate"><span class="pre">MediaVideo.fps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.frames"><code class="docutils literal notranslate"><span class="pre">MediaVideo.frames</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.get_frame"><code class="docutils literal notranslate"><span class="pre">MediaVideo.get_frame()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.height"><code class="docutils literal notranslate"><span class="pre">MediaVideo.height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.matches"><code class="docutils literal notranslate"><span class="pre">MediaVideo.matches()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.reset"><code class="docutils literal notranslate"><span class="pre">MediaVideo.reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.MediaVideo.width"><code class="docutils literal notranslate"><span class="pre">MediaVideo.width</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo"><code class="docutils literal notranslate"><span class="pre">NumpyVideo</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.channels"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.channels</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.dtype"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.dtype</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.frames"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.frames</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.get_frame"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.get_frame()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.height"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.is_missing"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.is_missing</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.matches"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.matches()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.reset"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.NumpyVideo.width"><code class="docutils literal notranslate"><span class="pre">NumpyVideo.width</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo.channels"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo.channels</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo.dtype"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo.dtype</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo.frames"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo.frames</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo.get_frame"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo.get_frame()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo.height"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo.height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo.matches"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo.matches()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo.reset"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo.reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.SingleImageVideo.width"><code class="docutils literal notranslate"><span class="pre">SingleImageVideo.width</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video"><code class="docutils literal notranslate"><span class="pre">Video</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.cattr"><code class="docutils literal notranslate"><span class="pre">Video.cattr()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.fixup_path"><code class="docutils literal notranslate"><span class="pre">Video.fixup_path()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.from_filename"><code class="docutils literal notranslate"><span class="pre">Video.from_filename()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.from_hdf5"><code class="docutils literal notranslate"><span class="pre">Video.from_hdf5()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.from_image_filenames"><code class="docutils literal notranslate"><span class="pre">Video.from_image_filenames()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.from_media"><code class="docutils literal notranslate"><span class="pre">Video.from_media()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.from_numpy"><code class="docutils literal notranslate"><span class="pre">Video.from_numpy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.get_frame"><code class="docutils literal notranslate"><span class="pre">Video.get_frame()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.get_frames"><code class="docutils literal notranslate"><span class="pre">Video.get_frames()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.get_frames_safely"><code class="docutils literal notranslate"><span class="pre">Video.get_frames_safely()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.imgstore_from_filenames"><code class="docutils literal notranslate"><span class="pre">Video.imgstore_from_filenames()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.is_missing"><code class="docutils literal notranslate"><span class="pre">Video.is_missing</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.last_frame_idx"><code class="docutils literal notranslate"><span class="pre">Video.last_frame_idx</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.num_frames"><code class="docutils literal notranslate"><span class="pre">Video.num_frames</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.shape"><code class="docutils literal notranslate"><span class="pre">Video.shape</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.to_hdf5"><code class="docutils literal notranslate"><span class="pre">Video.to_hdf5()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.to_imgstore"><code class="docutils literal notranslate"><span class="pre">Video.to_imgstore()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.Video.to_pipeline"><code class="docutils literal notranslate"><span class="pre">Video.to_pipeline()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.available_video_exts"><code class="docutils literal notranslate"><span class="pre">available_video_exts()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.video.load_video"><code class="docutils literal notranslate"><span class="pre">load_video()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>sleap.nn.data.resizing &#8212; SLEAP (v1.4.1a2)</title>
   
@@ -32,8 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -43,22 +42,19 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/sleap.nn.data.resizing';</script>
     <link rel="canonical" href="/develop/api/sleap.nn.data.resizing.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -293,7 +289,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -309,6 +307,51 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.PointsRescaler"><code class="docutils literal notranslate"><span class="pre">PointsRescaler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.PointsRescaler.input_keys"><code class="docutils literal notranslate"><span class="pre">PointsRescaler.input_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.PointsRescaler.output_keys"><code class="docutils literal notranslate"><span class="pre">PointsRescaler.output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.PointsRescaler.transform_dataset"><code class="docutils literal notranslate"><span class="pre">PointsRescaler.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer"><code class="docutils literal notranslate"><span class="pre">Resizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.image_key"><code class="docutils literal notranslate"><span class="pre">Resizer.image_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.scale_key"><code class="docutils literal notranslate"><span class="pre">Resizer.scale_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.points_key"><code class="docutils literal notranslate"><span class="pre">Resizer.points_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.scale"><code class="docutils literal notranslate"><span class="pre">Resizer.scale</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.pad_to_stride"><code class="docutils literal notranslate"><span class="pre">Resizer.pad_to_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.keep_full_image"><code class="docutils literal notranslate"><span class="pre">Resizer.keep_full_image</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.full_image_key"><code class="docutils literal notranslate"><span class="pre">Resizer.full_image_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.from_config"><code class="docutils literal notranslate"><span class="pre">Resizer.from_config()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.input_keys"><code class="docutils literal notranslate"><span class="pre">Resizer.input_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.output_keys"><code class="docutils literal notranslate"><span class="pre">Resizer.output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.transform_dataset"><code class="docutils literal notranslate"><span class="pre">Resizer.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher"><code class="docutils literal notranslate"><span class="pre">SizeMatcher</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.image_key"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.image_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.scale_key"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.scale_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.points_key"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.points_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.keep_full_image"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.keep_full_image</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.full_image_key"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.full_image_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.max_image_height"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.max_image_height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.max_image_width"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.max_image_width</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.center_pad"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.center_pad</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.from_config"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.from_config()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.input_keys"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.input_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.output_keys"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.transform_dataset"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.find_padding_for_stride"><code class="docutils literal notranslate"><span class="pre">find_padding_for_stride()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.pad_to_stride"><code class="docutils literal notranslate"><span class="pre">pad_to_stride()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.resize_image"><code class="docutils literal notranslate"><span class="pre">resize_image()</span></code></a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -319,7 +362,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="module-sleap.nn.data.resizing">
-<span id="sleap-nn-data-resizing"></span><h1>sleap.nn.data.resizing<a class="headerlink" href="#module-sleap.nn.data.resizing" title="Permalink to this headline">#</a></h1>
+<span id="sleap-nn-data-resizing"></span><h1>sleap.nn.data.resizing<a class="headerlink" href="#module-sleap.nn.data.resizing" title="Permalink to this heading">#</a></h1>
 <p>Transformers for image resizing and padding.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.resizing.PointsRescaler">
@@ -339,7 +382,7 @@ document.write(`
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.resizing.PointsRescaler.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/data/resizing.py#L490-L517"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.resizing.PointsRescaler.transform_dataset" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/data/resizing.py#L490-L517"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.resizing.PointsRescaler.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a dataset that contains instance cropped data.</p>
 </dd></dl>
 
@@ -356,7 +399,7 @@ in order to be downsampled or meet divisibility criteria.</p>
 <span class="sig-name descname"><span class="pre">image_key</span></span><a class="headerlink" href="#sleap.nn.data.resizing.Resizer.image_key" title="Permalink to this definition">#</a></dt>
 <dd><p>String name of the key containing the images to resize.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -367,7 +410,7 @@ in order to be downsampled or meet divisibility criteria.</p>
 <span class="sig-name descname"><span class="pre">scale_key</span></span><a class="headerlink" href="#sleap.nn.data.resizing.Resizer.scale_key" title="Permalink to this definition">#</a></dt>
 <dd><p>String name of the key containing the scale of the images.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -379,7 +422,7 @@ in order to be downsampled or meet divisibility criteria.</p>
 <dd><p>String name of the key containing points to adjust for the resizing
 operation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[str]</p>
 </dd>
 </dl>
@@ -390,7 +433,7 @@ operation.</p>
 <span class="sig-name descname"><span class="pre">scale</span></span><a class="headerlink" href="#sleap.nn.data.resizing.Resizer.scale" title="Permalink to this definition">#</a></dt>
 <dd><p>Scalar float specifying scaling factor to resize images by.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -404,7 +447,7 @@ If &gt; 1, this will pad the bottom and right of the images to ensure they meet
 this divisibility criteria. Padding is applied after the scaling specified
 in the <a class="reference internal" href="#sleap.nn.data.resizing.Resizer.scale" title="sleap.nn.data.resizing.Resizer.scale"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scale</span></code></a> attribute.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -416,7 +459,7 @@ in the <a class="reference internal" href="#sleap.nn.data.resizing.Resizer.scale
 <dd><p>If True, keeps the (original size) full image in the examples.
 This is useful for multi-scale inference.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -427,7 +470,7 @@ This is useful for multi-scale inference.</p>
 <span class="sig-name descname"><span class="pre">full_image_key</span></span><a class="headerlink" href="#sleap.nn.data.resizing.Resizer.full_image_key" title="Permalink to this definition">#</a></dt>
 <dd><p>String name of the key containing the full images.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -435,10 +478,10 @@ This is useful for multi-scale inference.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.resizing.Resizer.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.PreprocessingConfig" title="sleap.nn.config.data.PreprocessingConfig"><span class="pre">sleap.nn.config.data.PreprocessingConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'scale'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_to_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_full_image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_image_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'full_image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'instances'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.resizing.Resizer" title="sleap.nn.data.resizing.Resizer"><span class="pre">sleap.nn.data.resizing.Resizer</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/data/resizing.py#L138-L188"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.resizing.Resizer.from_config" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.PreprocessingConfig" title="sleap.nn.config.data.PreprocessingConfig"><span class="pre">PreprocessingConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'scale'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_to_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_full_image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_image_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'full_image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'instances'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.resizing.Resizer" title="sleap.nn.data.resizing.Resizer"><span class="pre">Resizer</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/data/resizing.py#L138-L188"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.resizing.Resizer.from_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Build an instance of this class from its configuration options.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config</strong> – An <code class="xref py py-obj docutils literal notranslate"><span class="pre">PreprocessingConfig</span></code> instance with the desired parameters. If
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">config.pad_to_stride</span></code> is not an explicit integer, the <a class="reference internal" href="#sleap.nn.data.resizing.pad_to_stride" title="sleap.nn.data.resizing.pad_to_stride"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pad_to_stride</span></code></a>
@@ -454,10 +497,10 @@ examples. This is useful for multi-scale inference.</p></li>
 resizing operation.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>An instance of this class.</p>
 </dd>
-<dt class="field-odd">Raises</dt>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ValueError</strong> – If <code class="xref py py-obj docutils literal notranslate"><span class="pre">config.pad_to_stride</span></code> is not set to an integer and the
     <a class="reference internal" href="#sleap.nn.data.resizing.pad_to_stride" title="sleap.nn.data.resizing.pad_to_stride"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pad_to_stride</span></code></a> argument is not provided.</p>
 </dd>
@@ -478,15 +521,15 @@ resizing operation.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.resizing.Resizer.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/data/resizing.py#L206-L253"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.resizing.Resizer.transform_dataset" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/data/resizing.py#L206-L253"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.resizing.Resizer.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a dataset that contains centroids computed from the inputs.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ds_input</strong> – A dataset with the image specified in the <a class="reference internal" href="#sleap.nn.data.resizing.Resizer.image_key" title="sleap.nn.data.resizing.Resizer.image_key"><code class="xref py py-obj docutils literal notranslate"><span class="pre">image_key</span></code></a> attribute,
 points specified in the <a class="reference internal" href="#sleap.nn.data.resizing.Resizer.points_key" title="sleap.nn.data.resizing.Resizer.points_key"><code class="xref py py-obj docutils literal notranslate"><span class="pre">points_key</span></code></a> attribute, and the “scale” key for
 tracking scaling transformations.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> with elements containing the same images and points with
 resizing applied.</p>
 <p>The “scale” key of the example will be multipled by the <a class="reference internal" href="#sleap.nn.data.resizing.Resizer.scale" title="sleap.nn.data.resizing.Resizer.scale"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scale</span></code></a> attribute of
@@ -510,7 +553,7 @@ before any processing.</p>
 <span class="sig-name descname"><span class="pre">image_key</span></span><a class="headerlink" href="#sleap.nn.data.resizing.SizeMatcher.image_key" title="Permalink to this definition">#</a></dt>
 <dd><p>String name of the key containing the images to resize.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -521,7 +564,7 @@ before any processing.</p>
 <span class="sig-name descname"><span class="pre">scale_key</span></span><a class="headerlink" href="#sleap.nn.data.resizing.SizeMatcher.scale_key" title="Permalink to this definition">#</a></dt>
 <dd><p>String name of the key containing the scale of the images.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -533,7 +576,7 @@ before any processing.</p>
 <dd><p>String name of the key containing points to adjust for the resizing
 operation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[str]</p>
 </dd>
 </dl>
@@ -545,7 +588,7 @@ operation.</p>
 <dd><p>If True, keeps the (original size) full image in the examples.
 This is useful for multi-scale inference.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -556,7 +599,7 @@ This is useful for multi-scale inference.</p>
 <span class="sig-name descname"><span class="pre">full_image_key</span></span><a class="headerlink" href="#sleap.nn.data.resizing.SizeMatcher.full_image_key" title="Permalink to this definition">#</a></dt>
 <dd><p>String name of the key containing the full images.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -567,7 +610,7 @@ This is useful for multi-scale inference.</p>
 <span class="sig-name descname"><span class="pre">max_image_height</span></span><a class="headerlink" href="#sleap.nn.data.resizing.SizeMatcher.max_image_height" title="Permalink to this definition">#</a></dt>
 <dd><p>int The target height to which all smaller images will be resized/padded to.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -578,7 +621,7 @@ This is useful for multi-scale inference.</p>
 <span class="sig-name descname"><span class="pre">max_image_width</span></span><a class="headerlink" href="#sleap.nn.data.resizing.SizeMatcher.max_image_width" title="Permalink to this definition">#</a></dt>
 <dd><p>int The target width to which all smaller images will be resized/padded to.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -590,7 +633,7 @@ This is useful for multi-scale inference.</p>
 <dd><p>If True, pad on the left/top to center the non-zero pixels rather than aligning
 them to the top-left. The offsets will be stored in the “offset_x” and “offset_y” keys.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -598,10 +641,10 @@ them to the top-left. The offsets will be stored in the “offset_x” and “of
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.resizing.SizeMatcher.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.PreprocessingConfig" title="sleap.nn.config.data.PreprocessingConfig"><span class="pre">sleap.nn.config.data.PreprocessingConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Provider</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'scale'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_full_image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_image_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'full_image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'instances'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.resizing.SizeMatcher" title="sleap.nn.data.resizing.SizeMatcher"><span class="pre">SizeMatcher</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/data/resizing.py#L283-L338"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.resizing.SizeMatcher.from_config" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.data.html#sleap.nn.config.data.PreprocessingConfig" title="sleap.nn.config.data.PreprocessingConfig"><span class="pre">PreprocessingConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Provider</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'scale'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_full_image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_image_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'full_image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'instances'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.resizing.SizeMatcher" title="sleap.nn.data.resizing.SizeMatcher"><span class="pre">SizeMatcher</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/data/resizing.py#L283-L338"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.resizing.SizeMatcher.from_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Build an instance of this class from configuration.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config</strong> – An <code class="xref py py-obj docutils literal notranslate"><span class="pre">PreprocessingConfig</span></code> instance with the desired parameters. If
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">config.resize_and_pad_to_target</span></code> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code> and ‘target_height’ /
@@ -621,7 +664,7 @@ examples. This is useful for multi-scale inference.</p></li>
 resizing operation.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>An instance of this class.</p>
 </dd>
 </dl>
@@ -641,15 +684,15 @@ resizing operation.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.resizing.SizeMatcher.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/data/resizing.py#L357-L469"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.resizing.SizeMatcher.transform_dataset" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/data/resizing.py#L357-L469"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.resizing.SizeMatcher.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Transform a dataset with variable size images into one with fixed sizes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ds_input</strong> – A dataset with the image specified in the <a class="reference internal" href="#sleap.nn.data.resizing.SizeMatcher.image_key" title="sleap.nn.data.resizing.SizeMatcher.image_key"><code class="xref py py-obj docutils literal notranslate"><span class="pre">image_key</span></code></a> attribute,
 points specified in the <a class="reference internal" href="#sleap.nn.data.resizing.SizeMatcher.points_key" title="sleap.nn.data.resizing.SizeMatcher.points_key"><code class="xref py py-obj docutils literal notranslate"><span class="pre">points_key</span></code></a> attribute, and the “scale” key for
 tracking scaling transformations.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> with elements containing the same images and points of
 equal size.</p>
 <p>If the <a class="reference internal" href="#sleap.nn.data.resizing.SizeMatcher.keep_full_image" title="sleap.nn.data.resizing.SizeMatcher.keep_full_image"><code class="xref py py-obj docutils literal notranslate"><span class="pre">keep_full_image</span></code></a> attribute is True, a key specified by
@@ -669,7 +712,7 @@ any processing.</p>
 <p>This function is useful for determining how to pad images such that they will not
 have issues with divisibility after repeated pooling steps.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>image_height</strong> – Scalar integer specifying the image height (rows).</p></li>
 <li><p><strong>image_width</strong> – Scalar integer specifying the image height (columns).</p></li>
@@ -677,7 +720,7 @@ have issues with divisibility after repeated pooling steps.</p>
 divisible by.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A tuple of (pad_bottom, pad_right), integers with the number of pixels that the
 image would need to be padded by to meet the divisibility requirement.</p>
 </dd>
@@ -686,12 +729,12 @@ image would need to be padded by to meet the divisibility requirement.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.data.resizing.pad_to_stride">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.resizing.</span></span><span class="sig-name descname"><span class="pre">pad_to_stride</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="headerlink" href="#sleap.nn.data.resizing.pad_to_stride" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.resizing.</span></span><span class="sig-name descname"><span class="pre">pad_to_stride</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#sleap.nn.data.resizing.pad_to_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Pad an image to meet a max stride constraint.</p>
 <p>This is useful for ensuring there is no size mismatch between an image and the
 output tensors after multiple downsampling and upsampling steps.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>image</strong> – Single image tensor of shape (height, width, channels).</p></li>
 <li><p><strong>max_stride</strong> – Scalar integer specifying the maximum stride that the image must be
@@ -701,7 +744,7 @@ length of the smallest tensor it is converted to. This is typically
 reduction layers in the model.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The input image with 0-padding applied to the bottom and/or right such that the
 new shape’s height and width are both divisible by <code class="xref py py-obj docutils literal notranslate"><span class="pre">max_stride</span></code>.</p>
 </dd>
@@ -710,12 +753,12 @@ new shape’s height and width are both divisible by <code class="xref py py-obj
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.data.resizing.resize_image">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.resizing.</span></span><span class="sig-name descname"><span class="pre">resize_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/data/resizing.py#L71-L105"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.resizing.resize_image" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.resizing.</span></span><span class="sig-name descname"><span class="pre">resize_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/data/resizing.py#L71-L105"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.resizing.resize_image" title="Permalink to this definition">#</a></dt>
 <dd><p>Rescale an image by a scale factor.</p>
 <p>This function is primarily a convenience wrapper for <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.image.resize</span></code> that
 calculates the new shape from the scale factor.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>image</strong> – Single image tensor of shape (height, width, channels).</p></li>
 <li><p><strong>scale</strong> – Factor to resize the image dimensions by, specified as either a float
@@ -723,7 +766,7 @@ scalar or as a 2-tuple of [scale_x, scale_y]. If a scalar is provided, both
 dimensions are resized by the same factor.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The resized image tensor of the same dtype but scaled height and width.</p>
 </dd>
 </dl>
@@ -753,6 +796,57 @@ dimensions are resized by the same factor.</p></li>
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.PointsRescaler"><code class="docutils literal notranslate"><span class="pre">PointsRescaler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.PointsRescaler.input_keys"><code class="docutils literal notranslate"><span class="pre">PointsRescaler.input_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.PointsRescaler.output_keys"><code class="docutils literal notranslate"><span class="pre">PointsRescaler.output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.PointsRescaler.transform_dataset"><code class="docutils literal notranslate"><span class="pre">PointsRescaler.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer"><code class="docutils literal notranslate"><span class="pre">Resizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.image_key"><code class="docutils literal notranslate"><span class="pre">Resizer.image_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.scale_key"><code class="docutils literal notranslate"><span class="pre">Resizer.scale_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.points_key"><code class="docutils literal notranslate"><span class="pre">Resizer.points_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.scale"><code class="docutils literal notranslate"><span class="pre">Resizer.scale</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.pad_to_stride"><code class="docutils literal notranslate"><span class="pre">Resizer.pad_to_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.keep_full_image"><code class="docutils literal notranslate"><span class="pre">Resizer.keep_full_image</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.full_image_key"><code class="docutils literal notranslate"><span class="pre">Resizer.full_image_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.from_config"><code class="docutils literal notranslate"><span class="pre">Resizer.from_config()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.input_keys"><code class="docutils literal notranslate"><span class="pre">Resizer.input_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.output_keys"><code class="docutils literal notranslate"><span class="pre">Resizer.output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.Resizer.transform_dataset"><code class="docutils literal notranslate"><span class="pre">Resizer.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher"><code class="docutils literal notranslate"><span class="pre">SizeMatcher</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.image_key"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.image_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.scale_key"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.scale_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.points_key"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.points_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.keep_full_image"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.keep_full_image</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.full_image_key"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.full_image_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.max_image_height"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.max_image_height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.max_image_width"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.max_image_width</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.center_pad"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.center_pad</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.from_config"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.from_config()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.input_keys"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.input_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.output_keys"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.SizeMatcher.transform_dataset"><code class="docutils literal notranslate"><span class="pre">SizeMatcher.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.find_padding_for_stride"><code class="docutils literal notranslate"><span class="pre">find_padding_for_stride()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.pad_to_stride"><code class="docutils literal notranslate"><span class="pre">pad_to_stride()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.resizing.resize_image"><code class="docutils literal notranslate"><span class="pre">resize_image()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

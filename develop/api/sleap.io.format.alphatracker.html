@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>sleap.io.format.alphatracker &#8212; SLEAP (v1.4.1a2)</title>
   
@@ -32,8 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -43,22 +42,19 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/sleap.io.format.alphatracker';</script>
     <link rel="canonical" href="/develop/api/sleap.io.format.alphatracker.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -293,7 +289,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -309,6 +307,32 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.all_exts"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.all_exts</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.can_read_file"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.can_read_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.can_write_filename"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.can_write_filename()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.default_ext"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.default_ext</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.does_match_ext"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.does_match_ext()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.does_read"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.does_read()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.does_write"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.does_write()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.formatted_ext_options"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.formatted_ext_options</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.get_alpha_tracker_frame_dict"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.get_alpha_tracker_frame_dict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.get_alpha_tracker_instance_dict"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.get_alpha_tracker_instance_dict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.get_alpha_tracker_point_dict"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.get_alpha_tracker_point_dict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.handles"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.handles</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.make_video_for_image_list"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.make_video_for_image_list()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.name"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.read"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.read()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.write"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.write()</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -319,7 +343,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="module-sleap.io.format.alphatracker">
-<span id="sleap-io-format-alphatracker"></span><h1>sleap.io.format.alphatracker<a class="headerlink" href="#module-sleap.io.format.alphatracker" title="Permalink to this headline">#</a></h1>
+<span id="sleap-io-format-alphatracker"></span><h1>sleap.io.format.alphatracker<a class="headerlink" href="#module-sleap.io.format.alphatracker" title="Permalink to this heading">#</a></h1>
 <p>Adaptor for reading AlphaTracker datasets.</p>
 <p>This can read a JSON file with labeled frames for a single video,
 or multiple videos.</p>
@@ -340,7 +364,7 @@ create a video object which wraps the individual frame images.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.format.alphatracker.AlphaTrackerAdaptor.can_read_file">
-<span class="sig-name descname"><span class="pre">can_read_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/format/alphatracker.py#L58-L138"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.can_read_file" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">can_read_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">FileHandle</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/format/alphatracker.py#L58-L138"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.can_read_file" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns whether this adaptor can read this file.</p>
 <p>Checks the format of the file at three different levels:
 - First, the upper-level format of file.json must be a list of dictionaries.
@@ -404,13 +428,13 @@ create a video object which wraps the individual frame images.</p>
 <span class="sig-name descname"><span class="pre">get_alpha_tracker_frame_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/format/alphatracker.py#L296-L309"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.get_alpha_tracker_frame_dict" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns a deep copy of the dictionary used for frames.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>annotations</strong> – List of AlphaTracker annotations for current frame.</p></li>
 <li><p><strong>filename</strong> – The filename of the image to use for the current frame.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A dictionary containing the annotations in the frame, the AlphaTracker
 class of the dictionary (“image”), and the filename.</p>
 </dd>
@@ -422,7 +446,7 @@ class of the dictionary (“image”), and the filename.</p>
 <span class="sig-name descname"><span class="pre">get_alpha_tracker_instance_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/format/alphatracker.py#L311-L338"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.get_alpha_tracker_instance_dict" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns a deep copy of the dictionary used for instances.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>height</strong> – The height of the bounding box.</p></li>
 <li><p><strong>width</strong> – The width of the bounding box.</p></li>
@@ -430,7 +454,7 @@ class of the dictionary (“image”), and the filename.</p>
 <li><p><strong>y</strong> – The y-coor of lower left hand corner of the bounding box.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A dictionary containing the AlphaTracker class of the dictionary
 (“Face”) along with the height, width, and x,y-coordinates of the
 bounding box around the instance.</p>
@@ -443,13 +467,13 @@ bounding box around the instance.</p>
 <span class="sig-name descname"><span class="pre">get_alpha_tracker_point_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/format/alphatracker.py#L340-L351"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.get_alpha_tracker_point_dict" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns a deep copy of the dictionary used for nodes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x</strong> – The x-coordinate of the node location.</p></li>
 <li><p><strong>y</strong> – The y-coordinate of the node location.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A dictionary containing the AlphaTracker class of the dictionary
 (“point”) and the x,y-coordinates of the node location.</p>
 </dd>
@@ -458,7 +482,7 @@ bounding box around the instance.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.io.format.alphatracker.AlphaTrackerAdaptor.handles">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.format.adaptor.html#sleap.io.format.adaptor.SleapObjectType" title="sleap.io.format.adaptor.SleapObjectType"><span class="pre">sleap.io.format.adaptor.SleapObjectType</span></a></em><a class="headerlink" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.handles" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">handles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="sleap.io.format.adaptor.html#sleap.io.format.adaptor.SleapObjectType" title="sleap.io.format.adaptor.SleapObjectType"><span class="pre">SleapObjectType</span></a></em><a class="headerlink" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.handles" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the type of object that can be read/written.</p>
 <p>The Dispatch class calls this method on all registered adaptors to
 determine which to use for reading/writing.</p>
@@ -466,16 +490,16 @@ determine which to use for reading/writing.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.format.alphatracker.AlphaTrackerAdaptor.make_video_for_image_list">
-<span class="sig-name descname"><span class="pre">make_video_for_image_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filenames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">sleap.io.video.Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/format/alphatracker.py#L273-L294"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.make_video_for_image_list" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_video_for_image_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filenames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">Video</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/format/alphatracker.py#L273-L294"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.make_video_for_image_list" title="Permalink to this definition">#</a></dt>
 <dd><p>Creates a Video object from frame images.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>image_dir</strong> – The directory that contains the AlphaTracker file.</p></li>
 <li><p><strong>filenames</strong> – A list of filenames for the frame images.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">Video</span></code> object.</p>
 </dd>
 </dl>
@@ -489,10 +513,10 @@ determine which to use for reading/writing.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.format.alphatracker.AlphaTrackerAdaptor.read">
-<span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">sleap.io.format.filehandle.FileHandle</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">skeleton</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.skeleton.html#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_video</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">sleap.io.video.Video</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/format/alphatracker.py#L152-L271"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.read" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.format.filehandle.html#sleap.io.format.filehandle.FileHandle" title="sleap.io.format.filehandle.FileHandle"><span class="pre">FileHandle</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">skeleton</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.skeleton.html#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">Skeleton</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_video</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">Video</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">Labels</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/format/alphatracker.py#L152-L271"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.read" title="Permalink to this definition">#</a></dt>
 <dd><p>Reads the file and returns the appropriate deserialized object.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>file</strong> – The file to read.</p></li>
 <li><p><strong>skeleton</strong> – The skeleton to use for <code class="xref py py-class docutils literal notranslate"><span class="pre">Instance</span></code> objects. If no skeleton
@@ -500,7 +524,7 @@ is provided, the skeleton will created with numerical node names.</p></li>
 <li><p><strong>full_video</strong> – The video to use for the <code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> object.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> object containing all the AlphaTracker annotations.</p>
 </dd>
 </dl>
@@ -508,21 +532,21 @@ is provided, the skeleton will created with numerical node names.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.format.alphatracker.AlphaTrackerAdaptor.write">
-<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_object</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">sleap.io.dataset.Labels</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/format/alphatracker.py#L355-L429"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.write" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_object</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.dataset.html#sleap.io.dataset.Labels" title="sleap.io.dataset.Labels"><span class="pre">Labels</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/io/format/alphatracker.py#L355-L429"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.write" title="Permalink to this definition">#</a></dt>
 <dd><p>Writes the object to an AlphaTracker JSON file.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> – The name of the file being written to.</p></li>
 <li><p><strong>souce_object</strong> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Labels</span></code> object which contains the relevant
 information to write to an AlphaTracker JSON file.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>NotImplementedError</strong> – The code for the write functionality is not complete,
     see TODOs.</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A list of annotated frames in the same format seen in the AlphaTracker JSON.</p>
 </dd>
 </dl>
@@ -553,6 +577,38 @@ information to write to an AlphaTracker JSON file.</p></li>
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.all_exts"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.all_exts</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.can_read_file"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.can_read_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.can_write_filename"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.can_write_filename()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.default_ext"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.default_ext</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.does_match_ext"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.does_match_ext()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.does_read"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.does_read()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.does_write"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.does_write()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.formatted_ext_options"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.formatted_ext_options</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.get_alpha_tracker_frame_dict"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.get_alpha_tracker_frame_dict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.get_alpha_tracker_instance_dict"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.get_alpha_tracker_instance_dict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.get_alpha_tracker_point_dict"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.get_alpha_tracker_point_dict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.handles"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.handles</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.make_video_for_image_list"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.make_video_for_image_list()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.name"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.read"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.read()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.format.alphatracker.AlphaTrackerAdaptor.write"><code class="docutils literal notranslate"><span class="pre">AlphaTrackerAdaptor.write()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

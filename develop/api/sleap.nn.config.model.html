@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>sleap.nn.config.model &#8212; SLEAP (v1.4.1a2)</title>
   
@@ -32,8 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -43,22 +42,19 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/sleap.nn.config.model';</script>
     <link rel="canonical" href="/develop/api/sleap.nn.config.model.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -293,7 +289,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -309,6 +307,162 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.BackboneConfig"><code class="docutils literal notranslate"><span class="pre">BackboneConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.BackboneConfig.leap"><code class="docutils literal notranslate"><span class="pre">BackboneConfig.leap</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.BackboneConfig.unet"><code class="docutils literal notranslate"><span class="pre">BackboneConfig.unet</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.BackboneConfig.hourglass"><code class="docutils literal notranslate"><span class="pre">BackboneConfig.hourglass</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.BackboneConfig.resnet"><code class="docutils literal notranslate"><span class="pre">BackboneConfig.resnet</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig"><code class="docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.anchor_part"><code class="docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig.anchor_part</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.part_names"><code class="docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig.part_names</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.sigma"><code class="docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.loss_weight"><code class="docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig.loss_weight</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.offset_refinement"><code class="docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig.offset_refinement</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CentroidsHeadConfig"><code class="docutils literal notranslate"><span class="pre">CentroidsHeadConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CentroidsHeadConfig.anchor_part"><code class="docutils literal notranslate"><span class="pre">CentroidsHeadConfig.anchor_part</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CentroidsHeadConfig.sigma"><code class="docutils literal notranslate"><span class="pre">CentroidsHeadConfig.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CentroidsHeadConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">CentroidsHeadConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CentroidsHeadConfig.loss_weight"><code class="docutils literal notranslate"><span class="pre">CentroidsHeadConfig.loss_weight</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CentroidsHeadConfig.offset_refinement"><code class="docutils literal notranslate"><span class="pre">CentroidsHeadConfig.offset_refinement</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassMapsHeadConfig"><code class="docutils literal notranslate"><span class="pre">ClassMapsHeadConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassMapsHeadConfig.classes"><code class="docutils literal notranslate"><span class="pre">ClassMapsHeadConfig.classes</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassMapsHeadConfig.sigma"><code class="docutils literal notranslate"><span class="pre">ClassMapsHeadConfig.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassMapsHeadConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">ClassMapsHeadConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassMapsHeadConfig.loss_weight"><code class="docutils literal notranslate"><span class="pre">ClassMapsHeadConfig.loss_weight</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassVectorsHeadConfig"><code class="docutils literal notranslate"><span class="pre">ClassVectorsHeadConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassVectorsHeadConfig.classes"><code class="docutils literal notranslate"><span class="pre">ClassVectorsHeadConfig.classes</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassVectorsHeadConfig.num_fc_layers"><code class="docutils literal notranslate"><span class="pre">ClassVectorsHeadConfig.num_fc_layers</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassVectorsHeadConfig.num_fc_units"><code class="docutils literal notranslate"><span class="pre">ClassVectorsHeadConfig.num_fc_units</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassVectorsHeadConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">ClassVectorsHeadConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassVectorsHeadConfig.loss_weight"><code class="docutils literal notranslate"><span class="pre">ClassVectorsHeadConfig.loss_weight</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HeadsConfig"><code class="docutils literal notranslate"><span class="pre">HeadsConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HeadsConfig.single_instance"><code class="docutils literal notranslate"><span class="pre">HeadsConfig.single_instance</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HeadsConfig.centroid"><code class="docutils literal notranslate"><span class="pre">HeadsConfig.centroid</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HeadsConfig.centered_instance"><code class="docutils literal notranslate"><span class="pre">HeadsConfig.centered_instance</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HeadsConfig.multi_instance"><code class="docutils literal notranslate"><span class="pre">HeadsConfig.multi_instance</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HeadsConfig.multi_class_bottomup"><code class="docutils literal notranslate"><span class="pre">HeadsConfig.multi_class_bottomup</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HeadsConfig.multi_class_topdown"><code class="docutils literal notranslate"><span class="pre">HeadsConfig.multi_class_topdown</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HourglassConfig"><code class="docutils literal notranslate"><span class="pre">HourglassConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HourglassConfig.stem_stride"><code class="docutils literal notranslate"><span class="pre">HourglassConfig.stem_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HourglassConfig.max_stride"><code class="docutils literal notranslate"><span class="pre">HourglassConfig.max_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HourglassConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">HourglassConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HourglassConfig.filters"><code class="docutils literal notranslate"><span class="pre">HourglassConfig.filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HourglassConfig.filters_increase"><code class="docutils literal notranslate"><span class="pre">HourglassConfig.filters_increase</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HourglassConfig.stacks"><code class="docutils literal notranslate"><span class="pre">HourglassConfig.stacks</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.LEAPConfig"><code class="docutils literal notranslate"><span class="pre">LEAPConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.LEAPConfig.max_stride"><code class="docutils literal notranslate"><span class="pre">LEAPConfig.max_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.LEAPConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">LEAPConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.LEAPConfig.filters"><code class="docutils literal notranslate"><span class="pre">LEAPConfig.filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.LEAPConfig.filters_rate"><code class="docutils literal notranslate"><span class="pre">LEAPConfig.filters_rate</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.LEAPConfig.up_interpolate"><code class="docutils literal notranslate"><span class="pre">LEAPConfig.up_interpolate</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.LEAPConfig.stacks"><code class="docutils literal notranslate"><span class="pre">LEAPConfig.stacks</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ModelConfig"><code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ModelConfig.backbone"><code class="docutils literal notranslate"><span class="pre">ModelConfig.backbone</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ModelConfig.heads"><code class="docutils literal notranslate"><span class="pre">ModelConfig.heads</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ModelConfig.base_checkpoint"><code class="docutils literal notranslate"><span class="pre">ModelConfig.base_checkpoint</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiClassBottomUpConfig"><code class="docutils literal notranslate"><span class="pre">MultiClassBottomUpConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiClassBottomUpConfig.confmaps"><code class="docutils literal notranslate"><span class="pre">MultiClassBottomUpConfig.confmaps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiClassBottomUpConfig.class_maps"><code class="docutils literal notranslate"><span class="pre">MultiClassBottomUpConfig.class_maps</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiClassTopDownConfig"><code class="docutils literal notranslate"><span class="pre">MultiClassTopDownConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiClassTopDownConfig.confmaps"><code class="docutils literal notranslate"><span class="pre">MultiClassTopDownConfig.confmaps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiClassTopDownConfig.class_vectors"><code class="docutils literal notranslate"><span class="pre">MultiClassTopDownConfig.class_vectors</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfig"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfig.confmaps"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfig.confmaps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfig.pafs"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfig.pafs</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfmapsHeadConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.part_names"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfmapsHeadConfig.part_names</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.sigma"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfmapsHeadConfig.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfmapsHeadConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.loss_weight"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfmapsHeadConfig.loss_weight</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.offset_refinement"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfmapsHeadConfig.offset_refinement</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsHeadConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig.edges"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsHeadConfig.edges</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig.sigma"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsHeadConfig.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsHeadConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig.loss_weight"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsHeadConfig.loss_weight</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PretrainedEncoderConfig"><code class="docutils literal notranslate"><span class="pre">PretrainedEncoderConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PretrainedEncoderConfig.encoder"><code class="docutils literal notranslate"><span class="pre">PretrainedEncoderConfig.encoder</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PretrainedEncoderConfig.pretrained"><code class="docutils literal notranslate"><span class="pre">PretrainedEncoderConfig.pretrained</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PretrainedEncoderConfig.decoder_filters"><code class="docutils literal notranslate"><span class="pre">PretrainedEncoderConfig.decoder_filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PretrainedEncoderConfig.decoder_filters_rate"><code class="docutils literal notranslate"><span class="pre">PretrainedEncoderConfig.decoder_filters_rate</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PretrainedEncoderConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">PretrainedEncoderConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PretrainedEncoderConfig.decoder_batchnorm"><code class="docutils literal notranslate"><span class="pre">PretrainedEncoderConfig.decoder_batchnorm</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ResNetConfig"><code class="docutils literal notranslate"><span class="pre">ResNetConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ResNetConfig.version"><code class="docutils literal notranslate"><span class="pre">ResNetConfig.version</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ResNetConfig.weights"><code class="docutils literal notranslate"><span class="pre">ResNetConfig.weights</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ResNetConfig.upsampling"><code class="docutils literal notranslate"><span class="pre">ResNetConfig.upsampling</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ResNetConfig.max_stride"><code class="docutils literal notranslate"><span class="pre">ResNetConfig.max_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ResNetConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">ResNetConfig.output_stride</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfmapsHeadConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.part_names"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfmapsHeadConfig.part_names</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.sigma"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfmapsHeadConfig.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfmapsHeadConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.loss_weight"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfmapsHeadConfig.loss_weight</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.offset_refinement"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfmapsHeadConfig.offset_refinement</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig"><code class="docutils literal notranslate"><span class="pre">UNetConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig.stem_stride"><code class="docutils literal notranslate"><span class="pre">UNetConfig.stem_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig.max_stride"><code class="docutils literal notranslate"><span class="pre">UNetConfig.max_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">UNetConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig.filters"><code class="docutils literal notranslate"><span class="pre">UNetConfig.filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig.filters_rate"><code class="docutils literal notranslate"><span class="pre">UNetConfig.filters_rate</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig.middle_block"><code class="docutils literal notranslate"><span class="pre">UNetConfig.middle_block</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig.up_interpolate"><code class="docutils literal notranslate"><span class="pre">UNetConfig.up_interpolate</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig.stacks"><code class="docutils literal notranslate"><span class="pre">UNetConfig.stacks</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig.method"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig.method</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig.skip_connections"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig.skip_connections</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig.block_stride"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig.block_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig.filters"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig.filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig.filters_rate"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig.filters_rate</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig.refine_convs"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig.refine_convs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig.conv_batchnorm"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig.conv_batchnorm</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig.transposed_conv_kernel_size"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig.transposed_conv_kernel_size</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -319,7 +473,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="module-sleap.nn.config.model">
-<span id="sleap-nn-config-model"></span><h1>sleap.nn.config.model<a class="headerlink" href="#module-sleap.nn.config.model" title="Permalink to this headline">#</a></h1>
+<span id="sleap-nn-config-model"></span><h1>sleap.nn.config.model<a class="headerlink" href="#module-sleap.nn.config.model" title="Permalink to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.model.BackboneConfig">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.model.</span></span><span class="sig-name descname"><span class="pre">BackboneConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/model.py#L630-L646"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.model.BackboneConfig" title="Permalink to this definition">#</a></dt>
@@ -330,7 +484,7 @@ document.write(`
 <span class="sig-name descname"><span class="pre">leap</span></span><a class="headerlink" href="#sleap.nn.config.model.BackboneConfig.leap" title="Permalink to this definition">#</a></dt>
 <dd><p>A <a class="reference internal" href="#sleap.nn.config.model.LEAPConfig" title="sleap.nn.config.model.LEAPConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LEAPConfig</span></code></a> instance.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[<a class="reference internal" href="#sleap.nn.config.model.LEAPConfig" title="sleap.nn.config.model.LEAPConfig">sleap.nn.config.model.LEAPConfig</a>]</p>
 </dd>
 </dl>
@@ -341,7 +495,7 @@ document.write(`
 <span class="sig-name descname"><span class="pre">unet</span></span><a class="headerlink" href="#sleap.nn.config.model.BackboneConfig.unet" title="Permalink to this definition">#</a></dt>
 <dd><p>A <a class="reference internal" href="#sleap.nn.config.model.UNetConfig" title="sleap.nn.config.model.UNetConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UNetConfig</span></code></a> instance.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[<a class="reference internal" href="#sleap.nn.config.model.UNetConfig" title="sleap.nn.config.model.UNetConfig">sleap.nn.config.model.UNetConfig</a>]</p>
 </dd>
 </dl>
@@ -352,7 +506,7 @@ document.write(`
 <span class="sig-name descname"><span class="pre">hourglass</span></span><a class="headerlink" href="#sleap.nn.config.model.BackboneConfig.hourglass" title="Permalink to this definition">#</a></dt>
 <dd><p>A <a class="reference internal" href="#sleap.nn.config.model.HourglassConfig" title="sleap.nn.config.model.HourglassConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HourglassConfig</span></code></a> instance.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[<a class="reference internal" href="#sleap.nn.config.model.HourglassConfig" title="sleap.nn.config.model.HourglassConfig">sleap.nn.config.model.HourglassConfig</a>]</p>
 </dd>
 </dl>
@@ -363,7 +517,7 @@ document.write(`
 <span class="sig-name descname"><span class="pre">resnet</span></span><a class="headerlink" href="#sleap.nn.config.model.BackboneConfig.resnet" title="Permalink to this definition">#</a></dt>
 <dd><p>A <a class="reference internal" href="#sleap.nn.config.model.ResNetConfig" title="sleap.nn.config.model.ResNetConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ResNetConfig</span></code></a> instance.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[<a class="reference internal" href="#sleap.nn.config.model.ResNetConfig" title="sleap.nn.config.model.ResNetConfig">sleap.nn.config.model.ResNetConfig</a>]</p>
 </dd>
 </dl>
@@ -398,7 +552,7 @@ anchor point can significantly improve topdown model accuracy as they
 benefit from a consistent geometry of the body parts relative to the center
 of the image.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[str]</p>
 </dd>
 </dl>
@@ -411,7 +565,7 @@ of the image.</p>
 to produce. The number of parts determines the number of channels in the
 output. If not specified, all body parts in the skeleton will be used.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[List[str]]</p>
 </dd>
 </dl>
@@ -427,7 +581,7 @@ learn but are less precise with respect to the peak coordinate. This spread
 is in units of pixels of the model input image, i.e., the image resolution
 after any input scaling is applied.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -442,7 +596,7 @@ results in confidence maps that are 0.5x the size of the input. Increasing
 this value can considerably speed up model performance and decrease memory
 requirements, at the cost of decreased spatial resolution.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -455,7 +609,7 @@ requirements, at the cost of decreased spatial resolution.</p>
 training. Increase this to encourage the optimization to focus on improving
 this specific output in multi-head models.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -472,7 +626,7 @@ localization can be achieved post-hoc with deterministic refinement, which
 does not require additional resources or training, but may not achieve the
 same accuracy as learned refinement.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -499,7 +653,7 @@ anchor point can significantly improve topdown model accuracy as they
 benefit from a consistent geometry of the body parts relative to the center
 of the image.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[str]</p>
 </dd>
 </dl>
@@ -515,7 +669,7 @@ learn but are less precise with respect to the peak coordinate. This spread
 is in units of pixels of the model input image, i.e., the image resolution
 after any input scaling is applied.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -530,7 +684,7 @@ results in confidence maps that are 0.5x the size of the input. Increasing
 this value can considerably speed up model performance and decrease memory
 requirements, at the cost of decreased spatial resolution.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -543,7 +697,7 @@ requirements, at the cost of decreased spatial resolution.</p>
 training. Increase this to encourage the optimization to focus on improving
 this specific output in multi-head models.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -560,7 +714,7 @@ localization can be achieved post-hoc with deterministic refinement, which
 does not require additional resources or training, but may not achieve the
 same accuracy as learned refinement.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -582,7 +736,7 @@ pixels in the neighborhood of the landmarks have a class assignment.</p>
 <span class="sig-name descname"><span class="pre">classes</span></span><a class="headerlink" href="#sleap.nn.config.model.ClassMapsHeadConfig.classes" title="Permalink to this definition">#</a></dt>
 <dd><p>List of string names of the classes that this head will predict.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[List[str]]</p>
 </dd>
 </dl>
@@ -594,7 +748,7 @@ pixels in the neighborhood of the landmarks have a class assignment.</p>
 <dd><p>Spread of the Gaussian distribution that determines the neighborhood
 that the class maps will be nonzero around each landmark.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -608,7 +762,7 @@ This is the reciprocal of the resolution, e.g., an output stride of 2
 results in maps that are 0.5x the size of the input. This should be the same
 size as the confidence maps they are associated with.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -621,7 +775,7 @@ size as the confidence maps they are associated with.</p>
 training. Increase this to encourage the optimization to focus on improving
 this specific output in multi-head models.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -642,7 +796,7 @@ the specified classes. This is similar to a standard classification task.</p>
 <span class="sig-name descname"><span class="pre">classes</span></span><a class="headerlink" href="#sleap.nn.config.model.ClassVectorsHeadConfig.classes" title="Permalink to this definition">#</a></dt>
 <dd><p>List of string names of the classes that this head will predict.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[List[str]]</p>
 </dd>
 </dl>
@@ -655,7 +809,7 @@ the specified classes. This is similar to a standard classification task.</p>
 layer. These can help in transforming general image features into
 classification-specific features.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -668,7 +822,7 @@ classification-specific features.</p>
 classification. Increasing this can improve the representational capacity in
 the pre-classification layers.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -682,7 +836,7 @@ This is the reciprocal of the resolution, e.g., an output stride of 2
 results in maps that are 0.5x the size of the input. This should be the same
 size as the confidence maps they are associated with.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -695,7 +849,7 @@ size as the confidence maps they are associated with.</p>
 training. Increase this to encourage the optimization to focus on improving
 this specific output in multi-head models.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -713,7 +867,7 @@ this specific output in multi-head models.</p>
 <span class="sig-name descname"><span class="pre">single_instance</span></span><a class="headerlink" href="#sleap.nn.config.model.HeadsConfig.single_instance" title="Permalink to this definition">#</a></dt>
 <dd><p>An instance of <a class="reference internal" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig" title="sleap.nn.config.model.SingleInstanceConfmapsHeadConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SingleInstanceConfmapsHeadConfig</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[<a class="reference internal" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig" title="sleap.nn.config.model.SingleInstanceConfmapsHeadConfig">sleap.nn.config.model.SingleInstanceConfmapsHeadConfig</a>]</p>
 </dd>
 </dl>
@@ -724,7 +878,7 @@ this specific output in multi-head models.</p>
 <span class="sig-name descname"><span class="pre">centroid</span></span><a class="headerlink" href="#sleap.nn.config.model.HeadsConfig.centroid" title="Permalink to this definition">#</a></dt>
 <dd><p>An instance of <a class="reference internal" href="#sleap.nn.config.model.CentroidsHeadConfig" title="sleap.nn.config.model.CentroidsHeadConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CentroidsHeadConfig</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[<a class="reference internal" href="#sleap.nn.config.model.CentroidsHeadConfig" title="sleap.nn.config.model.CentroidsHeadConfig">sleap.nn.config.model.CentroidsHeadConfig</a>]</p>
 </dd>
 </dl>
@@ -735,7 +889,7 @@ this specific output in multi-head models.</p>
 <span class="sig-name descname"><span class="pre">centered_instance</span></span><a class="headerlink" href="#sleap.nn.config.model.HeadsConfig.centered_instance" title="Permalink to this definition">#</a></dt>
 <dd><p>An instance of <a class="reference internal" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig" title="sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[<a class="reference internal" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig" title="sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig">sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig</a>]</p>
 </dd>
 </dl>
@@ -746,7 +900,7 @@ this specific output in multi-head models.</p>
 <span class="sig-name descname"><span class="pre">multi_instance</span></span><a class="headerlink" href="#sleap.nn.config.model.HeadsConfig.multi_instance" title="Permalink to this definition">#</a></dt>
 <dd><p>An instance of <a class="reference internal" href="#sleap.nn.config.model.MultiInstanceConfig" title="sleap.nn.config.model.MultiInstanceConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiInstanceConfig</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[<a class="reference internal" href="#sleap.nn.config.model.MultiInstanceConfig" title="sleap.nn.config.model.MultiInstanceConfig">sleap.nn.config.model.MultiInstanceConfig</a>]</p>
 </dd>
 </dl>
@@ -757,7 +911,7 @@ this specific output in multi-head models.</p>
 <span class="sig-name descname"><span class="pre">multi_class_bottomup</span></span><a class="headerlink" href="#sleap.nn.config.model.HeadsConfig.multi_class_bottomup" title="Permalink to this definition">#</a></dt>
 <dd><p>An instance of <a class="reference internal" href="#sleap.nn.config.model.MultiClassBottomUpConfig" title="sleap.nn.config.model.MultiClassBottomUpConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiClassBottomUpConfig</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[<a class="reference internal" href="#sleap.nn.config.model.MultiClassBottomUpConfig" title="sleap.nn.config.model.MultiClassBottomUpConfig">sleap.nn.config.model.MultiClassBottomUpConfig</a>]</p>
 </dd>
 </dl>
@@ -768,7 +922,7 @@ this specific output in multi-head models.</p>
 <span class="sig-name descname"><span class="pre">multi_class_topdown</span></span><a class="headerlink" href="#sleap.nn.config.model.HeadsConfig.multi_class_topdown" title="Permalink to this definition">#</a></dt>
 <dd><p>An instance of <a class="reference internal" href="#sleap.nn.config.model.MultiClassTopDownConfig" title="sleap.nn.config.model.MultiClassTopDownConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiClassTopDownConfig</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[<a class="reference internal" href="#sleap.nn.config.model.MultiClassTopDownConfig" title="sleap.nn.config.model.MultiClassTopDownConfig">sleap.nn.config.model.MultiClassTopDownConfig</a>]</p>
 </dd>
 </dl>
@@ -787,7 +941,7 @@ this specific output in multi-head models.</p>
 These are useful for learned downsampling that is able to retain spatial
 information while reducing large input image sizes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -799,7 +953,7 @@ information while reducing large input image sizes.</p>
 <dd><p>Determines the number of downsampling blocks in the network,
 increasing receptive field size at the cost of network size.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -810,7 +964,7 @@ increasing receptive field size at the cost of network size.</p>
 <span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.config.model.HourglassConfig.output_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Determines the number of upsampling blocks in the network.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -821,7 +975,7 @@ increasing receptive field size at the cost of network size.</p>
 <span class="sig-name descname"><span class="pre">filters</span></span><a class="headerlink" href="#sleap.nn.config.model.HourglassConfig.filters" title="Permalink to this definition">#</a></dt>
 <dd><p>Base number of filters in the network.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -838,7 +992,7 @@ increasing receptive field size at the cost of network size.</p>
 <span class="sig-name descname"><span class="pre">stacks</span></span><a class="headerlink" href="#sleap.nn.config.model.HourglassConfig.stacks" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of repeated stacks of the network (excluding the stem).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -856,7 +1010,7 @@ increasing receptive field size at the cost of network size.</p>
 <dd><p>Determines the number of downsampling blocks in the network,
 increasing receptive field size at the cost of network size.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -867,7 +1021,7 @@ increasing receptive field size at the cost of network size.</p>
 <span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.config.model.LEAPConfig.output_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Determines the number of upsampling blocks in the network.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -878,7 +1032,7 @@ increasing receptive field size at the cost of network size.</p>
 <span class="sig-name descname"><span class="pre">filters</span></span><a class="headerlink" href="#sleap.nn.config.model.LEAPConfig.filters" title="Permalink to this definition">#</a></dt>
 <dd><p>Base number of filters in the network.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -889,7 +1043,7 @@ increasing receptive field size at the cost of network size.</p>
 <span class="sig-name descname"><span class="pre">filters_rate</span></span><a class="headerlink" href="#sleap.nn.config.model.LEAPConfig.filters_rate" title="Permalink to this definition">#</a></dt>
 <dd><p>Factor to scale the number of filters by at each block.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -902,7 +1056,7 @@ increasing receptive field size at the cost of network size.</p>
 convolutions for upsampling. This can save computations but may lower
 overall accuracy.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -913,7 +1067,7 @@ overall accuracy.</p>
 <span class="sig-name descname"><span class="pre">stacks</span></span><a class="headerlink" href="#sleap.nn.config.model.LEAPConfig.stacks" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of repeated stacks of the network (excluding the stem).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -923,14 +1077,14 @@ overall accuracy.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.model.ModelConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.model.</span></span><span class="sig-name descname"><span class="pre">ModelConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.BackboneConfig" title="sleap.nn.config.model.BackboneConfig"><span class="pre">sleap.nn.config.model.BackboneConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.HeadsConfig" title="sleap.nn.config.model.HeadsConfig"><span class="pre">sleap.nn.config.model.HeadsConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/model.py#L650-L661"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.model.ModelConfig" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.model.</span></span><span class="sig-name descname"><span class="pre">ModelConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.BackboneConfig" title="sleap.nn.config.model.BackboneConfig"><span class="pre">BackboneConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.HeadsConfig" title="sleap.nn.config.model.HeadsConfig"><span class="pre">HeadsConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/model.py#L650-L661"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.model.ModelConfig" title="Permalink to this definition">#</a></dt>
 <dd><p>Configurations related to model architecture.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.model.ModelConfig.backbone">
 <span class="sig-name descname"><span class="pre">backbone</span></span><a class="headerlink" href="#sleap.nn.config.model.ModelConfig.backbone" title="Permalink to this definition">#</a></dt>
 <dd><p>Configurations related to the main network architecture.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#sleap.nn.config.model.BackboneConfig" title="sleap.nn.config.model.BackboneConfig">sleap.nn.config.model.BackboneConfig</a></p>
 </dd>
 </dl>
@@ -941,7 +1095,7 @@ overall accuracy.</p>
 <span class="sig-name descname"><span class="pre">heads</span></span><a class="headerlink" href="#sleap.nn.config.model.ModelConfig.heads" title="Permalink to this definition">#</a></dt>
 <dd><p>Configurations related to the output heads.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#sleap.nn.config.model.HeadsConfig" title="sleap.nn.config.model.HeadsConfig">sleap.nn.config.model.HeadsConfig</a></p>
 </dd>
 </dl>
@@ -952,7 +1106,7 @@ overall accuracy.</p>
 <span class="sig-name descname"><span class="pre">base_checkpoint</span></span><a class="headerlink" href="#sleap.nn.config.model.ModelConfig.base_checkpoint" title="Permalink to this definition">#</a></dt>
 <dd><p>Path to model folder for loading a checkpoint. Should contain the .h5 file</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[str]</p>
 </dd>
 </dl>
@@ -962,7 +1116,7 @@ overall accuracy.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.model.MultiClassBottomUpConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.model.</span></span><span class="sig-name descname"><span class="pre">MultiClassBottomUpConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">confmaps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig" title="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig"><span class="pre">sleap.nn.config.model.MultiInstanceConfmapsHeadConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_maps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.ClassMapsHeadConfig" title="sleap.nn.config.model.ClassMapsHeadConfig"><span class="pre">sleap.nn.config.model.ClassMapsHeadConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/model.py#L320-L342"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.model.MultiClassBottomUpConfig" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.model.</span></span><span class="sig-name descname"><span class="pre">MultiClassBottomUpConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">confmaps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig" title="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig"><span class="pre">MultiInstanceConfmapsHeadConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_maps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.ClassMapsHeadConfig" title="sleap.nn.config.model.ClassMapsHeadConfig"><span class="pre">ClassMapsHeadConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/model.py#L320-L342"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.model.MultiClassBottomUpConfig" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration for multi-instance confidence map and class map models.</p>
 <p>This configuration specifies a multi-head model that outputs both multi-instance
 confidence maps and class maps, which together enable multi-instance pose tracking
@@ -978,7 +1132,7 @@ experiments.</p>
 <dd><p>Part confidence map configuration (see the description in
 <a class="reference internal" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig" title="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiInstanceConfmapsHeadConfig</span></code></a>).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig" title="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig">sleap.nn.config.model.MultiInstanceConfmapsHeadConfig</a></p>
 </dd>
 </dl>
@@ -990,7 +1144,7 @@ experiments.</p>
 <dd><p>Class map configuration (see the description in
 <a class="reference internal" href="#sleap.nn.config.model.ClassMapsHeadConfig" title="sleap.nn.config.model.ClassMapsHeadConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ClassMapsHeadConfig</span></code></a>).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#sleap.nn.config.model.ClassMapsHeadConfig" title="sleap.nn.config.model.ClassMapsHeadConfig">sleap.nn.config.model.ClassMapsHeadConfig</a></p>
 </dd>
 </dl>
@@ -1000,7 +1154,7 @@ experiments.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.model.MultiClassTopDownConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.model.</span></span><span class="sig-name descname"><span class="pre">MultiClassTopDownConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">confmaps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig" title="sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig"><span class="pre">sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_vectors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.ClassVectorsHeadConfig" title="sleap.nn.config.model.ClassVectorsHeadConfig"><span class="pre">sleap.nn.config.model.ClassVectorsHeadConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/model.py#L381-L405"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.model.MultiClassTopDownConfig" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.model.</span></span><span class="sig-name descname"><span class="pre">MultiClassTopDownConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">confmaps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig" title="sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig"><span class="pre">CenteredInstanceConfmapsHeadConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_vectors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.ClassVectorsHeadConfig" title="sleap.nn.config.model.ClassVectorsHeadConfig"><span class="pre">ClassVectorsHeadConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/model.py#L381-L405"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.model.MultiClassTopDownConfig" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration for centered-instance confidence map and class map models.</p>
 <p>This configuration specifies a multi-head model that outputs both centered-instance
 confidence maps and class vectors, which together enable multi-instance pose
@@ -1017,7 +1171,7 @@ experiments.</p>
 <dd><p>Part confidence map configuration (see the description in
 <a class="reference internal" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig" title="sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig</span></code></a>).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig" title="sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig">sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig</a></p>
 </dd>
 </dl>
@@ -1029,7 +1183,7 @@ experiments.</p>
 <dd><p>Class map configuration (see the description in
 <a class="reference internal" href="#sleap.nn.config.model.ClassVectorsHeadConfig" title="sleap.nn.config.model.ClassVectorsHeadConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ClassVectorsHeadConfig</span></code></a>).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#sleap.nn.config.model.ClassVectorsHeadConfig" title="sleap.nn.config.model.ClassVectorsHeadConfig">sleap.nn.config.model.ClassVectorsHeadConfig</a></p>
 </dd>
 </dl>
@@ -1039,7 +1193,7 @@ experiments.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.model.MultiInstanceConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.model.</span></span><span class="sig-name descname"><span class="pre">MultiInstanceConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">confmaps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig" title="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig"><span class="pre">sleap.nn.config.model.MultiInstanceConfmapsHeadConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pafs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig" title="sleap.nn.config.model.PartAffinityFieldsHeadConfig"><span class="pre">sleap.nn.config.model.PartAffinityFieldsHeadConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/model.py#L268-L286"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.model.MultiInstanceConfig" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.model.</span></span><span class="sig-name descname"><span class="pre">MultiInstanceConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">confmaps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig" title="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig"><span class="pre">MultiInstanceConfmapsHeadConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pafs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig" title="sleap.nn.config.model.PartAffinityFieldsHeadConfig"><span class="pre">PartAffinityFieldsHeadConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/model.py#L268-L286"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.model.MultiInstanceConfig" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration for combined multi-instance confidence map and PAF model heads.</p>
 <p>This configuration specifies a multi-head model that outputs both multi-instance
 confidence maps and part affinity fields, which together enable multi-instance pose
@@ -1051,7 +1205,7 @@ required.</p>
 <dd><p>Part confidence map configuration (see the description in
 <a class="reference internal" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig" title="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiInstanceConfmapsHeadConfig</span></code></a>).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig" title="sleap.nn.config.model.MultiInstanceConfmapsHeadConfig">sleap.nn.config.model.MultiInstanceConfmapsHeadConfig</a></p>
 </dd>
 </dl>
@@ -1063,7 +1217,7 @@ required.</p>
 <dd><p>Part affinity fields configuration (see the description in
 <a class="reference internal" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig" title="sleap.nn.config.model.PartAffinityFieldsHeadConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PartAffinityFieldsHeadConfig</span></code></a>).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig" title="sleap.nn.config.model.PartAffinityFieldsHeadConfig">sleap.nn.config.model.PartAffinityFieldsHeadConfig</a></p>
 </dd>
 </dl>
@@ -1096,7 +1250,7 @@ there are many animals present in the frame.</p>
 to produce. The number of parts determines the number of channels in the
 output. If not specified, all body parts in the skeleton will be used.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[List[str]]</p>
 </dd>
 </dl>
@@ -1112,7 +1266,7 @@ learn but are less precise with respect to the peak coordinate. This spread
 is in units of pixels of the model input image, i.e., the image resolution
 after any input scaling is applied.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -1127,7 +1281,7 @@ results in confidence maps that are 0.5x the size of the input. Increasing
 this value can considerably speed up model performance and decrease memory
 requirements, at the cost of decreased spatial resolution.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -1140,7 +1294,7 @@ requirements, at the cost of decreased spatial resolution.</p>
 training. Increase this to encourage the optimization to focus on improving
 this specific output in multi-head models.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -1157,7 +1311,7 @@ localization can be achieved post-hoc with deterministic refinement, which
 does not require additional resources or training, but may not achieve the
 same accuracy as learned refinement.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -1191,7 +1345,7 @@ there are many animals present in the frame.</p>
 define pairs of text names of the directed edges of the graph. If not set,
 all edges in the skeleton will be used.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[Sequence[Tuple[str, str]]]</p>
 </dd>
 </dl>
@@ -1209,7 +1363,7 @@ disambiguating between edges that are nearby and parallel in direction. This
 spread is in units of pixels of the model input image, i.e., the image
 resolution after any input scaling is applied.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -1224,7 +1378,7 @@ stride of 2 results in PAFs that are 0.5x the size of the input. Increasing
 this value can considerably speed up model performance and decrease memory
 requirements, at the cost of decreased spatial resolution.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -1237,7 +1391,7 @@ requirements, at the cost of decreased spatial resolution.</p>
 training. Increase this to encourage the optimization to focus on improving
 this specific output in multi-head models.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -1270,7 +1424,7 @@ names are:
 </ul>
 <p>Defaults to <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;efficientnetb0&quot;</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -1281,7 +1435,7 @@ names are:
 <span class="sig-name descname"><span class="pre">pretrained</span></span><a class="headerlink" href="#sleap.nn.config.model.PretrainedEncoderConfig.pretrained" title="Permalink to this definition">#</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, use initialized with weights pretrained on ImageNet.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -1293,7 +1447,7 @@ names are:
 <dd><p>Base number of filters for the upsampling blocks in the
 decoder.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -1305,7 +1459,7 @@ decoder.</p>
 <dd><p>Factor to scale the number of filters by at each
 consecutive upsampling block in the decoder.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -1316,7 +1470,7 @@ consecutive upsampling block in the decoder.</p>
 <span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.config.model.PretrainedEncoderConfig.output_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Stride of the final output.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -1328,7 +1482,7 @@ consecutive upsampling block in the decoder.</p>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code> (the default), use batch normalization in the
 decoder layers.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -1338,7 +1492,7 @@ decoder layers.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.model.ResNetConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.model.</span></span><span class="sig-name descname"><span class="pre">ResNetConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ResNet50'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'frozen'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upsampling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.nn.config.model.UpsamplingConfig" title="sleap.nn.config.model.UpsamplingConfig"><span class="pre">sleap.nn.config.model.UpsamplingConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/model.py#L563-L589"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.model.ResNetConfig" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.model.</span></span><span class="sig-name descname"><span class="pre">ResNetConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ResNet50'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'frozen'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upsampling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.nn.config.model.UpsamplingConfig" title="sleap.nn.config.model.UpsamplingConfig"><span class="pre">UpsamplingConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/model.py#L563-L589"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.model.ResNetConfig" title="Permalink to this definition">#</a></dt>
 <dd><p>ResNet backbone configuration.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.model.ResNetConfig.version">
@@ -1346,7 +1500,7 @@ decoder layers.</p>
 <dd><p>Name of the ResNetV1 variant. Can be one of: “ResNet50”, “ResNet101”,
 or “ResNet152”.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -1360,7 +1514,7 @@ network is not pretrained. If “frozen”, the network uses pretrained weights
 and keeps them fixed. If “tunable”, the network uses pretrained weights and
 allows them to be trainable.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -1371,7 +1525,7 @@ allows them to be trainable.</p>
 <span class="sig-name descname"><span class="pre">upsampling</span></span><a class="headerlink" href="#sleap.nn.config.model.ResNetConfig.upsampling" title="Permalink to this definition">#</a></dt>
 <dd><p>A <a class="reference internal" href="#sleap.nn.config.model.UpsamplingConfig" title="sleap.nn.config.model.UpsamplingConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UpsamplingConfig</span></code></a> that defines an upsampling branch if not None.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[<a class="reference internal" href="#sleap.nn.config.model.UpsamplingConfig" title="sleap.nn.config.model.UpsamplingConfig">sleap.nn.config.model.UpsamplingConfig</a>]</p>
 </dd>
 </dl>
@@ -1382,7 +1536,7 @@ allows them to be trainable.</p>
 <span class="sig-name descname"><span class="pre">max_stride</span></span><a class="headerlink" href="#sleap.nn.config.model.ResNetConfig.max_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Stride of the backbone feature activations. These should be &lt;= 32.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -1395,7 +1549,7 @@ allows them to be trainable.</p>
 defined, the output stride is controlled via dilated convolutions or reduced
 pooling in the backbone.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -1418,7 +1572,7 @@ with a single peak for each part type which can be detected via global peak find
 to produce. The number of parts determines the number of channels in the
 output. If not specified, all body parts in the skeleton will be used.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[List[str]]</p>
 </dd>
 </dl>
@@ -1434,7 +1588,7 @@ learn but are less precise with respect to the peak coordinate. This spread
 is in units of pixels of the model input image, i.e., the image resolution
 after any input scaling is applied.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -1449,7 +1603,7 @@ results in confidence maps that are 0.5x the size of the input. Increasing
 this value can considerably speed up model performance and decrease memory
 requirements, at the cost of decreased spatial resolution.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -1462,7 +1616,7 @@ requirements, at the cost of decreased spatial resolution.</p>
 training. Increase this to encourage the optimization to focus on improving
 this specific output in multi-head models.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -1479,7 +1633,7 @@ localization can be achieved post-hoc with deterministic refinement, which
 does not require additional resources or training, but may not achieve the
 same accuracy as learned refinement.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -1498,7 +1652,7 @@ same accuracy as learned refinement.</p>
 downsampling. These are useful for learned downsampling that is able to
 retain spatial information while reducing large input image sizes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[int]</p>
 </dd>
 </dl>
@@ -1510,7 +1664,7 @@ retain spatial information while reducing large input image sizes.</p>
 <dd><p>Determines the number of downsampling blocks in the network,
 increasing receptive field size at the cost of network size.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -1521,7 +1675,7 @@ increasing receptive field size at the cost of network size.</p>
 <span class="sig-name descname"><span class="pre">output_stride</span></span><a class="headerlink" href="#sleap.nn.config.model.UNetConfig.output_stride" title="Permalink to this definition">#</a></dt>
 <dd><p>Determines the number of upsampling blocks in the network.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -1532,7 +1686,7 @@ increasing receptive field size at the cost of network size.</p>
 <span class="sig-name descname"><span class="pre">filters</span></span><a class="headerlink" href="#sleap.nn.config.model.UNetConfig.filters" title="Permalink to this definition">#</a></dt>
 <dd><p>Base number of filters in the network.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -1543,7 +1697,7 @@ increasing receptive field size at the cost of network size.</p>
 <span class="sig-name descname"><span class="pre">filters_rate</span></span><a class="headerlink" href="#sleap.nn.config.model.UNetConfig.filters_rate" title="Permalink to this definition">#</a></dt>
 <dd><p>Factor to scale the number of filters by at each block.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -1556,7 +1710,7 @@ increasing receptive field size at the cost of network size.</p>
 upsampling branch for additional processing for features at the largest
 receptive field size. This will not introduce an extra pooling step.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -1569,7 +1723,7 @@ receptive field size. This will not introduce an extra pooling step.</p>
 convolutions for upsampling. This can save computations but may lower
 overall accuracy.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -1580,7 +1734,7 @@ overall accuracy.</p>
 <span class="sig-name descname"><span class="pre">stacks</span></span><a class="headerlink" href="#sleap.nn.config.model.UNetConfig.stacks" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of repeated stacks of the network (excluding the stem).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -1599,7 +1753,7 @@ overall accuracy.</p>
 learnable upsampling. If “interpolation”, bilinear upsampling will be used
 instead.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -1614,7 +1768,7 @@ stride and a 1x1 linear conv is applied if the channel counts do no match
 up. If “concatenate”, the skip connection is formed via channel-wise
 concatenation. If None, skip connections will not be formed.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[str]</p>
 </dd>
 </dl>
@@ -1628,7 +1782,7 @@ typically set to 2, such that the tensor doubles in size with each
 upsampling step, but can be set higher to upsample to the desired
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">output_stride</span></code> directly in fewer steps.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -1640,7 +1794,7 @@ upsampling step, but can be set higher to upsample to the desired
 <dd><p>Integer that specifies the base number of filters in each convolution
 layer. This will be scaled by the <a class="reference internal" href="#sleap.nn.config.model.UpsamplingConfig.filters_rate" title="sleap.nn.config.model.UpsamplingConfig.filters_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filters_rate</span></code></a> at every upsampling step.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -1652,7 +1806,7 @@ layer. This will be scaled by the <a class="reference internal" href="#sleap.nn.
 <dd><p>Factor to scale the number of filters in the convolution layers
 after each upsampling step. If set to 1, the number of filters won’t change.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -1668,7 +1822,7 @@ refine the current feature map after upsampling, which can help to prevent
 aliasing and checkerboard effects. If 0, no additional convolutions will be
 applied.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -1687,7 +1841,7 @@ convolution (and before the ReLU activation).</p>
 <dd><p>Size of the kernel for the transposed convolution.
 No effect if bilinear upsampling is used.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -1718,6 +1872,168 @@ No effect if bilinear upsampling is used.</p>
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.BackboneConfig"><code class="docutils literal notranslate"><span class="pre">BackboneConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.BackboneConfig.leap"><code class="docutils literal notranslate"><span class="pre">BackboneConfig.leap</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.BackboneConfig.unet"><code class="docutils literal notranslate"><span class="pre">BackboneConfig.unet</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.BackboneConfig.hourglass"><code class="docutils literal notranslate"><span class="pre">BackboneConfig.hourglass</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.BackboneConfig.resnet"><code class="docutils literal notranslate"><span class="pre">BackboneConfig.resnet</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig"><code class="docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.anchor_part"><code class="docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig.anchor_part</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.part_names"><code class="docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig.part_names</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.sigma"><code class="docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.loss_weight"><code class="docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig.loss_weight</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CenteredInstanceConfmapsHeadConfig.offset_refinement"><code class="docutils literal notranslate"><span class="pre">CenteredInstanceConfmapsHeadConfig.offset_refinement</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CentroidsHeadConfig"><code class="docutils literal notranslate"><span class="pre">CentroidsHeadConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CentroidsHeadConfig.anchor_part"><code class="docutils literal notranslate"><span class="pre">CentroidsHeadConfig.anchor_part</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CentroidsHeadConfig.sigma"><code class="docutils literal notranslate"><span class="pre">CentroidsHeadConfig.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CentroidsHeadConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">CentroidsHeadConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CentroidsHeadConfig.loss_weight"><code class="docutils literal notranslate"><span class="pre">CentroidsHeadConfig.loss_weight</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.CentroidsHeadConfig.offset_refinement"><code class="docutils literal notranslate"><span class="pre">CentroidsHeadConfig.offset_refinement</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassMapsHeadConfig"><code class="docutils literal notranslate"><span class="pre">ClassMapsHeadConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassMapsHeadConfig.classes"><code class="docutils literal notranslate"><span class="pre">ClassMapsHeadConfig.classes</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassMapsHeadConfig.sigma"><code class="docutils literal notranslate"><span class="pre">ClassMapsHeadConfig.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassMapsHeadConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">ClassMapsHeadConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassMapsHeadConfig.loss_weight"><code class="docutils literal notranslate"><span class="pre">ClassMapsHeadConfig.loss_weight</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassVectorsHeadConfig"><code class="docutils literal notranslate"><span class="pre">ClassVectorsHeadConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassVectorsHeadConfig.classes"><code class="docutils literal notranslate"><span class="pre">ClassVectorsHeadConfig.classes</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassVectorsHeadConfig.num_fc_layers"><code class="docutils literal notranslate"><span class="pre">ClassVectorsHeadConfig.num_fc_layers</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassVectorsHeadConfig.num_fc_units"><code class="docutils literal notranslate"><span class="pre">ClassVectorsHeadConfig.num_fc_units</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassVectorsHeadConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">ClassVectorsHeadConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ClassVectorsHeadConfig.loss_weight"><code class="docutils literal notranslate"><span class="pre">ClassVectorsHeadConfig.loss_weight</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HeadsConfig"><code class="docutils literal notranslate"><span class="pre">HeadsConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HeadsConfig.single_instance"><code class="docutils literal notranslate"><span class="pre">HeadsConfig.single_instance</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HeadsConfig.centroid"><code class="docutils literal notranslate"><span class="pre">HeadsConfig.centroid</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HeadsConfig.centered_instance"><code class="docutils literal notranslate"><span class="pre">HeadsConfig.centered_instance</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HeadsConfig.multi_instance"><code class="docutils literal notranslate"><span class="pre">HeadsConfig.multi_instance</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HeadsConfig.multi_class_bottomup"><code class="docutils literal notranslate"><span class="pre">HeadsConfig.multi_class_bottomup</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HeadsConfig.multi_class_topdown"><code class="docutils literal notranslate"><span class="pre">HeadsConfig.multi_class_topdown</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HourglassConfig"><code class="docutils literal notranslate"><span class="pre">HourglassConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HourglassConfig.stem_stride"><code class="docutils literal notranslate"><span class="pre">HourglassConfig.stem_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HourglassConfig.max_stride"><code class="docutils literal notranslate"><span class="pre">HourglassConfig.max_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HourglassConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">HourglassConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HourglassConfig.filters"><code class="docutils literal notranslate"><span class="pre">HourglassConfig.filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HourglassConfig.filters_increase"><code class="docutils literal notranslate"><span class="pre">HourglassConfig.filters_increase</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.HourglassConfig.stacks"><code class="docutils literal notranslate"><span class="pre">HourglassConfig.stacks</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.LEAPConfig"><code class="docutils literal notranslate"><span class="pre">LEAPConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.LEAPConfig.max_stride"><code class="docutils literal notranslate"><span class="pre">LEAPConfig.max_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.LEAPConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">LEAPConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.LEAPConfig.filters"><code class="docutils literal notranslate"><span class="pre">LEAPConfig.filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.LEAPConfig.filters_rate"><code class="docutils literal notranslate"><span class="pre">LEAPConfig.filters_rate</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.LEAPConfig.up_interpolate"><code class="docutils literal notranslate"><span class="pre">LEAPConfig.up_interpolate</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.LEAPConfig.stacks"><code class="docutils literal notranslate"><span class="pre">LEAPConfig.stacks</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ModelConfig"><code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ModelConfig.backbone"><code class="docutils literal notranslate"><span class="pre">ModelConfig.backbone</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ModelConfig.heads"><code class="docutils literal notranslate"><span class="pre">ModelConfig.heads</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ModelConfig.base_checkpoint"><code class="docutils literal notranslate"><span class="pre">ModelConfig.base_checkpoint</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiClassBottomUpConfig"><code class="docutils literal notranslate"><span class="pre">MultiClassBottomUpConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiClassBottomUpConfig.confmaps"><code class="docutils literal notranslate"><span class="pre">MultiClassBottomUpConfig.confmaps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiClassBottomUpConfig.class_maps"><code class="docutils literal notranslate"><span class="pre">MultiClassBottomUpConfig.class_maps</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiClassTopDownConfig"><code class="docutils literal notranslate"><span class="pre">MultiClassTopDownConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiClassTopDownConfig.confmaps"><code class="docutils literal notranslate"><span class="pre">MultiClassTopDownConfig.confmaps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiClassTopDownConfig.class_vectors"><code class="docutils literal notranslate"><span class="pre">MultiClassTopDownConfig.class_vectors</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfig"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfig.confmaps"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfig.confmaps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfig.pafs"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfig.pafs</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfmapsHeadConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.part_names"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfmapsHeadConfig.part_names</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.sigma"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfmapsHeadConfig.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfmapsHeadConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.loss_weight"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfmapsHeadConfig.loss_weight</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.MultiInstanceConfmapsHeadConfig.offset_refinement"><code class="docutils literal notranslate"><span class="pre">MultiInstanceConfmapsHeadConfig.offset_refinement</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsHeadConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig.edges"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsHeadConfig.edges</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig.sigma"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsHeadConfig.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsHeadConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PartAffinityFieldsHeadConfig.loss_weight"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsHeadConfig.loss_weight</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PretrainedEncoderConfig"><code class="docutils literal notranslate"><span class="pre">PretrainedEncoderConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PretrainedEncoderConfig.encoder"><code class="docutils literal notranslate"><span class="pre">PretrainedEncoderConfig.encoder</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PretrainedEncoderConfig.pretrained"><code class="docutils literal notranslate"><span class="pre">PretrainedEncoderConfig.pretrained</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PretrainedEncoderConfig.decoder_filters"><code class="docutils literal notranslate"><span class="pre">PretrainedEncoderConfig.decoder_filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PretrainedEncoderConfig.decoder_filters_rate"><code class="docutils literal notranslate"><span class="pre">PretrainedEncoderConfig.decoder_filters_rate</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PretrainedEncoderConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">PretrainedEncoderConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.PretrainedEncoderConfig.decoder_batchnorm"><code class="docutils literal notranslate"><span class="pre">PretrainedEncoderConfig.decoder_batchnorm</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ResNetConfig"><code class="docutils literal notranslate"><span class="pre">ResNetConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ResNetConfig.version"><code class="docutils literal notranslate"><span class="pre">ResNetConfig.version</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ResNetConfig.weights"><code class="docutils literal notranslate"><span class="pre">ResNetConfig.weights</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ResNetConfig.upsampling"><code class="docutils literal notranslate"><span class="pre">ResNetConfig.upsampling</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ResNetConfig.max_stride"><code class="docutils literal notranslate"><span class="pre">ResNetConfig.max_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.ResNetConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">ResNetConfig.output_stride</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfmapsHeadConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.part_names"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfmapsHeadConfig.part_names</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.sigma"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfmapsHeadConfig.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfmapsHeadConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.loss_weight"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfmapsHeadConfig.loss_weight</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.SingleInstanceConfmapsHeadConfig.offset_refinement"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfmapsHeadConfig.offset_refinement</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig"><code class="docutils literal notranslate"><span class="pre">UNetConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig.stem_stride"><code class="docutils literal notranslate"><span class="pre">UNetConfig.stem_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig.max_stride"><code class="docutils literal notranslate"><span class="pre">UNetConfig.max_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig.output_stride"><code class="docutils literal notranslate"><span class="pre">UNetConfig.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig.filters"><code class="docutils literal notranslate"><span class="pre">UNetConfig.filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig.filters_rate"><code class="docutils literal notranslate"><span class="pre">UNetConfig.filters_rate</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig.middle_block"><code class="docutils literal notranslate"><span class="pre">UNetConfig.middle_block</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig.up_interpolate"><code class="docutils literal notranslate"><span class="pre">UNetConfig.up_interpolate</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UNetConfig.stacks"><code class="docutils literal notranslate"><span class="pre">UNetConfig.stacks</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig.method"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig.method</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig.skip_connections"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig.skip_connections</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig.block_stride"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig.block_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig.filters"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig.filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig.filters_rate"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig.filters_rate</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig.refine_convs"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig.refine_convs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig.conv_batchnorm"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig.conv_batchnorm</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.config.model.UpsamplingConfig.transposed_conv_kernel_size"><code class="docutils literal notranslate"><span class="pre">UpsamplingConfig.transposed_conv_kernel_size</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

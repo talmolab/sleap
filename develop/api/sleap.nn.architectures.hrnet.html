@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>sleap.nn.architectures.hrnet &#8212; SLEAP (v1.4.1a2)</title>
   
@@ -32,8 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -43,22 +42,19 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/sleap.nn.architectures.hrnet';</script>
     <link rel="canonical" href="/develop/api/sleap.nn.architectures.hrnet.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -293,7 +289,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -309,6 +307,28 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet"><code class="docutils literal notranslate"><span class="pre">HigherHRNet</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.C"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.C</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.initial_downsampling_steps"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.initial_downsampling_steps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.n_deconv_modules"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.n_deconv_modules</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.bottleneck"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.bottleneck</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.deconv_filters"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.deconv_filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.bilinear_upsampling"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.bilinear_upsampling</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.down_blocks"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.down_blocks</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.output"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.output()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.output_scale"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.output_scale</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.adjust_prefix"><code class="docutils literal notranslate"><span class="pre">adjust_prefix()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.bottleneck_block"><code class="docutils literal notranslate"><span class="pre">bottleneck_block()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.simple_block"><code class="docutils literal notranslate"><span class="pre">simple_block()</span></code></a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -319,7 +339,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="module-sleap.nn.architectures.hrnet">
-<span id="sleap-nn-architectures-hrnet"></span><h1>sleap.nn.architectures.hrnet<a class="headerlink" href="#module-sleap.nn.architectures.hrnet" title="Permalink to this headline">#</a></h1>
+<span id="sleap-nn-architectures-hrnet"></span><h1>sleap.nn.architectures.hrnet<a class="headerlink" href="#module-sleap.nn.architectures.hrnet" title="Permalink to this heading">#</a></h1>
 <p>(Higher)HRNet backbone.</p>
 <p>This implementation is based on the PyTorch implementation of HRNet, modified to
 implement HigherHRNet’s configuration and new deconvolution heads.</p>
@@ -337,7 +357,7 @@ implement HigherHRNet’s configuration and new deconvolution heads.</p>
 params. This number is effectively the number of filters at the highest
 resolution output.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -350,7 +370,7 @@ resolution output.</p>
 Decrease if this introduces too much loss of resolution from the initial
 images.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -363,7 +383,7 @@ images.</p>
 equal to initial_downsampling_steps, the output will be at the same scale as
 the input.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -374,7 +394,7 @@ the input.</p>
 <span class="sig-name descname"><span class="pre">bottleneck</span></span><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.bottleneck" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, uses bottleneck blocks instead of simple residual blocks.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -386,7 +406,7 @@ the input.</p>
 <dd><p>Number of filters to use in deconv blocks if using transposed
 convolutions.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -398,7 +418,7 @@ convolutions.</p>
 <dd><p>Use bilinear upsampling instead of transposed convolutions
 at the output heads.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -415,20 +435,20 @@ at the output heads.</p>
 <span class="sig-name descname"><span class="pre">output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_output_channels</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/architectures/hrnet.py#L604-L633"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.hrnet.HigherHRNet.output" title="Permalink to this definition">#</a></dt>
 <dd><p>Builds the layers for this backbone and return the output tensor.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x_in</strong> – Input 4D tf.Tensor.</p></li>
 <li><p><strong>n_output_channels</strong> – The number of final output channels.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
 <dt>A tf.keras.model whose outputs are a list of tf.Tensors</dt><dd><p>at each scale of the deconv_modules.</p>
 </dd>
 </dl>
 </p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>higher_hrnet_model</p>
 </dd>
 </dl>
@@ -483,6 +503,34 @@ at the output heads.</p>
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet"><code class="docutils literal notranslate"><span class="pre">HigherHRNet</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.C"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.C</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.initial_downsampling_steps"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.initial_downsampling_steps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.n_deconv_modules"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.n_deconv_modules</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.bottleneck"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.bottleneck</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.deconv_filters"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.deconv_filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.bilinear_upsampling"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.bilinear_upsampling</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.down_blocks"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.down_blocks</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.output"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.output()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.HigherHRNet.output_scale"><code class="docutils literal notranslate"><span class="pre">HigherHRNet.output_scale</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.adjust_prefix"><code class="docutils literal notranslate"><span class="pre">adjust_prefix()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.bottleneck_block"><code class="docutils literal notranslate"><span class="pre">bottleneck_block()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.hrnet.simple_block"><code class="docutils literal notranslate"><span class="pre">simple_block()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

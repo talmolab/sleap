@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>sleap.nn.peak_finding &#8212; SLEAP (v1.4.1a2)</title>
   
@@ -32,8 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -43,22 +42,19 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/sleap.nn.peak_finding';</script>
     <link rel="canonical" href="/develop/api/sleap.nn.peak_finding.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -293,7 +289,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -309,6 +307,26 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.crop_bboxes"><code class="docutils literal notranslate"><span class="pre">crop_bboxes()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_global_peaks"><code class="docutils literal notranslate"><span class="pre">find_global_peaks()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_global_peaks_integral"><code class="docutils literal notranslate"><span class="pre">find_global_peaks_integral()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_global_peaks_rough"><code class="docutils literal notranslate"><span class="pre">find_global_peaks_rough()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_global_peaks_with_offsets"><code class="docutils literal notranslate"><span class="pre">find_global_peaks_with_offsets()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_local_peaks"><code class="docutils literal notranslate"><span class="pre">find_local_peaks()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_local_peaks_integral"><code class="docutils literal notranslate"><span class="pre">find_local_peaks_integral()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_local_peaks_rough"><code class="docutils literal notranslate"><span class="pre">find_local_peaks_rough()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_local_peaks_with_offsets"><code class="docutils literal notranslate"><span class="pre">find_local_peaks_with_offsets()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_offsets_local_direction"><code class="docutils literal notranslate"><span class="pre">find_offsets_local_direction()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.integral_regression"><code class="docutils literal notranslate"><span class="pre">integral_regression()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.make_gaussian_kernel"><code class="docutils literal notranslate"><span class="pre">make_gaussian_kernel()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.smooth_imgs"><code class="docutils literal notranslate"><span class="pre">smooth_imgs()</span></code></a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -319,7 +337,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="module-sleap.nn.peak_finding">
-<span id="sleap-nn-peak-finding"></span><h1>sleap.nn.peak_finding<a class="headerlink" href="#module-sleap.nn.peak_finding" title="Permalink to this headline">#</a></h1>
+<span id="sleap-nn-peak-finding"></span><h1>sleap.nn.peak_finding<a class="headerlink" href="#module-sleap.nn.peak_finding" title="Permalink to this heading">#</a></h1>
 <p>This module contains TensorFlow-based peak finding methods.</p>
 <p>In general, the inputs to the functions provided here operate on confidence maps
 (sometimes referred to as heatmaps), which are image-based representations of the
@@ -330,12 +348,12 @@ centered at the true location and evaluated over the entire image grid.</p>
 <p>Peak finding entails finding either the global or local maxima of these confidence maps.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.peak_finding.crop_bboxes">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">crop_bboxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bboxes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L135-L190"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.crop_bboxes" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">crop_bboxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bboxes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L135-L190"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.crop_bboxes" title="Permalink to this definition">#</a></dt>
 <dd><p>Crop bounding boxes from a batch of images.</p>
 <p>This method serves as a convenience method for specifying the arguments of
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.image.crop_and_resize</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>images</strong> – Tensor of shape (samples, height, width, channels) of a batch of images.</p></li>
 <li><p><strong>bboxes</strong> – Tensor of shape (n_bboxes, 4) and dtype tf.float32, where the last axis
@@ -345,7 +363,7 @@ boxes. This can be generated from centroids using <code class="xref py py-obj do
 box should be cropped from.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A tensor of shape (n_bboxes, crop_height, crop_width, channels) of the same
 dtype as the input image. The crop size is inferred from the bounding box
 coordinates.</p>
@@ -365,10 +383,10 @@ the image with <code class="xref py py-obj docutils literal notranslate"><span c
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.peak_finding.find_global_peaks">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_global_peaks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refinement</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integral_patch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#sleap.nn.peak_finding.find_global_peaks" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_global_peaks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refinement</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integral_patch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#sleap.nn.peak_finding.find_global_peaks" title="Permalink to this definition">#</a></dt>
 <dd><p>Find global peaks with optional refinement.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cms</strong> – Confidence maps. Tensor of shape (samples, height, width, channels).</p></li>
 <li><p><strong>threshold</strong> – Minimum confidence threshold. Peaks with values below this will
@@ -380,7 +398,7 @@ peaks will be refined with quarter pixel local gradient offset.</p></li>
 integer scalar.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A tuple of (peak_points, peak_vals).</p>
 <p>peak_points: float32 tensor of shape (samples, channels, 2), where the last axis
 indicates peak locations in xy order.</p>
@@ -393,12 +411,12 @@ the peak points.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.peak_finding.find_global_peaks_integral">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_global_peaks_integral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L423-L448"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.find_global_peaks_integral" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_global_peaks_integral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L423-L448"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.find_global_peaks_integral" title="Permalink to this definition">#</a></dt>
 <dd><p>Find local peaks with integral refinement.</p>
 <p>Integral regression refinement will be computed by taking the weighted average of
 the local neighborhood around each rough peak.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cms</strong> – Confidence maps. Tensor of shape (samples, height, width, channels).</p></li>
 <li><p><strong>crop_size</strong> – Size of patches to crop around each rough peak as an integer scalar.</p></li>
@@ -406,7 +424,7 @@ the local neighborhood around each rough peak.</p>
 set to NaNs.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A tuple of (peak_points, peak_vals).</p>
 <p>peak_points: float32 tensor of shape (samples, channels, 2), where the last axis
 indicates peak locations in xy order.</p>
@@ -419,17 +437,17 @@ the peak points.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.peak_finding.find_global_peaks_rough">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_global_peaks_rough</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L193-L246"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.find_global_peaks_rough" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_global_peaks_rough</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L193-L246"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.find_global_peaks_rough" title="Permalink to this definition">#</a></dt>
 <dd><p>Find the global maximum for each sample and channel.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cms</strong> – Tensor of shape (samples, height, width, channels).</p></li>
 <li><p><strong>threshold</strong> – Scalar float specifying the minimum confidence value for peaks. Peaks
 with values below this threshold will be replaced with NaNs.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A tuple of (peak_points, peak_vals).</p>
 <p>peak_points: float32 tensor of shape (samples, channels, 2), where the last axis
 indicates peak locations in xy order.</p>
@@ -442,10 +460,10 @@ the peak points.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.peak_finding.find_global_peaks_with_offsets">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_global_peaks_with_offsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#sleap.nn.peak_finding.find_global_peaks_with_offsets" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_global_peaks_with_offsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#sleap.nn.peak_finding.find_global_peaks_with_offsets" title="Permalink to this definition">#</a></dt>
 <dd><p>Find global peaks and refine with learned offset maps.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cms</strong> – Confidence maps tensor of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">height,</span> <span class="pre">width,</span> <span class="pre">channels)</span></code>.</p></li>
 <li><p><strong>offsets</strong> – Offset maps tensor of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">height,</span> <span class="pre">width,</span> <span class="pre">2</span> <span class="pre">*</span> <span class="pre">channels)</span></code>.</p></li>
@@ -453,7 +471,7 @@ the peak points.</p>
 with values below this threshold will be replaced with NaNs.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A tuple of <code class="xref py py-obj docutils literal notranslate"><span class="pre">(peak_points,</span> <span class="pre">peak_vals)</span></code>.</p>
 <p><code class="xref py py-obj docutils literal notranslate"><span class="pre">peak_points</span></code>: <code class="xref py py-obj docutils literal notranslate"><span class="pre">float32</span></code> tensor of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">channels,</span> <span class="pre">2)</span></code>, where the
 last axis indicates peak locations in xy order.</p>
@@ -466,10 +484,10 @@ values at the peak points.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.peak_finding.find_local_peaks">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_local_peaks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refinement</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integral_patch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#sleap.nn.peak_finding.find_local_peaks" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_local_peaks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refinement</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integral_patch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#sleap.nn.peak_finding.find_local_peaks" title="Permalink to this definition">#</a></dt>
 <dd><p>Find local peaks with optional refinement.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cms</strong> – Confidence maps. Tensor of shape (samples, height, width, channels).</p></li>
 <li><p><strong>threshold</strong> – Minimum confidence threshold. Peaks with values below this will
@@ -481,7 +499,7 @@ peaks will be refined with quarter pixel local gradient offset.</p></li>
 integer scalar.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A tuple of (peak_points, peak_vals, peak_sample_inds, peak_channel_inds).</p>
 <p>peak_points: float32 tensor of shape (n_peaks, 2), where the last axis
 indicates peak locations in xy order.</p>
@@ -498,10 +516,10 @@ the channel each peak belongs to.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.peak_finding.find_local_peaks_integral">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_local_peaks_integral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L535-L563"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.find_local_peaks_integral" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_local_peaks_integral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L535-L563"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.find_local_peaks_integral" title="Permalink to this definition">#</a></dt>
 <dd><p>Find local peaks with integral refinement.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cms</strong> – Confidence maps. Tensor of shape (samples, height, width, channels).</p></li>
 <li><p><strong>crop_size</strong> – </p></li>
@@ -509,7 +527,7 @@ the channel each peak belongs to.</p>
 ignored.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A tuple of (peak_points, peak_vals, peak_sample_inds, peak_channel_inds).</p>
 <p>peak_points: float32 tensor of shape (n_peaks, 2), where the last axis
 indicates peak locations in xy order.</p>
@@ -526,17 +544,17 @@ the channel each peak belongs to.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.peak_finding.find_local_peaks_rough">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_local_peaks_rough</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L249-L308"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.find_local_peaks_rough" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_local_peaks_rough</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L249-L308"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.find_local_peaks_rough" title="Permalink to this definition">#</a></dt>
 <dd><p>Find local maxima via non-maximum suppresion.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cms</strong> – Tensor of shape (samples, height, width, channels).</p></li>
 <li><p><strong>threshold</strong> – Scalar float specifying the minimum confidence value for peaks. Peaks
 with values below this threshold will not be returned.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A tuple of (peak_points, peak_vals, peak_sample_inds, peak_channel_inds).
 peak_points: float32 tensor of shape (n_peaks, 2), where the last axis
 indicates peak locations in xy order.</p>
@@ -553,10 +571,10 @@ the channel each peak belongs to.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.peak_finding.find_local_peaks_with_offsets">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_local_peaks_with_offsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#sleap.nn.peak_finding.find_local_peaks_with_offsets" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_local_peaks_with_offsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#sleap.nn.peak_finding.find_local_peaks_with_offsets" title="Permalink to this definition">#</a></dt>
 <dd><p>Find local peaks and refine with learned offset maps.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cms</strong> – Confidence maps. Tensor of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">height,</span> <span class="pre">width,</span> <span class="pre">channels)</span></code>.</p></li>
 <li><p><strong>offsets</strong> – Offset maps tensor of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(samples,</span> <span class="pre">height,</span> <span class="pre">width,</span> <span class="pre">2</span> <span class="pre">*</span> <span class="pre">channels)</span></code>.</p></li>
@@ -564,7 +582,7 @@ the channel each peak belongs to.</p>
 ignored.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A tuple of <code class="xref py py-obj docutils literal notranslate"><span class="pre">(peak_points,</span> <span class="pre">peak_vals,</span> <span class="pre">peak_sample_inds,</span> <span class="pre">peak_channel_inds)</span></code>.</p>
 <p><code class="xref py py-obj docutils literal notranslate"><span class="pre">peak_points</span></code>: float32 tensor of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_peaks,</span> <span class="pre">2)</span></code>, where the last axis
 indicates peak locations in xy order.</p>
@@ -581,12 +599,12 @@ of the channel each peak belongs to.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.peak_finding.find_offsets_local_direction">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_offsets_local_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centered_patches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.25</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L78-L132"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.find_offsets_local_direction" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">find_offsets_local_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centered_patches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.25</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L78-L132"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.find_offsets_local_direction" title="Permalink to this definition">#</a></dt>
 <dd><p>Computes subpixel offsets from the direction of the pixels around the peak.</p>
 <p>This function finds the delta-offset from the center pixel of peak-centered patches
 by finding the direction of the gradient around each center.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>centered_patches</strong> – A rank-4 tensor of shape (samples, 3, 3, 1) corresponding
 to the centered crops around the grid-anchored peaks. For multi-channel
@@ -595,7 +613,7 @@ function.</p></li>
 <li><p><strong>delta</strong> – Scalar float that will scaled by the gradient direction.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>offsets, a float32 tensor of shape (samples, 2) where the columns correspond to
 the offsets relative to the center pixel for the x and y directions
 respectively, i.e., for the i-th sample:</p>
@@ -629,27 +647,28 @@ pose estimation applications in [1].</p>
 </pre></div>
 </div>
 <p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id1"><span class="brackets">1</span></dt>
-<dd><p>Alejandro Newell, Kaiyu Yang, and Jia Deng. Stacked Hourglass Networks
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id1" role="note">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>Alejandro Newell, Kaiyu Yang, and Jia Deng. Stacked Hourglass Networks
 for Human Pose Estimation. In _European conference on computer <a href="#id2"><span class="problematic" id="id3">vision_</span></a>, 2016.</p>
-</dd>
-</dl>
+</aside>
+</aside>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.peak_finding.integral_regression">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">integral_regression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L311-L334"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.integral_regression" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">integral_regression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L311-L334"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.integral_regression" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute regression by integrating over the confidence maps on a grid.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cms</strong> – Confidence maps with shape (samples, height, width, channels).</p></li>
 <li><p><strong>xv</strong> – X grid vector tf.float32 of grid coordinates to sample.</p></li>
 <li><p><strong>yv</strong> – Y grid vector tf.float32 of grid coordinates to sample.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A tuple of (x_hat, y_hat) with the regressed x- and y-coordinates for each
 channel of the confidence maps.</p>
 <p>x_hat and y_hat are of shape (samples, channels)</p>
@@ -660,16 +679,16 @@ channel of the confidence maps.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.peak_finding.make_gaussian_kernel">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">make_gaussian_kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L20-L46"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.make_gaussian_kernel" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">make_gaussian_kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L20-L46"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.make_gaussian_kernel" title="Permalink to this definition">#</a></dt>
 <dd><p>Generates a square unnormalized 2D symmetric Gaussian kernel.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>size</strong> – Length of kernel. This should be an odd integer.</p></li>
 <li><p><strong>sigma</strong> – Standard deviation of the Gaussian specified as a scalar float.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>kernel, a float32 tensor of shape (size, size) with values corresponding to the
 unnormalized probability density of a 2D Gaussian distribution with symmetric
 covariance along the x and y directions.</p>
@@ -684,10 +703,10 @@ element by (2 * np.pi * sigma ** 2).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.peak_finding.smooth_imgs">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">smooth_imgs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imgs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L49-L75"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.smooth_imgs" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.peak_finding.</span></span><span class="sig-name descname"><span class="pre">smooth_imgs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imgs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/peak_finding.py#L49-L75"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.peak_finding.smooth_imgs" title="Permalink to this definition">#</a></dt>
 <dd><p>Smooths the input image by convolving it with a Gaussian kernel.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>imgs</strong> – A rank-4 tensor of shape (samples, height, width, channels).</p></li>
 <li><p><strong>kernel_size</strong> – An odd-valued scalar integer specifying the width and height of
@@ -695,7 +714,7 @@ the Gaussian kernel.</p></li>
 <li><p><strong>sigma</strong> – Standard deviation of the Gaussian specified as a scalar float.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A tensor of the same shape as imgs after convolving with a Gaussian sample and
 channelwise.</p>
 </dd>
@@ -725,6 +744,32 @@ channelwise.</p>
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.crop_bboxes"><code class="docutils literal notranslate"><span class="pre">crop_bboxes()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_global_peaks"><code class="docutils literal notranslate"><span class="pre">find_global_peaks()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_global_peaks_integral"><code class="docutils literal notranslate"><span class="pre">find_global_peaks_integral()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_global_peaks_rough"><code class="docutils literal notranslate"><span class="pre">find_global_peaks_rough()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_global_peaks_with_offsets"><code class="docutils literal notranslate"><span class="pre">find_global_peaks_with_offsets()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_local_peaks"><code class="docutils literal notranslate"><span class="pre">find_local_peaks()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_local_peaks_integral"><code class="docutils literal notranslate"><span class="pre">find_local_peaks_integral()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_local_peaks_rough"><code class="docutils literal notranslate"><span class="pre">find_local_peaks_rough()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_local_peaks_with_offsets"><code class="docutils literal notranslate"><span class="pre">find_local_peaks_with_offsets()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.find_offsets_local_direction"><code class="docutils literal notranslate"><span class="pre">find_offsets_local_direction()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.integral_regression"><code class="docutils literal notranslate"><span class="pre">integral_regression()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.make_gaussian_kernel"><code class="docutils literal notranslate"><span class="pre">make_gaussian_kernel()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.peak_finding.smooth_imgs"><code class="docutils literal notranslate"><span class="pre">smooth_imgs()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

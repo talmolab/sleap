@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>Guides &#8212; SLEAP (v1.4.1a2)</title>
   
@@ -32,8 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -43,15 +42,12 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'guides/index';</script>
     <link rel="canonical" href="/develop/guides/index.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -60,7 +56,7 @@
     <link rel="next" title="GUI" href="gui.html" />
     <link rel="prev" title="Export Data For Analysis" href="../tutorials/analysis.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -333,14 +329,14 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="guides">
-<span id="id1"></span><h1>Guides<a class="headerlink" href="#guides" title="Permalink to this headline">#</a></h1>
+<span id="id1"></span><h1>Guides<a class="headerlink" href="#guides" title="Permalink to this heading">#</a></h1>
 <section id="general">
-<h2>General<a class="headerlink" href="#general" title="Permalink to this headline">#</a></h2>
+<h2>General<a class="headerlink" href="#general" title="Permalink to this heading">#</a></h2>
 <p><a class="reference internal" href="gui.html#gui"><span class="std std-ref">GUI</span></a> is a comprehensive list of the functionality in the SLEAP GUI for labeling, proofreading and inspection.</p>
 <p><a class="reference internal" href="cli.html#cli"><span class="std std-ref">Command line interfaces</span></a> describes the command line interfaces provided by SLEAP.</p>
 </section>
 <section id="getting-better-results">
-<h2>Getting better results<a class="headerlink" href="#getting-better-results" title="Permalink to this headline">#</a></h2>
+<h2>Getting better results<a class="headerlink" href="#getting-better-results" title="Permalink to this heading">#</a></h2>
 <p><a class="reference internal" href="troubleshooting-workflows.html"><span class="doc std std-doc">Troubleshooting workflows</span></a> provide a good place to start with suggestions based on how much you’ve labeled so far.</p>
 <p><a class="reference internal" href="skeletons.html#skeletons"><span class="std std-ref">Skeleton design</span></a> answers some questions about designing the skeleton for your animals.</p>
 <p><a class="reference internal" href="choosing-models.html#choosing-models"><span class="std std-ref">Configuring models</span></a> describes the types of models in SLEAP and how to configure them.</p>
@@ -348,7 +344,7 @@ document.write(`
 <p><a class="reference internal" href="proofreading.html#proofreading"><span class="std std-ref">Tracking and proofreading</span></a> provides tips and tools you can use to speed up proofreading when you’re happy enough with the frame-by-frame predictions but you need to correct the identities tracked across frames.</p>
 </section>
 <section id="running-remotely">
-<h2>Running remotely<a class="headerlink" href="#running-remotely" title="Permalink to this headline">#</a></h2>
+<h2>Running remotely<a class="headerlink" href="#running-remotely" title="Permalink to this heading">#</a></h2>
 <p><a class="reference internal" href="colab.html#colab"><span class="std std-ref">Run training and inference on Colab</span></a> when you have a project with labeled training data and you’d like to run training or inference in a <strong>Colab</strong> notebook.</p>
 <p><a class="reference internal" href="remote.html#remote-train"><span class="std std-ref">Remote training</span></a> when you have a project with training data and you want to train on a different machine using a <strong>command-line interface</strong>.</p>
 <p><a class="reference internal" href="custom-training.html#custom-training"><span class="std std-ref">Creating a custom training profile</span></a> for creating <strong>custom training profiles</strong> (i.e., non-default model hyperparameters) from the GUI.</p>

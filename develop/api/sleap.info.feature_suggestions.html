@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>sleap.info.feature_suggestions &#8212; SLEAP (v1.4.1a2)</title>
   
@@ -32,8 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -43,22 +42,19 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/sleap.info.feature_suggestions';</script>
     <link rel="canonical" href="/develop/api/sleap.info.feature_suggestions.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -293,7 +289,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -309,6 +307,55 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.method"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.method</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.item_group"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.item_group</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.group_data"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.group_data</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.groupset_data"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.groupset_data</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.all_items"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.all_items</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.append_to_group"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.append_to_group()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.extend_group_items"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.extend_group_items()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.get_item_group"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.get_item_group()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.groups"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.groups</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.sample"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.sample()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameItem"><code class="docutils literal notranslate"><span class="pre">FrameItem</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack"><code class="docutils literal notranslate"><span class="pre">ItemStack</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.items"><code class="docutils literal notranslate"><span class="pre">ItemStack.items</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.data"><code class="docutils literal notranslate"><span class="pre">ItemStack.data</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.ownership"><code class="docutils literal notranslate"><span class="pre">ItemStack.ownership</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.meta"><code class="docutils literal notranslate"><span class="pre">ItemStack.meta</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.group_sets"><code class="docutils literal notranslate"><span class="pre">ItemStack.group_sets</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.brisk_bag_of_features"><code class="docutils literal notranslate"><span class="pre">ItemStack.brisk_bag_of_features()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.current_groupset"><code class="docutils literal notranslate"><span class="pre">ItemStack.current_groupset</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.extend_ownership"><code class="docutils literal notranslate"><span class="pre">ItemStack.extend_ownership()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.flatten"><code class="docutils literal notranslate"><span class="pre">ItemStack.flatten()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.get_all_items_from_group"><code class="docutils literal notranslate"><span class="pre">ItemStack.get_all_items_from_group()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.get_item_data"><code class="docutils literal notranslate"><span class="pre">ItemStack.get_item_data()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.get_item_data_idxs"><code class="docutils literal notranslate"><span class="pre">ItemStack.get_item_data_idxs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.get_raw_images"><code class="docutils literal notranslate"><span class="pre">ItemStack.get_raw_images()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.hog_bag_of_features"><code class="docutils literal notranslate"><span class="pre">ItemStack.hog_bag_of_features()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.kmeans"><code class="docutils literal notranslate"><span class="pre">ItemStack.kmeans()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.make_sample_group"><code class="docutils literal notranslate"><span class="pre">ItemStack.make_sample_group()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.pca"><code class="docutils literal notranslate"><span class="pre">ItemStack.pca()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.sample_groups"><code class="docutils literal notranslate"><span class="pre">ItemStack.sample_groups()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ParallelFeaturePipeline"><code class="docutils literal notranslate"><span class="pre">ParallelFeaturePipeline</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ParallelFeaturePipeline.get"><code class="docutils literal notranslate"><span class="pre">ParallelFeaturePipeline.get()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ParallelFeaturePipeline.make"><code class="docutils literal notranslate"><span class="pre">ParallelFeaturePipeline.make()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ParallelFeaturePipeline.run"><code class="docutils literal notranslate"><span class="pre">ParallelFeaturePipeline.run()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ParallelFeaturePipeline.tuples_to_suggestions"><code class="docutils literal notranslate"><span class="pre">ParallelFeaturePipeline.tuples_to_suggestions()</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -319,11 +366,11 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="module-sleap.info.feature_suggestions">
-<span id="sleap-info-feature-suggestions"></span><h1>sleap.info.feature_suggestions<a class="headerlink" href="#module-sleap.info.feature_suggestions" title="Permalink to this headline">#</a></h1>
+<span id="sleap-info-feature-suggestions"></span><h1>sleap.info.feature_suggestions<a class="headerlink" href="#module-sleap.info.feature_suggestions" title="Permalink to this heading">#</a></h1>
 <p>Module for generating lists of frames using frame features, pca, kmeans, etc.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.info.feature_suggestions.FrameGroupSet">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.info.feature_suggestions.</span></span><span class="sig-name descname"><span class="pre">FrameGroupSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item_group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.info.feature_suggestions.FrameItem" title="sleap.info.feature_suggestions.FrameItem"><span class="pre">sleap.info.feature_suggestions.FrameItem</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groupset_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/info/feature_suggestions.py#L252-L340"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.feature_suggestions.FrameGroupSet" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.info.feature_suggestions.</span></span><span class="sig-name descname"><span class="pre">FrameGroupSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item_group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.info.feature_suggestions.FrameItem" title="sleap.info.feature_suggestions.FrameItem"><span class="pre">FrameItem</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groupset_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/info/feature_suggestions.py#L252-L340"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.feature_suggestions.FrameGroupSet" title="Permalink to this definition">#</a></dt>
 <dd><p>Class for a set of groups of FrameItem objects.</p>
 <p>Each item can have at most one group; each group is represented as an int.</p>
 <dl class="py attribute">
@@ -331,7 +378,7 @@ document.write(`
 <span class="sig-name descname"><span class="pre">method</span></span><a class="headerlink" href="#sleap.info.feature_suggestions.FrameGroupSet.method" title="Permalink to this definition">#</a></dt>
 <dd><p>Label for the method used to generate group set.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -342,7 +389,7 @@ document.write(`
 <span class="sig-name descname"><span class="pre">item_group</span></span><a class="headerlink" href="#sleap.info.feature_suggestions.FrameGroupSet.item_group" title="Permalink to this definition">#</a></dt>
 <dd><p>Dictionary which maps each item to its group.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Dict[<a class="reference internal" href="#sleap.info.feature_suggestions.FrameItem" title="sleap.info.feature_suggestions.FrameItem">sleap.info.feature_suggestions.FrameItem</a>, int]</p>
 </dd>
 </dl>
@@ -354,7 +401,7 @@ document.write(`
 <dd><p>Dictionary of any extra data for each group;
 keys are group ids, values are dictionaries of data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Dict[int, dict]</p>
 </dd>
 </dl>
@@ -365,7 +412,7 @@ keys are group ids, values are dictionaries of data.</p>
 <span class="sig-name descname"><span class="pre">groupset_data</span></span><a class="headerlink" href="#sleap.info.feature_suggestions.FrameGroupSet.groupset_data" title="Permalink to this definition">#</a></dt>
 <dd><p>Dictionary for any data about the entire set of groups.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Dict</p>
 </dd>
 </dl>
@@ -379,19 +426,19 @@ keys are group ids, values are dictionaries of data.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.info.feature_suggestions.FrameGroupSet.append_to_group">
-<span class="sig-name descname"><span class="pre">append_to_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.info.feature_suggestions.FrameItem" title="sleap.info.feature_suggestions.FrameItem"><span class="pre">sleap.info.feature_suggestions.FrameItem</span></a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/info/feature_suggestions.py#L271-L275"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.feature_suggestions.FrameGroupSet.append_to_group" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">append_to_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.info.feature_suggestions.FrameItem" title="sleap.info.feature_suggestions.FrameItem"><span class="pre">FrameItem</span></a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/info/feature_suggestions.py#L271-L275"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.feature_suggestions.FrameGroupSet.append_to_group" title="Permalink to this definition">#</a></dt>
 <dd><p>Adds item to group.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.info.feature_suggestions.FrameGroupSet.extend_group_items">
-<span class="sig-name descname"><span class="pre">extend_group_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.info.feature_suggestions.FrameItem" title="sleap.info.feature_suggestions.FrameItem"><span class="pre">sleap.info.feature_suggestions.FrameItem</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/info/feature_suggestions.py#L277-L280"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.feature_suggestions.FrameGroupSet.extend_group_items" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">extend_group_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.info.feature_suggestions.FrameItem" title="sleap.info.feature_suggestions.FrameItem"><span class="pre">FrameItem</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/info/feature_suggestions.py#L277-L280"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.feature_suggestions.FrameGroupSet.extend_group_items" title="Permalink to this definition">#</a></dt>
 <dd><p>Adds all items in list to group.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.info.feature_suggestions.FrameGroupSet.get_item_group">
-<span class="sig-name descname"><span class="pre">get_item_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.info.feature_suggestions.FrameItem" title="sleap.info.feature_suggestions.FrameItem"><span class="pre">sleap.info.feature_suggestions.FrameItem</span></a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/info/feature_suggestions.py#L282-L284"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.feature_suggestions.FrameGroupSet.get_item_group" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_item_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.info.feature_suggestions.FrameItem" title="sleap.info.feature_suggestions.FrameItem"><span class="pre">FrameItem</span></a></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/info/feature_suggestions.py#L282-L284"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.feature_suggestions.FrameGroupSet.get_item_group" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns group that contain item.</p>
 </dd></dl>
 
@@ -408,14 +455,14 @@ keys are group ids, values are dictionaries of data.</p>
 <p>Note that the order of items in the new groups will not match order of
 items in the groups from which samples are drawn.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>per_group</strong> – The number of samples to take from each group.</p></li>
 <li><p><strong>unique_samples</strong> – Whether to ensure that there are no shared items
 in the resulting groups.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>New FrameGroupSet.</p>
 </dd>
 </dl>
@@ -425,20 +472,20 @@ in the resulting groups.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.info.feature_suggestions.FrameItem">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.info.feature_suggestions.</span></span><span class="sig-name descname"><span class="pre">FrameItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">sleap.io.video.Video</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/info/feature_suggestions.py#L231-L248"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.feature_suggestions.FrameItem" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.info.feature_suggestions.</span></span><span class="sig-name descname"><span class="pre">FrameItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">Video</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/info/feature_suggestions.py#L231-L248"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.feature_suggestions.FrameItem" title="Permalink to this definition">#</a></dt>
 <dd><p>Just a simple wrapper for (video, frame_idx), plus method to get image.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.info.feature_suggestions.ItemStack">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.info.feature_suggestions.</span></span><span class="sig-name descname"><span class="pre">ItemStack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ownership</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_sets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.info.feature_suggestions.FrameGroupSet" title="sleap.info.feature_suggestions.FrameGroupSet"><span class="pre">sleap.info.feature_suggestions.FrameGroupSet</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/info/feature_suggestions.py#L344-L546"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.feature_suggestions.ItemStack" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.info.feature_suggestions.</span></span><span class="sig-name descname"><span class="pre">ItemStack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ownership</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_sets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.info.feature_suggestions.FrameGroupSet" title="sleap.info.feature_suggestions.FrameGroupSet"><span class="pre">FrameGroupSet</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/info/feature_suggestions.py#L344-L546"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.feature_suggestions.ItemStack" title="Permalink to this definition">#</a></dt>
 <dd><p>Container for items, each item can “own” one or more rows of data.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.info.feature_suggestions.ItemStack.items">
 <span class="sig-name descname"><span class="pre">items</span></span><a class="headerlink" href="#sleap.info.feature_suggestions.ItemStack.items" title="Permalink to this definition">#</a></dt>
 <dd><p>The list of items</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>List</p>
 </dd>
 </dl>
@@ -449,7 +496,7 @@ in the resulting groups.</p></li>
 <span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#sleap.info.feature_suggestions.ItemStack.data" title="Permalink to this definition">#</a></dt>
 <dd><p>An ndarray with rows of data corresponding to items.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[numpy.ndarray]</p>
 </dd>
 </dl>
@@ -461,7 +508,7 @@ in the resulting groups.</p></li>
 <dd><p>List which specifies which rows of data correspond to which
 items.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[List[tuple]]</p>
 </dd>
 </dl>
@@ -472,7 +519,7 @@ items.</p>
 <span class="sig-name descname"><span class="pre">meta</span></span><a class="headerlink" href="#sleap.info.feature_suggestions.ItemStack.meta" title="Permalink to this definition">#</a></dt>
 <dd><p>List which stores metadata about each operation on stack.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>List</p>
 </dd>
 </dl>
@@ -483,7 +530,7 @@ items.</p>
 <span class="sig-name descname"><span class="pre">group_sets</span></span><a class="headerlink" href="#sleap.info.feature_suggestions.ItemStack.group_sets" title="Permalink to this definition">#</a></dt>
 <dd><p>List of GroupSets of items.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>List[<a class="reference internal" href="#sleap.info.feature_suggestions.FrameGroupSet" title="sleap.info.feature_suggestions.FrameGroupSet">sleap.info.feature_suggestions.FrameGroupSet</a>]</p>
 </dd>
 </dl>
@@ -551,7 +598,7 @@ items.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.info.feature_suggestions.ItemStack.make_sample_group">
-<span class="sig-name descname"><span class="pre">make_sample_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">videos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">sleap.io.video.Video</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples_per_video</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'stride'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/info/feature_suggestions.py#L485-L509"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.feature_suggestions.ItemStack.make_sample_group" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_sample_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">videos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.io.video.html#sleap.io.video.Video" title="sleap.io.video.Video"><span class="pre">Video</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples_per_video</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'stride'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/info/feature_suggestions.py#L485-L509"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.feature_suggestions.ItemStack.make_sample_group" title="Permalink to this definition">#</a></dt>
 <dd><p>Adds GroupSet by sampling frames from each video.</p>
 </dd></dl>
 
@@ -571,7 +618,7 @@ items.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.info.feature_suggestions.ParallelFeaturePipeline">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.info.feature_suggestions.</span></span><span class="sig-name descname"><span class="pre">ParallelFeaturePipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">sleap.info.feature_suggestions.FeatureSuggestionPipeline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">videos_as_dicts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/info/feature_suggestions.py#L630-L697"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.feature_suggestions.ParallelFeaturePipeline" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.info.feature_suggestions.</span></span><span class="sig-name descname"><span class="pre">ParallelFeaturePipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">FeatureSuggestionPipeline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">videos_as_dicts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/info/feature_suggestions.py#L630-L697"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.info.feature_suggestions.ParallelFeaturePipeline" title="Permalink to this definition">#</a></dt>
 <dd><p>Enables easy per-video pipeline parallelization for feature suggestions.</p>
 <p>Create a <code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSuggestionPipeline</span></code> with the desired parameters, and
 then call <a class="reference internal" href="#sleap.info.feature_suggestions.ParallelFeaturePipeline.run" title="sleap.info.feature_suggestions.ParallelFeaturePipeline.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParallelFeaturePipeline.run()</span></code></a> with the pipeline and the list
@@ -627,6 +674,61 @@ the results back into a single list of <code class="xref py py-obj docutils lite
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.method"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.method</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.item_group"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.item_group</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.group_data"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.group_data</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.groupset_data"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.groupset_data</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.all_items"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.all_items</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.append_to_group"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.append_to_group()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.extend_group_items"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.extend_group_items()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.get_item_group"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.get_item_group()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.groups"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.groups</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameGroupSet.sample"><code class="docutils literal notranslate"><span class="pre">FrameGroupSet.sample()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.FrameItem"><code class="docutils literal notranslate"><span class="pre">FrameItem</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack"><code class="docutils literal notranslate"><span class="pre">ItemStack</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.items"><code class="docutils literal notranslate"><span class="pre">ItemStack.items</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.data"><code class="docutils literal notranslate"><span class="pre">ItemStack.data</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.ownership"><code class="docutils literal notranslate"><span class="pre">ItemStack.ownership</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.meta"><code class="docutils literal notranslate"><span class="pre">ItemStack.meta</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.group_sets"><code class="docutils literal notranslate"><span class="pre">ItemStack.group_sets</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.brisk_bag_of_features"><code class="docutils literal notranslate"><span class="pre">ItemStack.brisk_bag_of_features()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.current_groupset"><code class="docutils literal notranslate"><span class="pre">ItemStack.current_groupset</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.extend_ownership"><code class="docutils literal notranslate"><span class="pre">ItemStack.extend_ownership()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.flatten"><code class="docutils literal notranslate"><span class="pre">ItemStack.flatten()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.get_all_items_from_group"><code class="docutils literal notranslate"><span class="pre">ItemStack.get_all_items_from_group()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.get_item_data"><code class="docutils literal notranslate"><span class="pre">ItemStack.get_item_data()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.get_item_data_idxs"><code class="docutils literal notranslate"><span class="pre">ItemStack.get_item_data_idxs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.get_raw_images"><code class="docutils literal notranslate"><span class="pre">ItemStack.get_raw_images()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.hog_bag_of_features"><code class="docutils literal notranslate"><span class="pre">ItemStack.hog_bag_of_features()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.kmeans"><code class="docutils literal notranslate"><span class="pre">ItemStack.kmeans()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.make_sample_group"><code class="docutils literal notranslate"><span class="pre">ItemStack.make_sample_group()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.pca"><code class="docutils literal notranslate"><span class="pre">ItemStack.pca()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ItemStack.sample_groups"><code class="docutils literal notranslate"><span class="pre">ItemStack.sample_groups()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ParallelFeaturePipeline"><code class="docutils literal notranslate"><span class="pre">ParallelFeaturePipeline</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ParallelFeaturePipeline.get"><code class="docutils literal notranslate"><span class="pre">ParallelFeaturePipeline.get()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ParallelFeaturePipeline.make"><code class="docutils literal notranslate"><span class="pre">ParallelFeaturePipeline.make()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ParallelFeaturePipeline.run"><code class="docutils literal notranslate"><span class="pre">ParallelFeaturePipeline.run()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.info.feature_suggestions.ParallelFeaturePipeline.tuples_to_suggestions"><code class="docutils literal notranslate"><span class="pre">ParallelFeaturePipeline.tuples_to_suggestions()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

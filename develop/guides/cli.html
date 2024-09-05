@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>Command line interfaces &#8212; SLEAP (v1.4.1a2)</title>
   
@@ -32,8 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -43,15 +42,12 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'guides/cli';</script>
     <link rel="canonical" href="/develop/guides/cli.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -60,7 +56,7 @@
     <link rel="next" title="Troubleshooting workflows" href="troubleshooting-workflows.html" />
     <link rel="prev" title="GUI" href="gui.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -359,12 +355,12 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="command-line-interfaces">
-<span id="cli"></span><h1>Command line interfaces<a class="headerlink" href="#command-line-interfaces" title="Permalink to this headline">#</a></h1>
+<span id="cli"></span><h1>Command line interfaces<a class="headerlink" href="#command-line-interfaces" title="Permalink to this heading">#</a></h1>
 <p>SLEAP provides several types of functionality accessible through a command prompt.</p>
 <section id="gui">
-<h2>GUI<a class="headerlink" href="#gui" title="Permalink to this headline">#</a></h2>
+<h2>GUI<a class="headerlink" href="#gui" title="Permalink to this heading">#</a></h2>
 <section id="sleap-label">
-<span id="id1"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-label</span></code><a class="headerlink" href="#sleap-label" title="Permalink to this headline">#</a></h3>
+<span id="id1"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-label</span></code><a class="headerlink" href="#sleap-label" title="Permalink to this heading">#</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-label</span></code> runs the GUI application for labeling and viewing <code class="code docutils literal notranslate"><span class="pre">.slp</span></code> files.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-label [-h] [--nonnative] [--profiling] [--reset] [labels_path]
 
@@ -382,9 +378,9 @@ optional arguments:
 </section>
 </section>
 <section id="training">
-<h2>Training<a class="headerlink" href="#training" title="Permalink to this headline">#</a></h2>
+<h2>Training<a class="headerlink" href="#training" title="Permalink to this heading">#</a></h2>
 <section id="sleap-train">
-<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-train</span></code><a class="headerlink" href="#sleap-train" title="Permalink to this headline">#</a></h3>
+<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-train</span></code><a class="headerlink" href="#sleap-train" title="Permalink to this heading">#</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-train</span></code> is the command-line interface for training. Use this for training on a remote machine/cluster/colab notebook instead of through the GUI.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-train [-h] [--video-paths VIDEO_PATHS] [--val_labels VAL_LABELS]
                    [--test_labels TEST_LABELS] [--tensorboard] [--save_viz] 
@@ -437,7 +433,7 @@ optional arguments:
 </div>
 </section>
 <section id="sleap-export">
-<span id="id3"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-export</span></code><a class="headerlink" href="#sleap-export" title="Permalink to this headline">#</a></h3>
+<span id="id3"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-export</span></code><a class="headerlink" href="#sleap-export" title="Permalink to this heading">#</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-export</span></code> is a command-line interface for exporting trained models as a TensorFlow graph for use in other applications. See <a class="reference external" href="https://www.tensorflow.org/guide/saved_model">this guide</a> for details on how TensorFlow saves models and the <a class="reference internal" href="../api/sleap.nn.inference.html#sleap.nn.inference.InferenceModel.export_model" title="sleap.nn.inference.InferenceModel.export_model"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">sleap.nn.inference.InferenceModel.export_model</span></code></span></a> documentation.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-export [-h] [-m MODELS] [-e [EXPORT_PATH]]
 
@@ -460,9 +456,9 @@ optional arguments:
 </section>
 </section>
 <section id="inference-and-tracking">
-<h2>Inference and Tracking<a class="headerlink" href="#inference-and-tracking" title="Permalink to this headline">#</a></h2>
+<h2>Inference and Tracking<a class="headerlink" href="#inference-and-tracking" title="Permalink to this heading">#</a></h2>
 <section id="sleap-track">
-<span id="id4"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-track</span></code><a class="headerlink" href="#sleap-track" title="Permalink to this headline">#</a></h3>
+<span id="id4"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-track</span></code><a class="headerlink" href="#sleap-track" title="Permalink to this heading">#</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> is the command-line interface for running inference using models which have already been trained. Use this for running inference on a remote machine such as an HPC cluster or Colab notebook.</p>
 <p>If you specify how many identities there should be in a frame (i.e., the number of animals) with the <code class="code docutils literal notranslate"><span class="pre">--tracking.clean_instance_count</span></code> argument, then we will use a heuristic method to connect “breaks” in the track identities where we lose one identity and spawn another. This can be used as part of the inference pipeline (if models are specified), as part of the tracking-only pipeline (if the predictions file is specified and no models are specified), or by itself on predictions with pre-tracked identities (if you specify <code class="code docutils literal notranslate"><span class="pre">--tracking.tracker</span> <span class="pre">none</span></code>). See <a class="reference internal" href="proofreading.html#proofreading"><span class="std std-ref">Tracking and proofreading</span></a> for more details on tracking.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames] [--only-suggested-frames] [-o OUTPUT] [--no-empty-frames]
@@ -579,7 +575,7 @@ optional arguments:
 </pre></div>
 </div>
 <section id="examples">
-<h4>Examples:<a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h4>
+<h4>Examples:<a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h4>
 <p><strong>1. Simple inference without tracking:</strong></p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sleap-track -m &quot;models/my_model&quot; -o &quot;output_predictions.slp&quot; &quot;input_video.mp4&quot;
 </pre></div>
@@ -617,9 +613,9 @@ optional arguments:
 </section>
 </section>
 <section id="dataset-files">
-<h2>Dataset files<a class="headerlink" href="#dataset-files" title="Permalink to this headline">#</a></h2>
+<h2>Dataset files<a class="headerlink" href="#dataset-files" title="Permalink to this heading">#</a></h2>
 <section id="sleap-convert">
-<span id="id5"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-convert</span></code><a class="headerlink" href="#sleap-convert" title="Permalink to this headline">#</a></h3>
+<span id="id5"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-convert</span></code><a class="headerlink" href="#sleap-convert" title="Permalink to this heading">#</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-convert</span></code> allows you to convert between various dataset file formats. Amongst other things, it can be used to export data from a SLEAP dataset into an HDF5 file that can be easily used for analysis (e.g., read from MATLAB). See <a class="reference internal" href="../api/sleap.io.convert.html#module-sleap.io.convert" title="sleap.io.convert"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sleap.io.convert</span></code></a> for more information.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-convert [-h] [-o OUTPUT] [--format FORMAT] [--video VIDEO]
                      input_path
@@ -667,7 +663,7 @@ optional arguments:
 <p>See <span class="xref myst">Analysis examples</span> for how to work with these outputs.</p>
 </section>
 <section id="sleap-inspect">
-<span id="id6"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-inspect</span></code><a class="headerlink" href="#sleap-inspect" title="Permalink to this headline">#</a></h3>
+<span id="id6"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-inspect</span></code><a class="headerlink" href="#sleap-inspect" title="Permalink to this heading">#</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-inspect</span></code> gives you various information about a SLEAP dataset file such as a list of videos and a count of the frames with labels. If you’re inspecting a predictions dataset (i.e., the output from running <code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> or inference in the GUI) it will also include details about how those predictions were created (i.e., the models, the version of SLEAP, and any inference parameters).</p>
 <p>You can also specify a model folder to get a quick summary of the configuration and metrics (if available).</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-inspect [-h] [--verbose] data_path
@@ -683,9 +679,9 @@ optional arguments:
 </section>
 </section>
 <section id="rendering">
-<h2>Rendering<a class="headerlink" href="#rendering" title="Permalink to this headline">#</a></h2>
+<h2>Rendering<a class="headerlink" href="#rendering" title="Permalink to this heading">#</a></h2>
 <section id="sleap-render">
-<span id="id7"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-render</span></code><a class="headerlink" href="#sleap-render" title="Permalink to this headline">#</a></h3>
+<span id="id7"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-render</span></code><a class="headerlink" href="#sleap-render" title="Permalink to this heading">#</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-render</span></code> allows you to render videos directly from the CLI. It is used to render video clips with Instances.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-render [-h] [-o OUTPUT] [-f FPS] [--scale SCALE] [--crop CROP] [--frames FRAMES] [--video-index VIDEO_INDEX] data_path
 positional arguments:
@@ -721,9 +717,9 @@ optional arguments:
 </section>
 </section>
 <section id="debugging">
-<h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">#</a></h2>
+<h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this heading">#</a></h2>
 <section id="sleap-diagnostic">
-<span id="id8"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-diagnostic</span></code><a class="headerlink" href="#sleap-diagnostic" title="Permalink to this headline">#</a></h3>
+<span id="id8"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-diagnostic</span></code><a class="headerlink" href="#sleap-diagnostic" title="Permalink to this heading">#</a></h3>
 <p>There’s also a script to output diagnostic information which may help us if you need to contact us about problems installing or running SLEAP. If you were able to install the SLEAP Python package, you can run this script with <code class="code docutils literal notranslate"><span class="pre">sleap-diagnostic</span></code>. Otherwise, you can download <a class="reference external" href="https://raw.githubusercontent.com/talmolab/sleap/main/sleap/diagnostic.py">diagnostic.py</a> and run <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">diagnostic.py</span></code>.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-diagnostic [-h] [-o OUTPUT] [--gui-check]
 

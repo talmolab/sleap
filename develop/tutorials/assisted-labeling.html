@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>Prediction-assisted labeling &#8212; SLEAP (v1.4.1a2)</title>
   
@@ -32,8 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -43,15 +42,12 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/assisted-labeling';</script>
     <link rel="canonical" href="/develop/tutorials/assisted-labeling.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -60,7 +56,7 @@
     <link rel="next" title="Tracking instances across frames" href="proofreading.html" />
     <link rel="prev" title="Training and Inference" href="initial-training.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -333,7 +329,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="prediction-assisted-labeling">
-<span id="assisted-labeling"></span><h1>Prediction-assisted labeling<a class="headerlink" href="#prediction-assisted-labeling" title="Permalink to this headline">#</a></h1>
+<span id="assisted-labeling"></span><h1>Prediction-assisted labeling<a class="headerlink" href="#prediction-assisted-labeling" title="Permalink to this heading">#</a></h1>
 <p><em>Prediction-assisted labeling</em> has two main goals. First, it speeds up the labeling
 process as it is faster to correct a predicted instance which is mostly
 correct than it is to add a new instance from scratch. Second, it
@@ -347,7 +343,7 @@ predicted. Suggested frames with predicted instances will be marked in
 red on the seekbar.</p>
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="reviewing-and-fixing-predictions">
-<h1>Reviewing and fixing predictions<a class="headerlink" href="#reviewing-and-fixing-predictions" title="Permalink to this headline">#</a></h1>
+<h1>Reviewing and fixing predictions<a class="headerlink" href="#reviewing-and-fixing-predictions" title="Permalink to this heading">#</a></h1>
 <p>After you’ve successfully trained models and predicted some instances,
 you’ll get a message that inference has finished.
 Predictions will be marked with a thin black line on the seekbar, while frames
