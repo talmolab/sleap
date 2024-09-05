@@ -15,7 +15,7 @@ on:
 
 env:
   RUN_BUILD_JOB: false # TODO(LM): Change to "true"
-  RUN_ID: 10712122474
+  RUN_ID: 10713717594
 
 jobs:
   build:
@@ -136,10 +136,9 @@ jobs:
       - name: Set run id for conda package download (Windows)
         if: runner.os == 'Windows'
         id: set-run-id-win
-        # TODO(LM): Change to "true"
         run: |
-          if ($env:RUN_BUILD_JOB -eq "false") {
-            echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_OUTPUT
+          if ($env:RUN_BUILD_JOB -eq "true") {
+            echo "RUN_ID=$env:GITHUB_RUN_ID" >> $GITHUB_OUTPUT
           } else {
             echo "RUN_ID=$env:RUN_ID" >> $GITHUB_OUTPUT
           }
@@ -147,9 +146,8 @@ jobs:
       - name: Set run id for conda package download (not Windows)
         if: runner.os != 'Windows'
         id: set-run-id-not-win
-        # TODO(LM): Change to "true"
         run: |
-          if [ "${{ env.RUN_BUILD_JOB }}" == "false" ]; then
+          if [ "${{ env.RUN_BUILD_JOB }}" == "true" ]; then
             echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_OUTPUT
           else
             echo "RUN_ID=${{ env.RUN_ID }}" >> $GITHUB_OUTPUT
