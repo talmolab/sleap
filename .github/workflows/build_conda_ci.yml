@@ -13,9 +13,10 @@ on:
       - "environment_build.yml"
       - ".github/workflows/build_conda_ci.yml"
 
+# If RUN_BUILD_JOB is set to true, then RUN_ID will be overwritten to the current run id
 env:
-  RUN_BUILD_JOB: false # TODO(LM): Change to "true"
-  RUN_ID: 10713717594
+  RUN_BUILD_JOB: false # TODO(LM): Set to true
+  RUN_ID: 10713717594 # Only used if RUN_BUILD_JOB is false (to dowload build artifact)
 
 jobs:
   build:
@@ -65,6 +66,7 @@ jobs:
           conda list
           pip freeze
 
+      # TODO(LM): Test if we can merge this step
       # Build conda package (not Windows)
       - name: Build conda package (not Windows)
         if: runner.os != 'Windows' && env.RUN_BUILD_JOB == 'true'
@@ -161,19 +163,25 @@ jobs:
           python-version: ${{ matrix.pyver }}
           conda-solver: "libmamba"
 
-      # Big step because "conda activate" does not persist across steps
-      - name: Test package
+      - name: Create conda environment
+        shell: bash -l {0}
+        run: conda create sleap -y -n sleap_test -c ./build ${{ matrix.conda-channels }}
+
+      - name: Install packages for testing
         shell: bash -l {0}
         run: |
-          echo "Create conda environment"
-          conda create sleap -y -n sleap_test -c ./build ${{ matrix.conda-channels }}
-          echo "Activate conda environment"
           conda activate sleap_test
-          echo "Install packages for testing"
           pip install -r "dev_requirements.txt"
-          echo "List environment info"
+
+      # Note: "conda activate" does not persist across steps
+      - name: Print environment info
+        shell: bash -l {0}
+        run: |
+          conda activate sleap_test
           conda info
           conda list
           pip freeze
-          echo "Test environment"
-          ${{ matrix.test_args}}
+
+      - name: Test package
+        shell: bash -l {0}
+        run: ${{ matrix.test_args}}
