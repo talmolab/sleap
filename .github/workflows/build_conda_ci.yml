@@ -14,7 +14,7 @@ on:
       - ".github/workflows/build_conda_ci.yml"
 
 env:
-  RUN_BUILD_JOB: false
+  RUN_BUILD_JOB: true
   RUN_ID: 10706100292
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["windows-2022", "ubuntu-22.04", "macos-14"]  # TODO(LM): Uncomment
+        os: ["windows-2022", "ubuntu-22.04"]  #, "macos-14"]  # TODO(LM): Uncomment
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Use these variables as defaults
@@ -40,10 +40,10 @@ jobs:
           - os: "ubuntu-22.04"
             build-prefix: linux
           # Use special condarc if macos
-          - os: "macos-14"
-            condarc: .conda_mac/condarc.yaml
-            conda-folder: .conda_mac
-            build-prefix: osx
+          # - os: "macos-14"
+          #   condarc: .conda_mac/condarc.yaml
+          #   conda-folder: .conda_mac
+          #   build-prefix: osx
 
     steps:
       # Setup
@@ -88,11 +88,11 @@ jobs:
 
       # Upload artifact "tests" can use it
       - name: Upload conda package artifact
-        if: env.RUN_BUILD_JOB == 'true'  # Ideally, only the slowest runner uploads
+        if: env.RUN_BUILD_JOB == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: sleap-builds
-          path: build
+          name: sleap-build-${{ matrix.build-prefix }}
+          path: build  # Upload entire build directory
           retention-days: 1
           overwrite: true
 
@@ -103,7 +103,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["windows-2022", "ubuntu-22.04", "macos-14"]  # TODO(LM): Uncomment
+        os: ["windows-2022", "ubuntu-22.04"]  # , "macos-14"]  # TODO(LM): Uncomment
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Default values
@@ -114,12 +114,6 @@ jobs:
           - pyver: "3.10"
           - conda-channels: -c conda-forge -c nvidia -c anaconda
           # TODO(LM): Uncomment to run on all OS's
-          # Use special condarc if macos
-          - os: "macos-14"
-            build-prefix: osx
-          - build-suffix: arm64
-            condarc: .conda_mac/condarc.yaml
-            conda-channels: -c conda-forge -c anaconda
           # Ubuntu specific values
           - os: ubuntu-22.04
             build-prefix: linux
@@ -129,6 +123,12 @@ jobs:
               sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
               export DISPLAY=":1"
               pytest tests -k 'not exclude_from_linux_pip_test'
+          # Use special condarc if macos
+          # - os: "macos-14"
+          #   build-prefix: osx
+          #   build-suffix: arm64
+          #   condarc: .conda_mac/condarc.yaml
+          #   conda-channels: -c conda-forge -c anaconda
 
     steps:
       - name: Checkout repo
@@ -149,7 +149,7 @@ jobs:
         uses: actions/download-artifact@v4
         id: download
         with:
-          name: sleap-builds
+          name: sleap-build-${{ matrix.build-prefix }}
           path: build
           run-id: ${{ env.RUN_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
