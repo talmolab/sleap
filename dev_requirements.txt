@@ -11,7 +11,7 @@ sphinx-book-theme
 sphinx-copybutton
 sphinx-tabs
 nbformat==5.1.3
-myst-nb
+myst-nb>=0.16.0  # sphinx>=5.0 needs myst-nb>=0.16.0 
 myst-parser
 linkify-it-py
 sphinx-autobuild
