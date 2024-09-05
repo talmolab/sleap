@@ -135,8 +135,7 @@ jobs:
 
       - name: Use current run id for conda package download
         shell: bash -l {0}
-        # TODO(LM): Change to true
-        if: env.RUN_BUILD_JOB == 'false'
+        if: env.RUN_BUILD_JOB == 'true'
         run: echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
 
       # https://github.com/actions/download-artifact?tab=readme-ov-file#usage
