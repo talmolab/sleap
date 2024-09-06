@@ -1,50 +1,24 @@
-name: Comment on New Discussions
+name: Comment on New Discussions and Issues
 
 on:
   discussion:
     types: [created]
+  issues:
+    types: [opened]
 
 jobs:
-  comment:
-    runs-on: ubuntu-latest
+  comment_on_discussion:
+    if: github.event_name == 'discussion'
+    uses: ./.github/workflows/comment-template.yml
+    with:
+      subject_id: ${{ github.event.discussion.node_id }}
+      body_prefix: "Thank you for starting a new discussion!"
+      comment_type: "discussion"
 
-    steps:
-      - name: Post a multi-line comment on a new discussion
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const discussion_id = context.payload.discussion.node_id;
-
-            const mutation = `
-              mutation($discussionId: ID!, $body: String!) {
-                addDiscussionComment(input: {discussionId: $discussionId, body: $body}) {
-                  comment {
-                    id
-                  }
-                }
-              }
-            `;
-
-            const body = `
-              Thank you for starting a new discussion!
-
-              We appreciate your input and will review it soon.
-
-              > [!WARNING]  
-              > A friendly reminder that this is a public forum. Please be cautious when clicking links, downloading files, or running scripts posted by others.
-              >
-              > - Always verify the credibility of links and code.
-              > - Avoid running scripts or installing files from untrusted sources.
-              > - If you're unsure, ask for clarification before proceeding.
-
-              Stay safe and happy SLEAPing!
-
-              Best regards,
-              The Team
-            `;
-
-            await github.graphql(mutation, {
-              discussionId: discussion_id,
-              body: body.trim() // Removes trailing/leading whitespace
-            });
+  comment_on_issue:
+    if: github.event_name == 'issues'
+    uses: ./.github/workflows/comment-template.yml
+    with:
+      subject_id: ${{ github.event.issue.node_id }}
+      body_prefix: "Thank you for opening a new issue!"
+      comment_type: "issue"
