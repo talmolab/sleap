@@ -15,7 +15,7 @@ jobs:
       - name: Set base body
         id: set_output
         run: |
-          echo "base_body=$(cat <<EOF
+          echo "base_body=$(cat <<'EOF'
           We appreciate your input and will review it soon.
 
           > [!WARNING]  
