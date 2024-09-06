@@ -28,5 +28,7 @@ jobs:
 
             await github.graphql(mutation, {
               discussionId: discussion_id,
-              body: ':warning: Thank you for starting a new discussion! We will get back to you soon.'
+              body: 'Thank you for starting a new discussion! We will get back to you soon.
+              > [!WARNING]  
+              > Critical content demanding immediate user attention due to potential risks.'
             });
