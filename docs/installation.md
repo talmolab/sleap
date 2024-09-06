@@ -43,7 +43,7 @@ local:
 
 ## Package Manager
 
-SLEAP requires many complex dependencies, so we **strongly** recommend using a package manager such as [Miniconda](https://docs.anaconda.com/free/miniconda/) to install SLEAP in its own isolated environment. See the [Miniconda website](https://docs.anaconda.com/free/miniconda/) for installation instructions. The Anaconda or Mamba package managers will also work well; however, take care not to install multiple different conda-based package managers - choose one and stick with it.
+SLEAP requires many complex dependencies, so we **strongly** recommend using a package manager such as [Miniforge](https://github.com/conda-forge/miniforge) or [Miniconda](https://docs.anaconda.com/free/miniconda/) to install SLEAP in its own isolated environment.
 
 ````{note}
 If you already have Anaconda on your computer (and it is an [older installation](https://conda.org/blog/2023-11-06-conda-23-10-0-release/)), then make sure to [set the solver to `libmamba`](https://www.anaconda.com/blog/a-faster-conda-for-a-growing-community) in the `base` environment.
@@ -59,6 +59,82 @@ Any subsequent `conda` commands in the docs will need to be replaced with `mamba
 ```
 
 ````
+
+If you don't have a `conda` package manager installation, here are some quick install options:
+
+### Miniforge (recommended)
+
+Miniforge is a minimal installer for conda that includes the `conda` package manager and is maintained by the [conda-forge](https://conda-forge.org) community. The only difference between Miniforge and Miniconda is that Miniforge uses the `conda-forge` channel by default, which provides a much wider selection of community-maintained packages.
+
+
+````{tabs}
+   ```{group-tab} Windows
+      Open a new PowerShell terminal (does not need to be admin) and enter:
+
+      ```bash
+      Invoke-WebRequest -Uri "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe" -OutFile "$env:UserProfile/Downloads/Miniforge3-Windows-x86_64.exe"; Start-Process -FilePath "$env:UserProfile/Downloads/Miniforge3-Windows-x86_64.exe" -ArgumentList "/InstallationType=JustMe /RegisterPython=1 /S" -Wait; Remove-Item -Path "$env:UserProfile/Downloads/Miniforge3-Windows-x86_64.exe"
+      ```
+   ```
+   ```{group-tab} Linux
+      Open a new terminal and enter:
+
+      ```bash
+      curl -fsSL --compressed https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh -o "~/Downloads/Miniforge3-Linux-x86_64.sh" && chmod +x "~/Downloads/Miniforge3-Linux-x86_64.sh" && "~/Downloads/Miniforge3-Linux-x86_64.sh" -b -p ~/miniforge3 && rm "~/Downloads/Miniforge3-Linux-x86_64.sh" && ~/miniforge3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
+      ```
+   ```
+   ```{group-tab} Mac (Apple Silicon)
+      Open a new terminal and enter:
+
+      ```bash
+      curl -fsSL --compressed https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh -o "~/Downloads/Miniforge3-MacOSX-arm64.sh" && chmod +x "~/Downloads/Miniforge3-MacOSX-arm64.sh" && "~/Downloads/Miniforge3-MacOSX-arm64.sh" -b -p ~/miniforge3 && rm "~/Downloads/Miniforge3-MacOSX-arm64.sh" && ~/miniforge3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
+      ```
+   ```
+   ```{group-tab} Mac (Intel)
+      Open a new terminal and enter:
+
+      ```bash
+      curl -fsSL --compressed https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-x86_64.sh -o "~/Downloads/Miniforge3-MacOSX-x86_64.sh" && chmod +x "~/Downloads/Miniforge3-MacOSX-x86_64.sh" && "~/Downloads/Miniforge3-MacOSX-x86_64.sh" -b -p ~/miniforge3 && rm "~/Downloads/Miniforge3-MacOSX-x86_64.sh" && ~/miniforge3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
+      ```
+   ```
+````
+
+### Miniconda
+
+This is a minimal installer for conda that includes the `conda` package manager and is maintained by the [Anaconda](https://www.anaconda.com) company.
+
+````{tabs}
+   ```{group-tab} Windows
+      Open a new PowerShell terminal (does not need to be admin) and enter:
+
+      ```bash
+      curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe -o miniconda.exe; Start-Process -FilePath ".\miniconda.exe" -ArgumentList "/S" -Wait; del miniconda.exe
+      ```
+   ```
+   ```{group-tab} Linux
+      Open a new terminal and enter:
+
+      ```bash
+      mkdir -p ~/miniconda3 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh && bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3 && rm ~/miniconda3/miniconda.sh && ~/miniconda3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
+      ```
+   ```
+   ```{group-tab} Mac (Apple Silicon)
+      Open a new terminal and enter:
+
+      ```bash
+      curl -fsSL --compressed https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh -o "~/Downloads/Miniconda3-latest-MacOSX-arm64.sh" && chmod +x "~/Downloads/Miniconda3-latest-MacOSX-arm64.sh" && "~/Downloads/Miniconda3-latest-MacOSX-arm64.sh" -b -u -p ~/miniconda3 && rm "~/Downloads/Miniconda3-latest-MacOSX-arm64.sh" && ~/miniconda3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
+      ```
+   ```
+   ```{group-tab} Mac (Intel)
+      Open a new terminal and enter:
+
+      ```bash
+      curl -fsSL --compressed https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o "~/Downloads/Miniconda3-latest-MacOSX-x86_64.sh" && chmod +x "~/Downloads/Miniconda3-latest-MacOSX-x86_64.sh" && "~/Downloads/Miniconda3-latest-MacOSX-x86_64.sh" -b -u -p ~/miniconda3 && rm "~/Downloads/Miniconda3-latest-MacOSX-x86_64.sh" && ~/miniconda3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
+      ```
+   ```
+````
+
+See the [Miniconda website](https://docs.anaconda.com/free/miniconda/) for up-to-date installation instructions if the above instructions don't work for your system.
+
 
 (installation-methods)=
 ## Installation methods
