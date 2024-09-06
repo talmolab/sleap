@@ -18,12 +18,12 @@ jobs:
           echo "base_body=$(cat <<'EOF'
           We appreciate your input and will review it soon.
 
-          > [!WARNING]  
-          > A friendly reminder that this is a public forum. Please be cautious when clicking links, downloading files, or running scripts posted by others.
-          >
-          > - Always verify the credibility of links and code.
-          > - Avoid running scripts or installing files from untrusted sources.
-          > - If you're unsure, ask for clarification before proceeding.
+          \> [!WARNING]  
+          \> A friendly reminder that this is a public forum. Please be cautious when clicking links, downloading files, or running scripts posted by others.
+          \>
+          \> - Always verify the credibility of links and code.
+          \> - Avoid running scripts or installing files from untrusted sources.
+          \> - If you're unsure, ask for clarification before proceeding.
 
           Stay safe and happy SLEAPing!
 
