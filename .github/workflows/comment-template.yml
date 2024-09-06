@@ -1,0 +1,68 @@
+name: Reusable Comment Workflow
+
+on:
+  workflow_call:
+    inputs:
+      subject_id:
+        required: true
+        type: string
+      body_prefix:
+        required: true
+        type: string
+      comment_type:
+        required: true
+        type: string
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post a comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const subject_id = '${{ inputs.subject_id }}';
+            const comment_type = '${{ inputs.comment_type }}';
+            const baseBody = `
+              We appreciate your input and will review it soon.
+
+              > [!WARNING]  
+              > A friendly reminder that this is a public forum. Please be cautious when clicking links, downloading files, or running scripts posted by others.
+              >
+              > - Always verify the credibility of links and code.
+              > - Avoid running scripts or installing files from untrusted sources.
+              > - If you're unsure, ask for clarification before proceeding.
+
+              Stay safe and happy SLEAPing!
+
+              Best regards,
+              The Team
+            `;
+            const body = `${{ inputs.body_prefix }}\n\n${baseBody}`;
+
+            const mutation = comment_type === 'discussion'
+              ? `
+                mutation($discussionId: ID!, $body: String!) {
+                  addDiscussionComment(input: {discussionId: $discussionId, body: $body}) {
+                    comment {
+                      id
+                    }
+                  }
+                }
+              `
+              : `
+                mutation($issueId: ID!, $body: String!) {
+                  addComment(input: {subjectId: $issueId, body: $body}) {
+                    comment {
+                      id
+                    }
+                  }
+                }
+              `;
+
+            const variables = comment_type === 'discussion'
+              ? { discussionId: subject_id, body: body.trim() }
+              : { issueId: subject_id, body: body.trim() };
+
+            await github.graphql(mutation, variables);
