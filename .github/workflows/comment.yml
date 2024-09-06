@@ -31,6 +31,9 @@ jobs:
 
               We appreciate your input and will review it soon.
 
+              > [!WARNING]  
+              > Critical content demanding immediate user attention due to potential risks.
+
               Best regards,
               The Team
             `;
