@@ -14,11 +14,19 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo;
-            const discussion_number = context.payload.discussion.number;
+            const discussion_id = context.payload.discussion.node_id;
 
-            await github.rest.discussions.createDiscussionComment({
-              owner: owner,
-              repo: repo,
-              discussion_number: discussion_number,
-              body: 'Thank you for starting a new discussion! We will get back to you soon.',
+            const mutation = `
+              mutation($discussionId: ID!, $body: String!) {
+                addDiscussionComment(input: {discussionId: $discussionId, body: $body}) {
+                  comment {
+                    id
+                  }
+                }
+              }
+            `;
+
+            await github.graphql(mutation, {
+              discussionId: discussion_id,
+              body: 'Thank you for starting a new discussion! We will get back to you soon.'
             });
