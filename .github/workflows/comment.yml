@@ -16,9 +16,9 @@ jobs:
             const { owner, repo } = context.repo;
             const discussion_number = context.payload.discussion.number;
 
-            await github.rest.issues.createComment({
+            await github.rest.discussions.createDiscussionComment({
               owner: owner,
               repo: repo,
-              issue_number: discussion_number,
+              discussion_number: discussion_number,
               body: 'Thank you for starting a new discussion! We will get back to you soon.',
             });
