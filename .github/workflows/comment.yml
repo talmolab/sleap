@@ -16,9 +16,7 @@ jobs:
         run: |
           echo "base_body=$(cat <<'EOF'
           We appreciate your input and will review it soon.
-
           Stay safe and happy SLEAPing!
-
           Best regards,
           The Team
           EOF
