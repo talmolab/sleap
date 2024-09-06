@@ -1,20 +1,49 @@
-name: Comment on New Discussions
+name: Comment on New Discussions and Issues
 
 on:
   discussion:
     types: [created]
+  issues:
+    types: [opened]
 
 jobs:
-  comment:
+  setup:
     runs-on: ubuntu-latest
-
+    outputs:
+      base_body: ${{ steps.set_output.outputs.base_body }}
     steps:
-      - name: Post a multi-line comment on a new discussion
+      - name: Set base body
+        id: set_output
+        run: |
+          echo "base_body=$(cat <<EOF
+            We appreciate your input and will review it soon.
+
+            > [!WARNING]  
+            > A friendly reminder that this is a public forum. Please be cautious when clicking links, downloading files, or running scripts posted by others.
+            >
+            > - Always verify the credibility of links and code.
+            > - Avoid running scripts or installing files from untrusted sources.
+            > - If you're unsure, ask for clarification before proceeding.
+
+            Stay safe and happy SLEAPing!
+
+            Best regards,
+            The Team
+            EOF
+          )" >> $GITHUB_OUTPUT
+
+  comment_on_discussion:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Comment on a new discussion
         uses: actions/github-script@v6
         with:
           script: |
             const { owner, repo } = context.repo;
             const discussion_id = context.payload.discussion.node_id;
+            const baseBody = '${{ needs.setup.outputs.base_body }}';
+            const body = `Thank you for starting a new discussion!\n\n${baseBody}`;
 
             const mutation = `
               mutation($discussionId: ID!, $body: String!) {
@@ -24,24 +53,6 @@ jobs:
                   }
                 }
               }
-            `;
-
-            const body = `
-              Thank you for starting a new discussion!
-
-              We appreciate your input and will review it soon.
-
-              > [!WARNING]  
-              > A friendly reminder that this is a public forum. Please be cautious when clicking links, downloading files, or running scripts posted by others.
-              >
-              > - Always verify the credibility of links and code.
-              > - Avoid running scripts or installing files from untrusted sources.
-              > - If you're unsure, ask for clarification before proceeding.
-
-              Stay safe and happy SLEAPing!
-
-              Best regards,
-              The Team
             `;
 
             await github.graphql(mutation, {
