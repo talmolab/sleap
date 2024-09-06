@@ -54,8 +54,11 @@ jobs:
               : `
                 mutation($issueId: ID!, $body: String!) {
                   addComment(input: {subjectId: $issueId, body: $body}) {
-                    comment {
-                      id
+                    commentEdge {
+                      node {
+                        id
+                        body
+                      }
                     }
                   }
                 }
