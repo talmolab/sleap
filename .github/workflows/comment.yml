@@ -14,13 +14,21 @@ jobs:
     steps:
       - name: Set base body
         run: |
-          echo "base_body=$(cat <<'EOF'
-          We appreciate your input and will review it soon.
-          Stay safe and happy SLEAPing!
-          Best regards,
-          The Team
-          EOF
-          )" >> $GITHUB_ENV
+          echo "base_body<<EOF" >> $GITHUB_ENV
+          echo "We appreciate your input and will review it soon." >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          echo "> [!WARNING]" >> $GITHUB_ENV
+          echo "> A friendly reminder that this is a public forum. Please be cautious when clicking links, downloading files, or running scripts posted by others." >> $GITHUB_ENV
+          echo ">" >> $GITHUB_ENV
+          echo "> - Always verify the credibility of links and code." >> $GITHUB_ENV
+          echo "> - Avoid running scripts or installing files from untrusted sources." >> $GITHUB_ENV
+          echo "> - If you're unsure, ask for clarification before proceeding." >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          echo "Stay safe and happy SLEAPing!" >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          echo "Best regards," >> $GITHUB_ENV
+          echo "The Team" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
   comment_on_discussion:
     runs-on: ubuntu-latest
