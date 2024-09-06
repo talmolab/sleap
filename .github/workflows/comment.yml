@@ -13,7 +13,6 @@ jobs:
       base_body: ${{ steps.set_output.outputs.base_body }}
     steps:
       - name: Set base body
-        id: set_output
         run: |
           echo "base_body=$(cat <<'EOF'
           We appreciate your input and will review it soon.
@@ -30,7 +29,7 @@ jobs:
           Best regards,
           The Team
           EOF
-          )" >> $GITHUB_OUTPUT
+          )" >> $GITHUB_ENV
 
   comment_on_discussion:
     runs-on: ubuntu-latest
@@ -42,7 +41,7 @@ jobs:
           script: |
             const { owner, repo } = context.repo;
             const discussion_id = context.payload.discussion.node_id;
-            const baseBody = '${{ needs.setup.outputs.base_body }}';
+            const baseBody = '${{ env.base_body }}';
             const body = `Thank you for starting a new discussion!\n\n${baseBody}`;
 
             const mutation = `
