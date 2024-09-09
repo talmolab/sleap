@@ -439,7 +439,7 @@ inference:
       label: Similarity Method
       type: list
       default: instance
-      options: "instance,centroid,iou,object keypoint"
+      options: "instance,normalized_instance,centroid,iou,object keypoint"
     - name: tracking.match
       label: Matching Method
       type: list
@@ -538,7 +538,7 @@ inference:
       label: Similarity Method
       type: list
       default: instance
-      options: "instance,centroid,iou,object keypoint"
+      options: "instance,normalized_instance,centroid,iou,object keypoint"
     - name: tracking.match
       label: Matching Method
       type: list

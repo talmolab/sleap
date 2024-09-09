@@ -30,23 +30,29 @@ logger = logging.getLogger(__name__)
 InstanceType = TypeVar("InstanceType", Instance, PredictedInstance)
 
 
-def normalize_coords(points: np.ndarray, img_hw):
-    """Normalize the keypoint coordinates."""
+def normalized_instance_similarity(
+    ref_instance: InstanceType, query_instance: InstanceType
+) -> float:
+    """Computes similarity between instances with normalized keypoints."""
 
-    height, width = img_hw
-    points[0] /= width - 1
-    points[1] /= height - 1
-    return points
+    xmax = max(ref_instance.points_array[:, 0].max(), query_instance.points_array[:, 0].max())
+    ymax = max(ref_instance.points_array[:, 1].max(), query_instance.points_array[:, 1].max())
+    normalize_factors = np.array((xmax, ymax))
+    ref_visible = ~(np.isnan(ref_instance.points_array).any(axis=1))
+    normalized_query_keypoints = query_instance.points_array/ normalize_factors
+    normalized_ref_keypoints = ref_instance.points_array/ normalize_factors
+    dists = np.sum((normalized_query_keypoints - normalized_ref_keypoints) ** 2, axis=1)
+    similarity = np.nansum(np.exp(-dists)) / np.sum(ref_visible)
+
+    return similarity
 
 def instance_similarity(
-    ref_instance: InstanceType, query_instance: InstanceType, img_hw: tuple
+    ref_instance: InstanceType, query_instance: InstanceType
 ) -> float:
     """Computes similarity between instances."""
 
     ref_visible = ~(np.isnan(ref_instance.points_array).any(axis=1))
-    normalized_query_keypoints = normalize_coords(query_instance.points_array, img_hw)
-    normalized_ref_keypoints = normalize_coords(ref_instance.points_array, img_hw)
-    dists = np.sum((normalized_query_keypoints - normalized_ref_keypoints) ** 2, axis=1)
+    dists = np.sum((query_instance.points_array - ref_instance.points_array) ** 2, axis=1)
     similarity = np.nansum(np.exp(-dists)) / np.sum(ref_visible)
 
     return similarity

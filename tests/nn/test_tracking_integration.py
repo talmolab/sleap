@@ -138,6 +138,7 @@ def main(f, dir):
         instance=sleap.nn.tracker.components.instance_similarity,
         centroid=sleap.nn.tracker.components.centroid_distance,
         iou=sleap.nn.tracker.components.instance_iou,
+        normalized_instance=sleap.nn.tracker.components.normalized_instance_similarity
     )
     scales = (
         1,

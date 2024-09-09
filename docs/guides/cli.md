@@ -207,7 +207,7 @@ optional arguments:
   --tracking.clean_iou_threshold TRACKING.CLEAN_IOU_THRESHOLD
                         IOU to use when culling instances *after* tracking. (default: 0)
   --tracking.similarity TRACKING.SIMILARITY
-                        Options: instance, centroid, iou (default: instance)
+                        Options: instance, normalized_instance, centroid, iou (default: instance)
   --tracking.match TRACKING.MATCH
                         Options: hungarian, greedy (default: greedy)
   --tracking.robust TRACKING.ROBUST

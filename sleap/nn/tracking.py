@@ -5,6 +5,7 @@ import abc
 import attr
 import numpy as np
 import cv2
+import functools
 from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple
 
 from sleap import Track, LabeledFrame, Skeleton
@@ -12,6 +13,7 @@ from sleap import Track, LabeledFrame, Skeleton
 from sleap.nn.tracker.components import (
     factory_object_keypoint_similarity,
     instance_similarity,
+    normalized_instance_similarity,
     centroid_distance,
     instance_iou,
     hungarian_matching,
@@ -495,7 +497,7 @@ similarity_policies = dict(
     instance=instance_similarity,
     centroid=centroid_distance,
     iou=instance_iou,
-    object_keypoint=instance_similarity,
+    normalized_instance=normalized_instance_similarity,
 )
 
 match_policies = dict(
@@ -652,6 +654,9 @@ class Tracker(BaseTracker):
         Returns:
             A list of the instances that were tracked.
         """
+
+        if self.similarity_function == normalized_instance_similarity:
+            self.similarity_function = functools.partial(self.similarity_function(img_hw=img.shape[-2:]))
 
         if self.candidate_maker is None:
             return untracked_instances
