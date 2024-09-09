@@ -498,6 +498,7 @@ similarity_policies = dict(
     centroid=centroid_distance,
     iou=instance_iou,
     normalized_instance=normalized_instance_similarity,
+    object_keypoint=factory_object_keypoint_similarity()
 )
 
 match_policies = dict(
@@ -654,9 +655,6 @@ class Tracker(BaseTracker):
         Returns:
             A list of the instances that were tracked.
         """
-
-        if self.similarity_function == normalized_instance_similarity:
-            self.similarity_function = functools.partial(self.similarity_function(img_hw=img.shape[-2:]))
 
         if self.candidate_maker is None:
             return untracked_instances
