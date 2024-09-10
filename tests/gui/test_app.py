@@ -414,6 +414,12 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
         window.showNormal()
     vp = window.player
 
+    # Change state and ensure menu-item check updates
+    assert window.state["color predicted"] == True
+    assert window._menu_actions["color predicted"].isChecked() == True
+    window.state["color predicted"] = False
+    assert window._menu_actions["color predicted"].isChecked() == False
+
     # Enable distinct colors
     window.state["color predicted"] = True
 
