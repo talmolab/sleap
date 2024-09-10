@@ -8,6 +8,7 @@ ipython
 sphinx
 sphinx-book-theme
 sphinx-copybutton
+sphinx-tabs
 nbformat==5.1.3
 myst-nb==1.1.1  # Upgrading pin because attrs needs to be >=23.1.0
 myst-parser==4.0.0  # Upgrading pin because attrs needs to be >=23.1.0
