@@ -377,7 +377,6 @@ class MainWindow(QMainWindow):
         def connect_check(key):
             self._menu_actions[key].setCheckable(True)
             self._menu_actions[key].setChecked(self.state[key])
-            self.state.connect(key, self._menu_actions[key].setChecked)
 
         # add checkable menu item connected to state variable
         def add_menu_check_item(menu, key: str, name: str):
