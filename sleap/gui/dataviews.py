@@ -413,6 +413,13 @@ class SkeletonNodesTableModel(GenericTableModel):
         elif key == "symmetry":
             self.context.setNodeSymmetry(skeleton=self.obj, node=item, symmetry=value)
 
+    def get_item_color(self, item: Any, key: str):
+        if self.skeleton:
+            color = self.context.app.color_manager.get_item_color(
+                item, parent_skeleton=self.skeleton
+            )
+            return QtGui.QColor(*color)
+
 
 class SkeletonEdgesTableModel(GenericTableModel):
     """Table model for skeleton edges."""
@@ -428,6 +435,14 @@ class SkeletonEdgesTableModel(GenericTableModel):
                 for edge in skeleton.edges
             ]
         return items
+
+    def get_item_color(self, item: Any, key: str):
+        if self.skeleton:
+            edge_pair = (item["source"], item["destination"])
+            color = self.context.app.color_manager.get_item_color(
+                edge_pair, parent_skeleton=self.skeleton
+            )
+            return QtGui.QColor(*color)
 
 
 class LabeledFrameTableModel(GenericTableModel):
