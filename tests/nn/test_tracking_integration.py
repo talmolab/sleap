@@ -2,6 +2,7 @@ import inspect
 import operator
 import os
 import time
+from pathlib import Path
 
 import sleap
 from sleap.nn.inference import main as inference_cli
@@ -130,9 +131,8 @@ def main(f, dir):
         return tracker
 
     def make_filename(tracker_name, matcher_name, sim_name, scale=0):
-        return os.path.join(
-            dir,
-            f"{tracker_name}_{int(scale * 100)}_{matcher_name}_{sim_name}.h5",
+        return Path(dir).joinpath(
+            f"{tracker_name}_{int(scale * 100)}_{matcher_name}_{sim_name}.h5"
         )
 
     def make_tracker_and_filename(*args, **kwargs):
