@@ -71,7 +71,7 @@ requirements:
     - conda-forge::imageio
     - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
-    - conda-forge::jsonpickle
+    - conda-forge::jsonpickle <=1.5.0 # 1.5.1 breaks compatibility with v1 encoded files
     - conda-forge::networkx
     - conda-forge::opencv
     - conda-forge::pandas
