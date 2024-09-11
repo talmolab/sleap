@@ -139,7 +139,7 @@ class FlowCandidateMaker:
     img_scale: float = 1.0
     of_window_size: int = 21
     of_max_levels: int = 3
-    save_shifted_instances: bool = True
+    save_shifted_instances: bool = False
     track_window: int = 5
 
     shifted_instances: Dict[
@@ -1235,7 +1235,7 @@ class Tracker(BaseTracker):
         option["help"] = "For optical-flow: Number of pyramid scale levels to consider"
         options.append(option)
 
-        option = dict(name="save_shifted_instances", default=1)
+        option = dict(name="save_shifted_instances", default=0)
         option["type"] = int
         option["help"] = (
             "If non-zero and tracking.tracker is set to flow, save the shifted "
