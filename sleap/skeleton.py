@@ -987,7 +987,7 @@ class Skeleton:
         """Convert the :class:`Skeleton` to a JSON representation.
 
         Args:
-            node_to_idx: optional dict which maps :class:`Nodes`to index
+            node_to_idx: optional dict which maps :class:`Node`s to index
                 in some list. This is used when saving
                 :class:`Labels`where we want to serialize the
                 :class:`Nodes` outside the :class:`Skeleton` object.
@@ -1050,8 +1050,9 @@ class Skeleton:
                     # in legacy SLEAP.
                     "edge_insert_idx": edge_ind,
                     "key": 0,  # Always 0.
-                    "source": {"py/id": node_to_id[source]},
-                    "target": {"py/id": node_to_id[target]},
+                    "source": {"py/object": "sleap.skeleton.Node", "py/state": {"name": source.name, "weight": 1.0}},
+                    "target": {"py/object": "sleap.skeleton.Node", "py/state": {"name": target.name, "weight": 1.0}},
+                    # "target": {"py/id": node_to_id[target]},
                     "type": edge_type,
                 }
             )
@@ -1087,22 +1088,26 @@ class Skeleton:
             "name": self.name,
             "num_edges_inserted": len(self.edges),
         }
-        # Create skeleton dict.
+        # Create skeleton dict
         if self.is_template:
-            skeleton_dict = {
+            # Template skeletons have additional fields
+            nx_graph = {
                 "directed": True,
-                "nx_graph": graph, 
+                "graph": graph, 
                 "links": edges_dicts,
                 "multigraph": True,
                 # In the order in Skeleton.nodes and must match up with nodes_dicts.
                 "nodes": [{"id": {"py/id": node_to_id[node]}} for node in self.nodes],
+            }
+            skeleton_dict = {
                 "description": self.description,
+                "nx_graph": nx_graph, 
                 "preview_image": self.preview_image,
             }
         else:
             skeleton_dict ={
                     "directed": True,
-                    "nx_graph": graph,
+                    "graph": graph,
                     "links": edges_dicts,
                     "multigraph": True,
                     # In the order in Skeleton.nodes and must match up with nodes_dicts.
