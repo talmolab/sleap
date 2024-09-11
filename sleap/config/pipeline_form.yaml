@@ -460,7 +460,7 @@ inference:
       help: 'Save the flow-shifted instances between elapsed frames. It improves
       instance matching at the cost of using a bit more of memory.'
       type: bool
-      default: true
+      default: false
     - type: text
       text: '<b>Kalman filter-based tracking</b>:<br />
       Uses the above tracking options to track instances for an initial
