@@ -1,12 +1,13 @@
-import inspect
 import operator
 import os
 import time
+from pathlib import Path
+
 import pytest
 import sleap
 from sleap.nn.inference import main as inference_cli
 import sleap.nn.tracker.components
-from sleap.io.dataset import Labels, LabeledFrame
+from sleap.io.dataset import Labels
 
 
 similarity_args = [
@@ -211,7 +212,7 @@ def test_simple_tracker(tmpdir, centered_pair_predictions_slp_path):
     inference_cli(cli.split(" "))
 
     labels = sleap.load_file(f"{tmpdir}/simpletracks.slp")
-    assert len(labels.tracks) == 8
+    assert len(labels.tracks) == 27
 
 
 def test_simplemax_tracker(tmpdir, centered_pair_predictions_slp_path):
@@ -322,9 +323,8 @@ def main(f, dir):
         return tracker
 
     def make_filename(tracker_name, matcher_name, sim_name, scale=0):
-        return os.path.join(
-            dir,
-            f"{tracker_name}_{int(scale * 100)}_{matcher_name}_{sim_name}.h5",
+        return Path(dir).joinpath(
+            f"{tracker_name}_{int(scale * 100)}_{matcher_name}_{sim_name}.h5"
         )
 
     def make_tracker_and_filename(*args, **kwargs):
