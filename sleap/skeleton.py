@@ -1082,15 +1082,16 @@ class Skeleton:
                     "type": edge_type,
                 }
             )
-
+        # Create graph field
+        graph = {
+            "name": self.name,
+            "num_edges_inserted": len(self.edges),
+        }
         # Create skeleton dict.
         if self.is_template:
             skeleton_dict = {
                 "directed": True,
-                "graph": {
-                    "name": self.name,
-                    "num_edges_inserted": len(self.edges),
-                },
+                "nx_graph": graph, 
                 "links": edges_dicts,
                 "multigraph": True,
                 # In the order in Skeleton.nodes and must match up with nodes_dicts.
@@ -1101,14 +1102,16 @@ class Skeleton:
         else:
             skeleton_dict ={
                     "directed": True,
-                    "graph": {
-                        "name": self.name,
-                        "num_edges_inserted": len(self.edges),
-                    },
+                    "nx_graph": graph,
                     "links": edges_dicts,
                     "multigraph": True,
                     # In the order in Skeleton.nodes and must match up with nodes_dicts.
                     "nodes": [{"id": {"py/id": node_to_id[node]}} for node in self.nodes],}
+            
+        print(f'skeleton_dict: {skeleton_dict}')
+        json_str = json.dumps(skeleton_dict)
+        print(f'json_str: {json_str}')
+        return json_str
 
         # jsonpickle.set_encoder_options("simplejson", sort_keys=True, indent=4)
         # if node_to_idx is not None:
