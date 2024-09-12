@@ -191,7 +191,10 @@ def replace_jsonpickle_decode(json_str: str) -> Any:
             The decoded node and the updated list of decoded objects.
         """
 
-        if "py/object" in encoded_node:
+        if isinstance(encoded_node, int):
+            # Using index mapping to replace the object (load from Labels)
+            return encoded_node, decoded_objects
+        elif "py/object" in encoded_node:
             decoded_node: Node = decode_object_dict(encoded_node)
             decoded_objects.append(decoded_node)
         elif "py/id" in encoded_node:
