@@ -1,5 +1,5 @@
 channels:
-  - sleap-deps/label/dev
+  - sleap-deps
   - conda-forge
   - nvidia
   - anaconda

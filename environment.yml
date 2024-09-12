@@ -3,10 +3,9 @@
 name: sleap
 
 channels:
-    - sleap-deps/label/dev
+    - sleap-deps
     - conda-forge
     - nvidia
-    - sleap-deps
     - sleap
     - anaconda
 
@@ -38,7 +37,7 @@ dependencies:
     - conda-forge::scikit-image
     - conda-forge::scikit-learn >=1.0.0 # Python 3.10 is compatible with scikit-learn >=1.0.0
     - conda-forge::seaborn
-    - sleap-deps/label/dev::tensorflow ==2.9.2a0 # TODO: Switch to main label when updated
+    - sleap-deps::tensorflow ==2.9.2
     - conda-forge::tensorflow-hub # Pinned in meta.yml, but no problems here... yet
     - conda-forge::qudida
     - conda-forge::albumentations

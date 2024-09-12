@@ -1,6 +1,6 @@
 # https://github.com/github/roadmap/issues/528
 
 channels:
-  - sleap-deps/label/dev
+  - sleap-deps
   - conda-forge
   - anaconda

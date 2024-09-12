@@ -53,7 +53,7 @@ requirements:
     - conda-forge::scikit-image
     - conda-forge::scikit-learn >=1.0.0 # Python 3.10 requires scikit-learn >=1.0
     - conda-forge::seaborn
-    - sleap-deps/label/dev::tensorflow ==2.9.2a0 # TODO: Switch to main label when updated
+    - sleap-deps::tensorflow ==2.9.2
     - conda-forge::tensorflow-hub
     - conda-forge::qudida
     - conda-forge::albumentations
@@ -88,7 +88,7 @@ requirements:
     - conda-forge::scikit-image
     - conda-forge::scikit-learn >=1.0.0 # Python 3.10 requires scikit-learn >=1.0
     - conda-forge::seaborn
-    - sleap-deps/label/dev::tensorflow ==2.9.2a0 # TODO: Switch to main label when updated
+    - sleap-deps::tensorflow ==2.9.2
     - conda-forge::tensorflow-hub
     - conda-forge::qudida
     - conda-forge::albumentations

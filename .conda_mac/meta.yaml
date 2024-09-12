@@ -54,7 +54,7 @@ requirements:
     - conda-forge::scikit-image >=0.21.0 # 0.20.0 requires python_abi 3.8.* *_cp38
     - conda-forge::scikit-learn >=1.0.0 # Python 3.10 needs scikit-learn >= 1.0
     - conda-forge::seaborn
-    - sleap-deps/label/dev::tensorflow ==2.12.0 # TODO: Switch to main label when updated
+    - sleap-deps::tensorflow ==2.12.0
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose
@@ -85,7 +85,7 @@ requirements:
     - conda-forge::scikit-image >=0.21.0 # 0.20.0 requires python_abi 3.8.* *_cp38
     - conda-forge::scikit-learn >=1.0.0 # Python 3.10 needs scikit-learn >= 1.0
     - conda-forge::seaborn
-    - sleap-deps/label/dev::tensorflow ==2.12.0 # TODO: Switch to main label when updated
+    - sleap-deps::tensorflow ==2.12.0
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose
