@@ -498,7 +498,7 @@ similarity_policies = dict(
     centroid=centroid_distance,
     iou=instance_iou,
     normalized_instance=normalized_instance_similarity,
-    object_keypoint=factory_object_keypoint_similarity()
+    object_keypoint=factory_object_keypoint_similarity
 )
 
 match_policies = dict(
@@ -642,6 +642,7 @@ class Tracker(BaseTracker):
     def track(
         self,
         untracked_instances: List[InstanceType],
+        img_hw: Tuple[int],
         img: Optional[np.ndarray] = None,
         t: int = None,
     ) -> List[InstanceType]:
@@ -649,12 +650,17 @@ class Tracker(BaseTracker):
 
         Args:
             untracked_instances: List of instances to assign to tracks.
+            img_hw: (height, width) of the image used to normalize the keypoints.
             img: Image data of the current frame for flow shifting.
             t: Current timestep. If not provided, increments from the internal queue.
 
         Returns:
             A list of the instances that were tracked.
         """
+        if self.similarity_function == normalized_instance_similarity:
+            factory_normalized_instance = functools.partial(normalized_instance_similarity,
+                                                            img_hw=img_hw)
+            self.similarity_function = factory_normalized_instance
 
         if self.candidate_maker is None:
             return untracked_instances

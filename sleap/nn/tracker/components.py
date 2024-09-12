@@ -31,13 +31,11 @@ InstanceType = TypeVar("InstanceType", Instance, PredictedInstance)
 
 
 def normalized_instance_similarity(
-    ref_instance: InstanceType, query_instance: InstanceType
+    ref_instance: InstanceType, query_instance: InstanceType, img_hw: Tuple[int]
 ) -> float:
     """Computes similarity between instances with normalized keypoints."""
 
-    xmax = max(ref_instance.points_array[:, 0].max(), query_instance.points_array[:, 0].max())
-    ymax = max(ref_instance.points_array[:, 1].max(), query_instance.points_array[:, 1].max())
-    normalize_factors = np.array((xmax, ymax))
+    normalize_factors = np.array((img_hw[1], img_hw[0]))
     ref_visible = ~(np.isnan(ref_instance.points_array).any(axis=1))
     normalized_query_keypoints = query_instance.points_array/ normalize_factors
     normalized_ref_keypoints = ref_instance.points_array/ normalize_factors

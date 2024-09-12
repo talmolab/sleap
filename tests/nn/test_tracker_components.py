@@ -37,7 +37,7 @@ def tracker_by_name(frames=None, **kwargs):
 @pytest.mark.parametrize(
     "tracker", ["simple", "flow", "simplemaxtracks", "flowmaxtracks"]
 )
-@pytest.mark.parametrize("similarity", ["instance", "normalized_instance", "iou", "centroid"])
+@pytest.mark.parametrize("similarity", ["instance", "normalized_instance", "iou", "centroid", "object_keypoint"])
 @pytest.mark.parametrize("match", ["greedy", "hungarian"])
 @pytest.mark.parametrize("count", [0, 2])
 def test_tracker_by_name(

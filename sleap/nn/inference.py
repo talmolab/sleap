@@ -2622,6 +2622,7 @@ class TopDownPredictor(Predictor):
                         # Set tracks for predicted instances in this frame.
                         predicted_instances = self.tracker.track(
                             untracked_instances=predicted_instances,
+                            img_hw=ex["image"].shape[-2:],
                             img=image,
                             t=frame_ind,
                         )
@@ -3264,6 +3265,7 @@ class BottomUpPredictor(Predictor):
                         # Set tracks for predicted instances in this frame.
                         predicted_instances = self.tracker.track(
                             untracked_instances=predicted_instances,
+                            img_hw=ex["image"].shape[-2:],
                             img=image,
                             t=frame_ind,
                         )
