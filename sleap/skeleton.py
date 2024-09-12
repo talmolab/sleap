@@ -344,7 +344,11 @@ class SkeletonDecoder:
 
     @classmethod
     def decode(cls, json_str: str) -> Dict:
-        """Decode the given json string into a dictionary."""
+        """Decode the given json string into a dictionary.
+
+        Returns:
+            A dict with `Node`s, `EdgeType`s, and `bytes` decoded/reconstructed.
+        """
         decoder = cls()
         return decoder._decode(json_str)
 
