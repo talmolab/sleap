@@ -9,7 +9,7 @@ import re
 import shutil
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, Hashable, Iterable, List, Optional, Union
+from typing import Any, Dict, Hashable, Iterable, List, Optional
 from urllib.parse import unquote, urlparse
 from urllib.request import url2pathname
 

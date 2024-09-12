@@ -1,7 +1,6 @@
-import os
 import copy
+import os
 
-import jsonpickle
 import pytest
 
 from sleap.skeleton import Skeleton, SkeletonDecoder

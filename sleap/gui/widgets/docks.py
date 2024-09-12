@@ -33,8 +33,6 @@ from sleap.gui.widgets.views import CollapsibleWidget
 from sleap.skeleton import Skeleton, SkeletonDecoder
 from sleap.util import find_files_by_suffix, get_package_file
 
-# from sleap.gui.app import MainWindow
-
 
 class DockWidget(QDockWidget):
     """'Abstract' class for a dockable widget attached to the `MainWindow`."""
