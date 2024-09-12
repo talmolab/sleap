@@ -3,13 +3,11 @@
 Try not to put things in here unless they really have no other place.
 """
 
-import base64
 import json
 import os
 import re
 import shutil
 from collections import defaultdict
-from io import BytesIO
 from pathlib import Path
 from typing import Any, Dict, Hashable, Iterable, List, Optional, Union
 from urllib.parse import unquote, urlparse
@@ -26,8 +24,6 @@ try:
     from importlib.resources import files  # New in 3.9+
 except ImportError:
     from importlib_resources import files  # TODO(LM): Upgrade to importlib.resources.
-
-from PIL import Image
 
 import sleap.version as sleap_version
 
@@ -375,25 +371,3 @@ def find_files_by_suffix(
 def parse_uri_path(uri: str) -> str:
     """Parse a URI starting with 'file:///' to a posix path."""
     return Path(url2pathname(urlparse(unquote(uri)).path)).as_posix()
-
-
-def decode_preview_image(
-    img_b64: bytes, return_bytes: bool = False
-) -> Union[Image.Image, bytes]:
-    """Decode a skeleton preview image byte string representation to a `PIL.Image`
-
-    Args:
-        img_b64: a byte string representation of a skeleton preview image
-        return_bytes: whether to return the decoded image as bytes
-
-    Returns:
-        Either a PIL.Image of the skeleton preview image or the decoded image as bytes
-        (if `return_bytes` is True).
-    """
-    bytes = base64.b64decode(img_b64)
-    if return_bytes:
-        return bytes
-
-    buffer = BytesIO(bytes)
-    img = Image.open(buffer)
-    return img

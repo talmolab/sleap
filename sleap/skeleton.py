@@ -6,10 +6,12 @@ is to provide a common interface for defining the parts of the animal,
 their connection to each other, and needed meta-data.
 """
 
+import base64
 import copy
 import json
 import operator
 from enum import Enum
+from io import BytesIO
 from itertools import count
 from typing import Any, Dict, Iterable, List, Optional, Text, Tuple, Union
 
@@ -20,9 +22,8 @@ import jsonpickle
 import networkx as nx
 import numpy as np
 from networkx.readwrite import json_graph
+from PIL import Image
 from scipy.io import loadmat
-
-from sleap.util import decode_preview_image
 
 NodeRef = Union[str, "Node"]
 H5FileRef = Union[str, h5py.File]
@@ -315,6 +316,28 @@ class SkeletonDecoder:
 
         return links
 
+    @staticmethod
+    def decode_preview_image(
+        img_b64: bytes, return_bytes: bool = False
+    ) -> Union[Image.Image, bytes]:
+        """Decode a skeleton preview image byte string representation to a `PIL.Image`
+
+        Args:
+            img_b64: a byte string representation of a skeleton preview image
+            return_bytes: whether to return the decoded image as bytes
+
+        Returns:
+            Either a PIL.Image of the skeleton preview image or the decoded image as bytes
+            (if `return_bytes` is True).
+        """
+        bytes = base64.b64decode(img_b64)
+        if return_bytes:
+            return bytes
+
+        buffer = BytesIO(bytes)
+        img = Image.open(buffer)
+        return img
+
     def _decode(self, json_str: str):
         dicts = json.loads(json_str)
 
@@ -336,7 +359,7 @@ class SkeletonDecoder:
         # Decode the preview image (if it exists)
         preview_image = dicts.get("preview_image", None)
         if preview_image is not None:
-            dicts["preview_image"] = decode_preview_image(
+            dicts["preview_image"] = SkeletonDecoder.decode_preview_image(
                 preview_image["py/b64"], return_bytes=True
             )
 

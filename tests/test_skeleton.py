@@ -4,7 +4,7 @@ import copy
 import jsonpickle
 import pytest
 
-from sleap.skeleton import Skeleton
+from sleap.skeleton import Skeleton, SkeletonDecoder
 
 
 def test_add_dupe_node(skeleton):
@@ -222,6 +222,13 @@ def test_json(skeleton: Skeleton, tmpdir):
 
     # Make sure we get back the same skeleton we saved.
     assert skeleton.matches(skeleton_copy)
+
+
+def test_decode_preview_image(flies13_skeleton: Skeleton):
+    skeleton = flies13_skeleton
+    img_b64 = skeleton.preview_image
+    img = SkeletonDecoder.decode_preview_image(img_b64)
+    assert img.mode == "RGBA"
 
 
 def test_hdf5(skeleton, stickman, tmpdir):
