@@ -251,6 +251,9 @@ def replace_jsonpickle_decode(json_str: str) -> Any:
         reduce_list = reduce_dict["py/reduce"]
         has_py_type = has_py_tuple = False
         for reduce_item in reduce_list:
+            if reduce_item is None:
+                # Sometimes the reduce list has None values, skip them
+                continue
             if (
                 "py/type" in reduce_item
                 and reduce_item["py/type"] == "sleap.skeleton.EdgeType"
@@ -1554,3 +1557,8 @@ class Skeleton:
 
 cattr.register_unstructure_hook(Skeleton, lambda skeleton: Skeleton.to_dict(skeleton))
 cattr.register_structure_hook(Skeleton, lambda dicts, cls: Skeleton.from_dict(dicts))
+
+if __name__ == "__main__":
+    ds = "sleap/skeletons/bees.json"
+    sk = Skeleton.load_json(ds)
+    print("debug hook")
