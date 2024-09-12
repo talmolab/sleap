@@ -15,53 +15,50 @@ from sleap.instance import PredictedInstance
 from sleap.skeleton import Skeleton
 
 
-def tracker_by_name(frames=None, **kwargs):
-    t = Tracker.make_tracker_by_name(**kwargs)
-    print(kwargs)
-    print(t.candidate_maker)
-    if frames is None:
-        t.track([])
-        t.final_pass([])
-        return
+def run_tracker_by_name(frames=None, img_scale: float = 0, **kwargs):
+    # Create tracker
+    t = Tracker.make_tracker_by_name(verbosity="none", **kwargs)
+    # Update img_scale
+    if img_scale:
+        if hasattr(t, "candidate_maker") and hasattr(t.candidate_maker, "img_scale"):
+            t.candidate_maker.img_scale = img_scale
+        else:
+            # Do not even run tracking as it can be slow
+            pytest.skip("img_scale is not defined for this tracker")
+            return
 
-    for lf in frames:
-        # Clear the tracks
-        for inst in lf.instances:
-            inst.track = None
-
-        track_args = dict(untracked_instances=lf.instances, img=lf.video[lf.frame_idx])
-        t.track(**track_args)
-        t.final_pass(frames)
+    # Run tracking
+    new_frames = t.run_tracker(frames or [])
+    assert len(new_frames) == len(frames)
 
 
-@pytest.mark.parametrize(
-    "tracker", ["simple", "flow", "simplemaxtracks", "flowmaxtracks"]
-)
+@pytest.mark.parametrize("tracker", ["simple", "flow"])
 @pytest.mark.parametrize("similarity", ["instance", "iou", "centroid"])
 @pytest.mark.parametrize("match", ["greedy", "hungarian"])
+@pytest.mark.parametrize("img_scale", [0, 1, 0.25])
 @pytest.mark.parametrize("count", [0, 2])
 def test_tracker_by_name(
     centered_pair_predictions_sorted,
     tracker,
     similarity,
     match,
+    img_scale,
     count,
 ):
     # This is slow, so limit to 5 time points
     frames = centered_pair_predictions_sorted[:5]
 
-    tracker_by_name(
+    run_tracker_by_name(
         frames=frames,
         tracker=tracker,
         similarity=similarity,
         match=match,
+        img_scale=img_scale,
         max_tracks=count,
     )
 
 
-@pytest.mark.parametrize(
-    "tracker", ["simple", "flow", "simplemaxtracks", "flowmaxtracks"]
-)
+@pytest.mark.parametrize("tracker", ["simple", "flow"])
 @pytest.mark.parametrize("oks_score_weighting", ["True", "False"])
 @pytest.mark.parametrize("oks_normalization", ["all", "ref", "union"])
 def test_oks_tracker_by_name(
@@ -73,7 +70,7 @@ def test_oks_tracker_by_name(
     # This is slow, so limit to 5 time points
     frames = centered_pair_predictions_sorted[:5]
 
-    tracker_by_name(
+    run_tracker_by_name(
         frames=frames,
         tracker=tracker,
         similarity="object_keypoint",
@@ -244,7 +241,7 @@ def make_insts(trx):
     return insts
 
 
-def test_max_tracking_large_gap_single_track():
+def test_max_tracks_large_gap_single_track():
     # Track 2 instances with gap > window size
     preds = make_insts(
         [
@@ -279,11 +276,9 @@ def test_max_tracking_large_gap_single_track():
 
     tracker = Tracker.make_tracker_by_name(
         tracker="simple",
-        # tracker="simplemaxtracks",
         match="hungarian",
         track_window=2,
-        # max_tracks=2,
-        # max_tracking=True,
+        max_tracks=-1,
     )
 
     tracked = []
@@ -295,12 +290,10 @@ def test_max_tracking_large_gap_single_track():
     assert len(all_tracks) == 3
 
     tracker = Tracker.make_tracker_by_name(
-        # tracker="simple",
-        tracker="simplemaxtracks",
+        tracker="simple",
         match="hungarian",
         track_window=2,
         max_tracks=2,
-        max_tracking=True,
     )
 
     tracked = []
@@ -312,7 +305,7 @@ def test_max_tracking_large_gap_single_track():
     assert len(all_tracks) == 2
 
 
-def test_max_tracking_small_gap_on_both_tracks():
+def test_max_tracks_small_gap_on_both_tracks():
     # Test 2 instances with both tracks with gap > window size
     preds = make_insts(
         [
@@ -343,11 +336,9 @@ def test_max_tracking_small_gap_on_both_tracks():
 
     tracker = Tracker.make_tracker_by_name(
         tracker="simple",
-        # tracker="simplemaxtracks",
         match="hungarian",
         track_window=2,
-        # max_tracks=2,
-        # max_tracking=True,
+        max_tracks=-1,
     )
 
     tracked = []
@@ -359,12 +350,10 @@ def test_max_tracking_small_gap_on_both_tracks():
     assert len(all_tracks) == 4
 
     tracker = Tracker.make_tracker_by_name(
-        # tracker="simple",
-        tracker="simplemaxtracks",
+        tracker="simple",
         match="hungarian",
         track_window=2,
         max_tracks=2,
-        max_tracking=True,
     )
 
     tracked = []
@@ -376,7 +365,7 @@ def test_max_tracking_small_gap_on_both_tracks():
     assert len(all_tracks) == 2
 
 
-def test_max_tracking_extra_detections():
+def test_max_tracks_extra_detections():
     # Test having more than 2 detected instances in a frame
     preds = make_insts(
         [
@@ -412,11 +401,9 @@ def test_max_tracking_extra_detections():
 
     tracker = Tracker.make_tracker_by_name(
         tracker="simple",
-        # tracker="simplemaxtracks",
         match="hungarian",
         track_window=2,
-        # max_tracks=2,
-        # max_tracking=True,
+        max_tracks=-1,
     )
 
     tracked = []
@@ -428,12 +415,10 @@ def test_max_tracking_extra_detections():
     assert len(all_tracks) == 4
 
     tracker = Tracker.make_tracker_by_name(
-        # tracker="simple",
-        tracker="simplemaxtracks",
+        tracker="simple",
         match="hungarian",
         track_window=2,
         max_tracks=2,
-        max_tracking=True,
     )
 
     tracked = []

@@ -46,6 +46,11 @@ from typing import Text, Optional, List, Dict, Union, Iterator, Tuple
 from threading import Thread
 from queue import Queue
 
+if sys.version_info >= (3, 8):
+    from functools import cached_property
+else:  # cached_property is define only for python >=3.8
+    cached_property = property
+
 import tensorflow as tf
 import numpy as np
 
@@ -54,7 +59,7 @@ import sleap
 from sleap.nn.config import TrainingJobConfig, DataConfig
 from sleap.nn.data.resizing import SizeMatcher
 from sleap.nn.model import Model
-from sleap.nn.tracking import Tracker, run_tracker
+from sleap.nn.tracking import Tracker
 from sleap.nn.paf_grouping import PAFScorer
 from sleap.nn.data.pipelines import (
     Provider,
@@ -69,7 +74,7 @@ from sleap.nn.data.pipelines import (
 )
 from sleap.nn.utils import reset_input_layer
 from sleap.io.dataset import Labels
-from sleap.util import frame_list, make_scoped_dictionary
+from sleap.util import frame_list, make_scoped_dictionary, RateColumn
 from sleap.instance import PredictedInstance, LabeledFrame
 
 from tensorflow.python.framework.convert_to_constants import (
@@ -144,17 +149,6 @@ def get_keras_model_path(path: Text) -> str:
     return os.path.join(path, "best_model.h5")
 
 
-class RateColumn(rich.progress.ProgressColumn):
-    """Renders the progress rate."""
-
-    def render(self, task: "Task") -> rich.progress.Text:
-        """Show progress rate."""
-        speed = task.speed
-        if speed is None:
-            return rich.progress.Text("?", style="progress.data.speed")
-        return rich.progress.Text(f"{speed:.1f} FPS", style="progress.data.speed")
-
-
 @attr.s(auto_attribs=True)
 class Predictor(ABC):
     """Base interface class for predictors."""
@@ -167,7 +161,7 @@ class Predictor(ABC):
     report_rate: float = attr.ib(default=2.0, kw_only=True)
     model_paths: List[str] = attr.ib(factory=list, kw_only=True)
 
-    @property
+    @cached_property
     def report_period(self) -> float:
         """Time between progress reports in seconds."""
         return 1.0 / self.report_rate
@@ -374,6 +368,122 @@ class Predictor(ABC):
     def _initialize_inference_model(self):
         pass
 
+    def _process_batch(self, ex: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+        """Run prediction model on batch.
+
+        This method handles running inference on a batch and postprocessing.
+
+        Args:
+            ex: a dictionary holding the input for inference.
+
+        Returns:
+            The input dictionary updated with the predictions.
+        """
+        # Skip inference if model is not loaded
+        if self.inference_model is None:
+            return ex
+
+        # Run inference on current batch.
+        preds = self.inference_model.predict_on_batch(ex, numpy=True)
+
+        # Add model outputs to the input data example.
+        ex.update(preds)
+
+        # Convert to numpy arrays if not already.
+        if isinstance(ex["video_ind"], tf.Tensor):
+            ex["video_ind"] = ex["video_ind"].numpy().flatten()
+        if isinstance(ex["frame_ind"], tf.Tensor):
+            ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
+
+        # Adjust for potential SizeMatcher scaling.
+        offset_x = ex.get("offset_x", 0)
+        offset_y = ex.get("offset_y", 0)
+        ex["instance_peaks"] -= np.reshape([offset_x, offset_y], [-1, 1, 1, 2])
+        ex["instance_peaks"] /= np.expand_dims(
+            np.expand_dims(ex["scale"], axis=1), axis=1
+        )
+
+        return ex
+
+    def _run_batch_json(
+        self,
+        examples: List[Dict[str, np.ndarray]],
+        n_total: int,
+        max_length: int = 30,
+    ) -> Iterator[Dict[str, np.ndarray]]:
+        n_processed = 0
+        n_recent = deque(maxlen=max_length)
+        elapsed_recent = deque(maxlen=max_length)
+        last_report = time()
+        t0_all = time()
+        t0_batch = time()
+        for ex in examples:
+            # Process batch of examples.
+            ex = self._process_batch(ex)
+
+            # Track timing and progress.
+            elapsed_batch = time() - t0_batch
+            t0_batch = time()
+            n_batch = len(ex["frame_ind"])
+            n_processed += n_batch
+            elapsed_all = time() - t0_all
+
+            # Compute recent rate.
+            n_recent.append(n_batch)
+            elapsed_recent.append(elapsed_batch)
+            rate = sum(n_recent) / sum(elapsed_recent)
+            eta = (n_total - n_processed) / rate
+
+            # Report.
+            if time() > last_report + self.report_period:
+                print(
+                    json.dumps(
+                        {
+                            "n_processed": n_processed,
+                            "n_total": n_total,
+                            "elapsed": elapsed_all,
+                            "rate": rate,
+                            "eta": eta,
+                        }
+                    ),
+                    flush=True,
+                )
+                last_report = time()
+
+            # Return results.
+            yield ex
+
+    def _run_batch_rich(
+        self,
+        examples: List[Dict[str, np.ndarray]],
+        n_total: int,
+    ) -> Iterator[Dict[str, np.ndarray]]:
+        with rich.progress.Progress(
+            "{task.description}",
+            rich.progress.BarColumn(),
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            "ETA:",
+            rich.progress.TimeRemainingColumn(),
+            RateColumn(),
+            auto_refresh=False,
+            refresh_per_second=self.report_rate,
+            speed_estimate_period=5,
+        ) as progress:
+            task = progress.add_task("Predicting...", total=n_total)
+            last_report = time()
+            for ex in examples:
+                ex = self._process_batch(ex)
+
+                progress.update(task, advance=len(ex["frame_ind"]))
+
+                # Handle refreshing manually to support notebooks.
+                if time() > last_report + self.report_period:
+                    progress.refresh()
+                    last_report = time()
+
+                # Return results.
+                yield ex
+
     def _predict_generator(
         self, data_provider: Provider
     ) -> Iterator[Dict[str, np.ndarray]]:
@@ -395,103 +505,22 @@ class Predictor(ABC):
         if self.inference_model is None:
             self._initialize_inference_model()
 
-        def process_batch(ex):
-            # Run inference on current batch.
-            preds = self.inference_model.predict_on_batch(ex, numpy=True)
-
-            # Add model outputs to the input data example.
-            ex.update(preds)
-
-            # Convert to numpy arrays if not already.
-            if isinstance(ex["video_ind"], tf.Tensor):
-                ex["video_ind"] = ex["video_ind"].numpy().flatten()
-            if isinstance(ex["frame_ind"], tf.Tensor):
-                ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
-
-            # Adjust for potential SizeMatcher scaling.
-            offset_x = ex.get("offset_x", 0)
-            offset_y = ex.get("offset_y", 0)
-            ex["instance_peaks"] -= np.reshape([offset_x, offset_y], [-1, 1, 1, 2])
-            ex["instance_peaks"] /= np.expand_dims(
-                np.expand_dims(ex["scale"], axis=1), axis=1
-            )
-
-            return ex
+        # Compile loop examples before starting time to improve ETA
+        n_total = len(data_provider)
+        examples = self.pipeline.make_dataset()
 
         # Loop over data batches with optional progress reporting.
         if self.verbosity == "rich":
-            with rich.progress.Progress(
-                "{task.description}",
-                rich.progress.BarColumn(),
-                "[progress.percentage]{task.percentage:>3.0f}%",
-                "ETA:",
-                rich.progress.TimeRemainingColumn(),
-                RateColumn(),
-                auto_refresh=False,
-                refresh_per_second=self.report_rate,
-                speed_estimate_period=5,
-            ) as progress:
-                task = progress.add_task("Predicting...", total=len(data_provider))
-                last_report = time()
-                for ex in self.pipeline.make_dataset():
-                    ex = process_batch(ex)
-                    progress.update(task, advance=len(ex["frame_ind"]))
-
-                    # Handle refreshing manually to support notebooks.
-                    elapsed_since_last_report = time() - last_report
-                    if elapsed_since_last_report > self.report_period:
-                        progress.refresh()
-
-                    # Return results.
-                    yield ex
+            for ex in self._run_batch_rich(examples, n_total=n_total):
+                yield ex
 
         elif self.verbosity == "json":
-            n_processed = 0
-            n_total = len(data_provider)
-            n_recent = deque(maxlen=30)
-            elapsed_recent = deque(maxlen=30)
-            last_report = time()
-            t0_all = time()
-            t0_batch = time()
-            for ex in self.pipeline.make_dataset():
-                # Process batch of examples.
-                ex = process_batch(ex)
-
-                # Track timing and progress.
-                elapsed_batch = time() - t0_batch
-                t0_batch = time()
-                n_batch = len(ex["frame_ind"])
-                n_processed += n_batch
-                elapsed_all = time() - t0_all
-
-                # Compute recent rate.
-                n_recent.append(n_batch)
-                elapsed_recent.append(elapsed_batch)
-                rate = sum(n_recent) / sum(elapsed_recent)
-                eta = (n_total - n_processed) / rate
-
-                # Report.
-                elapsed_since_last_report = time() - last_report
-                if elapsed_since_last_report > self.report_period:
-                    print(
-                        json.dumps(
-                            {
-                                "n_processed": n_processed,
-                                "n_total": n_total,
-                                "elapsed": elapsed_all,
-                                "rate": rate,
-                                "eta": eta,
-                            }
-                        ),
-                        flush=True,
-                    )
-                    last_report = time()
-
-                # Return results.
+            for ex in self._run_batch_json(examples, n_total=n_total):
                 yield ex
+
         else:
-            for ex in self.pipeline.make_dataset():
-                yield process_batch(ex)
+            for ex in examples:
+                yield self._process_batch(ex)
 
     def predict(
         self, data: Union[Provider, sleap.Labels, sleap.Video], make_labels: bool = True
@@ -4918,16 +4947,10 @@ def load_model(
     )
     predictor.verbosity = progress_reporting
     if tracker is not None:
-        use_max_tracker = tracker_max_instances is not None
-        if use_max_tracker and not tracker.endswith("maxtracks"):
-            # Append maxtracks to the tracker name to use the right tracker variants.
-            tracker += "maxtracks"
-
         predictor.tracker = Tracker.make_tracker_by_name(
             tracker=tracker,
             track_window=tracker_window,
             post_connect_single_breaks=True,
-            max_tracking=use_max_tracker,
             max_tracks=tracker_max_instances,
             # clean_instance_count=tracker_max_instances,
         )
@@ -5388,7 +5411,9 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
                     )
                 )
             else:
-                provider_list.append(LabelsReader(labels))
+                provider_list.append(
+                    LabelsReader(labels, example_indices=frame_list(args.frames))
+                )
 
             data_path_list.append(file_path)
 
@@ -5482,7 +5507,10 @@ def _make_tracker_from_cli(args: argparse.Namespace) -> Optional[Tracker]:
     """
     policy_args = make_scoped_dictionary(vars(args), exclude_nones=True)
     if "tracking" in policy_args:
-        tracker = Tracker.make_tracker_by_name(**policy_args["tracking"])
+        tracker = Tracker.make_tracker_by_name(
+            progress_reporting=args.verbosity,
+            **policy_args["tracking"],
+        )
         return tracker
     return None
 
@@ -5649,14 +5677,16 @@ def main(args: Optional[list] = None):
         data_path = data_path_list[0]
 
         # Load predictions
-        data_path = args.data_path
         print("Loading predictions...")
-        labels_pr = sleap.load_file(data_path)
+        labels_pr = sleap.load_file(data_path.as_posix())
         frames = sorted(labels_pr.labeled_frames, key=lambda lf: lf.frame_idx)
+        if provider.example_indices is not None:
+            # Convert indices to a set to search in O(1), otherwise it is much slower
+            index_set = set(provider.example_indices)
+            frames = list(filter(lambda lf: lf.frame_idx in index_set, frames))
 
         print("Starting tracker...")
-        frames = run_tracker(frames=frames, tracker=tracker)
-        tracker.final_pass(frames)
+        frames = tracker.run_tracker(frames=frames)
 
         labels_pr = Labels(labeled_frames=frames)
 
@@ -5677,7 +5707,7 @@ def main(args: Optional[list] = None):
         labels_pr.provenance["sleap_version"] = sleap.__version__
         labels_pr.provenance["platform"] = platform.platform()
         labels_pr.provenance["command"] = " ".join(sys.argv)
-        labels_pr.provenance["data_path"] = data_path
+        labels_pr.provenance["data_path"] = os.fspath(data_path)
         labels_pr.provenance["output_path"] = output_path
         labels_pr.provenance["total_elapsed"] = total_elapsed
         labels_pr.provenance["start_timestamp"] = start_timestamp

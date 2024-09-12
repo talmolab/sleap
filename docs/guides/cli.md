@@ -36,7 +36,7 @@ optional arguments:
 
 ```none
 usage: sleap-train [-h] [--video-paths VIDEO_PATHS] [--val_labels VAL_LABELS]
-                   [--test_labels TEST_LABELS] [--tensorboard] [--save_viz] 
+                   [--test_labels TEST_LABELS] [--tensorboard] [--save_viz]
                    [--keep_viz] [--zmq] [--run_name RUN_NAME] [--prefix PREFIX]
                    [--suffix SUFFIX]
                    training_job_path [labels_path]
@@ -124,7 +124,7 @@ usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames] [-
                    [--verbosity {none,rich,json}] [--video.dataset VIDEO.DATASET] [--video.input_format VIDEO.INPUT_FORMAT]
                    [--video.index VIDEO.INDEX] [--cpu | --first-gpu | --last-gpu | --gpu GPU] [--max_edge_length_ratio MAX_EDGE_LENGTH_RATIO]
                    [--dist_penalty_weight DIST_PENALTY_WEIGHT] [--batch_size BATCH_SIZE] [--open-in-gui] [--peak_threshold PEAK_THRESHOLD]
-                   [-n MAX_INSTANCES] [--tracking.tracker TRACKING.TRACKER] [--tracking.max_tracking TRACKING.MAX_TRACKING]
+                   [-n MAX_INSTANCES] [--tracking.tracker TRACKING.TRACKER]
                    [--tracking.max_tracks TRACKING.MAX_TRACKS] [--tracking.target_instance_count TRACKING.TARGET_INSTANCE_COUNT]
                    [--tracking.pre_cull_to_target TRACKING.PRE_CULL_TO_TARGET] [--tracking.pre_cull_iou_threshold TRACKING.PRE_CULL_IOU_THRESHOLD]
                    [--tracking.post_connect_single_breaks TRACKING.POST_CONNECT_SINGLE_BREAKS]
@@ -187,10 +187,8 @@ optional arguments:
                         Limit maximum number of instances in multi-instance models. Not available for ID models. Defaults to None.
   --tracking.tracker TRACKING.TRACKER
                         Options: simple, flow, simplemaxtracks, flowmaxtracks, None (default: None)
-  --tracking.max_tracking TRACKING.MAX_TRACKING
-                        If true then the tracker will cap the max number of tracks. (default: False)
   --tracking.max_tracks TRACKING.MAX_TRACKS
-                        Maximum number of tracks to be tracked by the tracker. (default: None)
+                        Maximum number of tracks to be tracked by the tracker. No limit if None or -1. (default: None)
   --tracking.target_instance_count TRACKING.TARGET_INSTANCE_COUNT
                         Target number of instances to track per frame. (default: 0)
   --tracking.pre_cull_to_target TRACKING.PRE_CULL_TO_TARGET
@@ -264,13 +262,13 @@ sleap-track -m "models/my_model" --tracking.tracker simple -o "output_prediction
 **5. Inference with max tracks limit:**
 
 ```none
-sleap-track -m "models/my_model" --tracking.tracker simplemaxtracks --tracking.max_tracking 1 --tracking.max_tracks 4 -o "output_predictions.slp" "input_video.mp4"
+sleap-track -m "models/my_model" --tracking.tracker simple --tracking.max_tracks 4 -o "output_predictions.slp" "input_video.mp4"
 ```
 
 **6. Re-tracking without pose inference:**
 
 ```none
-sleap-track --tracking.tracker simplemaxtracks --tracking.max_tracking 1 --tracking.max_tracks 4 -o "retracked.slp" "input_predictions.slp"
+sleap-track --tracking.tracker simple --tracking.max_tracks 4 -o "retracked.slp" "input_predictions.slp"
 ```
 
 **7. Select GPU for pose inference:**
