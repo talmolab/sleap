@@ -6,23 +6,23 @@ is to provide a common interface for defining the parts of the animal,
 their connection to each other, and needed meta-data.
 """
 
-import attr
-import cattr
-import numpy as np
-import jsonpickle
-import json
-import h5py
 import copy
-
+import json
 import operator
 from enum import Enum
 from itertools import count
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, Text
+from typing import Any, Dict, Iterable, List, Optional, Text, Tuple, Union
 
+import attr
+import cattr
+import h5py
+import jsonpickle
 import networkx as nx
+import numpy as np
 from networkx.readwrite import json_graph
 from scipy.io import loadmat
 
+from sleap.util import decode_preview_image
 
 NodeRef = Union[str, "Node"]
 H5FileRef = Union[str, h5py.File]
