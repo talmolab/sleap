@@ -3,12 +3,25 @@ import pytest
 from sleap.skeleton import Skeleton
 
 TEST_FLY_LEGS_SKELETON = "tests/data/skeleton/fly_skeleton_legs.json"
+TEST_FLY_LEGS_SKELETON_DICT = "tests/data/skeleton/fly_skeleton_legs_pystate_dict.json"
 
 
 @pytest.fixture
 def fly_legs_skeleton_json():
-    """Path to fly_skeleton_legs.json"""
+    """Path to fly_skeleton_legs.json
+
+    This skeleton json has py/state in tuple format.
+    """
     return TEST_FLY_LEGS_SKELETON
+
+
+@pytest.fixture
+def fly_legs_skeleton_dict_json():
+    """Path to fly_skeleton_legs_pystate_dict.json
+
+    This skeleton json has py/state dict format.
+    """
+    return TEST_FLY_LEGS_SKELETON_DICT
 
 
 @pytest.fixture

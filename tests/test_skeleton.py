@@ -230,6 +230,19 @@ def test_decode_preview_image(flies13_skeleton: Skeleton):
     assert img.mode == "RGBA"
 
 
+def test_skeleton_decoder(fly_legs_skeleton_json, fly_legs_skeleton_dict_json):
+    """Test that SkeletonDecoder can decode both tuple and dict py/state formats."""
+
+    skeleton_tuple_pystate = Skeleton.load_json(fly_legs_skeleton_json)
+    assert isinstance(skeleton_tuple_pystate, Skeleton)
+
+    skeleton_dict_pystate = Skeleton.load_json(fly_legs_skeleton_dict_json)
+    assert isinstance(skeleton_dict_pystate, Skeleton)
+
+    # These are the same skeleton, so they should match
+    assert skeleton_dict_pystate.matches(skeleton_tuple_pystate)
+
+
 def test_hdf5(skeleton, stickman, tmpdir):
     filename = os.path.join(tmpdir, "skeleton.h5")
 
