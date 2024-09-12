@@ -498,7 +498,7 @@ similarity_policies = dict(
     centroid=centroid_distance,
     iou=instance_iou,
     normalized_instance=normalized_instance_similarity,
-    object_keypoint=factory_object_keypoint_similarity
+    object_keypoint=factory_object_keypoint_similarity,
 )
 
 match_policies = dict(
@@ -658,8 +658,9 @@ class Tracker(BaseTracker):
             A list of the instances that were tracked.
         """
         if self.similarity_function == normalized_instance_similarity:
-            factory_normalized_instance = functools.partial(normalized_instance_similarity,
-                                                            img_hw=img_hw)
+            factory_normalized_instance = functools.partial(
+                normalized_instance_similarity, img_hw=img_hw
+            )
             self.similarity_function = factory_normalized_instance
 
         if self.candidate_maker is None:
@@ -1529,6 +1530,7 @@ def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker) -> List[Labele
             track_args["img"] = lf.video[lf.frame_idx]
         else:
             track_args["img"] = None
+        track_args["img_hw"] = lf.image.shape[-3:-1]
 
         new_lf = LabeledFrame(
             frame_idx=lf.frame_idx,

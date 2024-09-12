@@ -37,12 +37,13 @@ def normalized_instance_similarity(
 
     normalize_factors = np.array((img_hw[1], img_hw[0]))
     ref_visible = ~(np.isnan(ref_instance.points_array).any(axis=1))
-    normalized_query_keypoints = query_instance.points_array/ normalize_factors
-    normalized_ref_keypoints = ref_instance.points_array/ normalize_factors
+    normalized_query_keypoints = query_instance.points_array / normalize_factors
+    normalized_ref_keypoints = ref_instance.points_array / normalize_factors
     dists = np.sum((normalized_query_keypoints - normalized_ref_keypoints) ** 2, axis=1)
     similarity = np.nansum(np.exp(-dists)) / np.sum(ref_visible)
 
     return similarity
+
 
 def instance_similarity(
     ref_instance: InstanceType, query_instance: InstanceType
@@ -50,7 +51,9 @@ def instance_similarity(
     """Computes similarity between instances."""
 
     ref_visible = ~(np.isnan(ref_instance.points_array).any(axis=1))
-    dists = np.sum((query_instance.points_array - ref_instance.points_array) ** 2, axis=1)
+    dists = np.sum(
+        (query_instance.points_array - ref_instance.points_array) ** 2, axis=1
+    )
     similarity = np.nansum(np.exp(-dists)) / np.sum(ref_visible)
 
     return similarity
