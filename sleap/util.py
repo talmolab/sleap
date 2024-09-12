@@ -11,7 +11,7 @@ import shutil
 from collections import defaultdict
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Dict, Hashable, Iterable, List, Optional
+from typing import Any, Dict, Hashable, Iterable, List, Optional, Union
 from urllib.parse import unquote, urlparse
 from urllib.request import url2pathname
 
@@ -26,6 +26,7 @@ try:
     from importlib.resources import files  # New in 3.9+
 except ImportError:
     from importlib_resources import files  # TODO(LM): Upgrade to importlib.resources.
+
 from PIL import Image
 
 import sleap.version as sleap_version
