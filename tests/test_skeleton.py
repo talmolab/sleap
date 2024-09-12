@@ -194,9 +194,9 @@ def test_json(skeleton: Skeleton, tmpdir):
     )
     assert skeleton.is_template == False
     json_str = skeleton.to_json()
-    json_dict = jsonpickle.decode(json_str)
+    json_dict = SkeletonDecoder.decode(json_str)
     json_dict_keys = list(json_dict.keys())
-    assert "nx_graph" not in json_dict_keys
+    assert "nx_graph" in json_dict_keys  # SkeletonDecoder adds this key
     assert "preview_image" not in json_dict_keys
     assert "description" not in json_dict_keys
 
@@ -208,7 +208,7 @@ def test_json(skeleton: Skeleton, tmpdir):
 
     skeleton._is_template = True
     json_str = skeleton.to_json()
-    json_dict = jsonpickle.decode(json_str)
+    json_dict = SkeletonDecoder.decode(json_str)
     json_dict_keys = list(json_dict.keys())
     assert "nx_graph" in json_dict_keys
     assert "preview_image" in json_dict_keys
