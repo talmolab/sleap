@@ -1078,14 +1078,14 @@ class Skeleton:
             else:
                 edge_type = {"py/id": 2}
 
-            src, dst = tuple(symmetry.nodes)
-            print(f"src: {src}")
-            print(f"dst: {dst}")
+            symmetry_src, symmetry_dst = symmetry
+            print(f"src: {symmetry_src}")
+            print(f"dst: {symmetry_dst}")
             edges_dicts.append(
                 {
                     "key": 0,
-                    "source": {"py/id": node_to_id[src]},
-                    "target": {"py/id": node_to_id[dst]},
+                    "source": {"py/id": node_to_id[symmetry_src]},
+                    "target": {"py/id": node_to_id[symmetry_dst]},
                     "type": edge_type,
                 }
             )
