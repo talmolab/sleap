@@ -1004,7 +1004,7 @@ class Skeleton:
         node_to_id = {}
         for node in self.nodes:
             if node not in node_to_id:
-                print(f'node: {node}')
+                print(f"node: {node}")
                 # Note: This ID is not the same as the node index in the skeleton in
                 # legacy SLEAP, but we do not retain this information in the labels, so
                 # IDs will be different.
@@ -1014,15 +1014,15 @@ class Skeleton:
                 #
                 # TODO: Store legacy metadata in labels to get byte-level compatibility?
                 node_to_id[node] = len(node_to_id)
-                print(f'node_to_id: {node_to_id}')
+                print(f"node_to_id: {node_to_id}")
                 nodes_dicts.append({"name": node.name, "weight": 1.0})
-        print(f'nodes_dicts: {nodes_dicts}')
+        print(f"nodes_dicts: {nodes_dicts}")
 
         # Build links dicts for normal edges.
         edges_dicts = []
         for edge_ind, edge in enumerate(self.edges):
-            print(f'edge_ind: {edge_ind}')
-            print(f'edge: {edge}')
+            print(f"edge_ind: {edge_ind}")
+            print(f"edge: {edge}")
             if edge_ind == 0:
                 edge_type = {
                     "py/reduce": [
@@ -1030,38 +1030,44 @@ class Skeleton:
                         {"py/tuple": [1]},  # 1 = real edge, 2 = symmetry edge
                     ]
                 }
-                print(f'edge_type: {edge_type}')
+                print(f"edge_type: {edge_type}")
             else:
                 edge_type = {"py/id": 1}
-                print(f'edge_type: {edge_type}')
+                print(f"edge_type: {edge_type}")
 
             # Edges are stored as a list of tuples of nodes
-            # The source and target are the nodes in the tuple (edge) are the first and 
+            # The source and target are the nodes in the tuple (edge) are the first and
             # second nodes respectively
             source = edge[0]
-            print(f'source: {source}')
-            print(f'node_to_id[source]: {node_to_id[source]}')
+            print(f"source: {source}")
+            print(f"node_to_id[source]: {node_to_id[source]}")
             target = edge[1]
-            print(f'target: {target}')
-            print(f'node_to_id[target]: {node_to_id[target]}')
+            print(f"target: {target}")
+            print(f"node_to_id[target]: {node_to_id[target]}")
             edges_dicts.append(
                 {
                     # Note: Insert idx is not the same as the edge index in the skeleton
                     # in legacy SLEAP.
                     "edge_insert_idx": edge_ind,
                     "key": 0,  # Always 0.
-                    "source": {"py/object": "sleap.skeleton.Node", "py/state": {"name": source.name, "weight": 1.0}},
-                    "target": {"py/object": "sleap.skeleton.Node", "py/state": {"name": target.name, "weight": 1.0}},
+                    "source": {
+                        "py/object": "sleap.skeleton.Node",
+                        "py/state": {"name": source.name, "weight": 1.0},
+                    },
+                    "target": {
+                        "py/object": "sleap.skeleton.Node",
+                        "py/state": {"name": target.name, "weight": 1.0},
+                    },
                     # "target": {"py/id": node_to_id[target]},
                     "type": edge_type,
                 }
             )
-        print(f'edges_dicts: {edges_dicts}')
+        print(f"edges_dicts: {edges_dicts}")
 
         # Build links dicts for symmetry edges.
         for symmetry_ind, symmetry in enumerate(self.symmetries):
-            print(f'symmetry_ind: {symmetry_ind}')
-            print(f'symmetry: {symmetry}')
+            print(f"symmetry_ind: {symmetry_ind}")
+            print(f"symmetry: {symmetry}")
             if symmetry_ind == 0:
                 edge_type = {
                     "py/reduce": [
@@ -1073,8 +1079,8 @@ class Skeleton:
                 edge_type = {"py/id": 2}
 
             src, dst = tuple(symmetry.nodes)
-            print(f'src: {src}')
-            print(f'dst: {dst}')
+            print(f"src: {src}")
+            print(f"dst: {dst}")
             edges_dicts.append(
                 {
                     "key": 0,
