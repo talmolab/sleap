@@ -1093,29 +1093,44 @@ class Skeleton:
             # Template skeletons have additional fields
             nx_graph = {
                 "directed": True,
-                "graph": graph, 
+                "graph": graph,
+                "nodes": [
+                    {
+                        "id": {
+                            "py/object": "sleap.skeleton.Node",
+                            "py/state": {"name": node.name, "weight": node.weight},
+                        }
+                    }
+                    for node in self.nodes
+                ],
                 "links": edges_dicts,
                 "multigraph": True,
-                # In the order in Skeleton.nodes and must match up with nodes_dicts.
-                "nodes": [{"id": {"py/id": node_to_id[node]}} for node in self.nodes],
             }
             skeleton_dict = {
                 "description": self.description,
-                "nx_graph": nx_graph, 
+                "nx_graph": nx_graph,
                 "preview_image": self.preview_image,
             }
         else:
-            skeleton_dict ={
-                    "directed": True,
-                    "graph": graph,
-                    "links": edges_dicts,
-                    "multigraph": True,
-                    # In the order in Skeleton.nodes and must match up with nodes_dicts.
-                    "nodes": [{"id": {"py/id": node_to_id[node]}} for node in self.nodes],}
-            
-        print(f'skeleton_dict: {skeleton_dict}')
-        json_str = json.dumps(skeleton_dict)
-        print(f'json_str: {json_str}')
+            skeleton_dict = {
+                "directed": True,
+                "graph": graph,
+                "nodes": [
+                    {
+                        "id": {
+                            "py/object": "sleap.skeleton.Node",
+                            "py/state": {"name": node.name, "weight": node.weight},
+                        }
+                    }
+                    for node in self.nodes
+                ],
+                "links": edges_dicts,
+                "multigraph": True,
+            }
+
+        print(f"skeleton_dict: {skeleton_dict}")
+        json_str = json.dumps(skeleton_dict, indent=4, sort_keys=True)
+        print(f"json_str: {json_str}")
         return json_str
 
         # jsonpickle.set_encoder_options("simplejson", sort_keys=True, indent=4)
