@@ -1052,13 +1052,12 @@ class Skeleton:
                     "key": 0,  # Always 0.
                     "source": {
                         "py/object": "sleap.skeleton.Node",
-                        "py/state": {"name": source.name, "weight": 1.0},
+                        "py/state": {"py/tuple": [source.name, source.weight]},
                     },
                     "target": {
                         "py/object": "sleap.skeleton.Node",
-                        "py/state": {"name": target.name, "weight": 1.0},
+                        "py/state": {"py/tuple": [target.name, target.weight]},
                     },
-                    # "target": {"py/id": node_to_id[target]},
                     "type": edge_type,
                 }
             )
