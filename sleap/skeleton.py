@@ -1097,7 +1097,7 @@ class Skeleton:
                     {
                         "id": {
                             "py/object": "sleap.skeleton.Node",
-                            "py/state": {"name": node.name, "weight": node.weight},
+                            "py/state": {"py/tuple": [node.name, node.weight]},
                         }
                     }
                     for node in self.nodes
@@ -1118,7 +1118,7 @@ class Skeleton:
                     {
                         "id": {
                             "py/object": "sleap.skeleton.Node",
-                            "py/state": {"name": node.name, "weight": node.weight},
+                            "py/state": {"py/tuple": [node.name, node.weight]},
                         }
                     }
                     for node in self.nodes
