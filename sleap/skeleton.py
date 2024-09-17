@@ -1050,14 +1050,8 @@ class Skeleton:
                     # in legacy SLEAP.
                     "edge_insert_idx": edge_ind,
                     "key": 0,  # Always 0.
-                    "source": {
-                        "py/object": "sleap.skeleton.Node",
-                        "py/state": {"py/tuple": [source.name, source.weight]},
-                    },
-                    "target": {
-                        "py/object": "sleap.skeleton.Node",
-                        "py/state": {"py/tuple": [target.name, target.weight]},
-                    },
+                    "source": {"py/id": self.nodes.index(node)},
+                    "target": {"py/id": self.nodes.index(node)},
                     "type": edge_type,
                 }
             )
