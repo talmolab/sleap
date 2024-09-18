@@ -59,6 +59,7 @@ extensions = [
     "sphinx.ext.linkcode",
     "sphinx.ext.napoleon",
     "sphinx_copybutton",
+    "sphinx_tabs.tabs",  # For tabs inside docs
     # https://myst-nb.readthedocs.io/en/latest/
     "myst_nb",
 ]
@@ -174,6 +175,12 @@ html_logo = "_static/logo.png"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
+# These paths are either relative to html_static_path
+# or fully qualified paths (eg. https://...)
+html_css_files = [
+    'css/tabs.css',
+]
+
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
 #
@@ -220,3 +227,7 @@ shutil.copytree("_static", _docs_static_path)
 
 # https://myst-nb.readthedocs.io/en/latest/use/config-reference.html
 jupyter_execute_notebooks = "off"
+
+# Sphinx-tabs settings
+# https://sphinx-tabs.readthedocs.io/en/latest/
+sphinx_tabs_disable_css_loading = True  # Use the theme's CSS

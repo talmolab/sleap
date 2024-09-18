@@ -1,0 +1,179 @@
+# Run tests using built conda packages.
+name: Build Conda CI (no upload)
+
+# Run when changes to pip wheel
+on:
+  push:
+    paths:
+      - ".conda/meta.yaml"
+      - ".conda_mac/meta.yaml"
+      - "setup.py"
+      - "requirements.txt"
+      - "dev_requirements.txt"
+      - "environment_build.yml"
+      - ".github/workflows/build_conda_ci.yml"
+
+# If RUN_BUILD_JOB is set to true, then RUN_ID will be overwritten to the current run id
+env:
+  RUN_BUILD_JOB: true
+  RUN_ID: 10713717594 # Only used if RUN_BUILD_JOB is false (to dowload build artifact)
+
+jobs:
+  build:
+    name: Build package from push (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["windows-2022", "ubuntu-22.04", "macos-14"]
+        # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
+        include:
+          # Use these variables as defaults
+          - condarc: .conda/condarc.yaml
+          - conda-folder: .conda
+          - pyver: "3.10"
+          - build-prefix: win
+          - os: "ubuntu-22.04"
+            build-prefix: linux
+          # Use special condarc if macos
+          - os: "macos-14"
+            condarc: .conda_mac/condarc.yaml
+            conda-folder: .conda_mac
+            build-prefix: osx
+
+    steps:
+      # Setup
+      - name: Checkout
+        if: env.RUN_BUILD_JOB == 'true'
+        uses: actions/checkout@v4
+
+      - name: Setup Miniconda
+        if: env.RUN_BUILD_JOB == 'true'
+        uses: conda-incubator/setup-miniconda@v3.0.4
+        with:
+          miniforge-version: latest
+          condarc-file: ${{ matrix.condarc }}
+          python-version: ${{ matrix.pyver }}
+          environment-file: environment_build.yml
+          activate-environment: sleap_ci
+          conda-solver: "libmamba"
+
+      - name: Print build environment info
+        if: env.RUN_BUILD_JOB == 'true'
+        shell: bash -l {0}
+        run: |
+          which python
+          conda list
+          pip freeze
+
+      # Build conda package
+      - name: Build conda package
+        if: env.RUN_BUILD_JOB == 'true'
+        shell: bash -l {0}
+        run: |
+          conda build ${{ matrix.conda-folder }} --output-folder build
+
+      # Upload artifact "tests" can use it
+      - name: Upload conda package artifact
+        if: env.RUN_BUILD_JOB == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sleap-build-${{ matrix.build-prefix }}
+          path: build # Upload entire build directory
+          retention-days: 1
+          overwrite: true
+
+  tests:
+    name: Run tests using package (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: build # Ensure the build job has completed before starting this job.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["windows-2022", "ubuntu-22.04", "macos-14"]
+        # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
+        include:
+          # Default values
+          - build-prefix: win
+          - build-suffix: 64
+          - test_args: pytest --durations=-1 tests/
+          - condarc: .conda/condarc.yaml
+          - pyver: "3.10"
+          - conda-channels: -c conda-forge -c nvidia -c anaconda
+          # Ubuntu specific values
+          - os: ubuntu-22.04
+            build-prefix: linux
+            # Otherwise core dumped in github actions
+            test_args: |
+              sudo apt install xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xfixes0
+              sudo Xvfb :1 -screen 0 1024x768x24 </dev/null &
+              export DISPLAY=":1"
+              pytest tests -k 'not exclude_from_linux_pip_test'
+          # Use special condarc if macos
+          - os: "macos-14"
+            build-prefix: osx
+            build-suffix: arm64
+            condarc: .conda_mac/condarc.yaml
+            conda-channels: -c conda-forge -c anaconda
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.pyver }}
+
+      - name: Use current run id for conda package download
+        shell: bash -l {0}
+        if: env.RUN_BUILD_JOB == 'true'
+        run: echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
+
+      # https://github.com/actions/download-artifact?tab=readme-ov-file#usage
+      - name: Download conda package artifact
+        uses: actions/download-artifact@v4
+        id: download
+        with:
+          name: sleap-build-${{ matrix.build-prefix }}
+          path: build
+          run-id: ${{ env.RUN_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: List items in current directory
+        run: |
+          ls .
+          ls -R build
+
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3.0.4
+        with:
+          miniforge-version: latest
+          condarc-file: ${{ matrix.condarc }}
+          python-version: ${{ matrix.pyver }}
+          conda-solver: "libmamba"
+
+      - name: Create conda environment
+        shell: bash -l {0}
+        run: conda create sleap -y -n sleap_ci -c ./build ${{ matrix.conda-channels }}
+
+      - name: Install packages for testing
+        shell: bash -l {0}
+        run: |
+          conda activate sleap_ci
+          pip install -r "dev_requirements.txt"
+
+      # Note: "conda activate" does not persist across steps
+      - name: Print environment info
+        shell: bash -l {0}
+        run: |
+          conda activate sleap_ci
+          conda info
+          conda list
+          pip freeze
+
+      - name: Test package
+        shell: bash -l {0}
+        run: |
+          conda activate sleap_ci
+          ${{ matrix.test_args}}
