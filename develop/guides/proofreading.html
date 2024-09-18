@@ -349,6 +349,8 @@ document.write(`
 <li><p>“<strong>centroid</strong>” measures similarity by the distance between the instance centroids</p></li>
 <li><p>“<strong>iou</strong>” measures similarity by the intersection/overlap of the instance bounding boxes</p></li>
 <li><p>“<strong>instance</strong>” measures similarity by looking at the distances between corresponding nodes in the instances, normalized by the number of valid nodes in the candidate instance.</p></li>
+<li><p>“<strong>normalized_instance</strong>” measures similarity by looking at the distances between corresponding nodes in the instances, normalized by the number of valid nodes in the candidate instance and the keypoints normalized by the image size.</p></li>
+<li><p>“<strong>object_keypoint</strong>” measures similarity by measuring the distance between each keypoints from a reference instance and a query instance, takes the exp(-d**2), sum for all the keypoints and divide by the number of visible keypoints in the reference instance.</p></li>
 </ul>
 <p>Once SLEAP has measured the similarity between all the candidates and the instances in frame N, you need to choose a way to pair them up. You can do this either by picking the best match, and the picking the best remaining match for each remaining instance in turn—this is “<strong>greedy</strong>” matching—or you can find the way of matching identities which minimizes the total cost (or: maximizes the total similarity)—this is “<strong>Hungarian</strong>” matching.</p>
 <p>Finally, you have an optional second-pass method which “cleans” the resulting
