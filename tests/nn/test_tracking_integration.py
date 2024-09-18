@@ -102,7 +102,7 @@ def run_tracker(frames, tracker):
         new_lf = LabeledFrame(
             frame_idx=lf.frame_idx,
             video=lf.video,
-            instances=tracker.track(**track_args),
+            instances=tracker.track(**track_args, img_hw=lf.image.shape[-3:-1]),
         )
         new_lfs.append(new_lf)
 
@@ -138,6 +138,8 @@ def main(f, dir):
         instance=sleap.nn.tracker.components.instance_similarity,
         centroid=sleap.nn.tracker.components.centroid_distance,
         iou=sleap.nn.tracker.components.instance_iou,
+        normalized_instance=sleap.nn.tracker.components.normalized_instance_similarity,
+        object_keypoint=sleap.nn.tracker.components.factory_object_keypoint_similarity(),
     )
     scales = (
         1,

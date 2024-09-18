@@ -5,6 +5,7 @@ import abc
 import attr
 import numpy as np
 import cv2
+import functools
 from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple
 
 from sleap import Track, LabeledFrame, Skeleton
@@ -12,6 +13,7 @@ from sleap import Track, LabeledFrame, Skeleton
 from sleap.nn.tracker.components import (
     factory_object_keypoint_similarity,
     instance_similarity,
+    normalized_instance_similarity,
     centroid_distance,
     instance_iou,
     hungarian_matching,
@@ -495,7 +497,8 @@ similarity_policies = dict(
     instance=instance_similarity,
     centroid=centroid_distance,
     iou=instance_iou,
-    object_keypoint=instance_similarity,
+    normalized_instance=normalized_instance_similarity,
+    object_keypoint=factory_object_keypoint_similarity,
 )
 
 match_policies = dict(
@@ -639,6 +642,7 @@ class Tracker(BaseTracker):
     def track(
         self,
         untracked_instances: List[InstanceType],
+        img_hw: Tuple[int],
         img: Optional[np.ndarray] = None,
         t: int = None,
     ) -> List[InstanceType]:
@@ -646,12 +650,18 @@ class Tracker(BaseTracker):
 
         Args:
             untracked_instances: List of instances to assign to tracks.
+            img_hw: (height, width) of the image used to normalize the keypoints.
             img: Image data of the current frame for flow shifting.
             t: Current timestep. If not provided, increments from the internal queue.
 
         Returns:
             A list of the instances that were tracked.
         """
+        if self.similarity_function == normalized_instance_similarity:
+            factory_normalized_instance = functools.partial(
+                normalized_instance_similarity, img_hw=img_hw
+            )
+            self.similarity_function = factory_normalized_instance
 
         if self.candidate_maker is None:
             return untracked_instances
@@ -1520,6 +1530,7 @@ def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker) -> List[Labele
             track_args["img"] = lf.video[lf.frame_idx]
         else:
             track_args["img"] = None
+        track_args["img_hw"] = lf.image.shape[-3:-1]
 
         new_lf = LabeledFrame(
             frame_idx=lf.frame_idx,
