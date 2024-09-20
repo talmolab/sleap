@@ -85,6 +85,10 @@ class Node:
         return other.name == self.name and other.weight == self.weight
 
 
+class SkeletonEncoder:
+    """Replace json.pickle.encode with our own encoder."""
+
+
 class Skeleton:
     """The main object for representing animal skeletons.
 
