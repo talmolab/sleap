@@ -117,7 +117,7 @@ class SkeletonEncoder:
     """
 
     def __init__(self):
-        self._encoded_strings: str = ""
+        self._encoded_objects: dict = {}
 
     @classmethod
     def encode(cls, data: dict) -> str:
@@ -133,7 +133,7 @@ class SkeletonEncoder:
         return encoder._encode(data)
     
     def _encode(self, data: dict) -> str:
-        
+
 
     def _encode_node(self, node: Node) -> dict:
         """Encode a `Node` object to a dictionary.
