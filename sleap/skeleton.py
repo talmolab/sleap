@@ -86,7 +86,86 @@ class Node:
 
 
 class SkeletonEncoder:
-    """Replace json.pickle.encode with our own encoder."""
+    """Replace jsonpickle.encode with our own encoder.
+
+
+    The input is a dictionary contained python objects that needs to be encoded as
+    JSON strings. The output is a JSON string that represents the input dictionary.
+
+    `Node(name='neck', weight=1.0)` =>
+        {
+            "py/object": "sleap.Skeleton.Node",
+            "py/state": {"py/tuple" ["neck", 1.0]}
+        }
+
+    `<EdgeType.BODY: 1>` =>
+        {"py/reduce": [
+            {"py/type": "sleap.Skeleton.EdgeType"},
+            {"py/tuple": [1] }
+            ]
+        }`
+
+    Where `name` and `weight` are the attributes of the `Node` class; weight is always 1.0.
+    `EdgeType` is an enum with values `BODY = 1` and `SYMMETRY = 2`.
+
+    See sleap.skeleton.Node and sleap.skeleton.EdgeType.
+
+    If the object has been "seen" before, it will not be encoded as the full JSON string
+    but referenced by its `py/id`, which starts at 1 and indexes the objects in the
+    order they are seen so that the second time the first object is used, it will be
+    referenced as `{"py/id": 1}`.
+    """
+
+    def __init__(self):
+        self._encoded_strings: str = ""
+
+    @classmethod
+    def encode(cls, data: dict) -> str:
+        """Encode the input dictionary as a JSON string.
+
+        Args:
+            data: The dictionary to encode.
+
+        Returns:
+            The JSON string representation of the dictionary.
+        """
+        encoder = cls()
+        return encoder._encode(data)
+    
+    def _encode(self, data: dict) -> str:
+        
+
+    def _encode_node(self, node: Node) -> dict:
+        """Encode a `Node` object to a dictionary.
+
+        Args:
+            node: The `Node` object to encode.
+
+        Returns:
+            The dictionary representation of the `Node`.
+        """
+        node_dict = {
+            "py/object": "sleap.Skeleton.Node",
+            "py/state": {"py/tuple": [node.name, node.weight]},
+        }
+        return node_dict
+
+    def _encode_edge_type(self, edge_type: EdgeType) -> dict:
+        """Encode an `EdgeType` object to a dictionary.
+
+        Args:
+            edge_type: The `EdgeType` object to encode.
+
+        Returns:
+            The dictionary representation of the `EdgeType`.
+        """
+        edge_type_dict = {
+            "py/reduce": [
+                {"py/type": "sleap.Skeleton.EdgeType"},
+                {"py/tuple": [edge_type.value]},
+            ]
+        }
+        return edge_type_dict
 
 
 class Skeleton:
@@ -1008,11 +1087,14 @@ class Skeleton:
             indexed_node_graph = nx.relabel_nodes(
                 G=self._graph, mapping=node_to_idx
             )  # map nodes to int
+            print(f"indexed_node_graph: {indexed_node_graph}")
         else:
             indexed_node_graph = self._graph
+            print(f"indexed_node_graph: {indexed_node_graph}")
 
         # Encode to JSON
         graph = json_graph.node_link_data(indexed_node_graph)
+        print(f"graph: {graph}")
 
         # SLEAP v1.3.0 added `description` and `preview_image` to `Skeleton`, but saving
         # these fields breaks data format compatibility. Currently, these are only
@@ -1024,10 +1106,13 @@ class Skeleton:
                 "description": self.description,
                 "preview_image": self.preview_image,
             }
+            print(f"data: {data}")
         else:
             data = graph
+            print(f"data: {data}")
 
         json_str = jsonpickle.encode(data)
+        print(f"json_str: {json_str}")
 
         return json_str
 
