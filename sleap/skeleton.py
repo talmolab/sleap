@@ -116,56 +116,129 @@ class SkeletonEncoder:
     """
 
     def __init__(self):
-        self._encoded_objects: dict = {}
+        """Initializes a SkeletonEncoder instance."""
+        # Maps object id to py/id
+        self._encoded_objects: Dict[int, int] = {}
 
     @classmethod
-    def encode(cls, data: dict) -> str:
-        """Encode the input dictionary as a JSON string.
+    def encode(cls, data: Dict[str, Any]) -> str:
+        """Encodes the input dictionary as a JSON string.
 
         Args:
-            data: The dictionary to encode.
+            data: The data to encode.
 
         Returns:
-            The JSON string representation of the dictionary.
+            json_str: The JSON string representation of the data.
         """
         encoder = cls()
-        return encoder._encode(data)
-    
-    def _encode(self, data: dict) -> str:
-        
+        encoded_data = encoder._encode(data)
+        json_str = json.dumps(encoded_data, indent=4, sort_keys=True)
+        return json_str
 
-
-    def _encode_node(self, node: Node) -> dict:
-        """Encode a `Node` object to a dictionary.
+    def _encode(self, obj: Any) -> Any:
+        """Recursively encodes the input object.
 
         Args:
-            node: The `Node` object to encode.
+            obj: The object to encode. Can be a dictionary, list, Node, EdgeType or 
+                primitive data type.
 
         Returns:
-            The dictionary representation of the `Node`.
+            The encoded object as a dictionary.
         """
-        node_dict = {
-            "py/object": "sleap.Skeleton.Node",
-            "py/state": {"py/tuple": [node.name, node.weight]},
-        }
-        return node_dict
+        if isinstance(obj, dict):
+            return {k: self._encode(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self._encode(v) for v in obj]
+        elif isinstance(obj, Node):
+            return self._encode_node(obj)
+        elif isinstance(obj, EdgeType):
+            return self._encode_edge_type(obj)
+        else:
+            return obj  # Primitive data types
 
-    def _encode_edge_type(self, edge_type: EdgeType) -> dict:
-        """Encode an `EdgeType` object to a dictionary.
+    def _encode_node(self, node: Node) -> Dict[str, Any]:
+        """Encodes a Node object.
 
         Args:
-            edge_type: The `EdgeType` object to encode.
+            node: The Node object to encode.
 
         Returns:
-            The dictionary representation of the `EdgeType`.
+            The encoded `Node` object as a dictionary.
         """
-        edge_type_dict = {
-            "py/reduce": [
-                {"py/type": "sleap.Skeleton.EdgeType"},
-                {"py/tuple": [edge_type.value]},
-            ]
-        }
-        return edge_type_dict
+        py_id = self._get_or_assign_id(node)
+        if self._is_first_encoding(node):
+            # Full encoding
+            return {
+                "py/object": "sleap.skeleton.Node",
+                "py/state": {
+                    "py/tuple": [
+                        node.name,
+                        node.weight
+                    ]
+                }
+            }
+        else:
+            # Reference by py/id
+            return {"py/id": py_id}
+
+    def _encode_edge_type(self, edge_type: EdgeType) -> Dict[str, Any]:
+        """Encodes an EdgeType object.
+
+        Args:
+            edge_type: The EdgeType object to encode. Either `EdgeType.BODY` or 
+                `EdgeType.SYMMETRY` enum with values 1 and 2 respectively.
+
+        Returns:
+            The encoded EdgeType object as a dictionary.
+        """
+        py_id = self._get_or_assign_id(edge_type)
+        if self._is_first_encoding(edge_type):
+            # Full encoding
+            return {
+                "py/reduce": [
+                    {
+                        "py/type": "sleap.skeleton.EdgeType"
+                    },
+                    {
+                        "py/tuple": [edge_type.value]
+                    },
+                ]
+            }
+        else:
+            # Reference by py/id
+            return {"py/id": py_id}
+
+    def _get_or_assign_id(self, obj: Any) -> int:
+        """Gets or assigns a py/id for the object.
+
+        Args:
+            The object to get or assign a py/id for.
+
+        Returns:
+            The py/id assigned to the object.
+        """
+        # Object id is unique for each object in the current session
+        obj_id = id(obj)
+        # Assign a py/id to the object if it hasn't been assigned one yet
+        if obj_id not in self._encoded_objects:
+            py_id = len(self._encoded_objects) + 1  # py/id starts at 1
+            # Assign the py/id to the object and store it in _encoded_objects
+            self._encoded_objects[obj_id] = py_id
+        return self._encoded_objects[obj_id]
+
+    def _is_first_encoding(self, obj: Any) -> bool:
+        """Checks if the object is being encoded for the first time.
+
+        Args:
+            obj: The object to check.
+
+        Returns:
+            True if this is the first encoding of the object, False otherwise.
+        """
+        obj_id = id(obj)
+        # The object is being encoded for the first time if it's just been added to 
+        # _encoded_objects
+        return self._encoded_objects[obj_id] == len(self._encoded_objects)
 
 
 class Skeleton:
