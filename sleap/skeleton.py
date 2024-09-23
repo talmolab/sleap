@@ -133,6 +133,7 @@ class SkeletonEncoder:
         return encoder._encode(data)
     
     def _encode(self, data: dict) -> str:
+        
 
 
     def _encode_node(self, node: Node) -> dict:
