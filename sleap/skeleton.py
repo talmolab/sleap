@@ -88,8 +88,7 @@ class Node:
 class SkeletonEncoder:
     """Replace jsonpickle.encode with our own encoder.
 
-
-    The input is a dictionary contained python objects that needs to be encoded as
+    The input is a dictionary containing python objects that need to be encoded as
     JSON strings. The output is a JSON string that represents the input dictionary.
 
     `Node(name='neck', weight=1.0)` =>
