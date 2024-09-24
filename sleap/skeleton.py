@@ -256,13 +256,16 @@ class SkeletonEncoder:
                     {
                         "py/tuple": [edge_type.value]
                     },
+                    None,
+                    None,
+                    None
                 ]
             }
         else:
             # Reference by py/id
             return {"py/id": py_id}
 
-    def _get_or_assign_id(self, obj: Any) -> int:
+    def _get_or_assign_id(self, obj: Any, first_encoding: bool) -> int:
         """Gets or assigns a py/id for the object.
 
         Args:
