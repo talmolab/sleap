@@ -215,8 +215,10 @@ class SkeletonEncoder:
         Returns:
             The encoded `Node` object as a dictionary.
         """
-        py_id = self._get_or_assign_id(node)
-        if self._is_first_encoding(node):
+        # Check if object has been encoded before
+        first_encoding = self._is_first_encoding(node)
+        py_id = self._get_or_assign_id(node, first_encoding)
+        if first_encoding:
             # Full encoding
             return {
                 "py/object": "sleap.skeleton.Node",
