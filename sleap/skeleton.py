@@ -295,9 +295,10 @@ class SkeletonEncoder:
             True if this is the first encoding of the object, False otherwise.
         """
         obj_id = id(obj)
-        # The object is being encoded for the first time if it's just been added to 
-        # _encoded_objects
-        return self._encoded_objects[obj_id] == len(self._encoded_objects)
+        first_time = obj_id not in self._encoded_objects
+        print(f"Length of encoded objects: {len(self._encoded_objects)}")
+        print(f"Is first time: {first_time} for object: {obj}")
+        return first_time
 
 
 class Skeleton:
