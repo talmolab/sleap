@@ -23,8 +23,6 @@ import networkx as nx
 from networkx.readwrite import json_graph
 from scipy.io import loadmat
 
-from sleap.skeleton import SkeletonEncoder
-
 
 NodeRef = Union[str, "Node"]
 H5FileRef = Union[str, h5py.File]
