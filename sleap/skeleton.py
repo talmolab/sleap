@@ -146,15 +146,65 @@ class SkeletonEncoder:
             The encoded object as a dictionary.
         """
         if isinstance(obj, dict):
-            return {k: self._encode(v) for k, v in obj.items()}
+            if 'nodes' in obj and 'links' in obj:
+                # Process 'links' key first
+                encoded_obj = {}
+                encoded_obj['links'] = self._encode_links(obj.get('links'))
+                # Now process other keys
+                for key in obj:
+                    if key != 'links':
+                        encoded_obj[key] = self._encode(obj[key])
+                return encoded_obj
+            else:
+                return {k: self._encode(v) for k, v in obj.items()}
         elif isinstance(obj, list):
             return [self._encode(v) for v in obj]
-        elif isinstance(obj, Node):
-            return self._encode_node(obj)
         elif isinstance(obj, EdgeType):
             return self._encode_edge_type(obj)
+        elif isinstance(obj, Node):
+            return self._encode_node(obj)
         else:
             return obj  # Primitive data types
+        
+    def _encode_links(self, links: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Encodes the list of links (edges) in the skeleton graph.
+
+        Args:
+            links: A list of dictionaries, each representing an edge in the graph.
+
+        Returns:
+            A list of encoded edge dictionaries with keys ordered as specified.
+        """
+        encoded_links = []
+        for link in links:
+            # Use a regular dict (insertion order preserved in Python 3.7+)
+            encoded_link = {}
+            
+            # Encode in specific order: source, target, type, other attributes
+            if 'source' in link:
+                value = link['source']
+                encoded_value = self._encode_node(value)
+                encoded_link['source'] = encoded_value
+            
+            if 'target' in link:
+                value = link['target']
+                encoded_value = self._encode_node(value)
+                encoded_link['target'] = encoded_value
+
+            if 'type' in link:
+                value = link['type']
+                encoded_value = self._encode_edge_type(value)
+                encoded_link['type'] = encoded_value
+            
+            # Encode other attributes
+            for key, value in link.items():
+                if key not in ('type', 'source', 'target'):
+                    encoded_value = self._encode(value)
+                    encoded_link[key] = encoded_value
+            
+            encoded_links.append(encoded_link)
+        print(f"Encoded links: {encoded_links}")
+        return encoded_links
 
     def _encode_node(self, node: Node) -> Dict[str, Any]:
         """Encodes a Node object.
