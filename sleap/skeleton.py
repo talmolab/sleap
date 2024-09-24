@@ -243,8 +243,10 @@ class SkeletonEncoder:
         Returns:
             The encoded EdgeType object as a dictionary.
         """
-        py_id = self._get_or_assign_id(edge_type)
-        if self._is_first_encoding(edge_type):
+        # Check if object has been encoded before
+        first_encoding = self._is_first_encoding(edge_type)
+        py_id = self._get_or_assign_id(edge_type, first_encoding)
+        if first_encoding:
             # Full encoding
             return {
                 "py/reduce": [
