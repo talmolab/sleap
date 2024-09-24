@@ -247,9 +247,6 @@ class SkeletonEncoder:
                 "py/reduce": [
                     {"py/type": "sleap.skeleton.EdgeType"},
                     {"py/tuple": [edge_type.value]},
-                    None,
-                    None,
-                    None,
                 ]
             }
         else:
