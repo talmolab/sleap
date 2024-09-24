@@ -1237,7 +1237,9 @@ class Skeleton:
             data = graph
             print(f"data: {data}")
 
-        json_str = jsonpickle.encode(data)
+        # json_str = jsonpickle.encode(data)
+        encoder = SkeletonEncoder()
+        json_str = encoder.encode(data)
         print(f"json_str: {json_str}")
 
         return json_str
