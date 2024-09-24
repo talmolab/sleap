@@ -277,10 +277,12 @@ class SkeletonEncoder:
         # Object id is unique for each object in the current session
         obj_id = id(obj)
         # Assign a py/id to the object if it hasn't been assigned one yet
-        if obj_id not in self._encoded_objects:
+        if first_encoding:
             py_id = len(self._encoded_objects) + 1  # py/id starts at 1
             # Assign the py/id to the object and store it in _encoded_objects
             self._encoded_objects[obj_id] = py_id
+            print(f"Assigned py_id: {py_id} to object: {obj} with id: {obj_id}")
+        print(f"Returning py_id: {self._encoded_objects[obj_id]} for object: {obj}")
         return self._encoded_objects[obj_id]
 
     def _is_first_encoding(self, obj: Any) -> bool:
