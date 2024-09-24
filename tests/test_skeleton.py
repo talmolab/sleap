@@ -36,14 +36,16 @@ def test_decoded_encoded_Skeleton_from_load_json(fly_legs_skeleton_json):
     assert json.loads(original_json_str) == json.loads(encoded_json_str)
 
 
-@pytest.mark.parametrize("skeleton_fixture_name", ["flies13_skeleton", "skeleton", "stickman"])
+@pytest.mark.parametrize(
+    "skeleton_fixture_name", ["flies13_skeleton", "skeleton", "stickman"]
+)
 def test_decoded_encoded_Skeleton(skeleton_fixture_name, request):
     """
     Test Skeleton decoded from SkeletonEncoder.encode matches the original Skeleton.
     """
     # Use request.getfixturevalue to get the actual fixture value by name
     skeleton = request.getfixturevalue(skeleton_fixture_name)
-    
+
     # Get the graph from the skeleton
     indexed_node_graph = skeleton._graph
     graph = json_graph.node_link_data(indexed_node_graph)
