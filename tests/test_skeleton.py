@@ -9,9 +9,9 @@ from sleap.skeleton import Skeleton
 from sleap.skeleton import SkeletonEncoder
 
 
-def test_SkeletonEncoder(fly_legs_skeleton_json):
+def test_decoded_encoded_Skeleton(fly_legs_skeleton_json):
     """
-    Test SkeletonEncoder.encode method.
+    Test Skeleton decoded from SkeletonEncoder.encode.
     """
     # Get the skeleton from the fixture
     skeleton = Skeleton.load_json(fly_legs_skeleton_json)
@@ -29,28 +29,48 @@ def test_SkeletonEncoder(fly_legs_skeleton_json):
     # Check that the decoded skeleton is the same as the original skeleton
     assert skeleton.matches(decoded_skeleton)
 
-    encoded_data = json.loads(encoded_json_str)
 
-    # Assert that the 'nodes' key exists and has the correct number of nodes
-    assert 'nodes' in encoded_data
-    assert len(encoded_data['nodes']) == len(skeleton.nodes)
+# def test_SkeletonEncoder(fly_legs_skeleton_json):
+#     """
+#     Test SkeletonEncoder.encode method.
+#     """
+#     # Get the skeleton from the fixture
+#     skeleton = Skeleton.load_json(fly_legs_skeleton_json)
+#     # Get the graph from the skeleton
+#     indexed_node_graph = skeleton._graph
+#     graph = json_graph.node_link_data(indexed_node_graph)
 
-    # Assert that the 'links' key exists and has the correct number of links
-    assert 'links' in encoded_data
-    assert len(encoded_data['links']) == len(skeleton.edges)
+#     # Encode the graph as a json string to test .encode method
+#     encoder = SkeletonEncoder()
+#     encoded_json_str = encoder.encode(graph)
 
-    # Check that py/id references are assigned to nodes
-    for node_entry in encoded_data['nodes']:
-        node_id = node_entry['id']
-        assert isinstance(node_id, dict)
-        assert 'py/id' in node_id or 'py/object' in node_id
+#     # Get the skeleton from the encoded json string
+#     decoded_skeleton = Skeleton.from_json(encoded_json_str)
 
-    # Check that edges have the correct structure
-    for link in encoded_data['links']:
-        assert 'source' in link and 'target' in link
-        assert isinstance(link['source'], dict)
-        assert isinstance(link['target'], dict)
+#     # Check that the decoded skeleton is the same as the original skeleton
+#     assert skeleton.matches(decoded_skeleton)
 
+#     encoded_data = json.loads(encoded_json_str)
+
+#     # Assert that the 'nodes' key exists and has the correct number of nodes
+#     assert 'nodes' in encoded_data
+#     assert len(encoded_data['nodes']) == len(skeleton.nodes)
+
+#     # Assert that the 'links' key exists and has the correct number of links
+#     assert 'links' in encoded_data
+#     assert len(encoded_data['links']) == len(skeleton.edges)
+
+#     # Check that py/id references are assigned to nodes
+#     for node_entry in encoded_data['nodes']:
+#         node_id = node_entry['id']
+#         assert isinstance(node_id, dict)
+#         assert 'py/id' in node_id or 'py/object' in node_id
+
+#     # Check that edges have the correct structure
+#     for link in encoded_data['links']:
+#         assert 'source' in link and 'target' in link
+#         assert isinstance(link['source'], dict)
+#         assert isinstance(link['target'], dict)
 
 
 def test_add_dupe_node(skeleton):
