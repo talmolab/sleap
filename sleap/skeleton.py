@@ -139,20 +139,20 @@ class SkeletonEncoder:
         """Recursively encodes the input object.
 
         Args:
-            obj: The object to encode. Can be a dictionary, list, Node, EdgeType or 
+            obj: The object to encode. Can be a dictionary, list, Node, EdgeType or
                 primitive data type.
 
         Returns:
             The encoded object as a dictionary.
         """
         if isinstance(obj, dict):
-            if 'nodes' in obj and 'links' in obj:
+            if "nodes" in obj and "links" in obj:
                 # Process 'links' key first
                 encoded_obj = {}
-                encoded_obj['links'] = self._encode_links(obj.get('links'))
+                encoded_obj["links"] = self._encode_links(obj.get("links"))
                 # Now process other keys
                 for key in obj:
-                    if key != 'links':
+                    if key != "links":
                         encoded_obj[key] = self._encode(obj[key])
                 return encoded_obj
             else:
@@ -165,7 +165,7 @@ class SkeletonEncoder:
             return self._encode_node(obj)
         else:
             return obj  # Primitive data types
-        
+
     def _encode_links(self, links: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Encodes the list of links (edges) in the skeleton graph.
 
@@ -179,29 +179,29 @@ class SkeletonEncoder:
         for link in links:
             # Use a regular dict (insertion order preserved in Python 3.7+)
             encoded_link = {}
-            
-            # Encode in specific order: source, target, type, other attributes
-            if 'source' in link:
-                value = link['source']
-                encoded_value = self._encode_node(value)
-                encoded_link['source'] = encoded_value
-            
-            if 'target' in link:
-                value = link['target']
-                encoded_value = self._encode_node(value)
-                encoded_link['target'] = encoded_value
 
-            if 'type' in link:
-                value = link['type']
+            # Encode in specific order: source, target, type, other attributes
+            if "source" in link:
+                value = link["source"]
+                encoded_value = self._encode_node(value)
+                encoded_link["source"] = encoded_value
+
+            if "target" in link:
+                value = link["target"]
+                encoded_value = self._encode_node(value)
+                encoded_link["target"] = encoded_value
+
+            if "type" in link:
+                value = link["type"]
                 encoded_value = self._encode_edge_type(value)
-                encoded_link['type'] = encoded_value
-            
+                encoded_link["type"] = encoded_value
+
             # Encode other attributes
             for key, value in link.items():
-                if key not in ('type', 'source', 'target'):
+                if key not in ("type", "source", "target"):
                     encoded_value = self._encode(value)
                     encoded_link[key] = encoded_value
-            
+
             encoded_links.append(encoded_link)
         print(f"Encoded links: {encoded_links}")
         return encoded_links
@@ -222,12 +222,7 @@ class SkeletonEncoder:
             # Full encoding
             return {
                 "py/object": "sleap.skeleton.Node",
-                "py/state": {
-                    "py/tuple": [
-                        node.name,
-                        node.weight
-                    ]
-                }
+                "py/state": {"py/tuple": [node.name, node.weight]},
             }
         else:
             # Reference by py/id
@@ -237,7 +232,7 @@ class SkeletonEncoder:
         """Encodes an EdgeType object.
 
         Args:
-            edge_type: The EdgeType object to encode. Either `EdgeType.BODY` or 
+            edge_type: The EdgeType object to encode. Either `EdgeType.BODY` or
                 `EdgeType.SYMMETRY` enum with values 1 and 2 respectively.
 
         Returns:
@@ -250,15 +245,11 @@ class SkeletonEncoder:
             # Full encoding
             return {
                 "py/reduce": [
-                    {
-                        "py/type": "sleap.skeleton.EdgeType"
-                    },
-                    {
-                        "py/tuple": [edge_type.value]
-                    },
+                    {"py/type": "sleap.skeleton.EdgeType"},
+                    {"py/tuple": [edge_type.value]},
                     None,
                     None,
-                    None
+                    None,
                 ]
             }
         else:
