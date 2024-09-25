@@ -467,7 +467,7 @@ class SkeletonEncoder:
             # Use a regular dict (insertion order preserved in Python 3.7+)
             encoded_link = {}
 
-            # Encode in specific order of appearance
+
             for key, value in link.items():
                 if key in ("source", "target"):
                     encoded_link[key] = self._encode_node(value)
