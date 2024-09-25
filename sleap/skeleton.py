@@ -203,18 +203,24 @@ class SkeletonEncoder:
                     encoded_link[key] = encoded_value
 
             encoded_links.append(encoded_link)
-        print(f"Encoded links: {encoded_links}")
         return encoded_links
 
-    def _encode_node(self, node: Node) -> Dict[str, Any]:
+    def _encode_node(self, node: Union["Node", int]) -> Dict[str, Any]:
         """Encodes a Node object.
 
         Args:
-            node: The Node object to encode.
+            node: The Node object to encode or integer index. The latter requires that
+                the class has the `idx_to_node` attribute set.
 
         Returns:
             The encoded `Node` object as a dictionary.
         """
+        if isinstance(node, int):
+            # We sometimes have the node object already replaced by its index (when
+            # `node_to_idx` is provided). In this case, we assume that the node object
+            # will be handled by the caller, so just return the index.
+            return node
+
         # Check if object has been encoded before
         first_encoding = self._is_first_encoding(node)
         py_id = self._get_or_assign_id(node, first_encoding)
@@ -228,7 +234,7 @@ class SkeletonEncoder:
             # Reference by py/id
             return {"py/id": py_id}
 
-    def _encode_edge_type(self, edge_type: EdgeType) -> Dict[str, Any]:
+    def _encode_edge_type(self, edge_type: "EdgeType") -> Dict[str, Any]:
         """Encodes an EdgeType object.
 
         Args:
@@ -269,8 +275,6 @@ class SkeletonEncoder:
             py_id = len(self._encoded_objects) + 1  # py/id starts at 1
             # Assign the py/id to the object and store it in _encoded_objects
             self._encoded_objects[obj_id] = py_id
-            print(f"Assigned py_id: {py_id} to object: {obj} with id: {obj_id}")
-        print(f"Returning py_id: {self._encoded_objects[obj_id]} for object: {obj}")
         return self._encoded_objects[obj_id]
 
     def _is_first_encoding(self, obj: Any) -> bool:
@@ -284,8 +288,6 @@ class SkeletonEncoder:
         """
         obj_id = id(obj)
         first_time = obj_id not in self._encoded_objects
-        print(f"Length of encoded objects: {len(self._encoded_objects)}")
-        print(f"Is first time: {first_time} for object: {obj}")
         return first_time
 
 
@@ -1141,7 +1143,7 @@ class Skeleton:
 
         # This is a weird hack to serialize the whole _graph into a dict.
         # I use the underlying to_json and parse it.
-        return json.loads(obj.to_json(node_to_idx))
+        return json.loads(obj.to_json(node_to_idx=node_to_idx))
 
     @classmethod
     def from_dict(cls, d: Dict, node_to_idx: Dict[Node, int] = None) -> "Skeleton":
@@ -1205,17 +1207,14 @@ class Skeleton:
         """
         jsonpickle.set_encoder_options("simplejson", sort_keys=True, indent=4)
         if node_to_idx is not None:
-            indexed_node_graph = nx.relabel_nodes(
-                G=self._graph, mapping=node_to_idx
-            )  # map nodes to int
-            print(f"indexed_node_graph: {indexed_node_graph}")
+            # Map Nodes to int
+            indexed_node_graph = nx.relabel_nodes(G=self._graph, mapping=node_to_idx)
         else:
+            # Keep graph nodes as Node objects
             indexed_node_graph = self._graph
-            print(f"indexed_node_graph: {indexed_node_graph}")
 
         # Encode to JSON
         graph = json_graph.node_link_data(indexed_node_graph)
-        print(f"graph: {graph}")
 
         # SLEAP v1.3.0 added `description` and `preview_image` to `Skeleton`, but saving
         # these fields breaks data format compatibility. Currently, these are only
@@ -1227,14 +1226,10 @@ class Skeleton:
                 "description": self.description,
                 "preview_image": self.preview_image,
             }
-            print(f"data: {data}")
         else:
             data = graph
-            print(f"data: {data}")
 
-        # json_str = jsonpickle.encode(data)
         json_str = SkeletonEncoder.encode(data)
-        print(f"json_str: {json_str}")
 
         return json_str
 

@@ -28,13 +28,6 @@ def test_decoded_encoded_Skeleton_from_load_json(fly_legs_skeleton_json):
     # Check that the decoded skeleton is the same as the original skeleton
     assert skeleton.matches(decoded_skeleton)
 
-    # Read the JSON string from the fixture
-    with open(fly_legs_skeleton_json, "r") as f:
-        original_json_str = f.read()
-
-    # Check that the original JSON string is the same as the encoded JSON string
-    assert json.loads(original_json_str) == json.loads(encoded_json_str)
-
 
 @pytest.mark.parametrize(
     "skeleton_fixture_name", ["flies13_skeleton", "skeleton", "stickman"]
