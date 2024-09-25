@@ -423,7 +423,7 @@ class SkeletonEncoder:
         """
         encoder = cls()
         encoded_data = encoder._encode(data)
-        json_str = json.dumps(encoded_data, indent=4, sort_keys=True)
+        json_str = json.dumps(encoded_data, indent=4)
         return json_str
 
     def _encode(self, obj: Any) -> Any:
