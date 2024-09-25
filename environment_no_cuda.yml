@@ -11,7 +11,7 @@ channels:
 
 dependencies:
     # Packages SLEAP uses directly
-    - conda-forge::attrs >=21.2.0,<=21.4.0
+    - conda-forge::attrs >=21.2.0
     - conda-forge::cattrs ==1.1.1
     - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
     - conda-forge::jsmin
