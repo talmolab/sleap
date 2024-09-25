@@ -423,7 +423,7 @@ class SkeletonEncoder:
         """
         encoder = cls()
         encoded_data = encoder._encode(data)
-        json_str = json.dumps(encoded_data, indent=4)
+        json_str = json.dumps(encoded_data)
         return json_str
 
     def _encode(self, obj: Any) -> Any:
@@ -437,17 +437,13 @@ class SkeletonEncoder:
             The encoded object as a dictionary.
         """
         if isinstance(obj, dict):
-            if "nodes" in obj and "links" in obj:
-                # Process 'links' key first
-                encoded_obj = {}
-                encoded_obj["links"] = self._encode_links(obj.get("links"))
-                # Now process other keys
-                for key in obj:
-                    if key != "links":
-                        encoded_obj[key] = self._encode(obj[key])
-                return encoded_obj
-            else:
-                return {k: self._encode(v) for k, v in obj.items()}
+            encoded_obj = {}
+            for key, value in obj.items():
+                if key == "links":
+                    encoded_obj[key] = self._encode_links(value)
+                else:
+                    encoded_obj[key] = self._encode(value)
+            return encoded_obj
         elif isinstance(obj, list):
             return [self._encode(v) for v in obj]
         elif isinstance(obj, EdgeType):
@@ -471,29 +467,16 @@ class SkeletonEncoder:
             # Use a regular dict (insertion order preserved in Python 3.7+)
             encoded_link = {}
 
-            # Encode in specific order: source, target, type, other attributes
-            if "source" in link:
-                value = link["source"]
-                encoded_value = self._encode_node(value)
-                encoded_link["source"] = encoded_value
-
-            if "target" in link:
-                value = link["target"]
-                encoded_value = self._encode_node(value)
-                encoded_link["target"] = encoded_value
-
-            if "type" in link:
-                value = link["type"]
-                encoded_value = self._encode_edge_type(value)
-                encoded_link["type"] = encoded_value
-
-            # Encode other attributes
+            # Encode in specific order of appearance
             for key, value in link.items():
-                if key not in ("type", "source", "target"):
-                    encoded_value = self._encode(value)
-                    encoded_link[key] = encoded_value
+                if key in ("source", "target"):
+                    encoded_link[key] = self._encode_node(value)
+                elif key == "type":
+                    encoded_link[key] = self._encode_edge_type(value)
+                else:
+                    encoded_link[key] = self._encode(value)
+                encoded_links.append(encoded_link)
 
-            encoded_links.append(encoded_link)
         return encoded_links
 
     def _encode_node(self, node: Union["Node", int]) -> Dict[str, Any]:
@@ -508,8 +491,7 @@ class SkeletonEncoder:
         """
         if isinstance(node, int):
             # We sometimes have the node object already replaced by its index (when
-            # `node_to_idx` is provided). In this case, we assume that the node object
-            # will be handled by the caller, so just return the index.
+            # `node_to_idx` is provided). In this case, the node is already encoded.
             return node
 
         # Check if object has been encoded before
