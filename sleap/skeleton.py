@@ -475,7 +475,7 @@ class SkeletonEncoder:
                     encoded_link[key] = self._encode_edge_type(value)
                 else:
                     encoded_link[key] = self._encode(value)
-                encoded_links.append(encoded_link)
+            encoded_links.append(encoded_link)
 
         return encoded_links
 
