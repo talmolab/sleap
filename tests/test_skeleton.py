@@ -1,10 +1,9 @@
-import os
 import copy
+import os
 
-import jsonpickle
 import pytest
 
-from sleap.skeleton import Skeleton
+from sleap.skeleton import Skeleton, SkeletonDecoder
 
 
 def test_add_dupe_node(skeleton):
@@ -194,9 +193,9 @@ def test_json(skeleton: Skeleton, tmpdir):
     )
     assert skeleton.is_template == False
     json_str = skeleton.to_json()
-    json_dict = jsonpickle.decode(json_str)
+    json_dict = SkeletonDecoder.decode(json_str)
     json_dict_keys = list(json_dict.keys())
-    assert "nx_graph" not in json_dict_keys
+    assert "nx_graph" in json_dict_keys  # SkeletonDecoder adds this key
     assert "preview_image" not in json_dict_keys
     assert "description" not in json_dict_keys
 
@@ -208,7 +207,7 @@ def test_json(skeleton: Skeleton, tmpdir):
 
     skeleton._is_template = True
     json_str = skeleton.to_json()
-    json_dict = jsonpickle.decode(json_str)
+    json_dict = SkeletonDecoder.decode(json_str)
     json_dict_keys = list(json_dict.keys())
     assert "nx_graph" in json_dict_keys
     assert "preview_image" in json_dict_keys
@@ -222,6 +221,26 @@ def test_json(skeleton: Skeleton, tmpdir):
 
     # Make sure we get back the same skeleton we saved.
     assert skeleton.matches(skeleton_copy)
+
+
+def test_decode_preview_image(flies13_skeleton: Skeleton):
+    skeleton = flies13_skeleton
+    img_b64 = skeleton.preview_image
+    img = SkeletonDecoder.decode_preview_image(img_b64)
+    assert img.mode == "RGBA"
+
+
+def test_skeleton_decoder(fly_legs_skeleton_json, fly_legs_skeleton_dict_json):
+    """Test that SkeletonDecoder can decode both tuple and dict py/state formats."""
+
+    skeleton_tuple_pystate = Skeleton.load_json(fly_legs_skeleton_json)
+    assert isinstance(skeleton_tuple_pystate, Skeleton)
+
+    skeleton_dict_pystate = Skeleton.load_json(fly_legs_skeleton_dict_json)
+    assert isinstance(skeleton_dict_pystate, Skeleton)
+
+    # These are the same skeleton, so they should match
+    assert skeleton_dict_pystate.matches(skeleton_tuple_pystate)
 
 
 def test_hdf5(skeleton, stickman, tmpdir):
