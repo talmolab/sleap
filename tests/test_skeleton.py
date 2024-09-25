@@ -1,9 +1,62 @@
 import copy
 import os
-
 import pytest
+import json
 
+from networkx.readwrite import json_graph
 from sleap.skeleton import Skeleton, SkeletonDecoder
+from sleap.skeleton import SkeletonEncoder
+
+
+def test_decoded_encoded_Skeleton_from_load_json(fly_legs_skeleton_json):
+    """
+    Test Skeleton decoded from SkeletonEncoder.encode matches the original Skeleton.
+    """
+    # Get the skeleton from the fixture
+    skeleton = Skeleton.load_json(fly_legs_skeleton_json)
+    # Get the graph from the skeleton
+    indexed_node_graph = skeleton._graph
+    graph = json_graph.node_link_data(indexed_node_graph)
+
+    # Encode the graph as a json string to test .encode method
+    encoded_json_str = SkeletonEncoder.encode(graph)
+
+    # Get the skeleton from the encoded json string
+    decoded_skeleton = Skeleton.from_json(encoded_json_str)
+
+    # Check that the decoded skeleton is the same as the original skeleton
+    assert skeleton.matches(decoded_skeleton)
+
+
+@pytest.mark.parametrize(
+    "skeleton_fixture_name", ["flies13_skeleton", "skeleton", "stickman"]
+)
+def test_decoded_encoded_Skeleton(skeleton_fixture_name, request):
+    """
+    Test Skeleton decoded from SkeletonEncoder.encode matches the original Skeleton.
+    """
+    # Use request.getfixturevalue to get the actual fixture value by name
+    skeleton = request.getfixturevalue(skeleton_fixture_name)
+
+    # Get the graph from the skeleton
+    indexed_node_graph = skeleton._graph
+    graph = json_graph.node_link_data(indexed_node_graph)
+
+    # Encode the graph as a json string to test .encode method
+    encoded_json_str = SkeletonEncoder.encode(graph)
+
+    # Get the skeleton from the encoded json string
+    decoded_skeleton = Skeleton.from_json(encoded_json_str)
+
+    # Check that the decoded skeleton is the same as the original skeleton
+    assert skeleton.matches(decoded_skeleton)
+
+    # Now make everything into a JSON string
+    skeleton_json_str = skeleton.to_json()
+    decoded_skeleton_json_str = decoded_skeleton.to_json()
+
+    # Check that the JSON strings are the same
+    assert json.loads(skeleton_json_str) == json.loads(decoded_skeleton_json_str)
 
 
 def test_add_dupe_node(skeleton):
