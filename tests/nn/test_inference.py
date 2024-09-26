@@ -1932,7 +1932,11 @@ def test_flow_tracker(centered_pair_predictions_sorted: Labels, tmpdir):
         for inst in lf.instances:
             inst.track = None
 
-        track_args = dict(untracked_instances=lf.instances, img=lf.video[lf.frame_idx])
+        track_args = dict(
+            untracked_instances=lf.instances,
+            img=lf.video[lf.frame_idx],
+            img_hw=lf.image.shape[-3:-1],
+        )
         tracker.track(**track_args)
 
         # Check that saved instances are pruned to track window
@@ -1975,7 +1979,11 @@ def test_max_tracks_matching_queue(
         for inst in lf.instances:
             inst.track = None
 
-        track_args = dict(untracked_instances=lf.instances, img=lf.video[lf.frame_idx])
+        track_args = dict(
+            untracked_instances=lf.instances,
+            img=lf.video[lf.frame_idx],
+            img_hw=lf.image.shape[-3:-1],
+        )
         tracker.track(**track_args)
 
         if trackername == "flowmaxtracks":

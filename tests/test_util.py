@@ -1,5 +1,4 @@
 import pytest
-from sleap.skeleton import Skeleton
 
 from sleap.util import *
 
@@ -147,10 +146,3 @@ def test_save_dict_to_hdf5(tmpdir):
         assert f["bar"][-1].decode() == "zop"
 
         assert f["cab"]["a"][()] == 2
-
-
-def test_decode_preview_image(flies13_skeleton: Skeleton):
-    skeleton = flies13_skeleton
-    img_b64 = skeleton.preview_image
-    img = decode_preview_image(img_b64)
-    assert img.mode == "RGBA"

@@ -35,7 +35,10 @@ def run_tracker_by_name(frames=None, img_scale: float = 0, **kwargs):
 @pytest.mark.parametrize(
     "tracker", ["simple", "flow", "simplemaxtracks", "flowmaxtracks"]
 )
-@pytest.mark.parametrize("similarity", ["instance", "iou", "centroid"])
+@pytest.mark.parametrize(
+    "similarity",
+    ["instance", "normalized_instance", "iou", "centroid", "object_keypoint"],
+)
 @pytest.mark.parametrize("match", ["greedy", "hungarian"])
 @pytest.mark.parametrize("img_scale", [0, 1, 0.25])
 @pytest.mark.parametrize("count", [0, 2])
@@ -289,7 +292,7 @@ def test_max_tracking_large_gap_single_track():
 
     tracked = []
     for insts in preds:
-        tracked_insts = tracker.track(insts)
+        tracked_insts = tracker.track(insts, img_hw=(1, 1))
         tracked.append(tracked_insts)
     all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
 
@@ -306,7 +309,7 @@ def test_max_tracking_large_gap_single_track():
 
     tracked = []
     for insts in preds:
-        tracked_insts = tracker.track(insts)
+        tracked_insts = tracker.track(insts, img_hw=(1, 1))
         tracked.append(tracked_insts)
     all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
 
@@ -353,7 +356,7 @@ def test_max_tracking_small_gap_on_both_tracks():
 
     tracked = []
     for insts in preds:
-        tracked_insts = tracker.track(insts)
+        tracked_insts = tracker.track(insts, img_hw=(1, 1))
         tracked.append(tracked_insts)
     all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
 
@@ -370,7 +373,7 @@ def test_max_tracking_small_gap_on_both_tracks():
 
     tracked = []
     for insts in preds:
-        tracked_insts = tracker.track(insts)
+        tracked_insts = tracker.track(insts, img_hw=(1, 1))
         tracked.append(tracked_insts)
     all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
 
@@ -422,7 +425,7 @@ def test_max_tracking_extra_detections():
 
     tracked = []
     for insts in preds:
-        tracked_insts = tracker.track(insts)
+        tracked_insts = tracker.track(insts, img_hw=(1, 1))
         tracked.append(tracked_insts)
     all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
 
@@ -439,7 +442,7 @@ def test_max_tracking_extra_detections():
 
     tracked = []
     for insts in preds:
-        tracked_insts = tracker.track(insts)
+        tracked_insts = tracker.track(insts, img_hw=(1, 1))
         tracked.append(tracked_insts)
     all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
 

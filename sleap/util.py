@@ -11,7 +11,6 @@ import os
 import re
 import shutil
 from collections import defaultdict
-from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Hashable, Iterable, List, Optional
 from urllib.parse import unquote, urlparse
@@ -30,6 +29,7 @@ import rapidjson
 import rich.progress
 import yaml
 from PIL import Image
+
 
 import sleap.version as sleap_version
 
@@ -391,18 +391,3 @@ def find_files_by_suffix(
 def parse_uri_path(uri: str) -> str:
     """Parse a URI starting with 'file:///' to a posix path."""
     return Path(url2pathname(urlparse(unquote(uri)).path)).as_posix()
-
-
-def decode_preview_image(img_b64: bytes) -> Image:
-    """Decode a skeleton preview image byte string representation to a `PIL.Image`
-
-    Args:
-        img_b64: a byte string representation of a skeleton preview image
-
-    Returns:
-        A PIL.Image of the skeleton preview
-    """
-    bytes = base64.b64decode(img_b64)
-    buffer = BytesIO(bytes)
-    img = Image.open(buffer)
-    return img

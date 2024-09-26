@@ -12,6 +12,7 @@ Main types of functions:
 
 
 """
+
 import operator
 from collections import defaultdict
 import logging
@@ -27,6 +28,21 @@ from sleap.nn import utils
 logger = logging.getLogger(__name__)
 
 InstanceType = TypeVar("InstanceType", Instance, PredictedInstance)
+
+
+def normalized_instance_similarity(
+    ref_instance: InstanceType, query_instance: InstanceType, img_hw: Tuple[int]
+) -> float:
+    """Computes similarity between instances with normalized keypoints."""
+
+    normalize_factors = np.array((img_hw[1], img_hw[0]))
+    ref_visible = ~(np.isnan(ref_instance.points_array).any(axis=1))
+    normalized_query_keypoints = query_instance.points_array / normalize_factors
+    normalized_ref_keypoints = ref_instance.points_array / normalize_factors
+    dists = np.sum((normalized_query_keypoints - normalized_ref_keypoints) ** 2, axis=1)
+    similarity = np.nansum(np.exp(-dists)) / np.sum(ref_visible)
+
+    return similarity
 
 
 def instance_similarity(

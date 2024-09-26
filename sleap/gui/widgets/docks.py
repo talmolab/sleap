@@ -30,10 +30,8 @@ from sleap.gui.dataviews import (
 )
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.widgets.views import CollapsibleWidget
-from sleap.skeleton import Skeleton
-from sleap.util import decode_preview_image, find_files_by_suffix, get_package_file
-
-# from sleap.gui.app import MainWindow
+from sleap.skeleton import Skeleton, SkeletonDecoder
+from sleap.util import find_files_by_suffix, get_package_file
 
 
 class DockWidget(QDockWidget):
@@ -365,7 +363,7 @@ class SkeletonDock(DockWidget):
         def updatePreviewImage(preview_image_bytes: bytes):
 
             # Decode the preview image
-            preview_image = decode_preview_image(preview_image_bytes)
+            preview_image = SkeletonDecoder.decode_preview_image(preview_image_bytes)
 
             # Create a QImage from the Image
             preview_image = QtGui.QImage(
