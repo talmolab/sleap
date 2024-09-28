@@ -18,7 +18,6 @@ from typing import Any, Dict, Iterable, List, Optional, Text, Tuple, Union
 import attr
 import cattr
 import h5py
-import jsonpickle
 import networkx as nx
 import numpy as np
 from networkx.readwrite import json_graph
@@ -1496,7 +1495,7 @@ class Skeleton:
         Returns:
             A string containing the JSON representation of the skeleton.
         """
-        jsonpickle.set_encoder_options("simplejson", sort_keys=True, indent=4)
+
         if node_to_idx is not None:
             # Map Nodes to int
             indexed_node_graph = nx.relabel_nodes(G=self._graph, mapping=node_to_idx)
