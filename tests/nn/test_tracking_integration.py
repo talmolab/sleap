@@ -1,4 +1,3 @@
-import inspect
 import operator
 import os
 import time
@@ -7,7 +6,7 @@ from pathlib import Path
 import sleap
 from sleap.nn.inference import main as inference_cli
 import sleap.nn.tracker.components
-from sleap.io.dataset import Labels, LabeledFrame
+from sleap.io.dataset import Labels
 
 
 def test_simple_tracker(tmpdir, centered_pair_predictions_slp_path):

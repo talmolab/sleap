@@ -9,7 +9,6 @@ from sleap.nn.tracker.components import (
     FrameMatches,
     greedy_matching,
 )
-from sleap.io.dataset import Labels
 
 from sleap.instance import PredictedInstance
 from sleap.skeleton import Skeleton
