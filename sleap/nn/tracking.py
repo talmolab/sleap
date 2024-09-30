@@ -542,6 +542,7 @@ class BaseTracker(abc.ABC):
             track_args["img"] = lf.video[lf.frame_idx]
         else:
             track_args["img"] = None
+        track_args["img_hw"] = lf.image.shape[-3:-1]
 
         return LabeledFrame(
             frame_idx=lf.frame_idx,
@@ -667,6 +668,7 @@ class BaseTracker(abc.ABC):
     def track(
         self,
         untracked_instances: List[InstanceType],
+        img_hw: Tuple[int],
         img: Optional[np.ndarray] = None,
         t: int = None,
     ):
@@ -1561,6 +1563,7 @@ class KalmanTracker(BaseTracker):
     def track(
         self,
         untracked_instances: List[InstanceType],
+        img_hw: Tuple[int],
         img: Optional[np.ndarray] = None,
         t: int = None,
     ) -> List[InstanceType]:
