@@ -57,7 +57,7 @@ requirements:
     - conda-forge::seaborn
     - conda-forge::qudida
     - conda-forge::albumentations
-    - conda-forge:: <0.2.0
+    - conda-forge::ndx-pose <0.2.0
 
   run:
     - conda-forge::python >=3.9.0, <3.10.0
