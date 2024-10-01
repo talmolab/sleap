@@ -39,6 +39,6 @@ dependencies:
     # - conda-forge::tensorflow-hub  # pulls in tensorflow cpu from conda-forge
     - conda-forge::qudida
     - conda-forge::albumentations
-    - conda-forge::ndx-pose
+    - conda-forge::ndx-pose <0.2.0
     - pip:
         - "--editable=.[conda_dev]"
