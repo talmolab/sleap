@@ -57,7 +57,7 @@ requirements:
     - conda-forge::tensorflow-hub
     - conda-forge::qudida
     - conda-forge::albumentations
-    - conda-forge::ndx-pose
+    - conda-forge::ndx-pose <0.2.0
     - conda-forge::importlib-metadata
   run:
     - conda-forge::python >=3.10.0,<3.11.0
@@ -92,7 +92,7 @@ requirements:
     - conda-forge::tensorflow-hub
     - conda-forge::qudida
     - conda-forge::albumentations
-    - conda-forge::ndx-pose
+    - conda-forge::ndx-pose <0.2.0
     - conda-forge::importlib-metadata
 
 test:

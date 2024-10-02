@@ -39,6 +39,6 @@ dependencies:
     - sleap-deps::tensorflow ==2.12.0
     - conda-forge::qudida
     - conda-forge::albumentations
-    - conda-forge::ndx-pose
+    - conda-forge::ndx-pose <0.2.0
     - pip:
           - "--editable=.[conda_dev]"
