@@ -40,7 +40,7 @@ dependencies:
     - conda-forge::tensorflow-hub  # Pinned in meta.yml, but no problems here... yet
     - conda-forge::qudida
     - conda-forge::albumentations
-    - conda-forge::ndx-pose
+    - conda-forge::ndx-pose <0.2.0
 
     # Packages required by tensorflow to find/use GPUs
     - conda-forge::cudatoolkit ==11.3.1

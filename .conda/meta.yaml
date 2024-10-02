@@ -55,7 +55,7 @@ requirements:
     - conda-forge::seaborn
     - conda-forge::qudida
     - conda-forge::albumentations
-    - conda-forge::ndx-pose
+    - conda-forge::ndx-pose <0.2.0
     - conda-forge::importlib-metadata ==4.11.4
   run:
     - conda-forge::python ==3.7.12  # Run into _MAX_WINDOWS_WORKERS not found if <
@@ -90,7 +90,7 @@ requirements:
     - conda-forge::tensorflow-hub <0.14.0  # Causes pynwb conflicts on linux GH-1446
     - conda-forge::qudida
     - conda-forge::albumentations
-    - conda-forge::ndx-pose
+    - conda-forge::ndx-pose <0.2.0
     - conda-forge::importlib-metadata ==4.11.4
 
 # This no longer works so we have moved it to the build workflow
