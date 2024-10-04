@@ -16,8 +16,10 @@ goto next suggestion: Space
 goto next track spawn: Ctrl+E
 goto next user: Ctrl+U
 goto next labeled: Alt+Right
+goto next view: V
 goto prev suggestion: Shift+Space
 goto prev labeled: Alt+Left
+goto prev view: Shift+V
 learning: Ctrl+L
 mark frame: Ctrl+M
 new: Ctrl+N

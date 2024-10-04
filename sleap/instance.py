@@ -722,26 +722,34 @@ class Instance:
 
         Args:
             points: The new points to update to.
-            exclude_complete: Whether to update points where Point.complete is True
+            exclude_complete: Whether to update visible points where Point.complete
+                and Point.visible is True. This only applies to user-labeled instances.
         """
+
+        # Determine if Instance is a PredictedInstance
+        is_predicted = True if isinstance(self._points, PredictedPointArray) else False
+
         points_dict = dict()
         for point_new, points_old, node_name in zip(
             points, self._points, self.skeleton.node_names
         ):
 
-            # Skip if new point is nan or old point is complete
-            if np.isnan(point_new).any() or (exclude_complete and points_old.complete):
+            visible = points_old.visible
+            complete = points_old.complete
+
+            # Skip if new point is nan or old is user-labeled, visible and complete
+            skip_if_complete = (not is_predicted) and exclude_complete and visible
+            if np.isnan(point_new).any() or (skip_if_complete and complete):
                 continue
 
             # Grab the x, y from the new point and visible, complete from the old point
             x, y = point_new
-            visible = points_old.visible
-            complete = points_old.complete
+            visible = visible
+            complete = complete
 
             # Create a new point and add to the dict
-            if type(self._points) == PredictedPointArray:
-                # TODO(LM): The point score is meant to rate the confidence of the
-                # prediction, but this method updates from triangulation.
+            if is_predicted:
+                # This method does not update the points score.
                 score = points_old.score
                 point_obj = PredictedPoint(
                     x=x, y=y, visible=visible, complete=complete, score=score
@@ -1546,33 +1554,18 @@ class LabeledFrame:
         a corresponding :class:`Instance` in the same track in frame.
         """
         unused_predictions = []
-        any_tracks = [inst.track for inst in self._instances if inst.track is not None]
-        if len(any_tracks):
-            # use tracks to determine which predicted instances have been used
-            used_tracks = [
-                inst.track
-                for inst in self._instances
-                if type(inst) == Instance and inst.track is not None
-            ]
-            unused_predictions = [
-                inst
-                for inst in self._instances
-                if inst.track not in used_tracks and type(inst) == PredictedInstance
-            ]
 
-        else:
-            # use from_predicted to determine which predicted instances have been used
-            # TODO: should we always do this instead of using tracks?
-            used_instances = [
-                inst.from_predicted
-                for inst in self._instances
-                if inst.from_predicted is not None
-            ]
-            unused_predictions = [
-                inst
-                for inst in self._instances
-                if type(inst) == PredictedInstance and inst not in used_instances
-            ]
+        # Use from_predicted to determine which predicted instances have been used
+        used_instances = [
+            inst.from_predicted
+            for inst in self._instances
+            if inst.from_predicted is not None
+        ]
+        unused_predictions = [
+            inst
+            for inst in self._instances
+            if type(inst) == PredictedInstance and inst not in used_instances
+        ]
 
         return unused_predictions
 
@@ -1593,9 +1586,9 @@ class LabeledFrame:
             if type(inst) == Instance or inst in unused_predictions
         ]
         inst_to_show.sort(
-            key=lambda inst: inst.track.spawned_on
-            if inst.track is not None
-            else math.inf
+            key=lambda inst: (
+                inst.track.spawned_on if inst.track is not None else math.inf
+            )
         )
         return inst_to_show
 

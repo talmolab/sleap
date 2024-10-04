@@ -33,17 +33,17 @@ import re
 import subprocess
 import sys
 import traceback
+import toml
 from enum import Enum
 from glob import glob
-from itertools import permutations, product
 from pathlib import Path, PurePath
-from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type, Union, cast
+from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type, Union
 
 import attr
 import cv2
 import numpy as np
-from sleap_anipose import triangulate, reproject
 from qtpy import QtCore, QtGui, QtWidgets
+from sleap_anipose import reproject, triangulate
 
 from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.gui.dialogs.filedialog import FileDialog
@@ -54,13 +54,13 @@ from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
-from sleap.io.cameras import Camcorder, InstanceGroup, FrameGroup, RecordingSession
+from sleap.io.cameras import Camcorder, FrameGroup, InstanceGroup, RecordingSession
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
-from sleap.io.video import Video
+from sleap.io.video import Video, MediaVideo
 from sleap.skeleton import Node, Skeleton
 from sleap.util import get_package_file
 
@@ -83,6 +83,7 @@ class UpdateTopic(Enum):
     frame = 8
     project = 9
     project_instances = 10
+    sessions = 11
 
 
 class AppCommand:
@@ -411,6 +412,14 @@ class CommandContext:
         """Activates video and goes to frame."""
         NavCommand.go_to(self, frame_idx, video)
 
+    def nextView(self):
+        """Goes to next view."""
+        self.execute(GoAdjacentView, prev_or_next="next")
+
+    def prevView(self):
+        """Goes to previous view."""
+        self.execute(GoAdjacentView, prev_or_next="prev")
+
     # Editing Commands
 
     def toggleGrayscale(self):
@@ -436,6 +445,19 @@ class CommandContext:
     def addSession(self):
         """Shows gui for adding `RecordingSession`s to the project."""
         self.execute(AddSession)
+
+    def removeSelectedSession(self):
+        """Removes a session from the project and the sessions dock."""
+        self.execute(RemoveSession)
+
+    def linkVideoToSession(
+        self,
+        video: Optional[Video] = None,
+        session: Optional[RecordingSession] = None,
+        camera: Optional[Camcorder] = None,
+    ):
+        """Links a video to a `RecordingSession`."""
+        self.execute(LinkVideoToSession, video=video, session=session, camera=camera)
 
     def openSkeletonTemplate(self):
         """Shows gui for loading saved skeleton into project."""
@@ -577,6 +599,17 @@ class CommandContext:
         """Sets track for selected instance."""
         self.execute(SetSelectedInstanceTrack, new_track=new_track)
 
+    def addInstanceGroup(self):
+        """Sets the instance group for selected instance."""
+        self.execute(AddInstanceGroup)
+
+    def setInstanceGroup(self, instance_group: Optional["InstanceGroup"]):
+        """Sets the instance group for selected instance."""
+        self.execute(SetSelectedInstanceGroup, instance_group=instance_group)
+
+    def setInstanceGroupName(self, instance_group: InstanceGroup, name: str):
+        self.execute(SetInstanceGroupName, instance_group=instance_group, name=name)
+
     def deleteTrack(self, track: "Track"):
         """Delete a track and remove from all instances."""
         self.execute(DeleteTrack, track=track)
@@ -584,6 +617,10 @@ class CommandContext:
     def deleteMultipleTracks(self, delete_all: bool = False):
         """Delete all tracks."""
         self.execute(DeleteMultipleTracks, delete_all=delete_all)
+
+    def deleteInstanceGroup(self, instance_group: "InstanceGroup"):
+        """Delete an instance group."""
+        self.execute(DeleteInstanceGroup, instance_group=instance_group)
 
     def copyInstanceTrack(self):
         """Copies the selected instance's track to the track clipboard."""
@@ -644,6 +681,10 @@ class CommandContext:
         """Open the current prerelease version."""
         self.execute(OpenPrereleaseVersion)
 
+    def unlink_video_from_camera(self):
+        """Unlinks video from a camera"""
+        self.execute(UnlinkVideo)
+
 
 # File Commands
 
@@ -685,6 +726,8 @@ class LoadLabelsObject(AppCommand):
         # Load first video
         if len(labels.videos):
             context.state["video"] = labels.videos[0]
+
+        context.state["session"] = labels.sessions[0] if len(labels.sessions) else None
 
         context.state["project_loaded"] = True
         context.state["has_changes"] = params.get("changed_on_load", False) or (
@@ -1686,6 +1729,25 @@ class SelectToFrameGui(NavCommand):
         return okay
 
 
+class GoAdjacentView(NavCommand):
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        operator = -1 if params["prev_or_next"] == "prev" else 1
+
+        labels = context.labels
+        frame_idx = context.state["frame_idx"]
+        video = context.state["video"]
+        session = labels.get_session(video)
+
+        # Get the next view
+        current_video_idx = session.videos.index(video)
+        new_video_idx = (current_video_idx + operator) % len(session.videos)
+        new_video = session.videos[new_video_idx]
+
+        context.state["video"] = new_video
+        context.state["frame_idx"] = frame_idx
+
+
 # Editing Commands
 
 
@@ -1763,10 +1825,22 @@ class ShowImportVideos(EditCommand):
     topics = [UpdateTopic.video]
 
     @staticmethod
-    def do_action(context: CommandContext, params: dict):
+    def ask(context: CommandContext, params: dict) -> bool:
         filenames = params["filenames"]
         import_list = ImportVideos().ask(filenames=filenames)
+
+        if len(import_list) > 0:
+            params["import_list"] = import_list
+            return True
+
+        return False
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        import_list = params["import_list"]
         new_videos = ImportVideos.create_videos(import_list)
+        params["new_videos"] = new_videos
+
         video = None
         for video in new_videos:
             # Add to labels
@@ -1939,20 +2013,96 @@ class RemoveVideo(EditCommand):
         return True
 
 
+class RemoveSession(EditCommand):
+    topics = [UpdateTopic.sessions]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        current_session = context.state["selected_session"]
+        try:
+            context.labels.remove_recording_session(current_session)
+        except Exception as e:
+            raise e
+        finally:
+            # Always set the selected session to None, even if it wasn't removed
+            context.state["selected_session"] = None
+
+
 class AddSession(EditCommand):
-    # topics = [UpdateTopic.session]
+    topics = [UpdateTopic.sessions, UpdateTopic.video]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         camera_calibration = params["camera_calibration"]
+
+        # Create session from camera calibration file
         session = RecordingSession.load(filename=camera_calibration)
 
         # Add session
         context.labels.add_session(session)
 
+        # Import the new videos and link them to a camera
+        if "import_list" in params:
+            ShowImportVideos().do_action(context=context, params=params)
+
+            # Create a lookup for cameras and videos
+            camera_by_video_paths = params.get("camera_by_video_paths", {})
+            new_videos = params.get("new_videos", [])
+            new_video_by_filename = {
+                video.backend.filename: video for video in new_videos
+            }
+            camera_by_name = {cam.name: cam for cam in session.cameras}
+
+            # Link videos to cameras
+            for video_path, camera_name in camera_by_video_paths.items():
+                # Get video and camcorder
+                video = new_video_by_filename.get(video_path, None)
+                if video is None:
+                    continue
+                camera = camera_by_name.get(camera_name, None)
+                if camera is None:
+                    continue
+                context.linkVideoToSession(video=video, session=session, camera=camera)
+
         # Load if no video currently loaded
         if context.state["session"] is None:
             context.state["session"] = session
+
+        # Reset since this action is also linked to a button in the SessionsDock and it
+        # is not visually apparent which session is selected after clicking the button
+        context.state["selected_session"] = None
+
+    @staticmethod
+    def find_video_paths(camera_calibration: str) -> Dict[str, str]:
+
+        # Find parent of calibration file
+        calibration_path = Path(camera_calibration)
+        parent_dir = calibration_path.parent
+
+        # Use camcorder names in session to find camera folders
+        calibration_data = toml.load(camera_calibration)
+        camera_names = [
+            value["name"] for value in calibration_data.values() if "name" in value
+        ]
+
+        # Find videos inside camera folders
+        camera_by_video_paths = {}
+        for camera_name in camera_names:
+            camera_folder = parent_dir / camera_name
+
+            # Skip if camera folder does not exist
+            if not camera_folder.exists():
+                continue
+
+            # Find and append all videos in camera folder
+            video_path = None
+            video_extensions = MediaVideo.EXTS
+            for file in camera_folder.iterdir():
+                if file.suffix[1:] in video_extensions:
+                    video_path = camera_folder / file
+                    camera_by_video_paths[video_path.as_posix()] = camera_name
+
+        return camera_by_video_paths
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
@@ -1966,8 +2116,41 @@ class AddSession(EditCommand):
         )
 
         params["camera_calibration"] = filename
+        if len(filename) == 0:
+            return False
 
-        return len(filename) > 0
+        camera_by_video_paths = AddSession.find_video_paths(camera_calibration=filename)
+        params["camera_by_video_paths"] = camera_by_video_paths
+
+        # Show import video dialog if any videos are found
+        if len(camera_by_video_paths) > 0:
+            params["filenames"] = list(camera_by_video_paths.keys())
+            ShowImportVideos().ask(context=context, params=params)
+
+        return True
+
+
+class LinkVideoToSession(EditCommand):
+    topics = [UpdateTopic.sessions]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        video = params["video"] or context.state["selected_unlinked_video"]
+        recording_session = params["session"] or context.state["selected_session"]
+        camcorder = params["camera"] or context.state["selected_camera"]
+
+        if camcorder is None:
+            raise ValueError("No camera selected.")
+
+        if recording_session is None:
+            raise ValueError("No session selected.")
+
+        if camcorder.get_video(recording_session) is None:
+            recording_session.add_video(video=video, camcorder=camcorder)
+
+        # Reset the selected camera and video
+        context.state["selected_camera"] = None
+        context.state["selected_unlinked_video"] = None
 
 
 class OpenSkeleton(EditCommand):
@@ -2613,6 +2796,44 @@ class DeleteDialogCommand(EditCommand):
             context.signal_update([UpdateTopic.project_instances])
 
 
+class AddInstanceGroup(EditCommand):
+    topics = [UpdateTopic.sessions]
+
+    @staticmethod
+    def do_action(context, params):
+
+        # Get session and frame index
+        frame_idx = context.state["frame_idx"]
+        session: RecordingSession = context.state["session"]
+        if session is None:
+            raise ValueError("Cannot add instance group without session.")
+
+        # Get or create frame group
+        frame_group = session.frame_groups.get(frame_idx, None)
+        if frame_group is None:
+            frame_group = session.new_frame_group(frame_idx=frame_idx)
+
+        # Create and add instance group
+        instance_group = frame_group.add_instance_group(instance_group=None)
+
+        # Now add the selected instance to the `InstanceGroup`
+        context.execute(SetSelectedInstanceGroup, instance_group=instance_group)
+
+
+class SetInstanceGroupName(EditCommand):
+
+    topics = [UpdateTopic.sessions]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        instance_group = params["instance_group"]
+        name = params["name"]
+
+        FrameGroup = context.state["session"].frame_groups[instance_group.frame_idx]
+
+        FrameGroup.set_instance_group_name(instance_group=instance_group, name=name)
+
+
 class AddTrack(EditCommand):
     topics = [UpdateTopic.tracks]
 
@@ -2627,6 +2848,63 @@ class AddTrack(EditCommand):
         context.labels.add_track(context.state["video"], new_track)
 
         context.execute(SetSelectedInstanceTrack, new_track=new_track)
+
+
+class SetSelectedInstanceGroup(EditCommand):
+    topics = [UpdateTopic.project_instances]
+
+    @staticmethod
+    def do_action(context, params):
+        """Set the `selected_instance` to the `instance_group`.
+
+        Args:
+            context: The command context.
+                state: The context state.
+                    instance: The selected instance.
+                    frame_idx: The frame index.
+                    video: The video.
+                    session: The recording session.
+
+            params: The command parameters.
+                instance_group: The `InstanceGroup` to set the selected instance to.
+
+        Raises:
+            ValueError: If the `RecordingSession` is None.
+            ValueError: If the `FrameGroup` does not exist for the frame index.
+            ValueError: If the `Video` is not linked to a `Camcorder`.
+        """
+
+        selected_instance = context.state["instance"]
+        frame_idx = context.state["frame_idx"]
+        video = context.state["video"]
+
+        base_message = (
+            f"Cannot set instance group for selected instance [{selected_instance}]."
+        )
+
+        # `RecordingSession` should not be None
+        session: RecordingSession = context.state["session"]
+        if session is None:
+            raise ValueError(f"{base_message} No session for video [{video}]")
+
+        # `FrameGroup` should already exist
+        frame_group = session.frame_groups.get(frame_idx, None)
+        if frame_group is None:
+            raise ValueError(
+                f"{base_message} Frame group does not exist for frame [{frame_idx}] in "
+                f"{session}."
+            )
+
+        # We need the camera and instance group to set the instance group
+        camera = session.get_camera(video=video)
+        if camera is None:
+            raise ValueError(f"{base_message} No camera linked to video [{video}]")
+        instance_group = params["instance_group"]
+
+        # Set the instance group
+        frame_group.add_instance(
+            instance=selected_instance, camera=camera, instance_group=instance_group
+        )
 
 
 class SetSelectedInstanceTrack(EditCommand):
@@ -2716,6 +2994,31 @@ class DeleteMultipleTracks(EditCommand):
             context.labels.remove_all_tracks()
         else:
             context.labels.remove_unused_tracks()
+
+
+class DeleteInstanceGroup(EditCommand):
+    topics = [UpdateTopic.sessions]
+
+    @staticmethod
+    def do_action(context, params):
+
+        instance_group = params["instance_group"]
+        frame_idx = context.state["frame_idx"]
+
+        base_message = f"Cannot delete instance group [{instance_group}]."
+
+        # `RecordingSession` should not be None
+        session: RecordingSession = context.state["session"]
+        if session is None:
+            raise ValueError(f"{base_message} No session in context state.")
+
+        # `FrameGroup` should already exist
+        frame_group = session.frame_groups.get(frame_idx, None)
+        if frame_group is None:
+            raise ValueError(f"{base_message} No frame group for frame {frame_idx}.")
+
+        # Remove the instance group
+        frame_group.remove_instance_group(instance_group=instance_group)
 
 
 class CopyInstanceTrack(EditCommand):
@@ -3299,6 +3602,7 @@ class AddMissingInstanceNodes(EditCommand):
     def add_force_directed_nodes(
         cls, context, instance, visible, center_point: QtCore.QPoint = None
     ):
+
         import networkx as nx
 
         center_point = center_point or context.app.player.getVisibleRect().center()
@@ -3597,3 +3901,20 @@ def copy_to_clipboard(text: str):
     clipboard = QtWidgets.QApplication.clipboard()
     clipboard.clear(mode=clipboard.Clipboard)
     clipboard.setText(text, mode=clipboard.Clipboard)
+
+
+class UnlinkVideo(EditCommand):
+    topics = [UpdateTopic.sessions]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        camcorder = context.state["selected_camera"]
+        recording_session = context.state["selected_session"]
+
+        video = camcorder.get_video(recording_session)
+
+        if video is not None and recording_session is not None:
+            recording_session.remove_video(video)
+
+        # Reset the selected camera
+        context.state["selected_camera"] = None
