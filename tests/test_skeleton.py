@@ -45,6 +45,18 @@ def test_decoded_encoded_Skeleton(skeleton_fixture_name, request):
     # Encode the graph as a json string to test .encode method
     encoded_json_str = SkeletonEncoder.encode(graph)
 
+    # Assert that the encoded json has keys in sorted order (backwards compatibility)
+    encoded_dict = json.loads(encoded_json_str)
+    sorted_keys = sorted(encoded_dict.keys())
+    assert list(encoded_dict.keys()) == sorted_keys
+    for key, value in encoded_dict.items():
+        if isinstance(value, dict):
+            assert list(value.keys()) == sorted(value.keys())
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    assert list(item.keys()) == sorted(item.keys())
+
     # Get the skeleton from the encoded json string
     decoded_skeleton = Skeleton.from_json(encoded_json_str)
 

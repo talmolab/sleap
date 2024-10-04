@@ -18,7 +18,6 @@ from typing import Any, Dict, Iterable, List, Optional, Text, Tuple, Union
 import attr
 import cattr
 import h5py
-import jsonpickle
 import networkx as nx
 import numpy as np
 from networkx.readwrite import json_graph
@@ -421,10 +420,29 @@ class SkeletonEncoder:
         Returns:
             json_str: The JSON string representation of the data.
         """
+
+        # This is required for backwards compatibility with SLEAP <=1.3.4
+        sorted_data = cls._recursively_sort_dict(data)
+
         encoder = cls()
-        encoded_data = encoder._encode(data)
+        encoded_data = encoder._encode(sorted_data)
         json_str = json.dumps(encoded_data)
         return json_str
+
+    @staticmethod
+    def _recursively_sort_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
+        """Recursively sorts the dictionary by keys."""
+        sorted_dict = dict(sorted(dictionary.items()))
+        for key, value in sorted_dict.items():
+            if isinstance(value, dict):
+                sorted_dict[key] = SkeletonEncoder._recursively_sort_dict(value)
+            elif isinstance(value, list):
+                for i, item in enumerate(value):
+                    if isinstance(item, dict):
+                        sorted_dict[key][i] = SkeletonEncoder._recursively_sort_dict(
+                            item
+                        )
+        return sorted_dict
 
     def _encode(self, obj: Any) -> Any:
         """Recursively encodes the input object.
@@ -1477,7 +1495,7 @@ class Skeleton:
         Returns:
             A string containing the JSON representation of the skeleton.
         """
-        jsonpickle.set_encoder_options("simplejson", sort_keys=True, indent=4)
+
         if node_to_idx is not None:
             # Map Nodes to int
             indexed_node_graph = nx.relabel_nodes(G=self._graph, mapping=node_to_idx)
