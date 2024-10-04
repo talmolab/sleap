@@ -1581,9 +1581,6 @@ class RecordingSession:
         # Unstructure `CameraCluster` and `metadata`
         calibration_dict = self.camera_cluster.to_calibration_dict()
 
-        # Sort `Camcorder`s following same schema as when deserializing
-        self.camera_cluster.cameras.sort(key=lambda x: x.name)
-
         # Store camcorder-to-video indices map where key is camcorder index
         # and value is video index from `Labels.videos`
         camcorder_to_video_idx_map = {}
@@ -1646,9 +1643,6 @@ class RecordingSession:
         session: RecordingSession = RecordingSession.from_calibration_dict(
             calibration_dict
         )
-
-        # Ensure `Camcorder`s are in the same order as they were serialized
-        session.camera_cluster.cameras.sort(key=lambda x: x.name)
 
         # Retrieve all `Camcorder` and `Video` objects, then add to `RecordingSession`
         camcorder_to_video_idx_map = session_dict["camcorder_to_video_idx_map"]
