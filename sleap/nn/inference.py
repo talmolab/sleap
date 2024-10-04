@@ -409,12 +409,13 @@ class Predictor(ABC):
                 ex["frame_ind"] = ex["frame_ind"].numpy().flatten()
 
             # Adjust for potential SizeMatcher scaling.
-            offset_x = ex.get("offset_x", 0)
-            offset_y = ex.get("offset_y", 0)
-            ex["instance_peaks"] -= np.reshape([offset_x, offset_y], [-1, 1, 1, 2])
-            ex["instance_peaks"] /= np.expand_dims(
-                np.expand_dims(ex["scale"], axis=1), axis=1
-            )
+            if ex["instance_peaks"].size > 0:
+                offset_x = ex.get("offset_x", 0)
+                offset_y = ex.get("offset_y", 0)
+                ex["instance_peaks"] -= np.reshape([offset_x, offset_y], [-1, 1, 1, 2])
+                ex["instance_peaks"] /= np.expand_dims(
+                    np.expand_dims(ex["scale"], axis=1), axis=1
+                )
 
             return ex
 
@@ -796,6 +797,7 @@ class CentroidCropGroundTruth(tf.keras.layers.Layer):
             crop_offsets=crop_offsets,
             centroids=example_gt["centroids"],
             centroid_vals=centroid_vals,
+            n_peaks=n_peaks,
         )
 
 
@@ -1918,7 +1920,9 @@ class CentroidCrop(InferenceLayer):
             centroid_vals, crop_sample_inds, nrows=samples
         )
 
-        outputs = dict(centroids=centroids, centroid_vals=centroid_vals)
+        outputs = dict(
+            centroids=centroids, centroid_vals=centroid_vals, n_peaks=n_peaks
+        )
         if self.return_confmaps:
             # Return confidence maps with outputs.
             cms = tf.RaggedTensor.from_value_rowids(
@@ -2092,6 +2096,15 @@ class FindInstancePeaks(InferenceLayer):
                 samples = tf.shape(crops)[0]
                 crop_sample_inds = tf.range(samples, dtype=tf.int32)
 
+        outputs = {}
+
+        if "centroids" in inputs:
+            outputs["centroids"] = inputs["centroids"]
+        if "centroid_vals" in inputs:
+            outputs["centroid_vals"] = inputs["centroid_vals"]
+        if "centroid_confmaps" in inputs:
+            outputs["centroid_confmaps"] = inputs["centroid_confmaps"]
+
         # Preprocess inputs (scaling, padding, colorspace, int to float).
         crops = self.preprocess(crops)
 
@@ -2151,13 +2164,8 @@ class FindInstancePeaks(InferenceLayer):
         )
 
         # Build outputs.
-        outputs = {"instance_peaks": peaks, "instance_peak_vals": peak_vals}
-        if "centroids" in inputs:
-            outputs["centroids"] = inputs["centroids"]
-        if "centroid_vals" in inputs:
-            outputs["centroid_vals"] = inputs["centroid_vals"]
-        if "centroid_confmaps" in inputs:
-            outputs["centroid_confmaps"] = inputs["centroid_confmaps"]
+        outputs["instance_peaks"] = peaks
+        outputs["instance_peak_vals"] = peak_vals
         if self.return_confmaps:
             cms = tf.RaggedTensor.from_value_rowids(
                 cms, crop_sample_inds, nrows=samples
@@ -2264,17 +2272,39 @@ class TopDownInferenceModel(InferenceModel):
 
         crop_output = self.centroid_crop(example)
 
-        if isinstance(self.instance_peaks, FindInstancePeaksGroundTruth):
-            if "instances" in example:
-                peaks_output = self.instance_peaks(example, crop_output)
-            else:
-                raise ValueError(
-                    "Ground truth data was not detected... "
-                    "Please load both models when predicting on non-ground-truth data."
-                )
+        if crop_output["n_peaks"] == 0:
+            samples = tf.shape(example["image"])[0]
+            output = {
+                "centroids": crop_output["centroids"],
+                "centroid_vals": crop_output["centroid_vals"],
+                "instance_peak_vals": tf.RaggedTensor.from_value_rowids(
+                    tf.zeros(shape=(0,), dtype=tf.float32),
+                    tf.zeros(shape=(0,), dtype=tf.int32),
+                    nrows=samples,
+                ),
+                "instance_peaks": tf.RaggedTensor.from_value_rowids(
+                    tf.zeros(shape=(0, 2), dtype=tf.float32),
+                    tf.zeros(shape=(0,), dtype=tf.int32),
+                    nrows=samples,
+                ),
+            }
+
+            if self.instance_peaks.return_confmaps:
+                output["instance_confmaps"] = tf.zeros((0, 0, 0, 0), dtype=tf.float32)
+
+            return output
         else:
-            peaks_output = self.instance_peaks(crop_output)
-        return peaks_output
+            if isinstance(self.instance_peaks, FindInstancePeaksGroundTruth):
+                if "instances" in example:
+                    peaks_output = self.instance_peaks(example, crop_output)
+                else:
+                    raise ValueError(
+                        "Ground truth data was not detected... "
+                        "Please load both models when predicting on non-ground-truth data."
+                    )
+            else:
+                peaks_output = self.instance_peaks(crop_output)
+            return peaks_output
 
 
 @attr.s(auto_attribs=True)
