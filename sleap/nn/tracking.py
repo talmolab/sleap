@@ -918,12 +918,12 @@ class Tracker(BaseTracker):
             )
 
         pre_cull_function = None
-        if target_instance_count and pre_cull_to_target:
+        if max_tracks and pre_cull_to_target:
 
             def pre_cull_function(inst_list):
                 cull_frame_instances(
                     inst_list,
-                    instance_count=target_instance_count,
+                    instance_count=max_tracks,
                     iou_threshold=pre_cull_iou_threshold,
                 )
 
