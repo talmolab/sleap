@@ -3093,6 +3093,47 @@ class AddInstance(EditCommand):
         return has_missing_nodes
 
     @staticmethod
+    def find_last_user_instance(
+        frame_to_copy_from: LabeledFrame,
+        index: int = -1,
+    ) -> Optional[Instance]:
+        """Find last user instance to copy from
+
+        Args:
+            frame_to_copy_from: The last labeled frame from which we obtain the last user instance.
+
+         Returns:
+          The last user instance in the frame_to_copy_from (if present), otherwise null
+        """
+
+        user_instances = frame_to_copy_from.user_instances
+        if len(user_instances) > 0:
+            return user_instances[index]
+
+    @staticmethod
+    def replace_with_user_instance_if_needed(
+        copy_instance: Optional[Union[Instance, PredictedInstance]],
+        frame_to_copy_from: LabeledFrame,
+    ):
+        """Replace copy_instance with user instance if needed.
+
+        Args:
+            copy_instance: The current copy instance.
+            frame_to_copy_from: The last labeled frame from which we obtain the last user instance.
+
+        Returns:
+        The current copy_instance or the user_instance it has been replaced with.
+        """
+
+        if isinstance(copy_instance, PredictedInstance):
+            # Set copy instance to last user instance in frame to copy from, if present
+            user_instance = AddInstance.find_last_user_instance(frame_to_copy_from)
+            if user_instance is not None:
+                return user_instance
+
+        return copy_instance
+
+    @staticmethod
     def find_instance_to_copy_from(
         context: CommandContext,
         copy_instance: Optional[Union[Instance, PredictedInstance]],
@@ -3140,15 +3181,24 @@ class AddInstance(EditCommand):
             prev_idx = AddInstance.get_previous_frame_index(context)
 
             if prev_idx is not None:
-                prev_instances = context.labels.find(
+                prev_frame = context.labels.find(
                     context.state["video"], prev_idx, return_new=True
-                )[0].instances
+                )[0]
+                prev_instances = prev_frame.instances
                 if len(prev_instances) > len(context.state["labeled_frame"].instances):
                     # If more instances in previous frame than current, then use the
                     # first unmatched instance.
-                    copy_instance = prev_instances[
-                        len(context.state["labeled_frame"].instances)
-                    ]
+                    prev_user_instances = prev_frame.user_instances
+                    current_user_instances = context.state[
+                        "labeled_frame"
+                    ].user_instances
+                    if len(prev_user_instances) > len(current_user_instances):
+                        copy_instance = prev_user_instances[len(current_user_instances)]
+                    else:
+                        copy_instance = prev_instances[
+                            len(context.state["labeled_frame"].instances)
+                        ]
+
                     from_prev_frame = True
                 elif init_method == "best" and (
                     context.state["labeled_frame"].instances
@@ -3156,9 +3206,19 @@ class AddInstance(EditCommand):
                     # Otherwise, if there are already instances in current frame,
                     # copy the points from the last instance added to frame.
                     copy_instance = context.state["labeled_frame"].instances[-1]
+
+                    copy_instance = AddInstance.replace_with_user_instance_if_needed(
+                        copy_instance, context.state["labeled_frame"]
+                    )
+
                 elif len(prev_instances):
                     # Otherwise use the last instance added to previous frame.
                     copy_instance = prev_instances[-1]
+
+                    copy_instance = AddInstance.replace_with_user_instance_if_needed(
+                        copy_instance, prev_frame
+                    )
+
                     from_prev_frame = True
 
         from_predicted = from_predicted if hasattr(from_predicted, "score") else None
