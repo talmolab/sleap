@@ -818,7 +818,7 @@ class Tracker(BaseTracker):
             #     print(
             #         "DEPRECATION WARNING: "
             #         "--clean_instance_count is deprecated (but still applied to "
-            #         "clean results *after* tracking). Use --target_instance_count "
+            #         "clean results *after* tracking). Use --max_tracks "
             #         "and --pre_cull_to_target instead to cull instances *before* "
             #         "tracking."
             #     )
