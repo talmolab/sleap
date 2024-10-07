@@ -574,7 +574,6 @@ class Tracker(BaseTracker):
     max_tracking: bool = False  # To enable maximum tracking.
 
     cleaner: Optional[Callable] = None  # TODO: deprecate
-    target_instance_count: int = 0
     pre_cull_function: Optional[Callable] = None
     post_connect_single_breaks: bool = False
     robust_best_instance: float = 1.0
