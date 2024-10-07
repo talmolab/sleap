@@ -823,8 +823,8 @@ class Tracker(BaseTracker):
             #         "tracking."
             #     )
             self.cleaner.run(frames)
-        elif self.target_instance_count and self.post_connect_single_breaks:
-            connect_single_track_breaks(frames, self.target_instance_count)
+        elif self.max_tracks and self.post_connect_single_breaks:
+            connect_single_track_breaks(frames, self.max_tracks)
 
     def get_name(self):
         tracker_name = self.candidate_maker.__class__.__name__
