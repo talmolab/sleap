@@ -1398,6 +1398,7 @@ class KalmanTracker(BaseTracker):
         untracked_instances: List[InstanceType],
         img: Optional[np.ndarray] = None,
         t: int = None,
+        **kwargs,
     ) -> List[InstanceType]:
         """Tracks individual frame, using Kalman filters if possible."""
 
