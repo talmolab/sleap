@@ -574,7 +574,7 @@ class Tracker(BaseTracker):
     max_tracking: bool = False  # To enable maximum tracking.
 
     cleaner: Optional[Callable] = None  # TODO: deprecate
-    target_instance_count: int = 0 # TODO: deprecate
+    target_instance_count: int = 0  # TODO: deprecate
     pre_cull_function: Optional[Callable] = None
     post_connect_single_breaks: bool = False
     robust_best_instance: float = 1.0
@@ -824,7 +824,9 @@ class Tracker(BaseTracker):
             #         "tracking."
             #     )
             self.cleaner.run(frames)
-        elif (self.target_instance_count or self.max_tracks) and self.post_connect_single_breaks:
+        elif (
+            self.target_instance_count or self.max_tracks
+        ) and self.post_connect_single_breaks:
             if not self.target_instance_count:
                 # If target_instance_count is not set, use max_tracks instead
                 # target_instance_count not available in the GUI
@@ -855,7 +857,7 @@ class Tracker(BaseTracker):
         of_max_levels: int = 3,
         save_shifted_instances: bool = False,
         # Pre-tracking options to cull instances
-        target_instance_count: int = 0, # TODO: deprecate target_instance_count
+        target_instance_count: int = 0,  # TODO: deprecate target_instance_count
         pre_cull_to_target: bool = False,
         pre_cull_iou_threshold: Optional[float] = None,
         # Post-tracking options to connect broken tracks
@@ -946,7 +948,7 @@ class Tracker(BaseTracker):
             pre_cull_function=pre_cull_function,
             max_tracking=max_tracking,
             max_tracks=max_tracks,
-            target_instance_count=target_instance_count, # TODO: deprecate target_instance_count
+            target_instance_count=target_instance_count,  # TODO: deprecate target_instance_count
             post_connect_single_breaks=post_connect_single_breaks,
         )
 
@@ -967,7 +969,9 @@ class Tracker(BaseTracker):
 
             return kalman_obj
         elif kf_init_frame_count and not (max_tracks or target_instance_count):
-            raise ValueError("Kalman filter requires max tracks or target instance count.")
+            raise ValueError(
+                "Kalman filter requires max tracks or target instance count."
+            )
         else:
             return tracker_obj
 
@@ -1381,7 +1385,9 @@ class KalmanTracker(BaseTracker):
         if init_tracker.pre_cull_function is None:
             init_tracker.pre_cull_function = cull_function
 
-        print(f"Using {init_tracker.get_name()} to track {init_frame_count} frames for Kalman filters.")
+        print(
+            f"Using {init_tracker.get_name()} to track {init_frame_count} frames for Kalman filters."
+        )
 
         return cls(
             init_tracker=init_tracker,
