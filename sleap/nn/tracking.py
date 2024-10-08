@@ -824,8 +824,13 @@ class Tracker(BaseTracker):
             #         "tracking."
             #     )
             self.cleaner.run(frames)
-        elif self.target_instance_count and self.post_connect_single_breaks:
+        elif (self.target_instance_count or self.max_tracks) and self.post_connect_single_breaks:
+            if not self.target_instance_count:
+                # If target_instance_count is not set, use max_tracks instead
+                # target_instance_count not available in the GUI
+                self.target_instance_count = self.max_tracks
             connect_single_track_breaks(frames, self.target_instance_count)
+            print("Connecting single track breaks.")
 
     def get_name(self):
         tracker_name = self.candidate_maker.__class__.__name__
