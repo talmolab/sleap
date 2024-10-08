@@ -1381,6 +1381,8 @@ class KalmanTracker(BaseTracker):
         if init_tracker.pre_cull_function is None:
             init_tracker.pre_cull_function = cull_function
 
+        print(f"Using {init_tracker.get_name()} to track {init_frame_count} frames for Kalman filters.")
+
         return cls(
             init_tracker=init_tracker,
             kalman_tracker=kalman_tracker,
@@ -1433,7 +1435,7 @@ class KalmanTracker(BaseTracker):
                 # Initialize the Kalman filters
                 self.kalman_tracker.init_filters(self.init_set.instances)
 
-                # print(f"Kalman filters initialized (frame {t})")
+                print(f"Kalman filters initialized (frame {t})")
 
                 # Clear the data used to init filters, so that if the filters
                 # stop tracking and we need to re-init, we won't re-use the
