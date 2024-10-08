@@ -855,7 +855,7 @@ class Tracker(BaseTracker):
         of_max_levels: int = 3,
         save_shifted_instances: bool = False,
         # Pre-tracking options to cull instances
-        target_instance_count: int = 0,
+        target_instance_count: int = 0, # TODO: deprecate target_instance_count
         pre_cull_to_target: bool = False,
         pre_cull_iou_threshold: Optional[float] = None,
         # Post-tracking options to connect broken tracks
