@@ -1586,6 +1586,7 @@ class GoIteratorCommand(AppCommand):
     def do_action(cls, context: CommandContext, params: dict):
         frames = cls._get_frame_iterator(context)
         cls._plot_if_next(context, frames)
+        context.state["instance"] = None
 
 
 class GoPreviousLabeledFrame(GoIteratorCommand):
@@ -1597,21 +1598,12 @@ class GoPreviousLabeledFrame(GoIteratorCommand):
             reverse=True,
         )
 
-    def do_action(cls, context: CommandContext, params: dict):
-        super().do_action(context)
-        context.state["instance"] = None
-
-
 class GoNextLabeledFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
         return context.labels.frames(
             context.state["video"], from_frame_idx=context.state["frame_idx"]
         )
-
-    def do_action(cls, context: CommandContext, params: dict):
-        super().do_action(context)
-        context.state["instance"] = None
 
 class GoNextUserLabeledFrame(GoIteratorCommand):
     @staticmethod
@@ -1630,6 +1622,7 @@ class NavCommand(AppCommand):
         if video is not None:
             context.state["video"] = video
         context.state["frame_idx"] = frame_idx
+        context.state["instance"] = None
 
 
 class GoLastInteractedFrame(NavCommand):
@@ -1697,7 +1690,6 @@ class GoFrameGui(NavCommand):
     @classmethod
     def do_action(cls, context: "CommandContext", params: dict):
         cls.go_to(context, params["frame_idx"])
-        context.state["instance"] = None
 
     @classmethod
     def ask(cls, context: "CommandContext", params: dict) -> bool:
@@ -1754,7 +1746,6 @@ class GoAdjacentView(NavCommand):
 
         context.state["video"] = new_video
         context.state["frame_idx"] = frame_idx
-        context.state["instance"] = None
 
 
 # Editing Commands
