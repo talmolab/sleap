@@ -363,7 +363,7 @@ class CommandContext:
     def previousLabeledFrame(self):
         """Goes to labeled frame prior to current frame."""
         self.execute(GoPreviousLabeledFrame)
-        
+
     def nextLabeledFrame(self):
         """Goes to labeled frame after current frame."""
         self.execute(GoNextLabeledFrame)
@@ -1598,12 +1598,14 @@ class GoPreviousLabeledFrame(GoIteratorCommand):
             reverse=True,
         )
 
+
 class GoNextLabeledFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
         return context.labels.frames(
             context.state["video"], from_frame_idx=context.state["frame_idx"]
         )
+
 
 class GoNextUserLabeledFrame(GoIteratorCommand):
     @staticmethod
