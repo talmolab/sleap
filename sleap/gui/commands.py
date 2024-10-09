@@ -363,12 +363,10 @@ class CommandContext:
     def previousLabeledFrame(self):
         """Goes to labeled frame prior to current frame."""
         self.execute(GoPreviousLabeledFrame)
-        self.state["instance"] = None
-
+        
     def nextLabeledFrame(self):
         """Goes to labeled frame after current frame."""
         self.execute(GoNextLabeledFrame)
-        self.state["instance"] = None
 
     def nextUserLabeledFrame(self):
         """Goes to next labeled frame with user instances."""
@@ -405,7 +403,6 @@ class CommandContext:
     def gotoFrame(self):
         """Shows gui to go to frame by number."""
         self.execute(GoFrameGui)
-        self.state["instance"] = None
 
     def selectToFrame(self):
         """Shows gui to go to frame by number."""
@@ -414,17 +411,14 @@ class CommandContext:
     def gotoVideoAndFrame(self, video: Video, frame_idx: int):
         """Activates video and goes to frame."""
         NavCommand.go_to(self, frame_idx, video)
-        self.state["instance"] = None
 
     def nextView(self):
         """Goes to next view."""
         self.execute(GoAdjacentView, prev_or_next="next")
-        self.state["instance"] = None
 
     def prevView(self):
         """Goes to previous view."""
         self.execute(GoAdjacentView, prev_or_next="prev")
-        self.state["instance"] = None
 
     # Editing Commands
 
@@ -1603,6 +1597,10 @@ class GoPreviousLabeledFrame(GoIteratorCommand):
             reverse=True,
         )
 
+    def do_action(cls, context: CommandContext, params: dict):
+        super().do_action(context)
+        context.state["instance"] = None
+
 
 class GoNextLabeledFrame(GoIteratorCommand):
     @staticmethod
@@ -1611,6 +1609,9 @@ class GoNextLabeledFrame(GoIteratorCommand):
             context.state["video"], from_frame_idx=context.state["frame_idx"]
         )
 
+    def do_action(cls, context: CommandContext, params: dict):
+        super().do_action(context)
+        context.state["instance"] = None
 
 class GoNextUserLabeledFrame(GoIteratorCommand):
     @staticmethod
@@ -1696,6 +1697,7 @@ class GoFrameGui(NavCommand):
     @classmethod
     def do_action(cls, context: "CommandContext", params: dict):
         cls.go_to(context, params["frame_idx"])
+        context.state["instance"] = None
 
     @classmethod
     def ask(cls, context: "CommandContext", params: dict) -> bool:
@@ -1752,6 +1754,7 @@ class GoAdjacentView(NavCommand):
 
         context.state["video"] = new_video
         context.state["frame_idx"] = frame_idx
+        context.state["instance"] = None
 
 
 # Editing Commands
