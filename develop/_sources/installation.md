@@ -5,12 +5,12 @@ SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. For qu
 ````{tabs}
    ```{group-tab} Windows and Linux
       ```bash
-      conda create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a3
+      conda create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a2
       ```
    ```
    ```{group-tab} Mac OS
       ```bash
-      conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a3
+      conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a2
       ```
    ```
 ````
@@ -27,7 +27,7 @@ local:
    Installation requires entering commands in a terminal. To open one:
    ````{tabs}
       ```{tab} Windows
-         Open the *Start menu* and search for the *Anaconda Prompt* (if using Miniconda) or the *Command Prompt* if not.
+         Open the *Start menu* and search for the *Anaconda Prompt* (if using Miniconda) or the *Command Prompt* if not. 
          ```{note}
          On Windows, our personal preference is to use alternative terminal apps like [Cmder](https://cmder.net) or [Windows Terminal](https://aka.ms/terminal).
          ```
@@ -65,6 +65,7 @@ If you don't have a `conda` package manager installation, here are some quick in
 ### Miniforge (recommended)
 
 Miniforge is a minimal installer for conda that includes the `conda` package manager and is maintained by the [conda-forge](https://conda-forge.org) community. The only difference between Miniforge and Miniconda is that Miniforge uses the `conda-forge` channel by default, which provides a much wider selection of community-maintained packages.
+
 
 ````{tabs}
    ```{group-tab} Windows
@@ -134,20 +135,20 @@ This is a minimal installer for conda that includes the `conda` package manager 
 
 See the [Miniconda website](https://docs.anaconda.com/free/miniconda/) for up-to-date installation instructions if the above instructions don't work for your system.
 
-(installation-methods)=
 
+(installation-methods)=
 ## Installation methods
 
 SLEAP can be installed three different ways: via {ref}`conda package<condapackage>`, {ref}`conda from source<condasource>`, or {ref}`pip package<pippackage>`. Select one of the methods below to install SLEAP. We recommend {ref}`conda package<condapackage>`.
 
-`````{tabs}
+````{tabs}
    ```{tab} conda package
       **This is the recommended installation method**.
       ````{tabs}
          ```{group-tab} Windows and Linux
             ```bash
-            conda create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a3
-            ```
+            conda create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1a2
+            ```  
             ```{note}
             - This comes with CUDA to enable GPU support. All you need is to have an NVIDIA GPU and [updated drivers](https://nvidia.com/drivers).
             - If you already have CUDA installed on your system, this will not conflict with it.
@@ -156,7 +157,7 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
          ```
          ```{group-tab} Mac OS
             ```bash
-            conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a3
+            conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1a2
             ```
             ```{note}
             This will also work in CPU mode if you don't have a GPU on your machine.
@@ -239,7 +240,7 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
                ```
             3. Finally, we can perform the `pip install`:
                ```bash
-               pip install sleap[pypi]==1.4.1a3
+               pip install sleap[pypi]==1.4.1a2
                ```
                ```{note}
                The pypi distributed package of SLEAP ships with the following extras:
@@ -255,7 +256,7 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
          ```
          ````
    ```
-`````
+````
 
 ## Testing that things are working
 

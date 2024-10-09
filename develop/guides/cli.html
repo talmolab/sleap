@@ -1,56 +1,53 @@
 
-
 <!DOCTYPE html>
 
 
-<html lang="en" >
+<html lang="en" data-content_root="../" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Command line interfaces &#8212; SLEAP (v1.4.1a3)</title>
+    <title>Command line interfaces &#8212; SLEAP (v1.4.1a2)</title>
   
   
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
 
   
-  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css?v=cbdb2f4f" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../_static/documentation_options.js?v=9f48819e"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'guides/cli';</script>
     <link rel="canonical" href="/develop/guides/cli.html" />
-    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Troubleshooting workflows" href="troubleshooting-workflows.html" />
@@ -64,19 +61,23 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
@@ -98,12 +99,20 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
-    </nav>
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -118,9 +127,13 @@
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
         <div class="sidebar-primary-item">
+
+  
+    
   
 
 <a class="navbar-brand logo" href="../index.html">
+  
   
   
   
@@ -130,18 +143,29 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="Logo image"/>
-    <script>document.write(`<img src="../_static/logo.png" class="logo__image only-dark" alt="Logo image"/>`);</script>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="SLEAP (v1.4.1a2) - Home"/>
+    <script>document.write(`<img src="../_static/logo.png" class="logo__image only-dark" alt="SLEAP (v1.4.1a2) - Home"/>`);</script>
   
   
 </a></div>
-        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/new-project.html">Creating a project</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-labeling.html">Initial Labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-training.html">Training and Inference</a></li>
@@ -150,8 +174,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/proofreading.html">Tracking instances across frames</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/analysis.html">Export Data For Analysis</a></li>
 </ul>
-</li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Guides</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Guides</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="gui.html">GUI</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Command line interfaces</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting-workflows.html">Troubleshooting workflows</a></li>
@@ -163,8 +187,8 @@
 <li class="toctree-l2"><a class="reference internal" href="custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="remote.html">Running SLEAP remotely</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html">Training and inference on an example dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html">Training and inference on your own data using Google Drive</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Model_evaluation.html">Model evaluation</a></li>
@@ -177,10 +201,10 @@
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Interactive_and_resumable_training.html">Interactive and resumable training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Interactive_and_realtime_inference.html">Interactive and realtime inference</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../api.html">Developer API</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul class="simple">
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api.html">Developer API</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1"><a class="reference internal" href="../datasets.html">Datasets</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/talmolab/sleap">GitHub</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/talmolab/sleap/releases">Releases</a></li>
@@ -200,7 +224,7 @@
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
 
@@ -209,14 +233,14 @@
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -274,26 +298,28 @@
 </div>
 
 
+
 <script>
 document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
   </button>
 `);
 </script>
 
+
 <script>
 document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
   </button>
 `);
 </script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
-</label>
+</button>
 </div></div>
       
     </div>
@@ -352,15 +378,15 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="command-line-interfaces">
-<span id="cli"></span><h1>Command line interfaces<a class="headerlink" href="#command-line-interfaces" title="Permalink to this heading">#</a></h1>
+<span id="cli"></span><h1>Command line interfaces<a class="headerlink" href="#command-line-interfaces" title="Link to this heading">#</a></h1>
 <p>SLEAP provides several types of functionality accessible through a command prompt.</p>
 <section id="gui">
-<h2>GUI<a class="headerlink" href="#gui" title="Permalink to this heading">#</a></h2>
+<h2>GUI<a class="headerlink" href="#gui" title="Link to this heading">#</a></h2>
 <section id="sleap-label">
-<span id="id1"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-label</span></code><a class="headerlink" href="#sleap-label" title="Permalink to this heading">#</a></h3>
+<span id="id1"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-label</span></code><a class="headerlink" href="#sleap-label" title="Link to this heading">#</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-label</span></code> runs the GUI application for labeling and viewing <code class="code docutils literal notranslate"><span class="pre">.slp</span></code> files.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-label [-h] [--nonnative] [--profiling] [--reset] [labels_path]
 
@@ -378,9 +404,9 @@ optional arguments:
 </section>
 </section>
 <section id="training">
-<h2>Training<a class="headerlink" href="#training" title="Permalink to this heading">#</a></h2>
+<h2>Training<a class="headerlink" href="#training" title="Link to this heading">#</a></h2>
 <section id="sleap-train">
-<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-train</span></code><a class="headerlink" href="#sleap-train" title="Permalink to this heading">#</a></h3>
+<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-train</span></code><a class="headerlink" href="#sleap-train" title="Link to this heading">#</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-train</span></code> is the command-line interface for training. Use this for training on a remote machine/cluster/colab notebook instead of through the GUI.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-train [-h] [--video-paths VIDEO_PATHS] [--val_labels VAL_LABELS]
                    [--test_labels TEST_LABELS] [--tensorboard] [--save_viz] 
@@ -433,7 +459,7 @@ optional arguments:
 </div>
 </section>
 <section id="sleap-export">
-<span id="id3"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-export</span></code><a class="headerlink" href="#sleap-export" title="Permalink to this heading">#</a></h3>
+<span id="id3"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-export</span></code><a class="headerlink" href="#sleap-export" title="Link to this heading">#</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-export</span></code> is a command-line interface for exporting trained models as a TensorFlow graph for use in other applications. See <a class="reference external" href="https://www.tensorflow.org/guide/saved_model">this guide</a> for details on how TensorFlow saves models and the <a class="reference internal" href="../api/sleap.nn.inference.html#sleap.nn.inference.InferenceModel.export_model" title="sleap.nn.inference.InferenceModel.export_model"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">sleap.nn.inference.InferenceModel.export_model</span></code></span></a> documentation.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-export [-h] [-m MODELS] [-e [EXPORT_PATH]]
 
@@ -456,9 +482,9 @@ optional arguments:
 </section>
 </section>
 <section id="inference-and-tracking">
-<h2>Inference and Tracking<a class="headerlink" href="#inference-and-tracking" title="Permalink to this heading">#</a></h2>
+<h2>Inference and Tracking<a class="headerlink" href="#inference-and-tracking" title="Link to this heading">#</a></h2>
 <section id="sleap-track">
-<span id="id4"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-track</span></code><a class="headerlink" href="#sleap-track" title="Permalink to this heading">#</a></h3>
+<span id="id4"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-track</span></code><a class="headerlink" href="#sleap-track" title="Link to this heading">#</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> is the command-line interface for running inference using models which have already been trained. Use this for running inference on a remote machine such as an HPC cluster or Colab notebook.</p>
 <p>If you specify how many identities there should be in a frame (i.e., the number of animals) with the <code class="code docutils literal notranslate"><span class="pre">--tracking.clean_instance_count</span></code> argument, then we will use a heuristic method to connect “breaks” in the track identities where we lose one identity and spawn another. This can be used as part of the inference pipeline (if models are specified), as part of the tracking-only pipeline (if the predictions file is specified and no models are specified), or by itself on predictions with pre-tracked identities (if you specify <code class="code docutils literal notranslate"><span class="pre">--tracking.tracker</span> <span class="pre">none</span></code>). See <a class="reference internal" href="proofreading.html#proofreading"><span class="std std-ref">Tracking and proofreading</span></a> for more details on tracking.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames] [--only-suggested-frames] [-o OUTPUT] [--no-empty-frames]
@@ -575,7 +601,7 @@ optional arguments:
 </pre></div>
 </div>
 <section id="examples">
-<h4>Examples:<a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h4>
+<h4>Examples:<a class="headerlink" href="#examples" title="Link to this heading">#</a></h4>
 <p><strong>1. Simple inference without tracking:</strong></p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sleap-track -m &quot;models/my_model&quot; -o &quot;output_predictions.slp&quot; &quot;input_video.mp4&quot;
 </pre></div>
@@ -613,9 +639,9 @@ optional arguments:
 </section>
 </section>
 <section id="dataset-files">
-<h2>Dataset files<a class="headerlink" href="#dataset-files" title="Permalink to this heading">#</a></h2>
+<h2>Dataset files<a class="headerlink" href="#dataset-files" title="Link to this heading">#</a></h2>
 <section id="sleap-convert">
-<span id="id5"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-convert</span></code><a class="headerlink" href="#sleap-convert" title="Permalink to this heading">#</a></h3>
+<span id="id5"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-convert</span></code><a class="headerlink" href="#sleap-convert" title="Link to this heading">#</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-convert</span></code> allows you to convert between various dataset file formats. Amongst other things, it can be used to export data from a SLEAP dataset into an HDF5 file that can be easily used for analysis (e.g., read from MATLAB). See <a class="reference internal" href="../api/sleap.io.convert.html#module-sleap.io.convert" title="sleap.io.convert"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sleap.io.convert</span></code></a> for more information.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-convert [-h] [-o OUTPUT] [--format FORMAT] [--video VIDEO]
                      input_path
@@ -660,10 +686,10 @@ optional arguments:
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sleap</span><span class="o">-</span><span class="n">convert</span> <span class="o">--</span><span class="nb">format</span> <span class="n">analysis</span> <span class="o">-</span><span class="n">o</span> <span class="s2">&quot;session1.predictions.analysis.h5&quot;</span> <span class="s2">&quot;session1.predictions.slp&quot;</span>
 </pre></div>
 </div>
-<p>See <span class="xref myst">Analysis examples</span> for how to work with these outputs.</p>
+<p>See <a class="reference internal" href="#../notebooks/Analysis_examples.html"><span class="xref myst">Analysis examples</span></a> for how to work with these outputs.</p>
 </section>
 <section id="sleap-inspect">
-<span id="id6"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-inspect</span></code><a class="headerlink" href="#sleap-inspect" title="Permalink to this heading">#</a></h3>
+<span id="id6"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-inspect</span></code><a class="headerlink" href="#sleap-inspect" title="Link to this heading">#</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-inspect</span></code> gives you various information about a SLEAP dataset file such as a list of videos and a count of the frames with labels. If you’re inspecting a predictions dataset (i.e., the output from running <code class="code docutils literal notranslate"><span class="pre">sleap-track</span></code> or inference in the GUI) it will also include details about how those predictions were created (i.e., the models, the version of SLEAP, and any inference parameters).</p>
 <p>You can also specify a model folder to get a quick summary of the configuration and metrics (if available).</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-inspect [-h] [--verbose] data_path
@@ -679,9 +705,9 @@ optional arguments:
 </section>
 </section>
 <section id="rendering">
-<h2>Rendering<a class="headerlink" href="#rendering" title="Permalink to this heading">#</a></h2>
+<h2>Rendering<a class="headerlink" href="#rendering" title="Link to this heading">#</a></h2>
 <section id="sleap-render">
-<span id="id7"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-render</span></code><a class="headerlink" href="#sleap-render" title="Permalink to this heading">#</a></h3>
+<span id="id7"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-render</span></code><a class="headerlink" href="#sleap-render" title="Link to this heading">#</a></h3>
 <p><code class="code docutils literal notranslate"><span class="pre">sleap-render</span></code> allows you to render videos directly from the CLI. It is used to render video clips with Instances.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-render [-h] [-o OUTPUT] [-f FPS] [--scale SCALE] [--crop CROP] [--frames FRAMES] [--video-index VIDEO_INDEX] data_path
 positional arguments:
@@ -717,9 +743,9 @@ optional arguments:
 </section>
 </section>
 <section id="debugging">
-<h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this heading">#</a></h2>
+<h2>Debugging<a class="headerlink" href="#debugging" title="Link to this heading">#</a></h2>
 <section id="sleap-diagnostic">
-<span id="id8"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-diagnostic</span></code><a class="headerlink" href="#sleap-diagnostic" title="Permalink to this heading">#</a></h3>
+<span id="id8"></span><h3><code class="docutils literal notranslate"><span class="pre">sleap-diagnostic</span></code><a class="headerlink" href="#sleap-diagnostic" title="Link to this heading">#</a></h3>
 <p>There’s also a script to output diagnostic information which may help us if you need to contact us about problems installing or running SLEAP. If you were able to install the SLEAP Python package, you can run this script with <code class="code docutils literal notranslate"><span class="pre">sleap-diagnostic</span></code>. Otherwise, you can download <a class="reference external" href="https://raw.githubusercontent.com/talmolab/sleap/main/sleap/diagnostic.py">diagnostic.py</a> and run <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">diagnostic.py</span></code>.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: sleap-diagnostic [-h] [-o OUTPUT] [--gui-check]
 
@@ -744,11 +770,10 @@ optional arguments:
 
               
               
-                <footer class="bd-footer-article">
+              
+              
+                <footer class="prev-next-footer d-print-none">
                   
-<div class="footer-article-items footer-article__inner">
-  
-    <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
        href="gui.html"
@@ -768,10 +793,7 @@ optional arguments:
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
-</div></div>
-  
 </div>
-
                 </footer>
               
             </div>
@@ -779,6 +801,7 @@ optional arguments:
             
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
 
   <div class="sidebar-secondary-item">
   <div class="page-toc tocsection onthispage">
@@ -836,6 +859,7 @@ By SLEAP Developers
   
   <div class="footer-item">
     
+
   <p class="copyright">
     
       © Copyright 2019–2024, Talmo Lab.
@@ -862,8 +886,8 @@ By SLEAP Developers
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
 
   <footer class="bd-footer">
   </footer>
