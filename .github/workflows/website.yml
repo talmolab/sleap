@@ -8,7 +8,7 @@ on:
       # 'main' triggers updates to 'sleap.ai', all others to 'sleap.ai/develop'
       - main
       - develop
-      - liezl/update-intallation-docs-1.4.1 # again!
+      - liezl/bump-to-1.4.1a3-py310
     paths:
       - "docs/**"
       - "README.rst"

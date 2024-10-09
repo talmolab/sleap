@@ -11,7 +11,7 @@ on:
       - "jupyter_requirements.txt"
       - "pypi_requirements.txt"
       - "environment_build.yml"
-      - ".github/workflows/build_pypi_ci.yml"
+      - ".github/workflows/build_pypi_ci.yml"  # Run
 
 jobs:
   build:
