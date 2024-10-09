@@ -221,7 +221,10 @@ def find_global_peaks_rough(
     channels = tf.cast(tf.shape(cms)[-1], tf.int64)
     total_peaks = tf.cast(tf.shape(argmax_cols)[0], tf.int64)
     sample_subs = tf.range(total_peaks, dtype=tf.int64) // channels
-    channel_subs = tf.math.mod(tf.range(total_peaks, dtype=tf.int64), channels)
+
+    # Custom modulo implementation because JIT errors with both % and tf.math.mod
+    peaks_range = tf.range(total_peaks, dtype=tf.int64)
+    channel_subs = peaks_range - (peaks_range // channels) * channels
 
     # Gather subscripts.
     peak_subs = tf.stack([sample_subs, argmax_rows, argmax_cols, channel_subs], axis=1)
