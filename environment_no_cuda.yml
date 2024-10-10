@@ -5,43 +5,43 @@
 name: sleap_ci
 
 channels:
-  - conda-forge
-  - sleap
-  - anaconda
+    - conda-forge
+    - sleap
+    - anaconda
 
 dependencies:
-  # Packages SLEAP uses directly
-  - conda-forge::attrs >=21.2.0
-  - conda-forge::cattrs ==1.1.1
-  - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
-  - conda-forge::jsmin
-  - conda-forge::jsonpickle ==1.2
-  - conda-forge::networkx
-  - anaconda::numpy >=1.19.5,<1.23.0
-  - conda-forge::opencv <4.9.0
-  - conda-forge::pandas
-  - conda-forge::pip
-  - conda-forge::pillow #>=8.3.1,<=8.4.0
-  - conda-forge::psutil
-  - conda-forge::pykalman
-  - conda-forge::pyside2 >=5.12 # To ensure application works correctly with QtPy.
-  - conda-forge::python ~=3.7 # Run into _MAX_WINDOWS_WORKERS not found if ==
-  - conda-forge::python-rapidjson
-  - conda-forge::pyyaml
-  - conda-forge::pyzmq
-  - conda-forge::qtpy >=2.0.1
-  - conda-forge::rich
-  - conda-forge::scipy >=1.4.1,<=1.9.0
-  - conda-forge::scikit-image
-  - conda-forge::scikit-learn ==1.0
-  - conda-forge::scikit-video
-  - conda-forge::seaborn
-  # - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
-  - sleap/label/dev::tensorflow ==2.7.0
-  - conda-forge::tensorflow-hub
-  - conda-forge::qudida
-  - conda-forge::albumentations >=1.4.15 # Handle Nan keypoints
-  - conda-forge::ndx-pose <0.2.0
+    # Packages SLEAP uses directly
+    - conda-forge::attrs >=21.2.0
+    - conda-forge::cattrs ==1.1.1
+    - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
+    - conda-forge::jsmin
+    - conda-forge::jsonpickle ==1.2
+    - conda-forge::networkx
+    - anaconda::numpy >=1.19.5,<1.23.0
+    - conda-forge::opencv <4.9.0
+    - conda-forge::pandas
+    - conda-forge::pip
+    - conda-forge::pillow #>=8.3.1,<=8.4.0
+    - conda-forge::psutil
+    - conda-forge::pykalman
+    - conda-forge::pyside2 >=5.12 # To ensure application works correctly with QtPy.
+    - conda-forge::python ~=3.7 # Run into _MAX_WINDOWS_WORKERS not found if ==
+    - conda-forge::python-rapidjson
+    - conda-forge::pyyaml
+    - conda-forge::pyzmq
+    - conda-forge::qtpy >=2.0.1
+    - conda-forge::rich
+    - conda-forge::scipy >=1.4.1,<=1.9.0
+    - conda-forge::scikit-image
+    - conda-forge::scikit-learn ==1.0
+    - conda-forge::scikit-video
+    - conda-forge::seaborn
+    # - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10
+    - sleap/label/dev::tensorflow ==2.7.0
+    - conda-forge::tensorflow-hub
+    - conda-forge::qudida
+    - conda-forge::albumentations >=1.4.15 # Handle Nan keypoints
+    - conda-forge::ndx-pose <0.2.0
 
-  - pip:
-      - "--editable=.[conda_dev]"
+    - pip:
+          - "--editable=.[conda_dev]"
