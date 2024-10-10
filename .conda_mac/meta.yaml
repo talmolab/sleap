@@ -56,7 +56,7 @@ requirements:
     - conda-forge::scikit-video
     - conda-forge::seaborn
     - conda-forge::qudida
-    - conda-forge::albumentations
+    - conda-forge::albumentations >=1.4.15 # Handle Nan keypoints
     - conda-forge::ndx-pose <0.2.0
 
   run:
@@ -88,7 +88,7 @@ requirements:
     - conda-forge::seaborn
     # - conda-forge::tensorflow-hub  # pulls in tensorflow cpu from conda-forge
     - conda-forge::qudida
-    - conda-forge::albumentations
+    - conda-forge::albumentations >=1.4.15 # Handle Nan keypoints
     - conda-forge::ndx-pose <0.2.0
 
 # test:

@@ -54,7 +54,7 @@ requirements:
     - conda-forge::scikit-video
     - conda-forge::seaborn
     - conda-forge::qudida
-    - conda-forge::albumentations
+    - conda-forge::albumentations >=1.4.15 # Handle Nan keypoints
     - conda-forge::ndx-pose <0.2.0
     - conda-forge::importlib-metadata ==4.11.4
   run:
@@ -89,7 +89,7 @@ requirements:
     - sleap/label/dev::tensorflow ==2.7.0  # TODO: Switch to main label when updated
     - conda-forge::tensorflow-hub <0.14.0  # Causes pynwb conflicts on linux GH-1446
     - conda-forge::qudida
-    - conda-forge::albumentations
+    - conda-forge::albumentations >=1.4.15 # Handle Nan keypoints
     - conda-forge::ndx-pose <0.2.0
     - conda-forge::importlib-metadata ==4.11.4
 
