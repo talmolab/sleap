@@ -4,47 +4,40 @@
 # pip install sleap[pypi].
 
 # These are also distributed through conda and not pip installed when using conda.
-attrs>=21.2.0,<=21.4.0
-cattrs==1.1.1
+attrs>=23.1.0  # required by cattrs >=23.2.0
+cattrs>=23.2.0
 imageio
 imageio-ffmpeg
-# certifi>=2017.4.17,<=2021.10.8
 jsmin
-jsonpickle==1.2
+jsonpickle<=1.5.0  # 1.5.1 breaks compatibility with v1 encoded files
 networkx
-numpy>=1.19.5,<1.23.0
-opencv-python>=4.2.0,<=4.7.0
+numpy>=1.16.5,<2.0  # Scipy 1.7.0 requires numpy >=1.16.5
+opencv-python
 pandas
-pillow>=8.3.1,<=8.4.0
+pillow
 psutil
-pykalman==0.9.5
-PySide2>=5.13.2,<=5.14.1; platform_machine != 'arm64'
-PySide6; sys_platform == 'darwin' and platform_machine == 'arm64'
-# Otherwise error: Microsoft Visual C++ 14.0 is required. 
-python-rapidjson <=1.10; sys_platform == 'win32'
-python-rapidjson; sys_platform != 'win32'
+pykalman
+PySide6
+python-rapidjson
 pyyaml
 pyzmq
 qtpy>=2.0.1
-rich==10.16.1
-imgaug==0.4.0
-scipy>=1.4.1,<=1.9.0
+rich
+imageio
+scipy>=1.7.0
 scikit-image
-scikit-learn ==1.0.*
-scikit-video
+scikit-learn>=1.0.0
 seaborn
-tensorflow>=2.6.3,<2.9; platform_machine != 'arm64'
-# tensorflow ==2.7.4; platform_machine != 'arm64'
-tensorflow-hub<=0.14.0
+tensorflow==2.9.2; platform_machine != 'arm64'
+tensorflow-hub
 albumentations>=1.4.15 # Handle Nan keypoints
 ndx-pose<0.2.0
-# These dependencies are untested since we do not offer a wheel for apple silicon atm.
-tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
-tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64'
+# Silicon Mac specific packages
+tensorflow-macos >=2.10.0,<2.13.0; sys_platform == 'darwin' and platform_machine == 'arm64'
+tensorflow-metal; sys_platform == 'darwin' and platform_machine == 'arm64'
 
 # Dependencies of dependencies
-# google-auth 2.23.0 has requirement urllib3<2.0
-urllib3<2.0  # Not a 'noticed' runtime-dependency
 # tensorboard 2.11.2 has requirement protobuf<4,>=3.9.2
 # tensorflow 2.11.0 has requirement protobuf<3.20,>=3.9.2
-protobuf<3.20  # Makes GUI work in windows
+protobuf; platform_machine != 'arm64'
+protobuf>3.20; sys_platform == 'darwin' and platform_machine == 'arm64'

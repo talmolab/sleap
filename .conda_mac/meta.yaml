@@ -23,74 +23,69 @@ source:
 
 requirements:
   host:  
-    - conda-forge::python >=3.9.0, <3.10.0
-    - anaconda::numpy >=1.19.5,<1.23.0
+    - conda-forge::python >=3.10.0,<3.11.0
+    - conda-forge::numpy >=1.16.5 # Scipy 1.7.0 requires numpy >=1.16.5
     - conda-forge::setuptools
     - conda-forge::packaging
     - conda-forge::pip
 
     # Only the packages above are required to build, but listing them all ensures no 
     # unnecessary pypi packages are installed via the build script (bld.bat, build.sh)
-    - conda-forge::attrs >=21.2.0
-    - conda-forge::cattrs ==1.1.1
+    - conda-forge::attrs
+    - conda-forge::cattrs
     - conda-forge::h5py
-    - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
+    - conda-forge::imageio
+    - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
-    - conda-forge::jsonpickle ==1.2
-    - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
-    - conda-forge::networkx <3.3
+    - conda-forge::jsonpickle <=1.5.0 # 1.5.1 breaks compatibility with v1 encoded files
+    - conda-forge::networkx
     - conda-forge::opencv
     - conda-forge::pandas
     - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside2 >=5.12
+    - conda-forge::pyside6 >=6.5.0 # 6.4 conda package uses problematic QtCharts
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
     - conda-forge::qtpy >=2.0.1
     - conda-forge::rich
-    - conda-forge::scipy >=1.4.1,<=1.9.0
-    - conda-forge::scikit-image
-    - conda-forge::scikit-learn ==1.0
-    - conda-forge::scikit-video
+    - conda-forge::scipy >=1.7.0 # Python 3.10 is compatible with scipy >=1.7.0
+    - conda-forge::scikit-image >=0.21.0 # 0.20.0 requires python_abi 3.8.* *_cp38
+    - conda-forge::scikit-learn >=1.0.0 # Python 3.10 needs scikit-learn >= 1.0
     - conda-forge::seaborn
+    - sleap-deps::tensorflow ==2.12.0
     - conda-forge::qudida
     - conda-forge::albumentations >=1.4.15 # Handle Nan keypoints
     - conda-forge::ndx-pose <0.2.0
 
   run:
-    - conda-forge::python >=3.9.0, <3.10.0
-    - conda-forge::attrs >=21.2.0
-    - conda-forge::cattrs ==1.1.1
+    - conda-forge::python >=3.10.0,<3.11.0
+    - conda-forge::attrs
+    - conda-forge::cattrs
     - conda-forge::h5py
-    - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
+    - conda-forge::imageio
+    - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
-    - conda-forge::jsonpickle ==1.2
-    - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
-    - conda-forge::networkx <3.3
-    - anaconda::numpy >=1.19.5,<1.23.0
+    - conda-forge::jsonpickle <=1.5.0 # 1.5.1 breaks compatibility with v1 encoded files
+    - conda-forge::networkx
+    - conda-forge::numpy >=1.16.5 # Scipy 1.7.0 requires numpy >=1.16.5
     - conda-forge::opencv
     - conda-forge::pandas
     - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside2 >=5.12
+    - conda-forge::pyside6 >=6.5.0 # 6.4 conda package uses problematic QtCharts
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
     - conda-forge::qtpy >=2.0.1
     - conda-forge::rich
-    - conda-forge::scipy >=1.4.1,<=1.9.0
-    - conda-forge::scikit-image
-    - conda-forge::scikit-learn ==1.0
-    - conda-forge::scikit-video
+    - conda-forge::scipy >=1.7.0 # Python 3.10 is compatible with scipy >=1.7.0
+    - conda-forge::scikit-image >=0.21.0 # 0.20.0 requires python_abi 3.8.* *_cp38
+    - conda-forge::scikit-learn >=1.0.0 # Python 3.10 needs scikit-learn >= 1.0
     - conda-forge::seaborn
-    # - conda-forge::tensorflow-hub  # pulls in tensorflow cpu from conda-forge
+    - sleap-deps::tensorflow ==2.12.0
     - conda-forge::qudida
     - conda-forge::albumentations >=1.4.15 # Handle Nan keypoints
     - conda-forge::ndx-pose <0.2.0
-
-# test:
-#   imports:
-#     - sleap
