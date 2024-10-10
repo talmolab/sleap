@@ -18,11 +18,11 @@ jobs:
         include:
           # Use this condarc as default
           - condarc: .conda/condarc.yaml
-          - pyver: "3.7"
+          - pyver: "3.10"
           # Use special condarc if macos
           - os: "macos-14"
             condarc: .conda_mac/condarc.yaml
-            pyver: "3.9"
+            pyver: "3.10"
     steps:
       # Setup
       - name: Checkout
@@ -38,16 +38,16 @@ jobs:
           activate-environment: sleap_ci
           conda-solver: "libmamba"
 
-      - name: Print environment info
+      - name: Print build environment info
         shell: bash -l {0}
         run: |
           which python
           conda info
           conda list
 
-      # Build pip wheel (Ubuntu)
-      - name: Build pip wheel (Ubuntu)
-        if: matrix.os == 'ubuntu-22.04'
+      # Build pip wheel (Not Windows)
+      - name: Build pip wheel (Not Windows)
+        if: matrix.os != 'windows-2022'
         shell: bash -l {0}
         run: |
           python setup.py bdist_wheel
@@ -85,59 +85,52 @@ jobs:
           conda build .conda_mac --output-folder build
           echo "BUILD_PATH=$(pwd)/build" >> "$GITHUB_ENV"
 
-      # Test built conda package (Ubuntu and Windows)
-      - name: Test built conda package (Ubuntu and Windows)
+      # Print build and environment info for each OS after deactiviating build environment
+      - name: Print base environment info
+        shell: bash -l {0}
+        run: |
+          echo "Current build path: $BUILD_PATH"
+          conda deactivate
+    
+          echo "Python executable before activating environment:"
+          which python
+          echo "Python version before activating environment:"
+          python --version
+          echo "Conda info before activating environment:"
+          conda info
+
+      # Install necessary OpenGL packages for Ubuntu only https://github.com/conda-forge/opencv-feedstock/issues/401
+      - name: Install OpenGL libraries on Ubuntu runner
+        if: matrix.os == 'ubuntu-22.04'
+        shell: bash -l {0}
+        run: |
+          sudo apt-get update
+          sudo apt-get install libglapi-mesa libegl-mesa0 libegl1 libopengl0 libgl1-mesa-glx
+
+      # Create conda environment using built conda package (Ubuntu and Windows)
+      - name: Create conda environment (Ubuntu and Windows)
         if: matrix.os != 'macos-14'
         shell: bash -l {0}
         run: |
-          echo "Current build path: $BUILD_PATH"
-          conda deactivate
-    
-          echo "Python executable before activating environment:"
-          which python
-          echo "Python version before activating environment:"
-          python --version
-          echo "Conda info before activating environment:"
-          conda info
-
           echo "Creating and testing conda environment with sleap package..."
           conda create -y -n sleap_test -c file://$BUILD_PATH -c sleap/label/dev -c conda-forge -c nvidia -c anaconda sleap
-          conda activate sleap_test
 
-          echo "Python executable after activating sleap_test environment:"
-          which python
-          echo "Python version after activating sleap_test environment:"
-          python --version
-          echo "Conda info after activating sleap_test environment:"
-          conda info
-          echo "List of installed conda packages in the sleap_test environment:"
-          conda list
-          echo "List of installed pip packages in the sleap_test environment:"
-          pip list
-    
-          echo "Testing sleap package installation..."
-          sleap_version=$(python -c "import sleap; print(sleap.__version__)")
-          echo "Test completed using sleap version: $sleap_version"
-
-      # Test built conda package (Mac)
-      - name: Test built conda package (Mac)
+      # Create conda environment using built conda package (Mac)
+      # Note channel differences
+      - name: Create conda environment (Mac)
         if: matrix.os == 'macos-14'
         shell: bash -l {0}
         run: |
-          echo "Current build path: $BUILD_PATH"
-          conda deactivate
-    
-          echo "Python executable before activating environment:"
-          which python
-          echo "Python version before activating environment:"
-          python --version
-          echo "Conda info before activating environment:"
-          conda info
-    
           echo "Creating and testing conda environment with sleap package..."
           conda create -y -n sleap_test -c file://$BUILD_PATH -c conda-forge -c anaconda sleap
+
+      # Test conda environment
+      - name: Test conda environment
+        shell: bash -l {0}
+        run: |
+          echo "Activating sleap_test"
           conda activate sleap_test
-    
+
           echo "Python executable after activating sleap_test environment:"
           which python
           echo "Python version after activating sleap_test environment:"

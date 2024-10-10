@@ -12,3 +12,14 @@ pip install --no-cache-dir -r .\requirements.txt
 @REM Install sleap itself. This does not install the requirements, but will list which 
 @REM requirements are missing (see "install_requires") when user attempts to install.
 python setup.py install --single-version-externally-managed --record=record.txt
+
+@REM Copied from https://docs.conda.io/projects/conda-build/en/latest/resources/activate-scripts.html
+setlocal EnableDelayedExpansion
+:: Copy the [de]activate scripts to %PREFIX%\etc\conda\[de]activate.d.
+:: This will allow them to be run on environment activation.
+for %%F in (activate deactivate) DO (
+    if not exist %PREFIX%\etc\conda\%%F.d mkdir %PREFIX%\etc\conda\%%F.d
+    copy %RECIPE_DIR%\%%F.bat %PREFIX%\etc\conda\%%F.d\%PKG_NAME%_%%F.bat
+    :: Copy unix shell activation scripts, needed by Windows Bash users
+    copy %RECIPE_DIR%\%%F.sh %PREFIX%\etc\conda\%%F.d\%PKG_NAME%_%%F.sh
+)

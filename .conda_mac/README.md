@@ -1,4 +1,4 @@
-This folder defines the conda package build for Apple silicon Macs. Until there are aarm64 runners, we have to run this manually on Apple M1 silicon.
+This folder defines the conda package build for Apple silicon Macs.
 
 To build, first go to the base repo directory and install the build environment:
 
