@@ -40,7 +40,7 @@ dependencies:
     - sleap-deps::tensorflow ==2.9.2
     - conda-forge::tensorflow-hub # Pinned in meta.yml, but no problems here... yet
     - conda-forge::qudida
-    - conda-forge::albumentations
+    - conda-forge::albumentations >=1.4.15 # Handle Nan keypoints
     - conda-forge::ndx-pose <0.2.0
 
     - pip:

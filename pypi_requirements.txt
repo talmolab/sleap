@@ -30,7 +30,7 @@ scikit-learn>=1.0.0
 seaborn
 tensorflow==2.9.2; platform_machine != 'arm64'
 tensorflow-hub
-albumentations
+albumentations>=1.4.15 # Handle Nan keypoints
 ndx-pose<0.2.0
 # Silicon Mac specific packages
 tensorflow-macos >=2.10.0,<2.13.0; sys_platform == 'darwin' and platform_machine == 'arm64'
