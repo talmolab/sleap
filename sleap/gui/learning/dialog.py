@@ -733,7 +733,7 @@ class LearningDialog(QtWidgets.QDialog):
         # count < 0 means there was an error and we didn't get any results.
         if new_counts is not None and new_counts >= 0:
             total_count = items_for_inference.total_frame_count
-            no_result_count = total_count - new_counts
+            no_result_count = max(0, total_count - new_counts)
 
             message = (
                 f"Inference ran on {total_count} frames."
