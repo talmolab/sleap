@@ -224,6 +224,7 @@ class MainWindow(QMainWindow):
         prefs["color predicted"] = self.state["color predicted"]
         prefs["trail shade"] = self.state["trail_shade"]
         prefs["share usage data"] = self.state["share usage data"]
+        prefs["color_by_instance_group"] = self.state["color_by_instance_group"]
 
         # Save preferences.
         prefs.save()
@@ -253,6 +254,11 @@ class MainWindow(QMainWindow):
                 self.commands.saveProject()
                 # accept event (closes window)
                 event.accept()
+    
+    def _save_color_by_instance_group(self, value):
+        """Update the color_by_instance_group preference and save it."""
+        prefs["color_by_instance_group"] = value
+        prefs.save()
 
     def dragEnterEvent(self, event):
         # TODO: Parse filenames and accept only if valid ext (or folder)
@@ -297,6 +303,8 @@ class MainWindow(QMainWindow):
 
     def _initialize_gui(self):
         """Creates menus, dock windows, starts timers to update gui state."""
+
+        self.state["color_by_instance_group"] = prefs["color_by_instance_group"]
 
         self._create_color_manager()
         self._create_video_player()
@@ -647,6 +655,9 @@ class MainWindow(QMainWindow):
 
         viewMenu.addSeparator()
         add_menu_check_item(viewMenu, "color predicted", "Color Predicted Instances")
+
+        add_menu_check_item(viewMenu, "color_by_instance_group", "Color by Instance Group")
+        self.state.connect("color_by_instance_group", lambda value: self._save_color_by_instance_group(value))
 
         add_submenu_choices(
             menu=viewMenu,
