@@ -48,8 +48,12 @@ from queue import Queue
 
 if sys.version_info >= (3, 8):
     from functools import cached_property
-else:  # cached_property is define only for python >=3.8
-    cached_property = property
+
+else:  # cached_property is defined only for python >=3.8
+    from functools import lru_cache
+
+    def cached_property(func):
+        return property(lru_cache()(func))
 
 import tensorflow as tf
 import numpy as np
@@ -164,6 +168,8 @@ class Predictor(ABC):
     @cached_property
     def report_period(self) -> float:
         """Time between progress reports in seconds."""
+        if self.report_rate <= 0:
+            raise ValueError("report_rate must be positive")
         return 1.0 / self.report_rate
 
     @classmethod

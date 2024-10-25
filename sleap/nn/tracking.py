@@ -1,6 +1,7 @@
 """Tracking tools for linking grouped instances over time."""
 
 import abc
+import functools
 import json
 import sys
 from collections import deque
@@ -35,8 +36,12 @@ from sleap.util import RateColumn
 
 if sys.version_info >= (3, 8):
     from functools import cached_property
-else:  # cached_property is define only for python >=3.8
-    cached_property = property
+
+else:  # cached_property is defined only for python >=3.8
+    from functools import lru_cache
+
+    def cached_property(func):
+        return property(lru_cache()(func))
 
 
 @attr.s(eq=False, slots=True, auto_attribs=True)
@@ -519,8 +524,12 @@ match_policies = dict(
 class BaseTracker(abc.ABC):
     """Abstract base class for tracker."""
 
-    verbosity: str
-    report_rate: float
+    verbosity: str = attr.ib(
+        validator=attr.validators.in_(["none", "rich", "json"]),
+        default="none",
+        kw_only=True,
+    )
+    report_rate: float = attr.ib(default=2.0, kw_only=True)
 
     @property
     def is_valid(self):
@@ -529,6 +538,8 @@ class BaseTracker(abc.ABC):
     @cached_property
     def report_period(self) -> float:
         """Time between progress reports in seconds."""
+        if self.report_rate <= 0:
+            raise ValueError("report_rate must be positive")
         return 1.0 / self.report_rate
 
     def run_step(self, lf: LabeledFrame) -> LabeledFrame:
@@ -750,12 +761,6 @@ class Tracker(BaseTracker):
     )  # keyed by t
 
     last_matches: Optional[FrameMatches] = None
-
-    verbosity: str = attr.ib(
-        validator=attr.validators.in_(["none", "rich", "json"]),
-        default="none",
-    )
-    report_rate: float = 2.0
 
     @property
     def is_valid(self):
@@ -1492,12 +1497,6 @@ class KalmanTracker(BaseTracker):
     pre_tracked: bool = False
     last_t: int = 0
     last_init_t: int = 0
-
-    verbosity: str = attr.ib(
-        validator=attr.validators.in_(["none", "rich", "json"]),
-        default="none",
-    )
-    report_rate: float = 2.0
 
     @property
     def is_valid(self):
