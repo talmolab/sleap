@@ -3,6 +3,7 @@
 import abc
 import functools
 import json
+import logging
 import sys
 from collections import deque
 from time import time
@@ -38,10 +39,9 @@ if sys.version_info >= (3, 8):
     from functools import cached_property
 
 else:  # cached_property is defined only for python >=3.8
-    from functools import lru_cache
+    cached_property = property
 
-    def cached_property(func):
-        return property(lru_cache()(func))
+logger = logging.getLogger(__name__)
 
 
 @attr.s(eq=False, slots=True, auto_attribs=True)
@@ -539,7 +539,8 @@ class BaseTracker(abc.ABC):
     def report_period(self) -> float:
         """Time between progress reports in seconds."""
         if self.report_rate <= 0:
-            raise ValueError("report_rate must be positive")
+            logger.warning("report_rate must be positive, fallback to 1")
+            return 1.0
         return 1.0 / self.report_rate
 
     def run_step(self, lf: LabeledFrame) -> LabeledFrame:
