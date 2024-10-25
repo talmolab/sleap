@@ -5,7 +5,6 @@ Try not to put things in here unless they really have no other place.
 
 from __future__ import annotations
 
-import base64
 import json
 import os
 import re
@@ -28,7 +27,6 @@ import psutil
 import rapidjson
 import rich.progress
 import yaml
-from PIL import Image
 
 import sleap.version as sleap_version
 
