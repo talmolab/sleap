@@ -1483,6 +1483,10 @@ class Labels(MutableSequence):
 
         # Add instance and track to labels
         frame.instances.append(instance)
+
+        # TODO: Do NOT merge into develop, this next line is handled by InstancesList
+        instance.frame = frame  # Needed to add instance to instance group
+
         if (instance.track is not None) and (instance.track not in self.tracks):
             self.add_track(video=frame.video, track=instance.track)
 
