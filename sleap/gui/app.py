@@ -224,6 +224,7 @@ class MainWindow(QMainWindow):
         prefs["color predicted"] = self.state["color predicted"]
         prefs["trail shade"] = self.state["trail_shade"]
         prefs["share usage data"] = self.state["share usage data"]
+        prefs["distinctly_color"] = self.state["distinctly_color"]
 
         # Save preferences.
         prefs.save()
@@ -297,6 +298,8 @@ class MainWindow(QMainWindow):
 
     def _initialize_gui(self):
         """Creates menus, dock windows, starts timers to update gui state."""
+
+        self.state["distinctly_color"] = prefs["distinctly_color"]
 
         self._create_color_manager()
         self._create_video_player()
@@ -655,7 +658,7 @@ class MainWindow(QMainWindow):
             key="palette",
         )
 
-        distinctly_color_options = ("instance_groups", "instances", "nodes", "edges")
+        distinctly_color_options = ("instance groups", "instances", "nodes", "edges")
 
         add_submenu_choices(
             menu=viewMenu,
@@ -665,7 +668,7 @@ class MainWindow(QMainWindow):
         )
 
         self.state["palette"] = prefs["palette"]
-        self.state["distinctly_color"] = "instances"
+        self.state["distinctly_color"] = prefs["distinctly_color"]
 
         viewMenu.addSeparator()
 
