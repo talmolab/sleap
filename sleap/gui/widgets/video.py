@@ -12,6 +12,7 @@ Example usage: ::
     >>> vp.addInstance(instance=my_instance, color=(r, g, b))
 
 """
+
 from collections import deque
 
 # FORCE_REQUESTS controls whether we emit a signal to process frame requests
@@ -270,8 +271,13 @@ class QtVideoPlayer(QWidget):
 
         self.seekbar.selectionChanged.connect(update_selection_state)
 
-        self.state.connect("frame_idx", lambda idx: self.plot())
-        self.state.connect("frame_idx", lambda idx: self.seekbar.setValue(idx))
+        def frame_idx_callback(frame_idx: int):
+            """All callbacks that need to be called when frame_idx changes."""
+            self.plot()
+            self.seekbar.setValue(frame_idx)
+            self.state["instance"] = None
+
+        self.state.connect("frame_idx", lambda idx: frame_idx_callback(idx))
         self.state.connect("instance", self.view.selectInstance)
         self.state.connect("instance_group", self.view.selectInstance)
 
@@ -340,6 +346,7 @@ class QtVideoPlayer(QWidget):
             # Display image
             self.view.setImage(qimage)
 
+    # TODO: Delegate to command context
     def _register_shortcuts(self):
         self._shortcut_triggers = dict()
 
@@ -1908,7 +1915,7 @@ class QtInstance(QGraphicsObject):
         self.track_label.setHtml(instance_label_text)
 
         # Add nodes
-        for (node, point) in self.instance.nodes_points:
+        for node, point in self.instance.nodes_points:
             if point.visible or self.show_non_visible:
                 node_item = QtNode(
                     parent=self,
@@ -1923,7 +1930,7 @@ class QtInstance(QGraphicsObject):
                 self.nodes[node.name] = node_item
 
         # Add edges
-        for (src, dst) in self.skeleton.edge_names:
+        for src, dst in self.skeleton.edge_names:
             # Make sure that both nodes are present in this instance before drawing edge
             if src in self.nodes and dst in self.nodes:
                 edge_item = QtEdge(
