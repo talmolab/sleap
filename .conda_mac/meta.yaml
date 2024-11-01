@@ -44,7 +44,7 @@ requirements:
     - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside6 >=6.5.0 # 6.4 conda package uses problematic QtCharts
+    - conda-forge::pyside6 >=6.5.0,<6.8.0 # 6.4: problematic QtCharts, 6.8.0: video display issues
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
@@ -75,7 +75,7 @@ requirements:
     - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside6 >=6.5.0 # 6.4 conda package uses problematic QtCharts
+    - conda-forge::pyside6 >=6.5.0,<6.8.0 # 6.4: problematic QtCharts, 6.8.0: video display issues
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
