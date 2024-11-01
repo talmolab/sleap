@@ -668,7 +668,7 @@ class MainWindow(QMainWindow):
         )
 
         self.state["palette"] = prefs["palette"]
-        self.state["distinctly_color"] = "instances"
+        self.state["distinctly_color"] = prefs["distinctly_color"]
 
         viewMenu.addSeparator()
 
