@@ -706,7 +706,7 @@ class InstanceGroupTableModel(GenericTableModel):
 
     def get_item_color(self, instance_group: InstanceGroup, key: str):
         color_manager = self.context.app.color_manager
-        if color_manager.distinctly_color == "instance_groups" and key == "name":
+        if color_manager.distinctly_color == "instance groups" and key == "name":
 
             # Get the RecordingSession
             state = self.context.state

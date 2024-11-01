@@ -300,7 +300,7 @@ class MainWindow(QMainWindow):
         """Creates menus, dock windows, starts timers to update gui state."""
 
         self.state["distinctly_color"] = prefs["distinctly_color"]
-        
+
         self._create_color_manager()
         self._create_video_player()
         self.statusBar()
@@ -658,7 +658,7 @@ class MainWindow(QMainWindow):
             key="palette",
         )
 
-        distinctly_color_options = ("instance_groups", "instances", "nodes", "edges")
+        distinctly_color_options = ("instance groups", "instances", "nodes", "edges")
 
         add_submenu_choices(
             menu=viewMenu,
