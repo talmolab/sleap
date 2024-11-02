@@ -56,7 +56,7 @@ requirements:
     - conda-forge::seaborn
     - sleap-deps::tensorflow ==2.12.0
     - conda-forge::qudida
-    - conda-forge::albumentations
+    - conda-forge::albumentations >=1.4.15 # Handle Nan keypoints
     - conda-forge::ndx-pose <0.2.0
 
   run:
@@ -87,5 +87,5 @@ requirements:
     - conda-forge::seaborn
     - sleap-deps::tensorflow ==2.12.0
     - conda-forge::qudida
-    - conda-forge::albumentations
+    - conda-forge::albumentations >=1.4.15 # Handle Nan keypoints
     - conda-forge::ndx-pose <0.2.0
