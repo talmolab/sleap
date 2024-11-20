@@ -639,6 +639,28 @@ class Tracker(BaseTracker):
     def uses_image(self):
         return getattr(self.candidate_maker, "uses_image", False)
 
+    def infer_next_timestep(self, t: Optional[int] = None) -> int:
+        """Infer timestep if not provided."""
+        # Timestep was provided
+        if t is not None:
+            return t
+
+        if self.has_max_tracking and len(self.track_matching_queue_dict) > 0:
+            # Default to last timestep + 1 if available.
+            # Here we find the track that has the most instances.
+            track_with_max_instances = max(
+                self.track_matching_queue_dict,
+                key=lambda track: len(self.track_matching_queue_dict[track]),
+            )
+            return 1 + self.track_matching_queue_dict[track_with_max_instances][-1].t
+
+        # Default to last timestep + 1 if available.
+        if not self.has_max_tracking and len(self.track_matching_queue) > 0:
+            return self.track_matching_queue[-1].t + 1
+
+        # Default to 0
+        return 0
+
     def track(
         self,
         untracked_instances: List[InstanceType],
@@ -667,31 +689,7 @@ class Tracker(BaseTracker):
             return untracked_instances
 
         # Infer timestep if not provided.
-        if t is None:
-            if self.has_max_tracking:
-                if len(self.track_matching_queue_dict) > 0:
-
-                    # Default to last timestep + 1 if available.
-                    # Here we find the track that has the most instances.
-                    track_with_max_instances = max(
-                        self.track_matching_queue_dict,
-                        key=lambda track: len(self.track_matching_queue_dict[track]),
-                    )
-                    t = (
-                        self.track_matching_queue_dict[track_with_max_instances][-1].t
-                        + 1
-                    )
-
-                else:
-                    t = 0
-            else:
-                if len(self.track_matching_queue) > 0:
-
-                    # Default to last timestep + 1 if available.
-                    t = self.track_matching_queue[-1].t + 1
-
-                else:
-                    t = 0
+        t = self.infer_next_timestep(t)
 
         # Initialize containers for tracked instances at the current timestep.
         tracked_instances = []
