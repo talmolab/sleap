@@ -1,6 +1,6 @@
 """Tracking tools for linking grouped instances over time."""
 
-from collections import deque, defaultdict
+from collections import deque
 import abc
 import attr
 import numpy as np
@@ -22,6 +22,7 @@ from sleap.nn.tracker.components import (
     cull_frame_instances,
     connect_single_track_breaks,
     InstanceType,
+    PredictedInstance,
     FrameMatches,
     Match,
 )
@@ -1164,9 +1165,7 @@ class FlowTracker(Tracker):
     candidate_maker: object = attr.ib(factory=FlowCandidateMaker)
 
 
-attr.s(auto_attribs=True)
-
-
+@attr.s(auto_attribs=True)
 class FlowMaxTracker(Tracker):
     """Pre-configured tracker to use optical flow shifted candidates with max tracks."""
 
@@ -1518,12 +1517,16 @@ def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker) -> List[Labele
 
     # Run tracking on every frame
     for lf in frames:
+        # Use only the predicted instances
+        instances = [
+            inst for inst in lf.instances if isinstance(inst, PredictedInstance)
+        ]
 
         # Clear the tracks
-        for inst in lf.instances:
+        for inst in instances:
             inst.track = None
 
-        track_args = dict(untracked_instances=lf.instances)
+        track_args = dict(untracked_instances=instances)
         if tracker.uses_image:
             track_args["img"] = lf.video[lf.frame_idx]
         else:
