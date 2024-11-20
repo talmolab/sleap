@@ -92,7 +92,7 @@ The version number to put in the Labels JSON format.
 LABELS_JSON_FILE_VERSION = "2.0.0"
 
 # For debugging, we can replace missing video files with a "dummy" video
-USE_DUMMY_FOR_MISSING_VIDEOS = os.getenv("SLEAP_USE_DUMMY_VIDEOS", default=True)
+USE_DUMMY_FOR_MISSING_VIDEOS = os.getenv("SLEAP_USE_DUMMY_VIDEOS", default="")
 
 
 @attr.s(auto_attribs=True)
