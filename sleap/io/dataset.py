@@ -92,7 +92,7 @@ The version number to put in the Labels JSON format.
 LABELS_JSON_FILE_VERSION = "2.0.0"
 
 # For debugging, we can replace missing video files with a "dummy" video
-USE_DUMMY_FOR_MISSING_VIDEOS = os.getenv("SLEAP_USE_DUMMY_VIDEOS", default="")
+USE_DUMMY_FOR_MISSING_VIDEOS = os.getenv("SLEAP_USE_DUMMY_VIDEOS", default=True)
 
 
 @attr.s(auto_attribs=True)
@@ -1440,6 +1440,13 @@ class Labels(MutableSequence):
         frame.instances.remove(instance)
         if not in_transaction:
             self._cache.remove_instance(frame, instance)
+
+        # Check that if a `PredictedInstance` is removed, that it is not referenced
+        from_predicted_instances = [inst.from_predicted for inst in frame.instances]
+        if instance in from_predicted_instances:
+            containing_inst_idx: int = from_predicted_instances.index(instance)
+            containing_inst: Instance = frame.instances[containing_inst_idx]
+            containing_inst.from_predicted = None
 
         # Also remove instance from `InstanceGroup` if any
         session = self.get_session(frame.video)
