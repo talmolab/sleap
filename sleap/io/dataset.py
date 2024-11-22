@@ -1441,6 +1441,14 @@ class Labels(MutableSequence):
         if not in_transaction:
             self._cache.remove_instance(frame, instance)
 
+        # TODO: Do NOT merge into develop, this next line is handled by InstancesList
+        # Check that if a `PredictedInstance` is removed, that it is not referenced
+        from_predicted_instances = [inst.from_predicted for inst in frame.instances]
+        if instance in from_predicted_instances:
+            containing_inst_idx: int = from_predicted_instances.index(instance)
+            containing_inst: Instance = frame.instances[containing_inst_idx]
+            containing_inst.from_predicted = None
+
         # Also remove instance from `InstanceGroup` if any
         session = self.get_session(frame.video)
         if session is None:
