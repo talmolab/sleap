@@ -180,6 +180,9 @@ class LabelsCocoAdaptor(Adaptor):
 
                 if flag == 0:
                     # node not labeled for this instance
+                    if (x, y) != (0, 0): 
+                        # If labeled but invisible, place the node at the coord
+                        points[node] = Point(x, y, False)
                     continue
 
                 is_visible = flag == 2
