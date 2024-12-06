@@ -345,8 +345,11 @@ class CameraCluster(CameraGroup):
         Returns:
             `CameraCluster` object.
         """
-        cgroup: CameraGroup = super().load(filename)
-        return cls(cameras=cgroup.cameras, metadata=cgroup.metadata)
+
+        calibration_dict = toml.load(filename)
+        camera_cluster = cls.from_calibration_dict(calibration_dict)
+
+        return camera_cluster
 
     @classmethod
     def from_calibration_dict(cls, calibration_dict: Dict[str, str]) -> "CameraCluster":
@@ -366,12 +369,12 @@ class CameraCluster(CameraGroup):
             `CameraCluster` object.
         """
 
-        # Save the calibration dictionary to a temp file and load as `CameraGroup`
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_file = str(Path(temp_dir, "calibration.toml"))
-            with open(temp_file, "w") as f:
-                toml.dump(calibration_dict, f)
-            cgroup: CameraGroup = super().load(temp_file)
+        # Taken from aniposelib.cameras.CameraGroup.load, but without sorting keys
+        keys = calibration_dict.keys()
+        items = [calibration_dict[k] for k in keys if k != "metadata"]
+        cgroup = CameraGroup.from_dicts(items)
+        if "metadata" in calibration_dict:
+            cgroup.metadata = calibration_dict["metadata"]
 
         return cls(cameras=cgroup.cameras, metadata=cgroup.metadata)
 
