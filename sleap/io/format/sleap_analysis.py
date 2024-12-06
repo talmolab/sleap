@@ -129,6 +129,7 @@ class SleapAnalysisAdaptor(Adaptor):
         filename: str,
         source_object: Labels,
         source_path: str = None,
+        all_frames: bool = False,
         video: Video = None,
     ):
         """Writes analysis file for :py:class:`Labels` `source_object`.
@@ -147,6 +148,6 @@ class SleapAnalysisAdaptor(Adaptor):
             labels=source_object,
             output_path=filename,
             labels_path=source_path,
-            all_frames=True,
+            all_frames=all_frames,
             video=video,
         )

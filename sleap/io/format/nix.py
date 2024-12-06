@@ -101,6 +101,7 @@ class NixAdaptor(Adaptor):
         filename: str,
         source_object: object,
         source_path: Optional[str] = None,
+        all_frames: bool = False,
         video: Optional[Video] = None,
     ):
         """Writes the object to a file."""
