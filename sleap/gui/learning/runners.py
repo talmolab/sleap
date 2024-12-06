@@ -261,6 +261,7 @@ class InferenceTask:
             "tracking.post_connect_single_breaks",
             "tracking.save_shifted_instances",
             "tracking.oks_score_weighting",
+            "tracking.only_predicted_instances",
         )
 
         for key in bool_items_as_ints:

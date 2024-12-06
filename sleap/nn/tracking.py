@@ -9,6 +9,7 @@ import functools
 from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple
 
 from sleap import Track, LabeledFrame, Skeleton
+from sleap.instance import convert_to_predicted_instance
 
 from sleap.nn.tracker.components import (
     factory_object_keypoint_similarity,
@@ -22,7 +23,6 @@ from sleap.nn.tracker.components import (
     cull_frame_instances,
     connect_single_track_breaks,
     InstanceType,
-    PredictedInstance,
     FrameMatches,
     Match,
 )
@@ -581,6 +581,7 @@ class Tracker(BaseTracker):
     robust_best_instance: float = 1.0
 
     min_new_track_points: int = 0
+    only_predicted_instances: bool = True
 
     track_matching_queue: Deque[MatchedFrameInstances] = attr.ib()
 
@@ -843,6 +844,7 @@ class Tracker(BaseTracker):
         robust: float = 1.0,
         min_new_track_points: int = 0,
         min_match_points: int = 0,
+        only_predicted_instances: bool = True,
         # Optical flow options
         img_scale: float = 1.0,
         of_window_size: int = 21,
@@ -941,6 +943,7 @@ class Tracker(BaseTracker):
             max_tracks=max_tracks,
             target_instance_count=target_instance_count,
             post_connect_single_breaks=post_connect_single_breaks,
+            only_predicted_instances=only_predicted_instances,
         )
 
         if target_instance_count and kf_init_frame_count:
@@ -1055,6 +1058,11 @@ class Tracker(BaseTracker):
         option = dict(name="min_match_points", default=0)
         option["type"] = int
         option["help"] = "Minimum points for match candidates"
+        options.append(option)
+
+        option = dict(name="only_predicted_instances", default=1)
+        option["type"] = int
+        option["help"] = "Track only predicted instances, not user-defined instances."
         options.append(option)
 
         option = dict(name="img_scale", default=1.0)
@@ -1518,9 +1526,10 @@ def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker) -> List[Labele
     # Run tracking on every frame
     for lf in frames:
         # Use only the predicted instances
-        instances = [
-            inst for inst in lf.instances if isinstance(inst, PredictedInstance)
-        ]
+        if tracker.only_predicted_instances:
+            instances = lf.predicted_instances
+        else:
+            instances = [convert_to_predicted_instance(inst) for inst in lf.instances]
 
         # Clear the tracks
         for inst in instances:
