@@ -1547,12 +1547,16 @@ class Video:
 
         # Use from_filename to fixup the video path and determine backend
         def fixup_video(x: dict, cl: Video):
-            backend_dict = x.pop("backend")
+            backend_dict: dict = x.pop("backend")
+
+            # If the backend is a DummyVideo
+            if backend_dict.get("dummy", False):
+                return cl(backend=cl.make_specific_backend(DummyVideo, backend_dict))
+
             filename = backend_dict.pop("filename", None) or backend_dict.pop(
                 "file", None
             )
-
-            return Video.from_filename(filename, **backend_dict)
+            return cl.from_filename(filename, **backend_dict)
 
         vid_cattr = cattr.Converter()
         vid_cattr.register_structure_hook(Video, fixup_video)
