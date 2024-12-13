@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pytest
+import toml
 
 from sleap.io.cameras import (
     Camcorder,
@@ -178,9 +179,21 @@ def test_recording_session(
     assert frame_group.frame_idx == 0
     assert frame_group == session.frame_groups[0]
 
-    # Test add_video
-    camcorder = session.camera_cluster.cameras[0]
+    # Test add_video (and _projection_bounds)
+    cam_idx = 0
+    camcorder = session.camera_cluster.cameras[cam_idx]
+    prev_cams_to_include = session.cams_to_include
+    n_prev_cams_to_include = len(prev_cams_to_include)
+    assert session.projection_bounds.shape == (n_prev_cams_to_include, 2)
+    assert np.all(np.isnan(session._projection_bounds[cam_idx]))
     session.add_video(centered_pair_vid, camcorder)
+    n_cams_to_include = len(session.cams_to_include)
+    assert n_cams_to_include == n_prev_cams_to_include + 1
+    assert session.projection_bounds.shape == (n_cams_to_include, 2)
+    assert np.all(
+        session._projection_bounds[cam_idx]
+        == [centered_pair_vid.width, centered_pair_vid.height]
+    )
     assert centered_pair_vid is session.camera_cluster._videos_by_session[session][0]
     assert centered_pair_vid is camcorder._video_by_session[session]
     assert session is session.camera_cluster._session_by_video[centered_pair_vid]
@@ -246,8 +259,18 @@ def test_recording_session(
     )
     compare_sessions(session, session_2)
 
-    # Test remove_video
+    # Test remove_video (and _projection_bounds)
+    assert session.projection_bounds.shape == (len(session.cams_to_include), 2)
+    cam_idx = session.camera_cluster.cameras.index(
+        session.get_camera(centered_pair_vid)
+    )
+    assert np.all(
+        session._projection_bounds[cam_idx]
+        == [centered_pair_vid.width, centered_pair_vid.height]
+    )
     session.remove_video(centered_pair_vid)
+    assert session.projection_bounds.shape == (len(session.cams_to_include), 2)
+    assert np.all(np.isnan(session._projection_bounds[cam_idx]))
     assert centered_pair_vid not in session.videos
     assert camcorder not in session.linked_cameras
     assert camcorder in session.unlinked_cameras
@@ -263,6 +286,45 @@ def test_recording_session(
     # Test __getitem__ with `Camcorder` key
     assert session[camcorder] is None
 
+    # Test _projection_bounds
+    _projection_bounds = session._projection_bounds
+    n_cameras, n_coords = _projection_bounds.shape
+    assert n_cameras == len(session.camera_cluster.cameras)
+    assert n_coords == 2
+    n_linked_cameras = len(session.linked_cameras)
+    assert n_linked_cameras < n_cameras
+    assert _projection_bounds[np.isnan(_projection_bounds)].shape == (
+        n_coords * (n_cameras - n_linked_cameras),
+    )
+    for cam_idx, cam in enumerate(session.camera_cluster.cameras):
+        if cam in session.linked_cameras:
+            linked_video = session.get_video(cam)
+            assert _projection_bounds[cam_idx, 0] == linked_video.width
+            assert _projection_bounds[cam_idx, 1] == linked_video.height
+        else:
+            assert np.all(np.isnan(_projection_bounds[cam_idx]) == True)
+
+    # Test projection_bounds property
+    session.cams_to_include = session.camera_cluster.cameras[:6]
+    projection_bounds = session.projection_bounds
+    n_cams_to_include, n_coords = projection_bounds.shape
+    assert n_cams_to_include == len(
+        set(session.linked_cameras) & set(session._cams_to_include)
+    )
+    assert n_coords == 2
+    assert projection_bounds[np.isnan(projection_bounds)].shape == (
+        n_coords * (n_cams_to_include - n_linked_cameras),
+    )
+    pb_idx = 0
+    for cam_idx, cam in enumerate(session.camera_cluster.cameras):
+        if cam in session.linked_cameras:
+            linked_video = session.get_video(cam)
+            assert projection_bounds[pb_idx, 0] == linked_video.width
+            assert projection_bounds[pb_idx, 1] == linked_video.height
+            pb_idx += 1
+        else:
+            assert np.all(np.isnan(session._projection_bounds[cam_idx]) == True)
+
     # Test make_cattr
     labeled_frame_to_idx = {lf: idx for idx, lf in enumerate(labels.labeled_frames)}
     sessions_cattr = RecordingSession.make_cattr(
@@ -274,6 +336,11 @@ def test_recording_session(
     assert session_dict_2 == session_dict
     session_3 = sessions_cattr.structure(session_dict_2, RecordingSession)
     compare_sessions(session_2, session_3)
+
+    # Test id
+    assert session.id == hash(session)
+    labels.add_session(session)
+    assert session.id == labels.sessions.index(session)
 
 
 def test_recording_session_get_videos_from_selected_cameras(
@@ -399,6 +466,7 @@ def create_instance_group(
     frame_idx: int,
     add_dummy: bool = False,
     name: Optional[str] = None,
+    score: Optional[float] = None,
 ) -> Union[
     InstanceGroup, Tuple[InstanceGroup, Dict[Camcorder, Instance], Instance, Camcorder]
 ]:
@@ -444,6 +512,7 @@ def create_instance_group(
         instance_by_camcorder=instance_by_camera,
         name="test_instance_group",
         name_registry={},
+        score=score,
     )
     return (
         (instance_group, instance_by_camera, dummy_instance, cam)
@@ -534,6 +603,20 @@ def test_instance_group(
     assert isinstance(instance_group_dict, dict)
     assert instance_group_dict["name"] == instance_group.name
     assert "camcorder_to_lf_and_inst_idx_map" in instance_group_dict
+    assert "score" not in instance_group_dict
+
+    # Test `score` property (and `to_dict`)
+    assert instance_group.score is None
+    instance_group.score = 0.5
+    for instance in instance_group.instances:
+        assert instance.score == 0.5
+    instance_group.score = 0.75
+    for instance in instance_group.instances:
+        assert instance.score == 0.75
+    instance_group_dict = instance_group.to_dict(
+        instance_to_lf_and_inst_idx=instance_to_lf_and_inst_idx
+    )
+    assert instance_group_dict["score"] == str(0.75)
 
     # Test `from_dict`
     instance_group_2 = InstanceGroup.from_dict(
@@ -585,6 +668,20 @@ def test_instance_group(
             name="test_instance_group",
             name_registry={},
         )
+    instance_by_camera = {
+        cam: instance_group.get_instance(cam) for cam in instance_group.cameras
+    }
+    instance_group_from_dict = InstanceGroup.from_instance_by_camcorder_dict(
+        instance_by_camcorder=instance_by_camera,
+        name="test_instance_group",
+        name_registry={},
+        score=0.5,
+    )
+    assert instance_group_from_dict.score == 0.5
+    # The score of instances will NOT be updated on initialization.
+    for instance in instance_group_from_dict.instances:
+        if isinstance(instance, PredictedInstance):
+            assert instance.score != instance_group_from_dict.score
 
     # Test `__repr__`
     print(instance_group)
@@ -619,9 +716,22 @@ def test_instance_group(
 
     # Test `update_points` method
     assert not np.all(instance_group.numpy(invisible_as_nan=False) == 72317)
-    instance_group.update_points(np.full((n_views, n_nodes, n_coords), 72317))
+    # Remove some Instances to "expose" underlying PredictedInstances
+    for inst in instance_group.instances[:2]:
+        lf = inst.frame
+        labels.remove_instance(lf, inst)
+    instance_group.update_points(points=np.full((n_views, n_nodes, n_coords), 72317))
+    for inst in instance_group.instances:
+        if isinstance(inst, PredictedInstance):
+            assert inst.score == instance_group.score
+    prev_score = instance_group.score
+    instance_group.update_points(points=np.full((n_views, n_nodes, n_coords), 72317))
+    for inst in instance_group.instances:
+        if isinstance(inst, PredictedInstance):
+            assert inst.score == instance_group.score
     instance_group_numpy = instance_group.numpy(invisible_as_nan=False)
     assert np.all(instance_group_numpy == 72317)
+    assert instance_group.score == 1.0  # Score should be 1.0 because same points
 
     # Test `add_instance`, `replace_instance`, and `remove_instance`
     cam = instance_group.cameras[0]
@@ -853,3 +963,130 @@ def test_frame_group(
     assert camera in frame_group.cameras
     assert labeled_frame_created in frame_group.labeled_frames
     assert labeled_frame in frame_group.session.labels.labeled_frames
+
+    # Test `upsert_points` (all in bounds, all updated)
+    n_cameras = len(frame_group.cams_to_include)
+    n_instance_groups = len(frame_group.instance_groups)
+    n_nodes = len(frame_group.session.labels.skeleton.nodes)
+    n_coords = 2
+    value = 100
+    points = np.full((n_cameras, n_instance_groups, n_nodes, n_coords), value)
+    frame_group.upsert_points(
+        points=points, instance_groups=frame_group.instance_groups
+    )
+    assert np.all(frame_group.numpy(invisible_as_nan=False) == value)
+
+    # Test `upsert_points` (all out of bound, none updated)
+    projection_bounds = frame_group.session.projection_bounds
+    min_bound = projection_bounds.min()
+    prev_value = value
+    oob_value = 5000
+    assert oob_value > min_bound
+    points = np.full((n_cameras, n_instance_groups, n_nodes, n_coords), oob_value)
+    frame_group.upsert_points(
+        points=points, instance_groups=frame_group.instance_groups
+    )
+    assert np.any(frame_group.numpy(invisible_as_nan=False) == oob_value) == False
+    assert np.all(frame_group.numpy(invisible_as_nan=False) == prev_value)
+
+    # Test `upsert_points` (some out of bound, some updated)
+    value = 200
+    oob_value = 5000
+    assert oob_value > min_bound
+    oob_mask = np.random.choice(
+        [True, False], size=(n_cameras, n_instance_groups, n_nodes, n_coords)
+    )
+    points = np.full((n_cameras, n_instance_groups, n_nodes, n_coords), value)
+    points[oob_mask] = oob_value
+    frame_group.upsert_points(
+        points=points, instance_groups=frame_group.instance_groups
+    )
+    # Get the logical or for either x or y being out of bounds
+    oob_mask_1d = np.any(oob_mask, axis=-1)  # Collapse last axis
+    oob_mask_1d_expanded = np.expand_dims(oob_mask_1d, axis=-1)
+    oob_mask_1d_expanded = np.broadcast_to(oob_mask_1d_expanded, oob_mask.shape)
+    frame_group_numpy = frame_group.numpy(invisible_as_nan=False)
+    assert np.any(frame_group_numpy > min_bound) == False
+    assert np.all(frame_group_numpy[oob_mask_1d_expanded] == prev_value)  # Not updated
+    assert np.all(frame_group_numpy[~oob_mask_1d_expanded] == value)  # Updated
+
+    # Test `upsert_points` (between x,y bounds, some out of bound, some updated)
+    value = 300
+    points = np.full((n_cameras, n_instance_groups, n_nodes, n_coords), value)
+    # Reset the points to all in bounds
+    frame_group.upsert_points(
+        points=points, instance_groups=frame_group.instance_groups
+    )
+    assert np.all(frame_group.numpy(invisible_as_nan=False) == value)
+    # Add some out of bounds points
+    prev_value = value
+    value = 400
+    points = np.full((n_cameras, n_instance_groups, n_nodes, n_coords), value)
+    max_bound = projection_bounds.max()
+    oob_value = max_bound - 1
+    assert oob_value < max_bound and oob_value > min_bound
+    oob_mask = np.random.choice(
+        [True, False], size=(n_cameras, n_instance_groups, n_nodes, n_coords)
+    )
+    points[oob_mask] = oob_value
+    frame_group.upsert_points(
+        points=points, instance_groups=frame_group.instance_groups
+    )
+    # Get the logical or for either x or y being out of bounds
+    bound_x, bound_y = projection_bounds[:, 0].min(), projection_bounds[:, 1].min()
+    oob_mask_x = np.where(points[:, :, :, 0] > bound_x, True, False)
+    oob_mask_y = np.where(points[:, :, :, 1] > bound_y, True, False)
+    oob_mask_1d = np.logical_or(oob_mask_x, oob_mask_y)
+    oob_mask_1d_expanded = np.expand_dims(oob_mask_1d, axis=-1)
+    oob_mask_1d_expanded = np.broadcast_to(oob_mask_1d_expanded, oob_mask.shape)
+    frame_group_numpy = frame_group.numpy(invisible_as_nan=False)
+    assert np.any(frame_group_numpy[:, :, :, 0] > bound_x) == False
+    assert np.any(frame_group_numpy[:, :, :, 1] > bound_y) == False
+    assert np.all(frame_group_numpy[oob_mask_1d_expanded] == prev_value)  # Not updated
+    oob_value_mask = np.logical_and(~oob_mask_1d_expanded, oob_mask)
+    value_mask = np.logical_and(~oob_mask_1d_expanded, ~oob_mask)
+    assert np.all(frame_group_numpy[oob_value_mask] == oob_value)  # Updated to oob
+    assert np.all(frame_group_numpy[value_mask] == value)  # Updated to value
+
+
+def test_cameras_are_not_sorted():
+    """Test that cameras are not sorted in `RecordingSession`.
+
+    Sorting will invalidate the correspondence between camera index and video index when
+    re-opening project.
+
+    [cam_0]
+    name = "back"
+    size = [ 1280, 1024,]
+    matrix = [ [ 762.513822135494, 0.0, 639.5,], [ 0.0, 762.513822135494, 511.5,], [ 0.0, 0.0, 1.0,],]
+    distortions = [ -0.2868458380166852, 0.0, 0.0, 0.0, 0.0,]
+    rotation = [ 0.3571857188780474, 0.8879473292757126, 1.6832001677006176,]
+    translation = [ -555.4577842902744, -294.43494957092884, -190.82196458369515,]
+    """
+
+    # Make a calibration file with more than 10 cameras
+    num_cameras = 20
+    calibration_dict = {}
+    for camera_idx in range(num_cameras):
+        cam_name = f"cam_{camera_idx}"
+        calibration_dict[cam_name] = {
+            "name": cam_name,
+            "size": (1024, 1024),
+            "matrix": np.eye(3).tolist(),
+            "distortions": [0, 0, 0, 0, 0],
+            "rotation": [0, 0, 0],
+            "translation": [10 * camera_idx, 0, 0],
+        }
+
+    # Save the dict to a toml file
+    calibration_file = "calibration.toml"
+    with open(calibration_file, "w") as f:
+        toml.dump(calibration_dict, f)
+
+    # Load the calibration file
+    camera_cluster = CameraCluster.load(calibration_file)
+    assert len(camera_cluster.cameras) == num_cameras
+
+    # Ensure that cameras are still in correct order
+    for camera_idx, camera in enumerate(camera_cluster.cameras):
+        assert camera.name == f"cam_{camera_idx}"

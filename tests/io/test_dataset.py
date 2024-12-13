@@ -1633,3 +1633,43 @@ def test_export_nwb(centered_pair_predictions: Labels, tmpdir):
     # Read from NWB file
     read_labels = NDXPoseAdaptor.read(NDXPoseAdaptor, filehandle.FileHandle(filename))
     assert_read_labels_match(centered_pair_predictions, read_labels)
+
+
+def test_remove_instance_removes_from_predicted_reference():
+
+    # Create skeleton
+    skeleton = Skeleton()
+    skeleton.add_node("nodeA")
+
+    # Dummy video
+    video = Video(backend=None)
+
+    # Create predicted instance
+    predicted_instance = PredictedInstance(
+        skeleton=skeleton, points={"nodeA": Point(1, 1)}, score=0.95
+    )
+    user_instance = Instance(skeleton=skeleton, points={"nodeA": Point(2, 2)})
+    user_instance.from_predicted = predicted_instance
+
+    # Create labeled_frame and add to labels
+    labeled_frame = LabeledFrame(
+        video=video, frame_idx=0, instances=[user_instance, predicted_instance]
+    )
+    labels = Labels(labeled_frames=[labeled_frame])
+
+    # Ensure the `from_predicted` reference exists
+    assert user_instance.from_predicted is predicted_instance
+
+    # Remove predicted instance
+    labels.remove_instance(labeled_frame, predicted_instance)
+
+    # Ensure the predicted instance is removed from the frame
+    assert predicted_instance not in labeled_frame.instances
+    assert len(labeled_frame.instances) == 1
+
+    # Ensure the `from_predicted` reference is removed
+    assert user_instance.from_predicted is None
+
+    # Ensure no lingering references to the predicted instance
+    assert predicted_instance not in labels.all_instances
+    assert all(predicted_instance not in lf.instances for lf in labels.labeled_frames)

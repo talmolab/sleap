@@ -456,7 +456,7 @@ class VideoMarkerThread(Thread):
                 )
 
         if self.show_edges:
-            for (src, dst) in instance.skeleton.edge_inds:
+            for src, dst in instance.skeleton.edge_inds:
                 # Get points for the nodes connected by this edge
                 src_x, src_y = points_array[src]
                 dst_x, dst_y = points_array[dst]
@@ -542,8 +542,9 @@ def save_labeled_video(
             for what instance/node/edge
         palette: SLEAP color palette to use. Options include: "alphabet", "five+",
             "solarized", or "standard". Only used if `color_manager` is None.
-        distinctly_color: Specify how to color instances. Options include: "instances",
-            "edges", and "nodes". Only used if `color_manager` is None.
+        distinctly_color: Specify how to color instances. Options include:
+            "instance groups", "instances", "edges", and "nodes". Only used if
+            `color_manager` is None.
         gui_progress: Whether to show Qt GUI progress dialog.
 
     Returns:

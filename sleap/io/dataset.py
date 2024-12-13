@@ -1,5 +1,5 @@
 """
-A SLEAP dataset collects labeled video frames, together with required metadata.
+A SLEAP dataset collects labeled video frames, together with required metadata. 
 
 This contains labeled frame data (user annotations and/or predictions),
 together with all the other data that is saved for a SLEAP project
@@ -37,6 +37,7 @@ If the filename has a supported extension (e.g., ".slp", ".h5", ".json") then
 the file will be saved in the corresponding format. You can also specify the
 default extension to use if none is provided in the filename.
 """
+
 import itertools
 import os
 from collections.abc import MutableSequence
@@ -111,6 +112,7 @@ class LabelsDataCache:
         self._track_occupancy = dict()
         self._frame_count_cache = dict()
         self._session_by_video: Dict[Video, RecordingSession] = dict()
+        self._linkage_of_videos = {"linked": [], "unlinked": []}
 
         # Loop through labeled frames only once
         for lf in self.labels:
@@ -127,6 +129,16 @@ class LabelsDataCache:
         for session in self.labels.sessions:
             for video in session.videos:
                 self._session_by_video[video] = session
+
+        # Build linkage of videos by session
+        for video in self.labels.videos:
+            if (
+                video not in self._session_by_video
+                or self._session_by_video[video] is None
+            ):
+                self._linkage_of_videos["unlinked"].append(video)
+            else:
+                self._linkage_of_videos["linked"].append(video)
 
     def add_labeled_frame(self, new_frame: LabeledFrame):
         """Add a new labeled frame to the cache.
@@ -163,6 +175,20 @@ class LabelsDataCache:
 
         self._session_by_video[new_video] = session
 
+    def update_linkage_of_videos(self):
+        """Updates a dictionary of linked and unlinked videos."""
+        temp = {"linked": [], "unlinked": []}
+        for video in self.labels.videos:
+            if (
+                video not in self._session_by_video
+                or self._session_by_video[video] is None
+            ):
+                temp["unlinked"].append(video)
+            else:
+                temp["linked"].append(video)
+
+        self._linkage_of_videos = temp
+
     def update(
         self,
         new_item: Optional[
@@ -182,6 +208,8 @@ class LabelsDataCache:
 
         elif isinstance(new_item, tuple):
             self.add_video_to_session(*new_item)
+
+        self.update_linkage_of_videos()
 
     def find_frames(
         self, video: Video, frame_idx: Optional[Union[int, Iterable[int]]] = None
@@ -1293,9 +1321,11 @@ class Labels(MutableSequence):
 
                 template_points = np.stack(
                     [
-                        node_positions[node]
-                        if node in node_positions
-                        else np.random.randint(0, 50, size=2)
+                        (
+                            node_positions[node]
+                            if node in node_positions
+                            else np.random.randint(0, 50, size=2)
+                        )
                         for node in skeleton.nodes
                     ]
                 )
@@ -1411,6 +1441,14 @@ class Labels(MutableSequence):
         if not in_transaction:
             self._cache.remove_instance(frame, instance)
 
+        # TODO: Do NOT merge into develop, this next line is handled by InstancesList
+        # Check that if a `PredictedInstance` is removed, that it is not referenced
+        from_predicted_instances = [inst.from_predicted for inst in frame.instances]
+        if instance in from_predicted_instances:
+            containing_inst_idx: int = from_predicted_instances.index(instance)
+            containing_inst: Instance = frame.instances[containing_inst_idx]
+            containing_inst.from_predicted = None
+
         # Also remove instance from `InstanceGroup` if any
         session = self.get_session(frame.video)
         if session is None:
@@ -1453,6 +1491,10 @@ class Labels(MutableSequence):
 
         # Add instance and track to labels
         frame.instances.append(instance)
+
+        # TODO: Do NOT merge into develop, this next line is handled by InstancesList
+        instance.frame = frame  # Needed to add instance to instance group
+
         if (instance.track is not None) and (instance.track not in self.tracks):
             self.add_track(video=frame.video, track=instance.track)
 
@@ -1761,6 +1803,15 @@ class Labels(MutableSequence):
         self._cache.remove_session_video(video=video)
         if session.get_camera(video) is not None:
             session.remove_video(video)
+
+    def remove_recording_session(self, session: RecordingSession):
+        """Remove a session from self.sessions.
+
+        Args:
+            session: `RecordingSession` instance
+        """
+        if session in self._sessions:
+            self._sessions.remove(session)
 
     @classmethod
     def from_json(cls, *args, **kwargs):
@@ -2696,9 +2747,11 @@ class Labels(MutableSequence):
         # whether they're tracked.
         n_insts = max(
             [
-                lf.n_user_instances
-                if lf.n_user_instances > 0  # take user instances over predicted
-                else lf.n_predicted_instances
+                (
+                    lf.n_user_instances
+                    if lf.n_user_instances > 0  # take user instances over predicted
+                    else lf.n_predicted_instances
+                )
                 for lf in lfs
             ]
         )
@@ -2911,7 +2964,6 @@ def find_path_using_paths(missing_path: Text, search_paths: List[Text]) -> Text:
 
     # Look for file with that name in each of the search path directories
     for search_path in search_paths:
-
         if os.path.isfile(search_path):
             path_dir = os.path.dirname(search_path)
         else:

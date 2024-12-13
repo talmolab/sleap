@@ -12,6 +12,7 @@ Example usage: ::
     >>> vp.addInstance(instance=my_instance, color=(r, g, b))
 
 """
+
 from collections import deque
 
 # FORCE_REQUESTS controls whether we emit a signal to process frame requests
@@ -73,6 +74,8 @@ from sleap.instance import Instance, Point, PredictedInstance
 from sleap.io.video import Video
 from sleap.prefs import prefs
 from sleap.skeleton import Node
+from sleap.io.cameras import Camcorder
+from sleap.io.cameras import InstanceGroup
 
 
 class LoadImageWorker(QtCore.QObject):
@@ -268,14 +271,44 @@ class QtVideoPlayer(QWidget):
 
         self.seekbar.selectionChanged.connect(update_selection_state)
 
-        self.state.connect("frame_idx", lambda idx: self.plot())
-        self.state.connect("frame_idx", lambda idx: self.seekbar.setValue(idx))
+        def frame_idx_callback(frame_idx: int):
+            """All callbacks that need to be called when frame_idx changes."""
+            self.plot()
+            self.seekbar.setValue(frame_idx)
+            self.state["instance"] = None
+
+        self.state.connect("frame_idx", lambda idx: frame_idx_callback(idx))
         self.state.connect("instance", self.view.selectInstance)
+        self.state.connect("instance_group", self.view.selectInstance)
 
         self.state.connect("show instances", self.plot)
         self.state.connect("show labels", self.plot)
         self.state.connect("show edges", self.plot)
         self.state.connect("video", self.load_video)
+
+        def set_video(video: Video):
+            self.state["video"] = video
+
+        self.state.connect("unlinked_video", lambda video: set_video(video))
+
+        def set_video_from_camera(camera: Camcorder):
+            """Updates the video state when camera state changes.
+
+            Args:
+                camera: The camera object
+            """
+            # If either the camera or the session is None, we can't get the linked video
+            session = self.state["session"]
+            if camera is None or session is None:
+                return
+
+            # Get the linked video from the camera
+            video: Optional[Video] = camera.get_video(session=session)
+            if video is not None:
+                self.state["video"] = video
+
+        self.state.connect("camera", lambda camera: set_video_from_camera(camera))
+
         self.state.connect("fit", self.setFitZoom)
 
         self.view.show()
@@ -313,6 +346,7 @@ class QtVideoPlayer(QWidget):
             # Display image
             self.view.setImage(qimage)
 
+    # TODO: Delegate to command context
     def _register_shortcuts(self):
         self._shortcut_triggers = dict()
 
@@ -935,18 +969,42 @@ class GraphicsView(QGraphicsView):
         scene_items = self.scene.items(Qt.SortOrder.AscendingOrder)
         return list(filter(lambda x: isinstance(x, QtInstance), scene_items))
 
-    def selectInstance(self, select: Union[Instance, int]):
-        """
-        Select a particular instance in view.
+    def selectInstance(self, select: Optional[Union[Instance, int, InstanceGroup]]):
+        """Select a particular instance in view.
 
         Args:
-            select: Either `Instance` or index of instance in view.
+            select: Either `None` or `Instance`, index, or `InstanceGroup` of instance
+                in view.
 
         Returns:
             None
         """
+
+        # Decide which function to use to determine if instance is selected
+        if isinstance(select, int):
+
+            def determine_selected(idx: int, instance: QtInstance):
+                return idx == select
+
+        elif isinstance(select, Instance):
+
+            def determine_selected(idx: int, instance: QtInstance):
+                return instance.instance == select
+
+        elif isinstance(select, InstanceGroup):
+
+            def determine_selected(idx: int, instance: QtInstance):
+                return instance.instance in select.instances
+
+        else:
+
+            def determine_selected(idx: int, instance: QtInstance):
+                return False
+
+        # Set selected state for each instance
         for idx, instance in enumerate(self.all_instances):
-            instance.selected = select == idx or select == instance.instance
+            instance.selected = determine_selected(idx, instance)
+
         self.updatedSelection.emit()
 
     def getSelectionIndex(self) -> Optional[int]:
@@ -1528,22 +1586,29 @@ class QtNode(QGraphicsEllipseItem):
             # Select instance this nodes belong to.
             self.parentObject().player.state["instance"] = self.parentObject().instance
 
+            # TODO(LM): Document this behavior
+            # Ctrl-click to toggle node(s) as incomplete
+            complete = False if (event.modifiers() & Qt.ControlModifier) else True
+
             # Alt-click to drag instance
-            if event.modifiers() == Qt.AltModifier:
+            if event.modifiers() & Qt.AltModifier:
                 self.dragParent = True
                 self.parentObject().setFlag(QGraphicsItem.ItemIsMovable)
                 # set origin to point clicked so that we can rotate around this point
                 self.parentObject().setTransformOriginPoint(self.scenePos())
                 self.parentObject().mousePressEvent(event)
-            # Shift-click to mark all points as complete
-            elif event.modifiers() == Qt.ShiftModifier:
-                self.parentObject().updatePoints(complete=True, user_change=True)
+            # Shift-click to mark all points as complete (or incomplete if ctrl is held)
+            elif event.modifiers() & Qt.ShiftModifier:
+                self.parentObject().updatePoints(
+                    complete=complete, incomplete=(not complete), user_change=True
+                )
             else:
                 self.dragParent = False
                 super(QtNode, self).mousePressEvent(event)
                 self.updatePoint()
 
-            self.point.complete = True  # FIXME: move to command
+            self.point.complete = complete  # FIXME: move to command
+
         elif event.button() == Qt.RightButton:
             # Select instance this nodes belong to.
             self.parentObject().player.state["instance"] = self.parentObject().instance
@@ -1850,7 +1915,7 @@ class QtInstance(QGraphicsObject):
         self.track_label.setHtml(instance_label_text)
 
         # Add nodes
-        for (node, point) in self.instance.nodes_points:
+        for node, point in self.instance.nodes_points:
             if point.visible or self.show_non_visible:
                 node_item = QtNode(
                     parent=self,
@@ -1865,7 +1930,7 @@ class QtInstance(QGraphicsObject):
                 self.nodes[node.name] = node_item
 
         # Add edges
-        for (src, dst) in self.skeleton.edge_names:
+        for src, dst in self.skeleton.edge_names:
             # Make sure that both nodes are present in this instance before drawing edge
             if src in self.nodes and dst in self.nodes:
                 edge_item = QtEdge(
@@ -1904,14 +1969,21 @@ class QtInstance(QGraphicsObject):
     def __repr__(self) -> str:
         return f"QtInstance(pos()={self.pos()},instance={self.instance})"
 
-    def updatePoints(self, complete: bool = False, user_change: bool = False):
+    def updatePoints(
+        self,
+        complete: bool = False,
+        incomplete: bool = False,
+        user_change: bool = False,
+    ):
         """Update data and display for all points in skeleton.
 
         This is called any time the skeleton is manipulated as a whole.
 
         Args:
-            complete: Whether to update all nodes by setting "completed"
-                attribute.
+            complete: Whether to update all nodes to complete by setting "completed"
+                attribute. Overrides `incomplete`.
+            incomplete: Whether to update all nodes to incomplete by setting "complete"
+                attribute. Overridden by `complete`.
             user_change: Whether method is called because of change made by
                 user.
 
@@ -1936,6 +2008,8 @@ class QtInstance(QGraphicsObject):
             if complete:
                 # FIXME: move to command
                 node_item.point.complete = True
+            elif incomplete:
+                node_item.point.complete = False
         # Wait to run callbacks until all nodes are updated
         # Otherwise the label positions aren't correct since
         # they depend on the edge vectors to old node positions.

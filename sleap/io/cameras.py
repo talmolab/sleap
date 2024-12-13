@@ -15,7 +15,7 @@ from attrs.validators import deep_iterable, instance_of
 # from sleap.io.dataset import Labels  # TODO(LM): Circular import, implement Observer
 from sleap.instance import Instance, LabeledFrame, PredictedInstance
 from sleap.io.video import Video
-from sleap.util import deep_iterable_converter
+from sleap.util import compute_oks, deep_iterable_converter
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class Camcorder:
 
     def get_video(self, session: "RecordingSession") -> Optional[Video]:
         if session not in self._video_by_session:
-            logger.warning(f"{session} not found in {self}.")
+            logger.debug(f"{session} not found in {self}.")
             return None
         return self._video_by_session[session]
 
@@ -345,8 +345,11 @@ class CameraCluster(CameraGroup):
         Returns:
             `CameraCluster` object.
         """
-        cgroup: CameraGroup = super().load(filename)
-        return cls(cameras=cgroup.cameras, metadata=cgroup.metadata)
+
+        calibration_dict = toml.load(filename)
+        camera_cluster = cls.from_calibration_dict(calibration_dict)
+
+        return camera_cluster
 
     @classmethod
     def from_calibration_dict(cls, calibration_dict: Dict[str, str]) -> "CameraCluster":
@@ -366,12 +369,12 @@ class CameraCluster(CameraGroup):
             `CameraCluster` object.
         """
 
-        # Save the calibration dictionary to a temp file and load as `CameraGroup`
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_file = str(Path(temp_dir, "calibration.toml"))
-            with open(temp_file, "w") as f:
-                toml.dump(calibration_dict, f)
-            cgroup: CameraGroup = super().load(temp_file)
+        # Taken from aniposelib.cameras.CameraGroup.load, but without sorting keys
+        keys = calibration_dict.keys()
+        items = [calibration_dict[k] for k in keys if k != "metadata"]
+        cgroup = CameraGroup.from_dicts(items)
+        if "metadata" in calibration_dict:
+            cgroup.metadata = calibration_dict["metadata"]
 
         return cls(cameras=cgroup.cameras, metadata=cgroup.metadata)
 
@@ -394,6 +397,35 @@ class CameraCluster(CameraGroup):
 
         return calibration_dict
 
+    # TODO(LM): Remove this function once aniposelib is updated.
+    def optim_points(
+        self,
+        points,
+        p3ds,
+        constraints=[],
+        constraints_weak=[],
+        scale_smooth=4,
+        scale_length=2,
+        scale_length_weak=0.5,
+        reproj_error_threshold=15,
+        reproj_loss="soft_l1",
+        n_deriv_smooth=1,
+        scores=None,
+        verbose=False,
+    ):
+        """Overwrite parent function which does not handle nan values.
+
+        This function is called when we triangulate. The triangulated points are stored
+        in p3ds, but the parent function optimizes the triangulated p3ds to better fit
+        the 2D points. The parent function does not handle nan values (yet), so we need
+        to overwrite it here.
+
+        Reutrns:
+            p3ds: np.ndarray of shape (n_points, 3)
+        """
+
+        return p3ds
+
 
 @define
 class InstanceGroup:
@@ -408,6 +440,9 @@ class InstanceGroup:
         cameras: List of `Camcorder` objects that have an `Instance` associated.
         instances: List of `Instance` objects.
         instance_by_camcorder: Dictionary of `Instance` objects by `Camcorder`.
+        score: Optional score for the `InstanceGroup`. Setting the score will also
+            update the score for all `instances` already in the `InstanceGroup`. The
+            score for `instances` will not be updated upon initialization.
     """
 
     _name: str = field()
@@ -416,6 +451,7 @@ class InstanceGroup:
     _camcorder_by_instance: Dict[Instance, Camcorder] = field(factory=dict)
     _dummy_instance: Optional[Instance] = field(default=None)
     camera_cluster: Optional[CameraCluster] = field(default=None)
+    _score: Optional[float] = field(default=None)
 
     def __attrs_post_init__(self):
         """Initialize `InstanceGroup` object."""
@@ -537,7 +573,7 @@ class InstanceGroup:
         return new_name
 
     @property
-    def instances(self) -> List[Instance]:
+    def instances(self) -> List[Union[Instance, PredictedInstance]]:
         """List of `Instance` objects."""
         return list(self._instance_by_camcorder.values())
 
@@ -551,7 +587,34 @@ class InstanceGroup:
         """Dictionary of `Instance` objects by `Camcorder`."""
         return self._instance_by_camcorder
 
-    def numpy(self, pred_as_nan: bool = False, invisible_as_nan=True) -> np.ndarray:
+    @property
+    def score(self) -> Optional[float]:
+        """Score for the `InstanceGroup`."""
+        return self._score
+
+    @score.setter
+    def score(self, score: Optional[float]):
+        """Set the score for the `InstanceGroup`.
+
+        Also sets the score for all instances in the `InstanceGroup` if they have a
+        `score` attribute.
+
+        Args:
+            score: Score to set for the `InstanceGroup`.
+        """
+
+        for instance in self.instances:
+            if hasattr(instance, "score"):
+                instance.score = score
+
+        self._score = score
+
+    def numpy(
+        self,
+        pred_as_nan: bool = False,
+        invisible_as_nan=True,
+        cams_to_include: Optional[List[Camcorder]] = None,
+    ) -> np.ndarray:
         """Return instances as a numpy array of shape (n_views, n_nodes, 2).
 
         The ordering of views is based on the ordering of `Camcorder`s in the
@@ -565,13 +628,19 @@ class InstanceGroup:
                 self.dummy_instance. Default is False.
             invisible_as_nan: If True, then replaces invisible points with nan. Default
                 is True.
+            cams_to_include: List of `Camcorder`s to include in the numpy array. If
+                None, then all `Camcorder`s in the `CameraCluster` are included. Default
+                is None.
 
         Returns:
             Numpy array of shape (n_views, n_nodes, 2).
         """
 
         instance_numpys: List[np.ndarray] = []  # len(M) x N x 2
-        for cam in self.camera_cluster.cameras:
+        if cams_to_include is None:
+            cams_to_include = self.camera_cluster.cameras
+
+        for cam in cams_to_include:
             instance = self.get_instance(cam)
 
             # Determine whether to use a dummy (all nan) instance
@@ -645,7 +714,7 @@ class InstanceGroup:
             )
 
         # Add the instance to the `InstanceGroup`
-        self.replace_instance(cam, instance)
+        self.replace_instance(cam=cam, instance=instance)
 
     def replace_instance(self, cam: Camcorder, instance: Instance):
         """Replace an `Instance` in the `InstanceGroup`.
@@ -667,6 +736,9 @@ class InstanceGroup:
 
         # Remove the instance if it already exists
         self.remove_instance(instance_or_cam=instance)
+
+        # Remove the instance currently at the cam (if any)
+        self.remove_instance(instance_or_cam=cam)
 
         # Replace the instance in the `InstanceGroup`
         self._instance_by_camcorder[cam] = instance
@@ -793,6 +865,11 @@ class InstanceGroup:
             f"Camcorders in `cams_to_include` ({len(cams_to_include)})."
         )
 
+        # Calculate OKS scores for the points
+        gt_points = self.numpy(
+            pred_as_nan=True, invisible_as_nan=True, cams_to_include=cams_to_include
+        )  # M x N x 2
+        oks_scores = np.full((n_views, n_nodes), np.nan)
         for cam_idx, cam in enumerate(cams_to_include):
             # Get the instance for the cam
             instance: Optional[Instance] = self.get_instance(cam)
@@ -802,10 +879,21 @@ class InstanceGroup:
                 )
                 continue
 
-            # Update the points (and scores) for the (predicted) instance
+            # Compute the OKS score for the instance if it is a ground truth instance
+            if not isinstance(instance, PredictedInstance):
+                instance_oks = compute_oks(
+                    gt_points[cam_idx, :, :],
+                    points[cam_idx, :, :],
+                )
+                oks_scores[cam_idx] = instance_oks
+
+            # Update the points for the instance
             instance.update_points(
                 points=points[cam_idx, :, :], exclude_complete=exclude_complete
             )
+
+        # Update the score for the InstanceGroup to be the average OKS score
+        self.score = np.nanmean(oks_scores)  # scalar
 
     def __getitem__(
         self, idx_or_key: Union[int, Camcorder, Instance]
@@ -841,7 +929,8 @@ class InstanceGroup:
     def __repr__(self):
         return (
             f"{self.__class__.__name__}(name={self.name}, frame_idx={self.frame_idx}, "
-            f"instances:{len(self)}, camera_cluster={self.camera_cluster})"
+            f"score={self.score}, instances:{len(self)}, camera_cluster="
+            f"{self.camera_cluster})"
         )
 
     def __hash__(self) -> int:
@@ -853,6 +942,7 @@ class InstanceGroup:
         instance_by_camcorder: Dict[Camcorder, Instance],
         name: str,
         name_registry: Set[str],
+        score: Optional[float] = None,
     ) -> Optional["InstanceGroup"]:
         """Creates an `InstanceGroup` object from a dictionary.
 
@@ -860,6 +950,8 @@ class InstanceGroup:
             instance_by_camcorder: Dictionary with `Camcorder` keys and `Instance` values.
             name: Name to use for the `InstanceGroup`.
             name_registry: Set of names to check for uniqueness.
+            score: Optional score for the `InstanceGroup`. This will NOT update the
+                score of the `Instance`s within the `InstanceGroup`. Default is None.
 
         Raises:
             ValueError: If the `InstanceGroup` name is already in use.
@@ -903,6 +995,7 @@ class InstanceGroup:
             frame_idx=frame_idx,
             camera_cluster=camera_cluster,
             instance_by_camcorder=instance_by_camcorder_copy,
+            score=score,
         )
 
     def to_dict(
@@ -930,10 +1023,14 @@ class InstanceGroup:
             for cam, instance in self._instance_by_camcorder.items()
         }
 
-        return {
+        instance_group_dict = {
             "name": self.name,
             "camcorder_to_lf_and_inst_idx_map": camcorder_to_lf_and_inst_idx_map,
         }
+        if self.score is not None:
+            instance_group_dict["score"] = str(round(self.score, 4))
+
+        return instance_group_dict
 
     @classmethod
     def from_dict(
@@ -957,6 +1054,13 @@ class InstanceGroup:
             `InstanceGroup` object.
         """
 
+        # Get the score (if available)
+        score = (
+            float(instance_group_dict["score"])
+            if "score" in instance_group_dict
+            else None
+        )
+
         # Get the `Instance` objects
         camcorder_to_lf_and_inst_idx_map: Dict[
             str, Tuple[str, str]
@@ -978,6 +1082,7 @@ class InstanceGroup:
             instance_by_camcorder=instance_by_camcorder,
             name=instance_group_dict["name"],
             name_registry=name_registry,
+            score=score,
         )
 
 
@@ -999,6 +1104,7 @@ class RecordingSession:
         frame_inds: List of frame indices.
         cams_to_include: List of `Camcorder`s to include in this `FrameGroup`.
         excluded_views: List of excluded views (names of `Camcorder`s).
+        projection_bounds: Projection bounds for `Camcorder`s in `self.cams_to_include`.
     """
 
     # TODO(LM): Consider implementing Observer pattern for `camera_cluster` and `labels`
@@ -1009,11 +1115,28 @@ class RecordingSession:
     _frame_group_by_frame_idx: Dict[int, "FrameGroup"] = field(factory=dict)
     _cams_to_include: Optional[List[Camcorder]] = field(default=None)
     _excluded_views: Optional[Tuple[str]] = field(default=None)
+    _projection_bounds: Optional[np.ndarray] = field(default=None)
+
+    @property
+    def id(self) -> str:
+        """Unique identifier for the `RecordingSession`."""
+        if self.labels is not None and self in self.labels.sessions:
+            return self.labels.sessions.index(self)
+        else:
+            return hash(self)
 
     @property
     def videos(self) -> List[Video]:
         """List of `Video`s."""
 
+        # TODO(LM): Should these be in the same order as `self.labels.videos`?
+        # e.g. switching between views in GUI should keep the same order, but not enforced.
+        # We COULD implicitly enforce this by adding videos in the same order as
+        # `self.labels.videos`, but "explicit is better than implicit".
+        # Instead, we could sort the videos by their index in labels.videos. This might
+        # bottleneck switching between views for sessions with lots of cameras/videos.
+        # Unless! We do this (each time) when adding the videos to the session instead
+        # of when accessing the videos. This would be a good compromise.
         return self.camera_cluster._videos_by_session[self]
 
     @property
@@ -1085,6 +1208,81 @@ class RecordingSession:
 
         return self._excluded_views
 
+    def _recalculate_projection_bounds(self):
+        """Calculate the projection bounds for `Camcorder`s in `self.cams_to_include`.
+
+        This method recreates the `_projection_bounds` attribute based on the linked
+        `Video`'s height and width. The `_projection_bounds` are updated one by one for
+        each `Video` added to the `RecordingSession` through the `add_video` method.
+        However, the `_projection_bounds` will need to be recalculated if the
+        `Video.height` or `Video.width` attribute is changed after the `Video` is added
+        to the `RecordingSession`.
+
+        Currently, this method is only called on initialization/deserialization of the
+        `RecordingSession` and yields an all nan array.
+        """
+
+        # Get the projection bounds for all `Camcorder`s in the `RecordingSession`
+        n_cameras = len(self.camera_cluster.cameras)
+        bounds = np.full((n_cameras, 2), np.nan)
+        for cam in self.linked_cameras:
+            video: Video = self.get_video(cam)
+
+            # Get the video's width and height
+            x_max = video.width
+            y_max = video.height
+
+            # Allow triangulating even if no video information is available
+            if x_max is None or y_max is None:
+                continue
+
+            # Update the bounds
+            bounds[self.camera_cluster.cameras.index(cam)] = (x_max, y_max)
+        self._projection_bounds = bounds.copy()
+
+    @property
+    def projection_bounds(self) -> Tuple[Tuple[float, float], Tuple[float, float]]:
+        """Projection bounds for `Camcorder`s in the `RecordingSession.cams_to_include`.
+
+        The projection bounds are based off the linked `Video`'s height and width.
+
+        To recalculate the projection bounds, set the `_projection_bounds` attribute to
+        None, then access the `projection_bounds` property.
+
+        Returns:
+            NumPy array of shape (n_cameras, 2) where the first column is the width and
+            the second column is the height of the `Video` linked to the associated
+            `Camcorder`.
+        """
+
+        # If the projection bounds have not been set, then calculate them
+        if self._projection_bounds is None:
+            # Reconstruct the projection bounds for all `Camcorder`s in the session
+            self._recalculate_projection_bounds()
+
+        # Ensure we don't accidentally modify the underlying projection bounds
+        bounds = self._projection_bounds.copy()
+
+        # Only return the bounds for cams to include
+        bounds = bounds[[cam in self.cams_to_include for cam in self.camera_cluster]]
+        return bounds
+
+    @projection_bounds.setter
+    def projection_bounds(self, bounds: np.ndarray):
+        """Raises error if trying to set projection bounds directly.
+
+        The underlying self._projection_bounds is updated automatically when calling
+        `RecordingSession.add_video`.
+
+        Raises:
+            ValueError: If trying to set projection bounds directly.
+        """
+
+        raise ValueError(
+            "Cannot set projection bounds directly. Projection bounds are updated "
+            "automatically when calling `RecordingSession.add_video`."
+        )
+
     def get_video(self, camcorder: Camcorder) -> Optional[Video]:
         """Retrieve `Video` linked to `Camcorder`.
 
@@ -1106,7 +1304,7 @@ class RecordingSession:
             )
 
         if camcorder not in self._video_by_camcorder:
-            logger.warning(
+            logger.debug(
                 f"Camcorder {camcorder.name} is not linked to a video in this "
                 f"RecordingSession."
             )
@@ -1148,6 +1346,12 @@ class RecordingSession:
                 f"{self.camera_cluster}."
             )
 
+        # Ensure the `Video` is a `Video` object
+        if not isinstance(video, Video):
+            raise ValueError(
+                f"Expected a `Video` object, but got {type(video)} instead."
+            )
+
         # Add session-to-videos (1-to-many) map to `CameraCluster`
         if self not in self.camera_cluster._videos_by_session:
             self.camera_cluster.add_session(self)
@@ -1178,6 +1382,14 @@ class RecordingSession:
         if self.labels is not None:
             self.labels.update_session(self, video)
 
+        # TODO(LM): Use observer pattern to update bounds when `Video.shape` changes
+        # Update projection bounds
+        x_max = video.width
+        y_max = video.height
+        if not (x_max is None or y_max is None):
+            cam_idx = self.camera_cluster.cameras.index(camcorder)
+            self._projection_bounds[cam_idx] = (x_max, y_max)
+
     def remove_video(self, video: Video):
         """Removes a `Video` from the `RecordingSession`.
 
@@ -1201,6 +1413,10 @@ class RecordingSession:
         # Update labels cache
         if self.labels is not None and self.labels.get_session(video) is not None:
             self.labels.remove_session_video(video=video)
+
+        # Update projection bounds
+        cam_idx = self.camera_cluster.cameras.index(camcorder)
+        self._projection_bounds[cam_idx] = (np.nan, np.nan)
 
     def new_frame_group(self, frame_idx: int):
         """Creates and adds an empty `FrameGroup` to the `RecordingSession`.
@@ -1242,12 +1458,18 @@ class RecordingSession:
 
         return videos
 
+    def __bool__(self):
+        return True
+
     def __attrs_post_init__(self):
         self.camera_cluster.add_session(self)
 
         # Reorder `cams_to_include` to match `CameraCluster` order (via setter method)
         if self._cams_to_include is not None:
             self.cams_to_include = self._cams_to_include
+
+        # Initialize `_projection_bounds` by calling the property
+        self.projection_bounds
 
     def __iter__(self) -> Iterator[List[Camcorder]]:
         return iter(self.camera_cluster)
@@ -1365,7 +1587,7 @@ class RecordingSession:
         # Store camcorder-to-video indices map where key is camcorder index
         # and value is video index from `Labels.videos`
         camcorder_to_video_idx_map = {}
-        for cam_idx, camcorder in enumerate(self.camera_cluster):
+        for cam_idx, camcorder in enumerate(self.camera_cluster.cameras):
             # Skip if Camcorder is not linked to any Video
             if camcorder not in self._video_by_camcorder:
                 continue
@@ -1560,7 +1782,7 @@ class FrameGroup:
         for camera in self.session.camera_cluster.cameras:
             self._instances_by_cam[camera] = set()
         for instance_group in self.instance_groups:
-            self.add_instance_group(instance_group)
+            self.add_instance_group(instance_group=instance_group)
 
     @property
     def instance_groups(self) -> List[InstanceGroup]:
@@ -1621,6 +1843,7 @@ class FrameGroup:
         self,
         instance_groups: Optional[List[InstanceGroup]] = None,
         pred_as_nan: bool = False,
+        invisible_as_nan: bool = True,
     ) -> np.ndarray:
         """Numpy array of all `InstanceGroup`s in `FrameGroup.cams_to_include`.
 
@@ -1629,10 +1852,11 @@ class FrameGroup:
                 self.instance_groups.
             pred_as_nan: If True, then replaces `PredictedInstance`s with all nan
                 self.dummy_instance. Default is False.
-
+            invisible_as_nan: If True, then replaces invisible points with nan. Default
+                is True.
         Returns:
             Numpy array of shape (M, T, N, 2) where M is the number of views (determined
-            by self.cames_to_include), T is the number of `InstanceGroup`s, N is the
+            by self.cams_to_include), T is the number of `InstanceGroup`s, N is the
             number of Nodes, and 2 is for x, y.
         """
 
@@ -1648,19 +1872,18 @@ class FrameGroup:
                         f"{self.instance_groups}"
                     )
 
-        instance_group_numpys: List[np.ndarray] = []  # len(T) M=all x N x 2
+        instance_group_numpys: List[np.ndarray] = []  # len(T) M=include x N x 2
         for instance_group in instance_groups:
             instance_group_numpy = instance_group.numpy(
-                pred_as_nan=pred_as_nan
-            )  # M=all x N x 2
+                pred_as_nan=pred_as_nan,
+                invisible_as_nan=invisible_as_nan,
+                cams_to_include=self.cams_to_include,
+            )  # M=include x N x 2
             instance_group_numpys.append(instance_group_numpy)
 
-        frame_group_numpy = np.stack(instance_group_numpys, axis=1)  # M=all x T x N x 2
-        cams_to_include_mask = np.array(
-            [cam in self.cams_to_include for cam in self.session.cameras]
-        )  # M=all x 1
+        frame_group_numpy = np.stack(instance_group_numpys, axis=1)  # M=include x TxNx2
 
-        return frame_group_numpy[cams_to_include_mask]  # M=include x T x N x 2
+        return frame_group_numpy  # M=include x T x N x 2
 
     def add_instance(
         self,
@@ -1702,6 +1925,15 @@ class FrameGroup:
 
         # Add the `Instance` to the `InstanceGroup`
         if instance_group is not None:
+            # Remove any existing `Instance` in given `InstanceGroup` at same `Camcorder`
+            preexisting_instance = instance_group.get_instance(camera)
+            if preexisting_instance is not None:
+                self.remove_instance(instance=preexisting_instance)
+
+            # Remove the `Instance` from the `FrameGroup` if it is already exists
+            self.remove_instance(instance=instance, remove_empty_instance_group=True)
+
+            # Add the `Instance` to the `InstanceGroup`
             instance_group.add_instance(cam=camera, instance=instance)
         else:
             self._raise_if_instance_not_in_instance_group(instance=instance)
@@ -1715,11 +1947,15 @@ class FrameGroup:
             labeled_frame = instance.frame
             self.add_labeled_frame(labeled_frame=labeled_frame, camera=camera)
 
-    def remove_instance(self, instance: Instance):
+    def remove_instance(
+        self, instance: Instance, remove_empty_instance_group: bool = False
+    ):
         """Removes an `Instance` from the `FrameGroup`.
 
         Args:
             instance: `Instance` to remove from the `FrameGroup`.
+            remove_empty_instance_group: If True, then remove the `InstanceGroup` if it
+                is empty. Default is False.
         """
 
         instance_group = self.get_instance_group(instance=instance)
@@ -1736,11 +1972,21 @@ class FrameGroup:
         instance_group.remove_instance(instance_or_cam=instance)
 
         # Remove the `Instance` from the `FrameGroup`
-        self._instances_by_cam[camera].remove(instance)
+        if instance in self._instances_by_cam[camera]:
+            self._instances_by_cam[camera].remove(instance)
+        else:
+            logger.debug(
+                f"Instance {instance} not found in this FrameGroup: "
+                f"{self._instances_by_cam[camera]}."
+            )
 
         # Remove "empty" `LabeledFrame`s from the `FrameGroup`
         if len(self._instances_by_cam[camera]) < 1:
             self.remove_labeled_frame(labeled_frame_or_camera=camera)
+
+        # Remove the `InstanceGroup` if it is empty
+        if remove_empty_instance_group and len(instance_group.instances) < 1:
+            self.remove_instance_group(instance_group=instance_group)
 
     def add_instance_group(
         self, instance_group: Optional[InstanceGroup] = None
@@ -1808,11 +2054,9 @@ class FrameGroup:
         # Remove the `Instance`s from the `FrameGroup`
         for camera, instance in instance_group.instance_by_camcorder.items():
             self._instances_by_cam[camera].remove(instance)
-
-        # Remove the `LabeledFrame` from the `FrameGroup`
-        labeled_frame = self.get_labeled_frame(camera=camera)
-        if labeled_frame is not None:
-            self.remove_labeled_frame(labeled_frame_or_camera=camera)
+            # Remove the `LabeledFrame` if no more grouped instances
+            if len(self._instances_by_cam[camera]) < 1:
+                self.remove_labeled_frame(labeled_frame_or_camera=camera)
 
     # TODO(LM): maintain this as a dictionary for quick lookups
     def get_instance_group(self, instance: Instance) -> Optional[InstanceGroup]:
@@ -2032,7 +2276,6 @@ class FrameGroup:
         This will update the points for existing `Instance`s in the `InstanceGroup`s and
         also add new `Instance`s if they do not exist.
 
-
         Included cams are specified by `FrameGroup.cams_to_include`.
 
         The ordering of the `InstanceGroup`s in `instance_groups` should match the
@@ -2055,6 +2298,22 @@ class FrameGroup:
             instance_groups
         ), f"Expected {len(instance_groups)} instances, got {n_instances}."
         assert n_coords == 2, f"Expected 2 coordinates, got {n_coords}."
+
+        # Ensure we are working with a float array
+        points = points.astype(float)
+
+        # Get projection bounds (based on video height/width)
+        bounds = self.session.projection_bounds
+        bounds_expanded_x = bounds[:, None, None, 0]
+        bounds_expanded_y = bounds[:, None, None, 1]
+
+        # Create masks for out-of-bounds x and y coordinates
+        out_of_bounds_x = (points[..., 0] < 0) | (points[..., 0] > bounds_expanded_x)
+        out_of_bounds_y = (points[..., 1] < 0) | (points[..., 1] > bounds_expanded_y)
+
+        # Replace out-of-bounds x and y coordinates with nan
+        points[out_of_bounds_x, 0] = np.nan
+        points[out_of_bounds_y, 1] = np.nan
 
         # Update points for each `InstanceGroup`
         for ig_idx, instance_group in enumerate(instance_groups):

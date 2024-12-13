@@ -44,7 +44,6 @@ ensures consistency (e.g.) between color of instances drawn on video
 frame and instances listed in data view table.
 """
 
-
 import os
 import platform
 import random
@@ -72,9 +71,11 @@ from sleap.gui.state import GuiState
 from sleap.gui.web import ReleaseChecker, ping_analytics
 from sleap.gui.widgets.docks import (
     InstancesDock,
+    SessionsDock,
     SkeletonDock,
     SuggestionsDock,
     VideosDock,
+    InstanceGroupDock,
 )
 from sleap.gui.widgets.slider import set_slider_marks_from_labels
 from sleap.gui.widgets.video import QtVideoPlayer
@@ -85,7 +86,6 @@ from sleap.io.video import available_video_exts
 from sleap.prefs import prefs
 from sleap.skeleton import Skeleton
 from sleap.util import parse_uri_path
-
 
 logger = getLogger(__name__)
 
@@ -144,6 +144,7 @@ class MainWindow(QMainWindow):
         self.state["labeled_frame"] = None
         self.state["last_interacted_frame"] = None
         self.state["filename"] = None
+        self.state["session"] = None
         self.state["show non-visible nodes"] = prefs["show non-visible nodes"]
         self.state["show instances"] = True
         self.state["show labels"] = True
@@ -223,6 +224,7 @@ class MainWindow(QMainWindow):
         prefs["color predicted"] = self.state["color predicted"]
         prefs["trail shade"] = self.state["trail_shade"]
         prefs["share usage data"] = self.state["share usage data"]
+        prefs["distinctly_color"] = self.state["distinctly_color"]
 
         # Save preferences.
         prefs.save()
@@ -297,6 +299,8 @@ class MainWindow(QMainWindow):
     def _initialize_gui(self):
         """Creates menus, dock windows, starts timers to update gui state."""
 
+        self.state["distinctly_color"] = prefs["distinctly_color"]
+
         self._create_color_manager()
         self._create_video_player()
         self.statusBar()
@@ -326,7 +330,18 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.player)
 
         def switch_frame(video):
-            """Jump to last labeled frame"""
+            """Maintain the same frame index if available.
+
+            If the video is shorter than the current frame index, find the last labeled
+            frame. If no labeled frame is found, set the frame index to 0.
+            """
+
+            # If the new video is long enough, stay on the current frame index
+            current_frame_idx = self.state["frame_idx"]
+            if video.num_frames > current_frame_idx:
+                return
+
+            # If the new video is not long enough, find last labeled frame or set to 0
             last_label = self.labels.find_last(video)
             if last_label is not None:
                 self.state["frame_idx"] = last_label.frame_idx
@@ -347,9 +362,16 @@ class MainWindow(QMainWindow):
                 frame_to_spinbox.setMaximum(video.num_frames)
                 frame_from_spinbox.setMaximum(video.num_frames)
 
+        def update_session(video):
+            """Update session state for current video."""
+            if video is not None and len(self.labels.sessions) > 0:
+                session = self.labels.get_session(video=video)
+                self.state["session"] = session
+
         self.state.connect(
             "video",
             callbacks=[
+                update_session,  # Important to update session before other callbacks
                 switch_frame,
                 lambda x: self._update_seekbar_marks(),
                 update_frame_chunk_suggestions,
@@ -570,6 +592,18 @@ class MainWindow(QMainWindow):
             "Next Track Spawn Frame",
             self.commands.nextTrackFrame,
         )
+        add_menu_item(
+            goMenu,
+            "goto next view",
+            "Next View",
+            self.commands.nextView,
+        )
+        add_menu_item(
+            goMenu,
+            "goto prev view",
+            "Prev View",
+            self.commands.prevView,
+        )
 
         goMenu.addSeparator()
 
@@ -624,7 +658,7 @@ class MainWindow(QMainWindow):
             key="palette",
         )
 
-        distinctly_color_options = ("instances", "nodes", "edges")
+        distinctly_color_options = ("instance groups", "instances", "nodes", "edges")
 
         add_submenu_choices(
             menu=viewMenu,
@@ -634,7 +668,7 @@ class MainWindow(QMainWindow):
         )
 
         self.state["palette"] = prefs["palette"]
-        self.state["distinctly_color"] = "instances"
+        self.state["distinctly_color"] = prefs["distinctly_color"]
 
         viewMenu.addSeparator()
 
@@ -797,9 +831,18 @@ class MainWindow(QMainWindow):
             self.commands.deleteFrameLimitPredictions,
         )
 
+        ### Sessions Menu ###
+
+        sessionsMenu = self.menuBar().addMenu("Sessions")
+
+        self.inst_groups_menu = sessionsMenu.addMenu("Set Instance Group")
+        self.inst_groups_delete_menu = sessionsMenu.addMenu("Delete Instance Group")
+        self.state.connect("frame_idx", self._update_sessions_menu)
+
         ### Tracks Menu ###
 
         tracksMenu = self.menuBar().addMenu("Tracks")
+
         self.track_menu = tracksMenu.addMenu("Set Instance Track")
         add_menu_check_item(
             tracksMenu, "propagate track labels", "Propagate Track Labels"
@@ -1017,9 +1060,11 @@ class MainWindow(QMainWindow):
         """Create dock windows and connect them to GUI."""
 
         self.videos_dock = VideosDock(self)
+        self.sessions_dock = SessionsDock(self, tab_with=self.videos_dock)
         self.skeleton_dock = SkeletonDock(self, tab_with=self.videos_dock)
         self.suggestions_dock = SuggestionsDock(self, tab_with=self.videos_dock)
         self.instances_dock = InstancesDock(self, tab_with=self.videos_dock)
+        self.instance_groups_dock = InstanceGroupDock(self, tab_with=self.videos_dock)
 
         # Bring videos tab forward.
         self.videos_dock.wgt_layout.parent().parent().raise_()
@@ -1079,7 +1124,10 @@ class MainWindow(QMainWindow):
         has_selected_node = self.state["selected_node"] is not None
         has_selected_edge = self.state["selected_edge"] is not None
         has_selected_video = self.state["selected_video"] is not None
+        has_selected_session = self.state["selected_session"] is not None
         has_video = self.state["video"] is not None
+        has_selected_camcorder = self.state["selected_camera"] is not None
+        has_selected_unlinked_video = self.state["selected_unlinked_video"] is not None
 
         has_frame_range = bool(self.state["has_frame_range"])
         has_unsaved_changes = bool(self.state["has_changes"])
@@ -1103,6 +1151,7 @@ class MainWindow(QMainWindow):
 
         # Update menus
 
+        self.inst_groups_menu.setEnabled(has_selected_instance)
         self.track_menu.setEnabled(has_selected_instance)
         self.delete_tracks_menu.setEnabled(has_tracks)
         self._menu_actions["clear selection"].setEnabled(has_selected_instance)
@@ -1134,9 +1183,16 @@ class MainWindow(QMainWindow):
         self._buttons["show video"].setEnabled(has_selected_video)
         self._buttons["remove video"].setEnabled(has_video)
         self._buttons["delete instance"].setEnabled(has_selected_instance)
+        self._buttons["unlink video"].setEnabled(has_selected_camcorder)
         self.suggestions_dock.suggestions_form_widget.buttons[
             "generate_button"
         ].setEnabled(has_videos)
+        self._buttons["remove session"].setEnabled(has_selected_session)
+        self._buttons["link video"].setEnabled(
+            has_selected_unlinked_video
+            and has_selected_camcorder
+            and has_selected_session
+        )
 
         # Update overlays
         self.overlays["track_labels"].visible = (
@@ -1162,6 +1218,10 @@ class MainWindow(QMainWindow):
         ):
             self.plotFrame()
 
+        if _has_topic([UpdateTopic.sessions]):
+            self.sessions_dock.sessions_table.model().items = self.labels.sessions
+            self.labels._cache.update()
+
         if _has_topic(
             [
                 UpdateTopic.frame,
@@ -1179,6 +1239,10 @@ class MainWindow(QMainWindow):
 
         if _has_topic([UpdateTopic.video]):
             self.videos_dock.table.model().items = self.labels.videos
+            self.labels._cache.update()
+            self.sessions_dock.unlinked_videos_table.model().items = (
+                self.labels._cache._linkage_of_videos["unlinked"]
+            )
 
         if _has_topic([UpdateTopic.skeleton]):
             self.skeleton_dock.nodes_table.model().items = self.state["skeleton"]
@@ -1197,6 +1261,7 @@ class MainWindow(QMainWindow):
 
         if _has_topic([UpdateTopic.project, UpdateTopic.on_frame]):
             self.instances_dock.table.model().items = self.state["labeled_frame"]
+            self._update_instance_group_model()
 
         if _has_topic([UpdateTopic.suggestions]):
             self.suggestions_dock.table.model().items = self.labels.suggestions
@@ -1221,6 +1286,38 @@ class MainWindow(QMainWindow):
 
         if _has_topic([UpdateTopic.frame, UpdateTopic.project_instances]):
             self.state["last_interacted_frame"] = self.state["labeled_frame"]
+            self._update_sessions_menu()
+
+        if _has_topic([UpdateTopic.sessions]):
+            self.update_cameras_model()
+            self.update_unlinked_videos_model()
+            self._update_sessions_menu()
+            self._update_instance_group_model()
+
+    def update_unlinked_videos_model(self):
+        """Update the unlinked videos model with the selected session."""
+        self.sessions_dock.unlinked_videos_table.model().items = (
+            self.labels._cache._linkage_of_videos["unlinked"]
+        )
+
+    def _update_instance_group_model(self):
+        """Update the instance group model with the `InstanceGroup`s in current frame."""
+
+        session = self.state["session"]
+        if session is not None:
+            frame_idx: int = self.state["frame_idx"]
+            frame_group = session.frame_groups.get(frame_idx, None)
+            if frame_group is not None:
+                self.instance_groups_dock.table.model().items = (
+                    frame_group.instance_groups
+                )
+                return
+
+        self.instance_groups_dock.table.model().items = []
+
+    def update_cameras_model(self):
+        """Update the cameras model with the selected session."""
+        self.sessions_dock.camera_table.model().items = self.state["selected_session"]
 
     def plotFrame(self, *args, **kwargs):
         """Plots (or replots) current frame."""
@@ -1241,7 +1338,8 @@ class MainWindow(QMainWindow):
         # Replot connected views for multi-camera projects
         # TODO(LM): Use context.state["session"] in command instead (when implemented)
         session = self.labels.get_session(video)
-        self.commands.triangulateSession(session=session)
+        if self.state.get("auto_triangulate", False):
+            self.commands.triangulateSession(session=session)
 
     def _after_plot_change(self, player, frame_idx, selected_inst):
         """Called each time a new frame is drawn."""
@@ -1333,6 +1431,11 @@ class MainWindow(QMainWindow):
             else:
                 self.statusBar().setStyleSheet("color: black")
 
+            if self.state["session"] is not None and current_video is not None:
+                camera = self.state["session"].get_camera(video=self.state["video"])
+                if camera is not None:
+                    message += f"{spacer}Camera: {camera.name}"
+
         self.statusBar().showMessage(message)
 
     def resetPrefs(self):
@@ -1362,6 +1465,51 @@ class MainWindow(QMainWindow):
             )
         self.track_menu.addAction(
             "New Track", self.commands.addTrack, Qt.CTRL + Qt.Key_0
+        )
+
+    def _update_sessions_menu(self):
+        """Update the instance groups menu based on the frame index."""
+
+        # Clear menus before adding more items
+        self.inst_groups_menu.clear()
+        self.inst_groups_delete_menu.clear()
+
+        # Get the session
+        session = self.state.get("session")
+        if session is None:
+            return
+
+        # Get the frame group for the current frame
+        frame_idx = self.state["frame_idx"]
+        frame_group = session.frame_groups.get(frame_idx, None)
+        if frame_group is not None:
+            for inst_group_ind, instance_group in enumerate(
+                frame_group.instance_groups
+            ):
+                # Create shortcut key for first 9 groups
+                key_command = ""
+                if inst_group_ind < 9:
+                    key_command = Qt.SHIFT + Qt.Key_0 + inst_group_ind + 1
+
+                # Update the Set Instance Group menu
+                self.inst_groups_menu.addAction(
+                    instance_group.name,
+                    lambda x=instance_group: self.commands.setInstanceGroup(x),
+                    key_command,
+                )
+
+                # Update the Delete Instance Group menu
+                self.inst_groups_delete_menu.addAction(
+                    instance_group.name,
+                    lambda x=instance_group: self.commands.deleteInstanceGroup(
+                        instance_group=x
+                    ),
+                )
+
+        self.inst_groups_menu.addAction(
+            "New Instance Group",
+            self.commands.addInstanceGroup,
+            Qt.SHIFT + Qt.Key_0,
         )
 
     def _update_seekbar_marks(self):
