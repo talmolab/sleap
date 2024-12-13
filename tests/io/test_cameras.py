@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pytest
+import toml
 
 from sleap.io.cameras import (
     Camcorder,
@@ -1046,3 +1047,46 @@ def test_frame_group(
     value_mask = np.logical_and(~oob_mask_1d_expanded, ~oob_mask)
     assert np.all(frame_group_numpy[oob_value_mask] == oob_value)  # Updated to oob
     assert np.all(frame_group_numpy[value_mask] == value)  # Updated to value
+
+
+def test_cameras_are_not_sorted():
+    """Test that cameras are not sorted in `RecordingSession`.
+
+    Sorting will invalidate the correspondence between camera index and video index when
+    re-opening project.
+
+    [cam_0]
+    name = "back"
+    size = [ 1280, 1024,]
+    matrix = [ [ 762.513822135494, 0.0, 639.5,], [ 0.0, 762.513822135494, 511.5,], [ 0.0, 0.0, 1.0,],]
+    distortions = [ -0.2868458380166852, 0.0, 0.0, 0.0, 0.0,]
+    rotation = [ 0.3571857188780474, 0.8879473292757126, 1.6832001677006176,]
+    translation = [ -555.4577842902744, -294.43494957092884, -190.82196458369515,]
+    """
+
+    # Make a calibration file with more than 10 cameras
+    num_cameras = 20
+    calibration_dict = {}
+    for camera_idx in range(num_cameras):
+        cam_name = f"cam_{camera_idx}"
+        calibration_dict[cam_name] = {
+            "name": cam_name,
+            "size": (1024, 1024),
+            "matrix": np.eye(3).tolist(),
+            "distortions": [0, 0, 0, 0, 0],
+            "rotation": [0, 0, 0],
+            "translation": [10 * camera_idx, 0, 0],
+        }
+
+    # Save the dict to a toml file
+    calibration_file = "calibration.toml"
+    with open(calibration_file, "w") as f:
+        toml.dump(calibration_dict, f)
+
+    # Load the calibration file
+    camera_cluster = CameraCluster.load(calibration_file)
+    assert len(camera_cluster.cameras) == num_cameras
+
+    # Ensure that cameras are still in correct order
+    for camera_idx, camera in enumerate(camera_cluster.cameras):
+        assert camera.name == f"cam_{camera_idx}"
