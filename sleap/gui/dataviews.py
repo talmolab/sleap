@@ -403,6 +403,11 @@ class GenericTableView(QtWidgets.QTableView):
         super().mousePressEvent(event)
 
     def show_context_menu(self, event):
+        """Show context menu for VideosTableView.
+
+        Args:
+            event (QMouseEvent): The mouse event.
+        """
         menu = QtWidgets.QMenu(self)
 
         # Add actions to the menu
@@ -447,6 +452,7 @@ class VideosTableModel(GenericTableModel):
         self.update_properties()
 
     def update_properties(self):
+        """Update properties based on show_video_name attribute."""
         if self.show_video_name:
             self.properties = (
                 "filename",
@@ -460,6 +466,7 @@ class VideosTableModel(GenericTableModel):
             self.properties = ("filename", "frames", "height", "width", "channels")
 
     def set_show_video_name(self, show_video_name: bool):
+        """Set whether to show video name in table."""
         if self.show_video_name == show_video_name:
             return
         self.show_video_name = show_video_name
