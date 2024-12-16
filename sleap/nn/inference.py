@@ -727,11 +727,18 @@ class CentroidCropGroundTruth(tf.keras.layers.Layer):
 
     Attributes:
         crop_size: The length of the square box to extract around each centroid.
+        input_scale: Float indicating if the images should be resized before being
+            passed to the model.
     """
 
-    def __init__(self, crop_size: int):
+    def __init__(
+        self,
+        crop_size: int,
+        input_scale: float = 1.0,
+    ):
         super().__init__()
         self.crop_size = crop_size
+        self.input_scale = input_scale
 
     def call(self, example_gt: Dict[str, tf.Tensor]) -> Dict[str, tf.Tensor]:
         """Return the ground truth instance crops.
@@ -758,6 +765,8 @@ class CentroidCropGroundTruth(tf.keras.layers.Layer):
         """
         # Pull out data from example.
         full_imgs = example_gt["image"]
+        if self.input_scale != 1.0:
+            full_imgs = sleap.nn.data.resizing.resize_image(full_imgs, self.input_scale)
         crop_sample_inds = example_gt["centroids"].value_rowids()  # (n_peaks,)
         n_peaks = tf.shape(crop_sample_inds)[0]  # total number of peaks in the batch
         centroid_points = example_gt["centroids"].flat_values  # (n_peaks, 2)
@@ -927,11 +936,12 @@ class InferenceLayer(tf.keras.layers.Layer):
         self.ensure_grayscale = ensure_grayscale
         self.ensure_float = ensure_float
 
-    def preprocess(self, imgs: tf.Tensor) -> tf.Tensor:
+    def preprocess(self, imgs: tf.Tensor, resize_img: bool = True) -> tf.Tensor:
         """Apply all preprocessing operations configured for this layer.
 
         Args:
             imgs: A batch of images as a tensor.
+            resize_img: Bool to indicate if the images should be resized.
 
         Returns:
             The input tensor after applying preprocessing operations. The tensor will
@@ -947,7 +957,7 @@ class InferenceLayer(tf.keras.layers.Layer):
         if self.ensure_float:
             imgs = sleap.nn.data.normalization.ensure_float(imgs)
 
-        if self.input_scale != 1.0:
+        if resize_img and self.input_scale != 1.0:
             imgs = sleap.nn.data.resizing.resize_image(imgs, self.input_scale)
 
         if self.pad_to_stride > 1:
@@ -1954,6 +1964,11 @@ class FindInstancePeaks(InferenceLayer):
             centered instance confidence maps.
         input_scale: Float indicating if the images should be resized before being
             passed to the model.
+        resize_input_image: Bool indicating if the crops should be resized. If
+            `CentroidCropGroundTruth` is used along with `FindInstancePeaks`, then the
+            images are resized in the `CentroidCropGroundTruth` and this is set to `False`.
+            However, the output keypoints are adjusted to the actual scale with the
+            `input_scaling` argument.
         output_stride: Output stride of the model, denoting the scale of the output
             confidence maps relative to the images (after input scaling). This is used
             for adjusting the peak coordinates to the image grid. This will be inferred
@@ -1984,6 +1999,7 @@ class FindInstancePeaks(InferenceLayer):
         self,
         keras_model: tf.keras.Model,
         input_scale: float = 1.0,
+        resize_input_image: bool = True,
         output_stride: Optional[int] = None,
         peak_threshold: float = 0.2,
         refinement: Optional[str] = "local",
@@ -1996,6 +2012,7 @@ class FindInstancePeaks(InferenceLayer):
         super().__init__(
             keras_model=keras_model, input_scale=input_scale, pad_to_stride=1, **kwargs
         )
+        self.resize_input_image = resize_input_image
         self.peak_threshold = peak_threshold
         self.refinement = refinement
         self.integral_patch_size = integral_patch_size
@@ -2093,7 +2110,7 @@ class FindInstancePeaks(InferenceLayer):
                 crop_sample_inds = tf.range(samples, dtype=tf.int32)
 
         # Preprocess inputs (scaling, padding, colorspace, int to float).
-        crops = self.preprocess(crops)
+        crops = self.preprocess(crops, resize_img=self.resize_input_image)
 
         # Network forward pass.
         out = self.keras_model(crops)
@@ -2343,7 +2360,7 @@ class TopDownPredictor(Predictor):
 
         if use_gt_centroid:
             centroid_crop_layer = CentroidCropGroundTruth(
-                crop_size=self.confmap_config.data.instance_cropping.crop_size
+                crop_size=self.confmap_config.data.instance_cropping.crop_size,
             )
         else:
             if use_gt_confmap:
@@ -2375,7 +2392,10 @@ class TopDownPredictor(Predictor):
                 refinement="integral" if self.integral_refinement else "local",
                 integral_patch_size=self.integral_patch_size,
                 return_confmaps=False,
+                resize_input_image=False,
             )
+            if use_gt_centroid:
+                centroid_crop_layer.input_scale = cfg.data.preprocessing.input_scaling
 
         self.inference_model = TopDownInferenceModel(
             centroid_crop=centroid_crop_layer, instance_peaks=instance_peaks_layer
@@ -3831,6 +3851,11 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
             centered instance confidence maps and classification.
         input_scale: Float indicating if the images should be resized before being
             passed to the model.
+        resize_input_image: Bool indicating if the crops should be resized. If
+            `CentroidCropGroundTruth` is used along with `FindInstancePeaks`, then the
+            images are resized in the `CentroidCropGroundTruth` and this is set to `False`.
+            However, the output keypoints are adjusted to the actual scale with the
+            `input_scaling` argument.
         output_stride: Output stride of the model, denoting the scale of the output
             confidence maps relative to the images (after input scaling). This is used
             for adjusting the peak coordinates to the image grid. This will be inferred
@@ -3872,6 +3897,7 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
         self,
         keras_model: tf.keras.Model,
         input_scale: float = 1.0,
+        resize_input_image: bool = True,
         output_stride: Optional[int] = None,
         peak_threshold: float = 0.2,
         refinement: Optional[str] = "local",
@@ -3887,6 +3913,7 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
         super().__init__(
             keras_model=keras_model, input_scale=input_scale, pad_to_stride=1, **kwargs
         )
+        self.resize_input_image = resize_input_image
         self.peak_threshold = peak_threshold
         self.refinement = refinement
         self.integral_patch_size = integral_patch_size
@@ -4004,7 +4031,7 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
                 crop_sample_inds = tf.range(samples, dtype=tf.int32)
 
         # Preprocess inputs (scaling, padding, colorspace, int to float).
-        crops = self.preprocess(crops)
+        crops = self.preprocess(crops, resize_img=self.resize_input_image)
 
         # Network forward pass.
         out = self.keras_model(crops)
@@ -4254,6 +4281,8 @@ class TopDownMultiClassPredictor(Predictor):
             integral_patch_size=self.integral_patch_size,
             return_confmaps=False,
         )
+        if use_gt_centroid:
+            centroid_crop_layer.input_scale = cfg.data.preprocessing.input_scaling
 
         self.inference_model = TopDownMultiClassInferenceModel(
             centroid_crop=centroid_crop_layer, instance_peaks=instance_peaks_layer
