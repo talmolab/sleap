@@ -33,6 +33,7 @@ requirements:
     - conda-forge::attrs ==21.4.0
     - conda-forge::cattrs ==1.1.1
     - conda-forge::h5py ==3.7.0
+    - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::networkx
@@ -54,12 +55,13 @@ requirements:
     - conda-forge::seaborn
     - conda-forge::qudida
     - conda-forge::albumentations
-    - conda-forge::ndx-pose
+    - conda-forge::ndx-pose <0.2.0
     - conda-forge::importlib-metadata ==4.11.4
   run:
     - conda-forge::python ==3.7.12  # Run into _MAX_WINDOWS_WORKERS not found if <
     - conda-forge::attrs ==21.4.0
     - conda-forge::cattrs ==1.1.1
+    - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
     - conda-forge::cudatoolkit ==11.3.1
     - conda-forge::cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
@@ -88,7 +90,7 @@ requirements:
     - conda-forge::tensorflow-hub <0.14.0  # Causes pynwb conflicts on linux GH-1446
     - conda-forge::qudida
     - conda-forge::albumentations
-    - conda-forge::ndx-pose
+    - conda-forge::ndx-pose <0.2.0
     - conda-forge::importlib-metadata ==4.11.4
 
 # This no longer works so we have moved it to the build workflow

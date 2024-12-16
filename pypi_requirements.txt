@@ -6,6 +6,8 @@
 # These are also distributed through conda and not pip installed when using conda.
 attrs>=21.2.0,<=21.4.0
 cattrs==1.1.1
+imageio
+imageio-ffmpeg
 # certifi>=2017.4.17,<=2021.10.8
 jsmin
 jsonpickle==1.2
@@ -35,7 +37,7 @@ tensorflow>=2.6.3,<2.9; platform_machine != 'arm64'
 # tensorflow ==2.7.4; platform_machine != 'arm64'
 tensorflow-hub<=0.14.0
 albumentations
-ndx-pose
+ndx-pose<0.2.0
 # These dependencies are untested since we do not offer a wheel for apple silicon atm.
 tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
 tensorflow-metal==0.5.0; sys_platform == 'darwin' and platform_machine == 'arm64'

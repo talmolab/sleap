@@ -1,17 +1,17 @@
 # Run tests using built wheels.
-name: Build CI (no upload)
+name: Build PyPI CI (no upload)
 
 # Run when changes to pip wheel
 on:
   push:
     paths:
-      - 'setup.py'
-      - 'requirements.txt'
-      - 'dev_requirements.txt'
-      - 'jupyter_requirements.txt'
-      - 'pypi_requirements.txt'
-      - 'environment_build.yml'
-      - '.github/workflows/build_ci.yml'
+      - "setup.py"
+      - "requirements.txt"
+      - "dev_requirements.txt"
+      - "jupyter_requirements.txt"
+      - "pypi_requirements.txt"
+      - "environment_build.yml"
+      - ".github/workflows/build_pypi_ci.yml"
 
 jobs:
   build:
@@ -54,7 +54,7 @@ jobs:
         shell: bash -l {0}
         run: |
           python setup.py bdist_wheel
-      
+
       # Upload artifact "tests" can use it
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v4
@@ -66,7 +66,7 @@ jobs:
   tests:
     name: Run tests using wheel (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    needs: build  # Ensure the build job has completed before starting this job.
+    needs: build # Ensure the build job has completed before starting this job.
     strategy:
       fail-fast: false
       matrix:
@@ -103,12 +103,12 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-      
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.pyver }}
-      
+
       # Download wheel
       - name: Download wheel artifact
         uses: actions/download-artifact@v4
@@ -144,7 +144,7 @@ jobs:
         run: |
           which python
           pip freeze
-        
+
       # Install and test the wheel
       - name: Test the built wheel
         run: |

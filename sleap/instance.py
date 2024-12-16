@@ -1049,7 +1049,9 @@ class PredictedInstance(Instance):
         return self.points_and_scores_array[:, 2]
 
     @classmethod
-    def from_instance(cls, instance: Instance, score: float) -> "PredictedInstance":
+    def from_instance(
+        cls, instance: Instance, score: float, tracking_score: float = 0.0
+    ) -> "PredictedInstance":
         """Create a `PredictedInstance` from an `Instance`.
 
         The fields are copied in a shallow manner with the exception of points. For each
@@ -1059,6 +1061,7 @@ class PredictedInstance(Instance):
         Args:
             instance: The `Instance` object to shallow copy data from.
             score: The score for this instance.
+            tracking_score: The tracking score for this instance.
 
         Returns:
             A `PredictedInstance` for the given `Instance`.
@@ -1070,6 +1073,7 @@ class PredictedInstance(Instance):
         )
         kw_args["points"] = PredictedPointArray.from_array(instance._points)
         kw_args["score"] = score
+        kw_args["tracking_score"] = tracking_score
         return cls(**kw_args)
 
     @classmethod
@@ -1080,6 +1084,7 @@ class PredictedInstance(Instance):
         instance_score: float,
         skeleton: Skeleton,
         track: Optional[Track] = None,
+        tracking_score: float = 0.0,
     ) -> "PredictedInstance":
         """Create a predicted instance from data arrays.
 
@@ -1094,6 +1099,7 @@ class PredictedInstance(Instance):
             skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the
                 predicted instance.
             track: Optional `sleap.Track` to associate with the instance.
+            tracking_score: Optional float representing the track matching score.
 
         Returns:
             A new `PredictedInstance`.
@@ -1114,6 +1120,7 @@ class PredictedInstance(Instance):
             skeleton=skeleton,
             score=instance_score,
             track=track,
+            tracking_score=tracking_score,
         )
 
     @classmethod
@@ -1124,6 +1131,7 @@ class PredictedInstance(Instance):
         instance_score: float,
         skeleton: Skeleton,
         track: Optional[Track] = None,
+        tracking_score: float = 0.0,
     ) -> "PredictedInstance":
         """Create a predicted instance from data arrays.
 
@@ -1138,12 +1146,18 @@ class PredictedInstance(Instance):
             skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the
                 predicted instance.
             track: Optional `sleap.Track` to associate with the instance.
+            tracking_score: Optional float representing the track matching score.
 
         Returns:
             A new `PredictedInstance`.
         """
         return cls.from_arrays(
-            points, point_confidences, instance_score, skeleton, track=track
+            points,
+            point_confidences,
+            instance_score,
+            skeleton,
+            track=track,
+            tracking_score=tracking_score,
         )
 
     @classmethod
@@ -1154,6 +1168,7 @@ class PredictedInstance(Instance):
         instance_score: float,
         skeleton: Skeleton,
         track: Optional[Track] = None,
+        tracking_score: float = 0.0,
     ) -> "PredictedInstance":
         """Create a predicted instance from data arrays.
 
@@ -1168,12 +1183,18 @@ class PredictedInstance(Instance):
             skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the
                 predicted instance.
             track: Optional `sleap.Track` to associate with the instance.
+            tracking_score: Optional float representing the track matching score.
 
         Returns:
             A new `PredictedInstance`.
         """
         return cls.from_arrays(
-            points, point_confidences, instance_score, skeleton, track=track
+            points,
+            point_confidences,
+            instance_score,
+            skeleton,
+            track=track,
+            tracking_score=tracking_score,
         )
 
 
@@ -1232,36 +1253,37 @@ def make_instance_cattr() -> cattr.Converter:
     def structure_instances_list(x, type):
         inst_list = []
         for inst_data in x:
-            if "score" in inst_data.keys():
-                inst = converter.structure(inst_data, PredictedInstance)
-            else:
-                if (
-                    "from_predicted" in inst_data
-                    and inst_data["from_predicted"] is not None
-                ):
-                    inst_data["from_predicted"] = converter.structure(
-                        inst_data["from_predicted"], PredictedInstance
-                    )
-                inst = converter.structure(inst_data, Instance)
+            inst = structure_instance(inst_data, type)
             inst_list.append(inst)
 
         return inst_list
+
+    def structure_instance(inst_data, type):
+        """Structure hook for Instance and PredictedInstance objects."""
+        from_predicted = None
+
+        if "score" in inst_data.keys():
+            inst = converter.structure(inst_data, PredictedInstance)
+        else:
+            if (
+                "from_predicted" in inst_data
+                and inst_data["from_predicted"] is not None
+            ):
+                from_predicted = converter.structure(
+                    inst_data["from_predicted"], PredictedInstance
+                )
+                # Remove the from_predicted key. We'll add it back afterwards.
+                inst_data["from_predicted"] = None
+
+            # Structure the instance data, then add the from_predicted attribute.
+            inst = converter.structure(inst_data, Instance)
+            inst.from_predicted = from_predicted
+        return inst
 
     converter.register_structure_hook(
         Union[List[Instance], List[PredictedInstance]], structure_instances_list
     )
     converter.register_structure_hook(InstancesList, structure_instances_list)
-
-    # Structure forward reference for PredictedInstance for the Instance.from_predicted
-    # attribute.
-    converter.register_structure_hook_func(
-        lambda t: t.__class__ is ForwardRef,
-        lambda v, t: converter.structure(v, t.__forward_value__),
-    )
-    # converter.register_structure_hook(
-    #     ForwardRef("PredictedInstance"),
-    #     lambda x, _: converter.structure(x, PredictedInstance),
-    # )
 
     # We can register structure hooks for point arrays that do nothing
     # because Instance can have a dict of points passed to it in place of
