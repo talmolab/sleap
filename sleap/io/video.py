@@ -465,6 +465,11 @@ class MediaVideo:
         """See :class:`Video`."""
         return self.test_frame.dtype
 
+    @property
+    def name(self):
+        """Return the name of the video."""
+        return os.path.basename(self.filename)
+
     def reset(self, filename: str = None, grayscale: bool = None, bgr: bool = None):
         """Reloads the video."""
         if filename is not None:
@@ -943,6 +948,11 @@ class SingleImageVideo:
     def dtype(self):
         """See :class:`Video`."""
         return self.cache_.dtype
+
+    @property
+    def name(self):
+        """Name of the video."""
+        return os.path.basename(self.filename)
 
     def reset(
         self,

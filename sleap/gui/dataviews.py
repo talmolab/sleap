@@ -291,6 +291,7 @@ class GenericTableView(QtWidgets.QTableView):
     name_prefix: str = "selected_"
     is_activatable: bool = False
     is_sortable: bool = False
+    show_video_name: bool = False
 
     def __init__(
         self,
@@ -305,12 +306,17 @@ class GenericTableView(QtWidgets.QTableView):
     ):
         super(GenericTableView, self).__init__()
 
+        model.show_video_name = self.show_video_name
+
         self.state = state or GuiState()
         self.row_name = row_name or self.row_name
         self.name_prefix = name_prefix if name_prefix is not None else self.name_prefix
         self.is_sortable = is_sortable or self.is_sortable
         self.is_activatable = is_activatable or self.is_activatable
         self.multiple_selection = multiple_selection
+        self.options = {
+            "Show Video Name": self.show_video_name,
+        }
 
         self.setModel(model)
 
@@ -384,12 +390,84 @@ class GenericTableView(QtWidgets.QTableView):
             return None
         return self.model().original_items[idx.row()]
 
+    def mousePressEvent(self, event) -> None:
+        """Only for right-click on VideosTableView.
+
+        Args:
+            event (QMouseEvent): The mouse event.
+        """
+        if event.button() == QtCore.Qt.RightButton and isinstance(
+            self.model(), VideosTableModel
+        ):
+            self.show_context_menu(event)
+        super().mousePressEvent(event)
+
+    def show_context_menu(self, event):
+        menu = QtWidgets.QMenu(self)
+
+        # Add actions to the menu
+        for option, is_checked in self.options.items():
+            action = QtWidgets.QAction(option, self)
+            action.setCheckable(True)
+            action.setChecked(is_checked)
+            action.triggered.connect(self.create_checked_lambda(option))
+            menu.addAction(action)
+
+        # Show the context menu
+        menu.exec_(event.globalPos())
+
+    def create_checked_lambda(self, option):
+        """Callback for context menu actions.
+
+        Args:
+            option (dict): The option to toggle.
+
+        Returns:
+            function: The callback function.
+        """
+        return lambda checked: self.toggle_option(option, checked)
+
+    def toggle_option(self, option, checked):
+        """Toggle the option in the context menu.
+
+        Args:
+            option (str): The option to toggle.
+            checked (bool): The new value for the option.
+        """
+        self.options[option] = checked
+        model = self.model()
+        if isinstance(model, VideosTableModel):
+            model.set_show_video_name(self.options["Show Video Name"])
+
 
 class VideosTableModel(GenericTableModel):
-    properties = ("filename", "frames", "height", "width", "channels")
+    def __init__(self, show_video_name: bool = False, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.show_video_name = show_video_name
+        self.update_properties()
+
+    def update_properties(self):
+        if self.show_video_name:
+            self.properties = (
+                "filename",
+                "name",
+                "frames",
+                "height",
+                "width",
+                "channels",
+            )
+        else:
+            self.properties = ("filename", "frames", "height", "width", "channels")
+
+    def set_show_video_name(self, show_video_name: bool):
+        if self.show_video_name == show_video_name:
+            return
+        self.show_video_name = show_video_name
+        self.update_properties()
+        self.layoutChanged.emit()
 
     def item_to_data(self, obj, item):
-        return {key: getattr(item, key) for key in self.properties}
+        return {key: getattr(item, key, None) for key in self.properties}
 
 
 class SkeletonNodesTableModel(GenericTableModel):
