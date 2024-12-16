@@ -22,7 +22,7 @@ This will generate the necessary `.pb` file and other information files required
 
 The `exported/model/path` folder will have a structure like the following:
 
-```
+```plaintext
 exported/model/path
 ├── centroid_config.json
 ├── confmap_config.json
@@ -38,9 +38,7 @@ exported/model/path
 
 ### Using Bonsai SLEAP modules
 
-Once you have Bonsai installed with the required packages, you should be able to open the Bonsai application.  
-
-The workflow must have a source module `FileCapture` which can be found in the toolbox search in the workflow editor. Provide the path to the video that was used to train the SLEAP model in the `FileName` field of the module.
+Once you have Bonsai installed with the required packages, you should be able to open the Bonsai application. The workflow must have a source module `FileCapture` which can be found in the toolbox search in the workflow editor. Provide the path to the video that was used to train the SLEAP model in the `FileName` field of the module.
 
 ![Bonsai FileCapture module](../_static/bonsai-filecapture.jpg)
 
@@ -64,7 +62,7 @@ The `PredictPoseIdentities` module will predict the instances with identities. T
 The `PredictSinglePose` module will predict the poses for single instance models. This module also has two fields: the `ModelFileName` field and the `TrainingConfig` field. The `TrainingConfig` field expects the path to the training config JSON file for the single instance model. The `ModelFileName` field expects the path to the `frozen_graph.pb` file in the `exported/model/path` folder.
 
 ### Connecting the modules
-Right click on the `FileCapture` module and select **Create Connection**. Now click on the required SLEAP module to complete the connection. 
+Right-click on the `FileCapture` module and select **Create Connection**. Now click on the required SLEAP module to complete the connection. 
 
 ![Bonsai module connection ](../_static/bonsai-connection.jpg)
 
