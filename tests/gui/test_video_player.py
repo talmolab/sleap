@@ -3,14 +3,13 @@ from sleap import Instance, Skeleton
 from sleap.gui.widgets.video import (
     QtVideoPlayer,
     GraphicsView,
-    QtInstance,
     QtVideoPlayer,
     QtTextWithBackground,
     VisibleBoundingBox,
 )
 
 from qtpy import QtCore, QtWidgets
-from qtpy.QtGui import QColor
+from qtpy.QtGui import QColor, QWheelEvent
 
 
 def test_gui_video(qtbot):
@@ -19,10 +18,6 @@ def test_gui_video(qtbot):
     qtbot.addWidget(vp)
 
     assert vp.close()
-
-    # Click the button 20 times
-    # for i in range(20):
-    #     qtbot.mouseClick(vp.btn, QtCore.Qt.LeftButton)
 
 
 def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
@@ -144,3 +139,40 @@ def test_VisibleBoundingBox(qtbot, centered_pair_labels):
     # Check if bounding box scaled appropriately
     assert inst.box.rect().width() - initial_width == 2 * dx
     assert inst.box.rect().height() - initial_height == 2 * dy
+
+
+def test_wheelEvent(qtbot):
+    """Test the wheelEvent method of the GraphicsView class."""
+    graphics_view = GraphicsView()
+
+    # Create a QWheelEvent
+    position = QtCore.QPointF(100, 100)  # The position of the wheel event
+    global_position = QtCore.QPointF(100, 100)  # The global position of the wheel event
+    pixel_delta = QtCore.QPoint(0, 120)  # The distance in pixels the wheel is rotated
+    angle_delta = QtCore.QPoint(0, 120)  # The distance in degrees the wheel is rotated
+    buttons = QtCore.Qt.NoButton  # No mouse button is pressed
+    modifiers = QtCore.Qt.NoModifier  # No keyboard modifier is pressed
+    phase = QtCore.Qt.ScrollUpdate  # The phase of the scroll event
+    inverted = False  # The scroll direction is not inverted
+    source = (
+        QtCore.Qt.MouseEventNotSynthesized
+    )  # The event is not synthesized from a touch or tablet event
+
+    event = QWheelEvent(
+        position,
+        global_position,
+        pixel_delta,
+        angle_delta,
+        buttons,
+        modifiers,
+        phase,
+        inverted,
+        source,
+    )
+
+    # Call the wheelEvent method
+    print(
+        "Testing GraphicsView.wheelEvent which will result in exit code 127 "
+        "originating from a segmentation fault if it fails."
+    )
+    graphics_view.wheelEvent(event)

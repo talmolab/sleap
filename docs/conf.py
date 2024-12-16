@@ -28,7 +28,7 @@ author = "SLEAP Developers"
 copyright = f"2019–{date.today().year}, Talmo Lab"
 
 # The short X.Y version
-version = "1.4.1a1"
+version = "1.4.1a2"
 
 # Get the sleap version
 # with open("../sleap/version.py") as f:
@@ -36,7 +36,7 @@ version = "1.4.1a1"
 #     version = re.search("\d.+(?=['\"])", version_file).group(0)
 
 # Release should be the full branch name
-release = "v1.4.1a1"
+release = "v1.4.1a2"
 
 html_title = f"SLEAP ({release})"
 html_short_title = "SLEAP"
@@ -59,6 +59,7 @@ extensions = [
     "sphinx.ext.linkcode",
     "sphinx.ext.napoleon",
     "sphinx_copybutton",
+    "sphinx_tabs.tabs",  # For tabs inside docs
     # https://myst-nb.readthedocs.io/en/latest/
     "myst_nb",
 ]
@@ -84,6 +85,7 @@ exclude_patterns = ["_build", "build", "_templates", "Thumbs.db", ".DS_Store"]
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
 pygments_dark_style = "monokai"
+
 
 # Autosummary linkcode resolution
 # https://www.sphinx-doc.org/en/master/usage/extensions/linkcode.html
@@ -173,6 +175,12 @@ html_logo = "_static/logo.png"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
+# These paths are either relative to html_static_path
+# or fully qualified paths (eg. https://...)
+html_css_files = [
+    'css/tabs.css',
+]
+
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
 #
@@ -219,3 +227,7 @@ shutil.copytree("_static", _docs_static_path)
 
 # https://myst-nb.readthedocs.io/en/latest/use/config-reference.html
 jupyter_execute_notebooks = "off"
+
+# Sphinx-tabs settings
+# https://sphinx-tabs.readthedocs.io/en/latest/
+sphinx_tabs_disable_css_loading = True  # Use the theme's CSS

@@ -12,6 +12,7 @@ dependencies:
     - conda-forge::importlib-metadata <7.1.0
     - conda-forge::cattrs ==1.1.1
     - conda-forge::h5py
+    - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::keras <2.10.0,>=2.9.0rc0  # Required by tensorflow-macos
@@ -38,6 +39,6 @@ dependencies:
     # - conda-forge::tensorflow-hub  # pulls in tensorflow cpu from conda-forge
     - conda-forge::qudida
     - conda-forge::albumentations
-    - conda-forge::ndx-pose
+    - conda-forge::ndx-pose <0.2.0
     - pip:
         - "--editable=.[conda_dev]"

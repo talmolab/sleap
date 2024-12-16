@@ -1,10 +1,74 @@
-import os
 import copy
-
-import jsonpickle
+import os
 import pytest
+import json
 
-from sleap.skeleton import Skeleton
+from networkx.readwrite import json_graph
+from sleap.skeleton import Skeleton, SkeletonDecoder
+from sleap.skeleton import SkeletonEncoder
+
+
+def test_decoded_encoded_Skeleton_from_load_json(fly_legs_skeleton_json):
+    """
+    Test Skeleton decoded from SkeletonEncoder.encode matches the original Skeleton.
+    """
+    # Get the skeleton from the fixture
+    skeleton = Skeleton.load_json(fly_legs_skeleton_json)
+    # Get the graph from the skeleton
+    indexed_node_graph = skeleton._graph
+    graph = json_graph.node_link_data(indexed_node_graph)
+
+    # Encode the graph as a json string to test .encode method
+    encoded_json_str = SkeletonEncoder.encode(graph)
+
+    # Get the skeleton from the encoded json string
+    decoded_skeleton = Skeleton.from_json(encoded_json_str)
+
+    # Check that the decoded skeleton is the same as the original skeleton
+    assert skeleton.matches(decoded_skeleton)
+
+
+@pytest.mark.parametrize(
+    "skeleton_fixture_name", ["flies13_skeleton", "skeleton", "stickman"]
+)
+def test_decoded_encoded_Skeleton(skeleton_fixture_name, request):
+    """
+    Test Skeleton decoded from SkeletonEncoder.encode matches the original Skeleton.
+    """
+    # Use request.getfixturevalue to get the actual fixture value by name
+    skeleton = request.getfixturevalue(skeleton_fixture_name)
+
+    # Get the graph from the skeleton
+    indexed_node_graph = skeleton._graph
+    graph = json_graph.node_link_data(indexed_node_graph)
+
+    # Encode the graph as a json string to test .encode method
+    encoded_json_str = SkeletonEncoder.encode(graph)
+
+    # Assert that the encoded json has keys in sorted order (backwards compatibility)
+    encoded_dict = json.loads(encoded_json_str)
+    sorted_keys = sorted(encoded_dict.keys())
+    assert list(encoded_dict.keys()) == sorted_keys
+    for key, value in encoded_dict.items():
+        if isinstance(value, dict):
+            assert list(value.keys()) == sorted(value.keys())
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    assert list(item.keys()) == sorted(item.keys())
+
+    # Get the skeleton from the encoded json string
+    decoded_skeleton = Skeleton.from_json(encoded_json_str)
+
+    # Check that the decoded skeleton is the same as the original skeleton
+    assert skeleton.matches(decoded_skeleton)
+
+    # Now make everything into a JSON string
+    skeleton_json_str = skeleton.to_json()
+    decoded_skeleton_json_str = decoded_skeleton.to_json()
+
+    # Check that the JSON strings are the same
+    assert json.loads(skeleton_json_str) == json.loads(decoded_skeleton_json_str)
 
 
 def test_add_dupe_node(skeleton):
@@ -194,9 +258,9 @@ def test_json(skeleton: Skeleton, tmpdir):
     )
     assert skeleton.is_template == False
     json_str = skeleton.to_json()
-    json_dict = jsonpickle.decode(json_str)
+    json_dict = SkeletonDecoder.decode(json_str)
     json_dict_keys = list(json_dict.keys())
-    assert "nx_graph" not in json_dict_keys
+    assert "nx_graph" in json_dict_keys  # SkeletonDecoder adds this key
     assert "preview_image" not in json_dict_keys
     assert "description" not in json_dict_keys
 
@@ -208,7 +272,7 @@ def test_json(skeleton: Skeleton, tmpdir):
 
     skeleton._is_template = True
     json_str = skeleton.to_json()
-    json_dict = jsonpickle.decode(json_str)
+    json_dict = SkeletonDecoder.decode(json_str)
     json_dict_keys = list(json_dict.keys())
     assert "nx_graph" in json_dict_keys
     assert "preview_image" in json_dict_keys
@@ -222,6 +286,26 @@ def test_json(skeleton: Skeleton, tmpdir):
 
     # Make sure we get back the same skeleton we saved.
     assert skeleton.matches(skeleton_copy)
+
+
+def test_decode_preview_image(flies13_skeleton: Skeleton):
+    skeleton = flies13_skeleton
+    img_b64 = skeleton.preview_image
+    img = SkeletonDecoder.decode_preview_image(img_b64)
+    assert img.mode == "RGBA"
+
+
+def test_skeleton_decoder(fly_legs_skeleton_json, fly_legs_skeleton_dict_json):
+    """Test that SkeletonDecoder can decode both tuple and dict py/state formats."""
+
+    skeleton_tuple_pystate = Skeleton.load_json(fly_legs_skeleton_json)
+    assert isinstance(skeleton_tuple_pystate, Skeleton)
+
+    skeleton_dict_pystate = Skeleton.load_json(fly_legs_skeleton_dict_json)
+    assert isinstance(skeleton_dict_pystate, Skeleton)
+
+    # These are the same skeleton, so they should match
+    assert skeleton_dict_pystate.matches(skeleton_tuple_pystate)
 
 
 def test_hdf5(skeleton, stickman, tmpdir):
