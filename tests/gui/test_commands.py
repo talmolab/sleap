@@ -863,14 +863,13 @@ def test_DeleteFrameLimitPredictions(
     context.state["video"] = centered_pair_vid
 
     # Set-up params for the command
-    params = {"frame_idx_threshold": 900}
+    params = {"min_frame_idx": 900, "max_frame_idx": 1000}
 
-    expected_instances = 423
-    predicted_instances = DeleteFrameLimitPredictions.get_frame_instance_list(
+    instances_to_delete = DeleteFrameLimitPredictions.get_frame_instance_list(
         context, params
     )
 
-    assert len(predicted_instances) == expected_instances
+    assert len(instances_to_delete) == 2070
 
 
 @pytest.mark.parametrize("export_extension", [".json.zip", ".slp"])
