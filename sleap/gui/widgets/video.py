@@ -2275,7 +2275,7 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
                 self.parent.nodes[node_key].setPos(new_x, new_y)
 
             # Update the instance
-            self.parent.updatePoints(complete=True, user_change=True)
+            self.parent.updatePoints(complete=False, user_change=True)
             self.resizing = None
 
 
