@@ -656,17 +656,18 @@ class MainWindow(QMainWindow):
             key="edge style",
         )
 
+        # XXX
         add_submenu_choices(
             menu=viewMenu,
             title="Node Marker Size",
-            options=(1, 2, 4, 6, 8, 12),
+            options=prefs["node marker sizes"],
             key="marker size",
         )
 
         add_submenu_choices(
             menu=viewMenu,
             title="Node Label Size",
-            options=(6, 12, 18, 24, 36),
+            options=prefs["node label sizes"],
             key="node label size",
         )
 
