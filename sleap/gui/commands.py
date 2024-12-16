@@ -49,6 +49,7 @@ from sleap.gui.dialogs.importvideos import ImportVideos
 from sleap.gui.dialogs.merge import MergeDialog, ReplaceSkeletonTableDialog
 from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
+from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
@@ -2484,28 +2485,25 @@ class DeleteFrameLimitPredictions(InstanceDeleteCommand):
         Returns:
             List of instances to be deleted.
         """
-        predicted_instances = []
+        instances = []
         # Select the instances to be deleted
         for lf in context.labels.labeled_frames:
-            if lf.frame_idx >= params["frame_idx_threshold"]:
-                predicted_instances.extend(
-                    [(lf, inst) for inst in lf.predicted_instances]
-                )
-        return predicted_instances
+            if lf.frame_idx < (params["min_frame_idx"] - 1) or lf.frame_idx > (
+                params["max_frame_idx"] - 1
+            ):
+                instances.extend([(lf, inst) for inst in lf.instances])
+        return instances
 
     @classmethod
     def ask(cls, context: CommandContext, params: Dict) -> bool:
         current_video = context.state["video"]
-        frame_idx_thresh, okay = QtWidgets.QInputDialog.getInt(
-            context.app,
-            "Delete Instance beyond Frame Number...",
-            "Frame number after which instances to be deleted:",
-            1,
-            1,
-            len(current_video),
+        dialog = FrameRangeDialog(
+            title="Delete Instances in Frame Range...", max_frame_idx=len(current_video)
         )
-        if okay:
-            params["frame_idx_threshold"] = frame_idx_thresh
+        results = dialog.get_results()
+        if results:
+            params["min_frame_idx"] = results["min_frame_idx"]
+            params["max_frame_idx"] = results["max_frame_idx"]
             return super().ask(context, params)
 
 
