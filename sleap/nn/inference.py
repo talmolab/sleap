@@ -767,6 +767,7 @@ class CentroidCropGroundTruth(tf.keras.layers.Layer):
         full_imgs = example_gt["image"]
         if self.input_scale != 1.0:
             full_imgs = sleap.nn.data.resizing.resize_image(full_imgs, self.input_scale)
+            example_gt["centroids"] *= self.input_scale
         crop_sample_inds = example_gt["centroids"].value_rowids()  # (n_peaks,)
         n_peaks = tf.shape(crop_sample_inds)[0]  # total number of peaks in the batch
         centroid_points = example_gt["centroids"].flat_values  # (n_peaks, 2)
