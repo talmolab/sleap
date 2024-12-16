@@ -1803,7 +1803,7 @@ class QtInstance(QGraphicsObject):
         color = color_manager.get_item_color(self.instance)
 
         self.show_non_visible = show_non_visible
-        self.selectable = not self.predicted or color_manager.color_predicted
+        self.selectable = True
         self.markerRadius = markerRadius
         self.nodeLabelSize = nodeLabelSize
 
