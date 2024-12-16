@@ -1049,7 +1049,9 @@ class PredictedInstance(Instance):
         return self.points_and_scores_array[:, 2]
 
     @classmethod
-    def from_instance(cls, instance: Instance, score: float) -> "PredictedInstance":
+    def from_instance(
+        cls, instance: Instance, score: float, tracking_score: float = 0.0
+    ) -> "PredictedInstance":
         """Create a `PredictedInstance` from an `Instance`.
 
         The fields are copied in a shallow manner with the exception of points. For each
@@ -1059,6 +1061,7 @@ class PredictedInstance(Instance):
         Args:
             instance: The `Instance` object to shallow copy data from.
             score: The score for this instance.
+            tracking_score: The tracking score for this instance.
 
         Returns:
             A `PredictedInstance` for the given `Instance`.
@@ -1070,6 +1073,7 @@ class PredictedInstance(Instance):
         )
         kw_args["points"] = PredictedPointArray.from_array(instance._points)
         kw_args["score"] = score
+        kw_args["tracking_score"] = tracking_score
         return cls(**kw_args)
 
     @classmethod
@@ -1080,6 +1084,7 @@ class PredictedInstance(Instance):
         instance_score: float,
         skeleton: Skeleton,
         track: Optional[Track] = None,
+        tracking_score: float = 0.0,
     ) -> "PredictedInstance":
         """Create a predicted instance from data arrays.
 
@@ -1094,6 +1099,7 @@ class PredictedInstance(Instance):
             skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the
                 predicted instance.
             track: Optional `sleap.Track` to associate with the instance.
+            tracking_score: Optional float representing the track matching score.
 
         Returns:
             A new `PredictedInstance`.
@@ -1114,6 +1120,7 @@ class PredictedInstance(Instance):
             skeleton=skeleton,
             score=instance_score,
             track=track,
+            tracking_score=tracking_score,
         )
 
     @classmethod
@@ -1124,6 +1131,7 @@ class PredictedInstance(Instance):
         instance_score: float,
         skeleton: Skeleton,
         track: Optional[Track] = None,
+        tracking_score: float = 0.0,
     ) -> "PredictedInstance":
         """Create a predicted instance from data arrays.
 
@@ -1138,12 +1146,18 @@ class PredictedInstance(Instance):
             skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the
                 predicted instance.
             track: Optional `sleap.Track` to associate with the instance.
+            tracking_score: Optional float representing the track matching score.
 
         Returns:
             A new `PredictedInstance`.
         """
         return cls.from_arrays(
-            points, point_confidences, instance_score, skeleton, track=track
+            points,
+            point_confidences,
+            instance_score,
+            skeleton,
+            track=track,
+            tracking_score=tracking_score,
         )
 
     @classmethod
@@ -1154,6 +1168,7 @@ class PredictedInstance(Instance):
         instance_score: float,
         skeleton: Skeleton,
         track: Optional[Track] = None,
+        tracking_score: float = 0.0,
     ) -> "PredictedInstance":
         """Create a predicted instance from data arrays.
 
@@ -1168,12 +1183,18 @@ class PredictedInstance(Instance):
             skeleton: A sleap.Skeleton instance with n_nodes nodes to associate with the
                 predicted instance.
             track: Optional `sleap.Track` to associate with the instance.
+            tracking_score: Optional float representing the track matching score.
 
         Returns:
             A new `PredictedInstance`.
         """
         return cls.from_arrays(
-            points, point_confidences, instance_score, skeleton, track=track
+            points,
+            point_confidences,
+            instance_score,
+            skeleton,
+            track=track,
+            tracking_score=tracking_score,
         )
 
 
