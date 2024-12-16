@@ -508,7 +508,7 @@ def setup_visualization(
     callbacks = []
 
     try:
-        matplotlib.use("Qt5Agg")
+        matplotlib.use("QtAgg")
     except ImportError:
         print(
             "Unable to use Qt backend for matplotlib. "
@@ -946,7 +946,7 @@ class Trainer(ABC):
         if self.config.outputs.save_outputs:
             if (
                 self.config.outputs.save_visualizations
-                and self.config.outputs.delete_viz_images
+                and not self.config.outputs.keep_viz_images
             ):
                 self.cleanup()
 
@@ -997,7 +997,7 @@ class Trainer(ABC):
 
     def package(self):
         """Package model folder into a zip file for portability."""
-        if self.config.outputs.delete_viz_images:
+        if not self.config.outputs.keep_viz_images:
             self.cleanup()
         logger.info(f"Packaging results to: {self.run_path}.zip")
         shutil.make_archive(
@@ -1865,6 +1865,14 @@ def create_trainer_using_cli(args: Optional[List] = None):
         ),
     )
     parser.add_argument(
+        "--keep_viz",
+        action="store_true",
+        help=(
+            "Keep prediction visualization images in the run folder after training when "
+            "--save_viz is enabled."
+        ),
+    )
+    parser.add_argument(
         "--zmq",
         action="store_true",
         help=(
@@ -1949,6 +1957,7 @@ def create_trainer_using_cli(args: Optional[List] = None):
     if args.suffix != "":
         job_config.outputs.run_name_suffix = args.suffix
     job_config.outputs.save_visualizations |= args.save_viz
+    job_config.outputs.keep_viz_images = args.keep_viz
     if args.labels_path == "":
         args.labels_path = None
     args.video_paths = args.video_paths.split(",")

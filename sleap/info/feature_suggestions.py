@@ -644,7 +644,7 @@ class ParallelFeaturePipeline(object):
     def get(self, video_idx):
         """Apply pipeline to single video by idx. Can be called in process."""
         video_dict = self.videos_as_dicts[video_idx]
-        video = cattr.structure(video_dict, Video)
+        video = Video.cattr().structure(video_dict, Video)
         group_offset = video_idx * self.pipeline.n_clusters
 
         # t0 = time()
