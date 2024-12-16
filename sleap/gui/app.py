@@ -873,6 +873,8 @@ class MainWindow(QMainWindow):
             "Point Displacement (max)",
             "Primary Point Displacement (sum)",
             "Primary Point Displacement (max)",
+            "Tracking Score (mean)",
+            "Tracking Score (min)",
             "Instance Score (sum)",
             "Instance Score (min)",
             "Point Score (sum)",
@@ -1406,6 +1408,8 @@ class MainWindow(QMainWindow):
             "Point Displacement (max)": data_obj.get_point_displacement_series,
             "Primary Point Displacement (sum)": data_obj.get_primary_point_displacement_series,
             "Primary Point Displacement (max)": data_obj.get_primary_point_displacement_series,
+            "Tracking Score (mean)": data_obj.get_tracking_score_series,
+            "Tracking Score (min)": data_obj.get_tracking_score_series,
             "Instance Score (sum)": data_obj.get_instance_score_series,
             "Instance Score (min)": data_obj.get_instance_score_series,
             "Point Score (sum)": data_obj.get_point_score_series,
@@ -1419,7 +1423,7 @@ class MainWindow(QMainWindow):
         else:
             if graph_name in header_functions:
                 kwargs = dict(video=self.state["video"])
-                reduction_name = re.search("\\((sum|max|min)\\)", graph_name)
+                reduction_name = re.search("\\((sum|max|min|mean)\\)", graph_name)
                 if reduction_name is not None:
                     kwargs["reduction"] = reduction_name.group(1)
                 series = header_functions[graph_name](**kwargs)
