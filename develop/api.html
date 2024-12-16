@@ -1,12 +1,13 @@
 
+
 <!DOCTYPE html>
 
 
-<html lang="en" data-content_root="./" >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>Developer API &#8212; SLEAP (v1.4.1a2)</title>
   
@@ -14,40 +15,42 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=a3416100" />
-    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
-    <link rel="stylesheet" type="text/css" href="_static/css/tabs.css?v=cbdb2f4f" />
+    <link rel="stylesheet" type="text/css" href="_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
-  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script src="_static/documentation_options.js?v=9f48819e"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
-    <script src="_static/copybutton.js?v=f281be69"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/clipboard.min.js"></script>
+    <script src="_static/copybutton.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api';</script>
     <link rel="canonical" href="/develop/api.html" />
-    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Datasets" href="datasets.html" />
@@ -61,23 +64,19 @@
 
   
   
-  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
-  
-  <div id="pst-scroll-pixel-helper"></div>
-  
-  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
-
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   
   <input type="checkbox"
           class="sidebar-toggle"
-          id="pst-primary-sidebar-checkbox"/>
-  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
   
   <input type="checkbox"
           class="sidebar-toggle"
-          id="pst-secondary-sidebar-checkbox"/>
-  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
@@ -99,20 +98,12 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
-
-  <div class="pst-async-banner-revealer d-none">
-  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
-</div>
-
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
-    </header>
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
   
-
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
-      
-      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -127,13 +118,9 @@
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
         <div class="sidebar-primary-item">
-
-  
-    
   
 
 <a class="navbar-brand logo" href="index.html">
-  
   
   
   
@@ -143,29 +130,18 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="SLEAP (v1.4.1a2) - Home"/>
-    <script>document.write(`<img src="_static/logo.png" class="logo__image only-dark" alt="SLEAP (v1.4.1a2) - Home"/>`);</script>
+    <img src="_static/logo.png" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="_static/logo.png" class="logo__image only-dark" alt="Logo image"/>`);</script>
   
   
 </a></div>
-        <div class="sidebar-primary-item">
-
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script></div>
-        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="tutorials/tutorial.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/new-project.html">Creating a project</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/initial-labeling.html">Initial Labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/initial-training.html">Training and Inference</a></li>
@@ -174,8 +150,8 @@
 <li class="toctree-l2"><a class="reference internal" href="tutorials/proofreading.html">Tracking instances across frames</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/analysis.html">Export Data For Analysis</a></li>
 </ul>
-</details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="guides/index.html">Guides</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="guides/gui.html">GUI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/cli.html">Command line interfaces</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/troubleshooting-workflows.html">Troubleshooting workflows</a></li>
@@ -186,9 +162,10 @@
 <li class="toctree-l2"><a class="reference internal" href="guides/colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
-</details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="notebooks/index.html">Notebooks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/Training_and_inference_on_an_example_dataset.html">Training and inference on an example dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/Training_and_inference_using_Google_Drive.html">Training and inference on your own data using Google Drive</a></li>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/Model_evaluation.html">Model evaluation</a></li>
@@ -201,10 +178,10 @@
 <li class="toctree-l2"><a class="reference internal" href="notebooks/Interactive_and_resumable_training.html">Interactive and resumable training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/Interactive_and_realtime_inference.html">Interactive and realtime inference</a></li>
 </ul>
-</details></li>
-<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">Developer API</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</li>
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">Developer API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul class="simple">
 </ul>
-</details></li>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="datasets.html">Datasets</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/talmolab/sleap">GitHub</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/talmolab/sleap/releases">Releases</a></li>
@@ -224,7 +201,7 @@
 
       </div>
       
-      <main id="main-content" class="bd-main" role="main">
+      <main id="main-content" class="bd-main">
         
         
 
@@ -233,14 +210,14 @@
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article d-print-none">
+              <div class="bd-header-article">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</button></div>
+</label></div>
       
     </div>
   
@@ -298,22 +275,20 @@
 </div>
 
 
-
 <script>
 document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
   </button>
 `);
 </script>
 
-
 <script>
 document.write(`
-  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
   </button>
 `);
 </script>
@@ -340,17 +315,17 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article">
+                <article class="bd-article" role="main">
                   
   <section id="developer-api">
-<span id="api"></span><h1>Developer API<a class="headerlink" href="#developer-api" title="Link to this heading">#</a></h1>
+<span id="api"></span><h1>Developer API<a class="headerlink" href="#developer-api" title="Permalink to this heading">#</a></h1>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
 <p>Head to our <a class="reference external" href="https://github.com/talmolab/sleap/discussions">discussions page</a> to get help from the SLEAP community.</p>
 </div>
 <div class="toctree-wrapper compound">
 </div>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.instance.html#module-sleap.instance" title="sleap.instance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.instance</span></code></a></p></td>
 <td><p>Data structures for all labeled data contained with a SLEAP project.</p></td>
@@ -384,78 +359,6 @@ document.write(`
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.info.write_tracking_h5.html#module-sleap.info.write_tracking_h5" title="sleap.info.write_tracking_h5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.info.write_tracking_h5</span></code></a></p></td>
 <td><p>Generate an HDF5 or CSV file with track occupancy and point location data.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.convert.html#module-sleap.io.convert" title="sleap.io.convert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.convert</span></code></a></p></td>
-<td><p>Command line utility for converting between various dataset formats.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.dataset.html#module-sleap.io.dataset" title="sleap.io.dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.dataset</span></code></a></p></td>
-<td><p>A SLEAP dataset collects labeled video frames, together with required metadata.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.legacy.html#module-sleap.io.legacy" title="sleap.io.legacy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.legacy</span></code></a></p></td>
-<td><p>Module for legacy LEAP dataset.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.pathutils.html#module-sleap.io.pathutils" title="sleap.io.pathutils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.pathutils</span></code></a></p></td>
-<td><p>Utilities for working with file paths.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.video.html#module-sleap.io.video" title="sleap.io.video"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.video</span></code></a></p></td>
-<td><p>Video reading and writing interfaces for different formats.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.videowriter.html#module-sleap.io.videowriter" title="sleap.io.videowriter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.videowriter</span></code></a></p></td>
-<td><p>Module for writing avi/mp4 videos.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.visuals.html#module-sleap.io.visuals" title="sleap.io.visuals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.visuals</span></code></a></p></td>
-<td><p>Module for generating videos with visual annotation overlays.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.adaptor.html#module-sleap.io.format.adaptor" title="sleap.io.format.adaptor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.adaptor</span></code></a></p></td>
-<td><p>File format adaptor base class.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.alphatracker.html#module-sleap.io.format.alphatracker" title="sleap.io.format.alphatracker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.alphatracker</span></code></a></p></td>
-<td><p>Adaptor for reading AlphaTracker datasets.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.coco.html#module-sleap.io.format.coco" title="sleap.io.format.coco"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.coco</span></code></a></p></td>
-<td><p>Adaptor for reading COCO keypoint detection datasets.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.csv.html#module-sleap.io.format.csv" title="sleap.io.format.csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.csv</span></code></a></p></td>
-<td><p>Adaptor for writing SLEAP analysis as csv.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.deeplabcut.html#module-sleap.io.format.deeplabcut" title="sleap.io.format.deeplabcut"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.deeplabcut</span></code></a></p></td>
-<td><p>Adaptor for reading DeepLabCut datasets.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.deepposekit.html#module-sleap.io.format.deepposekit" title="sleap.io.format.deepposekit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.deepposekit</span></code></a></p></td>
-<td><p>Adaptor for reading DeepPoseKit datasets (HDF5).</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.dispatch.html#module-sleap.io.format.dispatch" title="sleap.io.format.dispatch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.dispatch</span></code></a></p></td>
-<td><p>Dispatcher for dynamically supporting multiple dataset file formats.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.filehandle.html#module-sleap.io.format.filehandle" title="sleap.io.format.filehandle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.filehandle</span></code></a></p></td>
-<td><p>File object which can be passed to adaptors.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.genericjson.html#module-sleap.io.format.genericjson" title="sleap.io.format.genericjson"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.genericjson</span></code></a></p></td>
-<td><p>Adaptor for reading and writing any generic JSON file.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.hdf5.html#module-sleap.io.format.hdf5" title="sleap.io.format.hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.hdf5</span></code></a></p></td>
-<td><p>Adaptor for reading/writing SLEAP datasets as HDF5 (including <code class="xref py py-obj docutils literal notranslate"><span class="pre">slp</span></code>).</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.labels_json.html#module-sleap.io.format.labels_json" title="sleap.io.format.labels_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.labels_json</span></code></a></p></td>
-<td><p>Adaptor for reading/writing old, JSON dataset format (kind of deprecated).</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.leap_matlab.html#module-sleap.io.format.leap_matlab" title="sleap.io.format.leap_matlab"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.leap_matlab</span></code></a></p></td>
-<td><p>Adaptor to read (not write) LEAP MATLAB data files.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.main.html#module-sleap.io.format.main" title="sleap.io.format.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.main</span></code></a></p></td>
-<td><p>Read/write for multiple dataset formats.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.ndx_pose.html#module-sleap.io.format.ndx_pose" title="sleap.io.format.ndx_pose"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.ndx_pose</span></code></a></p></td>
-<td><p>Adaptor to read and write ndx-pose files.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.nix.html#module-sleap.io.format.nix" title="sleap.io.format.nix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.nix</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.sleap_analysis.html#module-sleap.io.format.sleap_analysis" title="sleap.io.format.sleap_analysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.sleap_analysis</span></code></a></p></td>
-<td><p>Adaptor to read and write analysis HDF5 files.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.text.html#module-sleap.io.format.text" title="sleap.io.format.text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.text</span></code></a></p></td>
-<td><p>Adaptor for reading and writing any generic text file.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.callbacks.html#module-sleap.nn.callbacks" title="sleap.nn.callbacks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.callbacks</span></code></a></p></td>
 <td><p>Training-related tf.keras callbacks.</p></td>
@@ -550,6 +453,24 @@ document.write(`
 <tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.data.utils.html#module-sleap.nn.data.utils" title="sleap.nn.data.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.data.utils</span></code></a></p></td>
 <td><p>Miscellaneous utility functions for data processing.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.data.html#module-sleap.nn.config.data" title="sleap.nn.config.data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.data</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.model.html#module-sleap.nn.config.model" title="sleap.nn.config.model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.model</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.optimization.html#module-sleap.nn.config.optimization" title="sleap.nn.config.optimization"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.optimization</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.outputs.html#module-sleap.nn.config.outputs" title="sleap.nn.config.outputs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.outputs</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.training_job.html#module-sleap.nn.config.training_job" title="sleap.nn.config.training_job"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.training_job</span></code></a></p></td>
+<td><p>Serializable configuration classes for specifying all training job parameters.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.utils.html#module-sleap.nn.config.utils" title="sleap.nn.config.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.utils</span></code></a></p></td>
+<td><p>Utilities for config building and validation.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.architectures.common.html#module-sleap.nn.architectures.common" title="sleap.nn.architectures.common"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.common</span></code></a></p></td>
 <td><p>Common utilities for architecture and model building.</p></td>
 </tr>
@@ -577,33 +498,86 @@ document.write(`
 <tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.architectures.upsampling.html#module-sleap.nn.architectures.upsampling" title="sleap.nn.architectures.upsampling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.architectures.upsampling</span></code></a></p></td>
 <td><p>This module defines common upsampling layer stack configurations.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.data.html#module-sleap.nn.config.data" title="sleap.nn.config.data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.data</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.model.html#module-sleap.nn.config.model" title="sleap.nn.config.model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.model</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.optimization.html#module-sleap.nn.config.optimization" title="sleap.nn.config.optimization"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.optimization</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.outputs.html#module-sleap.nn.config.outputs" title="sleap.nn.config.outputs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.outputs</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.config.training_job.html#module-sleap.nn.config.training_job" title="sleap.nn.config.training_job"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.training_job</span></code></a></p></td>
-<td><p>Serializable configuration classes for specifying all training job parameters.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.config.utils.html#module-sleap.nn.config.utils" title="sleap.nn.config.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.config.utils</span></code></a></p></td>
-<td><p>Utilities for config building and validation.</p></td>
-</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/sleap.nn.tracker.components.html#module-sleap.nn.tracker.components" title="sleap.nn.tracker.components"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.tracker.components</span></code></a></p></td>
 <td><p>Functions/classes used by multiple trackers.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.nn.tracker.kalman.html#module-sleap.nn.tracker.kalman" title="sleap.nn.tracker.kalman"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.nn.tracker.kalman</span></code></a></p></td>
 <td><p>Module to use Kalman filters for tracking instance identities.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.convert.html#module-sleap.io.convert" title="sleap.io.convert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.convert</span></code></a></p></td>
+<td><p>Command line utility for converting between various dataset formats.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.dataset.html#module-sleap.io.dataset" title="sleap.io.dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.dataset</span></code></a></p></td>
+<td><p>A SLEAP dataset collects labeled video frames, together with required metadata.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.legacy.html#module-sleap.io.legacy" title="sleap.io.legacy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.legacy</span></code></a></p></td>
+<td><p>Module for legacy LEAP dataset.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.pathutils.html#module-sleap.io.pathutils" title="sleap.io.pathutils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.pathutils</span></code></a></p></td>
+<td><p>Utilities for working with file paths.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.video.html#module-sleap.io.video" title="sleap.io.video"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.video</span></code></a></p></td>
+<td><p>Video reading and writing interfaces for different formats.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.videowriter.html#module-sleap.io.videowriter" title="sleap.io.videowriter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.videowriter</span></code></a></p></td>
+<td><p>Module for writing avi/mp4 videos.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.visuals.html#module-sleap.io.visuals" title="sleap.io.visuals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.visuals</span></code></a></p></td>
+<td><p>Module for generating videos with visual annotation overlays.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.adaptor.html#module-sleap.io.format.adaptor" title="sleap.io.format.adaptor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.adaptor</span></code></a></p></td>
+<td><p>File format adaptor base class.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.alphatracker.html#module-sleap.io.format.alphatracker" title="sleap.io.format.alphatracker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.alphatracker</span></code></a></p></td>
+<td><p>Adaptor for reading AlphaTracker datasets.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.coco.html#module-sleap.io.format.coco" title="sleap.io.format.coco"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.coco</span></code></a></p></td>
+<td><p>Adaptor for reading COCO keypoint detection datasets.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.csv.html#module-sleap.io.format.csv" title="sleap.io.format.csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.csv</span></code></a></p></td>
+<td><p>Adaptor for writing SLEAP analysis as csv.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.deeplabcut.html#module-sleap.io.format.deeplabcut" title="sleap.io.format.deeplabcut"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.deeplabcut</span></code></a></p></td>
+<td><p>Adaptor for reading DeepLabCut datasets.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.deepposekit.html#module-sleap.io.format.deepposekit" title="sleap.io.format.deepposekit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.deepposekit</span></code></a></p></td>
+<td><p>Adaptor for reading DeepPoseKit datasets (HDF5).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.dispatch.html#module-sleap.io.format.dispatch" title="sleap.io.format.dispatch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.dispatch</span></code></a></p></td>
+<td><p>Dispatcher for dynamically supporting multiple dataset file formats.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.filehandle.html#module-sleap.io.format.filehandle" title="sleap.io.format.filehandle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.filehandle</span></code></a></p></td>
+<td><p>File object which can be passed to adaptors.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.genericjson.html#module-sleap.io.format.genericjson" title="sleap.io.format.genericjson"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.genericjson</span></code></a></p></td>
+<td><p>Adaptor for reading and writing any generic JSON file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.hdf5.html#module-sleap.io.format.hdf5" title="sleap.io.format.hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.hdf5</span></code></a></p></td>
+<td><p>Adaptor for reading/writing SLEAP datasets as HDF5 (including <code class="xref py py-obj docutils literal notranslate"><span class="pre">slp</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.labels_json.html#module-sleap.io.format.labels_json" title="sleap.io.format.labels_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.labels_json</span></code></a></p></td>
+<td><p>Adaptor for reading/writing old, JSON dataset format (kind of deprecated).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.leap_matlab.html#module-sleap.io.format.leap_matlab" title="sleap.io.format.leap_matlab"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.leap_matlab</span></code></a></p></td>
+<td><p>Adaptor to read (not write) LEAP MATLAB data files.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.main.html#module-sleap.io.format.main" title="sleap.io.format.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.main</span></code></a></p></td>
+<td><p>Read/write for multiple dataset formats.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.ndx_pose.html#module-sleap.io.format.ndx_pose" title="sleap.io.format.ndx_pose"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.ndx_pose</span></code></a></p></td>
+<td><p>Adaptor to read and write ndx-pose files.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.nix.html#module-sleap.io.format.nix" title="sleap.io.format.nix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.nix</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/sleap.io.format.sleap_analysis.html#module-sleap.io.format.sleap_analysis" title="sleap.io.format.sleap_analysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.sleap_analysis</span></code></a></p></td>
+<td><p>Adaptor to read and write analysis HDF5 files.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/sleap.io.format.text.html#module-sleap.io.format.text" title="sleap.io.format.text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.io.format.text</span></code></a></p></td>
+<td><p>Adaptor for reading and writing any generic text file.</p></td>
+</tr>
 </tbody>
 </table>
-</div>
 </section>
 
 
@@ -612,10 +586,11 @@ document.write(`
 
               
               
-              
-              
-                <footer class="prev-next-footer d-print-none">
+                <footer class="bd-footer-article">
                   
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
        href="notebooks/Interactive_and_realtime_inference.html"
@@ -635,7 +610,10 @@ document.write(`
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
+</div></div>
+  
 </div>
+
                 </footer>
               
             </div>
@@ -658,7 +636,6 @@ By SLEAP Developers
   
   <div class="footer-item">
     
-
   <p class="copyright">
     
       © Copyright 2019–2024, Talmo Lab.
@@ -685,8 +662,8 @@ By SLEAP Developers
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <script src="_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
 
   <footer class="bd-footer">
   </footer>

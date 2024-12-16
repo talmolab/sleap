@@ -1,12 +1,13 @@
 
+
 <!DOCTYPE html>
 
 
-<html lang="en" data-content_root="../" >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>sleap.nn.config.outputs &#8212; SLEAP (v1.4.1a2)</title>
   
@@ -14,40 +15,42 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
 
   
-  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css?v=cbdb2f4f" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
-  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script src="../_static/documentation_options.js?v=9f48819e"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
-    <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/sleap.nn.config.outputs';</script>
     <link rel="canonical" href="/develop/api/sleap.nn.config.outputs.html" />
-    <link rel="icon" href="../_static/favicon.ico"/>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -59,23 +62,19 @@
 
   
   
-  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
-  
-  <div id="pst-scroll-pixel-helper"></div>
-  
-  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
-
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   
   <input type="checkbox"
           class="sidebar-toggle"
-          id="pst-primary-sidebar-checkbox"/>
-  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
   
   <input type="checkbox"
           class="sidebar-toggle"
-          id="pst-secondary-sidebar-checkbox"/>
-  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
@@ -97,22 +96,12 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
-
-  <div class="pst-async-banner-revealer d-none">
-  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
-</div>
-
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
-    </header>
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
   
-
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
-      
-      
-      
-        
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -127,13 +116,9 @@
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
         <div class="sidebar-primary-item">
-
-  
-    
   
 
 <a class="navbar-brand logo" href="../index.html">
-  
   
   
   
@@ -143,29 +128,18 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="SLEAP (v1.4.1a2) - Home"/>
-    <script>document.write(`<img src="../_static/logo.png" class="logo__image only-dark" alt="SLEAP (v1.4.1a2) - Home"/>`);</script>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="../_static/logo.png" class="logo__image only-dark" alt="Logo image"/>`);</script>
   
   
 </a></div>
-        <div class="sidebar-primary-item">
-
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script></div>
-        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/tutorial.html">Tutorial</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/new-project.html">Creating a project</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-labeling.html">Initial Labeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/initial-training.html">Training and Inference</a></li>
@@ -174,8 +148,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/proofreading.html">Tracking instances across frames</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/analysis.html">Export Data For Analysis</a></li>
 </ul>
-</details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Guides</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html">Guides</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../guides/gui.html">GUI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/cli.html">Command line interfaces</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/troubleshooting-workflows.html">Troubleshooting workflows</a></li>
@@ -186,9 +160,10 @@
 <li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
-</details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_on_an_example_dataset.html">Training and inference on an example dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Training_and_inference_using_Google_Drive.html">Training and inference on your own data using Google Drive</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Model_evaluation.html">Model evaluation</a></li>
@@ -201,10 +176,10 @@
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Interactive_and_resumable_training.html">Interactive and resumable training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/Interactive_and_realtime_inference.html">Interactive and realtime inference</a></li>
 </ul>
-</details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../api.html">Developer API</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api.html">Developer API</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul class="simple">
 </ul>
-</details></li>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../datasets.html">Datasets</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/talmolab/sleap">GitHub</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/talmolab/sleap/releases">Releases</a></li>
@@ -224,7 +199,7 @@
 
       </div>
       
-      <main id="main-content" class="bd-main" role="main">
+      <main id="main-content" class="bd-main">
         
         
 
@@ -233,14 +208,14 @@
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article d-print-none">
+              <div class="bd-header-article">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</button></div>
+</label></div>
       
     </div>
   
@@ -298,28 +273,26 @@
 </div>
 
 
-
 <script>
 document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
   </button>
 `);
 </script>
 
-
 <script>
 document.write(`
-  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
   </button>
 `);
 </script>
-<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
-</button>
+</label>
 </div></div>
       
     </div>
@@ -390,17 +363,17 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article">
+                <article class="bd-article" role="main">
                   
   <section id="module-sleap.nn.config.outputs">
-<span id="sleap-nn-config-outputs"></span><h1>sleap.nn.config.outputs<a class="headerlink" href="#module-sleap.nn.config.outputs" title="Link to this heading">#</a></h1>
+<span id="sleap-nn-config-outputs"></span><h1>sleap.nn.config.outputs<a class="headerlink" href="#module-sleap.nn.config.outputs" title="Permalink to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.CheckpointingConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.outputs.</span></span><span class="sig-name descname"><span class="pre">CheckpointingConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">every_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latest_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/outputs.py#L6-L37"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.outputs.CheckpointingConfig" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.outputs.</span></span><span class="sig-name descname"><span class="pre">CheckpointingConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">every_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latest_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/outputs.py#L7-L37"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.outputs.CheckpointingConfig" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration of model checkpointing.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.CheckpointingConfig.initial_model">
-<span class="sig-name descname"><span class="pre">initial_model</span></span><a class="headerlink" href="#sleap.nn.config.outputs.CheckpointingConfig.initial_model" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">initial_model</span></span><a class="headerlink" href="#sleap.nn.config.outputs.CheckpointingConfig.initial_model" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, the initial model is saved before any training occurs.
 If the model was not pretrained, these will just be the model with random
 weights. This is mostly useful for comparisons to a random baseline. If
@@ -417,7 +390,7 @@ enabled, the model will be serialized to:</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.CheckpointingConfig.best_model">
-<span class="sig-name descname"><span class="pre">best_model</span></span><a class="headerlink" href="#sleap.nn.config.outputs.CheckpointingConfig.best_model" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">best_model</span></span><a class="headerlink" href="#sleap.nn.config.outputs.CheckpointingConfig.best_model" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, the model will be saved at the end of an epoch if the
 validation loss has improved. If enabled, the model will be serialized to:</p>
 <blockquote>
@@ -432,7 +405,7 @@ validation loss has improved. If enabled, the model will be serialized to:</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.CheckpointingConfig.every_epoch">
-<span class="sig-name descname"><span class="pre">every_epoch</span></span><a class="headerlink" href="#sleap.nn.config.outputs.CheckpointingConfig.every_epoch" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">every_epoch</span></span><a class="headerlink" href="#sleap.nn.config.outputs.CheckpointingConfig.every_epoch" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, the model will be saved at the end of every epoch,
 regardless of whether there was an improvement detected. If enabled, the
 models will be serialized to:</p>
@@ -448,7 +421,7 @@ models will be serialized to:</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.CheckpointingConfig.latest_model">
-<span class="sig-name descname"><span class="pre">latest_model</span></span><a class="headerlink" href="#sleap.nn.config.outputs.CheckpointingConfig.latest_model" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">latest_model</span></span><a class="headerlink" href="#sleap.nn.config.outputs.CheckpointingConfig.latest_model" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, the model will be saved at the end of every epoch,
 regardless of whether there was an improvement detected, but will overwrite
 the previous latest model. If enabled, the model will be serialized to:</p>
@@ -464,7 +437,7 @@ the previous latest model. If enabled, the model will be serialized to:</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.CheckpointingConfig.final_model">
-<span class="sig-name descname"><span class="pre">final_model</span></span><a class="headerlink" href="#sleap.nn.config.outputs.CheckpointingConfig.final_model" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">final_model</span></span><a class="headerlink" href="#sleap.nn.config.outputs.CheckpointingConfig.final_model" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, the model will be saved at the end of training, whether it
 was stopped early or finished all epochs. If enabled, the model will be
 serialized to:</p>
@@ -482,11 +455,11 @@ serialized to:</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.OutputsConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.outputs.</span></span><span class="sig-name descname"><span class="pre">OutputsConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_outputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_name_prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_name_suffix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runs_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'models'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_visualizations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_viz_images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zip_outputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_to_csv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpointing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.outputs.CheckpointingConfig" title="sleap.nn.config.outputs.CheckpointingConfig"><span class="pre">CheckpointingConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensorboard</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.outputs.TensorBoardConfig" title="sleap.nn.config.outputs.TensorBoardConfig"><span class="pre">TensorBoardConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zmq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.outputs.ZMQConfig" title="sleap.nn.config.outputs.ZMQConfig"><span class="pre">ZMQConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/outputs.py#L112-L206"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.outputs.</span></span><span class="sig-name descname"><span class="pre">OutputsConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_outputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_name_prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_name_suffix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runs_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'models'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_visualizations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_viz_images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zip_outputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_to_csv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpointing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.outputs.CheckpointingConfig" title="sleap.nn.config.outputs.CheckpointingConfig"><span class="pre">CheckpointingConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensorboard</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.outputs.TensorBoardConfig" title="sleap.nn.config.outputs.TensorBoardConfig"><span class="pre">TensorBoardConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zmq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#sleap.nn.config.outputs.ZMQConfig" title="sleap.nn.config.outputs.ZMQConfig"><span class="pre">ZMQConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/outputs.py#L113-L206"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration of training outputs.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.OutputsConfig.save_outputs">
-<span class="sig-name descname"><span class="pre">save_outputs</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.save_outputs" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">save_outputs</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.save_outputs" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, file system-based outputs will be saved. If False,
 nothing will be written to disk, which may be useful for interactive
 training where no outputs are desired.</p>
@@ -499,7 +472,7 @@ training where no outputs are desired.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.OutputsConfig.run_name">
-<span class="sig-name descname"><span class="pre">run_name</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.run_name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">run_name</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.run_name" title="Permalink to this definition">#</a></dt>
 <dd><p>Name of the training run. This is the name of the folder that all
 outputs related to the training job are stored. If not specified explicitly,
 this will be automatically generated from the configuration options and the
@@ -509,14 +482,14 @@ runs can end up overwriting each other if <a class="reference internal" href="#s
 <a class="reference internal" href="#sleap.nn.config.outputs.OutputsConfig.run_name_suffix" title="sleap.nn.config.outputs.OutputsConfig.run_name_suffix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_name_suffix</span></code></a> are not specified.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str | None</p>
+<dd class="field-odd"><p>Optional[str]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.OutputsConfig.run_name_prefix">
-<span class="sig-name descname"><span class="pre">run_name_prefix</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.run_name_prefix" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">run_name_prefix</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.run_name_prefix" title="Permalink to this definition">#</a></dt>
 <dd><p>String to prepend to the run name. This is useful to prevent
 multiple runs started at the same exact time to be mapped to the same
 folder, or when a fixed run name is specified.</p>
@@ -529,7 +502,7 @@ folder, or when a fixed run name is specified.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.OutputsConfig.run_name_suffix">
-<span class="sig-name descname"><span class="pre">run_name_suffix</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.run_name_suffix" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">run_name_suffix</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.run_name_suffix" title="Permalink to this definition">#</a></dt>
 <dd><p>String to append to the run name. This is useful to prevent
 multiple runs started at the same exact time to be mapped to the same
 folder, or when a fixed run name is specified. If set to None, this will be
@@ -544,14 +517,14 @@ directory listing across clients.</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str | None</p>
+<dd class="field-odd"><p>Optional[str]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.OutputsConfig.runs_folder">
-<span class="sig-name descname"><span class="pre">runs_folder</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.runs_folder" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">runs_folder</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.runs_folder" title="Permalink to this definition">#</a></dt>
 <dd><p>Path to the folder that run data should be stored in. All the data
 for a single run are stored in the path:</p>
 <blockquote>
@@ -571,7 +544,7 @@ folders will be created if they do not already exist. Defaults to the
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.OutputsConfig.tags">
-<span class="sig-name descname"><span class="pre">tags</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.tags" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">tags</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.tags" title="Permalink to this definition">#</a></dt>
 <dd><p>A list of strings to use as “tags” that can be used to organize multiple
 runs. These are not used for anything during training or inference, so they
 can be used to store arbitrary user-specified metadata.</p>
@@ -584,7 +557,7 @@ can be used to store arbitrary user-specified metadata.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.OutputsConfig.save_visualizations">
-<span class="sig-name descname"><span class="pre">save_visualizations</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.save_visualizations" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">save_visualizations</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.save_visualizations" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, will render and save visualizations of the model
 predictions as PNGs to “{run_folder}/viz/{split}.{epoch:04d}.png”, where the
 split is one of “train”, “validation”, “test”.</p>
@@ -597,7 +570,7 @@ split is one of “train”, “validation”, “test”.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.OutputsConfig.keep_viz_images">
-<span class="sig-name descname"><span class="pre">keep_viz_images</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.keep_viz_images" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">keep_viz_images</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.keep_viz_images" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, keep the saved visualization images after training
 completes. This is useful unchecked to reduce the model folder size if you do not need
 to keep the visualization images.</p>
@@ -610,7 +583,7 @@ to keep the visualization images.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.OutputsConfig.zip_outputs">
-<span class="sig-name descname"><span class="pre">zip_outputs</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.zip_outputs" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">zip_outputs</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.zip_outputs" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, compress the run folder to a zip file. This will be named
 “{run_folder}.zip”.</p>
 <dl class="field-list simple">
@@ -622,7 +595,7 @@ to keep the visualization images.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.OutputsConfig.log_to_csv">
-<span class="sig-name descname"><span class="pre">log_to_csv</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.log_to_csv" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">log_to_csv</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.log_to_csv" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, loss and metrics will be saved to a simple CSV after each
 epoch to “{run_folder}/training_log.csv”</p>
 <dl class="field-list simple">
@@ -634,7 +607,7 @@ epoch to “{run_folder}/training_log.csv”</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.OutputsConfig.checkpointing">
-<span class="sig-name descname"><span class="pre">checkpointing</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.checkpointing" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">checkpointing</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.checkpointing" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration options related to model checkpointing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
@@ -645,7 +618,7 @@ epoch to “{run_folder}/training_log.csv”</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.OutputsConfig.tensorboard">
-<span class="sig-name descname"><span class="pre">tensorboard</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.tensorboard" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">tensorboard</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.tensorboard" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration options related to TensorBoard logging.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
@@ -656,7 +629,7 @@ epoch to “{run_folder}/training_log.csv”</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.OutputsConfig.zmq">
-<span class="sig-name descname"><span class="pre">zmq</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.zmq" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">zmq</span></span><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.zmq" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration options related to ZeroMQ-based control and monitoring.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
@@ -667,7 +640,7 @@ epoch to “{run_folder}/training_log.csv”</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.OutputsConfig.run_path">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.run_path" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#sleap.nn.config.outputs.OutputsConfig.run_path" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the complete run path where all training outputs are stored.</p>
 <dl class="simple">
 <dt>This path is determined by other attributes using the pattern:</dt><dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">{runs_folder}/{run_name_prefix}{run_name}{run_name_suffix}</span></code></p>
@@ -692,11 +665,11 @@ valid, use a relative path for the <a class="reference internal" href="#sleap.nn
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.TensorBoardConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.outputs.</span></span><span class="sig-name descname"><span class="pre">TensorBoardConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">write_logs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'epoch'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">architecture_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visualizations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/outputs.py#L40-L69"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.outputs.TensorBoardConfig" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.outputs.</span></span><span class="sig-name descname"><span class="pre">TensorBoardConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">write_logs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'epoch'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">architecture_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visualizations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/outputs.py#L41-L69"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.outputs.TensorBoardConfig" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration of TensorBoard-based monitoring of the training.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.TensorBoardConfig.write_logs">
-<span class="sig-name descname"><span class="pre">write_logs</span></span><a class="headerlink" href="#sleap.nn.config.outputs.TensorBoardConfig.write_logs" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">write_logs</span></span><a class="headerlink" href="#sleap.nn.config.outputs.TensorBoardConfig.write_logs" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, logging data will be written to disk within the run folder.
 TensorBoard can monitor either the specific run folder, or the parent runs
 folder that may contain multiple models/runs. Both will be displayed
@@ -710,7 +683,7 @@ correctly in the dashboard.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.TensorBoardConfig.loss_frequency">
-<span class="sig-name descname"><span class="pre">loss_frequency</span></span><a class="headerlink" href="#sleap.nn.config.outputs.TensorBoardConfig.loss_frequency" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">loss_frequency</span></span><a class="headerlink" href="#sleap.nn.config.outputs.TensorBoardConfig.loss_frequency" title="Permalink to this definition">#</a></dt>
 <dd><p>How often loss and metrics will be written out to disk. This can
 be “epoch” to only write summaries at the end of every epoch, “batch” to
 write summaries after every batch. High frequency writing can considerably
@@ -726,7 +699,7 @@ losses and metrics, not other summaries like visualizations.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.TensorBoardConfig.architecture_graph">
-<span class="sig-name descname"><span class="pre">architecture_graph</span></span><a class="headerlink" href="#sleap.nn.config.outputs.TensorBoardConfig.architecture_graph" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">architecture_graph</span></span><a class="headerlink" href="#sleap.nn.config.outputs.TensorBoardConfig.architecture_graph" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, the architecture of the model will be saved
 and can be viewed graphically in TensorBoard. This is only saved at the
 beginning of training, but can consume a lot of disk space for large models,
@@ -740,7 +713,7 @@ as well as potentially freezing the browser tab when rendered.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.TensorBoardConfig.profile_graph">
-<span class="sig-name descname"><span class="pre">profile_graph</span></span><a class="headerlink" href="#sleap.nn.config.outputs.TensorBoardConfig.profile_graph" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">profile_graph</span></span><a class="headerlink" href="#sleap.nn.config.outputs.TensorBoardConfig.profile_graph" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, profiles the second batch of examples to collect compute
 statistics.</p>
 <dl class="field-list simple">
@@ -752,7 +725,7 @@ statistics.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.TensorBoardConfig.visualizations">
-<span class="sig-name descname"><span class="pre">visualizations</span></span><a class="headerlink" href="#sleap.nn.config.outputs.TensorBoardConfig.visualizations" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">visualizations</span></span><a class="headerlink" href="#sleap.nn.config.outputs.TensorBoardConfig.visualizations" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, visualizations of the model predictions are rendered
 and logged for display in TensorBoard -&gt; Images.</p>
 <dl class="field-list simple">
@@ -766,11 +739,11 @@ and logged for display in TensorBoard -&gt; Images.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.ZMQConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.outputs.</span></span><span class="sig-name descname"><span class="pre">ZMQConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subscribe_to_controller</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller_address</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'tcp://127.0.0.1:9000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller_polling_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish_updates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish_address</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'tcp://127.0.0.1:9001'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/outputs.py#L72-L109"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.outputs.ZMQConfig" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.config.outputs.</span></span><span class="sig-name descname"><span class="pre">ZMQConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subscribe_to_controller</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller_address</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'tcp://127.0.0.1:9000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller_polling_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish_updates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish_address</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'tcp://127.0.0.1:9001'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1a2/sleap/nn/config/outputs.py#L73-L109"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.config.outputs.ZMQConfig" title="Permalink to this definition">#</a></dt>
 <dd><p>Configuration of ZeroMQ-based monitoring of the training.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.ZMQConfig.subscribe_to_controller">
-<span class="sig-name descname"><span class="pre">subscribe_to_controller</span></span><a class="headerlink" href="#sleap.nn.config.outputs.ZMQConfig.subscribe_to_controller" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">subscribe_to_controller</span></span><a class="headerlink" href="#sleap.nn.config.outputs.ZMQConfig.subscribe_to_controller" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, will listen for commands broadcast over a
 socket or another messaging endpoint using the ZeroMQ SUB protocol. This
 allows for external/asynchronous control of the training loop from other
@@ -794,7 +767,7 @@ Current commands are:</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.ZMQConfig.controller_address">
-<span class="sig-name descname"><span class="pre">controller_address</span></span><a class="headerlink" href="#sleap.nn.config.outputs.ZMQConfig.controller_address" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">controller_address</span></span><a class="headerlink" href="#sleap.nn.config.outputs.ZMQConfig.controller_address" title="Permalink to this definition">#</a></dt>
 <dd><p>IP address/hostname and port number of the endpoint to
 listen for command messages from. For TCP-based endpoints, this must be in
 the form of “<a class="reference external" href="tcp:/">tcp:/</a>/{ip_address}:{port_number}”. Defaults to
@@ -808,7 +781,7 @@ the form of “<a class="reference external" href="tcp:/">tcp:/</a>/{ip_address}
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.ZMQConfig.controller_polling_timeout">
-<span class="sig-name descname"><span class="pre">controller_polling_timeout</span></span><a class="headerlink" href="#sleap.nn.config.outputs.ZMQConfig.controller_polling_timeout" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">controller_polling_timeout</span></span><a class="headerlink" href="#sleap.nn.config.outputs.ZMQConfig.controller_polling_timeout" title="Permalink to this definition">#</a></dt>
 <dd><p>Polling timeout in microseconds specified as an
 integer. This controls how long the poller should wait to receive a response
 and should be set to a small value to minimize the impact on training speed.</p>
@@ -821,7 +794,7 @@ and should be set to a small value to minimize the impact on training speed.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.ZMQConfig.publish_updates">
-<span class="sig-name descname"><span class="pre">publish_updates</span></span><a class="headerlink" href="#sleap.nn.config.outputs.ZMQConfig.publish_updates" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">publish_updates</span></span><a class="headerlink" href="#sleap.nn.config.outputs.ZMQConfig.publish_updates" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, training summaries will be broadcast over a socket or
 another messaging endpoint using the ZeroMQ PUB protocol. This is useful for
 asynchronously monitoring training with external programs without writing to
@@ -837,7 +810,7 @@ TODO: Describe published message keys.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.config.outputs.ZMQConfig.publish_address">
-<span class="sig-name descname"><span class="pre">publish_address</span></span><a class="headerlink" href="#sleap.nn.config.outputs.ZMQConfig.publish_address" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">publish_address</span></span><a class="headerlink" href="#sleap.nn.config.outputs.ZMQConfig.publish_address" title="Permalink to this definition">#</a></dt>
 <dd><p>IP address/hostname and port number of the endpoint to publish
 updates to. For TCP-based endpoints, this must be in the form of
 “<a class="reference external" href="tcp:/">tcp:/</a>/{ip_address}:{port_number}”. Defaults to “<a class="reference external" href="tcp://127.0.0.1:9001">tcp://127.0.0.1:9001</a>”.</p>
@@ -858,12 +831,16 @@ updates to. For TCP-based endpoints, this must be in the form of
 
               
               
-              
-              
-                <footer class="prev-next-footer d-print-none">
+                <footer class="bd-footer-article">
                   
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
+</div></div>
+  
 </div>
+
                 </footer>
               
             </div>
@@ -871,7 +848,6 @@ updates to. For TCP-based endpoints, this must be in the form of
             
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
 
   <div class="sidebar-secondary-item">
   <div class="page-toc tocsection onthispage">
@@ -941,7 +917,6 @@ By SLEAP Developers
   
   <div class="footer-item">
     
-
   <p class="copyright">
     
       © Copyright 2019–2024, Talmo Lab.
@@ -968,8 +943,8 @@ By SLEAP Developers
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
 
   <footer class="bd-footer">
   </footer>
