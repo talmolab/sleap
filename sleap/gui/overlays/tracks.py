@@ -48,8 +48,8 @@ class TrackTrailOverlay(BaseOverlay):
     @classmethod
     def get_length_options(cls):
         if prefs["trail length"] != 0:
-            return (0, 10, 50, 100, 250, 500, prefs["trail length"])
-        return (0, 10, 50, 100, 250, 500)
+            return (0, 10, 50, 100, 250, 500, 1000, 2500, prefs["trail length"])
+        return (0, 10, 50, 100, 250, 500, 1000, 2500)
 
     @classmethod
     def get_shade_options(cls):
