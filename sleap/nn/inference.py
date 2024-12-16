@@ -3778,9 +3778,10 @@ class BottomUpMultiClassPredictor(Predictor):
                             PredictedInstance.from_numpy(
                                 points=pts,
                                 point_confidences=confs,
-                                instance_score=np.nanmean(score),
+                                instance_score=np.nanmean(confs),
                                 skeleton=skeleton,
                                 track=track,
+                                tracking_score=np.nanmean(score),
                             )
                         )
 
@@ -4452,18 +4453,27 @@ class TopDownMultiClassPredictor(Predictor):
                     break
 
                 # Loop over frames.
-                for image, video_ind, frame_ind, points, confidences, scores in zip(
+                for (
+                    image,
+                    video_ind,
+                    frame_ind,
+                    centroid_vals,
+                    points,
+                    confidences,
+                    scores,
+                ) in zip(
                     ex["image"],
                     ex["video_ind"],
                     ex["frame_ind"],
+                    ex["centroid_vals"],
                     ex["instance_peaks"],
                     ex["instance_peak_vals"],
                     ex["instance_scores"],
                 ):
                     # Loop over instances.
                     predicted_instances = []
-                    for i, (pts, confs, score) in enumerate(
-                        zip(points, confidences, scores)
+                    for i, (pts, centroid_val, confs, score) in enumerate(
+                        zip(points, centroid_vals, confidences, scores)
                     ):
                         if np.isnan(pts).all():
                             continue
@@ -4474,9 +4484,10 @@ class TopDownMultiClassPredictor(Predictor):
                             PredictedInstance.from_numpy(
                                 points=pts,
                                 point_confidences=confs,
-                                instance_score=np.nanmean(score),
+                                instance_score=centroid_val,
                                 skeleton=skeleton,
                                 track=track,
+                                tracking_score=score,
                             )
                         )
 
