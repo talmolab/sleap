@@ -1319,6 +1319,7 @@ class TopdownConfmapsModelTrainer(Trainer):
             peak_threshold=0.2,
             refinement="local",
             return_confmaps=True,
+            resize_input_image=False,
         )
 
         def visualize_example(example):
@@ -1759,6 +1760,7 @@ class TopDownMultiClassModelTrainer(Trainer):
             peak_threshold=0.2,
             refinement="local",
             return_confmaps=True,
+            resize_input_image=False,
         )
 
         def visualize_example(example):

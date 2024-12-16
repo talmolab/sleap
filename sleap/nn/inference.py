@@ -4280,6 +4280,7 @@ class TopDownMultiClassPredictor(Predictor):
             refinement="integral" if self.integral_refinement else "local",
             integral_patch_size=self.integral_patch_size,
             return_confmaps=False,
+            resize_input_image=False,
         )
         if use_gt_centroid:
             centroid_crop_layer.input_scale = cfg.data.preprocessing.input_scaling

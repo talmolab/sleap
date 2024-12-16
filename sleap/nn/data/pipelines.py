@@ -1251,6 +1251,7 @@ class TopDownMultiClassPipeline:
                 provider=data_provider,
             )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
             skeletons=self.data_config.labels.skeletons,
