@@ -46,6 +46,7 @@ from sleap.nn.inference import (
     MoveNetPredictor,
     MoveNetInferenceLayer,
     MoveNetInferenceModel,
+    VisualPredictor,
     MOVENET_MODELS,
     load_model,
     export_model,
@@ -2074,3 +2075,8 @@ def test_top_down_model(min_tracks_2node_labels: Labels, min_centroid_model_path
 
     # Runs without error message
     predictor.predict(labels.extract(inds=[0, 1]))
+
+
+def test_visual_predictor(min_bottomup_model_path):
+    model_path: str = min_bottomup_model_path
+    predictor = VisualPredictor.from_trained_models(model_path=model_path)
