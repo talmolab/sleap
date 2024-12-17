@@ -49,6 +49,7 @@ from sleap.gui.dialogs.importvideos import ImportVideos
 from sleap.gui.dialogs.merge import MergeDialog, ReplaceSkeletonTableDialog
 from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
+from sleap.gui.dialogs.export_clip import ExportClipAndLabelsDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
@@ -57,9 +58,11 @@ from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
-from sleap.io.video import Video
+from sleap.io.video import Video, MediaVideo
+from sleap.io.videowriter import VideoWriter
 from sleap.skeleton import Node, Skeleton
 from sleap.util import get_package_file
+
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
@@ -627,9 +630,13 @@ class CommandContext:
         """Open the current prerelease version."""
         self.execute(OpenPrereleaseVersion)
 
-    def exportVideoClip(self):
+    def exportClipVideo(self):
         """Exports a selected range of video frames and their corresponding labels."""
-        self.execute(ExportVideoClip)
+        self.execute(ExportClipVideo)
+    
+    def exportClipPkg(self):
+        """Exports a selected range of video frames and their corresponding labels."""
+        self.execute(ExportClipPkg)
 
 
 # File Commands
@@ -3474,23 +3481,22 @@ class OpenPrereleaseVersion(AppCommand):
         if rls is not None:
             context.openWebsite(rls.url)
 
-
-class ExportVideoClip(AppCommand):
+class ExportClipVideo(AppCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        from sleap.io.visuals import save_labeled_video
-        from sleap.io.video import MediaVideo, Video
-        import cv2
-        import numpy as np
+        """
+        Exports a pruned video clip and labels to a specified file based on selected frame range.
 
+        Args:
+            context (CommandContext): Contains state information like video and labels.
+            params (dict): Parameters including filename, fps, and open_when_done.
+        """
         # Extract video and labels from context
         video = context.state["video"]
         labels = context.state["labels"]
 
         # Ensure frame range is set; default to all frames if None
-        frame_range = context.state.get("frame_range")
-        if frame_range is None:
-            frame_range = (0, video.frames)
+        frame_range = context.state.get("frame_range", (0, video.frames))
 
         # Extract only the selected frames into a new Labels object
         pruned_labels = labels.extract(
@@ -3502,29 +3508,25 @@ class ExportVideoClip(AppCommand):
         for labeled_frame in pruned_labels.labeled_frames:
             labeled_frame.frame_idx -= frame_range[0]
 
-        # Save the video
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        # Initialize VideoWriter
         height, width = video.height, video.width
-        is_color = video.channels == 3
-        writer = cv2.VideoWriter(
-            params["filename"], fourcc, params["fps"], (width, height), is_color
-        )
+        fps = params["fps"]
+        writer = VideoWriter.safe_builder(params["filename"], height, width, fps)
 
-        for frame_idx in params["frames"]:
-            frame = video.get_frame(frame_idx)
+        # Write frames to the video
+        for frame_idx in range(*frame_range):
+            try:
+                frame = video.get_frame(frame_idx)
 
-            # Ensure frame format is valid for OpenCV
-            if frame.ndim == 2:  # Grayscale frames
-                frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+                # Convert grayscale to BGR if necessary
+                if frame.ndim == 2:  # Grayscale frames
+                    frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
-            if frame.shape[:2] != (height, width):
-                raise ValueError(
-                    f"Frame size {frame.shape[:2]} does not match expected {height, width}"
-                )
-
-            writer.write(frame)
-
-        writer.release()
+                writer.add_frame(frame, bgr=True)
+            except KeyError:
+                raise KeyError(f"Failed to load frame {frame_idx} from video.")
+        
+        writer.close()
 
         # Create a new Video object for the output video
         new_media_video = MediaVideo(
@@ -3532,30 +3534,18 @@ class ExportVideoClip(AppCommand):
         )
         new_video = Video(backend=new_media_video)
 
-        # Step 1: Update all labeled frames to point to the new video
+        # Update pruned labels to point to the new video
         for labeled_frame in pruned_labels.labeled_frames:
-            if labeled_frame.video.filename == video.filename:
-                labeled_frame.video = new_video
+            labeled_frame.video = new_video
+        
+        pruned_labels.videos = [new_video]
 
-        # Step 2: Safely replace the old video with the new video
-        pruned_labels.videos = [
-            v for v in pruned_labels.videos if v.filename != video.filename
-        ]
-        pruned_labels.add_video(new_video)
-
-        # Step 3: Rebuild the cache to ensure consistency
-        pruned_labels.update_cache()
-
-        # Save the pruned labels as .slp
+        # Save the pruned labels
         labels_filename = params["filename"].replace(".mp4", ".slp")
         pruned_labels.save(labels_filename)
 
-        # Save the pruned labels with embedded images as .pkg.slp
-        pkg_filename = params["filename"].replace(".mp4", ".pkg.slp")
-        pruned_labels.save(pkg_filename, with_images=True)
-
         # Open the video file when done, if specified
-        if params["open_when_done"]:
+        if params.get("open_when_done", False):
             open_file(params["filename"])
 
     @staticmethod
@@ -3586,7 +3576,7 @@ class ExportVideoClip(AppCommand):
 
         # Prompt user to select output file
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(
-            None, "Save Clip As...", "", "Video (*.avi *.mp4)"
+            None, "Save Clip As...", "", "Video (*.avi *.mp4) and Labels (.slp)"
         )
         if not filename:
             return False  # User canceled file selection
@@ -3613,3 +3603,56 @@ class ExportVideoClip(AppCommand):
         clipboard = QtWidgets.QApplication.clipboard()
         clipboard.clear(mode=clipboard.Clipboard)
         clipboard.setText(text, mode=clipboard.Clipboard)
+
+class ExportClipPkg(AppCommand):
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        """
+        Exports a pruned labels package based on selected frame range.
+
+        Args:
+            context (CommandContext): Contains state information like video and labels.
+            params (dict): Parameters including filename, fps, and open_when_done.
+        """
+        # Extract video and labels from context
+        video = context.state["video"]
+        labels = context.state["labels"]
+
+        # Ensure frame range is set; default to all frames if None
+        frame_range = context.state.get("frame_range", (0, video.frames))
+
+        # Extract only the selected frames into a new Labels object
+        pruned_labels = labels.extract(
+            inds=range(*frame_range),
+            copy=True,  # Ensures a deep copy of the extracted labels
+        )
+
+        # Remap frame indices in pruned_labels to start from 0
+        for labeled_frame in pruned_labels.labeled_frames:
+            labeled_frame.frame_idx -= frame_range[0]
+
+        pkg_filename =  f'{params["filename"]}'
+        pruned_labels.save(pkg_filename, with_images=True)
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        """
+        Asks the user for export parameters via a custom dialog.
+
+        Args:
+            context: Command context, providing state and application access.
+            params: A dictionary to populate with user-defined options.
+
+        Returns:
+            bool: True if the user confirmed the action, False if canceled.
+        """
+
+        # Prompt user to select output file
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            None, "Save Clip Package As...", "", "Label Package (*.pkg.slp)"
+        )
+        if not filename:
+            return False  # User canceled file selection
+         # Update the params dictionary with the selected filename
+        params["filename"] = filename
+        return True
