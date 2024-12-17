@@ -3497,6 +3497,10 @@ class ExportClipVideo(AppCommand):
 
         # Ensure frame range is set; default to all frames if None
         frame_range = context.state.get("frame_range", (0, video.frames))
+        
+        # Check if clip is selected, raise error if no clip selected
+        if frame_range == (0, video.frames) or frame_range == (0, 1):
+             raise ValueError("No valid clip frame range selected! Please select a valid frame range using shift + click in the GUI.")
 
         # Extract only the selected frames into a new Labels object
         pruned_labels = labels.extract(
@@ -3560,8 +3564,6 @@ class ExportClipVideo(AppCommand):
         Returns:
             bool: True if the user confirmed the action, False if canceled.
         """
-        from sleap.gui.dialogs.export_clip import ExportClipAndLabelsDialog
-        from qtpy import QtWidgets
 
         # Extract FPS from video metadata (fallback to 30 if unavailable)
         video_fps = getattr(context.state["video"], "fps", 30)
@@ -3576,7 +3578,7 @@ class ExportClipVideo(AppCommand):
 
         # Prompt user to select output file
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(
-            None, "Save Clip As...", "", "Video (*.avi *.mp4) and Labels (.slp)"
+            None, "Save Clip As...", "", "Video (*.mp4 *.avi)"
         )
         if not filename:
             return False  # User canceled file selection
@@ -3621,6 +3623,10 @@ class ExportClipPkg(AppCommand):
         # Ensure frame range is set; default to all frames if None
         frame_range = context.state.get("frame_range", (0, video.frames))
 
+        # Check if clip is selected, raise error if no clip selected
+        if frame_range == (0, video.frames) or frame_range == (0, 1):
+             raise ValueError("No valid clip frame range selected! Please select a valid frame range using shift + click in the GUI.")
+
         # Extract only the selected frames into a new Labels object
         pruned_labels = labels.extract(
             inds=range(*frame_range),
@@ -3631,7 +3637,7 @@ class ExportClipPkg(AppCommand):
         for labeled_frame in pruned_labels.labeled_frames:
             labeled_frame.frame_idx -= frame_range[0]
 
-        pkg_filename =  f'{params["filename"]}'
+        pkg_filename = params["filename"]
         pruned_labels.save(pkg_filename, with_images=True)
 
     @staticmethod
