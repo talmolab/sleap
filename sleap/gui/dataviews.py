@@ -402,7 +402,8 @@ class VideosTableModel(GenericTableModel):
                 filename = getattr(item, "filename")
                 name = Path(filename).name
             elif property == "filepath":
-                splitted = getattr(item, "filename").split("/")[:-1]
+                filename = getattr(item, "filename")
+                parent = Path(filename).parent
                 data[property] = "/".join(splitted)
             else:
                 data[property] = getattr(item, property)
