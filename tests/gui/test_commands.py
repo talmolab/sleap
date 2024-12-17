@@ -9,6 +9,7 @@ from qtpy import QtCore
 from typing import List
 
 from sleap import Skeleton, Track, PredictedInstance
+from sleap.skeleton import Node
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import (
     AddInstance,
@@ -21,6 +22,7 @@ from sleap.gui.commands import (
     OpenSkeleton,
     SaveProjectAs,
     get_new_version_filename,
+    ExportVideoClip,
 )
 from sleap.instance import Instance, LabeledFrame
 from sleap.io.convert import default_analysis_filename
@@ -28,7 +30,7 @@ from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.pathutils import fix_path_separator
-from sleap.io.video import Video
+from sleap.io.video import MediaVideo, Video
 from sleap.util import get_package_file
 
 # These imports cause trouble when running `pytest.main()` from within the file
@@ -36,6 +38,8 @@ from sleap.util import get_package_file
 from tests.info.test_h5 import extract_meta_hdf5
 from tests.io.test_video import assert_video_params
 from tests.io.test_formats import read_nix_meta
+
+from imageio import get_writer
 
 
 def test_delete_user_dialog(centered_pair_predictions):
@@ -1025,3 +1029,71 @@ def test_newInstance(qtbot, centered_pair_predictions: Labels):
     )
     diff = np.nan_to_num(new_inst.numpy() - copy_instance.numpy(), nan=offset)
     assert np.all(diff == offset)
+
+
+def test_ExportVideoClip_creates_files(tmpdir):
+    """Test that ExportVideoClip creates a video clip, .slp, and .pkg.slp."""
+
+    # Step 1: Generate a dummy video file using imageio
+    video_path = Path(tmpdir, "mock_video.mp4")
+    fps = 30
+    frame_count = 10
+    width, height = 100, 100
+
+    with get_writer(video_path, fps=fps, codec="libx264", format="FFMPEG") as writer:
+        for _ in range(frame_count):
+            frame = np.zeros((height, width), dtype=np.uint8)  # Black frame
+            writer.append_data(frame)
+
+    # Step 2: Create the video object
+    video = Video(backend=MediaVideo(filename=str(video_path), grayscale=True))
+
+    # Step 3: Mock skeleton
+    mock_skeleton = Skeleton()
+    mock_skeleton.add_node("node1")
+    mock_skeleton.add_node("node2")
+
+    # Step 4: Mock labeled frames
+    labeled_frames = [
+        LabeledFrame(
+            video=video,
+            frame_idx=i,
+            instances=[Instance(skeleton=mock_skeleton, track=Track(name=f"track_{i}"))],
+        )
+        for i in range(frame_count)
+    ]
+    labels = Labels(labeled_frames=labeled_frames, videos=[video], skeletons=[mock_skeleton])
+
+    # Step 5: Set up CommandContext
+    context = CommandContext.from_labels(labels)
+    context.state["video"] = video
+    context.state["labels"] = labels
+    context.state["frame_range"] = (0, frame_count)
+
+    # Step 6: Parameters for ExportVideoClip
+    export_path = Path(tmpdir, "exported_video.mp4")
+    params = {
+        "filename": str(export_path),
+        "fps": fps,
+        "frames": range(frame_count),
+        "open_when_done": False,
+    }
+
+    # Step 7: Call ExportVideoClip
+    ExportVideoClip.do_action(context, params)
+
+    # Step 8: Assertions
+    # Assert exported video exists
+    assert export_path.exists(), "Exported video file was not created."
+
+    # Assert .slp file exists
+    slp_path = export_path.with_suffix(".slp")
+    assert slp_path.exists(), ".slp file was not created."
+
+    # Assert .pkg.slp file exists
+    pkg_slp_path = export_path.with_suffix(".pkg.slp")
+    assert pkg_slp_path.exists(), ".pkg.slp file was not created."
+
+    # Assert that the exported labels match the expected number of frames
+    exported_labels = Labels.load_file(str(slp_path))  # Convert Path to string here
+    assert len(exported_labels.labeled_frames) == frame_count, "Incorrect number of frames in exported labels."
