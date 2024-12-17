@@ -48,6 +48,7 @@ from sleap.gui.dialogs.importvideos import ImportVideos
 from sleap.gui.dialogs.merge import MergeDialog, ReplaceSkeletonTableDialog
 from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
+from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
@@ -492,6 +493,10 @@ class CommandContext:
     def deleteInstanceLimitPredictions(self):
         """Gui for deleting instances beyond some number in each frame."""
         self.execute(DeleteInstanceLimitPredictions)
+
+    def deleteFrameLimitPredictions(self):
+        """Gui for deleting instances beyond some frame number."""
+        self.execute(DeleteFrameLimitPredictions)
 
     def completeInstanceNodes(self, instance: Instance):
         """Adds missing nodes to given instance."""
@@ -2467,6 +2472,36 @@ class DeleteInstanceLimitPredictions(InstanceDeleteCommand):
         )
         if okay:
             params["count_threshold"] = count_thresh
+            return super().ask(context, params)
+
+
+class DeleteFrameLimitPredictions(InstanceDeleteCommand):
+    @staticmethod
+    def get_frame_instance_list(context: CommandContext, params: Dict):
+        """Called from the parent `InstanceDeleteCommand.ask` method.
+
+        Returns:
+            List of instances to be deleted.
+        """
+        instances = []
+        # Select the instances to be deleted
+        for lf in context.labels.labeled_frames:
+            if lf.frame_idx < (params["min_frame_idx"] - 1) or lf.frame_idx > (
+                params["max_frame_idx"] - 1
+            ):
+                instances.extend([(lf, inst) for inst in lf.instances])
+        return instances
+
+    @classmethod
+    def ask(cls, context: CommandContext, params: Dict) -> bool:
+        current_video = context.state["video"]
+        dialog = FrameRangeDialog(
+            title="Delete Instances in Frame Range...", max_frame_idx=len(current_video)
+        )
+        results = dialog.get_results()
+        if results:
+            params["min_frame_idx"] = results["min_frame_idx"]
+            params["max_frame_idx"] = results["max_frame_idx"]
             return super().ask(context, params)
 
 
