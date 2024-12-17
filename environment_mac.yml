@@ -25,7 +25,7 @@ dependencies:
     - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside6 >=6.5.0 # >=6.2 is compatible with Python 3.10, conda package exists for >=6.4, 6.4 conda package uses problematic QtCharts https://github.com/roomrys/envexp/pull/3
+    - conda-forge::pyside6 >=6.5.0,<6.8.0 # 6.4: problematic QtCharts, 6.8.0: video display issues
     - conda-forge::python >=3.10.0,<3.11.0
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
@@ -38,7 +38,7 @@ dependencies:
     - conda-forge::seaborn
     - sleap-deps::tensorflow ==2.12.0
     - conda-forge::qudida
-    - conda-forge::albumentations
+    - conda-forge::albumentations >=1.4.15 # Handle Nan keypoints
     - conda-forge::ndx-pose <0.2.0
     - conda-forge::lazy_loader
     - pip:

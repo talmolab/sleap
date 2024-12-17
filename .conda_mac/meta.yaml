@@ -44,7 +44,7 @@ requirements:
     - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside6 >=6.5.0 # 6.4 conda package uses problematic QtCharts
+    - conda-forge::pyside6 >=6.5.0,<6.8.0 # 6.4: problematic QtCharts, 6.8.0: video display issues
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
@@ -56,7 +56,7 @@ requirements:
     - conda-forge::seaborn
     - sleap-deps::tensorflow ==2.12.0
     - conda-forge::qudida
-    - conda-forge::albumentations
+    - conda-forge::albumentations >=1.4.15 # Handle Nan keypoints
     - conda-forge::ndx-pose <0.2.0
     - conda-forge::lazy_loader
 
@@ -76,7 +76,7 @@ requirements:
     - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside6 >=6.5.0 # 6.4 conda package uses problematic QtCharts
+    - conda-forge::pyside6 >=6.5.0,<6.8.0 # 6.4: problematic QtCharts, 6.8.0: video display issues
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
@@ -88,6 +88,6 @@ requirements:
     - conda-forge::seaborn
     - sleap-deps::tensorflow ==2.12.0
     - conda-forge::qudida
-    - conda-forge::albumentations
+    - conda-forge::albumentations >=1.4.15 # Handle Nan keypoints
     - conda-forge::ndx-pose <0.2.0
     - conda-forge::lazy_loader
