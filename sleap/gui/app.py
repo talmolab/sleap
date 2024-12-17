@@ -1713,12 +1713,6 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
     if args.nonnative:
         os.environ["USE_NON_NATIVE_FILE"] = "1"
 
-    if platform.system() == "Darwin":
-        # TODO: Remove this workaround when we update to qtpy >= 5.15.
-        # https://bugreports.qt.io/browse/QTBUG-87014
-        # https://stackoverflow.com/q/64818879
-        os.environ["QT_MAC_WANTS_LAYER"] = "1"
-
     app = create_app()
 
     window = MainWindow(
