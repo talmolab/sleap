@@ -1193,6 +1193,94 @@ def test_ExportVideoClip_frame_and_video_list_sizes(tmpdir):
         actual_frame_indices == expected_frame_indices
     ), f"Expected frame indices {expected_frame_indices}, but got {actual_frame_indices}."
 
+@pytest.mark.parametrize("subset, should_raise_error", [
+    pytest.param((0, 0), True, id="single_frame"),           # Single frame
+    pytest.param((9, 9), True, id="last_frame"),             # Last frame
+    pytest.param((0, 1), True, id="invalid_minimal_range"),  # Invalid minimal range
+    pytest.param((0, 10), True, id="full_range"),            # Full range
+    pytest.param((3, 7), False, id="valid_partial_range"),   # Valid subset
+])
+def test_ExportVideoClip_edge_cases(subset, should_raise_error, tmpdir):
+    """Test ExportVideoClip for edge cases in frame range selection."""
+
+    # Step 1: Generate a dummy video file
+    video_path = Path(tmpdir, "mock_video.mp4")
+    fps = 30
+    total_frames = 10
+    width, height = 100, 100
+
+    with get_writer(video_path, fps=fps, codec="libx264", format="FFMPEG") as writer:
+        for _ in range(total_frames):
+            frame = np.zeros((height, width), dtype=np.uint8)
+            writer.append_data(frame)
+
+    # Step 2: Create video object
+    video = Video(backend=MediaVideo(filename=str(video_path), grayscale=True))
+
+    # Mock skeleton
+    mock_skeleton = Skeleton()
+    mock_skeleton.add_node("node1")
+    mock_skeleton.add_node("node2")
+
+    # Mock labeled frames
+    labeled_frames = [
+        LabeledFrame(
+            video=video,
+            frame_idx=i,
+            instances=[Instance(skeleton=mock_skeleton, track=Track(name=f"track_{i}"))],
+        )
+        for i in range(total_frames)
+    ]
+    labels = Labels(
+        labeled_frames=labeled_frames, videos=[video], skeletons=[mock_skeleton]
+    )
+
+    # Step 3: Set up CommandContext
+    subset_start, subset_end = subset
+    context = CommandContext.from_labels(labels)
+    context.state["video"] = video
+    context.state["labels"] = labels
+    context.state["frame_range"] = subset
+
+    # Parameters for ExportVideoClip
+    export_path = Path(tmpdir, f"exported_clip_{subset_start}_{subset_end}.mp4")
+    params = {
+        "filename": str(export_path),
+        "fps": fps,
+        "frames": range(subset_start, subset_end + 1),
+        "open_when_done": False,
+    }
+
+    # Step 4: Call ExportClipVideo and handle expected behavior
+    if should_raise_error:
+        with pytest.raises(ValueError, match="No valid clip frame range selected!"):
+            ExportClipVideo.do_action(context, params)
+    else:
+        # Run without error
+        ExportClipVideo.do_action(context, params)
+
+        # Assertions
+        # Case 1: Check that video file was created
+        assert export_path.exists(), f"Exported video file not created for range {subset}."
+
+        # Case 2: Check that the .slp file exists
+        slp_path = export_path.with_suffix(".slp")
+        assert slp_path.exists(), f".slp file not created for range {subset}."
+
+        # Case 3: Load the exported labels and verify frame count
+        exported_labels = Labels.load_file(str(slp_path))
+        expected_frame_count = 1 if subset_start == subset_end else subset_end - subset_start
+        assert len(exported_labels.labeled_frames) == expected_frame_count, (
+            f"Expected {expected_frame_count} frames, but got {len(exported_labels.labeled_frames)}."
+        )
+
+        # Case 4: Verify frame indices start at 0 and are sequential
+        exported_frame_indices = [lf.frame_idx for lf in exported_labels.labeled_frames]
+        expected_frame_indices = list(range(expected_frame_count))
+        assert exported_frame_indices == expected_frame_indices, (
+            f"Expected frame indices {expected_frame_indices}, but got {exported_frame_indices}."
+        )
+
 def test_ExportClipPkg_creates_pkg_file(tmpdir):
     """Test that ExportClipPkg creates a .pkg.slp file with selected frame range."""
 
@@ -1270,3 +1358,83 @@ def test_ExportClipPkg_creates_pkg_file(tmpdir):
     context.state["frame_range"] = (0, 10)  # Full video range
     with pytest.raises(ValueError, match="No valid clip frame range selected!"):
         ExportClipPkg.do_action(context, params)
+
+@pytest.mark.parametrize("subset, should_raise_error", [
+    pytest.param((0, 0), True, id="single_frame"),
+    pytest.param((9, 9), True, id="later_frame"),
+    pytest.param((0, 1), True, id="invalid_minimal_range"),
+    pytest.param((0, 10), True, id="full_range"),
+    pytest.param((12, 13), True, id="outside_range"),
+])
+def test_ExportClipPkg_edge_cases(subset, should_raise_error, tmpdir):
+    """Test ExportClipPkg for edge cases in frame range selection."""
+    # Step 1: Generate a dummy video file
+    video_path = Path(tmpdir, "mock_video.mp4")
+    fps = 30
+    frame_count = 10  # Total number of frames in the video
+    width, height = 100, 100
+
+    with get_writer(video_path, fps=fps, codec="libx264", format="FFMPEG") as writer:
+        for _ in range(frame_count):
+            frame = np.zeros((height, width), dtype=np.uint8)  # Black frame
+            writer.append_data(frame)
+
+    # Step 2: Create the video object
+    video = Video(backend=MediaVideo(filename=str(video_path), grayscale=True))
+
+    # Mock skeleton
+    mock_skeleton = Skeleton()
+    mock_skeleton.add_node("node1")
+    mock_skeleton.add_node("node2")
+
+    # Mock labeled frames
+    labeled_frames = [
+        LabeledFrame(
+            video=video,
+            frame_idx=i,
+            instances=[
+                Instance(skeleton=mock_skeleton, track=Track(name=f"track_{i}"))
+            ],
+        )
+        for i in range(frame_count)
+    ]
+    labels = Labels(
+        labeled_frames=labeled_frames, videos=[video], skeletons=[mock_skeleton]
+    )
+
+    # Step 3: Set up CommandContext
+    subset_start, subset_end = subset
+    context = CommandContext.from_labels(labels)
+    context.state["video"] = video
+    context.state["labels"] = labels
+    context.state["frame_range"] = subset
+
+    # Parameters for ExportClipPkg
+    pkg_path = Path(tmpdir, f"exported_clip_{subset_start}_{subset_end}.pkg.slp")
+    params = {
+        "filename": str(pkg_path),
+    }
+
+    # Step 4: Call ExportClipPkg and handle expected behavior
+    if should_raise_error:
+        with pytest.raises(ValueError, match="No valid clip frame range selected!"):
+            ExportClipPkg.do_action(context, params)
+    else:
+        # Run without error
+        ExportClipPkg.do_action(context, params)
+        # Assertions
+        assert pkg_path.exists(), f".pkg.slp file was not created for range {subset}."
+
+        # Load the exported labels and verify frame count
+        exported_labels = Labels.load_file(str(pkg_path))
+
+        # Adjust expected frame count for single-frame case
+        if subset_start == subset_end:  # Single frame case
+            expected_frame_count = 1
+        else:
+            expected_frame_count = subset_end - subset_start + 1
+
+        assert len(exported_labels.labeled_frames) == expected_frame_count, (
+            f"Incorrect number of frames for range {subset}. "
+            f"Expected {expected_frame_count}, got {len(exported_labels.labeled_frames)}."
+        )
