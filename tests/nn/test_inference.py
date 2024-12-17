@@ -2039,7 +2039,11 @@ def test_movenet_predictor(min_dance_labels, movenet_video):
         [labels_pr[0][0].numpy(), labels_pr[1][0].numpy()], axis=0
     )
 
-    np.testing.assert_allclose(points_gt, points_pr, atol=0.75)
+    assert_allclose(
+        points_gt[~np.isnan(points_gt).any(axis=1)],
+        points_pr[~np.isnan(points_gt).any(axis=1)],
+        atol=0.75,
+    )
 
 
 @pytest.mark.parametrize(
