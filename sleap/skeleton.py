@@ -1569,7 +1569,7 @@ class Skeleton:
         """
         dicts: dict = SkeletonDecoder.decode(json_str)
         nx_graph = dicts.get("nx_graph", dicts)
-        graph = json_graph.node_link_graph(nx_graph)
+        graph = json_graph.node_link_graph(nx_graph, edges="links")
 
         # Replace graph node indices with corresponding nodes from node_map
         if idx_to_node is not None:
