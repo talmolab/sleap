@@ -3710,7 +3710,7 @@ class ExportVideoClip(AppCommand):
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         """
-        Asks the user for export parameters via a dialog.
+        Asks the user for export parameters via a custom dialog.
 
         Args:
             context: Command context, providing state and application access.
@@ -3719,55 +3719,33 @@ class ExportVideoClip(AppCommand):
         Returns:
             bool: True if the user confirmed the action, False if canceled.
         """
-        from sleap.gui.dialogs.export_clip import ExportClipDialog
-        from sleap.io.videowriter import VideoWriter
+        from sleap.gui.dialogs.export_clip import ExportClipAndLabelsDialog
         from qtpy import QtWidgets
 
-        # Show the export dialog to the user
-        dialog = ExportClipDialog()
+        # Extract FPS from video metadata (fallback to 30 if unavailable)
+        video_fps = getattr(context.state["video"], "fps", 30)
 
-        # Set default FPS from the current video
-        dialog.form_widget.set_form_data(
-            dict(fps=getattr(context.state["video"], "fps", 30))
-        )
+        # Initialize and show the export dialog
+        dialog = ExportClipAndLabelsDialog(video_fps=video_fps)
+        if dialog.exec_() != QtWidgets.QDialog.Accepted:
+            return False  # User canceled
 
+        # Get user input from dialog
         export_options = dialog.get_results()
 
-        if export_options is None:  # User canceled the dialog
-            return False
-
-        # Determine default output filename
-        default_out_filename = context.state["filename"] + ".avi"
-        if VideoWriter.can_use_ffmpeg():
-            default_out_filename = context.state["filename"] + ".mp4"
-
-        # Prompt the user to select an output file
+        # Prompt user to select output file
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(
-            None,
-            "Save Clip As...",
-            default_out_filename,
-            "Video (*.avi *.mp4)",
+            None, "Save Clip As...", "", "Video (*.avi *.mp4)"
         )
+        if not filename:
+            return False  # User canceled file selection
 
-        if not filename:  # User canceled file selection
-            return False
-
-        # Populate parameters with user-selected options
+        # Populate export parameters
         params["filename"] = filename
         params["fps"] = export_options["fps"]
-        params["scale"] = export_options["scale"]
         params["open_when_done"] = export_options["open_when_done"]
-        params["background"] = export_options["background"]
-
-        # Handle crop size
-        params["crop"] = None
-        w = int(context.state["video"].width * params["scale"])
-        h = int(context.state["video"].height * params["scale"])
-        if export_options["crop"] == "Half":
-            params["crop"] = (w // 2, h // 2)
-        elif export_options["crop"] == "Quarter":
-            params["crop"] = (w // 4, h // 4)
-
+        
+        
         # Access frame range
         if context.state.get("has_frame_range"):
             params["frames"] = range(*context.state["frame_range"])
@@ -3775,13 +3753,13 @@ class ExportVideoClip(AppCommand):
             params["frames"] = range(context.state["video"].frames)
 
         return True
-        
-def copy_to_clipboard(text: str):
-    """Copy a string to the system clipboard.
+            
+    def copy_to_clipboard(text: str):
+        """Copy a string to the system clipboard.
 
-    Args:
-        text: String to copy to clipboard.
-    """
-    clipboard = QtWidgets.QApplication.clipboard()
-    clipboard.clear(mode=clipboard.Clipboard)
-    clipboard.setText(text, mode=clipboard.Clipboard)
+        Args:
+            text: String to copy to clipboard.
+        """
+        clipboard = QtWidgets.QApplication.clipboard()
+        clipboard.clear(mode=clipboard.Clipboard)
+        clipboard.setText(text, mode=clipboard.Clipboard)
