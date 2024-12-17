@@ -806,6 +806,7 @@ class GraphicsView(QGraphicsView):
         self._pixmapHandle = None
 
         self.setRenderHint(QPainter.Antialiasing)
+        self.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
 
         self.aspectRatioMode = Qt.KeepAspectRatio
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
