@@ -3499,7 +3499,7 @@ class ExportClipVideo(AppCommand):
         frame_range = context.state.get("frame_range", (0, video.frames))
         
         # Check if clip is selected, raise error if no clip selected
-        if frame_range == (0, video.frames) or frame_range == (0, 1):
+        if frame_range == (0, video.frames) or frame_range == (0, 1) or frame_range[0] == frame_range[1]:
              raise ValueError("No valid clip frame range selected! Please select a valid frame range using shift + click in the GUI.")
 
         # Extract only the selected frames into a new Labels object
@@ -3596,16 +3596,6 @@ class ExportClipVideo(AppCommand):
 
         return True
 
-    def copy_to_clipboard(text: str):
-        """Copy a string to the system clipboard.
-
-        Args:
-            text: String to copy to clipboard.
-        """
-        clipboard = QtWidgets.QApplication.clipboard()
-        clipboard.clear(mode=clipboard.Clipboard)
-        clipboard.setText(text, mode=clipboard.Clipboard)
-
 class ExportClipPkg(AppCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
@@ -3624,7 +3614,7 @@ class ExportClipPkg(AppCommand):
         frame_range = context.state.get("frame_range", (0, video.frames))
 
         # Check if clip is selected, raise error if no clip selected
-        if frame_range == (0, video.frames) or frame_range == (0, 1):
+        if frame_range == (0, video.frames) or frame_range == (0, 1) or frame_range[0] == frame_range[1]:
              raise ValueError("No valid clip frame range selected! Please select a valid frame range using shift + click in the GUI.")
 
         # Extract only the selected frames into a new Labels object
