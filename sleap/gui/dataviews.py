@@ -390,99 +390,16 @@ class GenericTableView(QtWidgets.QTableView):
             return None
         return self.model().original_items[idx.row()]
 
-    def mousePressEvent(self, event) -> None:
-        """Only for right-click on VideosTableView.
 
-        Args:
-            event (QMouseEvent): The mouse event.
-        """
-        if event.button() == QtCore.Qt.RightButton and isinstance(
-            self.model(), VideosTableModel
-        ):
-            self.show_context_menu(event)
-        super().mousePressEvent(event)
-
-    def show_context_menu(self, event):
-        """Show context menu for VideosTableView.
-
-        Args:
-            event (QMouseEvent): The mouse event.
-        """
-        menu = QtWidgets.QMenu(self)
-
-        # Add actions to the menu
-        for option, is_checked in self.options.items():
-            action = QtWidgets.QAction(option, self)
-            action.setCheckable(True)
-            action.setChecked(is_checked)
-            action.triggered.connect(self.create_checked_lambda(option))
-            menu.addAction(action)
-
-        # Show the context menu
-        menu.exec_(event.globalPos())
-
-    def create_checked_lambda(self, option):
-        """Callback for context menu actions.
-
-        Args:
-            option (dict): The option to toggle.
-
-        Returns:
-            function: The callback function.
-        """
-        return lambda checked: self.toggle_option(option, checked)
-
-    def toggle_option(self, option, checked):
-        """Toggle the option in the context menu.
-
-        Args:
-            option (str): The option to toggle.
-            checked (bool): The new value for the option.
-        """
-        self.options[option] = checked
-        model = self.model()
-        if isinstance(model, VideosTableModel):
-            if option == "Show Video Name":
-                model.set_show_video_name(self.options["Show Video Name"])
-
-
-# TODO: Fix the error in the Pytest.
 class VideosTableModel(GenericTableModel):
-    def __init__(self, items, show_video_name=False, **kwargs):
-        super().__init__(**kwargs)
-        self.items = items
-        self.show_video_name = show_video_name
-        self.properties = (
-            "filepath",
-            "name",
-            "frames",
-            "height",
-            "width",
-            "channels",
-        )
-        # TODO: Always with filepath and name (no filename)
-
-    def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
-        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
-            return self.properties[section].title()
-        return super().headerData(section, orientation, role)
-
-    def _get_properties(self):
-        """Return properties based on the show_video_name flag."""
-        if self.show_video_name:
-            return ["filepath", "name", "frames", "height", "width", "channels"]
-        return ["filename", "frames", "height", "width", "channels"]
-
-    def set_show_video_name(self, show_video_name: bool):
-        """Set whether to show video name in table."""
-        if self.show_video_name == show_video_name:
-            return
-
-        # Reset the table so that new columns are added
-        self.show_video_name = show_video_name
-        self.properties = self._get_properties()
-        self.beginResetModel()
-        self.endResetModel()
+    properties = (
+        "filepath",
+        "name",
+        "frames",
+        "height",
+        "width",
+        "channels",
+    )
 
     def item_to_data(self, obj, item: "Video"):
         data = {}
