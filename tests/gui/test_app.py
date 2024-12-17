@@ -376,8 +376,6 @@ def test_app_new_window(qtbot):
     )
     assert wins == (start_wins + 3)
 
-    app.player.cleanup()
-
     app.closeAllWindows()
 
 
