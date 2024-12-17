@@ -146,6 +146,11 @@ def main(f, dir):
         0.25,
     )
 
+    kalman_params = dict(
+        kf_node_indices=[0, 1],
+        kf_init_frame_count=10,
+    )
+
     def make_tracker(
         tracker_name, matcher_name, sim_name, max_tracks, max_tracking=False, scale=0
     ):
