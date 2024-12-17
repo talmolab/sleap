@@ -19,6 +19,7 @@ from qtpy import QtCore, QtWidgets, QtGui
 
 import numpy as np
 import os
+import pathlib
 
 from operator import itemgetter
 
@@ -400,11 +401,11 @@ class VideosTableModel(GenericTableModel):
         for property in self.properties:
             if property == "name":
                 filename = getattr(item, "filename")
-                name = Path(filename).name
+                data[property] = pathlib.Path(filename).name
             elif property == "filepath":
                 filename = getattr(item, "filename")
-                parent = Path(filename).parent
-                data[property] = "/".join(splitted)
+                data[property] = str(pathlib.Path(filename).parent)
+                print(data[property])
             else:
                 data[property] = getattr(item, property)
         return data
