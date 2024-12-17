@@ -62,6 +62,7 @@ from qtpy.QtWidgets import (
     QShortcut,
     QVBoxLayout,
     QWidget,
+    QPinchGesture,
 )
 
 import sleap
@@ -823,6 +824,8 @@ class GraphicsView(QGraphicsView):
         # Set icon as default background.
         self.setImage(QImage(sleap.util.get_package_file("gui/background.png")))
 
+        self.grabGesture(Qt.GestureType.PinchGesture)
+
     def dragEnterEvent(self, event):
         if self.parentWidget():
             self.parentWidget().dragEnterEvent(event)
@@ -1188,6 +1191,23 @@ class GraphicsView(QGraphicsView):
     def keyReleaseEvent(self, event):
         """Custom event hander, disables default QGraphicsView behavior."""
         event.ignore()  # Kicks the event up to parent
+
+    def event(self, event):
+        if event.type() == QtCore.QEvent.Gesture:
+            return self.handleGestureEvent(event)
+        return super().event(event)
+
+    def handleGestureEvent(self, event):
+        gesture = event.gesture(Qt.GestureType.PinchGesture)
+        if gesture:
+            self.handlePinchGesture(gesture)
+        return True
+
+    def handlePinchGesture(self, gesture: QPinchGesture):
+        if gesture.state() == Qt.GestureState.GestureUpdated:
+            factor = gesture.scaleFactor()
+            self.zoomFactor = max(factor * self.zoomFactor, 1)
+            self.updateViewer()
 
 
 class QtNodeLabel(QGraphicsTextItem):
