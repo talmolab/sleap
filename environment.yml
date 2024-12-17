@@ -7,7 +7,6 @@ channels:
     - conda-forge
     - nvidia
     - sleap
-    - anaconda
 
 dependencies:
     # Packages SLEAP uses directly
@@ -42,6 +41,7 @@ dependencies:
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose <0.2.0
+    - conda-forge::lazy_loader
 
     # Packages required by tensorflow to find/use GPUs
     - conda-forge::cudatoolkit ==11.3.1

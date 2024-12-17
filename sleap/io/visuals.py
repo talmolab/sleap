@@ -7,19 +7,17 @@ from sleap.io.videowriter import VideoWriter
 from sleap.io.dataset import Labels
 from sleap.gui.color import ColorManager
 from sleap.util import usable_cpu_count
-
-import cv2
 import os
 import numpy as np
 import math
 from collections import deque
 from time import perf_counter
 from typing import List, Optional, Tuple
-
 from queue import Queue
 from threading import Thread
-
 import logging
+import lazy_loader
+cv2 = lazy_loader.load("cv2")
 
 logger = logging.getLogger(__name__)
 

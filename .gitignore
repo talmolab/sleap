@@ -117,3 +117,5 @@ venv.bak/
 
 # OS generated files
 .DS_Store
+
+models/

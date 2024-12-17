@@ -4,6 +4,7 @@ import jsonpickle
 import logging
 import numpy as np
 import tensorflow as tf
+import qtpy
 import zmq
 import io
 import os

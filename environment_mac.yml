@@ -40,5 +40,6 @@ dependencies:
     - conda-forge::qudida
     - conda-forge::albumentations
     - conda-forge::ndx-pose <0.2.0
+    - conda-forge::lazy_loader
     - pip:
-          - "--editable=.[conda_dev]"
+        - "--editable=.[conda_dev]"

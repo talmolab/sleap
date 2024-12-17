@@ -28,13 +28,15 @@ scipy>=1.7.0
 scikit-image
 scikit-learn>=1.0.0
 seaborn
-tensorflow==2.9.2; platform_machine != 'arm64'
-tensorflow-hub
 albumentations
 ndx-pose<0.2.0
+lazy-loader
+tensorflow==2.9.2; platform_machine != 'arm64'
+tensorflow-hub; platform_machine != 'arm64'
 # Silicon Mac specific packages
+tensorflow-hub >=0.14.0,<=0.16.1; sys_platform == 'darwin' and platform_machine == 'arm64'
 tensorflow-macos >=2.10.0,<2.13.0; sys_platform == 'darwin' and platform_machine == 'arm64'
-tensorflow-metal; sys_platform == 'darwin' and platform_machine == 'arm64'
+tensorflow-metal >=0.8.0,<=1.1.0; sys_platform == 'darwin' and platform_machine == 'arm64'
 
 # Dependencies of dependencies
 # tensorboard 2.11.2 has requirement protobuf<4,>=3.9.2

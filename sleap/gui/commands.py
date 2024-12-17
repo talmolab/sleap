@@ -39,7 +39,6 @@ from pathlib import Path, PurePath
 from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type, Union, cast
 
 import attr
-import cv2
 import numpy as np
 from qtpy import QtCore, QtGui, QtWidgets
 
@@ -1794,8 +1793,7 @@ class ReplaceVideo(EditCommand):
         """Shows gui for replacing videos in project."""
 
         def _get_truncation_message(truncation_messages, path, video):
-            reader = cv2.VideoCapture(path)
-            last_vid_frame = int(reader.get(cv2.CAP_PROP_FRAME_COUNT))
+            last_vid_frame = len(Video.from_filename(path))
             lfs: List[LabeledFrame] = list(context.labels.get(video))
             if lfs is not None:
                 lfs.sort(key=lambda lf: lf.frame_idx)
