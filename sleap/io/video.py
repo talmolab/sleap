@@ -395,7 +395,7 @@ class MediaVideo:
             # the first frame of data.
             if self._detect_grayscale is True:
                 self.grayscale = bool(
-                    np.alltrue(self.test_frame[..., 0] == self.test_frame[..., -1])
+                    np.all(self.test_frame[..., 0] == self.test_frame[..., -1])
                 )
 
         # Return cached reader
@@ -864,7 +864,7 @@ class SingleImageVideo:
 
             if self._detect_grayscale is True:
                 self.grayscale = bool(
-                    np.alltrue(test_frame_[..., 0] == test_frame_[..., -1])
+                    np.all(test_frame_[..., 0] == test_frame_[..., -1])
                 )
 
             if self.height_ is None:

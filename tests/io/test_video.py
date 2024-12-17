@@ -73,7 +73,7 @@ def test_hdf5_get_frames(hdf5_vid):
 
 def test_hdf5_get_item(hdf5_vid):
     assert hdf5_vid[0].shape == (1, 512, 512, 1)
-    assert np.alltrue(hdf5_vid[1:10:3] == hdf5_vid.get_frames([1, 4, 7]))
+    assert np.all(hdf5_vid[1:10:3] == hdf5_vid.get_frames([1, 4, 7]))
 
 
 def test_hd5f_file_not_found():
@@ -108,7 +108,7 @@ def test_mp4_get_frames(small_robot_mp4_vid):
 
 def test_mp4_get_item(small_robot_mp4_vid):
     assert small_robot_mp4_vid[0].shape == (1, 320, 560, 3)
-    assert np.alltrue(
+    assert np.all(
         small_robot_mp4_vid[1:10:3] == small_robot_mp4_vid.get_frames([1, 4, 7])
     )
 
