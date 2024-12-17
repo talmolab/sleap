@@ -126,6 +126,11 @@ class LoadImageWorker(QtCore.QObject):
         self.timer.timeout.connect(self.doProcessing)
         self.timer.start(20)
 
+    @QtCore.Slot()
+    def stop_timers(self):
+        if self.timer:
+            self.timer.stop()
+
     def doProcessing(self):
         self._last_process_time = time.time()
 
@@ -289,20 +294,25 @@ class QtVideoPlayer(QWidget):
 
         self.view.show()
 
-        # Call cleanup method when application exits to end worker thread
-        self.destroyed.connect(self.cleanup)
-        atexit.register(self.cleanup)
+        # Call cleanup method when application exits to end worker thread.
+        # Note: This is commented out in favor of the MainWindow.closeEvent() path.
+        # self.destroyed.connect(self.cleanup)
+        # app = QApplication.instance()
+        # if app:
+        #     app.aboutToQuit.connect(self.cleanup)
 
         if video is not None:
             self.load_video(video)
 
     def on_new_frame(self, qimage):
-        # print("on_new_frame in thread:", QtCore.QThread.currentThread())
         self.view.setImage(qimage)
 
     def cleanup(self):
-        self._loader_thread.quit()
-        self._loader_thread.wait()
+        if self._loader_thread.isRunning():
+            QtCore.QMetaObject.invokeMethod(self._video_image_loader, "stop_timers", QtCore.Qt.QueuedConnection)
+            QtWidgets.QApplication.processEvents()
+            self._loader_thread.quit()
+            self._loader_thread.wait()
 
     def dragEnterEvent(self, event):
         if self.parentWidget():
