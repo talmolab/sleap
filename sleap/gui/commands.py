@@ -3497,10 +3497,10 @@ class ExportClipVideo(AppCommand):
 
         # Ensure frame range is set; default to all frames if None
         frame_range = context.state.get("frame_range", (0, video.frames))
-        
+
         # Check if clip is selected, raise error if no clip selected
         if frame_range == (0, video.frames) or frame_range == (0, 1) or frame_range[0] == frame_range[1]:
-             raise ValueError("No valid clip frame range selected! Please select a valid frame range using shift + click in the GUI.")
+            raise ValueError("No valid clip frame range selected! Please select a valid frame range using shift + click in the GUI.")
 
         # Extract only the selected frames into a new Labels object
         pruned_labels = labels.extract(
@@ -3517,20 +3517,44 @@ class ExportClipVideo(AppCommand):
         fps = params["fps"]
         writer = VideoWriter.safe_builder(params["filename"], height, width, fps)
 
+       # Conditionally show progress bar
+        show_progress = os.getenv("PYTEST_RUNNING") != "1"
+        if show_progress:
+            app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+            progress = QtWidgets.QProgressDialog("Exporting video...", "Cancel", 0, len(range(*frame_range)))
+            progress.setWindowModality(QtCore.Qt.WindowModal)
+            progress.setValue(0)
+        else:
+            progress = None  # Progress bar disabled during tests
+
         # Write frames to the video
-        for frame_idx in range(*frame_range):
-            try:
-                frame = video.get_frame(frame_idx)
+        try:
+            for idx, frame_idx in enumerate(range(*frame_range)):
+                if show_progress and progress.wasCanceled():
+                    writer.close()
+                    os.remove(params["filename"])
+                    return
 
-                # Convert grayscale to BGR if necessary
-                if frame.ndim == 2:  # Grayscale frames
-                    frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+                # Read and process frame
+                try:
+                    frame = video.get_frame(frame_idx)
+                    if frame.ndim == 2:  # Grayscale frames
+                        frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+                    writer.add_frame(frame, bgr=True)
+                except Exception as e:
+                    writer.close()
+                    os.remove(params["filename"])
+                    raise RuntimeError(f"Failed to write frame {frame_idx}: {str(e)}")
 
-                writer.add_frame(frame, bgr=True)
-            except KeyError:
-                raise KeyError(f"Failed to load frame {frame_idx} from video.")
-        
-        writer.close()
+                # Update progress
+                if show_progress:
+                    progress.setValue(idx + 1)
+                    QtWidgets.QApplication.processEvents()
+
+        finally:
+            writer.close()
+            if show_progress:
+                progress.setValue(frame_range[1] - frame_range[0])  # Complete progress
 
         # Create a new Video object for the output video
         new_media_video = MediaVideo(
@@ -3541,18 +3565,19 @@ class ExportClipVideo(AppCommand):
         # Update pruned labels to point to the new video
         for labeled_frame in pruned_labels.labeled_frames:
             labeled_frame.video = new_video
-        
-        pruned_labels.videos = [new_video]
-        try:
-            # Save the pruned labels
-            labels_filename = params["filename"].replace(".mp4", ".slp")
-            pruned_labels.save(labels_filename)
 
-            # Open the video file when done, if specified
-            if params.get("open_when_done", False):
-                open_file(params["filename"])
+        pruned_labels.videos = [new_video]
+
+        # Save the pruned labels
+        labels_filename = params["filename"].replace(".mp4", ".slp")
+        try:
+            pruned_labels.save(labels_filename)
         except Exception as e:
-            raise RuntimeError(f"Failed to save labels to {labels_filename}.")
+            raise RuntimeError(f"Failed to save labels to {labels_filename}: {str(e)}")
+
+        # Open the video file when done, if specified
+        if params.get("open_when_done", False):
+            open_file(params["filename"])
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
@@ -3566,7 +3591,6 @@ class ExportClipVideo(AppCommand):
         Returns:
             bool: True if the user confirmed the action, False if canceled.
         """
-
         # Extract FPS from video metadata (fallback to 30 if unavailable)
         video_fps = getattr(context.state["video"], "fps", 30)
 
