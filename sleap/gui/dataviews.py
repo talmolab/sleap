@@ -495,7 +495,7 @@ class VideosTableModel(GenericTableModel):
 
     def item_to_data(self, obj, item: "Video"):
         data = {}
-        for property in self.all_properties:
+        for property in self.properties:
             if property == "name":
                 data[property] = getattr(item, "filename").split("/")[-1]
             elif property == "filepath":
