@@ -461,15 +461,6 @@ class VideosTableModel(GenericTableModel):
             "channels",
         )
         # TODO: Always with filepath and name (no filename)
-        self.all_properties = (
-            "filename",
-            "filepath",
-            "name",
-            "frames",
-            "height",
-            "width",
-            "channels",
-        )
 
     def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
