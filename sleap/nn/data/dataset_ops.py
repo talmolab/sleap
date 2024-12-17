@@ -138,14 +138,19 @@ class Batcher:
             return example
 
         # Ensure that all keys have a rank of at least 1 (i.e., scalars).
-        ds_output = ds_input.map(
-            expand, num_parallel_calls=tf.data.AUTOTUNE
-        )
+        ds_output = ds_input.map(expand, num_parallel_calls=tf.data.AUTOTUNE)
 
-        ds_output = ds_output.ragged_batch(
-            batch_size=self.batch_size,
-            drop_remainder=self.drop_remainder
-        )
+        # Batch elements as ragged tensors.
+        if hasattr(ds_output, "ragged_batch"):
+            ds_output = ds_output.ragged_batch(
+                batch_size=self.batch_size, drop_remainder=self.drop_remainder
+            )
+        else:
+            ds_output = ds_output.apply(
+                tf.data.experimental.dense_to_ragged_batch(
+                    batch_size=self.batch_size, drop_remainder=self.drop_remainder
+                )
+            )
 
         if self.unrag:
             # Convert elements back into dense tensors with padding.
