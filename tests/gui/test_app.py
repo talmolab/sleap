@@ -376,6 +376,8 @@ def test_app_new_window(qtbot):
     )
     assert wins == (start_wins + 3)
 
+    app.player.cleanup()
+
     app.closeAllWindows()
 
 
@@ -448,3 +450,5 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
 
     # Toggle instance visibility with shortcut, showing instances
     toggle_and_verify_visibility(True)
+
+    window.player.cleanup()
