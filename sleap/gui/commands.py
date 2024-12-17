@@ -60,7 +60,7 @@ from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.video import Video, MediaVideo
 from sleap.io.videowriter import VideoWriter
-from sleap.skeleton import Node, Skeleton
+from sleap.skeleton import Skeleton
 from sleap.util import get_package_file
 
 
@@ -3497,7 +3497,9 @@ class ExportClipVideo(AppCommand):
 
         # Ensure frame range is set; default to all frames if None
         frame_range = context.state.get("frame_range", (0, video.frames))
-
+        # Validate frame range
+        if frame_range[0] < 0 or frame_range[1] > video.frames:
+            raise ValueError(f"Frame range {frame_range} is outside video bounds [0, {video.frames}]")
         # Check if clip is selected, raise error if no clip selected
         if frame_range == (0, video.frames) or frame_range == (0, 1) or frame_range[0] == frame_range[1]:
             raise ValueError("No valid clip frame range selected! Please select a valid frame range using shift + click in the GUI.")
