@@ -183,9 +183,6 @@ class VideosDock(DockWidget):
 
         return self.table
 
-    def create_context_menu(self) -> None:
-        """Create the context menu for the dock."""
-
     def create_video_edit_and_nav_buttons(self) -> QWidget:
         """Create the buttons for editing and navigating videos in table."""
         main_window = self.main_window
