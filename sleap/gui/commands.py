@@ -631,6 +631,7 @@ class CommandContext:
         """Exports a selected range of video frames and their corresponding labels."""
         self.execute(ExportVideoClip)
 
+
 # File Commands
 
 
@@ -3473,6 +3474,7 @@ class OpenPrereleaseVersion(AppCommand):
         if rls is not None:
             context.openWebsite(rls.url)
 
+
 class ExportVideoClip(AppCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
@@ -3572,8 +3574,12 @@ class ExportVideoClip(AppCommand):
         # Prompt the user with a simple Yes/No dialog for "Render Labels"
         render_labels_dialog = QtWidgets.QMessageBox()
         render_labels_dialog.setWindowTitle("Render Labels")
-        render_labels_dialog.setText("Do you want to include pose annotations in the video?")
-        render_labels_dialog.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        render_labels_dialog.setText(
+            "Do you want to include pose annotations in the video?"
+        )
+        render_labels_dialog.setStandardButtons(
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
+        )
         render_labels_dialog.setDefaultButton(QtWidgets.QMessageBox.Yes)
         render_labels = render_labels_dialog.exec_() == QtWidgets.QMessageBox.Yes
 
@@ -3629,7 +3635,8 @@ class ExportVideoClip(AppCommand):
         params["marker_size"] = context.state.get("marker size", default=4)
 
         return True
-    
+
+
 class ExportVideoClip(AppCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
@@ -3661,7 +3668,9 @@ class ExportVideoClip(AppCommand):
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         height, width = video.height, video.width
         is_color = video.channels == 3
-        writer = cv2.VideoWriter(params["filename"], fourcc, params["fps"], (width, height), is_color)
+        writer = cv2.VideoWriter(
+            params["filename"], fourcc, params["fps"], (width, height), is_color
+        )
 
         for frame_idx in params["frames"]:
             frame = video.get_frame(frame_idx)
@@ -3671,14 +3680,18 @@ class ExportVideoClip(AppCommand):
                 frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
             if frame.shape[:2] != (height, width):
-                raise ValueError(f"Frame size {frame.shape[:2]} does not match expected {height, width}")
+                raise ValueError(
+                    f"Frame size {frame.shape[:2]} does not match expected {height, width}"
+                )
 
             writer.write(frame)
 
         writer.release()
 
         # Create a new Video object for the output video
-        new_media_video = MediaVideo(filename=params["filename"], grayscale=video.channels == 1, bgr=True)
+        new_media_video = MediaVideo(
+            filename=params["filename"], grayscale=video.channels == 1, bgr=True
+        )
         new_video = Video(backend=new_media_video)
 
         # Step 1: Update all labeled frames to point to the new video
@@ -3744,8 +3757,7 @@ class ExportVideoClip(AppCommand):
         params["filename"] = filename
         params["fps"] = export_options["fps"]
         params["open_when_done"] = export_options["open_when_done"]
-        
-        
+
         # Access frame range
         if context.state.get("has_frame_range"):
             params["frames"] = range(*context.state["frame_range"])
@@ -3753,7 +3765,7 @@ class ExportVideoClip(AppCommand):
             params["frames"] = range(context.state["video"].frames)
 
         return True
-            
+
     def copy_to_clipboard(text: str):
         """Copy a string to the system clipboard.
 

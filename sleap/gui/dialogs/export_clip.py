@@ -5,6 +5,7 @@ Dialog for exporting clip; shows message depending on available encoder.
 from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
 from qtpy import QtWidgets
 
+
 class ExportClipDialog(FormBuilderModalDialog):
     def __init__(self):
         from sleap.io.videowriter import VideoWriter
@@ -27,6 +28,7 @@ class ExportClipDialog(FormBuilderModalDialog):
         self.add_message(message)
 
         self.setWindowTitle("Export Clip Options")
+
 
 class ExportClipAndLabelsDialog(FormBuilderModalDialog):
     def __init__(self, video_fps=30):

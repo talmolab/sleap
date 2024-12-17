@@ -1058,11 +1058,15 @@ def test_ExportVideoClip_creates_files(tmpdir):
         LabeledFrame(
             video=video,
             frame_idx=i,
-            instances=[Instance(skeleton=mock_skeleton, track=Track(name=f"track_{i}"))],
+            instances=[
+                Instance(skeleton=mock_skeleton, track=Track(name=f"track_{i}"))
+            ],
         )
         for i in range(frame_count)
     ]
-    labels = Labels(labeled_frames=labeled_frames, videos=[video], skeletons=[mock_skeleton])
+    labels = Labels(
+        labeled_frames=labeled_frames, videos=[video], skeletons=[mock_skeleton]
+    )
 
     # Set up CommandContext
     context = CommandContext.from_labels(labels)
@@ -1096,7 +1100,10 @@ def test_ExportVideoClip_creates_files(tmpdir):
 
     # Case 4: Assert that the exported labels match the expected number of frames
     exported_labels = Labels.load_file(str(slp_path))  # Convert Path to string here
-    assert len(exported_labels.labeled_frames) == frame_count, "Incorrect number of frames in exported labels."
+    assert (
+        len(exported_labels.labeled_frames) == frame_count
+    ), "Incorrect number of frames in exported labels."
+
 
 def test_ExportVideoClip_frame_and_video_list_sizes(tmpdir):
     """Test that ExportVideoClip exports correct length labeled frames and video lists with a subset range."""
@@ -1127,11 +1134,15 @@ def test_ExportVideoClip_frame_and_video_list_sizes(tmpdir):
         LabeledFrame(
             video=video,
             frame_idx=i,
-            instances=[Instance(skeleton=mock_skeleton, track=Track(name=f"track_{i}"))],
+            instances=[
+                Instance(skeleton=mock_skeleton, track=Track(name=f"track_{i}"))
+            ],
         )
         for i in range(total_frames)
     ]
-    labels = Labels(labeled_frames=labeled_frames, videos=[video], skeletons=[mock_skeleton])
+    labels = Labels(
+        labeled_frames=labeled_frames, videos=[video], skeletons=[mock_skeleton]
+    )
 
     # Set up CommandContext with subset frame range
     context = CommandContext.from_labels(labels)
@@ -1151,32 +1162,30 @@ def test_ExportVideoClip_frame_and_video_list_sizes(tmpdir):
     # Call ExportVideoClip
     ExportVideoClip.do_action(context, params)
 
-    
     slp_path = export_path.with_suffix(".slp")
     exported_labels = Labels.load_file(str(slp_path))  # Load exported labels
 
     # Assertions
 
     # Case 1: Check the number of labeled frames
-    assert len(exported_labels.labeled_frames) == subset_frame_count, (
-        f"Expected {subset_frame_count} labeled frames, but got {len(exported_labels.labeled_frames)}."
-    )
+    assert (
+        len(exported_labels.labeled_frames) == subset_frame_count
+    ), f"Expected {subset_frame_count} labeled frames, but got {len(exported_labels.labeled_frames)}."
 
     # Case 2: Check the number of videos
-    assert len(exported_labels.videos) == 1, (
-        f"Expected 1 video in exported labels, but got {len(exported_labels.videos)}."
-    )
+    assert (
+        len(exported_labels.videos) == 1
+    ), f"Expected 1 video in exported labels, but got {len(exported_labels.videos)}."
 
     # Case 3: Validate that the video in exported labels matches the filename
     exported_video = exported_labels.videos[0]
-    assert exported_video.filename == str(export_path), (
-        f"Expected video filename to be '{export_path}', but got '{exported_video.filename}'."
-    )
+    assert exported_video.filename == str(
+        export_path
+    ), f"Expected video filename to be '{export_path}', but got '{exported_video.filename}'."
 
     # Case 4: Check the frame indices in labeled frames start from 0
     expected_frame_indices = list(range(0, subset_frame_count))
     actual_frame_indices = [lf.frame_idx for lf in exported_labels.labeled_frames]
-    assert actual_frame_indices == expected_frame_indices, (
-        f"Expected frame indices {expected_frame_indices}, but got {actual_frame_indices}."
-    )
-    
+    assert (
+        actual_frame_indices == expected_frame_indices
+    ), f"Expected frame indices {expected_frame_indices}, but got {actual_frame_indices}."
