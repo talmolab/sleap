@@ -41,19 +41,24 @@ def find_instance_crop_size(
 
     # Calculate crop size
     min_crop_size_no_pad = min_crop_size - padding
-    height, width, _ = labels[0].image.shape
     max_length = 0.0
-    for inst in labels.user_instances:
-        pts = inst.points_array
+    for lf in labels:
+        for inst in lf.user_instances:
+            pts = inst.points_array
 
-        pts[pts < 0] = np.NaN
-        pts[:, 0][pts[:, 0] > height - 1] = np.NaN
-        pts[:, 1][pts[:, 1] > width - 1] = np.NaN
+            pts[pts < 0] = np.NaN
+            height, width, _ = lf.image.shape
+            pts[:, 0][pts[:, 0] > height - 1] = np.NaN
+            pts[:, 1][pts[:, 1] > width - 1] = np.NaN
 
-        pts *= input_scaling
-        max_length = np.maximum(max_length, np.nanmax(pts[:, 0]) - np.nanmin(pts[:, 0]))
-        max_length = np.maximum(max_length, np.nanmax(pts[:, 1]) - np.nanmin(pts[:, 1]))
-        max_length = np.maximum(max_length, min_crop_size_no_pad)
+            pts *= input_scaling
+            max_length = np.maximum(
+                max_length, np.nanmax(pts[:, 0]) - np.nanmin(pts[:, 0])
+            )
+            max_length = np.maximum(
+                max_length, np.nanmax(pts[:, 1]) - np.nanmin(pts[:, 1])
+            )
+            max_length = np.maximum(max_length, min_crop_size_no_pad)
 
     max_length += float(padding)
     crop_size = np.math.ceil(max_length / float(maximum_stride)) * maximum_stride

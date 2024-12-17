@@ -393,7 +393,7 @@ def test_topdown_model(test_pipeline):
     assert tuple(out["instance_peak_vals"].shape) == (8, 2, 2)
     assert tuple(out["n_valid"].shape) == (8,)
 
-    assert (out["n_valid"] == [1, 1, 1, 2, 2, 2, 2, 2]).all()
+    assert (out["n_valid"] == [1, 1, 1, 2, 2, 2, 1, 1]).all()
 
 
 def test_inference_layer():
