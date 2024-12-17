@@ -1339,8 +1339,6 @@ class MainWindow(QMainWindow):
                 hide_key = self.shortcuts["show instances"].toString()
                 message += f" [Hidden] Press '{hide_key}' to toggle."
                 self.statusBar().setStyleSheet("color: red")
-            else:
-                self.statusBar().setStyleSheet("color: black")
 
         self.statusBar().showMessage(message)
 
