@@ -662,7 +662,6 @@ class MainWindow(QMainWindow):
             key="edge style",
         )
 
-        # XXX
         add_submenu_choices(
             menu=viewMenu,
             title="Node Marker Size",

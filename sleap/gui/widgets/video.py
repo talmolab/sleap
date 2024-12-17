@@ -1653,7 +1653,7 @@ class QtNode(QGraphicsEllipseItem):
             view.instanceDoubleClicked.emit(self.parentObject().instance, event)
 
     def hoverEnterEvent(self, event):
-        print("QtNode: hover enter")
+        """Custom event handler for mouse hover enter."""
         return super().hoverEnterEvent(event)
 
 
