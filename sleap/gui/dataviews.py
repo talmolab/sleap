@@ -311,9 +311,6 @@ class GenericTableView(QtWidgets.QTableView):
         self.is_sortable = is_sortable or self.is_sortable
         self.is_activatable = is_activatable or self.is_activatable
         self.multiple_selection = multiple_selection
-        self.options = {
-            "Show Video Name": self.show_video_name,
-        }
 
         self.setModel(model)
 
