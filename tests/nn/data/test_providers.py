@@ -68,6 +68,37 @@ def test_labels_reader_no_visible_points(min_labels):
     assert len(labels_reader) == 0
 
 
+def test_labels_filter_oob_points(min_labels):
+    # There should be two instances in the labels dataset
+    labels = min_labels.copy()
+    assert len(labels.labeled_frames[0].instances) == 2
+
+    assert labels[0].instances[0].numpy().shape[0] == 2  # 2 nodes
+
+    labels[0].instances[0][0] = (390, 100)  # exceeds img height
+    print(labels[0].instances)
+
+    labels_reader = providers.LabelsReader.from_user_instances(labels)
+    examples = list(iter(labels_reader.make_dataset()))
+    assert len(examples) == 1
+
+    assert all(np.isnan(examples[0]["instances"][0][0]))
+
+    # test with negative keypoints
+    labels = min_labels.copy()
+    assert len(labels.labeled_frames[0].instances) == 2
+
+    assert labels[0].instances[0].numpy().shape[0] == 2  # 2 nodes
+
+    labels[0].instances[0][1] = (-10, 100)
+
+    labels_reader = providers.LabelsReader.from_user_instances(labels)
+    examples = list(iter(labels_reader.make_dataset()))
+    assert len(examples) == 1
+
+    assert all(np.isnan(examples[0]["instances"][0][1]))
+
+
 def test_labels_reader_subset(min_labels):
     labels = sleap.Labels([min_labels[0], min_labels[0], min_labels[0]])
     assert len(labels) == 3
