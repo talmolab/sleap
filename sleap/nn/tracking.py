@@ -287,9 +287,13 @@ class FlowCandidateMaker:
             This function relies on the Lucas-Kanade method for optical flow estimation.
         """
 
+        print(f"Image type before converting: {type(ref_img)}")
+
         # Convert to uint8 for cv2.calcOpticalFlowPyrLK
         ref_img = ensure_int(ref_img)
         new_img = ensure_int(new_img)
+
+        print(f"Image type after converting: {type(ref_img)}")
 
         # Convert tensors to ndarays
         if hasattr(ref_img, "numpy"):
@@ -1081,9 +1085,9 @@ class Tracker(BaseTracker):
 
         option = dict(name="of_window_size", default=21)
         option["type"] = int
-        option[
-            "help"
-        ] = "For optical-flow: Optical flow window size to consider at each pyramid "
+        option["help"] = (
+            "For optical-flow: Optical flow window size to consider at each pyramid "
+        )
         "scale level"
         options.append(option)
 
@@ -1110,9 +1114,9 @@ class Tracker(BaseTracker):
 
         option = dict(name="kf_init_frame_count", default="0")
         option["type"] = int
-        option[
-            "help"
-        ] = "For Kalman filter: Number of frames to track with other tracker. 0 means no Kalman filters will be used."
+        option["help"] = (
+            "For Kalman filter: Number of frames to track with other tracker. 0 means no Kalman filters will be used."
+        )
         options.append(option)
 
         def float_list_func(s):
