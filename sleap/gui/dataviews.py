@@ -390,8 +390,8 @@ class GenericTableView(QtWidgets.QTableView):
 
 class VideosTableModel(GenericTableModel):
     properties = (
-        "filepath",
         "name",
+        "filepath",
         "frames",
         "height",
         "width",
