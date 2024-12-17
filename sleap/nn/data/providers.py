@@ -5,6 +5,7 @@ import tensorflow as tf
 import attr
 from typing import Text, Optional, List, Sequence, Union, Tuple
 import sleap
+from sleap.instance import Instance
 
 
 @attr.s(auto_attribs=True)
@@ -197,6 +198,25 @@ class LabelsReader:
 
             raw_image = lf.image
             raw_image_size = np.array(raw_image.shape).astype("int32")
+
+            height, width = raw_image_size
+
+            # Filter OOB points
+            instances = []
+            for instance in lf.instances:
+                pts = instance.numpy()
+                # negative coords
+                pts[pts < 0] = np.NaN
+
+                # coordinates outside img frame
+                pts[:, 0][pts[:, 0] > height - 1] = np.NaN
+                pts[:, 1][pts[:, 1] > width - 1] = np.NaN
+
+                # remove all nans
+                pts = pts[~np.isnan(pts).any(axis=1), :]
+
+                instances.append(Instance.from_numpy(pts, lf.skeleton, lf.track))
+            lf.instances = instances
 
             if self.user_instances_only:
                 insts = lf.user_instances
