@@ -21,6 +21,7 @@ from skimage.util.shape import view_as_windows
 
 from sleap.io.video import Video
 import lazy_loader
+
 cv2 = lazy_loader.load("cv2")
 
 logger = logging.getLogger(__name__)

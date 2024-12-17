@@ -450,9 +450,7 @@ class InstanceConfidenceMapGenerator:
             return example
 
         # Map transformation.
-        output_ds = input_ds.map(
-            generate_confmaps, num_parallel_calls=tf.data.AUTOTUNE
-        )
+        output_ds = input_ds.map(generate_confmaps, num_parallel_calls=tf.data.AUTOTUNE)
         return output_ds
 
 
@@ -550,7 +548,5 @@ class SingleInstanceConfidenceMapGenerator:
             return example
 
         # Map transformation.
-        output_ds = input_ds.map(
-            generate_confmaps, num_parallel_calls=tf.data.AUTOTUNE
-        )
+        output_ds = input_ds.map(generate_confmaps, num_parallel_calls=tf.data.AUTOTUNE)
         return output_ds

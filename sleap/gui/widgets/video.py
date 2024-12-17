@@ -272,8 +272,7 @@ class QtVideoPlayer(QWidget):
 
         # Connect signal so that image will be shown after it's loaded
         self._video_image_loader.result.connect(
-            self.on_new_frame,
-            QtCore.Qt.QueuedConnection
+            self.on_new_frame, QtCore.Qt.QueuedConnection
         )
 
         def update_selection_state(a, b):
@@ -309,7 +308,9 @@ class QtVideoPlayer(QWidget):
 
     def cleanup(self):
         if self._loader_thread.isRunning():
-            QtCore.QMetaObject.invokeMethod(self._video_image_loader, "stop_timers", QtCore.Qt.QueuedConnection)
+            QtCore.QMetaObject.invokeMethod(
+                self._video_image_loader, "stop_timers", QtCore.Qt.QueuedConnection
+            )
             QtWidgets.QApplication.processEvents()
             self._loader_thread.quit()
             self._loader_thread.wait()

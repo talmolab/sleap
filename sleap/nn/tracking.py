@@ -5,6 +5,7 @@ import abc
 import attr
 import numpy as np
 import lazy_loader
+
 cv2 = lazy_loader.load("cv2")
 import functools
 from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple

@@ -13,6 +13,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import imageio.v2 as iio
 import lazy_loader
+
 cv2 = lazy_loader.load("cv2")
 
 

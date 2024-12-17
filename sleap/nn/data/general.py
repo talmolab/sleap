@@ -39,9 +39,7 @@ class KeyRenamer:
             return example
 
         # Map the main processing function to each example.
-        output_ds = input_ds.map(
-            rename_keys, num_parallel_calls=tf.data.AUTOTUNE
-        )
+        output_ds = input_ds.map(rename_keys, num_parallel_calls=tf.data.AUTOTUNE)
 
         return output_ds
 
@@ -70,9 +68,7 @@ class KeyFilter:
             return {key: example[key] for key in self.keep_keys}
 
         # Map the main processing function to each example.
-        output_ds = input_ds.map(
-            filter_keys, num_parallel_calls=tf.data.AUTOTUNE
-        )
+        output_ds = input_ds.map(filter_keys, num_parallel_calls=tf.data.AUTOTUNE)
 
         return output_ds
 
@@ -106,9 +102,7 @@ class KeyDeviceMover:
             return example
 
         # Map the main processing function to each example.
-        output_ds = input_ds.map(
-            move_keys, num_parallel_calls=tf.data.AUTOTUNE
-        )
+        output_ds = input_ds.map(move_keys, num_parallel_calls=tf.data.AUTOTUNE)
 
         return output_ds
 
@@ -143,8 +137,6 @@ class LambdaMap:
         """Create a dataset that contains transformed data."""
 
         # Map the main processing function to each example.
-        output_ds = input_ds.map(
-            self.func, num_parallel_calls=tf.data.AUTOTUNE
-        )
+        output_ds = input_ds.map(self.func, num_parallel_calls=tf.data.AUTOTUNE)
 
         return output_ds

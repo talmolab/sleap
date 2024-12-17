@@ -247,9 +247,7 @@ class Resizer:
             return example
 
         # Map transformation.
-        ds_output = ds_input.map(
-            resize, num_parallel_calls=tf.data.AUTOTUNE
-        )
+        ds_output = ds_input.map(resize, num_parallel_calls=tf.data.AUTOTUNE)
         return ds_output
 
 
@@ -463,9 +461,7 @@ class SizeMatcher:
 
             return example
 
-        ds_output = ds_input.map(
-            resize_and_pad, num_parallel_calls=tf.data.AUTOTUNE
-        )
+        ds_output = ds_input.map(resize_and_pad, num_parallel_calls=tf.data.AUTOTUNE)
         return ds_output
 
 
@@ -510,8 +506,6 @@ class PointsRescaler:
             return example
 
         # Map the main processing function to each example.
-        output_ds = input_ds.map(
-            rescale_points, num_parallel_calls=tf.data.AUTOTUNE
-        )
+        output_ds = input_ds.map(rescale_points, num_parallel_calls=tf.data.AUTOTUNE)
 
         return output_ds

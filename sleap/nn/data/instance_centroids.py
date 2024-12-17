@@ -189,7 +189,5 @@ class InstanceCentroidFinder:
                 return frame_data
 
         # Map transformation.
-        ds_output = ds_input.map(
-            find_centroids, num_parallel_calls=tf.data.AUTOTUNE
-        )
+        ds_output = ds_input.map(find_centroids, num_parallel_calls=tf.data.AUTOTUNE)
         return ds_output

@@ -353,7 +353,5 @@ class PartAffinityFieldsGenerator:
             return example
 
         # Map transformation.
-        output_ds = input_ds.map(
-            generate_pafs, num_parallel_calls=tf.data.AUTOTUNE
-        )
+        output_ds = input_ds.map(generate_pafs, num_parallel_calls=tf.data.AUTOTUNE)
         return output_ds

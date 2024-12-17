@@ -447,9 +447,7 @@ class InstanceCropper:
             return instances_data
 
         # Map the main processing function to each example.
-        output_ds = input_ds.map(
-            crop_instances, num_parallel_calls=tf.data.AUTOTUNE
-        )
+        output_ds = input_ds.map(crop_instances, num_parallel_calls=tf.data.AUTOTUNE)
         if self.unbatch:
             # Unbatch to split frame-level examples into individual instance-level
             # examples.
@@ -551,9 +549,7 @@ class PredictedInstanceCropper:
             return instances_data
 
         # Map the main processing function to each example.
-        output_ds = input_ds.map(
-            crop_instances, num_parallel_calls=tf.data.AUTOTUNE
-        )
+        output_ds = input_ds.map(crop_instances, num_parallel_calls=tf.data.AUTOTUNE)
 
         # Unbatch to split frame-level examples into individual instance-level examples.
         output_ds = output_ds.unbatch()

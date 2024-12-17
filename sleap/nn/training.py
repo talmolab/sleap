@@ -270,9 +270,13 @@ def setup_optimizer(config: OptimizationConfig) -> tf.keras.optimizers.Optimizer
         # Only use amsgrad on non-M1 Mac platforms (not currently supported)
         is_apple_silicon = "arm64" in platform.platform()
         if is_apple_silicon:
-            optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=config.initial_learning_rate)
+            optimizer = tf.keras.optimizers.legacy.Adam(
+                learning_rate=config.initial_learning_rate
+            )
         else:
-            optimizer = tf.keras.optimizers.Adam(learning_rate=config.initial_learning_rate, amsgrad=True)
+            optimizer = tf.keras.optimizers.Adam(
+                learning_rate=config.initial_learning_rate, amsgrad=True
+            )
     elif config.optimizer.lower() == "rmsprop":
         optimizer = tf.keras.optimizers.RMSprop(
             learning_rate=config.initial_learning_rate

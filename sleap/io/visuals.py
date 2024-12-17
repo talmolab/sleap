@@ -17,6 +17,7 @@ from queue import Queue
 from threading import Thread
 import logging
 import lazy_loader
+
 cv2 = lazy_loader.load("cv2")
 
 logger = logging.getLogger(__name__)

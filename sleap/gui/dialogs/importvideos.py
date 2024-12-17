@@ -46,6 +46,7 @@ from sleap.gui.dialogs.filedialog import FileDialog
 import h5py
 import qimage2ndarray
 import lazy_loader
+
 cv2 = lazy_loader.load("cv2")
 
 from typing import Any, Dict, List, Optional
