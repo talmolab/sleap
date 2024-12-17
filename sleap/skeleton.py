@@ -1504,7 +1504,7 @@ class Skeleton:
             indexed_node_graph = self._graph
 
         # Encode to JSON
-        graph = json_graph.node_link_data(indexed_node_graph)
+        graph = json_graph.node_link_data(indexed_node_graph, edges="links")
 
         # SLEAP v1.3.0 added `description` and `preview_image` to `Skeleton`, but saving
         # these fields breaks data format compatibility. Currently, these are only
