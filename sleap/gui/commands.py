@@ -3543,14 +3543,16 @@ class ExportClipVideo(AppCommand):
             labeled_frame.video = new_video
         
         pruned_labels.videos = [new_video]
+        try:
+            # Save the pruned labels
+            labels_filename = params["filename"].replace(".mp4", ".slp")
+            pruned_labels.save(labels_filename)
 
-        # Save the pruned labels
-        labels_filename = params["filename"].replace(".mp4", ".slp")
-        pruned_labels.save(labels_filename)
-
-        # Open the video file when done, if specified
-        if params.get("open_when_done", False):
-            open_file(params["filename"])
+            # Open the video file when done, if specified
+            if params.get("open_when_done", False):
+                open_file(params["filename"])
+        except Exception as e:
+            raise RuntimeError(f"Failed to save labels to {labels_filename}.")
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
@@ -3627,8 +3629,11 @@ class ExportClipPkg(AppCommand):
         for labeled_frame in pruned_labels.labeled_frames:
             labeled_frame.frame_idx -= frame_range[0]
 
-        pkg_filename = params["filename"]
-        pruned_labels.save(pkg_filename, with_images=True)
+        try:
+            pkg_filename = params["filename"]
+            pruned_labels.save(pkg_filename, with_images=True)
+        except Exception as e:
+            raise RuntimeError(f"Failed to save labels pkg to {pkg_filename}.")
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
