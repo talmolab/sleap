@@ -3657,7 +3657,7 @@ class ExportVideoClip(AppCommand):
         for labeled_frame in pruned_labels.labeled_frames:
             labeled_frame.frame_idx -= frame_range[0]
 
-        # Save the video without annotations
+        # Save the video
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         height, width = video.height, video.width
         is_color = video.channels == 3
