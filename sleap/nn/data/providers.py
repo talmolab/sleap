@@ -199,7 +199,7 @@ class LabelsReader:
             raw_image = lf.image
             raw_image_size = np.array(raw_image.shape).astype("int32")
 
-            height, width = raw_image_size
+            height, width, _ = raw_image_size
 
             # Filter OOB points
             instances = []
