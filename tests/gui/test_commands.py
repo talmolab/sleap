@@ -9,6 +9,7 @@ from qtpy import QtCore
 from typing import List
 
 from sleap import Skeleton, Track, PredictedInstance
+from sleap.skeleton import Node
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import (
     AddInstance,
@@ -22,6 +23,7 @@ from sleap.gui.commands import (
     SaveProjectAs,
     DeleteFrameLimitPredictions,
     get_new_version_filename,
+    ExportVideoClip,
 )
 from sleap.instance import Instance, LabeledFrame
 from sleap.io.convert import default_analysis_filename
@@ -29,7 +31,7 @@ from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.pathutils import fix_path_separator
-from sleap.io.video import Video
+from sleap.io.video import MediaVideo, Video
 from sleap.util import get_package_file
 
 # These imports cause trouble when running `pytest.main()` from within the file
@@ -37,6 +39,8 @@ from sleap.util import get_package_file
 from tests.info.test_h5 import extract_meta_hdf5
 from tests.io.test_video import assert_video_params
 from tests.io.test_formats import read_nix_meta
+
+from imageio import get_writer
 
 
 def test_delete_user_dialog(centered_pair_predictions):
@@ -1046,3 +1050,163 @@ def test_newInstance(qtbot, centered_pair_predictions: Labels):
     )
     diff = np.nan_to_num(new_inst.numpy() - copy_instance.numpy(), nan=offset)
     assert np.all(diff == offset)
+
+
+def test_ExportVideoClip_creates_files(tmpdir):
+    """Test that ExportVideoClip creates a video clip, .slp, and .pkg.slp."""
+
+    # Step 1: Generate a dummy video file using imageio
+    video_path = Path(tmpdir, "mock_video.mp4")
+    fps = 30
+    frame_count = 10
+    width, height = 100, 100
+
+    with get_writer(video_path, fps=fps, codec="libx264", format="FFMPEG") as writer:
+        for _ in range(frame_count):
+            frame = np.zeros((height, width), dtype=np.uint8)  # Black frame
+            writer.append_data(frame)
+
+    # Create the video object
+    video = Video(backend=MediaVideo(filename=str(video_path), grayscale=True))
+
+    # Mock skeleton
+    mock_skeleton = Skeleton()
+    mock_skeleton.add_node("node1")
+    mock_skeleton.add_node("node2")
+
+    # Mock labeled frames
+    labeled_frames = [
+        LabeledFrame(
+            video=video,
+            frame_idx=i,
+            instances=[
+                Instance(skeleton=mock_skeleton, track=Track(name=f"track_{i}"))
+            ],
+        )
+        for i in range(frame_count)
+    ]
+    labels = Labels(
+        labeled_frames=labeled_frames, videos=[video], skeletons=[mock_skeleton]
+    )
+
+    # Set up CommandContext
+    context = CommandContext.from_labels(labels)
+    context.state["video"] = video
+    context.state["labels"] = labels
+    context.state["frame_range"] = (0, frame_count)
+
+    # Parameters for ExportVideoClip
+    export_path = Path(tmpdir, "exported_video.mp4")
+    params = {
+        "filename": str(export_path),
+        "fps": fps,
+        "frames": range(frame_count),
+        "open_when_done": False,
+    }
+
+    # Call ExportVideoClip
+    ExportVideoClip.do_action(context, params)
+
+    # Assertions
+    # Case 1: Assert exported video exists
+    assert export_path.exists(), "Exported video file was not created."
+
+    # Case 2: Assert .slp file exists
+    slp_path = export_path.with_suffix(".slp")
+    assert slp_path.exists(), ".slp file was not created."
+
+    # Case 3: Assert .pkg.slp file exists
+    pkg_slp_path = export_path.with_suffix(".pkg.slp")
+    assert pkg_slp_path.exists(), ".pkg.slp file was not created."
+
+    # Case 4: Assert that the exported labels match the expected number of frames
+    exported_labels = Labels.load_file(str(slp_path))  # Convert Path to string here
+    assert (
+        len(exported_labels.labeled_frames) == frame_count
+    ), "Incorrect number of frames in exported labels."
+
+
+def test_ExportVideoClip_frame_and_video_list_sizes(tmpdir):
+    """Test that ExportVideoClip exports correct length labeled frames and video lists with a subset range."""
+
+    # Generate a dummy video file using imageio
+    video_path = Path(tmpdir, "mock_video.mp4")
+    fps = 30
+    total_frames = 10  # Total number of frames
+    subset_start, subset_end = 2, 7  # Define a subset frame range
+    subset_frame_count = subset_end - subset_start  # Subset range length
+    width, height = 100, 100
+
+    with get_writer(video_path, fps=fps, codec="libx264", format="FFMPEG") as writer:
+        for _ in range(total_frames):
+            frame = np.zeros((height, width), dtype=np.uint8)  # Black frame
+            writer.append_data(frame)
+
+    # Create the video object
+    video = Video(backend=MediaVideo(filename=str(video_path), grayscale=True))
+
+    # Mock skeleton
+    mock_skeleton = Skeleton()
+    mock_skeleton.add_node("node1")
+    mock_skeleton.add_node("node2")
+
+    # Mock labeled frames
+    labeled_frames = [
+        LabeledFrame(
+            video=video,
+            frame_idx=i,
+            instances=[
+                Instance(skeleton=mock_skeleton, track=Track(name=f"track_{i}"))
+            ],
+        )
+        for i in range(total_frames)
+    ]
+    labels = Labels(
+        labeled_frames=labeled_frames, videos=[video], skeletons=[mock_skeleton]
+    )
+
+    # Set up CommandContext with subset frame range
+    context = CommandContext.from_labels(labels)
+    context.state["video"] = video
+    context.state["labels"] = labels
+    context.state["frame_range"] = (subset_start, subset_end)  # Subset range
+
+    # Parameters for ExportVideoClip
+    export_path = Path(tmpdir, "exported_video.mp4")
+    params = {
+        "filename": str(export_path),
+        "fps": fps,
+        "frames": range(subset_start, subset_end),
+        "open_when_done": False,
+    }
+
+    # Call ExportVideoClip
+    ExportVideoClip.do_action(context, params)
+
+    slp_path = export_path.with_suffix(".slp")
+    exported_labels = Labels.load_file(str(slp_path))  # Load exported labels
+
+    # Assertions
+
+    # Case 1: Check the number of labeled frames
+    assert (
+        len(exported_labels.labeled_frames) == subset_frame_count
+    ), f"Expected {subset_frame_count} labeled frames, but got {len(exported_labels.labeled_frames)}."
+
+    # Case 2: Check the number of videos
+    assert (
+        len(exported_labels.videos) == 1
+    ), f"Expected 1 video in exported labels, but got {len(exported_labels.videos)}."
+
+    # Case 3: Validate that the video in exported labels matches the filename
+    exported_video = exported_labels.videos[0]
+    assert exported_video.filename == str(
+        export_path
+    ), f"Expected video filename to be '{export_path}', but got '{exported_video.filename}'."
+
+    # Case 4: Check the frame indices in labeled frames start from 0
+    expected_frame_indices = list(range(0, subset_frame_count))
+    actual_frame_indices = [lf.frame_idx for lf in exported_labels.labeled_frames]
+    assert (
+        actual_frame_indices == expected_frame_indices
+    ), f"Expected frame indices {expected_frame_indices}, but got {actual_frame_indices}."

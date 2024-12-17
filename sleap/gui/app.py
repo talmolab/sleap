@@ -749,6 +749,15 @@ class MainWindow(QMainWindow):
 
         add_menu_item(
             labelMenu,
+            "extract clip and labels",
+            "Extract Clip and Labels...",
+            self.commands.exportVideoClip,
+        )
+
+        labelMenu.addSeparator()
+
+        add_menu_item(
+            labelMenu,
             "add instances from all frame predictions",
             "Add Instances from All Predictions on Current Frame",
             self.commands.addUserInstancesFromPredictions,
