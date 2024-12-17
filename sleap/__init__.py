@@ -8,6 +8,11 @@ os.environ["NO_ALBUMENTATIONS_UPDATE"] = "1"
 # Setup logging to stdout
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
+# Control import order.
+import tensorflow as tf
+import cv2
+import qtpy
+
 # Import submodules we want available at top-level
 from sleap.version import __version__, versions
 
