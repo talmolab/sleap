@@ -442,39 +442,53 @@ class GenericTableView(QtWidgets.QTableView):
         self.options[option] = checked
         model = self.model()
         if isinstance(model, VideosTableModel):
-            model.set_show_video_name(self.options["Show Video Name"])
+            if option == "Show Video Name":
+                model.set_show_video_name(self.options["Show Video Name"])
 
 
 class VideosTableModel(GenericTableModel):
-    def __init__(self, show_video_name: bool = False, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, items, show_video_name=False, **kwargs):
+        super().__init__(**kwargs)
+        self.items = items
         self.show_video_name = show_video_name
-        self.update_properties()
+        self.properties = self._get_properties()
+        self.all_properties = (
+            "filename",
+            "filepath",
+            "name",
+            "frames",
+            "height",
+            "width",
+            "channels",
+        )
 
-    def update_properties(self):
-        """Update properties based on show_video_name attribute."""
+    def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
+        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+            return self.properties[section].title()
+        return super().headerData(section, orientation, role)
+
+    def _get_properties(self):
+        """Return properties based on the show_video_name flag."""
         if self.show_video_name:
-            self.properties = (
-                "filename",
-                "name",
-                "frames",
-                "height",
-                "width",
-                "channels",
-            )
-        else:
-            self.properties = ("filename", "frames", "height", "width", "channels")
+            return ["filepath", "name", "frames", "height", "width", "channels"]
+        return ["filename", "frames", "height", "width", "channels"]
 
     def set_show_video_name(self, show_video_name: bool):
         """Set whether to show video name in table."""
         if self.show_video_name == show_video_name:
             return
-        self.show_video_name = show_video_name
-        self.update_properties()
-        self.layoutChanged.emit()
 
-    def item_to_data(self, obj, item):
-        return {key: getattr(item, key, None) for key in self.properties}
+        # Reset the table so that new columns are added
+        self.show_video_name = show_video_name
+        self.properties = self._get_properties()
+        self.beginResetModel()
+        self.endResetModel()
+
+    def item_to_data(self, obj, item: "Video"):
+        data = {}
+        for property in self.all_properties:
+            data[property] = getattr(item, property)
+        return data
 
 
 class SkeletonNodesTableModel(GenericTableModel):

@@ -272,6 +272,17 @@ class HDF5Video:
         return self.__dataset_h5.shape[self.__height_idx]
 
     @property
+    def name(self):
+        """Name of the video."""
+        return self.filename.split("/")[-1]
+
+    @property
+    def filepath(self):
+        """Path to the video file."""
+        splitted = self.filename.split("/")[:-1]
+        return "/".join(splitted)
+
+    @property
     def dtype(self):
         """See :class:`Video`."""
         return self.test_frame.dtype
@@ -467,8 +478,14 @@ class MediaVideo:
 
     @property
     def name(self):
-        """Return the name of the video."""
-        return os.path.basename(self.filename)
+        """Name of the video."""
+        return self.filename.split("/")[-1]
+
+    @property
+    def filepath(self):
+        """Path to the video file."""
+        splitted = self.filename.split("/")[:-1]
+        return "/".join(splitted)
 
     def reset(self, filename: str = None, grayscale: bool = None, bgr: bool = None):
         """Reloads the video."""
@@ -595,6 +612,17 @@ class NumpyVideo:
         """See :class:`Video`."""
         return self.__data.dtype
 
+    @property
+    def name(self):
+        """Name of the video."""
+        return self.filename.split("/")[-1]
+
+    @property
+    def filepath(self):
+        """Path to the video file."""
+        splitted = self.filename.split("/")[:-1]
+        return "/".join(splitted)
+
     def reset(self):
         """Reload the video."""
         # TODO
@@ -710,6 +738,17 @@ class ImgStoreVideo:
     def height(self):
         """See :class:`Video`."""
         return self.__img.shape[0]
+
+    @property
+    def name(self):
+        """Name of the video."""
+        return self.filename.split("/")[-1]
+
+    @property
+    def filepath(self):
+        """Path to the video file."""
+        splitted = self.filename.split("/")[:-1]
+        return "/".join(splitted)
 
     @property
     def dtype(self):
@@ -952,7 +991,13 @@ class SingleImageVideo:
     @property
     def name(self):
         """Name of the video."""
-        return os.path.basename(self.filename)
+        return self.filename.split("/")[-1]
+
+    @property
+    def filepath(self):
+        """Path to the video file."""
+        splitted = self.filename.split("/")[:-1]
+        return "/".join(splitted)
 
     def reset(
         self,
