@@ -627,6 +627,9 @@ class CommandContext:
         """Open the current prerelease version."""
         self.execute(OpenPrereleaseVersion)
 
+    def exportVideoClip(self):
+        """Exports a selected range of video frames and their corresponding labels."""
+        self.execute(ExportVideoClip)
 
 # File Commands
 
@@ -3470,7 +3473,309 @@ class OpenPrereleaseVersion(AppCommand):
         if rls is not None:
             context.openWebsite(rls.url)
 
+class ExportVideoClip(AppCommand):
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        """
+        Extracts a video clip and saves it with pose annotations.
 
+        Args:
+            context: Command context, providing state and application access.
+            params: Parameters for the action, including file paths and export options.
+        """
+        from sleap.io.visuals import save_labeled_video
+        from sleap import Labels
+
+        # Extract video and labels from context
+        video = context.state["video"]
+        labels = context.state["labels"]
+
+        # Ensure frame range is set; default to all frames if None
+        frame_range = context.state.get("frame_range")
+        if frame_range is None:
+            frame_range = (0, video.frames)
+
+        # Extract only the selected frames into a new Labels object
+        pruned_labels = labels.extract(
+            inds=range(*frame_range),
+            copy=True,  # Ensures a deep copy of the extracted labels
+        )
+
+        # Remap frame indices in pruned_labels to start from 0
+        for labeled_frame in pruned_labels.labeled_frames:
+            labeled_frame.frame_idx -= frame_range[0]
+
+        # Ensure the pruned labels include the original video reference
+        if video not in pruned_labels.videos:
+            pruned_labels.add_video(video)
+
+        # Conditionally render labels
+        render_labels = params["render_labels"]
+
+        # Save the video clip with annotations
+        # Save the video clip with pose annotations
+        save_labeled_video(
+            filename=params["filename"],
+            labels=context.state["labels"] if render_labels else None,
+            video=context.state["video"],
+            frames=list(params["frames"]),
+            fps=params["fps"],
+            color_manager=params["color_manager"],
+            background=params["background"],
+            show_edges=params["show_edges"] if render_labels else False,
+            edge_is_wedge=params["edge_is_wedge"] if render_labels else False,
+            marker_size=params["marker_size"] if render_labels else 0,
+            scale=params["scale"],
+            crop_size_xy=params["crop"],
+            gui_progress=True,
+        )
+
+        # Save the pruned labels
+        labels_filename = params["filename"].replace(".mp4", ".slp")
+        pruned_labels.save(labels_filename)
+
+        # Open the video file when done, if specified
+        if params["open_when_done"]:
+            open_file(params["filename"])
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        """
+        Asks the user for export parameters via a dialog.
+
+        Args:
+            context: Command context, providing state and application access.
+            params: A dictionary to populate with user-defined options.
+
+        Returns:
+            bool: True if the user confirmed the action, False if canceled.
+        """
+        from sleap.gui.dialogs.export_clip import ExportClipDialog
+        from sleap.io.videowriter import VideoWriter
+        from qtpy import QtWidgets
+
+        # Show the export dialog to the user
+        dialog = ExportClipDialog()
+
+        # Set default FPS from the current video
+        dialog.form_widget.set_form_data(
+            dict(fps=getattr(context.state["video"], "fps", 30))
+        )
+
+        export_options = dialog.get_results()
+
+        if export_options is None:  # User canceled the dialog
+            return False
+
+        # **Add "Render Labels" Option Manually**
+        # Since the dialog does not have an "Render Labels" checkbox, add it here.
+        # Prompt the user with a simple Yes/No dialog for "Render Labels"
+        render_labels_dialog = QtWidgets.QMessageBox()
+        render_labels_dialog.setWindowTitle("Render Labels")
+        render_labels_dialog.setText("Do you want to include pose annotations in the video?")
+        render_labels_dialog.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        render_labels_dialog.setDefaultButton(QtWidgets.QMessageBox.Yes)
+        render_labels = render_labels_dialog.exec_() == QtWidgets.QMessageBox.Yes
+
+        # Determine default output filename
+        default_out_filename = context.state["filename"] + ".avi"
+        if VideoWriter.can_use_ffmpeg():
+            default_out_filename = context.state["filename"] + ".mp4"
+
+        # Prompt the user to select an output file
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            None,
+            "Save Clip As...",
+            default_out_filename,
+            "Video (*.avi *.mp4)",
+        )
+
+        if not filename:  # User canceled file selection
+            return False
+
+        # Populate parameters with user-selected options
+        params["filename"] = filename
+        params["fps"] = export_options["fps"]
+        params["scale"] = export_options["scale"]
+        params["open_when_done"] = export_options["open_when_done"]
+        params["background"] = export_options["background"]
+        params["render_labels"] = render_labels  # Add render_labels option
+
+        # Handle crop size
+        params["crop"] = None
+        w = int(context.state["video"].width * params["scale"])
+        h = int(context.state["video"].height * params["scale"])
+        if export_options["crop"] == "Half":
+            params["crop"] = (w // 2, h // 2)
+        elif export_options["crop"] == "Quarter":
+            params["crop"] = (w // 4, h // 4)
+
+        # Use GUI visuals if selected
+        if export_options["use_gui_visuals"]:
+            params["color_manager"] = context.app.color_manager
+        else:
+            params["color_manager"] = None
+
+        # Access frame range
+        if context.state.get("has_frame_range"):
+            params["frames"] = range(*context.state["frame_range"])
+        else:
+            params["frames"] = range(context.state["video"].frames)
+
+        params["show_edges"] = context.state.get("show edges", default=True)
+        params["edge_is_wedge"] = (
+            context.state.get("edge style", default="").lower() == "wedge"
+        )
+        params["marker_size"] = context.state.get("marker size", default=4)
+
+        return True
+    
+class ExportVideoClip(AppCommand):
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        from sleap.io.visuals import save_labeled_video
+        from sleap.io.video import MediaVideo, Video
+        import cv2
+        import numpy as np
+
+        # Extract video and labels from context
+        video = context.state["video"]
+        labels = context.state["labels"]
+
+        # Ensure frame range is set; default to all frames if None
+        frame_range = context.state.get("frame_range")
+        if frame_range is None:
+            frame_range = (0, video.frames)
+
+        # Extract only the selected frames into a new Labels object
+        pruned_labels = labels.extract(
+            inds=range(*frame_range),
+            copy=True,  # Ensures a deep copy of the extracted labels
+        )
+
+        # Remap frame indices in pruned_labels to start from 0
+        for labeled_frame in pruned_labels.labeled_frames:
+            labeled_frame.frame_idx -= frame_range[0]
+
+        # Save the video without annotations
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        height, width = video.height, video.width
+        is_color = video.channels == 3
+        writer = cv2.VideoWriter(params["filename"], fourcc, params["fps"], (width, height), is_color)
+
+        for frame_idx in params["frames"]:
+            frame = video.get_frame(frame_idx)
+
+            # Ensure frame format is valid for OpenCV
+            if frame.ndim == 2:  # Grayscale frames
+                frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+
+            if frame.shape[:2] != (height, width):
+                raise ValueError(f"Frame size {frame.shape[:2]} does not match expected {height, width}")
+
+            writer.write(frame)
+
+        writer.release()
+
+        # Create a new Video object for the output video
+        new_media_video = MediaVideo(filename=params["filename"], grayscale=video.channels == 1, bgr=True)
+        new_video = Video(backend=new_media_video)
+
+        # Step 1: Update all labeled frames to point to the new video
+        for labeled_frame in pruned_labels.labeled_frames:
+            if labeled_frame.video.filename == video.filename:
+                labeled_frame.video = new_video
+
+        # Step 2: Safely replace the old video with the new video
+        pruned_labels.videos = [
+            v for v in pruned_labels.videos if v.filename != video.filename
+        ]
+        pruned_labels.add_video(new_video)
+
+        # Step 3: Rebuild the cache to ensure consistency
+        pruned_labels.update_cache()
+
+        # Save the pruned labels as .slp
+        labels_filename = params["filename"].replace(".mp4", ".slp")
+        pruned_labels.save(labels_filename)
+
+        # Save the pruned labels with embedded images as .pkg.slp
+        pkg_filename = params["filename"].replace(".mp4", ".pkg.slp")
+        pruned_labels.save(pkg_filename, with_images=True)
+
+        # Open the video file when done, if specified
+        if params["open_when_done"]:
+            open_file(params["filename"])
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        """
+        Asks the user for export parameters via a dialog.
+
+        Args:
+            context: Command context, providing state and application access.
+            params: A dictionary to populate with user-defined options.
+
+        Returns:
+            bool: True if the user confirmed the action, False if canceled.
+        """
+        from sleap.gui.dialogs.export_clip import ExportClipDialog
+        from sleap.io.videowriter import VideoWriter
+        from qtpy import QtWidgets
+
+        # Show the export dialog to the user
+        dialog = ExportClipDialog()
+
+        # Set default FPS from the current video
+        dialog.form_widget.set_form_data(
+            dict(fps=getattr(context.state["video"], "fps", 30))
+        )
+
+        export_options = dialog.get_results()
+
+        if export_options is None:  # User canceled the dialog
+            return False
+
+        # Determine default output filename
+        default_out_filename = context.state["filename"] + ".avi"
+        if VideoWriter.can_use_ffmpeg():
+            default_out_filename = context.state["filename"] + ".mp4"
+
+        # Prompt the user to select an output file
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            None,
+            "Save Clip As...",
+            default_out_filename,
+            "Video (*.avi *.mp4)",
+        )
+
+        if not filename:  # User canceled file selection
+            return False
+
+        # Populate parameters with user-selected options
+        params["filename"] = filename
+        params["fps"] = export_options["fps"]
+        params["scale"] = export_options["scale"]
+        params["open_when_done"] = export_options["open_when_done"]
+        params["background"] = export_options["background"]
+
+        # Handle crop size
+        params["crop"] = None
+        w = int(context.state["video"].width * params["scale"])
+        h = int(context.state["video"].height * params["scale"])
+        if export_options["crop"] == "Half":
+            params["crop"] = (w // 2, h // 2)
+        elif export_options["crop"] == "Quarter":
+            params["crop"] = (w // 4, h // 4)
+
+        # Access frame range
+        if context.state.get("has_frame_range"):
+            params["frames"] = range(*context.state["frame_range"])
+        else:
+            params["frames"] = range(context.state["video"].frames)
+
+        return True
+        
 def copy_to_clipboard(text: str):
     """Copy a string to the system clipboard.
 
