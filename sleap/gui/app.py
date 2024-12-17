@@ -230,9 +230,11 @@ class MainWindow(QMainWindow):
         # Save preferences.
         prefs.save()
 
+        will_accept = False
+
         if not self.state["has_changes"]:
             # No unsaved changes, so accept event (close)
-            event.accept()
+            will_accept = True
         else:
             msgBox = QMessageBox()
             msgBox.setText("Do you want to save the changes to this project?")
@@ -249,12 +251,16 @@ class MainWindow(QMainWindow):
                 event.ignore()
             elif ret_val == QMessageBox.Discard:
                 # don't save, just close
-                event.accept()
+                will_accept = True
             elif ret_val == QMessageBox.Save:
                 # save
                 self.commands.saveProject()
                 # accept event (closes window)
-                event.accept()
+                will_accept = True
+
+        if will_accept:
+            self.player.cleanup()
+            event.accept()
 
     def dragEnterEvent(self, event):
         # TODO: Parse filenames and accept only if valid ext (or folder)

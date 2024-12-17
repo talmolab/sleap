@@ -16,7 +16,7 @@ def test_decoded_encoded_Skeleton_from_load_json(fly_legs_skeleton_json):
     skeleton = Skeleton.load_json(fly_legs_skeleton_json)
     # Get the graph from the skeleton
     indexed_node_graph = skeleton._graph
-    graph = json_graph.node_link_data(indexed_node_graph)
+    graph = json_graph.node_link_data(indexed_node_graph, edges="links")
 
     # Encode the graph as a json string to test .encode method
     encoded_json_str = SkeletonEncoder.encode(graph)
@@ -40,7 +40,7 @@ def test_decoded_encoded_Skeleton(skeleton_fixture_name, request):
 
     # Get the graph from the skeleton
     indexed_node_graph = skeleton._graph
-    graph = json_graph.node_link_data(indexed_node_graph)
+    graph = json_graph.node_link_data(indexed_node_graph, edges="links")
 
     # Encode the graph as a json string to test .encode method
     encoded_json_str = SkeletonEncoder.encode(graph)

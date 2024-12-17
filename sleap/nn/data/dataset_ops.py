@@ -138,21 +138,24 @@ class Batcher:
             return example
 
         # Ensure that all keys have a rank of at least 1 (i.e., scalars).
-        ds_output = ds_input.map(
-            expand, num_parallel_calls=tf.data.experimental.AUTOTUNE
-        )
+        ds_output = ds_input.map(expand, num_parallel_calls=tf.data.AUTOTUNE)
 
         # Batch elements as ragged tensors.
-        ds_output = ds_output.apply(
-            tf.data.experimental.dense_to_ragged_batch(
+        if hasattr(ds_output, "ragged_batch"):
+            ds_output = ds_output.ragged_batch(
                 batch_size=self.batch_size, drop_remainder=self.drop_remainder
             )
-        )
+        else:
+            ds_output = ds_output.apply(
+                tf.data.experimental.dense_to_ragged_batch(
+                    batch_size=self.batch_size, drop_remainder=self.drop_remainder
+                )
+            )
 
         if self.unrag:
             # Convert elements back into dense tensors with padding.
             ds_output = ds_output.map(
-                unrag_example, num_parallel_calls=tf.data.experimental.AUTOTUNE
+                unrag_example, num_parallel_calls=tf.data.AUTOTUNE
             )
 
         return ds_output
@@ -238,12 +241,12 @@ class Prefetcher:
     Attributes:
         prefetch: If False, returns the input dataset unmodified.
         buffer_size: Keep `buffer_size` elements loaded in the buffer. If set to -1
-            (`tf.data.experimental.AUTOTUNE`), this value will be optimized
+            (`tf.data.AUTOTUNE`), this value will be optimized
             automatically to decrease latency.
     """
 
     prefetch: bool = True
-    buffer_size: int = tf.data.experimental.AUTOTUNE
+    buffer_size: int = tf.data.AUTOTUNE
 
     @property
     def input_keys(self) -> List[Text]:

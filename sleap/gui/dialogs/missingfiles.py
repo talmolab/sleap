@@ -1,14 +1,10 @@
 """
 Gui for prompting the user to locate one or more missing files.
 """
-
 import os
-
 from pathlib import Path, PurePath
 from typing import Callable, List
-
 from qtpy import QtWidgets, QtCore, QtGui
-
 from sleap.io import pathutils
 from sleap.gui.dialogs.filedialog import FileDialog
 

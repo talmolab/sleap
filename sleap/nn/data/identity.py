@@ -106,7 +106,7 @@ class ClassVectorGenerator:
 
         # Map transformation.
         output_ds = input_ds.map(
-            generate_class_vectors, num_parallel_calls=tf.data.experimental.AUTOTUNE
+            generate_class_vectors, num_parallel_calls=tf.data.AUTOTUNE
         )
         return output_ds
 
@@ -197,6 +197,6 @@ class ClassMapGenerator:
 
         # Map transformation.
         output_ds = input_ds.map(
-            generate_class_maps, num_parallel_calls=tf.data.experimental.AUTOTUNE
+            generate_class_maps, num_parallel_calls=tf.data.AUTOTUNE
         )
         return output_ds
