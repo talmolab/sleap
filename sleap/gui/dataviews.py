@@ -446,12 +446,21 @@ class GenericTableView(QtWidgets.QTableView):
                 model.set_show_video_name(self.options["Show Video Name"])
 
 
+# TODO: Fix the error in the Pytest.
 class VideosTableModel(GenericTableModel):
     def __init__(self, items, show_video_name=False, **kwargs):
         super().__init__(**kwargs)
         self.items = items
         self.show_video_name = show_video_name
-        self.properties = self._get_properties()
+        self.properties = (
+            "filepath",
+            "name",
+            "frames",
+            "height",
+            "width",
+            "channels",
+        )
+        # TODO: Always with filepath and name (no filename)
         self.all_properties = (
             "filename",
             "filepath",
@@ -487,7 +496,13 @@ class VideosTableModel(GenericTableModel):
     def item_to_data(self, obj, item: "Video"):
         data = {}
         for property in self.all_properties:
-            data[property] = getattr(item, property)
+            if property == "name":
+                data[property] = getattr(item, "filename").split("/")[-1]
+            elif property == "filepath":
+                splitted = getattr(item, "filename").split("/")[:-1]
+                data[property] = "/".join(splitted)
+            else:
+                data[property] = getattr(item, property)
         return data
 
 
