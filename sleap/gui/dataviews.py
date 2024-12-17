@@ -291,7 +291,6 @@ class GenericTableView(QtWidgets.QTableView):
     name_prefix: str = "selected_"
     is_activatable: bool = False
     is_sortable: bool = False
-    show_video_name: bool = False
 
     def __init__(
         self,
@@ -305,8 +304,6 @@ class GenericTableView(QtWidgets.QTableView):
         multiple_selection: bool = False,
     ):
         super(GenericTableView, self).__init__()
-
-        model.show_video_name = self.show_video_name
 
         self.state = state or GuiState()
         self.row_name = row_name or self.row_name
