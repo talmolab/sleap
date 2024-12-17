@@ -22,7 +22,8 @@ from sleap.gui.commands import (
     OpenSkeleton,
     SaveProjectAs,
     get_new_version_filename,
-    ExportVideoClip,
+    ExportClipVideo,
+    ExportClipPkg
 )
 from sleap.instance import Instance, LabeledFrame
 from sleap.io.convert import default_analysis_filename
@@ -1068,11 +1069,15 @@ def test_ExportVideoClip_creates_files(tmpdir):
         labeled_frames=labeled_frames, videos=[video], skeletons=[mock_skeleton]
     )
 
+    # Step 2: Set up a partial frame range (e.g., frames 0 to 4)
+    partial_frame_range = (0, 4)  # Selected frame range: 0, 1, 2, 3
+    expected_frame_count = partial_frame_range[1] - partial_frame_range[0]  # 4 frames
+
     # Set up CommandContext
     context = CommandContext.from_labels(labels)
     context.state["video"] = video
     context.state["labels"] = labels
-    context.state["frame_range"] = (0, frame_count)
+    context.state["frame_range"] = partial_frame_range
 
     # Parameters for ExportVideoClip
     export_path = Path(tmpdir, "exported_video.mp4")
@@ -1084,7 +1089,7 @@ def test_ExportVideoClip_creates_files(tmpdir):
     }
 
     # Call ExportVideoClip
-    ExportVideoClip.do_action(context, params)
+    ExportClipVideo.do_action(context, params)
 
     # Assertions
     # Case 1: Assert exported video exists
@@ -1094,15 +1099,13 @@ def test_ExportVideoClip_creates_files(tmpdir):
     slp_path = export_path.with_suffix(".slp")
     assert slp_path.exists(), ".slp file was not created."
 
-    # Case 3: Assert .pkg.slp file exists
-    pkg_slp_path = export_path.with_suffix(".pkg.slp")
-    assert pkg_slp_path.exists(), ".pkg.slp file was not created."
-
     # Case 4: Assert that the exported labels match the expected number of frames
     exported_labels = Labels.load_file(str(slp_path))  # Convert Path to string here
+    exported_frame_indices = [lf.frame_idx for lf in exported_labels.labeled_frames]
+    expected_frame_indices = list(range(*partial_frame_range))  # Expected indices [0, 1, 2, 3]
     assert (
-        len(exported_labels.labeled_frames) == frame_count
-    ), "Incorrect number of frames in exported labels."
+        exported_frame_indices == expected_frame_indices
+    ), f"Exported frame indices {exported_frame_indices} do not match the selected range {expected_frame_indices}."
 
 
 def test_ExportVideoClip_frame_and_video_list_sizes(tmpdir):
@@ -1160,7 +1163,7 @@ def test_ExportVideoClip_frame_and_video_list_sizes(tmpdir):
     }
 
     # Call ExportVideoClip
-    ExportVideoClip.do_action(context, params)
+    ExportClipVideo.do_action(context, params)
 
     slp_path = export_path.with_suffix(".slp")
     exported_labels = Labels.load_file(str(slp_path))  # Load exported labels
@@ -1189,3 +1192,81 @@ def test_ExportVideoClip_frame_and_video_list_sizes(tmpdir):
     assert (
         actual_frame_indices == expected_frame_indices
     ), f"Expected frame indices {expected_frame_indices}, but got {actual_frame_indices}."
+
+def test_ExportClipPkg_creates_pkg_file(tmpdir):
+    """Test that ExportClipPkg creates a .pkg.slp file with selected frame range."""
+
+    # Step 1: Generate a dummy video file using imageio
+    video_path = Path(tmpdir, "mock_video.mp4")
+    fps = 30
+    frame_count = 10  # Total number of frames in the video
+    width, height = 100, 100
+
+    with get_writer(video_path, fps=fps, codec="libx264", format="FFMPEG") as writer:
+        for _ in range(frame_count):
+            frame = np.zeros((height, width), dtype=np.uint8)  # Black frame
+            writer.append_data(frame)
+
+    # Create the video object
+    video = Video(backend=MediaVideo(filename=str(video_path), grayscale=True))
+
+    # Mock skeleton
+    mock_skeleton = Skeleton()
+    mock_skeleton.add_node("node1")
+    mock_skeleton.add_node("node2")
+
+    # Mock labeled frames
+    labeled_frames = [
+        LabeledFrame(
+            video=video,
+            frame_idx=i,
+            instances=[
+                Instance(skeleton=mock_skeleton, track=Track(name=f"track_{i}"))
+            ],
+        )
+        for i in range(frame_count)
+    ]
+    labels = Labels(
+        labeled_frames=labeled_frames, videos=[video], skeletons=[mock_skeleton]
+    )
+
+    # Step 2: Set up a partial frame range (e.g., frames 3 to 7)
+    partial_frame_range = (3, 8)  # Selected frame range: 3, 4, 5, 6, 7
+    expected_frame_count = partial_frame_range[1] - partial_frame_range[0]  # 5 frames
+
+    # Set up CommandContext
+    context = CommandContext.from_labels(labels)
+    context.state["video"] = video
+    context.state["labels"] = labels
+    context.state["frame_range"] = partial_frame_range
+
+    # Parameters for ExportClipPkg
+    pkg_path = Path(tmpdir, "exported_clip.pkg.slp")
+    params = {
+        "filename": str(pkg_path),
+    }
+
+    # Step 3: Call ExportClipPkg
+    ExportClipPkg.do_action(context, params)
+
+    # Step 4: Assertions
+    # Case 1: Assert .pkg.slp file exists
+    assert pkg_path.exists(), ".pkg.slp file was not created."
+
+    # Case 2: Load exported labels and check frame count
+    exported_labels = Labels.load_file(str(pkg_path))  # Load the exported labels
+    assert (
+        len(exported_labels.labeled_frames) == expected_frame_count
+    ), "Incorrect number of frames in exported labels."
+
+    # Case 3: Check that the exported frame indices match the reset range
+    exported_frame_indices = [lf.frame_idx for lf in exported_labels.labeled_frames]
+    expected_frame_indices = list(range(len(exported_frame_indices)))  # Reset indices [0, 1, 2, 3, 4]
+    assert (
+        exported_frame_indices == expected_frame_indices
+    ), f"Exported frame indices {exported_frame_indices} do not match the expected reset range {expected_frame_indices}."
+
+    # Case 4: Test the error when no valid frame range is selected
+    context.state["frame_range"] = (0, 10)  # Full video range
+    with pytest.raises(ValueError, match="No valid clip frame range selected!"):
+        ExportClipPkg.do_action(context, params)
