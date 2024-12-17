@@ -377,6 +377,6 @@ class Normalizer:
 
         # Map transformation.
         ds_output = ds_input.map(
-            normalize, num_parallel_calls=tf.data.experimental.AUTOTUNE
+            normalize, num_parallel_calls=tf.data.AUTOTUNE
         )
         return ds_output

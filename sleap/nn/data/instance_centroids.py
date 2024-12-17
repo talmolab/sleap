@@ -190,6 +190,6 @@ class InstanceCentroidFinder:
 
         # Map transformation.
         ds_output = ds_input.map(
-            find_centroids, num_parallel_calls=tf.data.experimental.AUTOTUNE
+            find_centroids, num_parallel_calls=tf.data.AUTOTUNE
         )
         return ds_output
