@@ -50,7 +50,7 @@ def find_instance_crop_size(
         max_length = np.maximum(max_length, min_crop_size_no_pad)
 
     max_length += float(padding)
-    crop_size = np.math.ceil(max_length / float(maximum_stride)) * maximum_stride
+    crop_size = np.ceil(max_length / float(maximum_stride)) * maximum_stride
 
     return int(crop_size)
 
