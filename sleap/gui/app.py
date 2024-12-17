@@ -748,9 +748,16 @@ class MainWindow(QMainWindow):
 
         add_menu_item(
             labelMenu,
-            "extract clip and labels",
+            "Extract clip and labels",
             "Extract Clip and Labels...",
-            self.commands.exportVideoClip,
+            self.commands.exportClipVideo,
+        )
+
+        add_menu_item(
+            labelMenu,
+            "extract clip labels package",
+            "Extract Clip Labels Package...",
+            self.commands.exportClipPkg,
         )
 
         labelMenu.addSeparator()
