@@ -2,6 +2,7 @@ import numpy as np
 import os
 import pytest
 import lazy_loader
+
 cv2 = lazy_loader.load("cv2")
 from sleap.io.dataset import Labels
 from sleap.io.visuals import (
