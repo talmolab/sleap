@@ -21,7 +21,7 @@ class ExportClipDialog(FormBuilderModalDialog):
             )
         else:
             message = (
-                "<i>Unable to use ffpmeg via imageio. "
+                "<i>Unable to use ffmpeg via imageio. "
                 "<b>AVI</b> file will be encoding using OpenCV.</i>"
             )
 
@@ -64,18 +64,18 @@ class ExportClipAndLabelsDialog(FormBuilderModalDialog):
             )
         self.add_message(message)
 
-    def on_accept(self):
-        """Retrieve the form results and accept the dialog."""
-        self._results = {
+    def _get_form_results(self):
+        """Get form results as a dictionary."""
+        return {
             "fps": self.fps_input.value(),
             "open_when_done": self.open_when_done.isChecked(),
         }
+
+    def on_accept(self):
+        """Retrieve the form results and accept the dialog."""
+        self._results = self._get_form_results()
         self.accept()
 
     def get_results(self):
         """Get results as a dictionary."""
-        self._results = {
-            "fps": self.fps_input.value(),
-            "open_when_done": self.open_when_done.isChecked(),
-        }
-        return self._results
+        return self._get_form_results()
