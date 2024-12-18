@@ -448,3 +448,5 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
 
     # Toggle instance visibility with shortcut, showing instances
     toggle_and_verify_visibility(True)
+
+    window.player.cleanup()

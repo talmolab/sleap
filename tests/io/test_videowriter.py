@@ -1,5 +1,7 @@
 import os
-import cv2
+import lazy_loader
+
+cv2 = lazy_loader.load("cv2")
 from pathlib import Path
 from sleap.io.videowriter import VideoWriter, VideoWriterOpenCV, VideoWriterImageio
 

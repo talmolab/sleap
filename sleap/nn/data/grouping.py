@@ -73,7 +73,7 @@ def group_examples_iter(examples):
 #
 #         # Here we apply the encoder
 #         encoded_key_ds = ds_input.map(
-#             encode_group_key, num_parallel_calls=tf.data.experimental.AUTOTUNE
+#             encode_group_key, num_parallel_calls=tf.data.AUTOTUNE
 #         )
 #
 #         # We'll want to "reduce" matching keys by creating a list of examples

@@ -1,7 +1,9 @@
 import numpy as np
 import os
 import pytest
-import cv2
+import lazy_loader
+
+cv2 = lazy_loader.load("cv2")
 from sleap.io.dataset import Labels
 from sleap.io.visuals import (
     save_labeled_video,

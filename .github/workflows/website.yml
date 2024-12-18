@@ -8,7 +8,7 @@ on:
       # 'main' triggers updates to 'sleap.ai', all others to 'sleap.ai/develop'
       - main
       - develop
-      - liezl/update-intallation-docs-1.4.1 # again!
+      - liezl/bump-to-1.4.1a3-py310
     paths:
       - "docs/**"
       - "README.rst"
@@ -26,7 +26,6 @@ jobs:
         # https://github.com/conda-incubator/setup-miniconda
         uses: conda-incubator/setup-miniconda@v3.0.3
         with:
-          python-version: 3.7
           environment-file: environment_no_cuda.yml
           activate-environment: sleap_ci
       - name: Print environment info

@@ -11,7 +11,7 @@ on:
       - "requirements.txt"
       - "dev_requirements.txt"
       - "environment_build.yml"
-      - ".github/workflows/build_conda_ci.yml"
+      - ".github/workflows/build_conda_ci.yml"  # Run
 
 # If RUN_BUILD_JOB is set to true, then RUN_ID will be overwritten to the current run id
 env:

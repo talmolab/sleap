@@ -10,9 +10,11 @@ Usage: ::
 """
 
 from abc import ABC, abstractmethod
-import cv2
 import numpy as np
 import imageio.v2 as iio
+import lazy_loader
+
+cv2 = lazy_loader.load("cv2")
 
 
 class VideoWriter(ABC):

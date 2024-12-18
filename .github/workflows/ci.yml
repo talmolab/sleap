@@ -31,10 +31,10 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-      - name: Set up Python 3.7
+      - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
-          python-version: 3.7
+          python-version: "3.10"
       - name: Install Dependencies
         run: |
           pip install click==8.0.4
@@ -61,6 +61,13 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+
+      - name: Add Linux libraries
+        if: matrix.os == 'ubuntu-22.04'
+        # https://github.com/conda-forge/opencv-feedstock/issues/401#issue-2196393732
+        run: |
+          sudo apt-get update
+          sudo apt-get install libglapi-mesa libegl-mesa0 libegl1 libopengl0 libgl1-mesa-glx
 
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3.0.3

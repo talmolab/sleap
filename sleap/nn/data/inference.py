@@ -65,9 +65,7 @@ class KerasModelPredictor:
 
                 return example
 
-        output_ds = input_ds.map(
-            predict, num_parallel_calls=tf.data.experimental.AUTOTUNE
-        )
+        output_ds = input_ds.map(predict, num_parallel_calls=tf.data.AUTOTUNE)
         return output_ds
 
 
@@ -135,9 +133,7 @@ class GlobalPeakFinder:
 
                 return example
 
-        output_ds = input_ds.map(
-            find_peaks, num_parallel_calls=tf.data.experimental.AUTOTUNE
-        )
+        output_ds = input_ds.map(find_peaks, num_parallel_calls=tf.data.AUTOTUNE)
         return output_ds
 
 
@@ -194,9 +190,7 @@ class MockGlobalPeakFinder:
 
             return example
 
-        output_ds = input_ds.map(
-            find_peaks, num_parallel_calls=tf.data.experimental.AUTOTUNE
-        )
+        output_ds = input_ds.map(find_peaks, num_parallel_calls=tf.data.AUTOTUNE)
         return output_ds
 
 
@@ -274,9 +268,7 @@ class LocalPeakFinder:
 
                 return example
 
-        output_ds = input_ds.map(
-            find_peaks, num_parallel_calls=tf.data.experimental.AUTOTUNE
-        )
+        output_ds = input_ds.map(find_peaks, num_parallel_calls=tf.data.AUTOTUNE)
         return output_ds
 
 
@@ -341,8 +333,6 @@ class PredictedCenterInstanceNormalizer:
             return example
 
         # Map the main processing function to each example.
-        output_ds = input_ds.map(
-            norm_instance, num_parallel_calls=tf.data.experimental.AUTOTUNE
-        )
+        output_ds = input_ds.map(norm_instance, num_parallel_calls=tf.data.AUTOTUNE)
 
         return output_ds

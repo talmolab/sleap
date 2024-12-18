@@ -76,13 +76,12 @@ from sleap.instance import (
     make_instance_cattr,
     PredictedInstance,
 )
-
 from sleap.io import pathutils
 from sleap.io.video import Video, ImgStoreVideo, HDF5Video
 from sleap.gui.suggestions import SuggestionFrame
-from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.rangelist import RangeList
 from sleap.util import uniquify, json_dumps
+
 
 """
 The version number to put in the Labels JSON format.
@@ -2657,6 +2656,8 @@ class Labels(MutableSequence):
                         context["changed_on_load"] = True
 
             if use_gui:
+                from sleap.gui.dialogs.missingfiles import MissingFilesDialog
+
                 # If there are still missing paths, prompt user
                 if sum(missing):
                     # If we are using dummy for any video not found by user

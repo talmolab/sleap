@@ -20,8 +20,8 @@ build:
 
 requirements:
   host:
-    - conda-forge::python ==3.7.12  # Run into _MAX_WINDOWS_WORKERS not found if <
-    - numpy >=1.19.5,<1.23.0  # Linux likes anaconda, windows likes conda-forge
+    - conda-forge::python >=3.10.0,<3.11.0
+    - numpy >=1.16.5,<2.0 # SciPy 1.7 requires numpy >=1.16.5
     - conda-forge::cudatoolkit ==11.3.1
     - conda-forge::cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
@@ -30,71 +30,76 @@ requirements:
 
     # Only the packages above are required to build, but listing them all ensures no 
     # unnecessary pypi packages are installed via the build script (bld.bat, build.sh)
-    - conda-forge::attrs ==21.4.0
-    - conda-forge::cattrs ==1.1.1
-    - conda-forge::h5py ==3.7.0
-    - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
+    - conda-forge::attrs
+    - conda-forge::cattrs
+    - conda-forge::h5py
+    - conda-forge::imageio
+    - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
-    - conda-forge::jsonpickle ==1.2
+    - conda-forge::jsonpickle <=1.5.0 # 1.5.1 breaks compatibility with v1 encoded files
     - conda-forge::networkx
-    - conda-forge::opencv <4.9.0
+    - conda-forge::opencv
     - conda-forge::pandas
-    - conda-forge::pillow >=8.3.2
+    - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside2 >=5.12,<5.14
+    - conda-forge::pyside6 >=6.5.0,<6.8.0  # 6.4: problematic QtCharts, 6.8.0: video display issues
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
     - conda-forge::qtpy >=2.0.1
     - conda-forge::rich
-    - conda-forge::scipy >=1.4.1,<=1.9.0
+    - conda-forge::scipy >=1.7.0 # Python 3.10 requires scipy >=1.7
     - conda-forge::scikit-image
-    - conda-forge::scikit-learn ==1.0
-    - conda-forge::scikit-video
+    - conda-forge::scikit-learn >=1.0.0 # Python 3.10 requires scikit-learn >=1.0
     - conda-forge::seaborn
+    - sleap-deps::tensorflow ==2.9.2
+    - conda-forge::tensorflow-hub
     - conda-forge::qudida
-    - conda-forge::albumentations
+    - conda-forge::albumentations >=1.4.15 # Handle Nan keypoints
     - conda-forge::ndx-pose <0.2.0
-    - conda-forge::importlib-metadata ==4.11.4
+    - conda-forge::importlib-metadata
   run:
-    - conda-forge::python ==3.7.12  # Run into _MAX_WINDOWS_WORKERS not found if <
-    - conda-forge::attrs ==21.4.0
-    - conda-forge::cattrs ==1.1.1
-    - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
+    - conda-forge::python >=3.10.0,<3.11.0
+    - numpy >=1.16.5,<2.0 # SciPy 1.7 requires numpy >=1.16.5
+    - conda-forge::attrs
+    - conda-forge::cattrs
     - conda-forge::cudatoolkit ==11.3.1
     - conda-forge::cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
-    - conda-forge::h5py ==3.7.0
+    - conda-forge::h5py
+    - conda-forge::imageio
+    - conda-forge::imageio-ffmpeg
     - conda-forge::jsmin
-    - conda-forge::jsonpickle ==1.2
+    - conda-forge::jsonpickle <=1.5.0 # 1.5.1 breaks compatibility with v1 encoded files
     - conda-forge::networkx
-    - numpy >=1.19.5,<1.23.0  # Linux likes anaconda, windows likes conda-forge
-    - conda-forge::opencv <4.9.0
+    - conda-forge::opencv
     - conda-forge::pandas
-    - conda-forge::pillow >=8.3.2
+    - conda-forge::pillow
     - conda-forge::psutil
     - conda-forge::pykalman
-    - conda-forge::pyside2 >=5.12,<5.14  # To ensure works correctly with QtPy.
+    - conda-forge::pyside6 >=6.5.0,<6.8.0  # 6.4: problematic QtCharts, 6.8.0: video display issues
     - conda-forge::python-rapidjson
     - conda-forge::pyyaml
     - conda-forge::pyzmq
     - conda-forge::qtpy >=2.0.1
     - conda-forge::rich
-    - conda-forge::scipy >=1.4.1,<=1.9.0
+    - conda-forge::scipy >=1.7.0 # Python 3.10 requires scipy >=1.7
     - conda-forge::scikit-image
-    - conda-forge::scikit-learn ==1.0
-    - conda-forge::scikit-video
+    - conda-forge::scikit-learn >=1.0.0 # Python 3.10 requires scikit-learn >=1.0
     - conda-forge::seaborn
-    - sleap/label/dev::tensorflow ==2.7.0  # TODO: Switch to main label when updated
-    - conda-forge::tensorflow-hub <0.14.0  # Causes pynwb conflicts on linux GH-1446
+    - sleap-deps::tensorflow ==2.9.2
+    - conda-forge::tensorflow-hub
     - conda-forge::qudida
-    - conda-forge::albumentations
+    - conda-forge::albumentations >=1.4.15 # Handle Nan keypoints
     - conda-forge::ndx-pose <0.2.0
-    - conda-forge::importlib-metadata ==4.11.4
+    - conda-forge::importlib-metadata
 
+test:
+  requires:
+    - pip
+    - libopencv *=headless*  # [linux] https://github.com/conda-forge/opencv-feedstock/issues/401#issuecomment-2028099423
 # This no longer works so we have moved it to the build workflow
 # https://github.com/talmolab/sleap/pull/1744
-# test:
 #   imports:
 #     - sleap

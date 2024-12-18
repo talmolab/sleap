@@ -4,8 +4,6 @@ import os
 import shutil
 
 import h5py as h5
-import cv2
-import imgstore
 import numpy as np
 import attr
 import cattr
@@ -15,6 +13,10 @@ import multiprocessing
 from typing import Iterable, List, Optional, Tuple, Union, Text
 
 from sleap.util import json_loads, json_dumps
+import lazy_loader
+
+cv2 = lazy_loader.load("cv2")
+imgstore = lazy_loader.load("imgstore")
 
 logger = logging.getLogger(__name__)
 
@@ -393,7 +395,7 @@ class MediaVideo:
             # the first frame of data.
             if self._detect_grayscale is True:
                 self.grayscale = bool(
-                    np.alltrue(self.test_frame[..., 0] == self.test_frame[..., -1])
+                    np.all(self.test_frame[..., 0] == self.test_frame[..., -1])
                 )
 
         # Return cached reader
@@ -862,7 +864,7 @@ class SingleImageVideo:
 
             if self._detect_grayscale is True:
                 self.grayscale = bool(
-                    np.alltrue(test_frame_[..., 0] == test_frame_[..., -1])
+                    np.all(test_frame_[..., 0] == test_frame_[..., -1])
                 )
 
             if self.height_ is None:

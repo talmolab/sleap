@@ -47,6 +47,13 @@ class QtImageDirectoryWidget(QtVideoPlayer):
 
         self.resize(360, 400)
 
+        # Call cleanup method when application exits to end worker thread.
+        # Note: This is commented out in favor of the MainWindow.closeEvent() path.
+        self.destroyed.connect(self.cleanup)
+        # app = QApplication.instance()
+        # if app:
+        #     app.aboutToQuit.connect(self.cleanup)
+
         if self.filters:
             self.filter_menu = QtWidgets.QComboBox()
             self.filter_menu.addItems([filter[0] for filter in self.filters])
