@@ -8,7 +8,7 @@ on:
       # 'main' triggers updates to 'sleap.ai', all others to 'sleap.ai/develop'
       - main
       - develop
-      - liezl/update-intallation-docs-1.4.1 # again!
+      - liezl/add-channels-for-pip-conda-env
     paths:
       - "docs/**"
       - "README.rst"
