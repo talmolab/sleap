@@ -1,5 +1,5 @@
 """Frame range dialog."""
-from PySide2 import QtWidgets
+from qtpy import QtWidgets
 from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
 from typing import Optional
 
