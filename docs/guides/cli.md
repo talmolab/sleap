@@ -285,6 +285,12 @@ sleap-track --gpu 1 ...
 sleap-track -m "models/my_model" --frames 1000-2000 "input_video.mp4"
 ```
 
+**9. Use Kalman tracker (not recommended since flow is preferred):**
+
+```none
+sleap-track -m "models/my_model" --tracking.similarity instance --tracking.tracker simplemaxtracks --tracking.max_tracking 1 --tracking.max_tracks 4 --tracking.kf_init_frame_count 10 --tracking.kf_node_indices 0,1 -o "output_predictions.slp" "input_video.mp4"
+```
+
 ## Dataset files
 
 (sleap-convert)=
