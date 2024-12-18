@@ -26,28 +26,3 @@ def select_zmq_port(zmq_context: Optional[zmq.Context] = None) -> int:
     port = socket.bind_to_random_port("tcp://127.0.0.1")
     socket.close()
     return port
-
-
-def find_free_port(port: int, zmq_context: zmq.Context):
-    """Find free port to bind to.
-
-    Args:
-        port: The port to start searching from.
-        zmq_context: The ZMQ context to use.
-
-    Returns:
-        The free port.
-    """
-    attempts = 0
-    max_attempts = 10
-    while not is_port_free(port=port, zmq_context=zmq_context):
-        if attempts >= max_attempts:
-            raise RuntimeError(
-                f"Could not find free port to display training progress after "
-                f"{max_attempts} attempts. Please check your network settings "
-                "or use the CLI `sleap-train` command."
-            )
-        port = select_zmq_port(zmq_context=self.ctx)
-        attempts += 1
-
-    return port
