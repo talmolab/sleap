@@ -748,7 +748,7 @@ class MainWindow(QMainWindow):
 
         add_menu_item(
             labelMenu,
-            "Extract clip and labels",
+            "extract clip and labels",
             "Extract Clip and Labels...",
             self.commands.exportClipVideo,
         )
@@ -1099,7 +1099,7 @@ class MainWindow(QMainWindow):
         self.state.emit("color predicted")
 
     def _update_gui_state(self):
-        """Enable/disable gui items based on current state."""
+        """Enable/disable GUI items based on the current state."""
         has_selected_instance = self.state["instance"] is not None
         has_selected_node = self.state["selected_node"] is not None
         has_selected_edge = self.state["selected_edge"] is not None
@@ -1134,7 +1134,10 @@ class MainWindow(QMainWindow):
         self._menu_actions["delete instance"].setEnabled(has_selected_instance)
 
         self._menu_actions["delete clip predictions"].setEnabled(has_frame_range)
-        # self._menu_actions["export clip"].setEnabled(has_frame_range)
+        
+        # Enable/disable "Extract Clip and Labels" and "Extract Clip Labels Package"
+        self._menu_actions["extract clip and labels"].setEnabled(has_frame_range)
+        self._menu_actions["extract clip labels package"].setEnabled(has_frame_range)
 
         self._menu_actions["transpose"].setEnabled(has_multiple_instances)
 
