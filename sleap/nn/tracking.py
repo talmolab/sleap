@@ -287,13 +287,9 @@ class FlowCandidateMaker:
             This function relies on the Lucas-Kanade method for optical flow estimation.
         """
 
-        print(f"Image type before converting: {type(ref_img)}")
-
         # Convert to uint8 for cv2.calcOpticalFlowPyrLK
         ref_img = ensure_int(ref_img)
         new_img = ensure_int(new_img)
-
-        print(f"Image type after converting: {type(ref_img)}")
 
         # Convert tensors to ndarays
         if hasattr(ref_img, "numpy"):
