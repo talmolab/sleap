@@ -199,7 +199,7 @@ class LabelsReader:
             raw_image = lf.image
             raw_image_size = np.array(raw_image.shape).astype("int32")
 
-            height, width, _ = raw_image_size
+            height, width = raw_image_size[:2]
 
             # Filter OOB points
             instances = []
@@ -209,8 +209,8 @@ class LabelsReader:
                 pts[pts < 0] = np.NaN
 
                 # coordinates outside img frame
-                pts[:, 0][pts[:, 0] > height - 1] = np.NaN
-                pts[:, 1][pts[:, 1] > width - 1] = np.NaN
+                pts[:, 0][pts[:, 0] > width - 1] = np.NaN
+                pts[:, 1][pts[:, 1] > height - 1] = np.NaN
 
                 instances.append(
                     Instance.from_numpy(pts, instance.skeleton, instance.track)

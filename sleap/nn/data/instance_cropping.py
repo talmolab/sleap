@@ -47,9 +47,9 @@ def find_instance_crop_size(
             pts = inst.points_array
 
             pts[pts < 0] = np.NaN
-            height, width, _ = lf.image.shape
-            pts[:, 0][pts[:, 0] > height - 1] = np.NaN
-            pts[:, 1][pts[:, 1] > width - 1] = np.NaN
+            height, width = lf.image.shape[:2]
+            pts[:, 0][pts[:, 0] > width - 1] = np.NaN
+            pts[:, 1][pts[:, 1] > height - 1] = np.NaN
 
             pts *= input_scaling
             max_length = np.maximum(
