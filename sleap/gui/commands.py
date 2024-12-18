@@ -60,7 +60,7 @@ from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.video import Video, MediaVideo
 from sleap.io.videowriter import VideoWriter
-from sleap.skeleton import Skeleton
+from sleap.skeleton import Node, Skeleton
 from sleap.util import get_package_file
 
 
