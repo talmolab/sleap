@@ -221,7 +221,7 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
                ````{tabs}
                   ```{group-tab} NVIDIA GPU
                      ```bash
-                     conda create --name sleap pip python=3.7.12 cudatoolkit=11.3 cudnn=8.2
+                     conda create --name sleap pip python=3.7.12 cudatoolkit=11.3 cudnn=8.2 -c conda-forge -c nvidia
                      ```
                   ```
                   ```{group-tab} CPU or other GPU
