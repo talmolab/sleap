@@ -1590,7 +1590,6 @@ class QtNode(QGraphicsEllipseItem):
 
     def mouseMoveEvent(self, event):
         """Custom event handler for mouse move."""
-        # print(event)
         if self.dragParent:
             self.parentObject().mouseMoveEvent(event)
         else:
@@ -1601,7 +1600,6 @@ class QtNode(QGraphicsEllipseItem):
 
     def mouseReleaseEvent(self, event):
         """Custom event handler for mouse release."""
-        # print(event)
         self.unsetCursor()
         if self.dragParent:
             self.parentObject().mouseReleaseEvent(event)
@@ -1631,7 +1629,7 @@ class QtNode(QGraphicsEllipseItem):
             view.instanceDoubleClicked.emit(self.parentObject().instance, event)
 
     def hoverEnterEvent(self, event):
-        print("QtNode: hover enter")
+        """Custom event handler for mouse hover enter."""
         return super().hoverEnterEvent(event)
 
 
