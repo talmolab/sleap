@@ -8,6 +8,7 @@ import attr
 import jsonpickle
 import numpy as np
 import zmq
+import time
 from matplotlib.collections import PathCollection
 import matplotlib.transforms as mtransforms
 from qtpy import QtCore, QtWidgets
@@ -817,6 +818,7 @@ class LossViewer(QtWidgets.QMainWindow):
             port=self.zmq_ports["publish_port"], zmq_context=self.ctx
         )
         publish_address = f"tcp://127.0.0.1:{self.zmq_ports['publish_port']}"
+        time.sleep(0.5)
         self.sub.bind(publish_address)
 
         # Controller, PUBLISHER
