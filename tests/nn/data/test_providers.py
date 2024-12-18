@@ -76,7 +76,6 @@ def test_labels_filter_oob_points(min_labels):
     assert labels[0].instances[0].numpy().shape[0] == 2  # 2 nodes
 
     labels[0].instances[0][0] = (390, 100)  # exceeds img height
-    print(labels[0].instances)
 
     labels_reader = providers.LabelsReader.from_user_instances(labels)
     examples = list(iter(labels_reader.make_dataset()))
