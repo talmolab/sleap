@@ -180,6 +180,26 @@ def test_kalman_tracker(
         )
         assert len(labels.tracks) == 2
 
+        # Test with 'tracking.post_connect_single_breaks': 0
+        cli = (
+            f"--tracking.tracker {tracker_name} "
+            "--tracking.max_tracking 1 --tracking.max_tracks 2 "
+            f"--tracking.similarity {similarity} "
+            f"--tracking.match {match} "
+            "--tracking.track_window 5 "
+            "--tracking.kf_init_frame_count 10 "
+            "--tracking.kf_node_indices 0,1 "
+            "--tracking.target_instance_count 2 "
+            "--tracking.post_connect_single_breaks 0 "
+            f"-o {tmpdir}/{tracker_name}_max_tracks_target_instance_count_single_breaks.slp "
+            f"{centered_pair_predictions_slp_path}"
+        )
+        inference_cli(cli.split(" "))
+        labels = sleap.load_file(
+            f"{tmpdir}/{tracker_name}_max_tracks_target_instance_count_single_breaks.slp"
+        )
+        assert len(labels.tracks) == 2
+
 
 def test_simple_tracker(tmpdir, centered_pair_predictions_slp_path):
     cli = (
