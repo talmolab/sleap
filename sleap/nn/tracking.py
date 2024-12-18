@@ -958,6 +958,23 @@ class Tracker(BaseTracker):
 
         # Kalman filter requires deprecated target_instance_count
         if (max_tracks or target_instance_count) and kf_init_frame_count:
+            if not kf_node_indices:
+                raise ValueError(
+                    "Kalman filter requires node indices for instance tracking."
+                )
+
+            if tracker == "flow" or tracker == "flowmaxtracks":
+                # Tracking with Kalman filter requires initial tracker object to be simple
+                raise ValueError(
+                    "Kalman filter requires simple tracker for initial tracking."
+                )
+
+            if similarity == "normalized_instance":
+                # Kalman filter doesnot support normalized_instance_similarity
+                raise ValueError(
+                    "Kalman filter does not support normalized_instance_similarity."
+                )
+
             if not target_instance_count:
                 # If target_instance_count is not set, use max_tracks instead
                 # target_instance_count not available in the GUI
