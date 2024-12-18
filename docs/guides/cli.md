@@ -230,7 +230,7 @@ optional arguments:
   --tracking.kf_node_indices TRACKING.KF_NODE_INDICES
                         For Kalman filter: Indices of nodes to track. (default: )
   --tracking.kf_init_frame_count TRACKING.KF_INIT_FRAME_COUNT
-                        For Kalman filter: Number of frames to track with other tracker. 0 means no Kalman filters will be used. (default: 0)
+                        For Kalman filter: Number of frames to track with other tracker. 0 means no Kalman filters will be used. (default: 0) Kalman filters require TRACKING.KF_NODE_INDICES, TRACKING.MAX_TRACKING and TRACKING.MAX_TRACKS or TRACKING.TARGET_INSTANCE_COUNT, TRACKING.TRACKER to be simple or simplemaxtracks, and TRACKING.SIMILARITY to not be normalized_instance.
 ```
 
 #### Examples:
