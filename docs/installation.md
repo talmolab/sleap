@@ -5,7 +5,7 @@ SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. For qu
 ````{tabs}
    ```{group-tab} Windows and Linux
       ```bash
-      conda create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1
+      conda create -y -n sleap -c conda-forge -c nvidia -c sleap/label/dev -c sleap -c anaconda sleap=1.4.1
       ```
    ```
    ```{group-tab} Mac OS
