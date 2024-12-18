@@ -1,9 +1,12 @@
 """Module to test the dialogs of the GUI (contained in sleap/gui/dialogs)."""
 
 import os
+import importlib
 from pathlib import Path
+import re
 
 import pytest
+import qtpy.QtWidgets as QtWidgets
 from qtpy.QtWidgets import QComboBox
 
 import sleap
@@ -11,6 +14,10 @@ from sleap.skeleton import Skeleton
 from sleap.io.dataset import Labels
 from sleap.gui.commands import OpenSkeleton
 from sleap.gui.dialogs.merge import ReplaceSkeletonTableDialog
+from sleap.gui.dialogs.export_clip import ExportClipAndLabelsDialog, ExportClipDialog
+from sleap.io.videowriter import VideoWriter
+import sleap.gui.dialogs.export_clip as export_clip_dialogs
+from sleap.gui.app import MainWindow
 
 
 def test_ReplaceSkeletonTableDialog(
@@ -111,3 +118,123 @@ def test_ReplaceSkeletonTableDialog(
     assert win.table.item(len(rename_nodes), 0).text() not in skeleton.node_names
     data = win.result()
     assert data == {"head1": "forelegL2", "forelegL1": "forelegR3"}
+
+def test_ExportClipDialog_message_ffmpeg_available():
+    """
+    Test ExportClipDialog displays the correct message when ffmpeg is available.
+    """
+    app = QtWidgets.QApplication.instance()
+    if not app:
+        app = QtWidgets.QApplication([])
+
+    dialog = ExportClipDialog()
+    dialog.show()
+
+    # Find QLabel widgets and extract their text
+    label_texts = [label.text() for label in dialog.findChildren(QtWidgets.QLabel)]
+
+    # Check that the correct ffmpeg message appears
+    assert any(
+        "MP4" in text and "ffmpeg" in text for text in label_texts
+    ), "Expected message indicating MP4 encoding using ffmpeg."
+
+    dialog.close()
+
+def strip_html_tags(text: str) -> str:
+    """Utility to remove HTML tags from a string."""
+    return re.sub(r"<[^>]*>", "", text)
+
+def test_ExportClipDialog_message_ffmpeg_unavailable():
+    """
+    Test ExportClipDialog displays the correct message when ffmpeg is unavailable.
+    """
+    app = QtWidgets.QApplication.instance()
+    if not app:
+        app = QtWidgets.QApplication([])
+
+    # Override can_use_ffmpeg temporarily
+    VideoWriter.can_use_ffmpeg = lambda: False
+
+    try:
+        dialog = ExportClipDialog()
+        dialog.show()
+        dialog.layout().activate()
+
+        # Extract QLabel texts and strip HTML tags
+        label_texts = [strip_html_tags(label.text()) for label in dialog.findChildren(QtWidgets.QLabel)]
+        print("Extracted QLabel texts:", label_texts)
+
+        # Verify fallback message
+        assert any(
+            "Unable to use ffmpeg" in text and "AVI" in text for text in label_texts
+        ), f"Expected AVI fallback message, got: {label_texts}"
+    finally:
+        VideoWriter.can_use_ffmpeg = lambda: True
+    dialog.close()
+
+def test_ExportClipAndLabelsDialog_initial_values():
+    """
+    Test ExportClipAndLabelsDialog initializes FPS input and checkbox correctly.
+    """
+    app = QtWidgets.QApplication.instance()
+    if not app:
+        app = QtWidgets.QApplication([])
+
+    video_fps = 25
+    dialog = ExportClipAndLabelsDialog(video_fps=video_fps)
+    dialog.show()
+
+    # Verify FPS input initialization
+    assert dialog.fps_input.value() == video_fps, \
+        f"FPS input should initialize to {video_fps}."
+
+    # Verify checkbox default state
+    assert not dialog.open_when_done.isChecked(), \
+        "Checkbox 'Open file after saving' should be unchecked by default."
+    dialog.close()
+
+def test_ExportClipAndLabelsDialog_get_form_results():
+    """
+    Test ExportClipAndLabelsDialog retrieves form results correctly.
+    """
+    app = QtWidgets.QApplication.instance()
+    if not app:
+        app = QtWidgets.QApplication([])
+
+    dialog = ExportClipAndLabelsDialog(video_fps=30)
+    dialog.show()
+
+    # Set form values
+    dialog.fps_input.setValue(60)
+    dialog.open_when_done.setChecked(True)
+
+    # Retrieve form results
+    results = dialog.get_results()
+
+    # Verify form results
+    assert results["fps"] == 60, "FPS value should match the input."
+    assert results["open_when_done"] is True, "Checkbox value should be True when checked."
+    dialog.close()
+
+def test_ExportClipAndLabelsDialog_on_accept():
+    """
+    Test ExportClipAndLabelsDialog 'on_accept' method stores results correctly.
+    """
+    app = QtWidgets.QApplication.instance()
+    if not app:
+        app = QtWidgets.QApplication([])
+
+    dialog = ExportClipAndLabelsDialog(video_fps=30)
+    dialog.show()
+
+    # Set form values
+    dialog.fps_input.setValue(45)
+    dialog.open_when_done.setChecked(False)
+
+    # Simulate dialog acceptance
+    dialog.on_accept()
+
+    # Verify stored results
+    assert dialog._results["fps"] == 45, "Stored FPS should match the input value."
+    assert dialog._results["open_when_done"] is False, "Stored checkbox state should be False."
+    dialog.close()
