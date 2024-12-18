@@ -396,11 +396,9 @@ class VideosTableModel(GenericTableModel):
         data = {}
         for property in self.properties:
             if property == "name":
-                filename = getattr(item, "filename")
-                data[property] = Path(filename).name
+                data[property] = Path(item.filename).name
             elif property == "filepath":
-                filename = getattr(item, "filename")
-                data[property] = str(Path(filename).parent)
+                data[property] = str(Path(item.filename).parent)
             else:
                 data[property] = getattr(item, property)
         return data
