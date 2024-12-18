@@ -16,6 +16,7 @@ from attrs.validators import deep_iterable, instance_of
 from sleap.instance import Instance, LabeledFrame, PredictedInstance
 from sleap.io.video import Video
 from sleap.util import compute_oks, deep_iterable_converter
+from sleap_anipose.triangulation import reproject
 
 logger = logging.getLogger(__name__)
 
@@ -449,6 +450,7 @@ class InstanceGroup:
     _dummy_instance: Optional[Instance] = field(default=None)
     camera_cluster: Optional[CameraCluster] = field(default=None)
     _score: Optional[float] = field(default=None)
+    triangulated_3d_pose: Optional[np.ndarray] = field(default=None)
 
     def __attrs_post_init__(self):
         """Initialize `InstanceGroup` object."""
@@ -547,6 +549,14 @@ class InstanceGroup:
 
         self._name = name
         name_registry.add(name)
+
+    @property
+    def triangulation(self) -> Optional[np.ndarray]:
+        return self.triangulated_3d_pose
+
+    @triangulation.setter
+    def triangulation(self, triangulation: np.ndarray):
+        self.triangulated_3d_pose = triangulation
 
     @classmethod
     def return_unique_name(cls, name_registry: Set[str]) -> str:
@@ -850,6 +860,22 @@ class InstanceGroup:
             exclude_complete: If True, then do not update points that are marked as
                 complete. Default is True.
         """
+        # Ensure we are working with a float array
+        points = points.astype(float)
+
+        # Check if points are 3D
+        is_3d = points.shape[-1] == 3
+
+        if is_3d:
+            # Reproject 3D points into 2D points for each camera view
+            pts_reprojected = reproject(
+                points,
+                calib=self.camera_cluster,
+                excluded_views=self.excluded_views,
+            )  # M=include x F=1 x T x N x 2
+
+            # Squeeze back to the original shape
+            points = np.squeeze(pts_reprojected, axis=1)  # M=include x TxNx2
 
         # If no `Camcorder`s specified, then update `Instance`s for all `CameraCluster`
         if cams_to_include is None:
@@ -2286,15 +2312,15 @@ class FrameGroup:
                 complete. Default is True.
         """
 
-        # Check that the correct shape was passed in
-        n_views, n_instances, n_nodes, n_coords = points.shape
-        assert n_views == len(
-            self.cams_to_include
-        ), f"Expected {len(self.cams_to_include)} views, got {n_views}."
-        assert n_instances == len(
-            instance_groups
-        ), f"Expected {len(instance_groups)} instances, got {n_instances}."
-        assert n_coords == 2, f"Expected 2 coordinates, got {n_coords}."
+        # # Check that the correct shape was passed in
+        # n_views, n_instances, n_nodes, n_coords = points.shape
+        # assert n_views == len(
+        #     self.cams_to_include
+        # ), f"Expected {len(self.cams_to_include)} views, got {n_views}."
+        # assert n_instances == len(
+        #     instance_groups
+        # ), f"Expected {len(instance_groups)} instances, got {n_instances}."
+        # assert n_coords == 2, f"Expected 2 coordinates, got {n_coords}."
 
         # Ensure we are working with a float array
         points = points.astype(float)
@@ -2328,6 +2354,7 @@ class FrameGroup:
                 points=instance_points,
                 cams_to_include=self.cams_to_include,
                 exclude_complete=exclude_complete,
+                bounds=bounds,
             )
 
     def _raise_if_instance_not_in_instance_group(self, instance: Instance):
