@@ -1,7 +1,7 @@
 """Generic module containing utilities used for the GUI."""
 
 import zmq
-import time
+from time import sleep
 from typing import Optional
 
 
@@ -13,7 +13,7 @@ def is_port_free(port: int, zmq_context: Optional[zmq.Context] = None) -> bool:
     try:
         socket.bind(address)
         socket.unbind(address)
-        time.sleep(0.1)
+        sleep(0.1)
         return True
     except zmq.error.ZMQError:
         return False

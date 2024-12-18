@@ -8,7 +8,6 @@ import attr
 import jsonpickle
 import numpy as np
 import zmq
-import time
 from matplotlib.collections import PathCollection
 import matplotlib.transforms as mtransforms
 from qtpy import QtCore, QtWidgets
