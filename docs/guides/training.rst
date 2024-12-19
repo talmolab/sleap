@@ -69,7 +69,7 @@ SLEAP supports training on:
 
 **Unsupported configurations:**
 
-- AMD GPUs on older Macs (pre-M1) may fail during training.
+- AMD GPUs and older Macs (pre-M1) may fail during training.
 - Other GPU architectures or unsupported hardware configurations may lead to memory or allocation errors.
 
 For best results, we recommend using an NVIDIA GPU or Apple Silicon Mac for training.
