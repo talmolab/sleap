@@ -304,6 +304,7 @@ python -c "import sleap; sleap.versions()"
     Python: 3.7.11
     OS: Windows-10-10.0.19041-SP0
 
+(gpu-support)=
 ### GPU support
 
 Assuming you installed using either of the `conda`-based methods on Windows or Linux, SLEAP should automatically have GPU support enabled.
