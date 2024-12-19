@@ -1,16 +1,3 @@
-Training Hardware Support
-=========================
-
-SLEAP supports training on:
-
-- **NVIDIA GPUs**: Fully supported and tested.
-- **Apple Silicon Macs**: Supported and test.
-
-**Unsupported configurations:**
-
-- AMD GPUs and older Macs (pre-M1) may fail during training.
-- Other GPU architectures or unsupported hardware configurations may lead to memory or allocation errors.
-
 Training with GUI
 =================
 
