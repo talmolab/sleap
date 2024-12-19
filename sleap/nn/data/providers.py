@@ -210,16 +210,16 @@ class LabelsReader:
 
             for inst in insts:
 
-                if len(inst) > 0:
+                # Filter OOB
+                pts = inst.numpy()
+                pts[pts < 0] = np.NaN
 
-                    # Filter OOB
-                    pts = inst.numpy()
-                    pts[pts < 0] = np.NaN
+                pts[:, 0][pts[:, 0] > width - 1] = np.NaN
+                pts[:, 1][pts[:, 1] > height - 1] = np.NaN
 
-                    pts[:, 0][pts[:, 0] > width - 1] = np.NaN
-                    pts[:, 1][pts[:, 1] > height - 1] = np.NaN
+                instance = Instance.from_numpy(pts, inst.skeleton, inst.track)
 
-                    instance = Instance.from_numpy(pts, inst.skeleton, inst.track)
+                if len(instance) > 0:
 
                     if self.with_track_only:
                         if instance.track is not None:
