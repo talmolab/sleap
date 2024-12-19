@@ -1140,9 +1140,11 @@ class InferenceModel(tf.keras.Model):
             info["predicted_tensors"] = tensors
 
         full_model = tf.function(
-            lambda x: sleap.nn.data.utils.unrag_example(model(x), numpy=False)
-            if unrag_outputs
-            else model(x)
+            lambda x: (
+                sleap.nn.data.utils.unrag_example(model(x), numpy=False)
+                if unrag_outputs
+                else model(x)
+            )
         )
 
         full_model = full_model.get_concrete_function(
@@ -3818,9 +3820,10 @@ class BottomUpMultiClassPredictor(Predictor):
                             PredictedInstance.from_numpy(
                                 points=pts,
                                 point_confidences=confs,
-                                instance_score=np.nanmean(score),
+                                instance_score=np.nanmean(confs),
                                 skeleton=skeleton,
                                 track=track,
+                                tracking_score=np.nanmean(score),
                             )
                         )
 
@@ -4502,18 +4505,27 @@ class TopDownMultiClassPredictor(Predictor):
                     break
 
                 # Loop over frames.
-                for image, video_ind, frame_ind, points, confidences, scores in zip(
+                for (
+                    image,
+                    video_ind,
+                    frame_ind,
+                    centroid_vals,
+                    points,
+                    confidences,
+                    scores,
+                ) in zip(
                     ex["image"],
                     ex["video_ind"],
                     ex["frame_ind"],
+                    ex["centroid_vals"],
                     ex["instance_peaks"],
                     ex["instance_peak_vals"],
                     ex["instance_scores"],
                 ):
                     # Loop over instances.
                     predicted_instances = []
-                    for i, (pts, confs, score) in enumerate(
-                        zip(points, confidences, scores)
+                    for i, (pts, centroid_val, confs, score) in enumerate(
+                        zip(points, centroid_vals, confidences, scores)
                     ):
                         if np.isnan(pts).all():
                             continue
@@ -4524,9 +4536,10 @@ class TopDownMultiClassPredictor(Predictor):
                             PredictedInstance.from_numpy(
                                 points=pts,
                                 point_confidences=confs,
-                                instance_score=np.nanmean(score),
+                                instance_score=centroid_val,
                                 skeleton=skeleton,
                                 track=track,
+                                tracking_score=score,
                             )
                         )
 
@@ -5756,3 +5769,7 @@ def main(args: Optional[list] = None):
             "To retrack on predictions, must specify tracker. "
             "Use \"sleap-track --tracking.tracker ...' to specify tracker to use."
         )
+
+
+if __name__ == "__main__":
+    main()

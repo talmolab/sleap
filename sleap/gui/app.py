@@ -656,17 +656,18 @@ class MainWindow(QMainWindow):
             key="edge style",
         )
 
+        # XXX
         add_submenu_choices(
             menu=viewMenu,
             title="Node Marker Size",
-            options=(1, 2, 4, 6, 8, 12),
+            options=prefs["node marker sizes"],
             key="marker size",
         )
 
         add_submenu_choices(
             menu=viewMenu,
             title="Node Label Size",
-            options=(6, 12, 18, 24, 36),
+            options=prefs["node label sizes"],
             key="node label size",
         )
 
@@ -804,6 +805,12 @@ class MainWindow(QMainWindow):
             "Delete Predictions beyond Max Instances...",
             self.commands.deleteInstanceLimitPredictions,
         )
+        add_menu_item(
+            labelMenu,
+            "delete frame limit predictions",
+            "Delete Predictions beyond Frame Limit...",
+            self.commands.deleteFrameLimitPredictions,
+        )
 
         ### Tracks Menu ###
 
@@ -873,6 +880,8 @@ class MainWindow(QMainWindow):
             "Point Displacement (max)",
             "Primary Point Displacement (sum)",
             "Primary Point Displacement (max)",
+            "Tracking Score (mean)",
+            "Tracking Score (min)",
             "Instance Score (sum)",
             "Instance Score (min)",
             "Point Score (sum)",
@@ -1331,7 +1340,7 @@ class MainWindow(QMainWindow):
                 message += f" [Hidden] Press '{hide_key}' to toggle."
                 self.statusBar().setStyleSheet("color: red")
             else:
-                self.statusBar().setStyleSheet("color: black")
+                self.statusBar().setStyleSheet("")
 
         self.statusBar().showMessage(message)
 
@@ -1406,6 +1415,8 @@ class MainWindow(QMainWindow):
             "Point Displacement (max)": data_obj.get_point_displacement_series,
             "Primary Point Displacement (sum)": data_obj.get_primary_point_displacement_series,
             "Primary Point Displacement (max)": data_obj.get_primary_point_displacement_series,
+            "Tracking Score (mean)": data_obj.get_tracking_score_series,
+            "Tracking Score (min)": data_obj.get_tracking_score_series,
             "Instance Score (sum)": data_obj.get_instance_score_series,
             "Instance Score (min)": data_obj.get_instance_score_series,
             "Point Score (sum)": data_obj.get_point_score_series,
@@ -1419,7 +1430,7 @@ class MainWindow(QMainWindow):
         else:
             if graph_name in header_functions:
                 kwargs = dict(video=self.state["video"])
-                reduction_name = re.search("\\((sum|max|min)\\)", graph_name)
+                reduction_name = re.search("\\((sum|max|min|mean)\\)", graph_name)
                 if reduction_name is not None:
                     kwargs["reduction"] = reduction_name.group(1)
                 series = header_functions[graph_name](**kwargs)
