@@ -12,6 +12,7 @@ Example usage: ::
     >>> vp.addInstance(instance=my_instance, color=(r, g, b))
 
 """
+
 from collections import deque
 
 # FORCE_REQUESTS controls whether we emit a signal to process frame requests
@@ -1886,7 +1887,7 @@ class QtInstance(QGraphicsObject):
         self.track_label.setHtml(instance_label_text)
 
         # Add nodes
-        for (node, point) in self.instance.nodes_points:
+        for node, point in self.instance.nodes_points:
             if point.visible or self.show_non_visible:
                 node_item = QtNode(
                     parent=self,
@@ -1901,7 +1902,7 @@ class QtInstance(QGraphicsObject):
                 self.nodes[node.name] = node_item
 
         # Add edges
-        for (src, dst) in self.skeleton.edge_names:
+        for src, dst in self.skeleton.edge_names:
             # Make sure that both nodes are present in this instance before drawing edge
             if src in self.nodes and dst in self.nodes:
                 edge_item = QtEdge(
@@ -2123,6 +2124,61 @@ class QtInstance(QGraphicsObject):
         self._is_hovering = False
         self.updateBox()
         return super().hoverLeaveEvent(event)
+
+    def mousePressEvent(self, event):
+        """Custom event handler to emit signal on event."""
+        if event.buttons() == Qt.LeftButton:
+            if event.modifiers() == Qt.ControlModifier:
+                self._duplicate_instance(event)
+
+    def _duplicate_instance(self, event):
+        """Duplicate the instance and add it to the scene."""
+        scene = self.scene()
+
+        # Create a new instance by copying this one
+        new_instance = Instance.from_numpy(
+            self.instance.numpy(), skeleton=self.skeleton
+        )
+        new_instance.track = None
+
+        # Add instance to the context
+        context = self.player.context
+        current_frame = self.instance.frame
+        if context:
+            context.labels.add_instance(current_frame, new_instance)
+
+        # Create a new QtInstance object for the new instance
+        new_instance_gui = QtInstance(
+            instance=new_instance,
+            player=self.player,
+            markerRadius=self.markerRadius,
+            nodeLabelSize=self.nodeLabelSize,
+            show_non_visible=self.show_non_visible,
+        )
+        scene.addItem(new_instance_gui)
+
+        # Select the duplicated QtInstance object
+        new_instance_gui.setFlag(QGraphicsItem.ItemIsMovable)
+        new_instance_gui.setTransformOriginPoint(self.pos())
+        new_instance_gui.setSelected(True)
+        new_instance_gui.setCursor(Qt.ClosedHandCursor)
+        new_instance_gui.grabMouse()
+        self.player.state["instance"] = new_instance
+
+    def mouseMoveEvent(self, event):
+        """Custom event handler to emit signal on event."""
+        is_move = self.flags() & QGraphicsItem.ItemIsMovable
+        is_ctrl_pressed = (event.modifiers() & Qt.ControlModifier) == Qt.ControlModifier
+
+        if is_move and is_ctrl_pressed:
+            super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        """Custom event handler to emit signal on event."""
+        if self.flags() & QGraphicsItem.ItemIsMovable:
+            self.setFlag(QGraphicsItem.ItemIsMovable, False)
+            self.ungrabMouse()
+            super().mouseReleaseEvent(event)
 
 
 class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
