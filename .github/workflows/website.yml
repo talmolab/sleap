@@ -7,7 +7,7 @@ on:
     branches:
       # 'main' triggers updates to 'sleap.ai', all others to 'sleap.ai/develop'
       - main
-      - develop
+      - develop # Run
       - liezl/bump-to-1.4.1
     paths:
       - "docs/**"

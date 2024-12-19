@@ -146,7 +146,7 @@ SLEAP can be installed three different ways: via {ref}`conda package<condapackag
       ````{tabs}
          ```{group-tab} Windows and Linux
             ```bash
-            conda create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap=1.4.1
+            conda create -y -n sleap -c conda-forge -c nvidia -c sleap/label/dev -c sleap -c anaconda sleap=1.4.1
             ```
             ```{note}
             - This comes with CUDA to enable GPU support. All you need is to have an NVIDIA GPU and [updated drivers](https://nvidia.com/drivers).
