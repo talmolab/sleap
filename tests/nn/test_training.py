@@ -220,7 +220,11 @@ def test_train_topdown(training_labels, cfg):
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 96, 96, 2)
 
 
-def test_train_topdown_with_oob_pts(min_labels, cfg):
+@pytest.mark.parametrize(
+    "oob_point,test_case",
+    [((390, 187.9), "exceeding_image_dim"), ((-100, 187.9), "negative_coordinates")],
+)
+def test_train_topdown_with_oob_pts(min_labels, cfg, oob_point, test_case):
     # pt exceeding img dim
     labels = min_labels
     labels.append(
@@ -228,25 +232,7 @@ def test_train_topdown_with_oob_pts(min_labels, cfg):
             video=labels.videos[0], frame_idx=1, instances=labels[0].instances
         )
     )
-    labels[0].instances[1][0] = (390, 187.9)  # crop size=60
-
-    cfg.model.heads.centered_instance = CenteredInstanceConfmapsHeadConfig(
-        sigma=1.5, output_stride=1, offset_refinement=False
-    )
-    trainer = TopdownConfmapsModelTrainer.from_config(cfg, training_labels=labels)
-    trainer.setup()
-    trainer.train()
-    assert trainer.keras_model.output_names[0] == "CenteredInstanceConfmapsHead"
-    assert tuple(trainer.keras_model.outputs[0].shape) == (None, 80, 80, 2)
-
-    # negative pts
-    labels = min_labels
-    labels.append(
-        sleap.LabeledFrame(
-            video=labels.videos[0], frame_idx=1, instances=labels[0].instances
-        )
-    )
-    labels[0].instances[1][0] = (-100, 187.9)  # crop size=60
+    labels[0].instances[1][0] = oob_point  # crop size=60
 
     cfg.model.heads.centered_instance = CenteredInstanceConfmapsHeadConfig(
         sigma=1.5, output_stride=1, offset_refinement=False
