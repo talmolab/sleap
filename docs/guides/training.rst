@@ -10,9 +10,15 @@ machine, you should only try it if you have a GPU installed.
 
 |training-dialog|
 
-By default, training uses the training settings which we’ve found to work well on a wide range of videos. We train a “centroid” model on 1/4 scale images and then use this to crop where we think there are instances during inference. Another “instance centered” model is trained on full-sized, cropped image to predict the nodes for an instance at the center of each cropped image.
+By default, training uses the training settings which we’ve found to work
+well on a wide range of videos. We train a “centroid” model on 1/4 scale images 
+and then use this to crop where we think there are instances during inference. 
+Another "instance centered" model is trained on full-sized,cropped image to predict 
+the nodes for an instance at the center of each cropped
+image.
 
-At the top of the training dialog, you’ll see tabs for each of the models. This is where you can configure the model architecture and hyperparameters.
+At the top of the training dialog, you'll see tabs for each of the models.
+This is where you can configure the model architecture and hyperparameters.
 
 |model|
 
@@ -51,12 +57,22 @@ Blue points are training loss for each batch, lines are training and
 validation loss for the epochs (these won’t appear until the second
 epoch has finished.) There’s a button to stop training the model when
 you think is appropriate, or the training will automatically stop if the
-model doesn’t improve for a certain number of epochs (15 by default).
+model doesn’t improve for a certain number of epochs (15 by default)
 
-By default, training uses the training settings which we’ve found to work well on a wide range of videos. We train a “centroid” model on 1/4 scale images and then use this to crop where we think there are instances during inference. Another “instance centered” model is trained on full-sized, cropped image to predict the nodes for an instance at the center of each cropped image.
+Training Hardware Support
+=========================
 
-At the top of the training dialog, you’ll see tabs for each of the models. This is where you can configure the model architecture and hyperparameters.
+SLEAP supports training on:
 
+- **NVIDIA GPUs**: Fully supported and tested.
+- **Apple Silicon Macs**: Supported and tested.
+
+**Unsupported configurations:**
+
+- AMD GPUs on older Macs (pre-M1) may fail during training.
+- Other GPU architectures or unsupported hardware configurations may lead to memory or allocation errors.
+
+For best results, we recommend using an NVIDIA GPU or Apple Silicon Mac for training.
 
 .. |training-dialog| image:: ../_static/training-dialog.jpg
 .. |model| image:: ../_static/training-model-dialog.jpg
