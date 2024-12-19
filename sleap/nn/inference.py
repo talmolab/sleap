@@ -1129,9 +1129,11 @@ class InferenceModel(tf.keras.Model):
             info["predicted_tensors"] = tensors
 
         full_model = tf.function(
-            lambda x: sleap.nn.data.utils.unrag_example(model(x), numpy=False)
-            if unrag_outputs
-            else model(x)
+            lambda x: (
+                sleap.nn.data.utils.unrag_example(model(x), numpy=False)
+                if unrag_outputs
+                else model(x)
+            )
         )
 
         full_model = full_model.get_concrete_function(
@@ -5717,3 +5719,7 @@ def main(args: Optional[list] = None):
             "To retrack on predictions, must specify tracker. "
             "Use \"sleap-track --tracking.tracker ...' to specify tracker to use."
         )
+
+
+if __name__ == "__main__":
+    main()
