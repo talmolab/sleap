@@ -1090,14 +1090,12 @@ class LossViewer(QtWidgets.QMainWindow):
         if self.sub is not None:
             self.sub.unbind(self.sub.LAST_ENDPOINT)
             self.sub.close()
-            time.sleep(0.1)
             self.sub = None
 
         if self.zmq_ctrl is not None:
             url = self.zmq_ctrl.LAST_ENDPOINT
             self.zmq_ctrl.unbind(url)
             self.zmq_ctrl.close()
-            time.sleep(0.1)
             self.zmq_ctrl = None
 
         # If we started out own zmq context, terminate it.
