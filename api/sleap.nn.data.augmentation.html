@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>sleap.nn.data.augmentation &#8212; SLEAP (v1.3.3)</title>
+    <title>sleap.nn.data.augmentation &#8212; SLEAP (v1.4.1)</title>
   
   
   
@@ -32,8 +32,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -42,22 +42,19 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/sleap.nn.data.augmentation';</script>
     <link rel="canonical" href="/develop/api/sleap.nn.data.augmentation.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -163,6 +160,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -292,7 +290,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -308,6 +308,39 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter"><code class="docutils literal notranslate"><span class="pre">AlbumentationsAugmenter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.augmenter"><code class="docutils literal notranslate"><span class="pre">AlbumentationsAugmenter.augmenter</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.image_key"><code class="docutils literal notranslate"><span class="pre">AlbumentationsAugmenter.image_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.instances_key"><code class="docutils literal notranslate"><span class="pre">AlbumentationsAugmenter.instances_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.from_config"><code class="docutils literal notranslate"><span class="pre">AlbumentationsAugmenter.from_config()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.input_keys"><code class="docutils literal notranslate"><span class="pre">AlbumentationsAugmenter.input_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.output_keys"><code class="docutils literal notranslate"><span class="pre">AlbumentationsAugmenter.output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.transform_dataset"><code class="docutils literal notranslate"><span class="pre">AlbumentationsAugmenter.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomCropper"><code class="docutils literal notranslate"><span class="pre">RandomCropper</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomCropper.crop_height"><code class="docutils literal notranslate"><span class="pre">RandomCropper.crop_height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomCropper.crop_width"><code class="docutils literal notranslate"><span class="pre">RandomCropper.crop_width</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomCropper.transform_dataset"><code class="docutils literal notranslate"><span class="pre">RandomCropper.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomFlipper"><code class="docutils literal notranslate"><span class="pre">RandomFlipper</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomFlipper.symmetric_inds"><code class="docutils literal notranslate"><span class="pre">RandomFlipper.symmetric_inds</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomFlipper.horizontal"><code class="docutils literal notranslate"><span class="pre">RandomFlipper.horizontal</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomFlipper.probability"><code class="docutils literal notranslate"><span class="pre">RandomFlipper.probability</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomFlipper.from_skeleton"><code class="docutils literal notranslate"><span class="pre">RandomFlipper.from_skeleton()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomFlipper.transform_dataset"><code class="docutils literal notranslate"><span class="pre">RandomFlipper.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.flip_instances_lr"><code class="docutils literal notranslate"><span class="pre">flip_instances_lr()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.flip_instances_ud"><code class="docutils literal notranslate"><span class="pre">flip_instances_ud()</span></code></a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -318,57 +351,57 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="module-sleap.nn.data.augmentation">
-<span id="sleap-nn-data-augmentation"></span><h1>sleap.nn.data.augmentation<a class="headerlink" href="#module-sleap.nn.data.augmentation" title="Permalink to this headline">#</a></h1>
+<span id="sleap-nn-data-augmentation"></span><h1>sleap.nn.data.augmentation<a class="headerlink" href="#module-sleap.nn.data.augmentation" title="Permalink to this heading">#</a></h1>
 <p>Transformers for applying data augmentation.</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="sleap.nn.data.augmentation.ImgaugAugmenter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.augmentation.</span></span><span class="sig-name descname"><span class="pre">ImgaugAugmenter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">augmenter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">imgaug.augmenters.meta.Sequential</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instances_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'instances'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/augmentation.py#L114-L264"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.ImgaugAugmenter" title="Permalink to this definition">#</a></dt>
-<dd><p>Data transformer based on the <code class="xref py py-obj docutils literal notranslate"><span class="pre">imgaug</span></code> library.</p>
+<dt class="sig sig-object py" id="sleap.nn.data.augmentation.AlbumentationsAugmenter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.augmentation.</span></span><span class="sig-name descname"><span class="pre">AlbumentationsAugmenter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">augmenter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Compose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instances_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'instances'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/augmentation.py#L106-L261"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter" title="Permalink to this definition">#</a></dt>
+<dd><p>Data transformer based on the <code class="xref py py-obj docutils literal notranslate"><span class="pre">albumentations</span></code> library.</p>
 <p>This class can generate a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> from an existing one that generates
 image and instance data. Element of the output dataset will have a set of
 augmentation transformations applied.</p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="sleap.nn.data.augmentation.ImgaugAugmenter.augmenter">
-<span class="sig-name descname"><span class="pre">augmenter</span></span><a class="headerlink" href="#sleap.nn.data.augmentation.ImgaugAugmenter.augmenter" title="Permalink to this definition">#</a></dt>
-<dd><p>An instance of <code class="xref py py-obj docutils literal notranslate"><span class="pre">imgaug.augmenters.Sequential</span></code> that will be applied to
+<dt class="sig sig-object py" id="sleap.nn.data.augmentation.AlbumentationsAugmenter.augmenter">
+<span class="sig-name descname"><span class="pre">augmenter</span></span><a class="headerlink" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.augmenter" title="Permalink to this definition">#</a></dt>
+<dd><p>An instance of <code class="xref py py-obj docutils literal notranslate"><span class="pre">albumentations.Compose</span></code> that will be applied to
 each element of the input dataset.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>imgaug.augmenters.meta.Sequential</p>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>albumentations.core.composition.Compose</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="sleap.nn.data.augmentation.ImgaugAugmenter.image_key">
-<span class="sig-name descname"><span class="pre">image_key</span></span><a class="headerlink" href="#sleap.nn.data.augmentation.ImgaugAugmenter.image_key" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.nn.data.augmentation.AlbumentationsAugmenter.image_key">
+<span class="sig-name descname"><span class="pre">image_key</span></span><a class="headerlink" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.image_key" title="Permalink to this definition">#</a></dt>
 <dd><p>Name of the example key where the image is stored. Defaults to
 “image”.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="sleap.nn.data.augmentation.ImgaugAugmenter.instances_key">
-<span class="sig-name descname"><span class="pre">instances_key</span></span><a class="headerlink" href="#sleap.nn.data.augmentation.ImgaugAugmenter.instances_key" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.nn.data.augmentation.AlbumentationsAugmenter.instances_key">
+<span class="sig-name descname"><span class="pre">instances_key</span></span><a class="headerlink" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.instances_key" title="Permalink to this definition">#</a></dt>
 <dd><p>Name of the example key where the instance points are stored.
 Defaults to “instances”.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="sleap.nn.data.augmentation.ImgaugAugmenter.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.AugmentationConfig" title="sleap.nn.config.optimization.AugmentationConfig"><span class="pre">sleap.nn.config.optimization.AugmentationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instances_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'instances'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.augmentation.ImgaugAugmenter" title="sleap.nn.data.augmentation.ImgaugAugmenter"><span class="pre">sleap.nn.data.augmentation.ImgaugAugmenter</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/augmentation.py#L134-L199"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.ImgaugAugmenter.from_config" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.nn.data.augmentation.AlbumentationsAugmenter.from_config">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.optimization.html#sleap.nn.config.optimization.AugmentationConfig" title="sleap.nn.config.optimization.AugmentationConfig"><span class="pre">AugmentationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instances_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'instances'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter" title="sleap.nn.data.augmentation.AlbumentationsAugmenter"><span class="pre">AlbumentationsAugmenter</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/augmentation.py#L126-L203"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.from_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Create an augmenter from a set of configuration parameters.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config</strong> – An <code class="xref py py-obj docutils literal notranslate"><span class="pre">AugmentationConfig</span></code> instance with the desired parameters.</p></li>
 <li><p><strong>image_key</strong> – Name of the example key where the image is stored. Defaults to
@@ -377,35 +410,35 @@ Defaults to “instances”.</p>
 Defaults to “instances”.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>An instance of <a class="reference internal" href="#sleap.nn.data.augmentation.ImgaugAugmenter" title="sleap.nn.data.augmentation.ImgaugAugmenter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImgaugAugmenter</span></code></a> with the specified augmentation
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An instance of <a class="reference internal" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter" title="sleap.nn.data.augmentation.AlbumentationsAugmenter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AlbumentationsAugmenter</span></code></a> with the specified augmentation
 configuration.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="sleap.nn.data.augmentation.ImgaugAugmenter.input_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.augmentation.ImgaugAugmenter.input_keys" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.nn.data.augmentation.AlbumentationsAugmenter.input_keys">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.input_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the keys that incoming elements are expected to have.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="sleap.nn.data.augmentation.ImgaugAugmenter.output_keys">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.augmentation.ImgaugAugmenter.output_keys" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.nn.data.augmentation.AlbumentationsAugmenter.output_keys">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.output_keys" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the keys that outgoing elements will have.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="sleap.nn.data.augmentation.ImgaugAugmenter.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/augmentation.py#L211-L264"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.ImgaugAugmenter.transform_dataset" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.nn.data.augmentation.AlbumentationsAugmenter.transform_dataset">
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/augmentation.py#L215-L261"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> with elements containing augmented data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>input_ds</strong> – A dataset with elements that contain the keys “image” and
 “instances”. This is typically raw data from a data provider.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> with the same keys as the input, but with images and
 instance points updated with the applied augmentations.</p>
 </dd>
@@ -421,7 +454,7 @@ applied.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.augmentation.RandomCropper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.augmentation.</span></span><span class="sig-name descname"><span class="pre">RandomCropper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crop_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">256</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/augmentation.py#L268-L336"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.RandomCropper" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.augmentation.</span></span><span class="sig-name descname"><span class="pre">RandomCropper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crop_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">256</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/augmentation.py#L265-L333"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.RandomCropper" title="Permalink to this definition">#</a></dt>
 <dd><p>Data transformer for applying random crops to input images.</p>
 <p>This class can generate a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> from an existing one that generates
 image and instance data. Element of the output dataset will have random crops
@@ -431,7 +464,7 @@ applied.</p>
 <span class="sig-name descname"><span class="pre">crop_height</span></span><a class="headerlink" href="#sleap.nn.data.augmentation.RandomCropper.crop_height" title="Permalink to this definition">#</a></dt>
 <dd><p>The height of the cropped region in pixels.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -442,7 +475,7 @@ applied.</p>
 <span class="sig-name descname"><span class="pre">crop_width</span></span><a class="headerlink" href="#sleap.nn.data.augmentation.RandomCropper.crop_width" title="Permalink to this definition">#</a></dt>
 <dd><p>The width of the cropped region in pixels.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -450,14 +483,14 @@ applied.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.augmentation.RandomCropper.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/augmentation.py#L291-L336"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.RandomCropper.transform_dataset" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DatasetV2</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/augmentation.py#L288-L333"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.RandomCropper.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> with elements containing augmented data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>input_ds</strong> – A dataset with elements that contain the keys “image” and
 “instances”. This is typically raw data from a data provider.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> with the same keys as the input, but with images and
 instance points updated with the applied random crop.</p>
 <p>Additionally, the <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;crop_bbox&quot;</span></code> key will contain the bounding box of the
@@ -471,7 +504,7 @@ crop in the form <code class="xref py py-obj docutils literal notranslate"><span
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.augmentation.RandomFlipper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.augmentation.</span></span><span class="sig-name descname"><span class="pre">RandomFlipper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symmetric_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">horizontal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probability</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/augmentation.py#L340-L427"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.RandomFlipper" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.augmentation.</span></span><span class="sig-name descname"><span class="pre">RandomFlipper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symmetric_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">horizontal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probability</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/augmentation.py#L337-L424"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.RandomFlipper" title="Permalink to this definition">#</a></dt>
 <dd><p>Data transformer for applying random flipping to input images.</p>
 <p>This class can generate a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> from an existing one that generates
 image and instance data. Elements of the output dataset will have random horizontal
@@ -486,7 +519,7 @@ node comes first (e.g., left/right vs right/left) does not matter. Each pair
 of nodes will be swapped to account for the reflection if this is not <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>
 (the default).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[numpy.ndarray]</p>
 </dd>
 </dl>
@@ -498,7 +531,7 @@ of nodes will be swapped to account for the reflection if this is not <code clas
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code> (the default), flips are applied horizontally instead of
 vertically.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -509,7 +542,7 @@ vertically.</p>
 <span class="sig-name descname"><span class="pre">probability</span></span><a class="headerlink" href="#sleap.nn.data.augmentation.RandomFlipper.probability" title="Permalink to this definition">#</a></dt>
 <dd><p>The probability that the augmentation should be applied.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -517,10 +550,10 @@ vertically.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.augmentation.RandomFlipper.from_skeleton">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_skeleton</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skeleton</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.skeleton.html#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">sleap.skeleton.Skeleton</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">horizontal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probability</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.augmentation.RandomFlipper" title="sleap.nn.data.augmentation.RandomFlipper"><span class="pre">sleap.nn.data.augmentation.RandomFlipper</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/augmentation.py#L363-L382"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.RandomFlipper.from_skeleton" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_skeleton</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skeleton</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.skeleton.html#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton"><span class="pre">Skeleton</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">horizontal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probability</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.data.augmentation.RandomFlipper" title="sleap.nn.data.augmentation.RandomFlipper"><span class="pre">RandomFlipper</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/augmentation.py#L360-L379"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.RandomFlipper.from_skeleton" title="Permalink to this definition">#</a></dt>
 <dd><p>Create an instance of <a class="reference internal" href="#sleap.nn.data.augmentation.RandomFlipper" title="sleap.nn.data.augmentation.RandomFlipper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RandomFlipper</span></code></a> from a skeleton.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>skeleton</strong> – A <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap.Skeleton</span></code> that may define symmetric nodes.</p></li>
 <li><p><strong>horizontal</strong> – If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code> (the default), flips are applied horizontally instead
@@ -528,7 +561,7 @@ of vertically.</p></li>
 <li><p><strong>probability</strong> – The probability that the augmentation should be applied.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>An instance of <a class="reference internal" href="#sleap.nn.data.augmentation.RandomFlipper" title="sleap.nn.data.augmentation.RandomFlipper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RandomFlipper</span></code></a>.</p>
 </dd>
 </dl>
@@ -536,14 +569,14 @@ of vertically.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.augmentation.RandomFlipper.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/augmentation.py#L392-L427"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.RandomFlipper.transform_dataset" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DatasetV2</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/augmentation.py#L389-L424"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.RandomFlipper.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> with elements containing augmented data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>input_ds</strong> – A dataset with elements that contain the keys <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code> and
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;instances&quot;</span></code>. This is typically raw data from a data provider.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> with the same keys as the input, but with images and
 instance points updated with the applied random flip.</p>
 </dd>
@@ -554,10 +587,10 @@ instance points updated with the applied random flip.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.data.augmentation.flip_instances_lr">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.augmentation.</span></span><span class="sig-name descname"><span class="pre">flip_instances_lr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symmetric_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/augmentation.py#L21-L64"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.flip_instances_lr" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.augmentation.</span></span><span class="sig-name descname"><span class="pre">flip_instances_lr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symmetric_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/augmentation.py#L13-L56"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.flip_instances_lr" title="Permalink to this definition">#</a></dt>
 <dd><p>Flip a set of instance points horizontally with symmetric node adjustment.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instances</strong> – Instance points as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_instances,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code>
 and dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code>.</p></li>
@@ -570,7 +603,7 @@ not matter. Each pair of nodes will be swapped to account for the
 reflection if this is not <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> (the default).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The instance points with x-coordinates flipped horizontally.</p>
 </dd>
 </dl>
@@ -578,10 +611,10 @@ reflection if this is not <code class="xref py py-obj docutils literal notransla
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.data.augmentation.flip_instances_ud">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.augmentation.</span></span><span class="sig-name descname"><span class="pre">flip_instances_ud</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symmetric_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/augmentation.py#L67-L110"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.flip_instances_ud" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.augmentation.</span></span><span class="sig-name descname"><span class="pre">flip_instances_ud</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symmetric_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/augmentation.py#L59-L102"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.augmentation.flip_instances_ud" title="Permalink to this definition">#</a></dt>
 <dd><p>Flip a set of instance points vertically with symmetric node adjustment.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instances</strong> – Instance points as a <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_instances,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code>
 and dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code>.</p></li>
@@ -594,7 +627,7 @@ not matter. Each pair of nodes will be swapped to account for the
 reflection if this is not <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> (the default).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The instance points with y-coordinates flipped horizontally.</p>
 </dd>
 </dl>
@@ -624,6 +657,45 @@ reflection if this is not <code class="xref py py-obj docutils literal notransla
             
             
               
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter"><code class="docutils literal notranslate"><span class="pre">AlbumentationsAugmenter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.augmenter"><code class="docutils literal notranslate"><span class="pre">AlbumentationsAugmenter.augmenter</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.image_key"><code class="docutils literal notranslate"><span class="pre">AlbumentationsAugmenter.image_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.instances_key"><code class="docutils literal notranslate"><span class="pre">AlbumentationsAugmenter.instances_key</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.from_config"><code class="docutils literal notranslate"><span class="pre">AlbumentationsAugmenter.from_config()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.input_keys"><code class="docutils literal notranslate"><span class="pre">AlbumentationsAugmenter.input_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.output_keys"><code class="docutils literal notranslate"><span class="pre">AlbumentationsAugmenter.output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.AlbumentationsAugmenter.transform_dataset"><code class="docutils literal notranslate"><span class="pre">AlbumentationsAugmenter.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomCropper"><code class="docutils literal notranslate"><span class="pre">RandomCropper</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomCropper.crop_height"><code class="docutils literal notranslate"><span class="pre">RandomCropper.crop_height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomCropper.crop_width"><code class="docutils literal notranslate"><span class="pre">RandomCropper.crop_width</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomCropper.transform_dataset"><code class="docutils literal notranslate"><span class="pre">RandomCropper.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomFlipper"><code class="docutils literal notranslate"><span class="pre">RandomFlipper</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomFlipper.symmetric_inds"><code class="docutils literal notranslate"><span class="pre">RandomFlipper.symmetric_inds</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomFlipper.horizontal"><code class="docutils literal notranslate"><span class="pre">RandomFlipper.horizontal</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomFlipper.probability"><code class="docutils literal notranslate"><span class="pre">RandomFlipper.probability</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomFlipper.from_skeleton"><code class="docutils literal notranslate"><span class="pre">RandomFlipper.from_skeleton()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.RandomFlipper.transform_dataset"><code class="docutils literal notranslate"><span class="pre">RandomFlipper.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.flip_instances_lr"><code class="docutils literal notranslate"><span class="pre">flip_instances_lr()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.augmentation.flip_instances_ud"><code class="docutils literal notranslate"><span class="pre">flip_instances_ud()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
             
           </div>
           <footer class="bd-footer-content">
@@ -642,7 +714,7 @@ By SLEAP Developers
     
   <p class="copyright">
     
-      © Copyright 2019–2023, Talmo Lab.
+      © Copyright 2019–2024, Talmo Lab.
       <br/>
     
   </p>

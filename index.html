@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Social LEAP Estimates Animal Poses (SLEAP) &#8212; SLEAP (v1.3.3)</title>
+    <title>Social LEAP Estimates Animal Poses (SLEAP) &#8212; SLEAP (v1.4.1)</title>
   
   
   
@@ -32,8 +32,8 @@
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -42,15 +42,12 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/clipboard.min.js"></script>
     <script src="_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="_static/togglebutton.js"></script>
     <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
     <link rel="canonical" href="/develop/index.html" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -58,7 +55,7 @@
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Overview" href="overview.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -164,6 +161,7 @@
 <li class="toctree-l2"><a class="reference internal" href="guides/colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -339,11 +337,11 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="social-leap-estimates-animal-poses-sleap">
-<h1>Social LEAP Estimates Animal Poses (SLEAP)<a class="headerlink" href="#social-leap-estimates-animal-poses-sleap" title="Permalink to this headline">#</a></h1>
+<h1>Social LEAP Estimates Animal Poses (SLEAP)<a class="headerlink" href="#social-leap-estimates-animal-poses-sleap" title="Permalink to this heading">#</a></h1>
 <a class="reference internal image-reference" href="https://sleap.ai/docs/_static/sleap_movie.gif"><img alt="https://sleap.ai/docs/_static/sleap_movie.gif" src="https://sleap.ai/docs/_static/sleap_movie.gif" style="width: 600px;" /></a>
 <p><strong>SLEAP</strong> is an open source deep-learning based framework for multi-animal pose tracking <a class="reference external" href="https://www.nature.com/articles/s41592-022-01426-1">(Pereira et al., Nature Methods, 2022)</a>. It can be used to track any type or number of animals and includes an advanced labeling/training GUI for active learning and proofreading.</p>
 <section id="features">
-<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">#</a></h2>
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Easy, one-line installation with support for all OSes</p></li>
 <li><p>Purpose-built GUI and human-in-the-loop workflow for rapidly labeling large datasets</p></li>
@@ -356,34 +354,34 @@ document.write(`
 </ul>
 </section>
 <section id="get-some-sleap">
-<h2>Get some SLEAP<a class="headerlink" href="#get-some-sleap" title="Permalink to this headline">#</a></h2>
+<h2>Get some SLEAP<a class="headerlink" href="#get-some-sleap" title="Permalink to this heading">#</a></h2>
 <p>SLEAP is installed as a Python package. We strongly recommend using <a class="reference external" href="https://https://docs.conda.io/en/latest/miniconda.html">Miniconda</a> to install SLEAP in its own environment.</p>
 <p>You can find the latest version of SLEAP in the <a class="reference external" href="https://github.com/talmolab/sleap/releases">Releases</a> page.</p>
 <section id="quick-install">
-<h3>Quick install<a class="headerlink" href="#quick-install" title="Permalink to this headline">#</a></h3>
+<h3>Quick install<a class="headerlink" href="#quick-install" title="Permalink to this heading">#</a></h3>
 <p><code class="xref py py-obj docutils literal notranslate"><span class="pre">conda</span></code> <strong>(Windows/Linux/GPU)</strong>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda create -y -n sleap -c conda-forge -c nvidia -c sleap -c anaconda sleap
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-y<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>nvidia<span class="w"> </span>-c<span class="w"> </span>sleap/label/dev<span class="w"> </span>-c<span class="w"> </span>sleap<span class="w"> </span>-c<span class="w"> </span>anaconda<span class="w"> </span>sleap
 </pre></div>
 </div>
 <p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pip</span></code> <strong>(any OS except Apple silicon)</strong>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install sleap<span class="o">[</span>pypi<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>sleap<span class="o">[</span>pypi<span class="o">]</span>
 </pre></div>
 </div>
 <p>See the docs for <a class="reference external" href="https://sleap.ai/installation.html">full installation instructions</a>.</p>
 </section>
 </section>
 <section id="learn-to-sleap">
-<h2>Learn to SLEAP<a class="headerlink" href="#learn-to-sleap" title="Permalink to this headline">#</a></h2>
+<h2>Learn to SLEAP<a class="headerlink" href="#learn-to-sleap" title="Permalink to this heading">#</a></h2>
 <ul class="simple">
 <li><p><strong>Learn step-by-step</strong>: <a class="reference external" href="https://sleap.ai/tutorials/tutorial.html">Tutorial</a></p></li>
 <li><p><strong>Learn more advanced usage</strong>: <a class="reference external" href="https://sleap.ai/guides/">Guides</a> and <a class="reference external" href="https://sleap.ai/notebooks/">Notebooks</a></p></li>
-<li><p><strong>Learn by watching</strong>: <a class="reference external" href="https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking">MIT CBMM Tutorial</a></p></li>
+<li><p><strong>Learn by watching</strong>: <a class="reference external" href="https://www.youtube.com/watch?v=BfW-HgeDfMI">ABL:AOC 2023 Workshop</a> and <a class="reference external" href="https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking">MIT CBMM Tutorial</a></p></li>
 <li><p><strong>Learn by reading</strong>: <a class="reference external" href="https://www.nature.com/articles/s41592-022-01426-1">Paper (Pereira et al., Nature Methods, 2022)</a> and <a class="reference external" href="https://rdcu.be/caH3H">Review on behavioral quantification (Pereira et al., Nature Neuroscience, 2020)</a></p></li>
 <li><p><strong>Learn from others</strong>: <a class="reference external" href="https://github.com/talmolab/sleap/discussions">Discussions on Github</a></p></li>
 </ul>
 </section>
 <section id="references">
-<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">#</a></h2>
+<h2>References<a class="headerlink" href="#references" title="Permalink to this heading">#</a></h2>
 <p>SLEAP is the successor to the single-animal pose estimation software <a class="reference external" href="https://github.com/talmo/leap">LEAP</a> (<a class="reference external" href="https://www.nature.com/articles/s41592-018-0234-5">Pereira et al., Nature Methods, 2019</a>).</p>
 <p>If you use SLEAP in your research, please cite:</p>
 <blockquote>
@@ -424,7 +422,7 @@ document.write(`
 </div>
 </section>
 <section id="contact">
-<h2>Contact<a class="headerlink" href="#contact" title="Permalink to this headline">#</a></h2>
+<h2>Contact<a class="headerlink" href="#contact" title="Permalink to this heading">#</a></h2>
 <p>Follow <a class="reference external" href="https://twitter.com/talmop">&#64;talmop</a> on Twitter for news and updates!</p>
 <p><strong>Technical issue with the software?</strong></p>
 <ol class="arabic simple">
@@ -436,7 +434,7 @@ document.write(`
 Reach out to <code class="xref py py-obj docutils literal notranslate"><span class="pre">talmo&#64;salk.edu</span></code>.</p>
 </section>
 <section id="contributors">
-<span id="id2"></span><h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">#</a></h2>
+<span id="id2"></span><h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this heading">#</a></h2>
 <ul class="simple">
 <li><p><strong>Talmo Pereira</strong>, Salk Institute for Biological Studies</p></li>
 <li><p><strong>Liezl Maree</strong>, Salk Institute for Biological Studies</p></li>
@@ -456,11 +454,11 @@ Reach out to <code class="xref py py-obj docutils literal notranslate"><span cla
 </ul>
 </section>
 <section id="license">
-<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">#</a></h2>
+<h2>License<a class="headerlink" href="#license" title="Permalink to this heading">#</a></h2>
 <p>SLEAP is released under a <a class="reference external" href="https://raw.githubusercontent.com/talmolab/sleap/main/LICENSE">Clear BSD License</a> and is intended for research/academic use only. For commercial use, please contact: Laurie Tzodikov (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256.</p>
 </section>
 <section id="sleap-documentation">
-<h2>SLEAP Documentation<a class="headerlink" href="#sleap-documentation" title="Permalink to this headline">#</a></h2>
+<h2>SLEAP Documentation<a class="headerlink" href="#sleap-documentation" title="Permalink to this heading">#</a></h2>
 <div class="toctree-wrapper compound" id="sleap">
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Home</a></li>
@@ -552,7 +550,7 @@ By SLEAP Developers
     
   <p class="copyright">
     
-      © Copyright 2019–2023, Talmo Lab.
+      © Copyright 2019–2024, Talmo Lab.
       <br/>
     
   </p>

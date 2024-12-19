@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>sleap.nn.architectures.pretrained_encoders &#8212; SLEAP (v1.3.3)</title>
+    <title>sleap.nn.architectures.pretrained_encoders &#8212; SLEAP (v1.4.1)</title>
   
   
   
@@ -32,8 +32,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -42,22 +42,19 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/sleap.nn.architectures.pretrained_encoders';</script>
     <link rel="canonical" href="/develop/api/sleap.nn.architectures.pretrained_encoders.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -163,6 +160,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -292,7 +290,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -308,6 +308,25 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.encoder"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.encoder</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.decoder_filters"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.decoder_filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.pretrained"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.pretrained</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.down_blocks"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.down_blocks</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.from_config"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.from_config()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.make_backbone"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.make_backbone()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.maximum_stride"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.maximum_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.output_stride"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.up_blocks"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.up_blocks</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -318,7 +337,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="module-sleap.nn.architectures.pretrained_encoders">
-<span id="sleap-nn-architectures-pretrained-encoders"></span><h1>sleap.nn.architectures.pretrained_encoders<a class="headerlink" href="#module-sleap.nn.architectures.pretrained_encoders" title="Permalink to this headline">#</a></h1>
+<span id="sleap-nn-architectures-pretrained-encoders"></span><h1>sleap.nn.architectures.pretrained_encoders<a class="headerlink" href="#module-sleap.nn.architectures.pretrained_encoders" title="Permalink to this heading">#</a></h1>
 <p>Encoder-decoder backbones with pretrained encoder models.</p>
 <p>This module enables encoder-decoder style architectures using a wide range of
 state-of-the-art architectures as the encoder, with a UNet-like upsampling stack that
@@ -354,7 +373,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.pretrained_encoders.</span></span><span class="sig-name descname"><span class="pre">UnetPretrainedEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'efficientnetb0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(256,</span> <span class="pre">256,</span> <span class="pre">128,</span> <span class="pre">128)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/architectures/pretrained_encoders.py#L98-L253"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.pretrained_encoders.</span></span><span class="sig-name descname"><span class="pre">UnetPretrainedEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'efficientnetb0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(256,</span> <span class="pre">256,</span> <span class="pre">128,</span> <span class="pre">128)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/architectures/pretrained_encoders.py#L98-L253"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder" title="Permalink to this definition">#</a></dt>
 <dd><p>UNet with an (optionally) pretrained encoder model.</p>
 <p>This backbone enables the use of a variety of popular neural network architectures
 for feature extraction in the backbone. These can be used with ImageNet-pretrained
@@ -385,7 +404,7 @@ information on the individual backbones.</p>
 </ul>
 <p>Defaults to <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;mobilenetv2&quot;</span></code></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -400,7 +419,7 @@ block. The length of this attribute also specifies the number of upsampling
 steps and therefore the output stride of the backbone. Specify 5 filter
 numbers to get an output stride of 1 (same size as the input). Defaults to</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Tuple[int]</p>
 </dd>
 </dl>
@@ -413,7 +432,7 @@ numbers to get an output stride of 1 (same size as the input). Defaults to</p>
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, the same model architecture will be used for the encoder but the
 weights will be randomly initialized.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -427,14 +446,14 @@ weights will be randomly initialized.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.from_config">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.PretrainedEncoderConfig" title="sleap.nn.config.model.PretrainedEncoderConfig"><span class="pre">sleap.nn.config.model.PretrainedEncoderConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder" title="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder"><span class="pre">sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/architectures/pretrained_encoders.py#L142-L163"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.from_config" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="sleap.nn.config.model.html#sleap.nn.config.model.PretrainedEncoderConfig" title="sleap.nn.config.model.PretrainedEncoderConfig"><span class="pre">PretrainedEncoderConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder" title="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder"><span class="pre">UnetPretrainedEncoder</span></a></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/architectures/pretrained_encoders.py#L142-L163"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.from_config" title="Permalink to this definition">#</a></dt>
 <dd><p>Create the backbone from a configuration.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>config</strong> – A <code class="xref py py-obj docutils literal notranslate"><span class="pre">PretrainedEncoderConfig</span></code> instance specifying the
 configuration of the backbone.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>An instantiated <a class="reference internal" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder" title="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UnetPretrainedEncoder</span></code></a>.</p>
 </dd>
 </dl>
@@ -442,15 +461,15 @@ configuration of the backbone.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.make_backbone">
-<span class="sig-name descname"><span class="pre">make_backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/architectures/pretrained_encoders.py#L185-L253"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.make_backbone" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/architectures/pretrained_encoders.py#L185-L253"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.make_backbone" title="Permalink to this definition">#</a></dt>
 <dd><p>Create the backbone and return the output tensors for building a model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>x_in</strong> – A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.Tensor</span></code> representing the input to this backbone. This is
 typically an instance of <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.layers.Input()</span></code> but can also be any
 rank-4 tensor. Can be grayscale or RGB.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A tuple of (<code class="xref py py-obj docutils literal notranslate"><span class="pre">x_main</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">intermediate_activations</span></code>).</p>
 <p><code class="xref py py-obj docutils literal notranslate"><span class="pre">x_main</span></code> is the output tensor from the last upsampling block.</p>
 <p><code class="xref py py-obj docutils literal notranslate"><span class="pre">intermediate_activations</span></code> is a list of <a href="#id1"><span class="problematic" id="id2">`</span></a>IntermediateActivation`s containing
@@ -505,6 +524,31 @@ multi-output models at different feature strides.</p>
             
             
               
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.encoder"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.encoder</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.decoder_filters"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.decoder_filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.pretrained"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.pretrained</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.down_blocks"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.down_blocks</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.from_config"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.from_config()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.make_backbone"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.make_backbone()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.maximum_stride"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.maximum_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.output_stride"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.pretrained_encoders.UnetPretrainedEncoder.up_blocks"><code class="docutils literal notranslate"><span class="pre">UnetPretrainedEncoder.up_blocks</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
             
           </div>
           <footer class="bd-footer-content">
@@ -523,7 +567,7 @@ By SLEAP Developers
     
   <p class="copyright">
     
-      © Copyright 2019–2023, Talmo Lab.
+      © Copyright 2019–2024, Talmo Lab.
       <br/>
     
   </p>

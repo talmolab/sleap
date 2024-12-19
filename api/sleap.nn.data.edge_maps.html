@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>sleap.nn.data.edge_maps &#8212; SLEAP (v1.3.3)</title>
+    <title>sleap.nn.data.edge_maps &#8212; SLEAP (v1.4.1)</title>
   
   
   
@@ -32,8 +32,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -42,22 +42,19 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/sleap.nn.data.edge_maps';</script>
     <link rel="canonical" href="/develop/api/sleap.nn.data.edge_maps.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -163,6 +160,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -292,7 +290,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -308,6 +308,28 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsGenerator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.sigma"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsGenerator.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.output_stride"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsGenerator.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.skeletons"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsGenerator.skeletons</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.flatten_channels"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsGenerator.flatten_channels</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.input_keys"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsGenerator.input_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.output_keys"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsGenerator.output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.transform_dataset"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsGenerator.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.distance_to_edge"><code class="docutils literal notranslate"><span class="pre">distance_to_edge()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.get_edge_points"><code class="docutils literal notranslate"><span class="pre">get_edge_points()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.make_edge_maps"><code class="docutils literal notranslate"><span class="pre">make_edge_maps()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.make_multi_pafs"><code class="docutils literal notranslate"><span class="pre">make_multi_pafs()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.make_pafs"><code class="docutils literal notranslate"><span class="pre">make_pafs()</span></code></a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -318,11 +340,11 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="module-sleap.nn.data.edge_maps">
-<span id="sleap-nn-data-edge-maps"></span><h1>sleap.nn.data.edge_maps<a class="headerlink" href="#module-sleap.nn.data.edge_maps" title="Permalink to this headline">#</a></h1>
+<span id="sleap-nn-data-edge-maps"></span><h1>sleap.nn.data.edge_maps<a class="headerlink" href="#module-sleap.nn.data.edge_maps" title="Permalink to this heading">#</a></h1>
 <p>Transformers for generating edge confidence maps and part affinity fields.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.edge_maps.PartAffinityFieldsGenerator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.edge_maps.</span></span><span class="sig-name descname"><span class="pre">PartAffinityFieldsGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skeletons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten_channels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/edge_maps.py#L241-L359"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.edge_maps.</span></span><span class="sig-name descname"><span class="pre">PartAffinityFieldsGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skeletons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten_channels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/edge_maps.py#L241-L359"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator" title="Permalink to this definition">#</a></dt>
 <dd><p>Transformer to generate part affinity fields.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.sigma">
@@ -332,7 +354,7 @@ part affinity fields by their distance to the edges. This defines the spread
 in units of the input image’s grid, i.e., it does not take scaling in
 previous steps into account.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -345,7 +367,7 @@ previous steps into account.</p>
 effectively the reciprocal of the output scale, i.e., increase this to
 generate confidence maps that are smaller than the input images.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -357,7 +379,7 @@ generate confidence maps that are smaller than the input images.</p>
 <dd><p>List of <a href="#id1"><span class="problematic" id="id2">`</span></a>sleap.Skeleton`s to use for looking up the index of the
 edges.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[List[<a class="reference internal" href="sleap.skeleton.html#sleap.skeleton.Skeleton" title="sleap.skeleton.Skeleton">sleap.skeleton.Skeleton</a>]]</p>
 </dd>
 </dl>
@@ -370,7 +392,7 @@ edges.</p>
 [height, width, n_edges, 2]. If True, generated tensors are of shape
 [height, width, n_edges * 2] by flattening the last 2 axes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -390,14 +412,14 @@ edges.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/edge_maps.py#L276-L359"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.transform_dataset" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/edge_maps.py#L276-L359"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a dataset that contains the generated confidence maps.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>input_ds</strong> – A dataset with elements that contain the keys “image”,
 “instances” and “skeleton_inds”.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> with the same keys as the input, as well as
 “part_affinity_fields”.</p>
 <p>The “part_affinity_fields” key will be a tensor of shape
@@ -425,10 +447,10 @@ the original grid prior to scaling operations.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.data.edge_maps.distance_to_edge">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.edge_maps.</span></span><span class="sig-name descname"><span class="pre">distance_to_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_destination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/edge_maps.py#L16-L79"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.distance_to_edge" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.edge_maps.</span></span><span class="sig-name descname"><span class="pre">distance_to_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_destination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/edge_maps.py#L16-L79"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.distance_to_edge" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute pairwise distance between points and undirected edges.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>points</strong> – Tensor of dtype tf.float32 of shape (d_0, …, d_n, 2) where the last
 axis corresponds to x- and y-coordinates. Distances will be broadcast across
@@ -440,7 +462,7 @@ last axis corresponds to x- and y-coordinates of the source points of each
 edge.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A tensor of dtype tf.float32 of shape (d_0, …, d_n, n_edges) where the first
 axes correspond to the initial dimensions of <code class="xref py py-obj docutils literal notranslate"><span class="pre">points</span></code>, and the last indicates
 the distance of each point to each edge.</p>
@@ -450,10 +472,10 @@ the distance of each point to each edge.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.data.edge_maps.get_edge_points">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.edge_maps.</span></span><span class="sig-name descname"><span class="pre">get_edge_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/edge_maps.py#L214-L237"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.get_edge_points" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.edge_maps.</span></span><span class="sig-name descname"><span class="pre">get_edge_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/edge_maps.py#L214-L237"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.get_edge_points" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the points in each instance that form a directed graph.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instances</strong> – A tensor of shape (n_instances, n_nodes, 2) and dtype tf.float32
 containing instance points where the last axis corresponds to (x, y) pixel
@@ -464,7 +486,7 @@ indices that define a directed graph, where the last axis corresponds to the
 source and destination node indices.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Tuple of (edge_sources, edge_destinations) containing the edge and destination
 points respectively. Both will be tensors of shape (n_instances, n_edges, 2),
 where the last axis corresponds to (x, y) pixel coordinates on the image.</p>
@@ -474,10 +496,10 @@ where the last axis corresponds to (x, y) pixel coordinates on the image.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.data.edge_maps.make_edge_maps">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.edge_maps.</span></span><span class="sig-name descname"><span class="pre">make_edge_maps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_destination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/edge_maps.py#L82-L116"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.make_edge_maps" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.edge_maps.</span></span><span class="sig-name descname"><span class="pre">make_edge_maps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_destination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/edge_maps.py#L82-L116"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.make_edge_maps" title="Permalink to this definition">#</a></dt>
 <dd><p>Generate confidence maps for a set of undirected edges.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>xv</strong> – Sampling grid vector for x-coordinates of shape (grid_width,) and dtype
 tf.float32. This can be generated by
@@ -494,7 +516,7 @@ each edge.</p></li>
 confidence maps.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A set of confidence maps corresponding to the probability of each point on a
 sampling grid being on each edge. These will be in a tensor of shape
 (grid_height, grid_width, n_edges) of dtype tf.float32.</p>
@@ -504,10 +526,10 @@ sampling grid being on each edge. These will be in a tensor of shape
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.data.edge_maps.make_multi_pafs">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.edge_maps.</span></span><span class="sig-name descname"><span class="pre">make_multi_pafs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_sources</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_destinations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/edge_maps.py#L165-L211"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.make_multi_pafs" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.edge_maps.</span></span><span class="sig-name descname"><span class="pre">make_multi_pafs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_sources</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_destinations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/edge_maps.py#L165-L211"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.make_multi_pafs" title="Permalink to this definition">#</a></dt>
 <dd><p>Make multiple instance PAFs with max reduction.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>xv</strong> – Sampling grid vector for x-coordinates of shape (grid_width,) and dtype
 tf.float32. This can be generated by
@@ -525,7 +547,7 @@ points of each edge.</p></li>
 the edge maps for masking the PAFs.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A set of part affinity fields generated for each instance. These will be in a
 tensor of shape (grid_height, grid_width, n_edges, 2). If multiple instance
 PAFs are defined on the same pixel, they will be summed.</p>
@@ -535,10 +557,10 @@ PAFs are defined on the same pixel, they will be summed.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.data.edge_maps.make_pafs">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.edge_maps.</span></span><span class="sig-name descname"><span class="pre">make_pafs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_destination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/edge_maps.py#L119-L162"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.make_pafs" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.edge_maps.</span></span><span class="sig-name descname"><span class="pre">make_pafs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_destination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/edge_maps.py#L119-L162"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.edge_maps.make_pafs" title="Permalink to this definition">#</a></dt>
 <dd><p>Generate part affinity fields for a set of directed edges.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>xv</strong> – Sampling grid vector for x-coordinates of shape (grid_width,) and dtype
 tf.float32. This can be generated by
@@ -555,7 +577,7 @@ each edge.</p></li>
 the edge maps for masking the PAFs.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A set of part affinity fields corresponding to the unit vector pointing along
 the direction of each edge weighted by the probability of each point on a
 sampling grid being on each edge. These will be in a tensor of shape
@@ -589,6 +611,34 @@ corresponds to the x- and y-coordinates of the unit vectors.</p>
             
             
               
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsGenerator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.sigma"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsGenerator.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.output_stride"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsGenerator.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.skeletons"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsGenerator.skeletons</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.flatten_channels"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsGenerator.flatten_channels</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.input_keys"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsGenerator.input_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.output_keys"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsGenerator.output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.PartAffinityFieldsGenerator.transform_dataset"><code class="docutils literal notranslate"><span class="pre">PartAffinityFieldsGenerator.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.distance_to_edge"><code class="docutils literal notranslate"><span class="pre">distance_to_edge()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.get_edge_points"><code class="docutils literal notranslate"><span class="pre">get_edge_points()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.make_edge_maps"><code class="docutils literal notranslate"><span class="pre">make_edge_maps()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.make_multi_pafs"><code class="docutils literal notranslate"><span class="pre">make_multi_pafs()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.edge_maps.make_pafs"><code class="docutils literal notranslate"><span class="pre">make_pafs()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
             
           </div>
           <footer class="bd-footer-content">
@@ -607,7 +657,7 @@ By SLEAP Developers
     
   <p class="copyright">
     
-      © Copyright 2019–2023, Talmo Lab.
+      © Copyright 2019–2024, Talmo Lab.
       <br/>
     
   </p>

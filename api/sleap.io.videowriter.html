@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>sleap.io.videowriter &#8212; SLEAP (v1.3.3)</title>
+    <title>sleap.io.videowriter &#8212; SLEAP (v1.4.1)</title>
   
   
   
@@ -32,8 +32,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -42,22 +42,19 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/sleap.io.videowriter';</script>
     <link rel="canonical" href="/develop/api/sleap.io.videowriter.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -163,6 +160,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -292,7 +290,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -308,6 +308,28 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriter"><code class="docutils literal notranslate"><span class="pre">VideoWriter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriter.can_use_ffmpeg"><code class="docutils literal notranslate"><span class="pre">VideoWriter.can_use_ffmpeg()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriter.safe_builder"><code class="docutils literal notranslate"><span class="pre">VideoWriter.safe_builder()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriterImageio"><code class="docutils literal notranslate"><span class="pre">VideoWriterImageio</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriterImageio.filename"><code class="docutils literal notranslate"><span class="pre">VideoWriterImageio.filename</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriterImageio.height"><code class="docutils literal notranslate"><span class="pre">VideoWriterImageio.height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriterImageio.width"><code class="docutils literal notranslate"><span class="pre">VideoWriterImageio.width</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriterImageio.fps"><code class="docutils literal notranslate"><span class="pre">VideoWriterImageio.fps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriterImageio.crf"><code class="docutils literal notranslate"><span class="pre">VideoWriterImageio.crf</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriterImageio.preset"><code class="docutils literal notranslate"><span class="pre">VideoWriterImageio.preset</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriterOpenCV"><code class="docutils literal notranslate"><span class="pre">VideoWriterOpenCV</span></code></a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -318,7 +340,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="module-sleap.io.videowriter">
-<span id="sleap-io-videowriter"></span><h1>sleap.io.videowriter<a class="headerlink" href="#module-sleap.io.videowriter" title="Permalink to this headline">#</a></h1>
+<span id="sleap-io-videowriter"></span><h1>sleap.io.videowriter<a class="headerlink" href="#module-sleap.io.videowriter" title="Permalink to this heading">#</a></h1>
 <p>Module for writing avi/mp4 videos.</p>
 <p>Usage:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span> <span class="n">writer</span> <span class="o">=</span> <span class="n">VideoWriter</span><span class="o">.</span><span class="n">safe_builder</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">fps</span><span class="p">)</span>
@@ -328,64 +350,70 @@ document.write(`
 </div>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.videowriter.</span></span><span class="sig-name descname"><span class="pre">VideoWriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/io/videowriter.py#L17-L52"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.videowriter.VideoWriter" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.videowriter.</span></span><span class="sig-name descname"><span class="pre">VideoWriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/io/videowriter.py#L18-L57"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.videowriter.VideoWriter" title="Permalink to this definition">#</a></dt>
 <dd><p>Abstract base class for writing avi/mp4 videos.</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriter.can_use_ffmpeg">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">can_use_ffmpeg</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/io/videowriter.py#L41-L57"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.videowriter.VideoWriter.can_use_ffmpeg" title="Permalink to this definition">#</a></dt>
+<dd><p>Check if ffmpeg is available for writing videos.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriter.safe_builder">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">safe_builder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/io/videowriter.py#L32-L38"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.videowriter.VideoWriter.safe_builder" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">safe_builder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/io/videowriter.py#L33-L39"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.videowriter.VideoWriter.safe_builder" title="Permalink to this definition">#</a></dt>
 <dd><p>Builds VideoWriter based on available dependencies.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriterOpenCV">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.videowriter.</span></span><span class="sig-name descname"><span class="pre">VideoWriterOpenCV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/io/videowriter.py#L55-L68"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.videowriter.VideoWriterOpenCV" title="Permalink to this definition">#</a></dt>
-<dd><p>Writes video using OpenCV as wrapper for ffmpeg.</p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriterSkvideo">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.videowriter.</span></span><span class="sig-name descname"><span class="pre">VideoWriterSkvideo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">21</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'superfast'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/io/videowriter.py#L71-L112"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.videowriter.VideoWriterSkvideo" title="Permalink to this definition">#</a></dt>
-<dd><p>Writes video using scikit-video as wrapper for ffmpeg.</p>
+<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriterImageio">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.videowriter.</span></span><span class="sig-name descname"><span class="pre">VideoWriterImageio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">21</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'superfast'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/io/videowriter.py#L76-L127"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.videowriter.VideoWriterImageio" title="Permalink to this definition">#</a></dt>
+<dd><p>Writes video using imageio as a wrapper for ffmpeg.</p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriterSkvideo.filename">
-<span class="sig-name descname"><span class="pre">filename</span></span><a class="headerlink" href="#sleap.io.videowriter.VideoWriterSkvideo.filename" title="Permalink to this definition">#</a></dt>
-<dd><p>Path to mp4 file to save to.</p>
+<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriterImageio.filename">
+<span class="sig-name descname"><span class="pre">filename</span></span><a class="headerlink" href="#sleap.io.videowriter.VideoWriterImageio.filename" title="Permalink to this definition">#</a></dt>
+<dd><p>Path to video file to save to.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriterSkvideo.height">
-<span class="sig-name descname"><span class="pre">height</span></span><a class="headerlink" href="#sleap.io.videowriter.VideoWriterSkvideo.height" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriterImageio.height">
+<span class="sig-name descname"><span class="pre">height</span></span><a class="headerlink" href="#sleap.io.videowriter.VideoWriterImageio.height" title="Permalink to this definition">#</a></dt>
 <dd><p>Height of movie frames.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriterSkvideo.width">
-<span class="sig-name descname"><span class="pre">width</span></span><a class="headerlink" href="#sleap.io.videowriter.VideoWriterSkvideo.width" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriterImageio.width">
+<span class="sig-name descname"><span class="pre">width</span></span><a class="headerlink" href="#sleap.io.videowriter.VideoWriterImageio.width" title="Permalink to this definition">#</a></dt>
 <dd><p>Width of movie frames.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriterSkvideo.fps">
-<span class="sig-name descname"><span class="pre">fps</span></span><a class="headerlink" href="#sleap.io.videowriter.VideoWriterSkvideo.fps" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriterImageio.fps">
+<span class="sig-name descname"><span class="pre">fps</span></span><a class="headerlink" href="#sleap.io.videowriter.VideoWriterImageio.fps" title="Permalink to this definition">#</a></dt>
 <dd><p>Playback framerate to save at.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriterSkvideo.crf">
-<span class="sig-name descname"><span class="pre">crf</span></span><a class="headerlink" href="#sleap.io.videowriter.VideoWriterSkvideo.crf" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriterImageio.crf">
+<span class="sig-name descname"><span class="pre">crf</span></span><a class="headerlink" href="#sleap.io.videowriter.VideoWriterImageio.crf" title="Permalink to this definition">#</a></dt>
 <dd><p>Compression rate factor to control lossiness of video. Values go from
 2 to 32, with numbers in the 18 to 30 range being most common. Lower values
 mean less compressed/higher quality.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriterSkvideo.preset">
-<span class="sig-name descname"><span class="pre">preset</span></span><a class="headerlink" href="#sleap.io.videowriter.VideoWriterSkvideo.preset" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriterImageio.preset">
+<span class="sig-name descname"><span class="pre">preset</span></span><a class="headerlink" href="#sleap.io.videowriter.VideoWriterImageio.preset" title="Permalink to this definition">#</a></dt>
 <dd><p>Name of the libx264 preset to use (default: “superfast”).</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="sleap.io.videowriter.VideoWriterOpenCV">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.io.videowriter.</span></span><span class="sig-name descname"><span class="pre">VideoWriterOpenCV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/io/videowriter.py#L60-L73"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.io.videowriter.VideoWriterOpenCV" title="Permalink to this definition">#</a></dt>
+<dd><p>Writes video using OpenCV as wrapper for ffmpeg.</p>
 </dd></dl>
 
 </section>
@@ -412,6 +440,34 @@ mean less compressed/higher quality.</p>
             
             
               
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriter"><code class="docutils literal notranslate"><span class="pre">VideoWriter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriter.can_use_ffmpeg"><code class="docutils literal notranslate"><span class="pre">VideoWriter.can_use_ffmpeg()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriter.safe_builder"><code class="docutils literal notranslate"><span class="pre">VideoWriter.safe_builder()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriterImageio"><code class="docutils literal notranslate"><span class="pre">VideoWriterImageio</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriterImageio.filename"><code class="docutils literal notranslate"><span class="pre">VideoWriterImageio.filename</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriterImageio.height"><code class="docutils literal notranslate"><span class="pre">VideoWriterImageio.height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriterImageio.width"><code class="docutils literal notranslate"><span class="pre">VideoWriterImageio.width</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriterImageio.fps"><code class="docutils literal notranslate"><span class="pre">VideoWriterImageio.fps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriterImageio.crf"><code class="docutils literal notranslate"><span class="pre">VideoWriterImageio.crf</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriterImageio.preset"><code class="docutils literal notranslate"><span class="pre">VideoWriterImageio.preset</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.io.videowriter.VideoWriterOpenCV"><code class="docutils literal notranslate"><span class="pre">VideoWriterOpenCV</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
             
           </div>
           <footer class="bd-footer-content">
@@ -430,7 +486,7 @@ By SLEAP Developers
     
   <p class="copyright">
     
-      © Copyright 2019–2023, Talmo Lab.
+      © Copyright 2019–2024, Talmo Lab.
       <br/>
     
   </p>

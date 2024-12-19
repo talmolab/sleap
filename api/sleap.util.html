@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>sleap.util &#8212; SLEAP (v1.3.3)</title>
+    <title>sleap.util &#8212; SLEAP (v1.4.1)</title>
   
   
   
@@ -32,8 +32,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -42,22 +42,19 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/sleap.util';</script>
     <link rel="canonical" href="/develop/api/sleap.util.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -163,6 +160,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -292,7 +290,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -308,6 +308,27 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.attr_to_dtype"><code class="docutils literal notranslate"><span class="pre">attr_to_dtype()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.dict_cut"><code class="docutils literal notranslate"><span class="pre">dict_cut()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.find_files_by_suffix"><code class="docutils literal notranslate"><span class="pre">find_files_by_suffix()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.frame_list"><code class="docutils literal notranslate"><span class="pre">frame_list()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.get_config_file"><code class="docutils literal notranslate"><span class="pre">get_config_file()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.get_package_file"><code class="docutils literal notranslate"><span class="pre">get_package_file()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.json_dumps"><code class="docutils literal notranslate"><span class="pre">json_dumps()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.json_loads"><code class="docutils literal notranslate"><span class="pre">json_loads()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.make_scoped_dictionary"><code class="docutils literal notranslate"><span class="pre">make_scoped_dictionary()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.parse_uri_path"><code class="docutils literal notranslate"><span class="pre">parse_uri_path()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.save_dict_to_hdf5"><code class="docutils literal notranslate"><span class="pre">save_dict_to_hdf5()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.uniquify"><code class="docutils literal notranslate"><span class="pre">uniquify()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.usable_cpu_count"><code class="docutils literal notranslate"><span class="pre">usable_cpu_count()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.weak_filename_match"><code class="docutils literal notranslate"><span class="pre">weak_filename_match()</span></code></a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -318,51 +339,37 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="module-sleap.util">
-<span id="sleap-util"></span><h1>sleap.util<a class="headerlink" href="#module-sleap.util" title="Permalink to this headline">#</a></h1>
+<span id="sleap-util"></span><h1>sleap.util<a class="headerlink" href="#module-sleap.util" title="Permalink to this heading">#</a></h1>
 <p>A miscellaneous set of utility functions.</p>
 <p>Try not to put things in here unless they really have no other place.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.attr_to_dtype">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">attr_to_dtype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/util.py#L69-L95"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.attr_to_dtype" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">attr_to_dtype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/util.py#L66-L92"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.attr_to_dtype" title="Permalink to this definition">#</a></dt>
 <dd><p>Converts classes with basic types to numpy composite dtypes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>cls</strong> – class to convert</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>numpy dtype.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="sleap.util.decode_preview_image">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">decode_preview_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_b64</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">&lt;module</span> <span class="pre">'PIL.Image'</span> <span class="pre">from</span> <span class="pre">'/usr/share/miniconda/envs/sleap_ci/lib/python3.7/site-packages/PIL/Image.py'&gt;</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/util.py#L389-L401"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.decode_preview_image" title="Permalink to this definition">#</a></dt>
-<dd><p>Decode a skeleton preview image byte string representation to a <code class="xref py py-obj docutils literal notranslate"><span class="pre">PIL.Image</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>img_b64</strong> – a byte string representation of a skeleton preview image</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A PIL.Image of the skeleton preview</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.dict_cut">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">dict_cut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/util.py#L226-L239"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.dict_cut" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">dict_cut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/util.py#L223-L236"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.dict_cut" title="Permalink to this definition">#</a></dt>
 <dd><p>Helper function for creating subdictionary by numeric indexing of items.</p>
 <p>Assumes that <code class="xref py py-obj docutils literal notranslate"><span class="pre">dict.items()</span></code> will have a fixed order.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>d</strong> – The dictionary to “split”</p></li>
 <li><p><strong>a</strong> – Start index of range of items to include in result.</p></li>
 <li><p><strong>b</strong> – End index of range of items to include in result.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A dictionary that contains a subset of the items in the original dict.</p>
 </dd>
 </dl>
@@ -370,10 +377,10 @@ document.write(`
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.find_files_by_suffix">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">find_files_by_suffix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">posix.DirEntry</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/util.py#L348-L381"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.find_files_by_suffix" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">find_files_by_suffix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">DirEntry</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/util.py#L335-L368"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.find_files_by_suffix" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns list of files matching suffix, optionally searching in subdirs.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>root_dir</strong> – Path to directory where we start searching</p></li>
 <li><p><strong>suffix</strong> – File suffix to match (e.g., ‘.json’)</p></li>
@@ -381,7 +388,7 @@ document.write(`
 <li><p><strong>depth</strong> – How many subdirectories deep to keep searching</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>List of os.DirEntry objects.</p>
 </dd>
 </dl>
@@ -389,13 +396,13 @@ document.write(`
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.frame_list">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">frame_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame_str</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/util.py#L163-L180"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.frame_list" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">frame_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame_str</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/util.py#L160-L177"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.frame_list" title="Permalink to this definition">#</a></dt>
 <dd><p>Converts ‘n-m’ string to list of ints.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>frame_str</strong> – string representing range</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>List of ints, or None if string does not represent valid range.</p>
 </dd>
 </dl>
@@ -403,14 +410,14 @@ document.write(`
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.get_config_file">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">get_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shortname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_file_not_found</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_defaults</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/util.py#L249-L307"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.get_config_file" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">get_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shortname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_file_not_found</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_defaults</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/util.py#L246-L294"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.get_config_file" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the full path to the specified config file.</p>
 <p>The config file will be at ~/.sleap/&lt;version&gt;/&lt;shortname&gt;</p>
 <p>If that file doesn’t yet exist, we’ll look for a &lt;shortname&gt; file inside
 the package config directory (sleap/config) and copy the file into the
 user’s config directory (creating the directory if needed).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>shortname</strong> – The short filename, e.g., shortcuts.yaml</p></li>
 <li><p><strong>ignore_file_not_found</strong> – If True, then return path for config file
@@ -418,10 +425,10 @@ regardless of whether it exists.</p></li>
 <li><p><strong>get_defaults</strong> – If True, then just return the path to default config file.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>FileNotFoundError</strong> – If the specified config file cannot be found.</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The full path to the specified config file.</p>
 </dd>
 </dl>
@@ -429,22 +436,22 @@ regardless of whether it exists.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.get_package_file">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">get_package_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/util.py#L242-L246"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.get_package_file" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">get_package_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/util.py#L239-L243"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.get_package_file" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns full path to specified file within sleap package.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.json_dumps">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">json_dumps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/util.py#L49-L66"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.json_dumps" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">json_dumps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/util.py#L46-L63"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.json_dumps" title="Permalink to this definition">#</a></dt>
 <dd><p>A simple wrapper around the JSON encoder we are using.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>d</strong> – The dict to write.</p></li>
 <li><p><strong>filename</strong> – The filename to write to.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
 </dd>
 </dl>
@@ -452,13 +459,13 @@ regardless of whether it exists.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.json_loads">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">json_loads</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_str</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/util.py#L34-L46"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.json_loads" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">json_loads</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_str</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/util.py#L31-L43"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.json_loads" title="Permalink to this definition">#</a></dt>
 <dd><p>A simple wrapper around the JSON decoder we are using.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>json_str</strong> – JSON string to decode.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Result of decoding JSON string.</p>
 </dd>
 </dl>
@@ -466,17 +473,17 @@ regardless of whether it exists.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.make_scoped_dictionary">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">make_scoped_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flat_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_nones</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/util.py#L323-L345"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.make_scoped_dictionary" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">make_scoped_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flat_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_nones</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/util.py#L310-L332"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.make_scoped_dictionary" title="Permalink to this definition">#</a></dt>
 <dd><p>Converts dictionary with scoped keys to dictionary of dictionaries.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>flat_dict</strong> – The dictionary to convert. Keys should be strings with
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">scope.foo</span></code> format.</p></li>
 <li><p><strong>exclude_nodes</strong> – Whether to exclude items where value is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
 <dt>Dictionary in which keys are <code class="xref py py-obj docutils literal notranslate"><span class="pre">scope</span></code> and values are dictionary with</dt><dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">foo</span></code> (etc) as keys and original value of <code class="xref py py-obj docutils literal notranslate"><span class="pre">scope.foo</span></code> as value.</p>
 </dd>
@@ -488,19 +495,19 @@ regardless of whether it exists.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.parse_uri_path">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">parse_uri_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/util.py#L384-L386"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.parse_uri_path" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">parse_uri_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/util.py#L371-L373"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.parse_uri_path" title="Permalink to this definition">#</a></dt>
 <dd><p>Parse a URI starting with ‘<a class="reference external" href="file:///">file:///</a>’ to a posix path.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.save_dict_to_hdf5">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">save_dict_to_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h5file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">h5py._hl.files.File</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/util.py#L116-L160"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.save_dict_to_hdf5" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">save_dict_to_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h5file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">File</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/util.py#L113-L157"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.save_dict_to_hdf5" title="Permalink to this definition">#</a></dt>
 <dd><p>Saves dictionary to an HDF5 file.</p>
 <p>Calls itself recursively if items in dictionary are not
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">np.ndarray</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">np.int64</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">np.float64</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, or bytes.
 Objects must be iterable.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>h5file</strong> – The HDF5 filename object to save the data to.
 Assume it is open.</p></li>
@@ -508,10 +515,10 @@ Assume it is open.</p></li>
 <li><p><strong>dic</strong> – The dict to save.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If type for item in dict cannot be saved.</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
 </dd>
 </dl>
@@ -519,15 +526,15 @@ Assume it is open.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.uniquify">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">uniquify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/util.py#L183-L199"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.uniquify" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">uniquify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/util.py#L180-L196"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.uniquify" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns unique elements from list, preserving order.</p>
 <p>Note: This will not work on Python 3.5 or lower since dicts don’t
 preserve order.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>seq</strong> – The list to remove duplicates from.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The unique elements from the input list extracted in original
 order.</p>
 </dd>
@@ -536,11 +543,11 @@ order.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.usable_cpu_count">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">usable_cpu_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/util.py#L98-L113"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.usable_cpu_count" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">usable_cpu_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/util.py#L95-L110"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.usable_cpu_count" title="Permalink to this definition">#</a></dt>
 <dd><p>Gets number of CPUs usable by the current process.</p>
 <p>Takes into consideration cpusets restrictions.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The number of usable cpus</p>
 </dd>
 </dl>
@@ -548,17 +555,17 @@ order.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.util.weak_filename_match">
-<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">weak_filename_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/util.py#L202-L223"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.weak_filename_match" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.util.</span></span><span class="sig-name descname"><span class="pre">weak_filename_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/util.py#L199-L220"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.util.weak_filename_match" title="Permalink to this definition">#</a></dt>
 <dd><p>Check if paths probably point to same file.</p>
 <p>Compares the filename and names of two directories up.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename_a</strong> – first path to check</p></li>
 <li><p><strong>filename_b</strong> – path to check against first path</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>True if the paths probably match.</p>
 </dd>
 </dl>
@@ -588,6 +595,33 @@ order.</p>
             
             
               
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.attr_to_dtype"><code class="docutils literal notranslate"><span class="pre">attr_to_dtype()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.dict_cut"><code class="docutils literal notranslate"><span class="pre">dict_cut()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.find_files_by_suffix"><code class="docutils literal notranslate"><span class="pre">find_files_by_suffix()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.frame_list"><code class="docutils literal notranslate"><span class="pre">frame_list()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.get_config_file"><code class="docutils literal notranslate"><span class="pre">get_config_file()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.get_package_file"><code class="docutils literal notranslate"><span class="pre">get_package_file()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.json_dumps"><code class="docutils literal notranslate"><span class="pre">json_dumps()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.json_loads"><code class="docutils literal notranslate"><span class="pre">json_loads()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.make_scoped_dictionary"><code class="docutils literal notranslate"><span class="pre">make_scoped_dictionary()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.parse_uri_path"><code class="docutils literal notranslate"><span class="pre">parse_uri_path()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.save_dict_to_hdf5"><code class="docutils literal notranslate"><span class="pre">save_dict_to_hdf5()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.uniquify"><code class="docutils literal notranslate"><span class="pre">uniquify()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.usable_cpu_count"><code class="docutils literal notranslate"><span class="pre">usable_cpu_count()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.util.weak_filename_match"><code class="docutils literal notranslate"><span class="pre">weak_filename_match()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
             
           </div>
           <footer class="bd-footer-content">
@@ -606,7 +640,7 @@ By SLEAP Developers
     
   <p class="copyright">
     
-      © Copyright 2019–2023, Talmo Lab.
+      © Copyright 2019–2024, Talmo Lab.
       <br/>
     
   </p>

@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Help &#8212; SLEAP (v1.3.3)</title>
+    <title>Help &#8212; SLEAP (v1.4.1)</title>
   
   
   
@@ -32,8 +32,8 @@
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -42,15 +42,12 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/clipboard.min.js"></script>
     <script src="_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="_static/togglebutton.js"></script>
     <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'help';</script>
     <link rel="canonical" href="/develop/help.html" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -58,7 +55,7 @@
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Datasets" href="datasets.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -164,6 +161,7 @@
 <li class="toctree-l2"><a class="reference internal" href="guides/colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -352,35 +350,35 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="help">
-<h1>Help<a class="headerlink" href="#help" title="Permalink to this headline">#</a></h1>
+<h1>Help<a class="headerlink" href="#help" title="Permalink to this heading">#</a></h1>
 <p>Stuck? Can’t get SLEAP to run? Crashing? Try the recommended tips below.</p>
 <section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">#</a></h2>
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h2>
 <section id="i-cant-get-sleap-to-install">
-<h3>I can’t get SLEAP to install!<a class="headerlink" href="#i-cant-get-sleap-to-install" title="Permalink to this headline">#</a></h3>
+<h3>I can’t get SLEAP to install!<a class="headerlink" href="#i-cant-get-sleap-to-install" title="Permalink to this heading">#</a></h3>
 <p>Have you tried all of the steps in the <a class="reference internal" href="installation.html"><span class="doc std std-doc">installation instructions</span></a>?</p>
 <p>If so, please feel free to <a class="reference external" href="https://github.com/talmolab/sleap/discussions">start a discussion</a> or <a class="reference external" href="https://github.com/talmolab/sleap/issues">open an issue</a> and tell us how you’re trying to install it, what error messages you’re getting and which operating system you’re on.</p>
 </section>
 <section id="can-i-install-it-on-a-computer-without-a-gpu">
-<h3>Can I install it on a computer without a GPU?<a class="headerlink" href="#can-i-install-it-on-a-computer-without-a-gpu" title="Permalink to this headline">#</a></h3>
+<h3>Can I install it on a computer without a GPU?<a class="headerlink" href="#can-i-install-it-on-a-computer-without-a-gpu" title="Permalink to this heading">#</a></h3>
 <p>Yes! You can install SLEAP as you normally would using the <code class="docutils literal notranslate"><span class="pre">conda</span></code> or <code class="docutils literal notranslate"><span class="pre">pip</span></code>-based methods and the GPU support will be ignored.</p>
 </section>
 <section id="what-if-i-already-have-cuda-set-up-on-my-system">
-<h3>What if I already have CUDA set up on my system?<a class="headerlink" href="#what-if-i-already-have-cuda-set-up-on-my-system" title="Permalink to this headline">#</a></h3>
-<p>You can use the system CUDA installation by simply using the <a class="reference internal" href="installation.html#pip-package"><span class="std std-doc">pip package</span></a> installation method.</p>
+<h3>What if I already have CUDA set up on my system?<a class="headerlink" href="#what-if-i-already-have-cuda-set-up-on-my-system" title="Permalink to this heading">#</a></h3>
+<p>You can use the system CUDA installation by simply using the <span class="xref myst"></span> installation method.</p>
 <p>Note that you will need to use a version compatible with <strong>TensorFlow 2.6+</strong> (<strong>CUDA Toolkit v11.3</strong> and <strong>cuDNN v8.2</strong>).</p>
 </section>
 </section>
 <section id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">#</a></h2>
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">#</a></h2>
 <section id="how-do-i-use-sleap">
-<h3>How do I use SLEAP?<a class="headerlink" href="#how-do-i-use-sleap" title="Permalink to this headline">#</a></h3>
+<h3>How do I use SLEAP?<a class="headerlink" href="#how-do-i-use-sleap" title="Permalink to this heading">#</a></h3>
 <p>If you’re new to pose tracking in general, check out <a class="reference external" href="https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking">this talk</a> or our review in <em><a class="reference external" href="https://rdcu.be/caH3H">Nature Neuroscience</a></em>.</p>
 <p>If you’re just new to SLEAP, we suggest starting with the <a class="reference internal" href="overview.html#high-level-overview"><span class="std std-ref">Overview</span></a> and then following the <a class="reference internal" href="tutorials/tutorial.html#tutorial"><span class="std std-ref">Tutorial</span></a>.</p>
 <p>Once you get the hang of it, check out the <a class="reference internal" href="guides/index.html#guides"><span class="std std-ref">Guides</span></a> for more detailed info.</p>
 </section>
 <section id="does-my-data-need-to-be-in-a-particular-format">
-<span id="reencoding"></span><h3>Does my data need to be in a particular format?<a class="headerlink" href="#does-my-data-need-to-be-in-a-particular-format" title="Permalink to this headline">#</a></h3>
+<span id="reencoding"></span><h3>Does my data need to be in a particular format?<a class="headerlink" href="#does-my-data-need-to-be-in-a-particular-format" title="Permalink to this heading">#</a></h3>
 <p>SLEAP supports a large number of formats, including all video formats and imported data from DeepLabCut and others.</p>
 <p>Many types of video acquisition software, however, do not save videos in a format suitable for computer vision-based processing. A very common issue is that videos are not <strong>reliably seekable</strong>, meaning that you may not get the same data when trying to read a particular frame index. This is because many video formats are optimized for realtime and sequential playback and save space by reconstructing the image using data in adjacent frames. The consequence is that you may not get the exact same image depending on what the last frame you read was. Check out <a class="reference external" href="http://blog.loopbio.com/video-io-1-introduction.html">this blog post</a> for more details.</p>
 <p>If you think you may be affected by this issue, or just want to be safe, re-encode your videos using the following command:</p>
@@ -399,35 +397,35 @@ document.write(`
 <p>If you don’t have <code class="docutils literal notranslate"><span class="pre">ffmpeg</span></code> on your system, you can install it using <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span> <span class="pre">ffmpeg</span></code> or by downloading it from the <a class="reference external" href="https://ffmpeg.org/download.html">official website</a>.</p>
 </section>
 <section id="i-get-strange-results-where-the-poses-appear-to-be-correct-but-shifted-relative-to-the-image">
-<h3>I get strange results where the poses appear to be correct but shifted relative to the image.<a class="headerlink" href="#i-get-strange-results-where-the-poses-appear-to-be-correct-but-shifted-relative-to-the-image" title="Permalink to this headline">#</a></h3>
+<h3>I get strange results where the poses appear to be correct but shifted relative to the image.<a class="headerlink" href="#i-get-strange-results-where-the-poses-appear-to-be-correct-but-shifted-relative-to-the-image" title="Permalink to this heading">#</a></h3>
 <p>This is most likely an issue with the video compression format. <a class="reference internal" href="#reencoding"><span class="std std-ref">See above</span></a>.</p>
 </section>
 <section id="how-do-i-get-predictions-out">
-<h3>How do I get predictions out?<a class="headerlink" href="#how-do-i-get-predictions-out" title="Permalink to this headline">#</a></h3>
+<h3>How do I get predictions out?<a class="headerlink" href="#how-do-i-get-predictions-out" title="Permalink to this heading">#</a></h3>
 <p>See <a class="reference internal" href="tutorials/analysis.html#export-analysis"><span class="std std-ref">Export Data For Analysis</span></a> and <a class="reference internal" href="guides/cli.html#sleap-convert"><span class="std std-ref">sleap-convert</span></a>.</p>
 </section>
 <section id="what-do-i-do-with-the-output-of-sleap">
-<h3>What do I do with the output of SLEAP?<a class="headerlink" href="#what-do-i-do-with-the-output-of-sleap" title="Permalink to this headline">#</a></h3>
+<h3>What do I do with the output of SLEAP?<a class="headerlink" href="#what-do-i-do-with-the-output-of-sleap" title="Permalink to this heading">#</a></h3>
 <p>Check out the <a class="reference internal" href="notebooks/Analysis_examples.html"><span class="doc std std-doc">Analysis examples</span></a> notebooks.</p>
 </section>
 </section>
 <section id="getting-more-help">
-<h2>Getting more help<a class="headerlink" href="#getting-more-help" title="Permalink to this headline">#</a></h2>
+<h2>Getting more help<a class="headerlink" href="#getting-more-help" title="Permalink to this heading">#</a></h2>
 <section id="ive-found-a-bug-or-have-another-problem">
-<h3>I’ve found a bug or have another problem!<a class="headerlink" href="#ive-found-a-bug-or-have-another-problem" title="Permalink to this headline">#</a></h3>
+<h3>I’ve found a bug or have another problem!<a class="headerlink" href="#ive-found-a-bug-or-have-another-problem" title="Permalink to this heading">#</a></h3>
 <p>Feel free to <a class="reference external" href="https://github.com/talmolab/sleap/discussions">start a discussion</a> to get help from the developers and community.
 Or <a class="reference external" href="https://github.com/talmolab/sleap/issues">open an issue</a> and we’ll get back to you as soon as we can!</p>
 </section>
 <section id="can-i-just-talk-to-someone">
-<h3>Can I just talk to someone?<a class="headerlink" href="#can-i-just-talk-to-someone" title="Permalink to this headline">#</a></h3>
+<h3>Can I just talk to someone?<a class="headerlink" href="#can-i-just-talk-to-someone" title="Permalink to this heading">#</a></h3>
 <p>SLEAP is a complex machine learning system intended for general use, so it’s possible that we failed to consider the specifics of the situation in which you may be interested in using it with.</p>
 <p>Feel free to reach out to us at <code class="docutils literal notranslate"><span class="pre">talmo&#64;salk.edu</span></code> if you have a question that isn’t covered here.</p>
 </section>
 </section>
 <section id="improving-sleap">
-<h2>Improving SLEAP<a class="headerlink" href="#improving-sleap" title="Permalink to this headline">#</a></h2>
+<h2>Improving SLEAP<a class="headerlink" href="#improving-sleap" title="Permalink to this heading">#</a></h2>
 <section id="how-can-i-help-improve-sleap">
-<h3>How can I help improve SLEAP?<a class="headerlink" href="#how-can-i-help-improve-sleap" title="Permalink to this headline">#</a></h3>
+<h3>How can I help improve SLEAP?<a class="headerlink" href="#how-can-i-help-improve-sleap" title="Permalink to this heading">#</a></h3>
 <ul>
 <li><p>Tell your friends about SLEAP! We also love to hear stories about what worked or didn’t work, or your experience if you came from other software tools (<code class="docutils literal notranslate"><span class="pre">talmo&#64;salk.edu</span></code>).</p></li>
 <li><p><a class="reference external" href="https://www.nature.com/articles/s41592-022-01426-1">Cite our paper</a>! Here’s a BibTeX citation for your reference manager:</p>
@@ -469,7 +467,7 @@ Or <a class="reference external" href="https://github.com/talmolab/sleap/issues"
 </ul>
 </section>
 <section id="what-is-usage-data">
-<span id="usage-data"></span><h3>What is usage data?<a class="headerlink" href="#what-is-usage-data" title="Permalink to this headline">#</a></h3>
+<span id="usage-data"></span><h3>What is usage data?<a class="headerlink" href="#what-is-usage-data" title="Permalink to this heading">#</a></h3>
 <p>To help us improve SLEAP, you may allow us to collect basic and <strong>anonymous</strong> usage data. If enabled from the <strong>Help</strong> menu, the SLEAP GUI will transmit information such as which version of Python and operating system you are running SLEAP on.</p>
 <p>This helps us understand on which types of computers SLEAP is being used so we can ensure that our software is maximally accessible to the broadest userbase possible, for example, by telling us whether it’s safe to update our dependencies without breaking SLEAP for most users. Collecting usage data also helps us get a sense for how often SLEAP is being used so that we can report its impact to external grant funding agencies.</p>
 <p>You can opt out at any time from the menu (this preference will be stored). If you want to prevent these data from being shared with us, you can launch the GUI with <code class="docutils literal notranslate"><span class="pre">sleap-label</span> <span class="pre">--no-usage-data</span></code>. Usage data is only shared when the GUI is used, not the API or CLIs. You can check out the <a class="reference external" href="https://github.com/talmolab/sleap/blob/main/sleap/gui/web.py">source code</a> to see exactly what data is collected.</p>
@@ -563,7 +561,7 @@ By SLEAP Developers
     
   <p class="copyright">
     
-      © Copyright 2019–2023, Talmo Lab.
+      © Copyright 2019–2024, Talmo Lab.
       <br/>
     
   </p>

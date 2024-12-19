@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Analysis examples &#8212; SLEAP (v1.3.3)</title>
+    <title>Analysis examples &#8212; SLEAP (v1.4.1)</title>
   
   
   
@@ -32,8 +32,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -42,15 +42,12 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/Analysis_examples';</script>
     <link rel="canonical" href="/develop/notebooks/Analysis_examples.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -59,7 +56,7 @@
     <link rel="next" title="Data structures" href="Data_structures.html" />
     <link rel="prev" title="Model evaluation" href="Model_evaluation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -165,6 +162,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Notebooks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
@@ -341,17 +339,17 @@ document.write(`
                   
   <p><a href="https://colab.research.google.com/github/talmolab/sleap/blob/main/docs/notebooks/Analysis_examples.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
 <section class="tex2jax_ignore mathjax_ignore" id="analysis-examples">
-<h1>Analysis examples<a class="headerlink" href="#analysis-examples" title="Permalink to this headline">#</a></h1>
+<h1>Analysis examples<a class="headerlink" href="#analysis-examples" title="Permalink to this heading">#</a></h1>
 <p>In this notebook we’ll show examples of how you might use the predictions exported from SLEAP. We’ll work with an <a class="reference external" href="https://sleap.ai/tutorials/analysis.html">Analysis HDF5</a> file (rather than the <code class="docutils literal notranslate"><span class="pre">.slp</span></code> predictions file). This HDF5 file can be exported from SLEAP.</p>
 <p>We advise building your post-SLEAP analysis pipeline around these HDF5 files rather than trying to work directly with the <code class="docutils literal notranslate"><span class="pre">.slp</span></code> files used by SLEAP.</p>
 <p><strong>Note</strong>: You can work with these HDF5 directly in Python (as we’ll do here) or MATLAB without having SLEAP itself installed.</p>
 <section id="example-analysis-data">
-<h2>Example analysis data<a class="headerlink" href="#example-analysis-data" title="Permalink to this headline">#</a></h2>
+<h2>Example analysis data<a class="headerlink" href="#example-analysis-data" title="Permalink to this heading">#</a></h2>
 <p>Let’s start by download a sample HDF5. These predictions were created with models trained on our <a class="reference external" href="https://github.com/talmolab/sleap-datasets">sample Drosophila melanogaster courtship dataset</a>. Using these models we can inference on a video clip with 3000 frames. The video clip, resulting predictions, and exported HDF5 are all available <a class="reference external" href="https://github.com/talmolab/sleap/tree/main/docs/notebooks/analysis_example">here</a>.</p>
 <p>We’ll just download the <code class="docutils literal notranslate"><span class="pre">predictions.analysis.h5</span></code> file:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>wget -O predictions.analysis.h5 https://github.com/talmolab/sleap/raw/main/docs/notebooks/analysis_example/predictions.analysis.h5
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>wget<span class="w"> </span>-O<span class="w"> </span>predictions.analysis.h5<span class="w"> </span>https://github.com/talmolab/sleap/raw/main/docs/notebooks/analysis_example/predictions.analysis.h5
 </pre></div>
 </div>
 </div>
@@ -385,7 +383,7 @@ predictions.analysi 100%[===================&gt;] 538.58K  --.-KB/s    in 0.05s
 </div>
 </section>
 <section id="loading-the-data">
-<h2>Loading the data<a class="headerlink" href="#loading-the-data" title="Permalink to this headline">#</a></h2>
+<h2>Loading the data<a class="headerlink" href="#loading-the-data" title="Permalink to this heading">#</a></h2>
 <p>We use the <a class="reference external" href="https://www.h5py.org">h5py</a> package to load data from the HDF5. This is already installed in Colab. If your running analysis code on your local machine and have SLEAP installed, then <code class="docutils literal notranslate"><span class="pre">h5py</span></code> and other packages we use are already installed in your SLEAP conda environment. Otherwise, you may need to use <code class="docutils literal notranslate"><span class="pre">conda</span></code> or <code class="docutils literal notranslate"><span class="pre">pip</span></code> to install <code class="docutils literal notranslate"><span class="pre">h5py</span></code> as well as <code class="docutils literal notranslate"><span class="pre">numpy</span></code>, <code class="docutils literal notranslate"><span class="pre">scipy</span></code>, <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code>, <code class="docutils literal notranslate"><span class="pre">seaborn</span></code>, and any other packages you want use in your analysis code.</p>
 <p>Let’s load the file and take a peek.</p>
 <div class="cell docutils container">
@@ -475,13 +473,13 @@ instance count: 2
 <p>Now that we’ve loaded the data, let’s see some different things we can do with it…</p>
 </section>
 <section id="fill-missing-values">
-<h2>Fill missing values<a class="headerlink" href="#fill-missing-values" title="Permalink to this headline">#</a></h2>
+<h2>Fill missing values<a class="headerlink" href="#fill-missing-values" title="Permalink to this heading">#</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">interp1d</span>
 
 <span class="k">def</span> <span class="nf">fill_missing</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Fills missing values independently along each dimension after the first.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fills missing values independently along each dimension after the first.&quot;&quot;&quot;</span>
 
     <span class="c1"># Store initial shape.</span>
     <span class="n">initial_shape</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">shape</span>
@@ -525,7 +523,7 @@ instance count: 2
 </div>
 </section>
 <section id="visualize-thorax-movement-across-video">
-<h2>Visualize thorax movement across video<a class="headerlink" href="#visualize-thorax-movement-across-video" title="Permalink to this headline">#</a></h2>
+<h2>Visualize thorax movement across video<a class="headerlink" href="#visualize-thorax-movement-across-video" title="Permalink to this heading">#</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">HEAD_INDEX</span> <span class="o">=</span> <span class="mi">0</span>
@@ -587,20 +585,20 @@ instance count: 2
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Text(0.5, 1.0, &#39;Thorax tracks&#39;)
 </pre></div>
 </div>
-<img alt="../_images/Analysis_examples_19_1.png" src="../_images/Analysis_examples_19_1.png" />
-<img alt="../_images/Analysis_examples_19_2.png" src="../_images/Analysis_examples_19_2.png" />
+<img alt="../_images/dc4bfaee117747c1eeba0b62c375704e720b95ba9694ecd512a2cc28d501fbab.png" src="../_images/dc4bfaee117747c1eeba0b62c375704e720b95ba9694ecd512a2cc28d501fbab.png" />
+<img alt="../_images/35c10296694a5eb3635e87b56ab9545d9a293bed86bd144682549fe750d7a34d.png" src="../_images/35c10296694a5eb3635e87b56ab9545d9a293bed86bd144682549fe750d7a34d.png" />
 </div>
 </div>
 </section>
 <section id="more-advanced-visualizations">
-<h2>More advanced visualizations<a class="headerlink" href="#more-advanced-visualizations" title="Permalink to this headline">#</a></h2>
+<h2>More advanced visualizations<a class="headerlink" href="#more-advanced-visualizations" title="Permalink to this heading">#</a></h2>
 <p>For some additional analysis, we’ll first smooth and differentiate the data with a Savitzky-Golay filter to extract velocities of each joint.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">savgol_filter</span>
 
 <span class="k">def</span> <span class="nf">smooth_diff</span><span class="p">(</span><span class="n">node_loc</span><span class="p">,</span> <span class="n">win</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">poly</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    node_loc is a [frames, 2] array</span>
 <span class="sd">    </span>
 <span class="sd">    win defines the window to smooth over</span>
@@ -631,7 +629,7 @@ instance count: 2
 </div>
 </div>
 <section id="visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0">
-<h3>Visualizing thorax x-y dynamics and velocity for fly 0<a class="headerlink" href="#visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0" title="Permalink to this headline">#</a></h3>
+<h3>Visualizing thorax x-y dynamics and velocity for fly 0<a class="headerlink" href="#visualizing-thorax-x-y-dynamics-and-velocity-for-fly-0" title="Permalink to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">7</span><span class="p">))</span>
@@ -653,12 +651,12 @@ instance count: 2
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Text(0.5, 1.0, &#39;Velocity&#39;)
 </pre></div>
 </div>
-<img alt="../_images/Analysis_examples_25_1.png" src="../_images/Analysis_examples_25_1.png" />
+<img alt="../_images/6a87f28526a92715315c4766f197b24f30f433e554ae3059a3d226b457135a00.png" src="../_images/6a87f28526a92715315c4766f197b24f30f433e554ae3059a3d226b457135a00.png" />
 </div>
 </div>
 </section>
 <section id="visualize-thorax-colored-by-magnitude-of-fly-speed">
-<h3>Visualize thorax colored by magnitude of fly speed<a class="headerlink" href="#visualize-thorax-colored-by-magnitude-of-fly-speed" title="Permalink to this headline">#</a></h3>
+<h3>Visualize thorax colored by magnitude of fly speed<a class="headerlink" href="#visualize-thorax-colored-by-magnitude-of-fly-speed" title="Permalink to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
@@ -688,18 +686,18 @@ instance count: 2
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Text(0.5, 1.0, &#39;Thorax tracks colored by magnitude of fly speed&#39;)
 </pre></div>
 </div>
-<img alt="../_images/Analysis_examples_27_1.png" src="../_images/Analysis_examples_27_1.png" />
+<img alt="../_images/4c35c39e8dcf293ab2362ab3534303852fcba727e88b0345cabc9999244acf84.png" src="../_images/4c35c39e8dcf293ab2362ab3534303852fcba727e88b0345cabc9999244acf84.png" />
 </div>
 </div>
 </section>
 <section id="find-covariance-in-thorax-velocities-between-fly-0-and-fly-1">
-<h3>Find covariance in thorax velocities between fly-0 and fly-1<a class="headerlink" href="#find-covariance-in-thorax-velocities-between-fly-0-and-fly-1" title="Permalink to this headline">#</a></h3>
+<h3>Find covariance in thorax velocities between fly-0 and fly-1<a class="headerlink" href="#find-covariance-in-thorax-velocities-between-fly-0-and-fly-1" title="Permalink to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 <span class="k">def</span> <span class="nf">corr_roll</span><span class="p">(</span><span class="n">datax</span><span class="p">,</span> <span class="n">datay</span><span class="p">,</span> <span class="n">win</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    datax, datay are the two timeseries to find correlations between</span>
 <span class="sd">    </span>
 <span class="sd">    win sets the number of frames over which the covariance is computed</span>
@@ -735,15 +733,15 @@ instance count: 2
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Analysis_examples_30_0.png" src="../_images/Analysis_examples_30_0.png" />
+<img alt="../_images/b21d966bde1fb74635e96843f91a4ec1072e73e79320eae51395ff6e3a9fe551.png" src="../_images/b21d966bde1fb74635e96843f91a4ec1072e73e79320eae51395ff6e3a9fe551.png" />
 </div>
 </div>
 </section>
 </section>
 <section id="clustering">
-<h2>Clustering<a class="headerlink" href="#clustering" title="Permalink to this headline">#</a></h2>
+<h2>Clustering<a class="headerlink" href="#clustering" title="Permalink to this heading">#</a></h2>
 <p>For an example of clustering the data, we’ll</p>
-<ol class="simple">
+<ol class="arabic simple">
 <li><p>extract joint velocities for each joint,</p></li>
 <li><p>run simple k-means on the velocities from each frame.</p></li>
 </ol>
@@ -783,7 +781,7 @@ instance count: 2
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Analysis_examples_34_0.png" src="../_images/Analysis_examples_34_0.png" />
+<img alt="../_images/42e0a303da85179624b2247d2d06868f157496f5fefdd2f4e8ad741179cb6e69.png" src="../_images/42e0a303da85179624b2247d2d06868f157496f5fefdd2f4e8ad741179cb6e69.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -795,7 +793,7 @@ instance count: 2
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Analysis_examples_35_0.png" src="../_images/Analysis_examples_35_0.png" />
+<img alt="../_images/6dcf42bdd95e0ded30ed1fb43ad73bdc855130d58eaa29f55050031f80d0a148.png" src="../_images/6dcf42bdd95e0ded30ed1fb43ad73bdc855130d58eaa29f55050031f80d0a148.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -838,7 +836,7 @@ instance count: 2
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Analysis_examples_38_0.png" src="../_images/Analysis_examples_38_0.png" />
+<img alt="../_images/b44ac03a6b1270ea102001c424a678d09aa630125b1a04b4b4429de3f8b4f1fc.png" src="../_images/b44ac03a6b1270ea102001c424a678d09aa630125b1a04b4b4429de3f8b4f1fc.png" />
 </div>
 </div>
 </section>
@@ -926,7 +924,7 @@ By SLEAP Developers
     
   <p class="copyright">
     
-      © Copyright 2019–2023, Talmo Lab.
+      © Copyright 2019–2024, Talmo Lab.
       <br/>
     
   </p>

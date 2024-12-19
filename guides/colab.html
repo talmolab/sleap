@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Run training and inference on Colab &#8212; SLEAP (v1.3.3)</title>
+    <title>Run training and inference on Colab &#8212; SLEAP (v1.4.1)</title>
   
   
   
@@ -32,8 +32,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -42,15 +42,12 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'guides/colab';</script>
     <link rel="canonical" href="/develop/guides/colab.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -59,7 +56,7 @@
     <link rel="next" title="Creating a custom training profile" href="custom-training.html" />
     <link rel="prev" title="Tracking and proofreading" href="proofreading.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -165,6 +162,7 @@
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -331,18 +329,18 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="run-training-and-inference-on-colab">
-<span id="colab"></span><h1>Run training and inference on Colab<a class="headerlink" href="#run-training-and-inference-on-colab" title="Permalink to this headline">#</a></h1>
+<span id="colab"></span><h1>Run training and inference on Colab<a class="headerlink" href="#run-training-and-inference-on-colab" title="Permalink to this heading">#</a></h1>
 <p><em>Case: You already have a project with labeled training data and you’d like to run training or inference in a Colab notebook.</em></p>
 <p>Take a look at our <a class="reference external" href="https://sleap.ai/notebooks">example notebooks</a> which you can run on Colab! These will walk you through the entire process of running training and inference on Colab.</p>
 <section id="about-colab">
-<h2>About Colab<a class="headerlink" href="#about-colab" title="Permalink to this headline">#</a></h2>
+<h2>About Colab<a class="headerlink" href="#about-colab" title="Permalink to this heading">#</a></h2>
 <p><a class="reference external" href="https://colab.research.google.com/">Google Colaboratory</a> is a hosted service from Google that lets you run Python code (like SLEAP) on Google’s servers with access to GPUs for training and inference. It’s free!</p>
 <p>When you start running code in a notebook, Google connects your notebook to a virtual server instance. Think of this as a new computer with Python, TensorFlow and a few other things pre-installed. You can run things on this server instance for at most 12 hours (it will timeout sooner if idle but this depends on how much demand there is for Google’s servers).</p>
 <p>Once the server instance times out, you lose all the data that’s stored on the server instance. This means that you’ll need to install SLEAP from the notebook at the beginning of each new session, you’ll need to move your data to the server instance, and you’ll need to copy any results off the server instance when you’re done.</p>
 <p>You can also pay for <a class="reference external" href="https://colab.research.google.com/signup">Colab Pro</a> (currently available only in the US) which gives you priority access to better hardware and longer runtimes (they say 24 hours and more lenient idle timeouts).</p>
 </section>
 <section id="moving-data-to-from-colab">
-<h2>Moving Data to/from Colab<a class="headerlink" href="#moving-data-to-from-colab" title="Permalink to this headline">#</a></h2>
+<h2>Moving Data to/from Colab<a class="headerlink" href="#moving-data-to-from-colab" title="Permalink to this heading">#</a></h2>
 <p>The easiest way to work with your own data on Colab is to use <a class="reference external" href="https://www.google.com/drive/">Google Drive</a>. This is another service provided by Google. It’s also free! If your university has <a class="reference external" href="https://edu.google.com/products/gsuite-for-education/">G Suite for Education</a> you’ll have unlimited storage space.</p>
 <p>Google Drive is similar to Dropbox, Microsoft OneDrive, or Apple iCloud. You can install software and you’ll you get a special folder which is automatically synced: anything you copy into it will be available from other computers (using your account), and anything copied into it from elsewhere will automatically be downloaded into the folder on your computer.</p>
 <p>For training on your own data, it’s probably easiest to export a training job package from the <code class="xref py py-obj docutils literal notranslate"><span class="pre">sleap-label</span></code> GUI. The training job package will contain model files as well as all of your labeled data and all of the images for labeled frames within a single file, so that you don’t have to copy the full training videos and you don’t have to worry about paths to the videos.</p>
@@ -423,7 +421,7 @@ By SLEAP Developers
     
   <p class="copyright">
     
-      © Copyright 2019–2023, Talmo Lab.
+      © Copyright 2019–2024, Talmo Lab.
       <br/>
     
   </p>

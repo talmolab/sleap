@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Interactive and resumable training &#8212; SLEAP (v1.3.3)</title>
+    <title>Interactive and resumable training &#8212; SLEAP (v1.4.1)</title>
   
   
   
@@ -32,8 +32,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -42,15 +42,12 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/Interactive_and_resumable_training';</script>
     <link rel="canonical" href="/develop/notebooks/Interactive_and_resumable_training.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -59,7 +56,7 @@
     <link rel="next" title="Interactive and realtime inference" href="Interactive_and_realtime_inference.html" />
     <link rel="prev" title="Post-inference tracking" href="Post_inference_tracking.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -165,6 +162,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Notebooks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
@@ -335,19 +333,19 @@ document.write(`
                   
   <p><a href="https://colab.research.google.com/github/talmolab/sleap/blob/main/docs/notebooks/Interactive_and_resumable_training.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
 <section class="tex2jax_ignore mathjax_ignore" id="interactive-and-resumable-training">
-<h1>Interactive and resumable training<a class="headerlink" href="#interactive-and-resumable-training" title="Permalink to this headline">#</a></h1>
+<h1>Interactive and resumable training<a class="headerlink" href="#interactive-and-resumable-training" title="Permalink to this heading">#</a></h1>
 <p>Most of the time, you will be training models through the GUI or using the <a class="reference external" href="https://sleap.ai/guides/cli.html#sleap-train"><code class="docutils literal notranslate"><span class="pre">sleap-train</span></code> CLI</a>.</p>
 <p>If you’d like to customize the training process, however, you can use SLEAP’s low-level training functionality interactively. This allows you to define scripts that train models according to your own workflow, for example, to <strong>resume training</strong> on an already trained model. Another possible application would be to train a model using <strong>transfer learning</strong>, where a pretrained model can be used to initialize the weights of the new model.</p>
 <p>In this notebook we will explore how to set up a training job and train a model for multiple rounds without the GUI or CLI.</p>
 <section id="setup-sleap">
-<h2>1. Setup SLEAP<a class="headerlink" href="#setup-sleap" title="Permalink to this headline">#</a></h2>
+<h2>1. Setup SLEAP<a class="headerlink" href="#setup-sleap" title="Permalink to this heading">#</a></h2>
 <p>Run this cell first to install SLEAP. If you get a dependency error in subsequent cells, just click <strong>Runtime</strong> → <strong>Restart runtime</strong> to reload the packages.</p>
 <p>Don’t forget to set <strong>Runtime</strong> → <strong>Change runtime type</strong> → <strong>GPU</strong> as the accelerator.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This should take care of all the dependencies on colab:</span>
-<span class="o">!</span>pip uninstall -qqq -y opencv-python opencv-contrib-python
-<span class="o">!</span>pip install -qqq <span class="s2">&quot;sleap[pypi]&gt;=1.3.3&quot;</span>
+<span class="o">!</span>pip<span class="w"> </span>uninstall<span class="w"> </span>-qqq<span class="w"> </span>-y<span class="w"> </span>opencv-python<span class="w"> </span>opencv-contrib-python
+<span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>-qqq<span class="w"> </span><span class="s2">&quot;sleap[pypi]&gt;=1.3.3&quot;</span>
 
 
 <span class="c1"># But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):</span>
@@ -389,14 +387,14 @@ GPUs: 1/1 available
 </div>
 </section>
 <section id="setup-training-data">
-<h2>2. Setup training data<a class="headerlink" href="#setup-training-data" title="Permalink to this headline">#</a></h2>
+<h2>2. Setup training data<a class="headerlink" href="#setup-training-data" title="Permalink to this heading">#</a></h2>
 <p>Here we will download an existing training dataset package. This is an <code class="docutils literal notranslate"><span class="pre">.slp</span></code> file that contains both the labeled poses, as well as the image data for labeled frames.</p>
 <p>If running on Google Colab, you’ll want to replace this with mounting your Google Drive folder containing your own data, or if running locally, simply change the path to your labels below in <code class="docutils literal notranslate"><span class="pre">TRAINING_SLP_FILE</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># !curl -L --output labels.pkg.slp https://www.dropbox.com/s/b990gxjt3d3j3jh/210205.sleap_wt_gold.13pt.pkg.slp?dl=1</span>
-<span class="o">!</span>curl -L --output labels.pkg.slp https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/train.pkg.slp
-<span class="o">!</span>ls -lah
+<span class="o">!</span>curl<span class="w"> </span>-L<span class="w"> </span>--output<span class="w"> </span>labels.pkg.slp<span class="w"> </span>https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/train.pkg.slp
+<span class="o">!</span>ls<span class="w"> </span>-lah
 </pre></div>
 </div>
 </div>
@@ -431,7 +429,7 @@ drwxrwxr-x  2 talmolab talmolab 4.0K Jun 20 10:00 analysis_example
 </div>
 </section>
 <section id="setup-training-job">
-<h2>3. Setup training job<a class="headerlink" href="#setup-training-job" title="Permalink to this headline">#</a></h2>
+<h2>3. Setup training job<a class="headerlink" href="#setup-training-job" title="Permalink to this heading">#</a></h2>
 <p>A SLEAP <code class="docutils literal notranslate"><span class="pre">TrainingJobConfig</span></code> is a structure that contains all of the hyperparameters needed to train a SLEAP model. This is typically saved out to <code class="docutils literal notranslate"><span class="pre">initial_config.json</span></code> and <code class="docutils literal notranslate"><span class="pre">training_config.json</span></code> in the model folder so that training runs can be reproduced if needed, as well as to store metadata necessary for inference.</p>
 <p>Normally, these are generated interactively by the GUI, or manually by editing an existing JSON file in a text editor. Here, we will define a configuration interactively entirely in Python.</p>
 <div class="cell docutils container">
@@ -468,12 +466,12 @@ drwxrwxr-x  2 talmolab talmolab 4.0K Jun 20 10:00 analysis_example
 </div>
 </div>
 <p>Existing configs can also be loaded from a <code class="docutils literal notranslate"><span class="pre">.json</span></code> file with:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="s2">&quot;training_config.json&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">cfg</span> <span class="o">=</span> <span class="n">sleap</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="s2">&quot;training_config.json&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="training">
-<h2>4. Training<a class="headerlink" href="#training" title="Permalink to this headline">#</a></h2>
+<h2>4. Training<a class="headerlink" href="#training" title="Permalink to this heading">#</a></h2>
 <p>Next we will create a SLEAP <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> from the configuration we just specified. This handles all the nitty gritty mechanics necessary to setup training in the backend.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -569,9 +567,7 @@ INFO:sleap.nn.training:Deleting visualization directory: models/baseline_model.t
 INFO:sleap.nn.training:Saving evaluation metrics to model folder...
 </pre></div>
 </div>
-<script type="application/vnd.jupyter.widget-view+json">
-{"model_id": "9864dea73605449cb08b26c938812cfb", "version_major": 2, "version_minor": 0}
-</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "9864dea73605449cb08b26c938812cfb", "version_major": 2, "version_minor": 0}</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
 </div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
 </pre>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.train.slp
@@ -579,9 +575,7 @@ INFO:sleap.nn.evals:Saved metrics: models/baseline_model.topdown/metrics.train.n
 INFO:sleap.nn.evals:OKS mAP: 0.508754
 </pre></div>
 </div>
-<script type="application/vnd.jupyter.widget-view+json">
-{"model_id": "243984a359bc41e9975653fa6206ac27", "version_major": 2, "version_minor": 0}
-</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "243984a359bc41e9975653fa6206ac27", "version_major": 2, "version_minor": 0}</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
 </div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
 </pre>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.val.slp
@@ -593,7 +587,7 @@ INFO:sleap.nn.evals:OKS mAP: 0.477220
 </div>
 </section>
 <section id="continuing-training">
-<h2>5. Continuing training<a class="headerlink" href="#continuing-training" title="Permalink to this headline">#</a></h2>
+<h2>5. Continuing training<a class="headerlink" href="#continuing-training" title="Permalink to this heading">#</a></h2>
 <p>If we still have the trainer in memory, we can continue training by simply calling <code class="docutils literal notranslate"><span class="pre">trainer.train()</span></code> again with a potentially different number of epochs:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -617,9 +611,7 @@ INFO:sleap.nn.training:Deleting visualization directory: models/baseline_model.t
 INFO:sleap.nn.training:Saving evaluation metrics to model folder...
 </pre></div>
 </div>
-<script type="application/vnd.jupyter.widget-view+json">
-{"model_id": "f1bb0ee48431420d9cb6d99c4db4680d", "version_major": 2, "version_minor": 0}
-</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "f1bb0ee48431420d9cb6d99c4db4680d", "version_major": 2, "version_minor": 0}</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
 </div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
 </pre>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.train.slp
@@ -627,9 +619,7 @@ INFO:sleap.nn.evals:Saved metrics: models/baseline_model.topdown/metrics.train.n
 INFO:sleap.nn.evals:OKS mAP: 0.559100
 </pre></div>
 </div>
-<script type="application/vnd.jupyter.widget-view+json">
-{"model_id": "db5de880cd154476a097178972c8f0a3", "version_major": 2, "version_minor": 0}
-</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "db5de880cd154476a097178972c8f0a3", "version_major": 2, "version_minor": 0}</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
 </div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
 </pre>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.val.slp
@@ -712,9 +702,7 @@ INFO:sleap.nn.training:Deleting visualization directory: models/baseline_model.t
 INFO:sleap.nn.training:Saving evaluation metrics to model folder...
 </pre></div>
 </div>
-<script type="application/vnd.jupyter.widget-view+json">
-{"model_id": "b94057057f6442c990c6fc548910a685", "version_major": 2, "version_minor": 0}
-</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "b94057057f6442c990c6fc548910a685", "version_major": 2, "version_minor": 0}</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
 </div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
 </pre>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.train.slp
@@ -722,9 +710,7 @@ INFO:sleap.nn.evals:Saved metrics: models/baseline_model.topdown/metrics.train.n
 INFO:sleap.nn.evals:OKS mAP: 0.585451
 </pre></div>
 </div>
-<script type="application/vnd.jupyter.widget-view+json">
-{"model_id": "8f2e64c8d4d6457986ee8b43b47e2876", "version_major": 2, "version_minor": 0}
-</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "8f2e64c8d4d6457986ee8b43b47e2876", "version_major": 2, "version_minor": 0}</script><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre>
 </div><div class="output text_html"><pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
 </pre>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:sleap.nn.evals:Saved predictions: models/baseline_model.topdown/labels_pr.val.slp
@@ -815,7 +801,7 @@ By SLEAP Developers
     
   <p class="copyright">
     
-      © Copyright 2019–2023, Talmo Lab.
+      © Copyright 2019–2024, Talmo Lab.
       <br/>
     
   </p>

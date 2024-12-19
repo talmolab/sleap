@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Data structures &#8212; SLEAP (v1.3.3)</title>
+    <title>Data structures &#8212; SLEAP (v1.4.1)</title>
   
   
   
@@ -32,8 +32,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -42,15 +42,12 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/Data_structures';</script>
     <link rel="canonical" href="/develop/notebooks/Data_structures.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -59,7 +56,7 @@
     <link rel="next" title="Post-inference tracking" href="Post_inference_tracking.html" />
     <link rel="prev" title="Analysis examples" href="Analysis_examples.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -165,6 +162,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Notebooks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
@@ -332,7 +330,7 @@ document.write(`
                   
   <p><a href="https://colab.research.google.com/github/talmolab/sleap/blob/main/docs/notebooks/Data_structures.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
 <section class="tex2jax_ignore mathjax_ignore" id="data-structures">
-<h1>Data structures<a class="headerlink" href="#data-structures" title="Permalink to this headline">#</a></h1>
+<h1>Data structures<a class="headerlink" href="#data-structures" title="Permalink to this heading">#</a></h1>
 <p>In this notebook, we will explore some of the major data structures used in SLEAP and how they can be manipulated when generating predictions from trained models.</p>
 <p>A quick overview of the data structures before we start:</p>
 <ul class="simple">
@@ -343,14 +341,14 @@ document.write(`
 <li><p><code class="docutils literal notranslate"><span class="pre">Labels</span></code> → Contains a set of <code class="docutils literal notranslate"><span class="pre">LabeledFrame</span></code>s and the associated metadata for the videos and other information related to the project or predictions.</p></li>
 </ul>
 <section id="setup-sleap-and-data">
-<h2>1. Setup SLEAP and data<a class="headerlink" href="#setup-sleap-and-data" title="Permalink to this headline">#</a></h2>
+<h2>1. Setup SLEAP and data<a class="headerlink" href="#setup-sleap-and-data" title="Permalink to this heading">#</a></h2>
 <p>We’ll start by installing SLEAP and downloading some data and models to play around with.</p>
 <p>If you get a dependency error in subsequent cells, just click <strong>Runtime</strong> → <strong>Restart runtime</strong> to reload the packages.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This should take care of all the dependencies on colab:</span>
-<span class="o">!</span>pip uninstall -qqq -y opencv-python opencv-contrib-python
-<span class="o">!</span>pip install -qqq <span class="s2">&quot;sleap[pypi]&gt;=1.3.3&quot;</span>
+<span class="o">!</span>pip<span class="w"> </span>uninstall<span class="w"> </span>-qqq<span class="w"> </span>-y<span class="w"> </span>opencv-python<span class="w"> </span>opencv-contrib-python
+<span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>-qqq<span class="w"> </span><span class="s2">&quot;sleap[pypi]&gt;=1.3.3&quot;</span>
 
 <span class="c1"># But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):</span>
 <span class="c1"># conda create -n sleap -c sleap -c conda-forge -c nvidia sleap</span>
@@ -361,17 +359,17 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Test video:</span>
-<span class="o">!</span>wget https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.mp4
+<span class="o">!</span>wget<span class="w"> </span>https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.mp4
 
 <span class="c1"># Test video labels (from predictions/not necessary for inference benchmarking):</span>
-<span class="o">!</span>wget https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.slp
+<span class="o">!</span>wget<span class="w"> </span>https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.slp
 
 <span class="c1"># Bottom-up model:</span>
 <span class="c1"># !wget https://storage.googleapis.com/sleap-data/reference/flies13/bu.210506_230852.multi_instance.n%3D1800.zip</span>
 
 <span class="c1"># Top-down model (two-stage):</span>
-<span class="o">!</span>wget https://storage.googleapis.com/sleap-data/reference/flies13/centroid.fast.210504_182918.centroid.n%3D1800.zip
-<span class="o">!</span>wget https://storage.googleapis.com/sleap-data/reference/flies13/td_fast.210505_012601.centered_instance.n%3D1800.zip
+<span class="o">!</span>wget<span class="w"> </span>https://storage.googleapis.com/sleap-data/reference/flies13/centroid.fast.210504_182918.centroid.n%3D1800.zip
+<span class="o">!</span>wget<span class="w"> </span>https://storage.googleapis.com/sleap-data/reference/flies13/td_fast.210505_012601.centered_instance.n%3D1800.zip
 </pre></div>
 </div>
 </div>
@@ -425,7 +423,7 @@ td_fast.210505_0126 100%[===================&gt;]  29.35M  21.3MB/s    in 1.4s
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>ls -lah
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>ls<span class="w"> </span>-lah
 </pre></div>
 </div>
 </div>
@@ -508,7 +506,7 @@ Skipping registering GPU devices...
 </div>
 </section>
 <section id="data-structures-and-inference">
-<h2>2. Data structures and inference<a class="headerlink" href="#data-structures-and-inference" title="Permalink to this headline">#</a></h2>
+<h2>2. Data structures and inference<a class="headerlink" href="#data-structures-and-inference" title="Permalink to this heading">#</a></h2>
 <p>SLEAP can read videos in a variety of different formats through the <code class="docutils literal notranslate"><span class="pre">sleap.load_video</span></code> high level API. Once loaded, the <code class="docutils literal notranslate"><span class="pre">sleap.Video</span></code> object allows you to access individual frames as if the it were a standard numpy array.</p>
 <p><strong>Note:</strong> The actual frames are not loaded until you access them so we don’t blow up our memory when using long videos.</p>
 <div class="cell docutils container">
@@ -568,9 +566,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 </div>
 </div>
 <div class="cell_output docutils container">
-<script type="application/vnd.jupyter.widget-view+json">
-{"model_id": "cf38d776e9fc48ada47705ce018c64af", "version_major": 2, "version_minor": 0}
-</script><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-08-31 12:04:01.923466: W tensorflow/core/grappler/costs/op_level_cost_estimator.cc:690] Error in PredictCost() for the op: op: &quot;CropAndResize&quot; attr { key: &quot;T&quot; value { type: DT_FLOAT } } attr { key: &quot;extrapolation_value&quot; value { f: 0 } } attr { key: &quot;method&quot; value { s: &quot;bilinear&quot; } } inputs { dtype: DT_FLOAT shape { dim { size: -45 } dim { size: -46 } dim { size: -47 } dim { size: 1 } } } inputs { dtype: DT_FLOAT shape { dim { size: -15 } dim { size: 4 } } } inputs { dtype: DT_INT32 shape { dim { size: -15 } } } inputs { dtype: DT_INT32 shape { dim { size: 2 } } } device { type: &quot;CPU&quot; vendor: &quot;GenuineIntel&quot; model: &quot;103&quot; frequency: 3600 num_cores: 16 environment { key: &quot;cpu_instruction_set&quot; value: &quot;AVX SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2&quot; } environment { key: &quot;eigen&quot; value: &quot;3.4.90&quot; } l1_cache_size: 49152 l2_cache_size: 524288 l3_cache_size: 16777216 memory_size: 268435456 } outputs { dtype: DT_FLOAT shape { dim { size: -15 } dim { size: -48 } dim { size: -49 } dim { size: 1 } } }
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "cf38d776e9fc48ada47705ce018c64af", "version_major": 2, "version_minor": 0}</script><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-08-31 12:04:01.923466: W tensorflow/core/grappler/costs/op_level_cost_estimator.cc:690] Error in PredictCost() for the op: op: &quot;CropAndResize&quot; attr { key: &quot;T&quot; value { type: DT_FLOAT } } attr { key: &quot;extrapolation_value&quot; value { f: 0 } } attr { key: &quot;method&quot; value { s: &quot;bilinear&quot; } } inputs { dtype: DT_FLOAT shape { dim { size: -45 } dim { size: -46 } dim { size: -47 } dim { size: 1 } } } inputs { dtype: DT_FLOAT shape { dim { size: -15 } dim { size: 4 } } } inputs { dtype: DT_INT32 shape { dim { size: -15 } } } inputs { dtype: DT_INT32 shape { dim { size: 2 } } } device { type: &quot;CPU&quot; vendor: &quot;GenuineIntel&quot; model: &quot;103&quot; frequency: 3600 num_cores: 16 environment { key: &quot;cpu_instruction_set&quot; value: &quot;AVX SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2&quot; } environment { key: &quot;eigen&quot; value: &quot;3.4.90&quot; } l1_cache_size: 49152 l2_cache_size: 524288 l3_cache_size: 16777216 memory_size: 268435456 } outputs { dtype: DT_FLOAT shape { dim { size: -15 } dim { size: -48 } dim { size: -49 } dim { size: 1 } } }
 2023-08-31 12:04:01.923717: W tensorflow/core/grappler/costs/op_level_cost_estimator.cc:690] Error in PredictCost() for the op: op: &quot;CropAndResize&quot; attr { key: &quot;T&quot; value { type: DT_UINT8 } } attr { key: &quot;extrapolation_value&quot; value { f: 0 } } attr { key: &quot;method&quot; value { s: &quot;bilinear&quot; } } inputs { dtype: DT_UINT8 shape { dim { size: 4 } dim { size: 1024 } dim { size: 1024 } dim { size: 1 } } } inputs { dtype: DT_FLOAT shape { dim { size: -15 } dim { size: 4 } } } inputs { dtype: DT_INT32 shape { dim { size: -15 } } } inputs { dtype: DT_INT32 shape { dim { size: 2 } } } device { type: &quot;CPU&quot; vendor: &quot;GenuineIntel&quot; model: &quot;103&quot; frequency: 3600 num_cores: 16 environment { key: &quot;cpu_instruction_set&quot; value: &quot;AVX SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2&quot; } environment { key: &quot;eigen&quot; value: &quot;3.4.90&quot; } l1_cache_size: 49152 l2_cache_size: 524288 l3_cache_size: 16777216 memory_size: 268435456 } outputs { dtype: DT_FLOAT shape { dim { size: -15 } dim { size: -56 } dim { size: -57 } dim { size: 1 } } }
 2023-08-31 12:04:01.926044: W tensorflow/core/grappler/costs/op_level_cost_estimator.cc:690] Error in PredictCost() for the op: op: &quot;CropAndResize&quot; attr { key: &quot;T&quot; value { type: DT_FLOAT } } attr { key: &quot;extrapolation_value&quot; value { f: 0 } } attr { key: &quot;method&quot; value { s: &quot;bilinear&quot; } } inputs { dtype: DT_FLOAT shape { dim { size: -90 } dim { size: -91 } dim { size: -92 } dim { size: 1 } } } inputs { dtype: DT_FLOAT shape { dim { size: -20 } dim { size: 4 } } } inputs { dtype: DT_INT32 shape { dim { size: -20 } } } inputs { dtype: DT_INT32 shape { dim { size: 2 } } } device { type: &quot;CPU&quot; vendor: &quot;GenuineIntel&quot; model: &quot;103&quot; frequency: 3600 num_cores: 16 environment { key: &quot;cpu_instruction_set&quot; value: &quot;AVX SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2&quot; } environment { key: &quot;eigen&quot; value: &quot;3.4.90&quot; } l1_cache_size: 49152 l2_cache_size: 524288 l3_cache_size: 16777216 memory_size: 268435456 } outputs { dtype: DT_FLOAT shape { dim { size: -20 } dim { size: -94 } dim { size: -95 } dim { size: 1 } } }
 </pre></div>
@@ -630,7 +626,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Data_structures_20_0.png" src="../_images/Data_structures_20_0.png" />
+<img alt="../_images/7e506e2f6407ee4d65215f596800b1ab55b0a5571d0d2bb8b55ff041fe2e88f0.png" src="../_images/7e506e2f6407ee4d65215f596800b1ab55b0a5571d0d2bb8b55ff041fe2e88f0.png" />
 </div>
 </div>
 <p>The labeled frame is itself a container for instances:</p>
@@ -722,7 +718,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 <p>Let’s delete the source data:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>rm <span class="s2">&quot;190719_090330_wt_18159206_rig1.2@15000-17560.mp4&quot;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>rm<span class="w"> </span><span class="s2">&quot;190719_090330_wt_18159206_rig1.2@15000-17560.mp4&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -748,7 +744,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Data_structures_34_0.png" src="../_images/Data_structures_34_0.png" />
+<img alt="../_images/7e506e2f6407ee4d65215f596800b1ab55b0a5571d0d2bb8b55ff041fe2e88f0.png" src="../_images/7e506e2f6407ee4d65215f596800b1ab55b0a5571d0d2bb8b55ff041fe2e88f0.png" />
 </div>
 </div>
 </section>
@@ -827,7 +823,7 @@ By SLEAP Developers
     
   <p class="copyright">
     
-      © Copyright 2019–2023, Talmo Lab.
+      © Copyright 2019–2024, Talmo Lab.
       <br/>
     
   </p>

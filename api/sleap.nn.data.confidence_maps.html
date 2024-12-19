@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>sleap.nn.data.confidence_maps &#8212; SLEAP (v1.3.3)</title>
+    <title>sleap.nn.data.confidence_maps &#8212; SLEAP (v1.4.1)</title>
   
   
   
@@ -32,8 +32,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -42,22 +42,19 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/sleap.nn.data.confidence_maps';</script>
     <link rel="canonical" href="/develop/api/sleap.nn.data.confidence_maps.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -163,6 +160,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -292,7 +290,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -308,6 +308,51 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.sigma"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.output_stride"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.all_instances"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.all_instances</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.with_offsets"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.with_offsets</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.offsets_threshold"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.offsets_threshold</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.flatten_offsets"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.flatten_offsets</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.input_keys"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.input_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.output_keys"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.transform_dataset"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.sigma"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.output_stride"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.centroids"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.centroids</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.with_offsets"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.with_offsets</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.offsets_threshold"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.offsets_threshold</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.flatten_offsets"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.flatten_offsets</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.input_keys"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.input_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.output_keys"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.transform_dataset"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.sigma"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.output_stride"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.with_offsets"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator.with_offsets</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.offsets_threshold"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator.offsets_threshold</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.flatten_offsets"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator.flatten_offsets</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.input_keys"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator.input_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.output_keys"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator.output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.transform_dataset"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.make_confmaps"><code class="docutils literal notranslate"><span class="pre">make_confmaps()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.make_multi_confmaps"><code class="docutils literal notranslate"><span class="pre">make_multi_confmaps()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.make_multi_confmaps_with_offsets"><code class="docutils literal notranslate"><span class="pre">make_multi_confmaps_with_offsets()</span></code></a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -318,11 +363,11 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="module-sleap.nn.data.confidence_maps">
-<span id="sleap-nn-data-confidence-maps"></span><h1>sleap.nn.data.confidence_maps<a class="headerlink" href="#module-sleap.nn.data.confidence_maps" title="Permalink to this headline">#</a></h1>
+<span id="sleap-nn-data-confidence-maps"></span><h1>sleap.nn.data.confidence_maps<a class="headerlink" href="#module-sleap.nn.data.confidence_maps" title="Permalink to this heading">#</a></h1>
 <p>Transformers for confidence map generation.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></span><span class="sig-name descname"><span class="pre">InstanceConfidenceMapGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten_offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/confidence_maps.py#L319-L456"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></span><span class="sig-name descname"><span class="pre">InstanceConfidenceMapGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten_offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/confidence_maps.py#L319-L456"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator" title="Permalink to this definition">#</a></dt>
 <dd><p>Transformer to generate instance-centered confidence maps.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.sigma">
@@ -331,7 +376,7 @@ document.write(`
 confidence maps. This defines the spread in units of the input image’s grid,
 i.e., it does not take scaling in previous steps into account.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -344,7 +389,7 @@ i.e., it does not take scaling in previous steps into account.</p>
 effectively the reciprocal of the output scale, i.e., increase this to
 generate confidence maps that are smaller than the input images.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -355,7 +400,7 @@ generate confidence maps that are smaller than the input images.</p>
 <span class="sig-name descname"><span class="pre">all_instances</span></span><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.all_instances" title="Permalink to this definition">#</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, will also generate the multi-instance confidence maps.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -366,7 +411,7 @@ generate confidence maps that are smaller than the input images.</p>
 <span class="sig-name descname"><span class="pre">with_offsets</span></span><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.with_offsets" title="Permalink to this definition">#</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, also return offsets for refining the peaks.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -378,7 +423,7 @@ generate confidence maps that are smaller than the input images.</p>
 <dd><p>Minimum confidence map value below which offsets will be
 replaced with zeros.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -391,7 +436,7 @@ replaced with zeros.</p>
 flattened to produce rank-3 tensors. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, the generated offset maps
 will be rank-4 with shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(height,</span> <span class="pre">width,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -411,15 +456,15 @@ will be rank-4 with shape <code class="xref py py-obj docutils literal notransla
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/confidence_maps.py#L365-L456"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.transform_dataset" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/confidence_maps.py#L365-L456"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a dataset that contains the generated confidence maps.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>input_ds</strong> – A dataset with elements that contain the keys <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;instance_image&quot;</span></code>,
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;center_instance&quot;</span></code> and, if the attribute <a class="reference internal" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.all_instances" title="sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.all_instances"><code class="xref py py-obj docutils literal notranslate"><span class="pre">all_instances</span></code></a> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>,
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;all_instances&quot;</span></code>.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> with the same keys as the input, as well as
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;instance_confidence_maps&quot;</span></code> and, if the attribute <a class="reference internal" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.all_instances" title="sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.all_instances"><code class="xref py py-obj docutils literal notranslate"><span class="pre">all_instances</span></code></a> is
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;all_instance_confidence_maps&quot;</span></code> keys containing the generated
@@ -443,7 +488,7 @@ the original grid prior to scaling operations.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></span><span class="sig-name descname"><span class="pre">MultiConfidenceMapGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten_offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/confidence_maps.py#L196-L315"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></span><span class="sig-name descname"><span class="pre">MultiConfidenceMapGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten_offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/confidence_maps.py#L196-L315"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator" title="Permalink to this definition">#</a></dt>
 <dd><p>Transformer to generate multi-instance confidence maps.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.sigma">
@@ -452,7 +497,7 @@ the original grid prior to scaling operations.</p>
 confidence maps. This defines the spread in units of the input image’s grid,
 i.e., it does not take scaling in previous steps into account.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -465,7 +510,7 @@ i.e., it does not take scaling in previous steps into account.</p>
 effectively the reciprocal of the output scale, i.e., increase this to
 generate confidence maps that are smaller than the input images.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -477,7 +522,7 @@ generate confidence maps that are smaller than the input images.</p>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, generate confidence maps for centroids rather than
 instance points.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -488,7 +533,7 @@ instance points.</p>
 <span class="sig-name descname"><span class="pre">with_offsets</span></span><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.with_offsets" title="Permalink to this definition">#</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, also return offsets for refining the peaks.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -500,7 +545,7 @@ instance points.</p>
 <dd><p>Minimum confidence map value below which offsets will be
 replaced with zeros.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -513,7 +558,7 @@ replaced with zeros.</p>
 flattened to produce rank-3 tensors. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, the generated offset maps
 will be rank-4 with shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(height,</span> <span class="pre">width,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -533,15 +578,15 @@ will be rank-4 with shape <code class="xref py py-obj docutils literal notransla
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/confidence_maps.py#L243-L315"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.transform_dataset" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/confidence_maps.py#L243-L315"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a dataset that contains the generated confidence maps.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>input_ds</strong> – A dataset with elements that contain the keys <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;scale&quot;</span></code>
 and either “instances” or “centroids” depending on whether the
 <a class="reference internal" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.centroids" title="sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.centroids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">centroids</span></code></a> attribute is set to <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> with the same keys as the input, as well as a
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;confidence_maps&quot;</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;centroid_confidence_maps&quot;</span></code> key containing the
 generated confidence maps.</p>
@@ -564,7 +609,7 @@ the original grid prior to scaling operations.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></span><span class="sig-name descname"><span class="pre">SingleInstanceConfidenceMapGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten_offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/confidence_maps.py#L460-L556"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></span><span class="sig-name descname"><span class="pre">SingleInstanceConfidenceMapGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten_offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/confidence_maps.py#L460-L556"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator" title="Permalink to this definition">#</a></dt>
 <dd><p>Transformer to generate single-instance confidence maps.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.sigma">
@@ -573,7 +618,7 @@ the original grid prior to scaling operations.</p>
 confidence maps. This defines the spread in units of the input image’s grid,
 i.e., it does not take scaling in previous steps into account.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -586,7 +631,7 @@ i.e., it does not take scaling in previous steps into account.</p>
 effectively the reciprocal of the output scale, i.e., increase this to
 generate confidence maps that are smaller than the input images.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -597,7 +642,7 @@ generate confidence maps that are smaller than the input images.</p>
 <span class="sig-name descname"><span class="pre">with_offsets</span></span><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.with_offsets" title="Permalink to this definition">#</a></dt>
 <dd><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, also return offsets for refining the peaks.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -609,7 +654,7 @@ generate confidence maps that are smaller than the input images.</p>
 <dd><p>Minimum confidence map value below which offsets will be
 replaced with zeros.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -622,7 +667,7 @@ replaced with zeros.</p>
 flattened to produce rank-3 tensors. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, the generated offset maps
 will be rank-4 with shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(height,</span> <span class="pre">width,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -642,14 +687,14 @@ will be rank-4 with shape <code class="xref py py-obj docutils literal notransla
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.transform_dataset">
-<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.data.ops.dataset_ops.DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/confidence_maps.py#L497-L556"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.transform_dataset" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">transform_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DatasetV2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DatasetV2</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/confidence_maps.py#L497-L556"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.transform_dataset" title="Permalink to this definition">#</a></dt>
 <dd><p>Create a dataset that contains the generated confidence maps.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>input_ds</strong> – A dataset with elements that contain the keys <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;instances&quot;</span></code> and
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code>.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.data.Dataset</span></code> with the same keys as the input, as well as
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">&quot;confidence_maps&quot;</span></code> containing the generated confidence maps.</p>
 </dd>
@@ -668,10 +713,10 @@ the original grid prior to scaling operations.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.data.confidence_maps.make_confmaps">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></span><span class="sig-name descname"><span class="pre">make_confmaps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/confidence_maps.py#L10-L54"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.make_confmaps" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></span><span class="sig-name descname"><span class="pre">make_confmaps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/confidence_maps.py#L10-L54"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.make_confmaps" title="Permalink to this definition">#</a></dt>
 <dd><p>Make confidence maps from a set of points from a single instance.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>points</strong> – A tensor of points of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_nodes,</span> <span class="pre">2)</span></code> and dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code> where
 the last axis corresponds to (x, y) pixel coordinates on the image. These
@@ -686,7 +731,7 @@ can contain NaNs to indicate missing points.</p></li>
 confidence maps.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>Confidence maps as a tensor of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(grid_height,</span> <span class="pre">grid_width,</span> <span class="pre">n_nodes)</span></code> of
 dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code>.</p>
 <p>Each channel of the confidence maps will contain the unnormalized PDF of a 2D
@@ -705,10 +750,10 @@ contain all zeros.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.data.confidence_maps.make_multi_confmaps">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></span><span class="sig-name descname"><span class="pre">make_multi_confmaps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/confidence_maps.py#L57-L110"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.make_multi_confmaps" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></span><span class="sig-name descname"><span class="pre">make_multi_confmaps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/confidence_maps.py#L57-L110"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.make_multi_confmaps" title="Permalink to this definition">#</a></dt>
 <dd><p>Make confidence maps for multiple instances through reduction.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instances</strong> – A tensor of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_instances,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code> and dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code>
 containing instance points where the last axis corresponds to (x, y) pixel
@@ -724,7 +769,7 @@ present.</p></li>
 confidence maps.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>Confidence maps as a tensor of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(grid_height,</span> <span class="pre">grid_width,</span> <span class="pre">n_nodes)</span></code> of
 dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code>.</p>
 <p>Each channel will contain the elementwise maximum of the confidence maps
@@ -744,10 +789,10 @@ large numbers of instances.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="sleap.nn.data.confidence_maps.make_multi_confmaps_with_offsets">
-<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></span><span class="sig-name descname"><span class="pre">make_multi_confmaps_with_offsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/data/confidence_maps.py#L113-L192"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.make_multi_confmaps_with_offsets" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">sleap.nn.data.confidence_maps.</span></span><span class="sig-name descname"><span class="pre">make_multi_confmaps_with_offsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/data/confidence_maps.py#L113-L192"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.data.confidence_maps.make_multi_confmaps_with_offsets" title="Permalink to this definition">#</a></dt>
 <dd><p>Make confidence maps and offsets for multiple instances through reduction.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instances</strong> – A tensor of shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(n_instances,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code> and dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code>
 containing instance points where the last axis corresponds to (x, y) pixel
@@ -771,7 +816,7 @@ flattened to produce rank-3 tensors. If <code class="xref py py-obj docutils lit
 will be rank-4 with shape <code class="xref py py-obj docutils literal notranslate"><span class="pre">(height,</span> <span class="pre">width,</span> <span class="pre">n_nodes,</span> <span class="pre">2)</span></code>.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A tuple of <code class="xref py py-obj docutils literal notranslate"><span class="pre">(confmaps,</span> <span class="pre">offsets)</span></code>.</p>
 <p><code class="xref py py-obj docutils literal notranslate"><span class="pre">confmaps</span></code> are confidence maps as a tensor of shape
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">(grid_height,</span> <span class="pre">grid_width,</span> <span class="pre">n_nodes)</span></code> and dtype <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.float32</span></code>.</p>
@@ -817,6 +862,57 @@ examples with large numbers of instances.</p>
             
             
               
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.sigma"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.output_stride"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.all_instances"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.all_instances</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.with_offsets"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.with_offsets</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.offsets_threshold"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.offsets_threshold</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.flatten_offsets"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.flatten_offsets</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.input_keys"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.input_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.output_keys"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.InstanceConfidenceMapGenerator.transform_dataset"><code class="docutils literal notranslate"><span class="pre">InstanceConfidenceMapGenerator.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.sigma"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.output_stride"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.centroids"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.centroids</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.with_offsets"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.with_offsets</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.offsets_threshold"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.offsets_threshold</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.flatten_offsets"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.flatten_offsets</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.input_keys"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.input_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.output_keys"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.MultiConfidenceMapGenerator.transform_dataset"><code class="docutils literal notranslate"><span class="pre">MultiConfidenceMapGenerator.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.sigma"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator.sigma</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.output_stride"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.with_offsets"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator.with_offsets</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.offsets_threshold"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator.offsets_threshold</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.flatten_offsets"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator.flatten_offsets</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.input_keys"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator.input_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.output_keys"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator.output_keys</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.SingleInstanceConfidenceMapGenerator.transform_dataset"><code class="docutils literal notranslate"><span class="pre">SingleInstanceConfidenceMapGenerator.transform_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.make_confmaps"><code class="docutils literal notranslate"><span class="pre">make_confmaps()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.make_multi_confmaps"><code class="docutils literal notranslate"><span class="pre">make_multi_confmaps()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.data.confidence_maps.make_multi_confmaps_with_offsets"><code class="docutils literal notranslate"><span class="pre">make_multi_confmaps_with_offsets()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
             
           </div>
           <footer class="bd-footer-content">
@@ -835,7 +931,7 @@ By SLEAP Developers
     
   <p class="copyright">
     
-      © Copyright 2019–2023, Talmo Lab.
+      © Copyright 2019–2024, Talmo Lab.
       <br/>
     
   </p>

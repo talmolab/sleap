@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>sleap.nn.architectures.encoder_decoder &#8212; SLEAP (v1.3.3)</title>
+    <title>sleap.nn.architectures.encoder_decoder &#8212; SLEAP (v1.4.1)</title>
   
   
   
@@ -32,8 +32,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -42,22 +42,19 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/sleap.nn.architectures.encoder_decoder';</script>
     <link rel="canonical" href="/develop/api/sleap.nn.architectures.encoder_decoder.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -163,6 +160,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/index.html">Notebooks</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -292,7 +290,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -308,6 +308,78 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.DecoderBlock"><code class="docutils literal notranslate"><span class="pre">DecoderBlock</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.DecoderBlock.upsampling_stride"><code class="docutils literal notranslate"><span class="pre">DecoderBlock.upsampling_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.DecoderBlock.make_block"><code class="docutils literal notranslate"><span class="pre">DecoderBlock.make_block()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock"><code class="docutils literal notranslate"><span class="pre">EncoderBlock</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock.pool"><code class="docutils literal notranslate"><span class="pre">EncoderBlock.pool</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock.pooling_stride"><code class="docutils literal notranslate"><span class="pre">EncoderBlock.pooling_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock.make_block"><code class="docutils literal notranslate"><span class="pre">EncoderBlock.make_block()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.stacks"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.stacks</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_features_stride"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.decoder_features_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_stack"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.decoder_stack</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_features_stride"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.encoder_features_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_stack"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.encoder_stack</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_backbone"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.make_backbone()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_decoder"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.make_decoder()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_encoder"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.make_encoder()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_stem"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.make_stem()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.maximum_stride"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.maximum_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.output_stride"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.stem_features_stride"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.stem_features_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.stem_stack"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.stem_stack</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.pool"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.pool</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.pooling_stride"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.pooling_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.pool_before_convs"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.pool_before_convs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.num_convs"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.num_convs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.filters"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.kernel_size"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.kernel_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.use_bias"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.use_bias</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.batch_norm"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.batch_norm</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.batch_norm_before_activation"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.batch_norm_before_activation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.activation"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.activation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.block_prefix"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.block_prefix</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.make_block"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.make_block()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.upsampling_stride"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.upsampling_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.transposed_conv</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_filters"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.transposed_conv_filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_kernel_size"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.transposed_conv_kernel_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_use_bias"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.transposed_conv_use_bias</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_batch_norm"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.transposed_conv_batch_norm</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_batch_norm_before_activation"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.transposed_conv_batch_norm_before_activation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_activation"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.transposed_conv_activation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.interp_method"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.interp_method</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.skip_connection"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.skip_connection</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.skip_add"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.skip_add</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.refine_convs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_first_filters"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.refine_convs_first_filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_filters"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.refine_convs_filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_kernel_size"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.refine_convs_kernel_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_use_bias"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.refine_convs_use_bias</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_batch_norm"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.refine_convs_batch_norm</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_batch_norm_before_activation"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.refine_convs_batch_norm_before_activation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_activation"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.refine_convs_activation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.make_block"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.make_block()</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -318,7 +390,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="module-sleap.nn.architectures.encoder_decoder">
-<span id="sleap-nn-architectures-encoder-decoder"></span><h1>sleap.nn.architectures.encoder_decoder<a class="headerlink" href="#module-sleap.nn.architectures.encoder_decoder" title="Permalink to this headline">#</a></h1>
+<span id="sleap-nn-architectures-encoder-decoder"></span><h1>sleap.nn.architectures.encoder_decoder<a class="headerlink" href="#module-sleap.nn.architectures.encoder_decoder" title="Permalink to this heading">#</a></h1>
 <p>Generic encoder-decoder fully convolutional backbones.</p>
 <p>This module contains building blocks for creating encoder-decoder architectures of
 general form.</p>
@@ -346,7 +418,7 @@ classes.</p>
 <p>See the <a class="reference internal" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder" title="sleap.nn.architectures.encoder_decoder.EncoderDecoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EncoderDecoder</span></code></a> base class for requirements for creating new architectures.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.DecoderBlock">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.encoder_decoder.</span></span><span class="sig-name descname"><span class="pre">DecoderBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upsampling_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/architectures/encoder_decoder.py#L148-L182"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.DecoderBlock" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.encoder_decoder.</span></span><span class="sig-name descname"><span class="pre">DecoderBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upsampling_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/architectures/encoder_decoder.py#L148-L182"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.DecoderBlock" title="Permalink to this definition">#</a></dt>
 <dd><p>Base class for decoder blocks.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.DecoderBlock.upsampling_stride">
@@ -355,7 +427,7 @@ classes.</p>
 to 2, such that the input tensor doubles in size after the block, but can be
 set higher to upsample in fewer steps.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -363,10 +435,10 @@ set higher to upsample in fewer steps.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.DecoderBlock.make_block">
-<span class="sig-name descname"><span class="pre">make_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'upsample'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/architectures/encoder_decoder.py#L159-L182"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.DecoderBlock.make_block" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'upsample'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/architectures/encoder_decoder.py#L159-L182"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.DecoderBlock.make_block" title="Permalink to this definition">#</a></dt>
 <dd><p>Instantiate the decoder block from an input tensor.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x_in</strong> – Input tensor to the block.</p></li>
 <li><p><strong>current_stride</strong> – The stride of input tensor.</p></li>
@@ -377,7 +449,7 @@ If not specified, instantiating this block multiple times may result in
 name conflicts if existing layers have the same name.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The output tensor after applying all operations in the block.</p>
 </dd>
 </dl>
@@ -387,14 +459,14 @@ name conflicts if existing layers have the same name.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.EncoderBlock">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.encoder_decoder.</span></span><span class="sig-name descname"><span class="pre">EncoderBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/architectures/encoder_decoder.py#L37-L53"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.encoder_decoder.</span></span><span class="sig-name descname"><span class="pre">EncoderBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/architectures/encoder_decoder.py#L37-L53"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock" title="Permalink to this definition">#</a></dt>
 <dd><p>Base class for encoder blocks.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.EncoderBlock.pool">
 <span class="sig-name descname"><span class="pre">pool</span></span><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock.pool" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, applies max pooling at the end of the block.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -406,7 +478,7 @@ name conflicts if existing layers have the same name.</p></li>
 <dd><p>Stride of the max pooling operation. If 1, the output of this
 block will be at the same stride (== 1/scale) as the input.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -414,7 +486,7 @@ block will be at the same stride (== 1/scale) as the input.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.EncoderBlock.make_block">
-<span class="sig-name descname"><span class="pre">make_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/architectures/encoder_decoder.py#L49-L53"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock.make_block" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/architectures/encoder_decoder.py#L49-L53"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock.make_block" title="Permalink to this definition">#</a></dt>
 <dd><p>Instantiate the encoder block from an input tensor.</p>
 </dd></dl>
 
@@ -422,7 +494,7 @@ block will be at the same stride (== 1/scale) as the input.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.EncoderDecoder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.encoder_decoder.</span></span><span class="sig-name descname"><span class="pre">EncoderDecoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stacks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/architectures/encoder_decoder.py#L403-L676"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.encoder_decoder.</span></span><span class="sig-name descname"><span class="pre">EncoderDecoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stacks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/architectures/encoder_decoder.py#L403-L676"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder" title="Permalink to this definition">#</a></dt>
 <dd><p>General encoder-decoder base class.</p>
 <p>New architectures that follow the encoder-decoder pattern can be defined by
 inheriting from this class and implementing the <a class="reference internal" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_stack" title="sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_stack"><code class="xref py py-obj docutils literal notranslate"><span class="pre">encoder_stack</span></code></a> and <a class="reference internal" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_stack" title="sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_stack"><code class="xref py py-obj docutils literal notranslate"><span class="pre">decoder_stack</span></code></a>
@@ -432,7 +504,7 @@ methods.</p>
 <span class="sig-name descname"><span class="pre">stacks</span></span><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.stacks" title="Permalink to this definition">#</a></dt>
 <dd><p>If greater than 1, the encoder-decoder architecture will be repeated.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -448,7 +520,7 @@ from an input with stride 1.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_stack">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decoder_stack</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.nn.architectures.encoder_decoder.DecoderBlock" title="sleap.nn.architectures.encoder_decoder.DecoderBlock"><span class="pre">sleap.nn.architectures.encoder_decoder.DecoderBlock</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_stack" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decoder_stack</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.nn.architectures.encoder_decoder.DecoderBlock" title="sleap.nn.architectures.encoder_decoder.DecoderBlock"><span class="pre">DecoderBlock</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_stack" title="Permalink to this definition">#</a></dt>
 <dd><p>Return a list of decoder blocks that define the decoder.</p>
 </dd></dl>
 
@@ -462,16 +534,16 @@ from an input with stride 1.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_stack">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">encoder_stack</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock" title="sleap.nn.architectures.encoder_decoder.EncoderBlock"><span class="pre">sleap.nn.architectures.encoder_decoder.EncoderBlock</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_stack" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">encoder_stack</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock" title="sleap.nn.architectures.encoder_decoder.EncoderBlock"><span class="pre">EncoderBlock</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_stack" title="Permalink to this definition">#</a></dt>
 <dd><p>Return a list of encoder blocks that define the encoder.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_backbone">
-<span class="sig-name descname"><span class="pre">make_backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/architectures/encoder_decoder.py#L607-L676"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_backbone" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/architectures/encoder_decoder.py#L607-L676"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_backbone" title="Permalink to this definition">#</a></dt>
 <dd><p>Instantiate the entire encoder-decoder backbone.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x_in</strong> – The input tensor.</p></li>
 <li><p><strong>current_stride</strong> – The stride of <code class="xref py py-obj docutils literal notranslate"><span class="pre">x_in</span></code> relative to the original input. This is
@@ -480,7 +552,7 @@ this must be set appropriately in order to match up intermediate tensors
 during decoder construction.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A tuple of the final output tensor of the decoder and a list of
 <a href="#id7"><span class="problematic" id="id8">`</span></a>IntermediateFeature`s.</p>
 <p>The intermediate features contain the output tensors from every block except
@@ -495,10 +567,10 @@ output tensors and intermediate features corresponding to each stack.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_decoder">
-<span class="sig-name descname"><span class="pre">make_decoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_source_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'dec'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/architectures/encoder_decoder.py#L546-L605"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_decoder" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_decoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_source_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'dec'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/architectures/encoder_decoder.py#L546-L605"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_decoder" title="Permalink to this definition">#</a></dt>
 <dd><p>Instantiate the encoder layers defined by the decoder stack configuration.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x_in</strong> – The input tensor.</p></li>
 <li><p><strong>current_stride</strong> – The stride of <code class="xref py py-obj docutils literal notranslate"><span class="pre">x_in</span></code> relative to the original input. This is
@@ -512,7 +584,7 @@ be ignored even if found.</p></li>
 <li><p><strong>prefix</strong> – String prefix for naming decoder layers.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A tuple of the final output tensor of the decoder and a list of
 <a href="#id11"><span class="problematic" id="id12">`</span></a>IntermediateFeature`s.</p>
 <p>The intermediate features contain the output tensors from every block except
@@ -525,10 +597,10 @@ useful when defining heads that take inputs at multiple scales.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_encoder">
-<span class="sig-name descname"><span class="pre">make_encoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'enc'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">sleap.nn.architectures.common.IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/architectures/encoder_decoder.py#L508-L544"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_encoder" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_encoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'enc'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="sleap.nn.architectures.common.html#sleap.nn.architectures.common.IntermediateFeature" title="sleap.nn.architectures.common.IntermediateFeature"><span class="pre">IntermediateFeature</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/architectures/encoder_decoder.py#L508-L544"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_encoder" title="Permalink to this definition">#</a></dt>
 <dd><p>Instantiate the encoder layers defined by the encoder stack configuration.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x_in</strong> – The input tensor.</p></li>
 <li><p><strong>current_stride</strong> – The stride of <code class="xref py py-obj docutils literal notranslate"><span class="pre">x_in</span></code> relative to the original input. If any
@@ -538,7 +610,7 @@ features.</p></li>
 <li><p><strong>prefix</strong> – String prefix for naming encoder layers.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A tuple of the final output tensor of the encoder and a list of
 <a href="#id13"><span class="problematic" id="id14">`</span></a>IntermediateFeature`s.</p>
 <p>The intermediate features contain the output tensors from every block except
@@ -550,11 +622,11 @@ the last. These can be reused in the decoder to form skip connections.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_stem">
-<span class="sig-name descname"><span class="pre">make_stem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'stem'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/architectures/encoder_decoder.py#L484-L506"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_stem" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_stem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'stem'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/architectures/encoder_decoder.py#L484-L506"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_stem" title="Permalink to this definition">#</a></dt>
 <dd><p>Instantiate the stem layers defined by the stem block configuration.</p>
 <p>Unlike in the encoder, the stem layers do not get repeated in stacked models.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x_in</strong> – The input tensor.</p></li>
 <li><p><strong>current_stride</strong> – The stride of <code class="xref py py-obj docutils literal notranslate"><span class="pre">x_in</span></code> relative to the original input. If any
@@ -563,7 +635,7 @@ order to appropriately set the stride in the rest of the model.</p></li>
 <li><p><strong>prefix</strong> – String prefix for naming stem layers.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The final output tensor of the stem.</p>
 </dd>
 </dl>
@@ -591,7 +663,7 @@ from an input with stride 1.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.EncoderDecoder.stem_stack">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stem_stack</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock" title="sleap.nn.architectures.encoder_decoder.EncoderBlock"><span class="pre">sleap.nn.architectures.encoder_decoder.EncoderBlock</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.stem_stack" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stem_stack</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock" title="sleap.nn.architectures.encoder_decoder.EncoderBlock"><span class="pre">EncoderBlock</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.stem_stack" title="Permalink to this definition">#</a></dt>
 <dd><p>Return a list of encoder blocks that define the stem.</p>
 </dd></dl>
 
@@ -599,14 +671,14 @@ from an input with stride 1.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.SimpleConvBlock">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.encoder_decoder.</span></span><span class="sig-name descname"><span class="pre">SimpleConvBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_before_convs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_convs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_norm_before_activation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'relu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/architectures/encoder_decoder.py#L57-L144"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.encoder_decoder.</span></span><span class="sig-name descname"><span class="pre">SimpleConvBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_before_convs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_convs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_norm_before_activation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'relu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/architectures/encoder_decoder.py#L57-L144"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock" title="Permalink to this definition">#</a></dt>
 <dd><p>Flexible block of convolutions and max pooling.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.SimpleConvBlock.pool">
 <span class="sig-name descname"><span class="pre">pool</span></span><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.pool" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, applies max pooling at the end of the block.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -618,7 +690,7 @@ from an input with stride 1.</p>
 <dd><p>Stride of the max pooling operation. If 1, the output of this
 block will be at the same stride (== 1/scale) as the input.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -629,7 +701,7 @@ block will be at the same stride (== 1/scale) as the input.</p>
 <span class="sig-name descname"><span class="pre">pool_before_convs</span></span><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.pool_before_convs" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, max pooling is performed before convolutions.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -641,7 +713,7 @@ block will be at the same stride (== 1/scale) as the input.</p>
 <dd><p>Number of convolution layers with activation. All attributes below
 are the same for all convolution layers within the block.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -652,7 +724,7 @@ are the same for all convolution layers within the block.</p>
 <span class="sig-name descname"><span class="pre">filters</span></span><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.filters" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of convolutional kernel filters.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -663,7 +735,7 @@ are the same for all convolution layers within the block.</p>
 <span class="sig-name descname"><span class="pre">kernel_size</span></span><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.kernel_size" title="Permalink to this definition">#</a></dt>
 <dd><p>Size of convolutional kernels (== height == width).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -674,7 +746,7 @@ are the same for all convolution layers within the block.</p>
 <span class="sig-name descname"><span class="pre">use_bias</span></span><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.use_bias" title="Permalink to this definition">#</a></dt>
 <dd><p>If False, convolution layers will not have a bias term.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -685,7 +757,7 @@ are the same for all convolution layers within the block.</p>
 <span class="sig-name descname"><span class="pre">batch_norm</span></span><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.batch_norm" title="Permalink to this definition">#</a></dt>
 <dd><p>If True, applies batch normalization after each convolution.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -705,7 +777,7 @@ activation function, i.e.:</p>
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -716,7 +788,7 @@ activation function, i.e.:</p>
 <span class="sig-name descname"><span class="pre">activation</span></span><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.activation" title="Permalink to this definition">#</a></dt>
 <dd><p>Name of activation function (typically “relu” or “linear”).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -727,7 +799,7 @@ activation function, i.e.:</p>
 <span class="sig-name descname"><span class="pre">block_prefix</span></span><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.block_prefix" title="Permalink to this definition">#</a></dt>
 <dd><p>String to append to the prefix provided at block creation time.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -739,10 +811,10 @@ activation function, i.e.:</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.SimpleConvBlock.make_block">
-<span class="sig-name descname"><span class="pre">make_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'conv_block'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/architectures/encoder_decoder.py#L94-L144"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.make_block" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'conv_block'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/architectures/encoder_decoder.py#L94-L144"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.make_block" title="Permalink to this definition">#</a></dt>
 <dd><p>Create the block from an input tensor.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x_in</strong> – Input tensor to the block.</p></li>
 <li><p><strong>prefix</strong> – String that will be added to the name of every layer in the block.
@@ -750,7 +822,7 @@ If not specified, instantiating this block multiple times may result in
 name conflicts if existing layers have the same name.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The output tensor after applying all operations in the block.</p>
 </dd>
 </dl>
@@ -760,7 +832,7 @@ name conflicts if existing layers have the same name.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.encoder_decoder.</span></span><span class="sig-name descname"><span class="pre">SimpleUpsamplingBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upsampling_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transposed_conv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transposed_conv_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transposed_conv_kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transposed_conv_use_bias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transposed_conv_batch_norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transposed_conv_batch_norm_before_activation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transposed_conv_activation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'relu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'bilinear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_connection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_add</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_convs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_convs_first_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_convs_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_convs_use_bias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_convs_kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_convs_batch_norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_convs_batch_norm_before_activation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_convs_activation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'relu'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/architectures/encoder_decoder.py#L186-L399"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sleap.nn.architectures.encoder_decoder.</span></span><span class="sig-name descname"><span class="pre">SimpleUpsamplingBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upsampling_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transposed_conv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transposed_conv_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transposed_conv_kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transposed_conv_use_bias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transposed_conv_batch_norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transposed_conv_batch_norm_before_activation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transposed_conv_activation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'relu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'bilinear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_connection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_add</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_convs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_convs_first_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_convs_filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_convs_use_bias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_convs_kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_convs_batch_norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_convs_batch_norm_before_activation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine_convs_activation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'relu'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/architectures/encoder_decoder.py#L186-L399"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock" title="Permalink to this definition">#</a></dt>
 <dd><p>Standard block of upsampling with optional refinement and skip connections.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.upsampling_stride">
@@ -769,7 +841,7 @@ name conflicts if existing layers have the same name.</p></li>
 to 2, such that the input tensor doubles in size after the block, but can be
 set higher to upsample in fewer steps.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -782,7 +854,7 @@ set higher to upsample in fewer steps.</p>
 learnable upsampling. If False, interpolated upsampling will be used (see
 <a class="reference internal" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.interp_method" title="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.interp_method"><code class="xref py py-obj docutils literal notranslate"><span class="pre">interp_method</span></code></a>) and <code class="xref py py-obj docutils literal notranslate"><span class="pre">transposed_conv_*</span></code> attributes will have no effect.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -794,7 +866,7 @@ learnable upsampling. If False, interpolated upsampling will be used (see
 <dd><p>Integer that specifies the number of filters in the
 transposed convolution layer.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -805,7 +877,7 @@ transposed convolution layer.</p>
 <span class="sig-name descname"><span class="pre">transposed_conv_kernel_size</span></span><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_kernel_size" title="Permalink to this definition">#</a></dt>
 <dd><p>Size of the kernel for the transposed convolution.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -817,7 +889,7 @@ transposed convolution layer.</p>
 <dd><p>If False, transposed convolution layers will not have
 a bias term.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -829,7 +901,7 @@ a bias term.</p>
 <dd><p>If True, applies batch normalization after the
 transposed convolution.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -849,7 +921,7 @@ operation before the activation function, i.e.:</p>
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -861,7 +933,7 @@ operation before the activation function, i.e.:</p>
 <dd><p>Name of activation function (typically “relu” or
 “linear”).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -874,7 +946,7 @@ operation before the activation function, i.e.:</p>
 <a class="reference internal" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv" title="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transposed_conv</span></code></a> is set to False. This can be <code class="xref py py-obj docutils literal notranslate"><span class="pre">bilinear</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">nearest</span></code>. See
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">tf.keras.layers.UpSampling2D</span></code> for more details on the implementation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -888,7 +960,7 @@ features if provided during instantiation in the <a class="reference internal" h
 False, no skip connection will be formed even if a source feature is
 available.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -903,7 +975,7 @@ number of channels, a 1x1 linear convolution will be applied to the source
 first (similar to residual shortcut connections). If False, the two tensors
 will be concatenated channelwise instead.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -921,7 +993,7 @@ upsampling and the skip connection (if present) and all <code class="xref py py-
 attributes will have no effect. If greater than 1, all layers will be
 identical with respect to these attributes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -933,7 +1005,7 @@ identical with respect to these attributes.</p>
 <dd><p>If not None, the first refinement conv layer will
 have this many filters, otherwise <a class="reference internal" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_filters" title="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">refine_convs_filters</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[int]</p>
 </dd>
 </dl>
@@ -945,7 +1017,7 @@ have this many filters, otherwise <a class="reference internal" href="#sleap.nn.
 <dd><p>Specifies the number of filters to use for the refinement
 convolutions.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -956,7 +1028,7 @@ convolutions.</p>
 <span class="sig-name descname"><span class="pre">refine_convs_kernel_size</span></span><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_kernel_size" title="Permalink to this definition">#</a></dt>
 <dd><p>Size of the kernel for the refinement convolution.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -968,7 +1040,7 @@ convolutions.</p>
 <dd><p>If False, refinement convolution layers will not have a
 bias term.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -980,7 +1052,7 @@ bias term.</p>
 <dd><p>If True, applies batch normalization after each
 refinement convolution.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -1000,7 +1072,7 @@ operation before the activation function, i.e.:</p>
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -1012,7 +1084,7 @@ operation before the activation function, i.e.:</p>
 <dd><p>Name of activation function (typically “relu” or
 “linear”).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -1024,10 +1096,10 @@ operation before the activation function, i.e.:</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.make_block">
-<span class="sig-name descname"><span class="pre">make_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'upsample'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.3.3/sleap/nn/architectures/encoder_decoder.py#L275-L399"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.make_block" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'upsample'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference external" href="https://github.com/talmolab/sleap/blob/v1.4.1/sleap/nn/architectures/encoder_decoder.py#L275-L399"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.make_block" title="Permalink to this definition">#</a></dt>
 <dd><p>Instantiate the decoder block from an input tensor.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x_in</strong> – Input tensor to the block.</p></li>
 <li><p><strong>current_stride</strong> – The stride of input tensor. Not required but if provided,
@@ -1039,7 +1111,7 @@ If not specified, instantiating this block multiple times may result in
 name conflicts if existing layers have the same name.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The output tensor after applying all operations in the block.</p>
 </dd>
 </dl>
@@ -1071,6 +1143,84 @@ name conflicts if existing layers have the same name.</p></li>
             
             
               
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.DecoderBlock"><code class="docutils literal notranslate"><span class="pre">DecoderBlock</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.DecoderBlock.upsampling_stride"><code class="docutils literal notranslate"><span class="pre">DecoderBlock.upsampling_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.DecoderBlock.make_block"><code class="docutils literal notranslate"><span class="pre">DecoderBlock.make_block()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock"><code class="docutils literal notranslate"><span class="pre">EncoderBlock</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock.pool"><code class="docutils literal notranslate"><span class="pre">EncoderBlock.pool</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock.pooling_stride"><code class="docutils literal notranslate"><span class="pre">EncoderBlock.pooling_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderBlock.make_block"><code class="docutils literal notranslate"><span class="pre">EncoderBlock.make_block()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.stacks"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.stacks</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_features_stride"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.decoder_features_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.decoder_stack"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.decoder_stack</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_features_stride"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.encoder_features_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.encoder_stack"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.encoder_stack</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_backbone"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.make_backbone()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_decoder"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.make_decoder()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_encoder"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.make_encoder()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.make_stem"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.make_stem()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.maximum_stride"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.maximum_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.output_stride"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.output_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.stem_features_stride"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.stem_features_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.EncoderDecoder.stem_stack"><code class="docutils literal notranslate"><span class="pre">EncoderDecoder.stem_stack</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.pool"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.pool</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.pooling_stride"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.pooling_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.pool_before_convs"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.pool_before_convs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.num_convs"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.num_convs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.filters"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.kernel_size"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.kernel_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.use_bias"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.use_bias</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.batch_norm"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.batch_norm</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.batch_norm_before_activation"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.batch_norm_before_activation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.activation"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.activation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.block_prefix"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.block_prefix</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleConvBlock.make_block"><code class="docutils literal notranslate"><span class="pre">SimpleConvBlock.make_block()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.upsampling_stride"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.upsampling_stride</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.transposed_conv</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_filters"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.transposed_conv_filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_kernel_size"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.transposed_conv_kernel_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_use_bias"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.transposed_conv_use_bias</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_batch_norm"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.transposed_conv_batch_norm</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_batch_norm_before_activation"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.transposed_conv_batch_norm_before_activation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.transposed_conv_activation"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.transposed_conv_activation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.interp_method"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.interp_method</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.skip_connection"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.skip_connection</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.skip_add"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.skip_add</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.refine_convs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_first_filters"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.refine_convs_first_filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_filters"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.refine_convs_filters</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_kernel_size"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.refine_convs_kernel_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_use_bias"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.refine_convs_use_bias</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_batch_norm"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.refine_convs_batch_norm</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_batch_norm_before_activation"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.refine_convs_batch_norm_before_activation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.refine_convs_activation"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.refine_convs_activation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sleap.nn.architectures.encoder_decoder.SimpleUpsamplingBlock.make_block"><code class="docutils literal notranslate"><span class="pre">SimpleUpsamplingBlock.make_block()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
             
           </div>
           <footer class="bd-footer-content">
@@ -1089,7 +1239,7 @@ By SLEAP Developers
     
   <p class="copyright">
     
-      © Copyright 2019–2023, Talmo Lab.
+      © Copyright 2019–2024, Talmo Lab.
       <br/>
     
   </p>

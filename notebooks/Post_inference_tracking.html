@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Post-inference tracking &#8212; SLEAP (v1.3.3)</title>
+    <title>Post-inference tracking &#8212; SLEAP (v1.4.1)</title>
   
   
   
@@ -32,8 +32,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -42,15 +42,12 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/Post_inference_tracking';</script>
     <link rel="canonical" href="/develop/notebooks/Post_inference_tracking.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -59,7 +56,7 @@
     <link rel="next" title="Interactive and resumable training" href="Interactive_and_resumable_training.html" />
     <link rel="prev" title="Data structures" href="Data_structures.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -165,6 +162,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Notebooks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
@@ -342,21 +340,21 @@ document.write(`
                   
   <p><a href="https://colab.research.google.com/github/talmolab/sleap/blob/main/docs/notebooks/Post_inference_tracking.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
 <section class="tex2jax_ignore mathjax_ignore" id="post-inference-tracking">
-<h1>Post-inference tracking<a class="headerlink" href="#post-inference-tracking" title="Permalink to this headline">#</a></h1>
+<h1>Post-inference tracking<a class="headerlink" href="#post-inference-tracking" title="Permalink to this heading">#</a></h1>
 <p>In tracking, we associate the poses (that were detected within individual frames) across time such that they belong to the same individual.</p>
 <p>Since we typically do this separately, it is sometimes desirable to tweak the tracking parameters to optimize accuracy without having to re-run inference (e.g., <code class="docutils literal notranslate"><span class="pre">sleap-track</span></code>).</p>
 <p>In this notebook, we will explore how to re-run the tracking given an existing predictions SLP file.</p>
 <p><strong>Note:</strong> Tracking does not run on the GPU, so this notebook can be run locally on your computer without the hassle of uploading your data if desired.</p>
 <section id="setup-sleap">
-<h2>1. Setup SLEAP<a class="headerlink" href="#setup-sleap" title="Permalink to this headline">#</a></h2>
+<h2>1. Setup SLEAP<a class="headerlink" href="#setup-sleap" title="Permalink to this heading">#</a></h2>
 <p>Run this cell first to install SLEAP. If you get a dependency error in subsequent cells, just click <strong>Runtime</strong> → <strong>Restart runtime</strong> to reload the packages.</p>
 <section id="install">
-<h3>Install<a class="headerlink" href="#install" title="Permalink to this headline">#</a></h3>
+<h3>Install<a class="headerlink" href="#install" title="Permalink to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This should take care of all the dependencies on colab:</span>
-<span class="o">!</span>pip uninstall -qqq -y opencv-python opencv-contrib-python
-<span class="o">!</span>pip install -qqq <span class="s2">&quot;sleap[pypi]&gt;=1.3.3&quot;</span>
+<span class="o">!</span>pip<span class="w"> </span>uninstall<span class="w"> </span>-qqq<span class="w"> </span>-y<span class="w"> </span>opencv-python<span class="w"> </span>opencv-contrib-python
+<span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>-qqq<span class="w"> </span><span class="s2">&quot;sleap[pypi]&gt;=1.3.3&quot;</span>
 
 <span class="c1"># But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):</span>
 <span class="c1"># conda create -n sleap -c sleap -c conda-forge -c nvidia sleap</span>
@@ -366,7 +364,7 @@ document.write(`
 </div>
 </section>
 <section id="test">
-<h3>Test<a class="headerlink" href="#test" title="Permalink to this headline">#</a></h3>
+<h3>Test<a class="headerlink" href="#test" title="Permalink to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#@title SLEAP and system versions: { display-mode: &quot;form&quot; }</span>
@@ -408,13 +406,13 @@ Skipping registering GPU devices...
 </section>
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="setup-data">
-<h1>2. Setup data<a class="headerlink" href="#setup-data" title="Permalink to this headline">#</a></h1>
+<h1>2. Setup data<a class="headerlink" href="#setup-data" title="Permalink to this heading">#</a></h1>
 <p>Here we’re downloading an existing <code class="docutils literal notranslate"><span class="pre">.slp</span></code> file with predictions and the corresponding <code class="docutils literal notranslate"><span class="pre">.mp4</span></code> video.</p>
 <p>You should replace this with Google Drive mounting if running this on Google Colab, or simply skip it altogether and just set the paths below if running locally.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>wget -q -O fly_clip.mp4 https://github.com/talmolab/sleap-tutorial-uo/blob/main/data/fly_clip.mp4?raw<span class="o">=</span>true
-<span class="o">!</span>wget -q -O predictions.slp https://github.com/talmolab/sleap-tutorial-uo/blob/main/data/predictions.slp?raw<span class="o">=</span>true
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>wget<span class="w"> </span>-q<span class="w"> </span>-O<span class="w"> </span>fly_clip.mp4<span class="w"> </span>https://github.com/talmolab/sleap-tutorial-uo/blob/main/data/fly_clip.mp4?raw<span class="o">=</span>true
+<span class="o">!</span>wget<span class="w"> </span>-q<span class="w"> </span>-O<span class="w"> </span>predictions.slp<span class="w"> </span>https://github.com/talmolab/sleap-tutorial-uo/blob/main/data/predictions.slp?raw<span class="o">=</span>true
 </pre></div>
 </div>
 </div>
@@ -428,7 +426,7 @@ Skipping registering GPU devices...
 </div>
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="track">
-<h1>3. Track<a class="headerlink" href="#track" title="Permalink to this headline">#</a></h1>
+<h1>3. Track<a class="headerlink" href="#track" title="Permalink to this heading">#</a></h1>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load predictions</span>
@@ -502,7 +500,7 @@ Skipping registering GPU devices...
 </div>
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="inspect-and-save">
-<h1>4. Inspect and save<a class="headerlink" href="#inspect-and-save" title="Permalink to this headline">#</a></h1>
+<h1>4. Inspect and save<a class="headerlink" href="#inspect-and-save" title="Permalink to this heading">#</a></h1>
 <p>Let’s see the results and save out the tracked predictions.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -511,7 +509,7 @@ Skipping registering GPU devices...
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Post_inference_tracking_17_0.png" src="../_images/Post_inference_tracking_17_0.png" />
+<img alt="../_images/3f78e9f7b93df6d2f3452d162ca631a9de6f98afaf55b8f4f59ee8351db6feeb.png" src="../_images/3f78e9f7b93df6d2f3452d162ca631a9de6f98afaf55b8f4f59ee8351db6feeb.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -521,7 +519,7 @@ Skipping registering GPU devices...
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Post_inference_tracking_18_0.png" src="../_images/Post_inference_tracking_18_0.png" />
+<img alt="../_images/1b0b6e7baba606deccb7311077642a87dad38e9d08625d98d4cf0ffd2b414281.png" src="../_images/1b0b6e7baba606deccb7311077642a87dad38e9d08625d98d4cf0ffd2b414281.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -616,7 +614,7 @@ By SLEAP Developers
     
   <p class="copyright">
     
-      © Copyright 2019–2023, Talmo Lab.
+      © Copyright 2019–2024, Talmo Lab.
       <br/>
     
   </p>

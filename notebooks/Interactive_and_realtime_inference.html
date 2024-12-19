@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html >
+<html lang="en" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Interactive and realtime inference &#8212; SLEAP (v1.3.3)</title>
+    <title>Interactive and realtime inference &#8212; SLEAP (v1.4.1)</title>
   
   
   
@@ -32,8 +32,8 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tabs.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -42,15 +42,12 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
-    <script>let toggleHintShow = 'Click to show';</script>
-    <script>let toggleHintHide = 'Click to hide';</script>
-    <script>let toggleOpenOnPrint = 'true';</script>
-    <script src="../_static/togglebutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
-    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/Interactive_and_realtime_inference';</script>
     <link rel="canonical" href="/develop/notebooks/Interactive_and_realtime_inference.html" />
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
@@ -59,7 +56,7 @@
     <link rel="next" title="Developer API" href="../api.html" />
     <link rel="prev" title="Interactive and resumable training" href="Interactive_and_resumable_training.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="docsearch:language" content="None"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
   
   
@@ -165,6 +162,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../guides/colab.html">Run training and inference on Colab</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/custom-training.html">Creating a custom training profile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../guides/remote.html">Running SLEAP remotely</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/bonsai.html">Using Bonsai with SLEAP</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Notebooks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
@@ -334,18 +332,18 @@ document.write(`
                   
   <p><a href="https://colab.research.google.com/github/talmolab/sleap/blob/main/docs/notebooks/Interactive_and_realtime_inference.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
 <section class="tex2jax_ignore mathjax_ignore" id="interactive-and-realtime-inference">
-<h1>Interactive and realtime inference<a class="headerlink" href="#interactive-and-realtime-inference" title="Permalink to this headline">#</a></h1>
+<h1>Interactive and realtime inference<a class="headerlink" href="#interactive-and-realtime-inference" title="Permalink to this heading">#</a></h1>
 <p>For most workflows, using the <a class="reference external" href="https://sleap.ai/guides/cli.html#sleap-track"><code class="docutils literal notranslate"><span class="pre">sleap-track</span></code> CLI</a> is probably the most convenient option, but if you’re developing a custom application you can take advantage of SLEAP’s inference API to use your trained models in your own custom scripts.</p>
 <p>In this notebook we will explore how to predict poses from raw images in pure Python, and do some basic benchmarking on a simulated realtime predictor that could be used to enable closed-loop experiments.</p>
 <section id="setup-sleap">
-<h2>1. Setup SLEAP<a class="headerlink" href="#setup-sleap" title="Permalink to this headline">#</a></h2>
+<h2>1. Setup SLEAP<a class="headerlink" href="#setup-sleap" title="Permalink to this heading">#</a></h2>
 <p>Run this cell first to install SLEAP. If you get a dependency error in subsequent cells, just click <strong>Runtime</strong> → <strong>Restart runtime</strong> to reload the packages.</p>
 <p>Don’t forget to set <strong>Runtime</strong> → <strong>Change runtime type</strong> → <strong>GPU</strong> as the accelerator.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This should take care of all the dependencies on colab:</span>
-<span class="o">!</span>pip uninstall -qqq -y opencv-python opencv-contrib-python
-<span class="o">!</span>pip install -qqq <span class="s2">&quot;sleap[pypi]&gt;=1.3.3&quot;</span>
+<span class="o">!</span>pip<span class="w"> </span>uninstall<span class="w"> </span>-qqq<span class="w"> </span>-y<span class="w"> </span>opencv-python<span class="w"> </span>opencv-contrib-python
+<span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>-qqq<span class="w"> </span><span class="s2">&quot;sleap[pypi]&gt;=1.3.3&quot;</span>
 
 
 <span class="c1"># But to do it locally, we&#39;d recommend the conda package (available on Windows + Linux):</span>
@@ -393,14 +391,14 @@ GPUs: 1/1 available
 </div>
 </section>
 <section id="setup-data">
-<h2>2. Setup data<a class="headerlink" href="#setup-data" title="Permalink to this headline">#</a></h2>
+<h2>2. Setup data<a class="headerlink" href="#setup-data" title="Permalink to this heading">#</a></h2>
 <p>Before we start, let’s download a raw video and a set of trained top-down ID models that we’ll use to build our application around.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>curl -L --output video.mp4 https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.mp4
-<span class="o">!</span>curl -L --output centroid_model.zip https://storage.googleapis.com/sleap-data/reference/flies13/centroid.fast.210504_182918.centroid.n%3D1800.zip
-<span class="o">!</span>curl -L --output centered_instance_id_model.zip https://storage.googleapis.com/sleap-data/reference/flies13/td_id.fast.v2.210519_111253.multi_class_topdown.n%3D1800.zip
-<span class="o">!</span>ls -lah
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>curl<span class="w"> </span>-L<span class="w"> </span>--output<span class="w"> </span>video.mp4<span class="w"> </span>https://storage.googleapis.com/sleap-data/reference/flies13/190719_090330_wt_18159206_rig1.2%4015000-17560.mp4
+<span class="o">!</span>curl<span class="w"> </span>-L<span class="w"> </span>--output<span class="w"> </span>centroid_model.zip<span class="w"> </span>https://storage.googleapis.com/sleap-data/reference/flies13/centroid.fast.210504_182918.centroid.n%3D1800.zip
+<span class="o">!</span>curl<span class="w"> </span>-L<span class="w"> </span>--output<span class="w"> </span>centered_instance_id_model.zip<span class="w"> </span>https://storage.googleapis.com/sleap-data/reference/flies13/td_id.fast.v2.210519_111253.multi_class_topdown.n%3D1800.zip
+<span class="o">!</span>ls<span class="w"> </span>-lah
 </pre></div>
 </div>
 </div>
@@ -454,7 +452,7 @@ drwxrwxr-x  4 talmolab talmolab 4.0K Sep  1 13:39  models
 <p><strong>Note:</strong> These zip files just have the contents of standard SLEAP model folders that are generated during training.</p>
 </section>
 <section id="interactive-inference">
-<h2>3. Interactive inference<a class="headerlink" href="#interactive-inference" title="Permalink to this headline">#</a></h2>
+<h2>3. Interactive inference<a class="headerlink" href="#interactive-inference" title="Permalink to this heading">#</a></h2>
 <p>SLEAP provides a high-level API for performing inference in the form of <code class="docutils literal notranslate"><span class="pre">Predictor</span></code> classes specific to each approach/model type.</p>
 <p>To create one from a set of trained models, we can use the high-level <code class="docutils literal notranslate"><span class="pre">sleap.load_model()</span></code> function:</p>
 <div class="cell docutils container">
@@ -506,9 +504,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 </div>
 </div>
 <div class="cell_output docutils container">
-<script type="application/vnd.jupyter.widget-view+json">
-{"model_id": "0cc2e3a471764285a58d023906ba1f7a", "version_major": 2, "version_minor": 0}
-</script><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>imgs.shape: (100, 1024, 1024, 1)
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "0cc2e3a471764285a58d023906ba1f7a", "version_major": 2, "version_minor": 0}</script><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>imgs.shape: (100, 1024, 1024, 1)
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2023-09-01 13:57:13.455046: I tensorflow/stream_executor/cuda/cuda_dnn.cc:366] Loaded cuDNN version 8201
@@ -534,7 +530,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Interactive_and_realtime_inference_16_0.png" src="../_images/Interactive_and_realtime_inference_16_0.png" />
+<img alt="../_images/ca67ed7d78a0a607f47eea0f22d937fc65e07bfc3c875c09ac3e2290aea8f4e7.png" src="../_images/ca67ed7d78a0a607f47eea0f22d937fc65e07bfc3c875c09ac3e2290aea8f4e7.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -1270,7 +1266,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 </div>
 </section>
 <section id="realtime-performance">
-<h2>4. Realtime performance<a class="headerlink" href="#realtime-performance" title="Permalink to this headline">#</a></h2>
+<h2>4. Realtime performance<a class="headerlink" href="#realtime-performance" title="Permalink to this heading">#</a></h2>
 <p>Now that we know how to do inference with different types of outputs, let’s try to use that to build a simulated “realtime” application with timing.</p>
 <p>First, we’ll create a class that simulates a camera grabber API that provides a sequence of pre-loaded frames.</p>
 <div class="cell docutils container">
@@ -1280,7 +1276,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 
 
 <span class="k">class</span> <span class="nc">SimulatedCamera</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Simulated camera class that serves frames from memory continuously.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simulated camera class that serves frames from memory continuously.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        frames: Numpy array with pre-loaded frames.</span>
@@ -1355,7 +1351,7 @@ Inference times: 63.1 +- 1.2 ms
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Interactive_and_realtime_inference_27_0.png" src="../_images/Interactive_and_realtime_inference_27_0.png" />
+<img alt="../_images/507b37f5c35704f694d1e81f64e1dc7a4c8f1ea2f81e7ea81aa3d61b9cc5c3a9.png" src="../_images/507b37f5c35704f694d1e81f64e1dc7a4c8f1ea2f81e7ea81aa3d61b9cc5c3a9.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -1368,7 +1364,7 @@ Inference times: 63.1 +- 1.2 ms
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/Interactive_and_realtime_inference_28_0.png" src="../_images/Interactive_and_realtime_inference_28_0.png" />
+<img alt="../_images/7d06f5baca09a6bf3099c8ae1060ddf3eba8874e355ff047933d9a606da9318e.png" src="../_images/7d06f5baca09a6bf3099c8ae1060ddf3eba8874e355ff047933d9a606da9318e.png" />
 </div>
 </div>
 </section>
@@ -1449,7 +1445,7 @@ By SLEAP Developers
     
   <p class="copyright">
     
-      © Copyright 2019–2023, Talmo Lab.
+      © Copyright 2019–2024, Talmo Lab.
       <br/>
     
   </p>
