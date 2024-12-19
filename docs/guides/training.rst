@@ -1,3 +1,18 @@
+Training Hardware Support
+=========================
+
+SLEAP supports training on:
+
+- **NVIDIA GPUs**: Fully supported and tested.
+- **Apple Silicon Macs**: Supported and test.
+
+**Unsupported configurations:**
+
+- AMD GPUs on older Macs (pre-M1) may fail during training.
+- Other GPU architectures or unsupported hardware configurations may lead to memory or allocation errors.
+
+For best results, we recommend using an NVIDIA GPU or Apple Silicon Mac for training.
+
 Training with GUI
 =================
 
@@ -11,7 +26,20 @@ machine, you should only try it if you have a GPU installed.
 |training-dialog|
 
 By default, training uses the training settings which we’ve found to work
-well on a wide range of videos. We train a “centroid” model on 1/4 scale
+well on a wide range of videos. We train a “centroid” model on 1/4 scaleTraining Hardware Support
+=========================
+
+SLEAP supports training on:
+
+- **NVIDIA GPUs**: Fully supported and tested.
+- **Apple Silicon Macs**: Supported via `tensorflow-macos` and `tensorflow-metal`.
+
+**Unsupported configurations:**
+
+- AMD GPUs on older Macs (pre-M1) may fail during training.
+- Other GPU architectures or unsupported hardware configurations may lead to memory or allocation errors.
+
+For best results, we recommend using an NVIDIA GPU or Apple Silicon Mac for training.
 images and then use this to crop where we think there are instances
 during inference. Another "instance centered" model is trained on full-sized,
 cropped image to predict the nodes for an instance at the center of each cropped
